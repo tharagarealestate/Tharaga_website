@@ -3,51 +3,168 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Tharaga — Home</title>
+  <title>Tharaga — Property Listing</title>
   <style>
-    body {
-      font-family: system-ui, sans-serif;
-      margin: 0;
-      padding: 0;
-      background: #fafafa;
-      color: #222;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      min-height: 100vh;
-      text-align: center;
-      flex-direction: column;
+    :root{
+      --bg:#fafafa; --muted:#6b7280; --card:#fff; --ring:#e6e7eb; --primary:#0e7afe; --accent:#10b981;
+      --radius:12px; --maxw:1200px;
     }
-    h1 { font-size: 2rem; margin-bottom: 1rem; }
-    p  { max-width: 600px; margin-bottom: 2rem; }
-    nav a {
-      margin: 0 1rem;
-      text-decoration: none;
-      font-weight: 500;
-      color: #0055ff;
+    *{box-sizing:border-box}
+    body{margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,sans-serif;background:var(--bg);color:#111}
+    .site-header{
+      display:flex;align-items:center;justify-content:center;padding:20px;border-bottom:1px solid var(--ring);
+      position:sticky;top:0;background:#fff;z-index:40;
     }
-    nav a:hover { text-decoration: underline; }
-    footer { margin-top: 2rem; font-size: 0.9rem; color: #666; }
+    .pillbar{display:flex;gap:10px;flex-wrap:wrap;max-width:var(--maxw);width:100%;justify-content:center}
+    .pill{padding:10px 18px;border-radius:999px;border:1px solid var(--ring);background:#fff;cursor:pointer;font-weight:600}
+    .pill.active{background:linear-gradient(90deg,var(--primary),#2563eb);color:#fff;border-color:transparent;box-shadow:0 6px 18px rgba(14,122,254,.12)}
+    main.container{max-width:var(--maxw);margin:22px auto;padding:0 16px;display:grid;gap:18px}
+    .topbar{display:flex;justify-content:space-between;align-items:center;gap:12px}
+    .hero{
+      background:linear-gradient(90deg,#f8fbff,#ffffff);
+      border-radius:14px;padding:18px;border:1px solid var(--ring);display:flex;align-items:center;gap:16px;
+      box-shadow:0 6px 18px rgba(2,6,23,.03)
+    }
+    .hero h1{margin:0;font-size:18px}
+    .filters-row{display:flex;flex-direction:column;gap:12px}
+    .filters{
+      background:var(--card);border-radius:12px;padding:14px;border:1px solid var(--ring);
+      display:flex;flex-direction:column;gap:10px;
+    }
+    .filters .row {display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+    label{font-size:12px;color:var(--muted)}
+    input,select{padding:8px 10px;border-radius:10px;border:1px solid var(--ring);min-height:36px}
+    select[multiple]{min-height:86px}
+    .actions{display:flex;gap:10px;align-items:center}
+    button.btn{padding:9px 14px;border-radius:10px;border:1px solid var(--ring);background:#fff;cursor:pointer}
+    button.primary{background:var(--primary);color:#fff;border-color:var(--primary)}
+    .grid{
+      display:grid;grid-template-columns:1fr;gap:16px;
+    }
+
+    /* RESULTS region */
+    .results-wrap{background:transparent}
+    .results{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:14px}
+    .card{background:var(--card);border-radius:12px;border:1px solid var(--ring);overflow:hidden;display:flex;flex-direction:column}
+    .card-img{position:relative;aspect-ratio:16/9;background:#f7fafc}
+    .card-img img{width:100%;height:100%;object-fit:cover;display:block}
+    .badge{position:absolute;left:8px;top:8px;padding:6px 10px;border-radius:8px;background:var(--accent);color:#fff;font-weight:700;font-size:12px}
+    .score{position:absolute;right:8px;bottom:8px;background:rgba(0,0,0,.6);color:#fff;padding:6px 8px;border-radius:8px;font-weight:700;font-size:12px}
+    .card-body{padding:12px;display:flex;flex-direction:column;gap:10px}
+    .meta{color:var(--muted);font-size:13px}
+    .tag{display:inline-block;padding:6px 8px;border-radius:999px;border:1px solid var(--ring);font-size:12px;margin-right:6px}
+    .row-space{display:flex;justify-content:space-between;align-items:center;gap:12px}
+    #pager{display:flex;gap:8px;justify-content:center;padding:8px}
+    .page{border-radius:8px;padding:6px 9px;border:1px solid var(--ring);background:#fff;cursor:pointer}
+    .page.active{background:linear-gradient(90deg,#eef4ff,#fff);border-color:transparent}
+
+    footer{padding:18px;text-align:center;color:var(--muted);font-size:13px}
+    /* small screens: stack controls nicely */
+    @media(min-width:980px){
+      .grid{grid-template-columns:360px 1fr}
+    }
   </style>
+
+  <script>
+    window.CONFIG = window.CONFIG || {
+      METRO_JSON_URL: "./metro.json",
+      SHEET_CSV_URL: null,
+      SUPABASE_URL: "", // leave empty locally, we'll fetch from Netlify function when deployed
+      SUPABASE_ANON_KEY: ""
+    };
+  </script>
 </head>
 <body>
-  <h1>Welcome to Tharaga</h1>
-  <p>
-    This is the unified website. Use the links below or Durable can embed
-    each section directly using its own route.
-  </p>
-  <nav>
-    <a href="/about/">About</a>
-    <a href="/buyer-form/">Buyer Form</a>
-    <a href="/property-listing/">Properties</a>
-    <a href="/rating/">Rating</a>
-    <a href="/reel-grid/">Reels</a>
-    <a href="/registration/">Registration</a>
-    <a href="/search-filter-home/">Search Filter</a>
-  </nav>
-  <footer>© <span id="year"></span> Tharaga</footer>
-  <script>
-    document.getElementById("year").textContent = new Date().getFullYear();
-  </script>
+  <header class="site-header">
+    <div class="pillbar" role="tablist" aria-label="Listing type">
+      <button class="pill active" data-type="all">All</button>
+      <button class="pill" data-type="buy">Buy</button>
+      <button class="pill" data-type="rent">Rent</button>
+      <button class="pill" data-type="commercial">Commercial</button>
+    </div>
+  </header>
+
+  <main class="container" id="main">
+    <div class="topbar">
+      <div class="hero">
+        <div>
+          <h1>Find verified properties, faster</h1>
+          <div style="color:var(--muted);font-size:13px">Matches with explainability, commute, and verified status</div>
+        </div>
+        <div style="margin-left:auto">
+          <button class="btn" onclick="location.href='/'">Home</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid">
+      <aside class="filters">
+        <div class="filters-row">
+          <div class="row">
+            <div style="flex:1;min-width:180px">
+              <label for="q">Search</label>
+              <input id="q" placeholder="3 BHK near Chromepet metro" />
+            </div>
+
+            <div style="width:180px">
+              <label for="city">City</label>
+              <select id="city" multiple></select>
+            </div>
+
+            <div style="width:220px">
+              <label for="locality">Locality</label>
+              <select id="locality" multiple><option value="All" selected>All</option></select>
+            </div>
+          </div>
+
+          <div class="row">
+            <div><label for="ptype">Type</label><select id="ptype"><option value="">Any</option><option>Apartment</option><option>Villa</option><option>Plot</option></select></div>
+            <div><label for="bhk">BHK</label><select id="bhk"><option value="">Any</option><option>1</option><option>2</option><option>3</option><option>4</option></select></div>
+            <div><label for="minPrice">Min ₹</label><input id="minPrice" type="number" placeholder="0" /></div>
+            <div><label for="maxPrice">Max ₹</label><input id="maxPrice" type="number" placeholder="0" /></div>
+          </div>
+
+          <div class="row">
+            <div><label for="minArea">Min sqft</label><input id="minArea" type="number" /></div>
+            <div><label for="maxArea">Max sqft</label><input id="maxArea" type="number" /></div>
+
+            <div style="display:flex;align-items:center;gap:6px">
+              <label for="wantMetro">Near Metro</label>
+              <input id="wantMetro" type="checkbox" />
+              <input id="maxWalk" type="number" min="1" value="10" style="width:72px" />
+              <span style="font-size:12px;color:var(--muted)">minutes</span>
+            </div>
+          </div>
+
+          <div class="row">
+            <div style="flex:1"><label for="amenity">Amenity contains</label><input id="amenity" placeholder="e.g. gym, pool" /></div>
+            <div style="width:180px"><label for="sort">Sort</label><select id="sort"><option value="relevance">Relevance</option><option value="newest">Newest</option><option value="priceLow">Price Low</option><option value="priceHigh">Price High</option></select></div>
+          </div>
+
+          <div class="actions">
+            <button id="apply" class="btn primary">Apply</button>
+            <button id="reset" class="btn">Reset</button>
+            <div id="activeFilters" style="margin-left:auto"></div>
+          </div>
+        </div>
+      </aside>
+
+      <section>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+          <div id="count">0 results</div>
+          <div style="color:var(--muted);font-size:13px">Tharaga — Safe • Transparent • Verified</div>
+        </div>
+
+        <div class="results-wrap">
+          <div id="results" class="results"></div>
+          <nav id="pager"></nav>
+        </div>
+      </section>
+    </div>
+    <footer>© <span id="year"></span> Tharaga</footer>
+  </main>
+
+  <script type="module" src="./listings.js?v=20250825"></script>
+  <script>document.getElementById('year').textContent=new Date().getFullYear();</script>
 </body>
 </html>

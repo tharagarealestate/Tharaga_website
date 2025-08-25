@@ -1,11 +1,13 @@
 /* app.js — pure lib (no auto-render) */
-
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const CFG = (typeof window !== "undefined" && window.CONFIG) || {};
 const SUPABASE_URL = CFG.SUPABASE_URL || "https://wedevtjjmdvngyshqdro.supabase.co";
-const SUPABASE_ANON_KEY = CFG.SUPABASE_ANON_KEY || ""; // <-- set via window.CONFIG on prod
+const SUPABASE_ANON_KEY = CFG.SUPABASE_ANON_KEY || ""; // provide via window.CONFIG for prod
 const SHEET_CSV_URL = CFG.SHEET_CSV_URL || null;
+const METRO_JSON_URL = CFG.METRO_JSON_URL || "./metro.json";
+
+export const MAX_SCORE = 40; // used for Match % scale
 
 const supabase = (SUPABASE_URL && SUPABASE_ANON_KEY)
   ? createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
@@ -26,7 +28,6 @@ function toArray(val){
 /* ---------- normalizer ---------- */
 export function normalizeRow(row = {}) {
   const r = (k) => row[k] ?? row[k.replace(/[A-Z]/g, m => "_"+m.toLowerCase())] ?? row[k.replace(/_([a-z])/g,(_,c)=>c.toUpperCase())];
-
   const price_inr = toNumber(r("priceINR")) ?? toNumber(r("price_inr"));
   const sqft = toNumber(r("carpetAreaSqft")) ?? toNumber(r("sqft"));
   const pricePerSqft =
@@ -97,7 +98,7 @@ async function fetchFromSheetCSV() {
 }
 async function fetchFromLocalJSON() {
   try {
-    const res = await fetch("./data.json");
+    const res = await fetch("./data.json", { cache: "no-store" });
     if (!res.ok) throw new Error("data.json fetch failed");
     const json = await res.json();
     const arr = Array.isArray(json) ? json : (Array.isArray(json.properties) ? json.properties : []);
@@ -105,39 +106,95 @@ async function fetchFromLocalJSON() {
   } catch(e){ console.warn("Local JSON fallback failed:", e); return []; }
 }
 
-/** Primary loader for listings.js */
 export async function fetchProperties(){
   const supa = await fetchFromSupabase(); if (supa.length) return supa;
   const sheet = await fetchFromSheetCSV(); if (sheet.length) return sheet;
   return await fetchFromLocalJSON();
 }
 
-/* ---------- score + card ---------- */
-export function score(p, q = "", amenity = "") {
-  let s = 0;
-  const text = ((p.title||"")+" "+(p.project||"")+" "+(p.city||"")+" "+(p.locality||"")).toLowerCase();
-  if (q) q.toLowerCase().split(/\s+/).filter(Boolean).forEach(tok => { if (text.includes(tok)) s += 8; });
-  if (p.postedAt) { const days=(Date.now()-new Date(p.postedAt).getTime())/86400000; s += Math.max(0, 10 - Math.min(10, days/3)); }
-  if (p.pricePerSqftINR) { const v=p.pricePerSqftINR; if (v>0) s += 6*(1/(1+Math.exp((v-6000)/800))); }
-  if (amenity && p.amenities?.some(a=>a.toLowerCase().includes(amenity.toLowerCase()))) s += 6;
-  return s;
+/* ---------- Metro support ---------- */
+let METRO = null;
+export async function loadMetro(){
+  if (METRO !== null) return METRO;
+  try {
+    const res = await fetch(METRO_JSON_URL, { cache: "no-store" });
+    if (!res.ok) { METRO = []; return METRO; }
+    const j = await res.json();
+    METRO = Array.isArray(j) ? j : (j.stations || []);
+    return METRO;
+  } catch { METRO = []; return METRO; }
 }
+export function haversineKm(lat1, lon1, lat2, lon2){
+  const toRad = d => d * Math.PI/180, R = 6371;
+  const dLat = toRad(lat2-lat1), dLon = toRad(lon2-lon1);
+  const a = Math.sin(dLat/2)**2 + Math.cos(toRad(lat1))*Math.cos(toRad(lat2))*Math.sin(dLon/2)**2;
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)); return R*c;
+}
+export function nearestMetroKm(lat, lng){
+  if (!Number.isFinite(lat) || !Number.isFinite(lng) || !METRO?.length) return null;
+  let best = Infinity;
+  for (const s of METRO){
+    const km = haversineKm(lat, lng, Number(s.lat ?? s.latitude), Number(s.lng ?? s.longitude));
+    if (km < best) best = km;
+  }
+  return Number.isFinite(best) ? best : null;
+}
+
+/* ---------- score + card ---------- */
+export function score(p, q = "", amenity = "", opts = {}){
+  // Backward/forward compatible arg shape:
+  if (typeof q === "object" && q) { opts = q; amenity = q.amenity || ""; q = q.q || ""; }
+
+  let s = 0;
+
+  // semantic-ish keyword hit (cheap proxy until hybrid API)
+  const text = ((p.title||"")+" "+(p.project||"")+" "+(p.city||"")+" "+(p.locality||"")+" "+(p.summary||"")).toLowerCase();
+  if (q) q.toLowerCase().split(/\s+/).filter(Boolean).forEach(tok => { if (text.includes(tok)) s += 8; });
+
+  // recency (0..6)
+  if (p.postedAt) {
+    const days = (Date.now() - new Date(p.postedAt).getTime()) / 86400000;
+    s += Math.max(0, 6 - Math.min(6, days/5));
+  }
+
+  // price per sqft attractiveness (0..6)
+  if (p.pricePerSqftINR) { const v=p.pricePerSqftINR; if (v>0) s += 6*(1/(1+Math.exp((v-6000)/800))); }
+
+  // amenity hit (0..5)
+  if (amenity && p.amenities?.some(a=>a.toLowerCase().includes(amenity.toLowerCase()))) s += 5;
+
+  // verified trust (0..3)
+  if (p.is_verified) s += 3;
+
+  // metro proximity (0..5) if enabled and we know distance
+  const wantMetro = !!opts.wantMetro, maxWalk = Math.max(1, Number(opts.maxWalk||10));
+  const km = Number.isFinite(p._metroKm) ? p._metroKm : null;
+  if (wantMetro && km !== null) {
+    const minutes = km * 12; // 5 km/h walking
+    const metroScore = Math.max(0, 1 - (minutes / maxWalk)); // 1 at 0 min, 0 at >=max
+    s += 5 * metroScore;
+  }
+
+  // clamp
+  return Math.max(0, Math.min(MAX_SCORE, s));
+}
+
 function escapeHtml(s){ if(!s && s!==0) return ""; return String(s).replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;"); }
 
 export function cardHTML(p, s) {
   const img = (p.images && p.images[0]) || "";
-  const tags = [`${p.bhk||''} BHK`, `${p.carpetAreaSqft||'-'} sqft`, p.furnished||'', p.facing?`Facing ${p.facing}`:'' ].filter(Boolean).map(t=>`<span class="tag">${escapeHtml(t)}</span>`).join(' ');
+  const meta = [`${p.bhk||''} BHK`, `${p.carpetAreaSqft||'-'} sqft`, p.furnished||'', p.facing?`Facing ${p.facing}`:'' ]
+    .filter(Boolean).map(t=>`<span class="tag">${escapeHtml(t)}</span>`).join(' ');
   const price = p.priceDisplay || (p.priceINR ? currency(p.priceINR) : 'Price on request');
   const pps = p.pricePerSqftINR ? `₹${Number(p.pricePerSqftINR).toLocaleString('en-IN')}/sqft` : '';
-
-  // show a badge only if it's meaningful (e.g., Verified)
   const badge = p.is_verified ? 'Verified' : (p.listingStatus && p.listingStatus.toLowerCase() !== 'changed' ? p.listingStatus : '');
+  const metroChip = Number.isFinite(p._metroKm) ? `<span class="tag">${Math.round(p._metroKm*12)} min to metro</span>` : '';
 
   return `<article class="card" data-id="${escapeHtml(p.id)}" style="display:flex;flex-direction:column">
     <div class="card-img">
-      <img src="${escapeHtml(img)}" alt="${escapeHtml(p.title)}">
+      <img src="${escapeHtml(img)}" alt="${escapeHtml(p.title)}" loading="lazy">
       ${badge ? `<div class="badge ribbon">${escapeHtml(badge)}</div>` : ''}
-      <div class="tag score">Match ${Math.round((s/30)*100)}%</div>
+      <div class="tag score">Match ${Math.round((s/ MAX_SCORE)*100)}%</div>
     </div>
     <div style="padding:14px;display:flex;gap:12px;flex-direction:column">
       <div>
@@ -148,7 +205,7 @@ export function cardHTML(p, s) {
         <div style="font-weight:800">${escapeHtml(price)}</div>
         <div style="color:var(--muted);font-size:12px">${escapeHtml(pps)}</div>
       </div>
-      <div class="row" style="gap:8px;flex-wrap:wrap">${tags}</div>
+      <div class="row" style="gap:8px;flex-wrap:wrap">${metroChip} ${meta}</div>
       <div class="row">
         <a class="btn" href="./details.html?id=${encodeURIComponent(p.id)}">View details</a>
       </div>

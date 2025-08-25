@@ -1,12 +1,17 @@
-// listings.js — the only renderer
+// listings.js — the renderer
 import * as App from './app.js?v=20250825';
 
 const PAGE_SIZE = 9;
 let ALL = [];
 let PAGE = 1;
 
-function debounceLocal(fn, wait = 150){ let t; return (...a)=>{ clearTimeout(t); t=setTimeout(()=>fn(...a), wait); }; }
+const deb = (fn, ms=150)=>{ let t; return (...a)=>{ clearTimeout(t); t=setTimeout(()=>fn(...a),ms); }; };
 
+function setLocalityAllSelected(){
+  const el = document.querySelector('#locality');
+  if (!el) return;
+  Array.from(el.options).forEach(o => o.selected = (o.value === 'All'));
+}
 function hydrateCityOptions(){
   const sel = document.querySelector('#city');
   if (!sel) return;
@@ -24,19 +29,20 @@ function hydrateLocalityOptions(selectedCities){
   const scope = (!selectedCities || selectedCities.length===0) ? ALL : ALL.filter(p=> selectedCities.includes(p.city));
   const localities = Array.from(new Set(scope.map(p=>p.locality).filter(Boolean))).sort();
   localitySelect.innerHTML = `<option value="All" selected>All</option>` + localities.map(l=>`<option value="${l}">${l}</option>`).join('');
+  setLocalityAllSelected();
 }
-
 function activeFilterBadges(filters){
   const wrap = document.querySelector('#activeFilters'); if(!wrap) return;
   const parts = [];
   Object.entries(filters).forEach(([k,v])=>{
-    if(v && (Array.isArray(v) ? v.length : String(v).trim()!==''))
+    if(v && (Array.isArray(v) ? v.length : String(v).trim()!=='')){
       parts.push(`<span class="tag">${k}: ${Array.isArray(v)? v.join(', '): v}</span>`);
+    }
   });
   wrap.innerHTML = parts.join(' ');
 }
 
-function apply(){
+function collectFilters(){
   const q = (document.querySelector('#q')?.value || "").trim();
 
   const activePill = document.querySelector('.filter-pill.active');
@@ -60,39 +66,61 @@ function apply(){
   const minA = parseInt(document.querySelector('#minArea')?.value||0) || 0;
   const maxA = parseInt(document.querySelector('#maxArea')?.value||0) || 0;
   const amenity = (document.querySelector('#amenity')?.value || "").trim();
+  const wantMetro = !!document.querySelector('#wantMetro')?.checked;
+  const maxWalk = parseInt(document.querySelector('#maxWalk')?.value||10) || 10;
   const sort = document.querySelector('#sort')?.value || 'relevance';
 
-  activeFilterBadges({ q, city: citySel, locality: localitySel, price:`${minP||''}-${maxP||''}`, type: ptype, bhk, furnished, facing, area:`${minA||''}-${maxA||''}`, amenity });
+  activeFilterBadges({
+    q,
+    city: citySel,
+    locality: localitySel,
+    price:`${minP||''}-${maxP||''}`,
+    type: ptype, bhk, furnished, facing,
+    area:`${minA||''}-${maxA||''}`,
+    amenity,
+    metro: wantMetro ? `≤ ${maxWalk} min walk` : ''
+  });
+
+  return { q, mode, citySel, localitySel, minP, maxP, ptype, bhk, furnished, facing, minA, maxA, amenity, wantMetro, maxWalk, sort };
+}
+
+function apply(){
+  const F = collectFilters();
 
   let filtered = ALL.filter(p=>{
-    if (mode) {
+    if (F.mode) {
       const pc = String(p.category || p.propertyCategory || '').toLowerCase();
-      if (pc !== mode) return false;
+      if (pc !== F.mode) return false;
     }
-    if (q) {
-      const t = (p.title+' '+p.project+' '+p.city+' '+p.locality+' '+(p.address||'')).toLowerCase();
-      const toks = q.toLowerCase().split(/\s+/).filter(Boolean);
+    if (F.q) {
+      const t = (p.title+' '+p.project+' '+p.city+' '+p.locality+' '+(p.address||'')+' '+(p.summary||'')).toLowerCase();
+      const toks = F.q.toLowerCase().split(/\s+/).filter(Boolean);
       if (!toks.every(tok => t.includes(tok))) return false;
     }
-    if (citySel.length && !citySel.includes(p.city)) return false;
-    if (localitySel.length && !(localitySel.includes("All") || localitySel.includes(p.locality))) return false;
-    if (minP && (p.priceINR||0) < minP) return false;
-    if (maxP && (p.priceINR||0) > maxP) return false;
-    if (ptype && p.type !== ptype) return false;
-    if (bhk && String(p.bhk)!==String(bhk)) return false;
-    if (furnished && p.furnished !== furnished) return false;
-    if (facing && p.facing !== facing) return false;
-    if (minA && (p.carpetAreaSqft||0) < minA) return false;
-    if (maxA && (p.carpetAreaSqft||0) > maxA) return false;
-    if (amenity && !(p.amenities||[]).some(a=>a.toLowerCase().includes(amenity.toLowerCase()))) return false;
+    if (F.citySel.length && !F.citySel.includes(p.city)) return false;
+    if (F.localitySel.length && !(F.localitySel.includes("All") || F.localitySel.includes(p.locality))) return false;
+    if (F.minP && (p.priceINR||0) < F.minP) return false;
+    if (F.maxP && (p.priceINR||0) > F.maxP) return false;
+    if (F.ptype && p.type !== F.ptype) return false;
+    if (F.bhk && String(p.bhk)!==String(F.bhk)) return false;
+    if (F.furnished && p.furnished !== F.furnished) return false;
+    if (F.facing && p.facing !== F.facing) return false;
+    if (F.minA && (p.carpetAreaSqft||0) < F.minA) return false;
+    if (F.maxA && (p.carpetAreaSqft||0) > F.maxA) return false;
+    if (F.amenity && !(p.amenities||[]).some(a=>a.toLowerCase().includes(F.amenity.toLowerCase()))) return false;
+    if (F.wantMetro && !Number.isFinite(p._metroKm)) return false; // require metro distance known
+    // also hard filter by metro max walk if enabled
+    if (F.wantMetro && Number.isFinite(p._metroKm) && (p._metroKm*12) > F.maxWalk) return false;
     return true;
-  }).map(p=>({ p, s: App.score(p, q, amenity) }));
+  }).map(p=>({ p, s: App.score(p, { q: F.q, amenity: F.amenity, wantMetro: F.wantMetro, maxWalk: F.maxWalk }) }));
 
-  if(sort==='relevance'){ filtered.sort((a,b)=> b.s - a.s); }
-  if(sort==='newest'){ filtered.sort((a,b)=> new Date(b.p.postedAt) - new Date(a.p.postedAt)); }
-  if(sort==='priceLow'){ filtered.sort((a,b)=> (a.p.priceINR||0) - (b.p.priceINR||0)); }
-  if(sort==='priceHigh'){ filtered.sort((a,b)=> (b.p.priceINR||0) - (a.p.priceINR||0)); }
-  if(sort==='areaHigh'){ filtered.sort((a,b)=> (b.p.carpetAreaSqft||0) - (a.p.carpetAreaSqft||0)); }
+  switch(F.sort){
+    case 'relevance': filtered.sort((a,b)=> b.s - a.s); break;
+    case 'newest':    filtered.sort((a,b)=> new Date(b.p.postedAt||0) - new Date(a.p.postedAt||0)); break;
+    case 'priceLow':  filtered.sort((a,b)=> (a.p.priceINR||0) - (b.p.priceINR||0)); break;
+    case 'priceHigh': filtered.sort((a,b)=> (b.p.priceINR||0) - (a.p.priceINR||0)); break;
+    case 'areaHigh':  filtered.sort((a,b)=> (b.p.carpetAreaSqft||0) - (a.p.carpetAreaSqft||0)); break;
+  }
 
   const total = filtered.length;
   const countEl = document.querySelector('#count'); if (countEl) countEl.textContent = `${total} result${total!==1?'s':''}`;
@@ -115,34 +143,65 @@ function apply(){
 }
 
 function goto(n){ PAGE = n; apply(); }
-window.goto = goto; // if you need inline onclick, but we also delegate below.
+window.goto = goto;
 
 function wireUI(){
   document.querySelector('#apply')?.addEventListener('click', ()=>{ PAGE=1; apply(); });
-  const debApply = debounceLocal(()=>{ PAGE=1; apply(); }, 120);
-  ['#minPrice','#maxPrice','#minArea','#maxArea','#amenity'].forEach(sel=> document.querySelector(sel)?.addEventListener('input', debApply));
-  ['#sort','#ptype','#bhk','#furnished','#facing','#city','#locality'].forEach(sel=> document.querySelector(sel)?.addEventListener('change', ()=>{ PAGE=1; apply(); }));
-  document.querySelector('#pager')?.addEventListener('click', (e)=>{ const b=e.target.closest('button'); if(!b) return; const n=Number(b.dataset.page||b.textContent); if(n) goto(n); });
-  document.querySelector('#q')?.addEventListener('input', ()=>{ PAGE=1; apply(); });
+
+  const debApply = deb(()=>{ PAGE=1; apply(); }, 120);
+  ['#minPrice','#maxPrice','#minArea','#maxArea','#amenity','#q'].forEach(sel=>
+    document.querySelector(sel)?.addEventListener('input', debApply)
+  );
+  ['#sort','#ptype','#bhk','#furnished','#facing','#city','#locality','#wantMetro','#maxWalk'].forEach(sel=>
+    document.querySelector(sel)?.addEventListener('change', ()=>{ PAGE=1; apply(); })
+  );
+
+  document.querySelector('#pager')?.addEventListener('click', (e)=>{
+    const b=e.target.closest('button'); if(!b) return;
+    const n=Number(b.dataset.page||b.textContent); if(n) goto(n);
+  });
+
   document.querySelectorAll('.filter-pill').forEach(btn=>{
     btn.addEventListener('click', ()=>{
       document.querySelectorAll('.filter-pill').forEach(b=>b.classList.remove('active'));
       btn.classList.add('active'); PAGE=1; apply();
     });
   });
+
   document.querySelector('#reset')?.addEventListener('click', ()=>{
-    ['q','minPrice','maxPrice','ptype','bhk','furnished','facing','minArea','maxArea','amenity'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
+    ['q','minPrice','maxPrice','ptype','bhk','furnished','facing','minArea','maxArea','amenity'].forEach(id=>{
+      const el=document.getElementById(id); if(el) el.value='';
+    });
     if (document.querySelector('#city')) Array.from(document.querySelector('#city').options).forEach(o=> o.selected=false);
-    if (document.querySelector('#locality')) document.querySelector('#locality').value = "All";
+    setLocalityAllSelected();
+    const wm = document.getElementById('wantMetro'); if (wm) wm.checked = false;
+    const mw = document.getElementById('maxWalk'); if (mw) mw.value = 10;
     PAGE=1; apply();
   });
 }
 
+async function enrichWithMetro(){
+  const stations = await App.loadMetro();
+  if (!stations.length) return; // no metro dataset → skip
+  for (const p of ALL){
+    if (Number.isFinite(p.lat) && Number.isFinite(p.lng)){
+      p._metroKm = App.nearestMetroKm(p.lat, p.lng);
+    } else {
+      p._metroKm = null;
+    }
+  }
+}
+
 async function init(){
-  ALL = await App.fetchProperties(); // single source of truth
-  if (document.querySelector('#city')) { hydrateCityOptions(); hydrateLocalityOptions([]); }
+  try{
+    ALL = await App.fetchProperties();
+    hydrateCityOptions(); hydrateLocalityOptions([]);
+    await enrichWithMetro();
+  } catch(e){
+    console.error("Init failed:", e);
+  }
   wireUI();
   apply();
 }
 
-init();
+document.addEventListener('DOMContentLoaded', init);

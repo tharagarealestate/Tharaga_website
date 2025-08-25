@@ -161,12 +161,54 @@ function wireUI(){
     const n=Number(b.dataset.page||b.textContent); if(n) goto(n);
   });
 
-  document.querySelectorAll('.filter-pill').forEach(btn=>{
-    btn.addEventListener('click', ()=>{
-      document.querySelectorAll('.filter-pill').forEach(b=>b.classList.remove('active'));
-      btn.classList.add('active'); PAGE=1; apply();
+  // ======== v3 pill logic: accessibility + persistence + keyboard ========
+  (function setupPills(){
+    const pills = document.querySelectorAll('.filter-pill');
+    if (!pills.length) return;
+
+    const STORAGE_KEY = 'activeFilterType';
+    const savedType = localStorage.getItem(STORAGE_KEY) || 'all';
+
+    function setActivePill(pill){
+      pills.forEach(p => {
+        p.classList.remove('active');
+        p.setAttribute('aria-pressed','false');
+      });
+      pill.classList.add('active');
+      pill.setAttribute('aria-pressed','true');
+      const type = pill.dataset.type || 'all';
+      localStorage.setItem(STORAGE_KEY, type);
+    }
+
+    // Initialize ARIA / keyboard and events
+    pills.forEach(pill => {
+      pill.setAttribute('role','button');
+      pill.setAttribute('tabindex','0');
+      pill.setAttribute('aria-pressed','false');
+
+      pill.addEventListener('click', () => {
+        setActivePill(pill);
+        debApply(); // debounce re-render
+      });
+
+      pill.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          setActivePill(pill);
+          debApply();
+        }
+      });
     });
-  });
+
+    // Activate saved pill on load (fallback to "all")
+    const toActivate =
+      document.querySelector(`.filter-pill[data-type="${savedType}"]`) ||
+      document.querySelector('.filter-pill[data-type="all"]') ||
+      pills[0];
+
+    if (toActivate) setActivePill(toActivate);
+  })();
+  // ======== end v3 pill logic ========
 
   document.querySelector('#reset')?.addEventListener('click', ()=>{
     ['q','minPrice','maxPrice','ptype','bhk','furnished','facing','minArea','maxArea','amenity'].forEach(id=>{
@@ -176,6 +218,20 @@ function wireUI(){
     setLocalityAllSelected();
     const wm = document.getElementById('wantMetro'); if (wm) wm.checked = false;
     const mw = document.getElementById('maxWalk'); if (mw) mw.value = 10;
+
+    // Reset pill to "All" and persist
+    const allPill = document.querySelector('.filter-pill[data-type="all"]');
+    if (allPill) {
+      // mimic setActivePill without re-declaring helpers: update classes + aria + storage
+      document.querySelectorAll('.filter-pill').forEach(p => {
+        p.classList.remove('active');
+        p.setAttribute('aria-pressed','false');
+      });
+      allPill.classList.add('active');
+      allPill.setAttribute('aria-pressed','true');
+      localStorage.setItem('activeFilterType', 'all');
+    }
+
     PAGE=1; apply();
   });
 }

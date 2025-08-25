@@ -5,166 +5,191 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Tharaga — Property Listing</title>
   <style>
-    :root{
-      --bg:#fafafa; --muted:#6b7280; --card:#fff; --ring:#e6e7eb; --primary:#0e7afe; --accent:#10b981;
-      --radius:12px; --maxw:1200px;
+    :root {
+      --muted:#6b7280; --ring:#e5e7eb; --card:#ffffff; --bg:#fafafa;
+      --primary:#0e7afe; --radius:12px;
     }
     *{box-sizing:border-box}
-    body{margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,sans-serif;background:var(--bg);color:#111}
-    .site-header{
-      display:flex;align-items:center;justify-content:center;padding:20px;border-bottom:1px solid var(--ring);
-      position:sticky;top:0;background:#fff;z-index:40;
-    }
-    .pillbar{display:flex;gap:10px;flex-wrap:wrap;max-width:var(--maxw);width:100%;justify-content:center}
-    .pill{padding:10px 18px;border-radius:999px;border:1px solid var(--ring);background:#fff;cursor:pointer;font-weight:600}
-    .pill.active{background:linear-gradient(90deg,var(--primary),#2563eb);color:#fff;border-color:transparent;box-shadow:0 6px 18px rgba(14,122,254,.12)}
-    main.container{max-width:var(--maxw);margin:22px auto;padding:0 16px;display:grid;gap:18px}
-    .topbar{display:flex;justify-content:space-between;align-items:center;gap:12px}
-    .hero{
-      background:linear-gradient(90deg,#f8fbff,#ffffff);
-      border-radius:14px;padding:18px;border:1px solid var(--ring);display:flex;align-items:center;gap:16px;
-      box-shadow:0 6px 18px rgba(2,6,23,.03)
-    }
-    .hero h1{margin:0;font-size:18px}
-    .filters-row{display:flex;flex-direction:column;gap:12px}
-    .filters{
-      background:var(--card);border-radius:12px;padding:14px;border:1px solid var(--ring);
-      display:flex;flex-direction:column;gap:10px;
-    }
-    .filters .row {display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+    body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,sans-serif;background:var(--bg);color:#111;margin:0}
+    header{padding:16px 20px;border-bottom:1px solid var(--ring);background:#fff;position:sticky;top:0;z-index:5}
+    main{display:grid;gap:16px;padding:16px;max-width:1200px;margin:0 auto}
+    .filters{display:grid;gap:12px;background:#fff;border:1px solid var(--ring);border-radius:var(--radius);padding:12px}
+    .row{display:flex;flex-wrap:wrap;gap:10px}
+    .field{display:flex;flex-direction:column;gap:6px;min-width:160px}
     label{font-size:12px;color:var(--muted)}
-    input,select{padding:8px 10px;border-radius:10px;border:1px solid var(--ring);min-height:36px}
-    select[multiple]{min-height:86px}
-    .actions{display:flex;gap:10px;align-items:center}
-    button.btn{padding:9px 14px;border-radius:10px;border:1px solid var(--ring);background:#fff;cursor:pointer}
+    input, select{
+      border:1px solid var(--ring);border-radius:10px;padding:8px 10px;background:#fff;min-height:38px
+    }
+    select[multiple]{min-width:220px;min-height:80px}
+    .actions{display:flex;gap:10px;margin-top:6px}
+    button.btn{border:1px solid var(--ring);background:#fff;border-radius:10px;padding:8px 14px;cursor:pointer}
     button.primary{background:var(--primary);color:#fff;border-color:var(--primary)}
-    .grid{
-      display:grid;grid-template-columns:1fr;gap:16px;
-    }
-
-    /* RESULTS region */
-    .results-wrap{background:transparent}
-    .results{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:14px}
-    .card{background:var(--card);border-radius:12px;border:1px solid var(--ring);overflow:hidden;display:flex;flex-direction:column}
-    .card-img{position:relative;aspect-ratio:16/9;background:#f7fafc}
+    .pillbar{display:flex;gap:8px}
+    .filter-pill{padding:6px 10px;border:1px solid var(--ring);border-radius:999px;background:#fff;cursor:pointer}
+    .filter-pill.active{background:#eef4ff;border-color:#cfe0ff}
+    #activeFilters{display:flex;flex-wrap:wrap;gap:6px}
+    .tag{border:1px solid var(--ring);background:#fff;border-radius:999px;padding:4px 8px;font-size:12px;color:#333}
+    .results{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px}
+    .card{border:1px solid var(--ring);border-radius:14px;background:#fff;overflow:hidden}
+    .card-img{position:relative;aspect-ratio:16/9;background:#f3f4f6}
     .card-img img{width:100%;height:100%;object-fit:cover;display:block}
-    .badge{position:absolute;left:8px;top:8px;padding:6px 10px;border-radius:8px;background:var(--accent);color:#fff;font-weight:700;font-size:12px}
-    .score{position:absolute;right:8px;bottom:8px;background:rgba(0,0,0,.6);color:#fff;padding:6px 8px;border-radius:8px;font-weight:700;font-size:12px}
-    .card-body{padding:12px;display:flex;flex-direction:column;gap:10px}
-    .meta{color:var(--muted);font-size:13px}
-    .tag{display:inline-block;padding:6px 8px;border-radius:999px;border:1px solid var(--ring);font-size:12px;margin-right:6px}
-    .row-space{display:flex;justify-content:space-between;align-items:center;gap:12px}
-    #pager{display:flex;gap:8px;justify-content:center;padding:8px}
-    .page{border-radius:8px;padding:6px 9px;border:1px solid var(--ring);background:#fff;cursor:pointer}
-    .page.active{background:linear-gradient(90deg,#eef4ff,#fff);border-color:transparent}
-
-    footer{padding:18px;text-align:center;color:var(--muted);font-size:13px}
-    /* small screens: stack controls nicely */
-    @media(min-width:980px){
-      .grid{grid-template-columns:360px 1fr}
-    }
+    .badge.ribbon{position:absolute;top:8px;left:-6px;background:#10b981;color:#fff;padding:6px 10px;border-top-right-radius:8px;border-bottom-right-radius:8px;font-size:12px}
+    .score{position:absolute;bottom:8px;right:8px}
+    .empty{padding:30px;text-align:center;color:var(--muted)}
+    #pager{display:flex;gap:8px;justify-content:center}
+    .page{border:1px solid var(--ring);background:#fff;border-radius:10px;padding:6px 10px;cursor:pointer}
+    .page.active{background:#eef4ff;border-color:#cfe0ff}
+    footer{color:var(--muted);font-size:12px;padding:12px;text-align:center}
   </style>
-
   <script>
-    window.CONFIG = window.CONFIG || {
+    /* Optional runtime config without editing JS files */
+    window.CONFIG = {
+      // If you have a metro JSON file, keep it beside index.html as metro.json
       METRO_JSON_URL: "./metro.json",
+      // If you have a CSV or a published-sheet CSV, set it; else keep null
       SHEET_CSV_URL: null,
-      SUPABASE_URL: "", // leave empty locally, we'll fetch from Netlify function when deployed
-      SUPABASE_ANON_KEY: ""
+      // Supabase: set only if you want to pull from DB directly on the client
+      SUPABASE_URL: "https://wedevtjjmdvngyshqdro.supabase.co",
+      SUPABASE_ANON_KEY: "" // leave blank for demo/local JSON
     };
   </script>
 </head>
 <body>
-  <header class="site-header">
-    <div class="pillbar" role="tablist" aria-label="Listing type">
-      <button class="pill active" data-type="all">All</button>
-      <button class="pill" data-type="buy">Buy</button>
-      <button class="pill" data-type="rent">Rent</button>
-      <button class="pill" data-type="commercial">Commercial</button>
+  <header>
+    <div class="row" style="justify-content:space-between;align-items:center">
+      <strong>Tharaga — Verified Properties</strong>
+      <div class="pillbar">
+        <button class="filter-pill active" data-type="all">All</button>
+        <button class="filter-pill" data-type="buy">Buy</button>
+        <button class="filter-pill" data-type="rent">Rent</button>
+        <button class="filter-pill" data-type="commercial">Commercial</button>
+      </div>
     </div>
   </header>
 
-  <main class="container" id="main">
-    <div class="topbar">
-      <div class="hero">
-        <div>
-          <h1>Find verified properties, faster</h1>
-          <div style="color:var(--muted);font-size:13px">Matches with explainability, commute, and verified status</div>
+  <main>
+    <section class="filters">
+      <div class="row">
+        <div class="field" style="flex:1 1 260px">
+          <label for="q">Search</label>
+          <input id="q" placeholder="eg. 3 bhk villa in Coimbatore near metro" />
         </div>
-        <div style="margin-left:auto">
-          <button class="btn" onclick="location.href='/'">Home</button>
+
+        <div class="field">
+          <label for="city">City (multi)</label>
+          <select id="city" multiple></select>
+        </div>
+
+        <div class="field">
+          <label for="locality">Locality (multi)</label>
+          <select id="locality" multiple>
+            <option value="All" selected>All</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="ptype">Type</label>
+          <select id="ptype">
+            <option value="">Any</option>
+            <option>Apartment</option>
+            <option>Villa</option>
+            <option>Plot</option>
+            <option>Independent House</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="bhk">BHK</label>
+          <select id="bhk">
+            <option value="">Any</option>
+            <option>1</option><option>2</option><option>3</option><option>4</option><option>5</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="furnished">Furnished</label>
+          <select id="furnished">
+            <option value="">Any</option>
+            <option>Furnished</option>
+            <option>Semi-Furnished</option>
+            <option>Unfurnished</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="facing">Facing</label>
+          <select id="facing">
+            <option value="">Any</option>
+            <option>East</option><option>West</option><option>North</option><option>South</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label>Price (INR)</label>
+          <div class="row" style="gap:6px">
+            <input id="minPrice" type="number" placeholder="Min" style="width:120px">
+            <input id="maxPrice" type="number" placeholder="Max" style="width:120px">
+          </div>
+        </div>
+
+        <div class="field">
+          <label>Area (sqft)</label>
+          <div class="row" style="gap:6px">
+            <input id="minArea" type="number" placeholder="Min" style="width:120px">
+            <input id="maxArea" type="number" placeholder="Max" style="width:120px">
+          </div>
+        </div>
+
+        <!-- Metro: NoBroker-like -->
+        <div class="field">
+          <label for="wantMetro">Near Metro</label>
+          <div class="row" style="gap:6px;align-items:center">
+            <input id="wantMetro" type="checkbox" />
+            <span style="font-size:12px;color:var(--muted)">walk ≤</span>
+            <input id="maxWalk" type="number" min="1" value="10" style="width:72px">
+            <span style="font-size:12px;color:var(--muted)">minutes</span>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="amenity">Amenity contains</label>
+          <input id="amenity" placeholder="e.g. gym, pool, lift" />
+        </div>
+
+        <div class="field">
+          <label for="sort">Sort</label>
+          <select id="sort">
+            <option value="relevance">Relevance</option>
+            <option value="newest">Newest</option>
+            <option value="priceLow">Price: Low → High</option>
+            <option value="priceHigh">Price: High → Low</option>
+            <option value="areaHigh">Area: High → Low</option>
+          </select>
         </div>
       </div>
-    </div>
 
-    <div class="grid">
-      <aside class="filters">
-        <div class="filters-row">
-          <div class="row">
-            <div style="flex:1;min-width:180px">
-              <label for="q">Search</label>
-              <input id="q" placeholder="3 BHK near Chromepet metro" />
-            </div>
+      <div class="actions">
+        <button id="apply" class="btn primary">Apply</button>
+        <button id="reset" class="btn">Reset</button>
+        <!-- Optional experimental AI toggle: -->
+        <!-- <label style="display:flex;align-items:center;gap:6px"><input id="aiToggle" type="checkbox"> AI Relevance</label> -->
+      </div>
 
-            <div style="width:180px">
-              <label for="city">City</label>
-              <select id="city" multiple></select>
-            </div>
+      <div id="activeFilters" style="margin-top:6px"></div>
+    </section>
 
-            <div style="width:220px">
-              <label for="locality">Locality</label>
-              <select id="locality" multiple><option value="All" selected>All</option></select>
-            </div>
-          </div>
+    <section class="row" style="justify-content:space-between;align-items:center">
+      <div id="count">0 results</div>
+    </section>
 
-          <div class="row">
-            <div><label for="ptype">Type</label><select id="ptype"><option value="">Any</option><option>Apartment</option><option>Villa</option><option>Plot</option></select></div>
-            <div><label for="bhk">BHK</label><select id="bhk"><option value="">Any</option><option>1</option><option>2</option><option>3</option><option>4</option></select></div>
-            <div><label for="minPrice">Min ₹</label><input id="minPrice" type="number" placeholder="0" /></div>
-            <div><label for="maxPrice">Max ₹</label><input id="maxPrice" type="number" placeholder="0" /></div>
-          </div>
-
-          <div class="row">
-            <div><label for="minArea">Min sqft</label><input id="minArea" type="number" /></div>
-            <div><label for="maxArea">Max sqft</label><input id="maxArea" type="number" /></div>
-
-            <div style="display:flex;align-items:center;gap:6px">
-              <label for="wantMetro">Near Metro</label>
-              <input id="wantMetro" type="checkbox" />
-              <input id="maxWalk" type="number" min="1" value="10" style="width:72px" />
-              <span style="font-size:12px;color:var(--muted)">minutes</span>
-            </div>
-          </div>
-
-          <div class="row">
-            <div style="flex:1"><label for="amenity">Amenity contains</label><input id="amenity" placeholder="e.g. gym, pool" /></div>
-            <div style="width:180px"><label for="sort">Sort</label><select id="sort"><option value="relevance">Relevance</option><option value="newest">Newest</option><option value="priceLow">Price Low</option><option value="priceHigh">Price High</option></select></div>
-          </div>
-
-          <div class="actions">
-            <button id="apply" class="btn primary">Apply</button>
-            <button id="reset" class="btn">Reset</button>
-            <div id="activeFilters" style="margin-left:auto"></div>
-          </div>
-        </div>
-      </aside>
-
-      <section>
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-          <div id="count">0 results</div>
-          <div style="color:var(--muted);font-size:13px">Tharaga — Safe • Transparent • Verified</div>
-        </div>
-
-        <div class="results-wrap">
-          <div id="results" class="results"></div>
-          <nav id="pager"></nav>
-        </div>
-      </section>
-    </div>
-    <footer>© <span id="year"></span> Tharaga</footer>
+    <section id="results" class="results"></section>
+    <nav id="pager"></nav>
   </main>
 
+  <footer>© <span id="year"></span> Tharaga — Safe, Transparent, Verified</footer>
+
+  <!-- IMPORTANT: module import so the JS actually runs -->
   <script type="module" src="./listings.js?v=20250825"></script>
-  <script>document.getElementById('year').textContent=new Date().getFullYear();</script>
+  <script>document.getElementById("year").textContent = new Date().getFullYear();</script>
 </body>
 </html>

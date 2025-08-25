@@ -1,36 +1,59 @@
-/* app.js — lazy supabase init + helpers */
+/* app.js — lazy supabase init + helpers (merged with supabase fetch logic)
+   - Exports: initConfig, fetchProperties, fetchSheetOrLocal, fetchMatchesById,
+              score, cardHTML, currency, normalizeRow, normalizeProperty
+   - Usage: import * as App from './app.js';
+           await App.initConfig(); const props = await App.fetchProperties();
+*/
+
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
+/* ---------- runtime config & client ---------- */
 let CFG = (typeof window !== "undefined" && window.CONFIG) || {};
 let supabase = null;
 export const MAX_SCORE = 40;
+
+const DEFAULT_SUPABASE_URL = "https://wedevtjjmdvngyshqdro.supabase.co"; // keep as fallback only
 const SHEET_CSV_URL = () => (CFG.SHEET_CSV_URL || null);
 const METRO_JSON_URL = () => (CFG.METRO_JSON_URL || "./metro.json");
 
-export async function initConfig(){
-  // If window.CONFIG already contains keys, use them
+/**
+ * initConfig - attempt to populate CFG and initialize supabase client
+ *  - prefers window.CONFIG (if contains SUPABASE_ANON_KEY)
+ *  - else tries /.netlify/functions/config (useful for Netlify)
+ *  - returns { cfg, supabasePresent }
+ */
+export async function initConfig() {
+  // if window.CONFIG already has keys, merge and use
   if (typeof window !== "undefined" && window.CONFIG && window.CONFIG.SUPABASE_ANON_KEY) {
-    CFG = Object.assign({}, window.CONFIG, CFG);
+    CFG = Object.assign({}, CFG, window.CONFIG);
   } else {
-    // try fetching from Netlify function / server endpoint
+    // try server-provided config endpoint (Netlify function or proxy)
     try {
       const r = await fetch('/.netlify/functions/config');
       if (r.ok) {
         const json = await r.json();
         CFG = Object.assign({}, CFG, json);
       }
-    } catch(e){
-      // ignore — will fallback to local json
-      console.warn('config fetch failed', e);
+    } catch (e) {
+      // silently fail — will rely on window.CONFIG or fallback to local data
+      console.warn('initConfig: server config fetch failed (this is OK if you run local):', e?.message || e);
     }
   }
 
-  // build supabase client if we have creds
+  // ensure keys default safely (don't leak service role)
+  CFG.SUPABASE_URL = CFG.SUPABASE_URL || DEFAULT_SUPABASE_URL;
+  CFG.SUPABASE_ANON_KEY = CFG.SUPABASE_ANON_KEY || CFG.SUPABASE_ANONKEY || CFG.SUPABASE_ANON || "";
+
   if (CFG.SUPABASE_URL && CFG.SUPABASE_ANON_KEY && !supabase) {
     try {
       supabase = createClient(CFG.SUPABASE_URL, CFG.SUPABASE_ANON_KEY);
-    } catch(e){ console.warn('supabase init failed', e); supabase = null; }
+      console.info('initConfig: Supabase client initialized');
+    } catch (e) {
+      console.warn('initConfig: supabase init failed:', e?.message || e);
+      supabase = null;
+    }
   }
+
   return { cfg: CFG, supabasePresent: !!supabase };
 }
 
@@ -38,17 +61,18 @@ export async function initConfig(){
 export const currency = (n) =>
   new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(n);
 
-function toNumber(v){ if(v===null||v===undefined||v==="") return undefined; const n=Number(String(v).replace(/[^\d.-]/g,"").trim()); return Number.isFinite(n)?n:undefined; }
-function toArray(val){
+function toNumber(v) { if (v === null || v === undefined || v === "") return undefined; const n = Number(String(v).replace(/[^\d.-]/g, "").trim()); return Number.isFinite(n) ? n : undefined; }
+function toArray(val) {
   if (Array.isArray(val)) return val.filter(Boolean);
   if (!val) return [];
   try { const p = JSON.parse(val); if (Array.isArray(p)) return p.filter(Boolean); } catch {}
-  return String(val).split(",").map(s=>s.trim()).filter(Boolean);
+  return String(val).split(",").map(s => s.trim()).filter(Boolean);
 }
 
-/* ---------- normalizer ---------- */
+/* ---------- normalizer (keeps mapping robust) ---------- */
 export function normalizeRow(row = {}) {
-  const r = (k) => row[k] ?? row[k.replace(/[A-Z]/g, m => "_"+m.toLowerCase())] ?? row[k.replace(/_([a-z])/g,(_,c)=>c.toUpperCase())];
+  const r = (k) => row[k] ?? row[k.replace(/[A-Z]/g, m => "_" + m.toLowerCase())] ?? row[k.replace(/_([a-z])/g, (_, c) => c.toUpperCase())];
+
   const price_inr = toNumber(r("priceINR")) ?? toNumber(r("price_inr"));
   const sqft = toNumber(r("carpetAreaSqft")) ?? toNumber(r("sqft"));
   const pricePerSqft =
@@ -86,21 +110,64 @@ export function normalizeRow(row = {}) {
     docsLink: r("docs_link") || r("docsLink") || "",
     owner: {
       name: r("owner_name") || r("ownerName") || r("owner") || "Owner",
-      phone: r("owner_phone") || r("ownerPhone") || "",
-      whatsapp: ""
+      phone: r("owner_phone") || r("ownerPhone") || r("owner") || "",
+      whatsapp: r("owner_whatsapp") || r("ownerWhatsapp") || ""
     },
     postedAt: r("listed_at") || r("postedAt") || r("listedAt") || undefined,
     summary: r("description") || r("summary") || ""
   };
 }
 
-/* ---------- fetchers ---------- */
+/* alias kept for compatibility with older code */
+export function normalizeProperty(row) { return normalizeRow(row); }
+
+/* ---------- fetchers (Supabase-first with server/proxy fallback) ---------- */
+
+/**
+ * fetchFromSupabase - direct client-side supabase fetch (requires anon key present)
+ * returns [] on failure or if supabase is not initialized
+ */
 async function fetchFromSupabase({ limit = 1000 } = {}) {
   if (!supabase) return [];
-  const { data, error } = await supabase.from("properties").select("*").limit(limit);
-  if (error) { console.warn("Supabase fetch error:", error); return []; }
-  return (data || []).map(normalizeRow);
+  try {
+    const { data, error } = await supabase.from("properties").select("*").limit(limit);
+    if (error) {
+      console.warn("fetchFromSupabase: error", error);
+      return [];
+    }
+    if (!Array.isArray(data)) return [];
+    return data.map(normalizeRow);
+  } catch (e) {
+    console.warn("fetchFromSupabase: exception", e?.message || e);
+    return [];
+  }
 }
+
+/**
+ * fetchFromServerProxy - prefer calling a serverless endpoint that uses service_role key
+ * helpful when you don't want to expose anon key or RLS blocks client
+ */
+async function fetchFromServerProxy() {
+  try {
+    const r = await fetch('/.netlify/functions/properties');
+    if (!r.ok) {
+      // not fatal — allow fallbacks
+      console.warn("fetchFromServerProxy: non-ok response", r.status);
+      return [];
+    }
+    const json = await r.json();
+    if (!Array.isArray(json)) return [];
+    return json.map(normalizeRow);
+  } catch (e) {
+    // silent fallback
+    // console.warn('fetchFromServerProxy failed', e);
+    return [];
+  }
+}
+
+/**
+ * fetchFromSheetCSV - fetch published sheet csv (optional)
+ */
 async function fetchFromSheetCSV() {
   const url = CFG.SHEET_CSV_URL || null;
   if (!url) return [];
@@ -116,8 +183,15 @@ async function fetchFromSheetCSV() {
       return normalizeRow(obj);
     });
     return rows;
-  } catch(e){ console.warn("Sheet CSV fallback failed:", e); return []; }
+  } catch (e) {
+    console.warn("fetchFromSheetCSV failed:", e?.message || e);
+    return [];
+  }
 }
+
+/**
+ * fetchFromLocalJSON - local fallback (data.json)
+ */
 async function fetchFromLocalJSON() {
   try {
     const res = await fetch("./data.json", { cache: "no-store" });
@@ -125,19 +199,84 @@ async function fetchFromLocalJSON() {
     const json = await res.json();
     const arr = Array.isArray(json) ? json : (Array.isArray(json.properties) ? json.properties : []);
     return arr.map(normalizeRow);
-  } catch(e){ console.warn("Local JSON fallback failed:", e); return []; }
+  } catch (e) {
+    console.warn("fetchFromLocalJSON failed:", e?.message || e);
+    return [];
+  }
 }
 
-export async function fetchProperties(){
-  // priority: supabase -> sheet -> local
-  const supa = await fetchFromSupabase(); if (supa.length) return supa;
-  const sheet = await fetchFromSheetCSV(); if (sheet.length) return sheet;
-  return await fetchFromLocalJSON();
+/**
+ * fetchSheetOrLocal - wrapper returning { properties: [...] } shape (backwards compat)
+ */
+export async function fetchSheetOrLocal() {
+  const sheet = await fetchFromSheetCSV();
+  if (sheet && sheet.length) return { properties: sheet };
+  const local = await fetchFromLocalJSON();
+  return { properties: local };
 }
 
-/* ---------- metro support ---------- */
+/**
+ * fetchMatchesById - tries endpoint(s) then supabase ai_matches table as fallback
+ */
+export async function fetchMatchesById(matchId) {
+  if (!matchId) return null;
+  try {
+    const r1 = await fetch(`/api/matches/${encodeURIComponent(matchId)}`);
+    if (r1.ok) return await r1.json();
+  } catch (e) {}
+  try {
+    const r2 = await fetch(`/api/matches?id=${encodeURIComponent(matchId)}`);
+    if (r2.ok) return await r2.json();
+  } catch (e) {}
+  if (supabase) {
+    try {
+      const { data, error } = await supabase.from("ai_matches").select("results").eq("id", matchId).limit(1);
+      if (error) { console.warn("fetchMatchesById supabase error:", error); return null; }
+      if (Array.isArray(data) && data.length) return data[0];
+    } catch (e) { console.warn("fetchMatchesById supabase fallback error:", e); }
+  }
+  return null;
+}
+
+/**
+ * fetchProperties - the primary loader used by listings.js and UI.
+ * Priority:
+ *  1) server proxy (Netlify function) - avoids client keys & RLS
+ *  2) client-side Supabase (if anon key present)
+ *  3) sheet CSV
+ *  4) local data.json
+ */
+export async function fetchProperties() {
+  // 1) server proxy (preferred for production)
+  const server = await fetchFromServerProxy();
+  if (server && server.length) {
+    console.info('fetchProperties: using server proxy data count=', server.length);
+    return server;
+  }
+
+  // 2) client-side supabase
+  const supa = await fetchFromSupabase();
+  if (supa && supa.length) {
+    console.info('fetchProperties: using client supabase data count=', supa.length);
+    return supa;
+  }
+
+  // 3) sheet CSV
+  const sheet = await fetchFromSheetCSV();
+  if (sheet && sheet.length) {
+    console.info('fetchProperties: using sheet csv data count=', sheet.length);
+    return sheet;
+  }
+
+  // 4) local JSON fallback
+  const local = await fetchFromLocalJSON();
+  console.info('fetchProperties: using local json data count=', local.length);
+  return local;
+}
+
+/* ---------- metro helpers (kept) ---------- */
 let METRO = null;
-export async function loadMetro(){
+export async function loadMetro() {
   if (METRO !== null) return METRO;
   try {
     const res = await fetch(METRO_JSON_URL(), { cache: "no-store" });
@@ -147,16 +286,16 @@ export async function loadMetro(){
     return METRO;
   } catch { METRO = []; return METRO; }
 }
-export function haversineKm(lat1, lon1, lat2, lon2){
+export function haversineKm(lat1, lon1, lat2, lon2) {
   const toRad = d => d * Math.PI/180, R = 6371;
   const dLat = toRad(lat2-lat1), dLon = toRad(lon2-lon1);
   const a = Math.sin(dLat/2)**2 + Math.cos(toRad(lat1))*Math.cos(toRad(lat2))*Math.sin(dLon/2)**2;
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)); return R*c;
 }
-export function nearestMetroKm(lat, lng){
+export function nearestMetroKm(lat, lng) {
   if (!Number.isFinite(lat) || !Number.isFinite(lng) || !METRO?.length) return null;
   let best = Infinity;
-  for (const s of METRO){
+  for (const s of METRO) {
     const stationLat = Number(s.lat ?? s.latitude);
     const stationLng = Number(s.lng ?? s.longitude);
     if (!Number.isFinite(stationLat) || !Number.isFinite(stationLng)) continue;
@@ -166,8 +305,8 @@ export function nearestMetroKm(lat, lng){
   return Number.isFinite(best) ? best : null;
 }
 
-/* ---------- score + card ---------- */
-export function score(p, q = "", amenity = "", opts = {}){
+/* ---------- scoring + cardHTML (kept + exports) ---------- */
+export function score(p, q = "", amenity = "", opts = {}) {
   if (typeof q === "object" && q) { opts = q; amenity = q.amenity || ""; q = q.q || ""; }
 
   let s = 0;
@@ -196,12 +335,12 @@ export function score(p, q = "", amenity = "", opts = {}){
   return Math.max(0, Math.min(MAX_SCORE, s));
 }
 
-function escapeHtml(s){ if(!s && s!==0) return ""; return String(s).replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;"); }
+function escapeHtml(s) { if(!s && s!==0) return ""; return String(s).replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;"); }
 
 export function cardHTML(p, s) {
   const img = (p.images && p.images[0]) || "";
-  const meta = [`${p.bhk||''} BHK`, `${p.carpetAreaSqft||'-'} sqft`, p.furnished||'', p.facing?`Facing ${p.facing}`:'' ].filter(Boolean)
-    .map(t=>`<span class="tag">${escapeHtml(t)}</span>`).join(' ');
+  const meta = [`${p.bhk||''} BHK`, `${p.carpetAreaSqft||'-'} sqft`, p.furnished||'', p.facing?`Facing ${p.facing}`:'' ]
+    .filter(Boolean).map(t=>`<span class="tag">${escapeHtml(t)}</span>`).join(' ');
   const price = p.priceDisplay || (p.priceINR ? currency(p.priceINR) : 'Price on request');
   const pps = p.pricePerSqftINR ? `₹${Number(p.pricePerSqftINR).toLocaleString('en-IN')}/sqft` : '';
   const badge = p.is_verified ? 'Verified' : (p.listingStatus && p.listingStatus.toLowerCase() !== 'changed' ? p.listingStatus : '');
@@ -227,3 +366,67 @@ export function cardHTML(p, s) {
     </div>
   </article>`;
 }
+
+/* ---------- minimal local cache & render helper (kept) ---------- */
+let PROPERTIES_CACHE = [];
+
+export function renderListings(listings = [], containerSelector = "#results") {
+  const container = document.querySelector(containerSelector);
+  if (!container) {
+    console.warn("renderListings: container not found:", containerSelector);
+    return;
+  }
+  const html = listings.map(p => {
+    const s = score(p, (document.getElementById('q')?.value || ""), "");
+    return cardHTML(p, s);
+  }).join("\n");
+  container.innerHTML = html || `<div class="empty">No properties found</div>`;
+}
+
+/* ---------- bootstrap utility for pages that want "one call init" ---------- */
+export async function bootstrapPropertiesAndRender(containerSelector = "#results") {
+  try {
+    await initConfig();
+    const props = await fetchProperties();
+    PROPERTIES_CACHE = props;
+    window.__THARAGA__ = window.__THARAGA__ || {};
+    window.__THARAGA__.properties = PROPERTIES_CACHE;
+    console.info("bootstrap: loaded properties count =", PROPERTIES_CACHE.length);
+    renderListings(PROPERTIES_CACHE, containerSelector);
+  } catch (e) {
+    console.error("bootstrapPropertiesAndRender failed:", e);
+  }
+}
+
+/* ---------- auto-init if page directly includes this script (kept safe) ---------- */
+if (typeof document !== "undefined") {
+  document.addEventListener("DOMContentLoaded", async () => {
+    // Only auto-init when the page wants quick rendering: guard by presence of #results
+    if (document.querySelector('#results')) {
+      try {
+        await initConfig();
+        PROPERTIES_CACHE = await fetchProperties();
+        window.__THARAGA__ = window.__THARAGA__ || {};
+        window.__THARAGA__.properties = PROPERTIES_CACHE;
+        renderListings(PROPERTIES_CACHE);
+      } catch (e) {
+        console.error("auto init error:", e);
+      }
+    }
+  });
+}
+
+/* ---------- exports (explicit) ---------- */
+export {
+  fetchProperties,
+  fetchSheetOrLocal,
+  fetchMatchesById,
+  score,
+  cardHTML,
+  currency,
+  normalizeRow,
+  normalizeProperty,
+  initConfig,
+  bootstrapPropertiesAndRender,
+  renderListings
+};

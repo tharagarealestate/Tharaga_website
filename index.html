@@ -3,193 +3,51 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Tharaga — Property Listing</title>
+  <title>Tharaga — Home</title>
   <style>
-    :root {
-      --muted:#6b7280; --ring:#e5e7eb; --card:#ffffff; --bg:#fafafa;
-      --primary:#0e7afe; --radius:12px;
+    body {
+      font-family: system-ui, sans-serif;
+      margin: 0;
+      padding: 0;
+      background: #fafafa;
+      color: #222;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      text-align: center;
+      flex-direction: column;
     }
-    *{box-sizing:border-box}
-    body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,sans-serif;background:var(--bg);color:#111;margin:0}
-    header{padding:16px 20px;border-bottom:1px solid var(--ring);background:#fff;position:sticky;top:0;z-index:5}
-    main{display:grid;gap:16px;padding:16px;max-width:1200px;margin:0 auto}
-    .filters{display:grid;gap:12px;background:#fff;border:1px solid var(--ring);border-radius:var(--radius);padding:12px}
-    .row{display:flex;flex-wrap:wrap;gap:10px}
-    .field{display:flex;flex-direction:column;gap:6px;min-width:160px}
-    label{font-size:12px;color:var(--muted)}
-    input, select{
-      border:1px solid var(--ring);border-radius:10px;padding:8px 10px;background:#fff;min-height:38px
+    h1 { font-size: 2rem; margin-bottom: 1rem; }
+    p  { max-width: 600px; margin-bottom: 2rem; }
+    nav a {
+      margin: 0 1rem;
+      text-decoration: none;
+      font-weight: 500;
+      color: #0055ff;
     }
-    select[multiple]{min-width:220px;min-height:80px}
-    .actions{display:flex;gap:10px;margin-top:6px}
-    button.btn{border:1px solid var(--ring);background:#fff;border-radius:10px;padding:8px 14px;cursor:pointer}
-    button.primary{background:var(--primary);color:#fff;border-color:var(--primary)}
-    .pillbar{display:flex;gap:10px;flex-wrap:wrap;max-width:var(--maxw);width:100%;justify-content:center}
-    .filter-pill{padding:6px 10px;border:1px solid var(--ring);border-radius:999px;background:#fff;cursor:pointer}
-    .filter-pill.active{background:#eef4ff;border-color:#cfe0ff}
-    #activeFilters{display:flex;flex-wrap:wrap;gap:6px}
-    .tag{border:1px solid var(--ring);background:#fff;border-radius:999px;padding:4px 8px;font-size:12px;color:#333}
-    .results{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px}
-    .card{border:1px solid var(--ring);border-radius:14px;background:#fff;overflow:hidden}
-    .card-img{position:relative;aspect-ratio:16/9;background:#f3f4f6}
-    .card-img img{width:100%;height:100%;object-fit:cover;display:block}
-    .badge.ribbon{position:absolute;top:8px;left:-6px;background:#10b981;color:#fff;padding:6px 10px;border-top-right-radius:8px;border-bottom-right-radius:8px;font-size:12px}
-    .score{position:absolute;bottom:8px;right:8px}
-    .empty{padding:30px;text-align:center;color:var(--muted)}
-    #pager{display:flex;gap:8px;justify-content:center}
-    .page{border:1px solid var(--ring);background:#fff;border-radius:10px;padding:6px 10px;cursor:pointer}
-    .page.active{background:#eef4ff;border-color:#cfe0ff}
-    footer{color:var(--muted);font-size:12px;padding:12px;text-align:center}
+    nav a:hover { text-decoration: underline; }
+    footer { margin-top: 2rem; font-size: 0.9rem; color: #666; }
   </style>
-  <script>
-    /* Optional runtime config without editing JS files */
-    window.CONFIG = {
-      // If you have a metro JSON file, keep it beside index.html as metro.json
-      METRO_JSON_URL: "./metro.json",
-      // If you have a CSV or a published-sheet CSV, set it; else keep null
-      SHEET_CSV_URL: null,
-      // Supabase: set only if you want to pull from DB directly on the client
-      SUPABASE_URL: "https://wedevtjjmdvngyshqdro.supabase.co",
-      SUPABASE_ANON_KEY: "" // leave blank for demo/local JSON
-    };
-  </script>
 </head>
 <body>
-  <header>
-    <div class="row" style="justify-content:space-between;align-items:center">
-      <strong>Tharaga — Verified Properties</strong>
-      <div class="pillbar">
-        <button class="filter-pill active" data-type="all">All</button>
-        <button class="filter-pill" data-type="buy">Buy</button>
-        <button class="filter-pill" data-type="rent">Rent</button>
-        <button class="filter-pill" data-type="commercial">Commercial</button>
-      </div>
-    </div>
-  </header>
-
-  <main>
-    <section class="filters">
-      <div class="row">
-        <div class="field" style="flex:1 1 260px">
-          <label for="q">Search</label>
-          <input id="q" placeholder="eg. 3 bhk villa in Coimbatore near metro" />
-        </div>
-
-        <div class="field">
-          <label for="city">City (multi)</label>
-          <select id="city" multiple></select>
-        </div>
-
-        <div class="field">
-          <label for="locality">Locality (multi)</label>
-          <select id="locality" multiple>
-            <option value="All" selected>All</option>
-          </select>
-        </div>
-
-        <div class="field">
-          <label for="ptype">Type</label>
-          <select id="ptype">
-            <option value="">Any</option>
-            <option>Apartment</option>
-            <option>Villa</option>
-            <option>Plot</option>
-            <option>Independent House</option>
-          </select>
-        </div>
-
-        <div class="field">
-          <label for="bhk">BHK</label>
-          <select id="bhk">
-            <option value="">Any</option>
-            <option>1</option><option>2</option><option>3</option><option>4</option><option>5</option>
-          </select>
-        </div>
-
-        <div class="field">
-          <label for="furnished">Furnished</label>
-          <select id="furnished">
-            <option value="">Any</option>
-            <option>Furnished</option>
-            <option>Semi-Furnished</option>
-            <option>Unfurnished</option>
-          </select>
-        </div>
-
-        <div class="field">
-          <label for="facing">Facing</label>
-          <select id="facing">
-            <option value="">Any</option>
-            <option>East</option><option>West</option><option>North</option><option>South</option>
-          </select>
-        </div>
-
-        <div class="field">
-          <label>Price (INR)</label>
-          <div class="row" style="gap:6px">
-            <input id="minPrice" type="number" placeholder="Min" style="width:120px">
-            <input id="maxPrice" type="number" placeholder="Max" style="width:120px">
-          </div>
-        </div>
-
-        <div class="field">
-          <label>Area (sqft)</label>
-          <div class="row" style="gap:6px">
-            <input id="minArea" type="number" placeholder="Min" style="width:120px">
-            <input id="maxArea" type="number" placeholder="Max" style="width:120px">
-          </div>
-        </div>
-
-        <!-- Metro: NoBroker-like -->
-        <div class="field">
-          <label for="wantMetro">Near Metro</label>
-          <div class="row" style="gap:6px;align-items:center">
-            <input id="wantMetro" type="checkbox" />
-            <span style="font-size:12px;color:var(--muted)">walk ≤</span>
-            <input id="maxWalk" type="number" min="1" value="10" style="width:72px">
-            <span style="font-size:12px;color:var(--muted)">minutes</span>
-          </div>
-        </div>
-
-        <div class="field">
-          <label for="amenity">Amenity contains</label>
-          <input id="amenity" placeholder="e.g. gym, pool, lift" />
-        </div>
-
-        <div class="field">
-          <label for="sort">Sort</label>
-          <select id="sort">
-            <option value="relevance">Relevance</option>
-            <option value="newest">Newest</option>
-            <option value="priceLow">Price: Low → High</option>
-            <option value="priceHigh">Price: High → Low</option>
-            <option value="areaHigh">Area: High → Low</option>
-          </select>
-        </div>
-      </div>
-
-      <div class="actions">
-        <button id="apply" class="btn primary">Apply</button>
-        <button id="reset" class="btn">Reset</button>
-        <!-- Optional experimental AI toggle: -->
-        <!-- <label style="display:flex;align-items:center;gap:6px"><input id="aiToggle" type="checkbox"> AI Relevance</label> -->
-      </div>
-
-      <div id="activeFilters" style="margin-top:6px"></div>
-    </section>
-
-    <section class="row" style="justify-content:space-between;align-items:center">
-      <div id="count">0 results</div>
-    </section>
-
-    <section id="results" class="results"></section>
-    <nav id="pager"></nav>
-  </main>
-
-  <footer>© <span id="year"></span> Tharaga — Safe, Transparent, Verified</footer>
-
-  <!-- IMPORTANT: module import so the JS actually runs -->
-  <script type="module" src="./listings.js?v=20250825"></script>
-  <script>document.getElementById("year").textContent = new Date().getFullYear();</script>
+  <h1>Welcome to Tharaga</h1>
+  <p>
+    This is the unified website. Use the links below or Durable can embed
+    each section directly using its own route.
+  </p>
+  <nav>
+    <a href="/about/">About</a>
+    <a href="/buyer-form/">Buyer Form</a>
+    <a href="/property-listing/">Properties</a>
+    <a href="/rating/">Rating</a>
+    <a href="/reel-grid/">Reels</a>
+    <a href="/registration/">Registration</a>
+    <a href="/search-filter-home/">Search Filter</a>
+  </nav>
+  <footer>© <span id="year"></span> Tharaga</footer>
+  <script>
+    document.getElementById("year").textContent = new Date().getFullYear();
+  </script>
 </body>
 </html>

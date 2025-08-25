@@ -1,7 +1,6 @@
 [build]
   command = ""
   publish = "."   # Root folder where your index.html exists
-  functions = "functions"
 
 [dev]
   command = "npm run dev"

@@ -1,4 +1,5 @@
-// listings.js — the renderer
+// listings.js — main renderer (baseline you asked to keep + v3 pill logic integrated)
+
 import * as App from './app.js?v=20250825';
 
 const PAGE_SIZE = 9;
@@ -12,17 +13,19 @@ function setLocalityAllSelected(){
   if (!el) return;
   Array.from(el.options).forEach(o => o.selected = (o.value === 'All'));
 }
+
 function hydrateCityOptions(){
   const sel = document.querySelector('#city');
   if (!sel) return;
   const cities = Array.from(new Set(ALL.map(p=>p.city).filter(Boolean))).sort();
   sel.innerHTML = cities.map(c=>`<option value="${c}">${c}</option>`).join('');
-  sel.addEventListener('change', ()=>{
+  sel.addEventListener('change', ()=> {
     const selectedCities = Array.from(sel.selectedOptions).map(o=>o.value);
     hydrateLocalityOptions(selectedCities);
     PAGE=1; apply();
   });
 }
+
 function hydrateLocalityOptions(selectedCities){
   const localitySelect = document.querySelector('#locality');
   if (!localitySelect) return;
@@ -31,6 +34,7 @@ function hydrateLocalityOptions(selectedCities){
   localitySelect.innerHTML = `<option value="All" selected>All</option>` + localities.map(l=>`<option value="${l}">${l}</option>`).join('');
   setLocalityAllSelected();
 }
+
 function activeFilterBadges(filters){
   const wrap = document.querySelector('#activeFilters'); if(!wrap) return;
   const parts = [];
@@ -57,17 +61,17 @@ function collectFilters(){
     ? Array.from(document.querySelector('#locality').selectedOptions).map(o=>o.value)
     : [];
 
-  const minP = parseInt(document.querySelector('#minPrice')?.value||0) || 0;
-  const maxP = parseInt(document.querySelector('#maxPrice')?.value||0) || 0;
+  const minP = Number(document.querySelector('#minPrice')?.value || 0) || 0;
+  const maxP = Number(document.querySelector('#maxPrice')?.value || 0) || 0;
   const ptype = document.querySelector('#ptype')?.value || '';
   const bhk = document.querySelector('#bhk')?.value || '';
   const furnished = document.querySelector('#furnished')?.value || '';
   const facing = document.querySelector('#facing')?.value || '';
-  const minA = parseInt(document.querySelector('#minArea')?.value||0) || 0;
-  const maxA = parseInt(document.querySelector('#maxArea')?.value||0) || 0;
+  const minA = Number(document.querySelector('#minArea')?.value || 0) || 0;
+  const maxA = Number(document.querySelector('#maxArea')?.value || 0) || 0;
   const amenity = (document.querySelector('#amenity')?.value || "").trim();
   const wantMetro = !!document.querySelector('#wantMetro')?.checked;
-  const maxWalk = parseInt(document.querySelector('#maxWalk')?.value||10) || 10;
+  const maxWalk = Number(document.querySelector('#maxWalk')?.value || 10) || 10;
   const sort = document.querySelector('#sort')?.value || 'relevance';
 
   activeFilterBadges({
@@ -108,8 +112,7 @@ function apply(){
     if (F.minA && (p.carpetAreaSqft||0) < F.minA) return false;
     if (F.maxA && (p.carpetAreaSqft||0) > F.maxA) return false;
     if (F.amenity && !(p.amenities||[]).some(a=>a.toLowerCase().includes(F.amenity.toLowerCase()))) return false;
-    if (F.wantMetro && !Number.isFinite(p._metroKm)) return false; // require metro distance known
-    // also hard filter by metro max walk if enabled
+    if (F.wantMetro && !Number.isFinite(p._metroKm)) return false;
     if (F.wantMetro && Number.isFinite(p._metroKm) && (p._metroKm*12) > F.maxWalk) return false;
     return true;
   }).map(p=>({ p, s: App.score(p, { q: F.q, amenity: F.amenity, wantMetro: F.wantMetro, maxWalk: F.maxWalk }) }));
@@ -131,7 +134,14 @@ function apply(){
   const slice = filtered.slice(start, start+PAGE_SIZE);
 
   const res = document.querySelector('#results');
-  if (res) res.innerHTML = slice.map(({p,s})=> App.cardHTML(p, s)).join('') || `<div class="empty">No properties found</div>`;
+  if (res) {
+    try {
+      res.innerHTML = slice.map(({p,s})=> App.cardHTML(p, s)).join('') || `<div class="empty">No properties found</div>`;
+    } catch (e) {
+      console.error("render error:", e);
+      res.innerHTML = `<div class="empty">Error rendering results</div>`;
+    }
+  }
 
   const pager = document.querySelector('#pager');
   if (pager) {
@@ -140,6 +150,13 @@ function apply(){
       return `<button class="${cls}" data-page="${n}">${n}</button>`;
     }).join('');
   }
+
+  // In listings.js -> inside apply() filter loop
+if (F.wantMetro) {
+  const mins = Number(p.nearest_metro_minutes);
+  if (!Number.isFinite(mins) || mins > F.maxWalk) return false;
+}
+
 }
 
 function goto(n){ PAGE = n; apply(); }
@@ -161,7 +178,7 @@ function wireUI(){
     const n=Number(b.dataset.page||b.textContent); if(n) goto(n);
   });
 
-  // ======== v3 pill logic: accessibility + persistence + keyboard ========
+  // v3 pill logic: accessibility + persistence + keyboard
   (function setupPills(){
     const pills = document.querySelectorAll('.filter-pill');
     if (!pills.length) return;
@@ -180,7 +197,6 @@ function wireUI(){
       localStorage.setItem(STORAGE_KEY, type);
     }
 
-    // Initialize ARIA / keyboard and events
     pills.forEach(pill => {
       pill.setAttribute('role','button');
       pill.setAttribute('tabindex','0');
@@ -188,7 +204,7 @@ function wireUI(){
 
       pill.addEventListener('click', () => {
         setActivePill(pill);
-        debApply(); // debounce re-render
+        debApply();
       });
 
       pill.addEventListener('keydown', (e) => {
@@ -200,7 +216,6 @@ function wireUI(){
       });
     });
 
-    // Activate saved pill on load (fallback to "all")
     const toActivate =
       document.querySelector(`.filter-pill[data-type="${savedType}"]`) ||
       document.querySelector('.filter-pill[data-type="all"]') ||
@@ -208,7 +223,6 @@ function wireUI(){
 
     if (toActivate) setActivePill(toActivate);
   })();
-  // ======== end v3 pill logic ========
 
   document.querySelector('#reset')?.addEventListener('click', ()=>{
     ['q','minPrice','maxPrice','ptype','bhk','furnished','facing','minArea','maxArea','amenity'].forEach(id=>{
@@ -222,7 +236,6 @@ function wireUI(){
     // Reset pill to "All" and persist
     const allPill = document.querySelector('.filter-pill[data-type="all"]');
     if (allPill) {
-      // mimic setActivePill without re-declaring helpers: update classes + aria + storage
       document.querySelectorAll('.filter-pill').forEach(p => {
         p.classList.remove('active');
         p.setAttribute('aria-pressed','false');
@@ -237,24 +250,31 @@ function wireUI(){
 }
 
 async function enrichWithMetro(){
-  const stations = await App.loadMetro();
-  if (!stations.length) return; // no metro dataset → skip
-  for (const p of ALL){
-    if (Number.isFinite(p.lat) && Number.isFinite(p.lng)){
-      p._metroKm = App.nearestMetroKm(p.lat, p.lng);
-    } else {
-      p._metroKm = null;
+  try {
+    const stations = await App.loadMetro();
+    if (!stations.length) return;
+    for (const p of ALL){
+      if (Number.isFinite(p.lat) && Number.isFinite(p.lng)){
+        p._metroKm = App.nearestMetroKm(p.lat, p.lng);
+      } else {
+        p._metroKm = null;
+      }
     }
+  } catch (e) {
+    console.warn("enrichWithMetro failed:", e);
   }
 }
 
 async function init(){
   try{
+    // ensure app config/supabase client is ready
+    await App.initConfig();
     ALL = await App.fetchProperties();
     hydrateCityOptions(); hydrateLocalityOptions([]);
     await enrichWithMetro();
   } catch(e){
     console.error("Init failed:", e);
+    // still try to wire UI so user can interact with the page
   }
   wireUI();
   apply();

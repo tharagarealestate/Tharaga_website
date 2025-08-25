@@ -1,4 +1,3 @@
-// netlify/functions/config.js
 exports.handler = async function(event) {
   return {
     statusCode: 200,

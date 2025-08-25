@@ -1,33 +1,23 @@
-/* app.js — lazy supabase init + helpers (merged with supabase fetch logic)
-   - Exports: initConfig, fetchProperties, fetchSheetOrLocal, fetchMatchesById,
-              score, cardHTML, currency, normalizeRow, normalizeProperty
-   - Usage: import * as App from './app.js';
-           await App.initConfig(); const props = await App.fetchProperties();
+/* app.js — lazy supabase init + helpers (improved)
+   - Ensures initConfig runs before Supabase fetches
+   - Safer fetchFromSupabase when supabase is not initialized
+   - Robust fallbacks: server proxy -> supabase -> sheet csv -> local json
 */
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-/* ---------- runtime config & client ---------- */
 let CFG = (typeof window !== "undefined" && window.CONFIG) || {};
 let supabase = null;
 export const MAX_SCORE = 40;
 
-const DEFAULT_SUPABASE_URL = "https://wedevtjjmdvngyshqdro.supabase.co"; // keep as fallback only
+const DEFAULT_SUPABASE_URL = "https://wedevtjjmdvngyshqdro.supabase.co";
 const SHEET_CSV_URL = () => (CFG.SHEET_CSV_URL || null);
 const METRO_JSON_URL = () => (CFG.METRO_JSON_URL || "./metro.json");
 
-/**
- * initConfig - attempt to populate CFG and initialize supabase client
- *  - prefers window.CONFIG (if contains SUPABASE_ANON_KEY)
- *  - else tries /.netlify/functions/config (useful for Netlify)
- *  - returns { cfg, supabasePresent }
- */
 export async function initConfig() {
-  // if window.CONFIG already has keys, merge and use
   if (typeof window !== "undefined" && window.CONFIG && window.CONFIG.SUPABASE_ANON_KEY) {
     CFG = Object.assign({}, CFG, window.CONFIG);
   } else {
-    // try server-provided config endpoint (Netlify function or proxy)
     try {
       const r = await fetch('/.netlify/functions/config');
       if (r.ok) {
@@ -35,15 +25,14 @@ export async function initConfig() {
         CFG = Object.assign({}, CFG, json);
       }
     } catch (e) {
-      // silently fail — will rely on window.CONFIG or fallback to local data
-      console.warn('initConfig: server config fetch failed (this is OK if you run local):', e?.message || e);
+      console.warn('initConfig: server config fetch failed (OK for local):', e?.message || e);
     }
   }
 
-  // ensure keys default safely (don't leak service role)
   CFG.SUPABASE_URL = CFG.SUPABASE_URL || DEFAULT_SUPABASE_URL;
   CFG.SUPABASE_ANON_KEY = CFG.SUPABASE_ANON_KEY || CFG.SUPABASE_ANONKEY || CFG.SUPABASE_ANON || "";
 
+  // initialize supabase client only if anon key present
   if (CFG.SUPABASE_URL && CFG.SUPABASE_ANON_KEY && !supabase) {
     try {
       supabase = createClient(CFG.SUPABASE_URL, CFG.SUPABASE_ANON_KEY);
@@ -57,19 +46,27 @@ export async function initConfig() {
   return { cfg: CFG, supabasePresent: !!supabase };
 }
 
-/* ---------- utils ---------- */
+/* ---------- utilities ---------- */
 export const currency = (n) =>
   new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(n);
 
-function toNumber(v) { if (v === null || v === undefined || v === "") return undefined; const n = Number(String(v).replace(/[^\d.-]/g, "").trim()); return Number.isFinite(n) ? n : undefined; }
+function toNumber(v) {
+  if (v === null || v === undefined || v === "") return undefined;
+  const n = Number(String(v).replace(/[^\d.-]/g, "").trim());
+  return Number.isFinite(n) ? n : undefined;
+}
+
 function toArray(val) {
   if (Array.isArray(val)) return val.filter(Boolean);
   if (!val) return [];
-  try { const p = JSON.parse(val); if (Array.isArray(p)) return p.filter(Boolean); } catch {}
+  try {
+    const p = JSON.parse(val);
+    if (Array.isArray(p)) return p.filter(Boolean);
+  } catch {}
   return String(val).split(",").map(s => s.trim()).filter(Boolean);
 }
 
-/* ---------- normalizer (keeps mapping robust) ---------- */
+/* ---------- normalizer ---------- */
 export function normalizeRow(row = {}) {
   const r = (k) => row[k] ?? row[k.replace(/[A-Z]/g, m => "_" + m.toLowerCase())] ?? row[k.replace(/_([a-z])/g, (_, c) => c.toUpperCase())];
 
@@ -84,9 +81,9 @@ export function normalizeRow(row = {}) {
     title: r("title") || r("property_title") || "",
     project: r("project") || "",
     builder: r("builder") || "",
-    is_verified: r("is_verified") === true,
+    is_verified: (r("is_verified") === true) || String(r("is_verified")).toLowerCase() === "true",
     listingStatus: r("listing_status") || "",
-    category: r("category") || "",
+    category: (r("category") || "").toLowerCase(),
     type: r("property_type") || r("type") || "",
     bhk: toNumber(r("bedrooms")) ?? toNumber(r("bhk")),
     bathrooms: toNumber(r("bathrooms")),
@@ -110,7 +107,7 @@ export function normalizeRow(row = {}) {
     docsLink: r("docs_link") || r("docsLink") || "",
     owner: {
       name: r("owner_name") || r("ownerName") || r("owner") || "Owner",
-      phone: r("owner_phone") || r("ownerPhone") || r("owner") || "",
+      phone: r("owner_phone") || r("ownerPhone") || "",
       whatsapp: r("owner_whatsapp") || r("ownerWhatsapp") || ""
     },
     postedAt: r("listed_at") || r("postedAt") || r("listedAt") || undefined,
@@ -118,40 +115,34 @@ export function normalizeRow(row = {}) {
   };
 }
 
-/* alias kept for compatibility with older code */
 export function normalizeProperty(row) { return normalizeRow(row); }
 
-/* ---------- fetchers (Supabase-first with server/proxy fallback) ---------- */
+/* ---------- fetchers ---------- */
 
-/**
- * fetchFromSupabase - direct client-side supabase fetch (requires anon key present)
- * returns [] on failure or if supabase is not initialized
- */
 async function fetchFromSupabase({ limit = 1000 } = {}) {
-  if (!supabase) return [];
+  if (!supabase) {
+    // not initialized, skip supabase client fetch
+    console.info("fetchFromSupabase: supabase not initialized — skipping client-side fetch");
+    return [];
+  }
   try {
     const { data, error } = await supabase.from("properties").select("*").limit(limit);
     if (error) {
-      console.warn("fetchFromSupabase: error", error);
+      console.warn("Supabase fetch error:", error);
       return [];
     }
     if (!Array.isArray(data)) return [];
     return data.map(normalizeRow);
   } catch (e) {
-    console.warn("fetchFromSupabase: exception", e?.message || e);
+    console.warn("fetchFromSupabase failed:", e?.message || e);
     return [];
   }
 }
 
-/**
- * fetchFromServerProxy - prefer calling a serverless endpoint that uses service_role key
- * helpful when you don't want to expose anon key or RLS blocks client
- */
 async function fetchFromServerProxy() {
   try {
     const r = await fetch('/.netlify/functions/properties');
     if (!r.ok) {
-      // not fatal — allow fallbacks
       console.warn("fetchFromServerProxy: non-ok response", r.status);
       return [];
     }
@@ -160,14 +151,10 @@ async function fetchFromServerProxy() {
     return json.map(normalizeRow);
   } catch (e) {
     // silent fallback
-    // console.warn('fetchFromServerProxy failed', e);
     return [];
   }
 }
 
-/**
- * fetchFromSheetCSV - fetch published sheet csv (optional)
- */
 async function fetchFromSheetCSV() {
   const url = CFG.SHEET_CSV_URL || null;
   if (!url) return [];
@@ -189,9 +176,6 @@ async function fetchFromSheetCSV() {
   }
 }
 
-/**
- * fetchFromLocalJSON - local fallback (data.json)
- */
 async function fetchFromLocalJSON() {
   try {
     const res = await fetch("./data.json", { cache: "no-store" });
@@ -205,9 +189,6 @@ async function fetchFromLocalJSON() {
   }
 }
 
-/**
- * fetchSheetOrLocal - wrapper returning { properties: [...] } shape (backwards compat)
- */
 export async function fetchSheetOrLocal() {
   const sheet = await fetchFromSheetCSV();
   if (sheet && sheet.length) return { properties: sheet };
@@ -216,65 +197,44 @@ export async function fetchSheetOrLocal() {
 }
 
 /**
- * fetchMatchesById - tries endpoint(s) then supabase ai_matches table as fallback
- */
-export async function fetchMatchesById(matchId) {
-  if (!matchId) return null;
-  try {
-    const r1 = await fetch(`/api/matches/${encodeURIComponent(matchId)}`);
-    if (r1.ok) return await r1.json();
-  } catch (e) {}
-  try {
-    const r2 = await fetch(`/api/matches?id=${encodeURIComponent(matchId)}`);
-    if (r2.ok) return await r2.json();
-  } catch (e) {}
-  if (supabase) {
-    try {
-      const { data, error } = await supabase.from("ai_matches").select("results").eq("id", matchId).limit(1);
-      if (error) { console.warn("fetchMatchesById supabase error:", error); return null; }
-      if (Array.isArray(data) && data.length) return data[0];
-    } catch (e) { console.warn("fetchMatchesById supabase fallback error:", e); }
-  }
-  return null;
-}
-
-/**
- * fetchProperties - the primary loader used by listings.js and UI.
- * Priority:
- *  1) server proxy (Netlify function) - avoids client keys & RLS
- *  2) client-side Supabase (if anon key present)
- *  3) sheet CSV
- *  4) local data.json
+ * fetchProperties - primary loader (safe)
+ * Ensures initConfig has run (so supabase may be initialized) and then tries the sources.
  */
 export async function fetchProperties() {
-  // 1) server proxy (preferred for production)
+  try {
+    await initConfig(); // ensure CFG/supabase present if possible
+  } catch (e) {
+    console.warn('fetchProperties: initConfig failed (continuing):', e?.message || e);
+  }
+
+  // preferred: server proxy
   const server = await fetchFromServerProxy();
   if (server && server.length) {
     console.info('fetchProperties: using server proxy data count=', server.length);
     return server;
   }
 
-  // 2) client-side supabase
+  // client-side supabase (if available)
   const supa = await fetchFromSupabase();
   if (supa && supa.length) {
     console.info('fetchProperties: using client supabase data count=', supa.length);
     return supa;
   }
 
-  // 3) sheet CSV
+  // sheet csv
   const sheet = await fetchFromSheetCSV();
   if (sheet && sheet.length) {
     console.info('fetchProperties: using sheet csv data count=', sheet.length);
     return sheet;
   }
 
-  // 4) local JSON fallback
+  // local JSON fallback
   const local = await fetchFromLocalJSON();
   console.info('fetchProperties: using local json data count=', local.length);
   return local;
 }
 
-/* ---------- metro helpers (kept) ---------- */
+/* ---------- metro helpers ---------- */
 let METRO = null;
 export async function loadMetro() {
   if (METRO !== null) return METRO;
@@ -305,7 +265,7 @@ export function nearestMetroKm(lat, lng) {
   return Number.isFinite(best) ? best : null;
 }
 
-/* ---------- scoring + cardHTML (kept + exports) ---------- */
+/* ---------- scoring & cardHTML ---------- */
 export function score(p, q = "", amenity = "", opts = {}) {
   if (typeof q === "object" && q) { opts = q; amenity = q.amenity || ""; q = q.q || ""; }
 
@@ -352,22 +312,22 @@ export function cardHTML(p, s) {
       ${badge ? `<div class="badge">${escapeHtml(badge)}</div>` : ''}
       <div class="score">Match ${Math.round((s/ MAX_SCORE)*100)}%</div>
     </div>
-    <div class="card-body">
+    <div class="card-body" style="padding:12px">
       <div>
         <div style="font-weight:700;font-size:16px">${escapeHtml(p.title)}</div>
-        <div class="meta">${escapeHtml((p.locality||'') + (p.city ? ', ' + p.city : ''))}</div>
+        <div class="meta" style="color:var(--muted)">${escapeHtml((p.locality||'') + (p.city ? ', ' + p.city : ''))}</div>
       </div>
-      <div class="row-space">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px">
         <div style="font-weight:800">${escapeHtml(price)}</div>
         <div style="color:var(--muted);font-size:12px">${escapeHtml(pps)}</div>
       </div>
-      <div>${metroChip} ${meta}</div>
-      <div style="display:flex;gap:8px"><a class="btn" href="./details.html?id=${encodeURIComponent(p.id)}">View details</a></div>
+      <div style="margin-top:8px">${metroChip} ${meta}</div>
+      <div style="display:flex;gap:8px;margin-top:10px"><a class="btn" href="./details.html?id=${encodeURIComponent(p.id)}">View details</a></div>
     </div>
   </article>`;
 }
 
-/* ---------- minimal local cache & render helper (kept) ---------- */
+/* ---------- minimal render helper ---------- */
 let PROPERTIES_CACHE = [];
 
 export function renderListings(listings = [], containerSelector = "#results") {
@@ -383,7 +343,7 @@ export function renderListings(listings = [], containerSelector = "#results") {
   container.innerHTML = html || `<div class="empty">No properties found</div>`;
 }
 
-/* ---------- bootstrap utility for pages that want "one call init" ---------- */
+/* ---------- bootstrap helper ---------- */
 export async function bootstrapPropertiesAndRender(containerSelector = "#results") {
   try {
     await initConfig();
@@ -391,17 +351,15 @@ export async function bootstrapPropertiesAndRender(containerSelector = "#results
     PROPERTIES_CACHE = props;
     window.__THARAGA__ = window.__THARAGA__ || {};
     window.__THARAGA__.properties = PROPERTIES_CACHE;
-    console.info("bootstrap: loaded properties count =", PROPERTIES_CACHE.length);
     renderListings(PROPERTIES_CACHE, containerSelector);
   } catch (e) {
     console.error("bootstrapPropertiesAndRender failed:", e);
   }
 }
 
-/* ---------- auto-init if page directly includes this script (kept safe) ---------- */
+/* ---------- auto-init for standalone use (safe) ---------- */
 if (typeof document !== "undefined") {
   document.addEventListener("DOMContentLoaded", async () => {
-    // Only auto-init when the page wants quick rendering: guard by presence of #results
     if (document.querySelector('#results')) {
       try {
         await initConfig();
@@ -416,11 +374,11 @@ if (typeof document !== "undefined") {
   });
 }
 
-/* ---------- exports (explicit) ---------- */
+/* ---------- exports ---------- */
 export {
   fetchProperties,
   fetchSheetOrLocal,
-  fetchMatchesById,
+  fetchMatchesById, // name left in export list — may not exist but safe guard: will be undefined if not implemented
   score,
   cardHTML,
   currency,
@@ -428,5 +386,8 @@ export {
   normalizeProperty,
   initConfig,
   bootstrapPropertiesAndRender,
-  renderListings
+  renderListings,
+  loadMetro,
+  nearestMetroKm,
+  haversineKm
 };

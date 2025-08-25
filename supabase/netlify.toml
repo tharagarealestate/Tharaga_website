@@ -1,6 +1,6 @@
 [build]
-  command = "npm run build"
-  publish = "dist"   # or "build" depending on your frontend (React/Vue/Svelte)
+  command = ""
+  publish = "."   # Root folder where your index.html exists
   functions = "functions"
 
 [dev]
@@ -20,4 +20,4 @@
 [build.environment]
   NODE_VERSION = "18"
   SUPABASE_URL = "https://your-project.supabase.co"
-  SUPABASE_ANON_KEY = "your-anon-key"
+  SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndlZGV2dGpqbWR2bmd5c2hxZHJvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU0NzYwMzgsImV4cCI6MjA3MTA1MjAzOH0.Ex2c_sx358dFdygUGMVBohyTVto6fdEQ5nydDRh9m6M"

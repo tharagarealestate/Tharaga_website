@@ -56,3 +56,9 @@ pnpm-lock.yaml
 *.zip
 *.tmp
 *.bak
+
+# ==========================================
+# Custom project ignores
+# ==========================================
+# Ignore all "bckup" folders anywhere in repo
+**/bckup/

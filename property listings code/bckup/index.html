@@ -1,0 +1,194 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Tharaga — Verified Properties in Tamil Nadu</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./styles.css">
+
+    <!-- ✅ Add Leaflet -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+  <script defer src="./config.js"></script>
+  <script defer src="./app.js"></script>
+  <script defer src="./listings.js"></script>
+</head>
+<body>
+  <header class="header">
+    <div class="inner container">
+      <div class="listings-title">Discover Premium Homes in Tamil Nadu</div>
+    </div>
+  </header>
+
+  <main class="container">
+
+    <section class="filter-container compact">
+      <!-- Property Type Pills -->
+  <div class="filter-pill-row">
+    <button class="filter-pill active" data-type="buy">Buy</button>
+    <button class="filter-pill" data-type="rent">Rent</button>
+    <button class="filter-pill" data-type="commercial">Commercial</button>
+  </div>
+
+      <div class="top-row">
+  <div class="search-box">
+    <input id="q" class="input search-large" placeholder="Search by city, locality, project, landmark…">
+  </div>
+
+  <div class="price-box">
+    <label>Price (₹)</label>
+    <div class="price-range" data-min="0" data-max="20000000" data-step="100000" data-gap="200000">
+      <div class="slider-track">
+        <div class="range-progress"></div>
+      </div>
+      <input type="range" id="priceMinSlider" aria-label="Minimum price">
+      <input type="range" id="priceMaxSlider" aria-label="Maximum price">
+    </div>
+    <div class="price-values">
+      <span id="minPriceValue">₹0</span>
+      <span>–</span>
+      <span id="maxPriceValue">₹2Cr</span>
+    </div>
+    <input type="number" id="minPrice" hidden>
+    <input type="number" id="maxPrice" hidden>
+  </div>
+</div>
+
+<div class="filter-grid compact-grid">
+
+        <!-- 🔄 CHANGE #2: Locality auto-updates based on City -->
+        <div>
+          <label>Locality</label>
+          <select id="locality" multiple size="4">
+            <option value="">Select Locality</option>
+          </select>
+        </div>
+
+        <!-- Price -->
+        <!--<div>
+          <label>Price (₹)</label>
+
+          
+          <div class="price-range" data-min="0" data-max="20000000" data-step="100000" data-gap="200000">
+            <div class="slider-track">
+              <div class="range-progress"></div>
+            </div>
+            <input type="range" id="priceMinSlider" aria-label="Minimum price">
+            <input type="range" id="priceMaxSlider" aria-label="Maximum price">
+          </div>
+
+          <div class="price-values">
+            <span id="minPriceValue">₹0</span>
+            <span>–</span>
+            <span id="maxPriceValue">₹2Cr</span>
+          </div>
+
+          
+          <input type="number" id="minPrice" hidden>
+          <input type="number" id="maxPrice" hidden>
+        </div> -->
+
+        <!-- Sort -->
+        <div>
+          <label>Sort</label>
+          <select id="sort">
+            <option value="relevance">AI Relevance</option>
+            <option value="newest">Newest</option>
+            <option value="priceLow">Price: Low → High</option>
+            <option value="priceHigh">Price: High → Low</option>
+            <option value="areaHigh">Area: High → Low</option>
+          </select>
+        </div>
+
+        <!-- Type -->
+        <div>
+          <label>Type</label>
+          <select id="ptype">
+            <option value="">Any</option>
+            <option>Apartment</option>
+            <option>Villa</option>
+            <option>Plot</option>
+            <option>Independent House</option>
+          </select>
+        </div>
+
+        <!-- BHK -->
+        <div>
+          <label>BHK</label>
+          <select id="bhk">
+            <option value="">Any</option>
+            <option>1</option>
+            <option>2</option>
+            <option>3</option>
+            <option>4</option>
+            <option>5</option>
+          </select>
+        </div>
+
+        <!-- Furnished -->
+        <div>
+          <label>Furnished</label>
+          <select id="furnished">
+            <option value="">Any</option>
+            <option>Semi Furnished</option>
+            <option>Unfurnished</option>
+            <option>Fully Furnished</option>
+          </select>
+        </div>
+
+        <!-- Facing -->
+        <div>
+          <label>Facing</label>
+          <select id="facing">
+            <option value="">Any</option>
+            <option>East</option>
+            <option>West</option>
+            <option>North</option>
+            <option>South</option>
+          </select>
+        </div>
+
+        <!-- Area -->
+        <div>
+          <label>Area (sqft)</label>
+          <div class="grid-2">
+            <input id="minArea" class="input" type="number" placeholder="Min">
+            <input id="maxArea" class="input" type="number" placeholder="Max">
+          </div>
+        </div>
+
+        <!-- Amenities -->
+        <div>
+          <label>Amenities</label>
+          <input id="amenity" class="input" placeholder="Gym, Lift, Parking…">
+        </div>
+      </div>
+
+      <!-- Buttons -->
+      <div class="filter-actions right">
+        <button id="reset" class="btn secondary">Reset</button>
+        <button id="apply" class="btn">Apply</button>
+      </div>
+    </section>
+
+    <!-- ✅ MAP SECTION -->
+  <!--<section id="mapSection" style="margin:20px 0;">
+    <div id="map" style="height: 500px; width: 100%; border-radius: 10px;"></div>
+  </section>-->
+
+    <!-- Results -->
+    <section id="stats" class="row" style="margin:12px 0 4px">
+      <div class="tag" id="count">0 results</div>
+      <div class="row" id="activeFilters" style="gap:8px"></div>
+    </section>
+
+    <section id="results" class="grid" style="grid-template-columns:repeat(auto-fill,minmax(300px,1fr));"></section>
+    <div id="pager" class="pager"></div>
+  </main>
+
+  <footer class="footer">© Tharaga — Safe, Transparent, Verified</footer>
+</body>
+</html>

@@ -1,0 +1,23 @@
+[build]
+  command = "npm run build"
+  publish = "dist"   # or "build" depending on your frontend (React/Vue/Svelte)
+  functions = "functions"
+
+[dev]
+  command = "npm run dev"
+  port = 8888
+  targetPort = 5173   # e.g., Vite dev server
+  functionsPort = 9999
+  publish = "dist"
+
+# Redirect all routes to index.html (SPA support)
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+# Optional: Environment variables (you can still set them in Netlify dashboard)
+[build.environment]
+  NODE_VERSION = "18"
+  SUPABASE_URL = "https://your-project.supabase.co"
+  SUPABASE_ANON_KEY = "your-anon-key"

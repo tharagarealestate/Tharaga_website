@@ -1,0 +1,26 @@
+# Dependencies
+node_modules/
+deno.lock
+
+# Local env
+.env
+.env.local
+.env.development
+.env.production
+
+# Build output
+.netlify/
+dist/
+build/
+.tmp/
+.temp/
+cache/
+.vscode/
+.branches/
+bckup/
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*

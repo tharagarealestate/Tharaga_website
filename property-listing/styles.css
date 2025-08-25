@@ -203,7 +203,7 @@ img{max-width:100%;display:block}
 
 /* === NEW FILTER BOX STYLES === */
 .filter-container {
-  background: linear-gradient(180deg, #fff, #fdf9f7);
+  background: linear-gradient(180deg, #fff, #f1b191);
   border-radius: 16px; /* 🔄 CHANGE: slightly smaller for sleekness */
   padding: 16px; /* 🔄 CHANGE: more compact */
   border: 1px solid #f0d9d9;
@@ -258,8 +258,8 @@ img{max-width:100%;display:block}
 }
 
 .filter-grid label {
-  font-weight: 600;
-  font-size: 12px; /* 🔄 CHANGE: smaller label font */
+  font-weight: 1000;
+  font-size: 20px; /* 🔄 CHANGE: smaller label font */
   color: var(--muted);
   display: block;
   margin-bottom: 3px; /* 🔄 CHANGE: tighter spacing */

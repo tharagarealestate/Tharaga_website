@@ -249,8 +249,16 @@ function score(p, q = "", amenity = "") {
   if (amenity && p.amenities) {
     const hit = p.amenities.some(a => a.toLowerCase().includes(amenity.toLowerCase()));
     if (hit) s += 6;
+  const wantMetro = !!opts.wantMetro, maxWalk = Math.max(1, Number(opts.maxWalk||10));
+  const km = Number.isFinite(p._metroKm) ? p._metroKm : null;
+  if (wantMetro && km !== null) {
+    const minutes = km * 12;
+    const metroScore = Math.max(0, 1 - (minutes / maxWalk));
+    s += 5 * metroScore;
   }
-  return s;
+
+  return Math.max(0, Math.min(MAX_SCORE, s));
+
 }
 
 /** Card HTML generator — unchanged shape so your UI remains the same */
@@ -260,6 +268,8 @@ function cardHTML(p, s) {
     .filter(Boolean).map(t=>`<span class="tag">${t}</span>`).join(' ');
   const price = p.priceDisplay || (p.priceINR ? currency(p.priceINR) : 'Price on request');
   const pps = p.pricePerSqftINR ? `₹${p.pricePerSqftINR.toLocaleString('en-IN')}/sqft` : '';
+  const badge = p.is_verified ? 'Verified' : (p.listingStatus && p.listingStatus.toLowerCase() !== 'changed' ? p.listingStatus : '');
+  const metroChip = Number.isFinite(p._metroKm) ? `<span class="tag">${Math.round(p._metroKm*12)} min to metro</span>` : '';
   return `<article class="card" style="display:flex;flex-direction:column">
     <div class="card-img">
       <img src="${escapeHtml(img)}" alt="${escapeHtml(p.title)}">

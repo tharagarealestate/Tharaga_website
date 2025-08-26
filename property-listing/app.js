@@ -121,20 +121,24 @@ export function normalizeProperty(row) { return normalizeRow(row); }
 
 async function fetchFromSupabase({ limit = 1000 } = {}) {
   if (!supabase) {
-    // not initialized, skip supabase client fetch
-    console.info("fetchFromSupabase: supabase not initialized — skipping client-side fetch");
+    console.warn('fetchFromSupabase: supabase client not initialized — returning []');
     return [];
   }
   try {
-    const { data, error } = await supabase.from("properties").select("*").limit(limit);
+    const { data, error } = await supabase
+      .from("properties")
+      .select("*")
+      .limit(limit);
+
     if (error) {
       console.warn("Supabase fetch error:", error);
+      // don't throw — return empty so fallbacks (csv/local) can run
       return [];
     }
     if (!Array.isArray(data)) return [];
     return data.map(normalizeRow);
   } catch (e) {
-    console.warn("fetchFromSupabase failed:", e?.message || e);
+    console.warn("fetchFromSupabase unexpected error:", e);
     return [];
   }
 }

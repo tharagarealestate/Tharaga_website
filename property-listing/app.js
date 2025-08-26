@@ -356,6 +356,8 @@ export function renderListings(listings = [], containerSelector = "#results") {
 }
 
 /* ---------- bootstrap helper ---------- */
+let PROPERTIES_CACHE = [];
+
 export async function bootstrapPropertiesAndRender(containerSelector = "#results") {
   try {
     await initConfig();
@@ -369,21 +371,16 @@ export async function bootstrapPropertiesAndRender(containerSelector = "#results
   }
 }
 
-/* ---------- auto-init for standalone use (safe) ---------- */
+/* ---------- startup wrapper ---------- */
+function initApp() {
+  if (document.querySelector("#results")) {
+    bootstrapPropertiesAndRender("#results");
+  }
+}
+
+/* ---------- auto-init ---------- */
 if (typeof document !== "undefined") {
-  document.addEventListener("DOMContentLoaded", async () => {
-    if (document.querySelector('#results')) {
-      try {
-        await initConfig();
-        PROPERTIES_CACHE = await fetchProperties();
-        window.__THARAGA__ = window.__THARAGA__ || {};
-        window.__THARAGA__.properties = PROPERTIES_CACHE;
-        renderListings(PROPERTIES_CACHE);
-      } catch (e) {
-        console.error("auto init error:", e);
-      }
-    }
-  });
+  document.addEventListener("DOMContentLoaded", initApp);
 }
 
 /* ---------- exports ---------- */

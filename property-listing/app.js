@@ -249,15 +249,8 @@ function score(p, q = "", amenity = "") {
   if (amenity && p.amenities) {
     const hit = p.amenities.some(a => a.toLowerCase().includes(amenity.toLowerCase()));
     if (hit) s += 6;
-  const wantMetro = !!opts.wantMetro, maxWalk = Math.max(1, Number(opts.maxWalk||10));
-  const km = Number.isFinite(p._metroKm) ? p._metroKm : null;
-  if (wantMetro && km !== null) {
-    const minutes = km * 12;
-    const metroScore = Math.max(0, 1 - (minutes / maxWalk));
-    s += 5 * metroScore;
   }
-
-  return Math.max(0, Math.min(MAX_SCORE, s));
+  return s;
 }
 
 /** Card HTML generator — unchanged shape so your UI remains the same */

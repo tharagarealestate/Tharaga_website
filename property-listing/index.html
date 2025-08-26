@@ -2,94 +2,111 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Tharaga — Property Listing</title>
-  <style>
-    :root {
-      --muted:#6b7280; --ring:#e5e7eb; --card:#ffffff; --bg:#FAF5EF;
-      --primary:#0e7afe; --radius:12px;
-    }
-    *{box-sizing:border-box}
-    body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,sans-serif;background:var(--bg);color:#111;margin:0}
-    header{padding:16px 20px;border-bottom:1px solid var(--ring);background:#fff;position:sticky;top:0;z-index:5}
-    main{display:grid;gap:16px;padding:16px;max-width:1200px;margin:0 auto}
-    .filters{display:grid;gap:12px;background:#fff;border:1px solid var(--ring);border-radius:var(--radius);padding:12px}
-    .row{display:flex;flex-wrap:wrap;gap:10px}
-    .field{display:flex;flex-direction:column;gap:6px;min-width:160px}
-    label{font-size:12px;color:var(--muted)}
-    input, select{
-      border:1px solid var(--ring);border-radius:10px;padding:8px 10px;background:#fff;min-height:38px
-    }
-    select[multiple]{min-width:220px;min-height:80px}
-    .actions{display:flex;gap:10px;margin-top:6px}
-    button.btn{border:1px solid var(--ring);background:#fff;border-radius:10px;padding:8px 14px;cursor:pointer}
-    button.primary{background:var(--primary);color:#fff;border-color:var(--primary)}
-    .pillbar{display:flex;gap:10px;flex-wrap:wrap;max-width:var(--maxw);width:100%;justify-content:center}
-    .filter-pill{padding:6px 10px;border:1px solid var(--ring);border-radius:999px;background:#fff;cursor:pointer}
-    .filter-pill.active{background:#eef4ff;border-color:#cfe0ff}
-    #activeFilters{display:flex;flex-wrap:wrap;gap:6px}
-    .tag{border:1px solid var(--ring);background:#fff;border-radius:999px;padding:4px 8px;font-size:12px;color:#333}
-    .results{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px}
-    .card{border:1px solid var(--ring);border-radius:14px;background:#fff;overflow:hidden}
-    .card-img{position:relative;aspect-ratio:16/9;background:#f3f4f6}
-    .card-img img{width:100%;height:100%;object-fit:cover;display:block}
-    .badge.ribbon{position:absolute;top:8px;left:-6px;background:#10b981;color:#fff;padding:6px 10px;border-top-right-radius:8px;border-bottom-right-radius:8px;font-size:12px}
-    .score{position:absolute;bottom:8px;right:8px}
-    .empty{padding:30px;text-align:center;color:var(--muted)}
-    #pager{display:flex;gap:8px;justify-content:center}
-    .page{border:1px solid var(--ring);background:#fff;border-radius:10px;padding:6px 10px;cursor:pointer}
-    .page.active{background:#eef4ff;border-color:#cfe0ff}
-    footer{color:var(--muted);font-size:12px;padding:12px;text-align:center}
-  </style>
-  <script>
-    /* Optional runtime config without editing JS files */
-    window.CONFIG = {
-      // If you have a metro JSON file, keep it beside index.html as metro.json
-      METRO_JSON_URL: "./metro.json",
-      // If you have a CSV or a published-sheet CSV, set it; else keep null
-      SHEET_CSV_URL: null,
-      // Supabase: set only if you want to pull from DB directly on the client
-      SUPABASE_URL: "https://wedevtjjmdvngyshqdro.supabase.co",
-      SUPABASE_ANON_KEY: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndlZGV2dGpqbWR2bmd5c2hxZHJvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU0NzYwMzgsImV4cCI6MjA3MTA1MjAzOH0.Ex2c_sx358dFdygUGMVBohyTVto6fdEQ5nydDRh9m6" // leave blank for demo/local JSON
-    };
-  </script>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Tharaga — Verified Properties in Tamil Nadu</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./styles.css">
+  <script src="./config.js"></script>
+  <script type="module" src="./app.js?v=20250823"></script>
+
+  <script type="module" src="./listings.js"></script>
+
+    <!-- ✅ Add Leaflet -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
 </head>
 <body>
-  <header>
-    <div class="row" style="justify-content:space-between;align-items:center;width:100%;justify-content:center">
-      <strong>Tharaga — Verified Properties</strong>
+  <header class="header">
+    <div class="inner container">
+      <div class="listings-title">Discover Premium Homes in Tamil Nadu</div>
     </div>
   </header>
 
-  <main>
-    <section class="filters">
-      <div class="pillbar">
-        <button class="filter-pill active" data-type="all">All</button>
-        <button class="filter-pill" data-type="buy">Buy</button>
-        <button class="filter-pill" data-type="rent">Rent</button>
-        <button class="filter-pill" data-type="commercial">Commercial</button>
+  <main class="container">
+
+    <section class="filter-container compact">
+      <!-- Property Type Pills -->
+  <div class="filter-pill-row">
+    <button class="filter-pill active" data-type="buy">Buy</button>
+    <button class="filter-pill" data-type="rent">Rent</button>
+    <button class="filter-pill" data-type="commercial">Commercial</button>
+  </div>
+
+      <div class="top-row">
+  <div class="search-box">
+    <input id="q" class="input search-large" placeholder="Search by city, locality, project, landmark…">
+  </div>
+
+  <div class="price-box">
+    <label>Price (₹)</label>
+    <div class="price-range" data-min="0" data-max="20000000" data-step="100000" data-gap="200000">
+      <div class="slider-track">
+        <div class="range-progress"></div>
       </div>
+      <input type="range" id="priceMinSlider" aria-label="Minimum price">
+      <input type="range" id="priceMaxSlider" aria-label="Maximum price">
+    </div>
+    <div class="price-values">
+      <span id="minPriceValue">₹0</span>
+      <span>–</span>
+      <span id="maxPriceValue">₹2Cr</span>
+    </div>
+    <input type="number" id="minPrice" hidden>
+    <input type="number" id="maxPrice" hidden>
+  </div>
+</div>
 
-      <div class="row">
-        <div class="field" style="flex:1 1 260px">
-          <label for="q">Search</label>
-          <input id="q" placeholder="eg. 3 bhk villa in Chennai near metro" />
-        </div>
+<div class="filter-grid compact-grid">
 
-        <div class="field">
-          <label for="city">City (multi)</label>
-          <select id="city" multiple></select>
-        </div>
-
-        <div class="field">
-          <label for="locality">Locality (multi)</label>
-          <select id="locality" multiple>
-            <option value="All" selected>All</option>
+        <!-- 🔄 CHANGE #2: Locality auto-updates based on City -->
+        <div>
+          <label>Locality</label>
+          <select id="locality">
+            <option value="">All localities</option>
           </select>
         </div>
 
-        <div class="field">
-          <label for="ptype">Type</label>
+        <!-- Price -->
+        <!--<div>
+          <label>Price (₹)</label>
+
+          
+          <div class="price-range" data-min="0" data-max="20000000" data-step="100000" data-gap="200000">
+            <div class="slider-track">
+              <div class="range-progress"></div>
+            </div>
+            <input type="range" id="priceMinSlider" aria-label="Minimum price">
+            <input type="range" id="priceMaxSlider" aria-label="Maximum price">
+          </div>
+
+          <div class="price-values">
+            <span id="minPriceValue">₹0</span>
+            <span>–</span>
+            <span id="maxPriceValue">₹2Cr</span>
+          </div>
+
+          
+          <input type="number" id="minPrice" hidden>
+          <input type="number" id="maxPrice" hidden>
+        </div> -->
+
+        <!-- Sort -->
+        <div>
+          <label>Sort</label>
+          <select id="sort">
+            <option value="relevance">AI Relevance</option>
+            <option value="newest">Newest</option>
+            <option value="priceLow">Price: Low → High</option>
+            <option value="priceHigh">Price: High → Low</option>
+            <option value="areaHigh">Area: High → Low</option>
+          </select>
+        </div>
+
+        <!-- Type -->
+        <div>
+          <label>Type</label>
           <select id="ptype">
             <option value="">Any</option>
             <option>Apartment</option>
@@ -99,98 +116,80 @@
           </select>
         </div>
 
-        <div class="field">
-          <label for="bhk">BHK</label>
+        <!-- BHK -->
+        <div>
+          <label>BHK</label>
           <select id="bhk">
             <option value="">Any</option>
-            <option>1</option><option>2</option><option>3</option><option>4</option><option>5</option>
+            <option>1</option>
+            <option>2</option>
+            <option>3</option>
+            <option>4</option>
+            <option>5</option>
           </select>
         </div>
 
-        <div class="field">
-          <label for="furnished">Furnished</label>
+        <!-- Furnished -->
+        <div>
+          <label>Furnished</label>
           <select id="furnished">
             <option value="">Any</option>
-            <option>Furnished</option>
-            <option>Semi-Furnished</option>
+            <option>Semi Furnished</option>
             <option>Unfurnished</option>
+            <option>Fully Furnished</option>
           </select>
         </div>
 
-        <div class="field">
-          <label for="facing">Facing</label>
+        <!-- Facing -->
+        <div>
+          <label>Facing</label>
           <select id="facing">
             <option value="">Any</option>
-            <option>East</option><option>West</option><option>North</option><option>South</option>
+            <option>East</option>
+            <option>West</option>
+            <option>North</option>
+            <option>South</option>
           </select>
         </div>
 
-        <div class="field">
-          <label>Price (INR)</label>
-          <div class="row" style="gap:6px">
-            <input id="minPrice" type="number" placeholder="Min" style="width:120px">
-            <input id="maxPrice" type="number" placeholder="Max" style="width:120px">
-          </div>
-        </div>
-
-        <div class="field">
+        <!-- Area -->
+        <div>
           <label>Area (sqft)</label>
-          <div class="row" style="gap:6px">
-            <input id="minArea" type="number" placeholder="Min" style="width:120px">
-            <input id="maxArea" type="number" placeholder="Max" style="width:120px">
+          <div class="grid-2">
+            <input id="minArea" class="input" type="number" placeholder="Min">
+            <input id="maxArea" class="input" type="number" placeholder="Max">
           </div>
         </div>
 
-        <!-- Metro: NoBroker-like -->
-        <div class="field">
-          <label for="wantMetro">Near Metro</label>
-          <div class="row" style="gap:6px;align-items:center">
-            <input id="wantMetro" type="checkbox" />
-            <span style="font-size:12px;color:var(--muted)">walk ≤</span>
-            <input id="maxWalk" type="number" min="1" value="10" style="width:72px">
-            <span style="font-size:12px;color:var(--muted)">minutes</span>
-          </div>
-        </div>
-
-        <div class="field">
-          <label for="amenity">Amenity contains</label>
-          <input id="amenity" placeholder="e.g. gym, pool, lift" />
-        </div>
-
-        <div class="field">
-          <label for="sort">Sort</label>
-          <select id="sort">
-            <option value="relevance">Relevance</option>
-            <option value="newest">Newest</option>
-            <option value="priceLow">Price: Low → High</option>
-            <option value="priceHigh">Price: High → Low</option>
-            <option value="areaHigh">Area: High → Low</option>
-          </select>
+        <!-- Amenities -->
+        <div>
+          <label>Amenities</label>
+          <input id="amenity" class="input" placeholder="Gym, Lift, Parking…">
         </div>
       </div>
 
-      <div class="actions">
-        <button id="apply" class="btn primary">Apply</button>
-        <button id="reset" class="btn">Reset</button>
-        <!-- Optional experimental AI toggle: -->
-        <!-- <label style="display:flex;align-items:center;gap:6px"><input id="aiToggle" type="checkbox"> AI Relevance</label> -->
+      <!-- Buttons -->
+      <div class="filter-actions right">
+        <button id="reset" class="btn secondary">Reset</button>
+        <button id="apply" class="btn">Apply</button>
       </div>
-
-      <div id="activeFilters" style="margin-top:6px"></div>
     </section>
 
-    <section class="row" style="justify-content:space-between;align-items:center">
-      <div id="count">0 results</div>
+    <!-- ✅ MAP SECTION -->
+  <!--<section id="mapSection" style="margin:20px 0;">
+    <div id="map" style="height: 500px; width: 100%; border-radius: 10px;"></div>
+  </section>-->
+
+    <!-- Results -->
+    <section id="stats" class="row" style="margin:12px 0 4px">
+      <div class="tag" id="count">0 results</div>
+      <div class="row" id="activeFilters" style="gap:8px"></div>
     </section>
 
-    <section id="results" class="results"></section>
-    <nav id="pager"></nav>
+    <section id="results" class="grid" style="grid-template-columns:repeat(auto-fill,minmax(300px,1fr));"></section>
+    <div id="pager" class="pager"></div>
   </main>
 
-  <footer>© <span id="year"></span> Tharaga — Safe, Transparent, Verified</footer>
-
-  <!-- IMPORTANT: module import so the JS actually runs -->
-  <script type="module" src="./listings.js?v=20250825"></script>
-  <script>document.getElementById("year").textContent = new Date().getFullYear();</script>
+  <footer class="footer">© Tharaga — Safe, Transparent, Verified</footer>
 </body>
 </html>

@@ -249,19 +249,9 @@ function score(p, q = "", amenity = "") {
   if (amenity && p.amenities) {
     const hit = p.amenities.some(a => a.toLowerCase().includes(amenity.toLowerCase()));
     if (hit) s += 6;
-
-
-  const wantMetro = !!opts.wantMetro, maxWalk = Math.max(1, Number(opts.maxWalk||10));
-  const km = Number.isFinite(p._metroKm) ? p._metroKm : null;
-  if (wantMetro && km !== null) {
-    const minutes = km * 12;
-    const metroScore = Math.max(0, 1 - (minutes / maxWalk));
-    s += 5 * metroScore;
   }
-
-  return Math.max(0, Math.min(MAX_SCORE, s));
+  return s;
 }
-
 
 /** Card HTML generator — unchanged shape so your UI remains the same */
 function cardHTML(p, s) {
@@ -270,9 +260,6 @@ function cardHTML(p, s) {
     .filter(Boolean).map(t=>`<span class="tag">${t}</span>`).join(' ');
   const price = p.priceDisplay || (p.priceINR ? currency(p.priceINR) : 'Price on request');
   const pps = p.pricePerSqftINR ? `₹${p.pricePerSqftINR.toLocaleString('en-IN')}/sqft` : '';
-  const badge = p.is_verified ? 'Verified' : (p.listingStatus && p.listingStatus.toLowerCase() !== 'changed' ? p.listingStatus : '');
-  const metroChip = Number.isFinite(p._metroKm) ? `<span class="tag">${Math.round(p._metroKm*12)} min to metro</span>` : '';
-
   return `<article class="card" style="display:flex;flex-direction:column">
     <div class="card-img">
       <img src="${escapeHtml(img)}" alt="${escapeHtml(p.title)}">
@@ -288,8 +275,12 @@ function cardHTML(p, s) {
         <div style="font-weight:800">${escapeHtml(price)}</div>
         <div style="color:var(--muted);font-size:12px">${escapeHtml(pps)}</div>
       </div>
-      <div style="margin-top:8px">${metroChip} ${meta}</div>
-      <div style="display:flex;gap:8px;margin-top:10px"><a class="btn" href="./details.html?id=${encodeURIComponent(p.id)}">View details</a></div>
+      <div class="row" style="gap:8px;flex-wrap:wrap">${tags}</div>
+      <div class="row">
+        <a class="btn" href="./details.html?id=${encodeURIComponent(p.id)}">View details</a>
+        <a class="btn secondary" href="./details.html?id=${encodeURIComponent(p.id)}#map">📍 View on Map</a>
+        <a class="btn secondary" href="https://wa.me/${encodeURIComponent((p.owner && p.owner.whatsapp) || '')}?text=Hi%2C%20I%20saw%20${encodeURIComponent(p.title)}%20on%20Tharaga" target="_blank">WhatsApp</a>
+      </div>
     </div>
   </article>`;
 }

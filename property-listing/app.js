@@ -260,8 +260,6 @@ function cardHTML(p, s) {
     .filter(Boolean).map(t=>`<span class="tag">${t}</span>`).join(' ');
   const price = p.priceDisplay || (p.priceINR ? currency(p.priceINR) : 'Price on request');
   const pps = p.pricePerSqftINR ? `₹${p.pricePerSqftINR.toLocaleString('en-IN')}/sqft` : '';
-  const badge = p.is_verified ? 'Verified' : (p.listingStatus && p.listingStatus.toLowerCase() !== 'changed' ? p.listingStatus : '');
-  const metroChip = Number.isFinite(p._metroKm) ? `<span class="tag">${Math.round(p._metroKm*12)} min to metro</span>` : '';
   return `<article class="card" style="display:flex;flex-direction:column">
     <div class="card-img">
       <img src="${escapeHtml(img)}" alt="${escapeHtml(p.title)}">
@@ -277,7 +275,7 @@ function cardHTML(p, s) {
         <div style="font-weight:800">${escapeHtml(price)}</div>
         <div style="color:var(--muted);font-size:12px">${escapeHtml(pps)}</div>
       </div>
-      <div style="margin-top:8px">${metroChip} ${meta}</div>
+      <div class="row" style="gap:8px;flex-wrap:wrap">${tags}</div>
       <div class="row">
         <a class="btn" href="./details.html?id=${encodeURIComponent(p.id)}">View details</a>
         <a class="btn secondary" href="./details.html?id=${encodeURIComponent(p.id)}#map">📍 View on Map</a>
@@ -480,5 +478,20 @@ if (typeof document !== "undefined") {
 }
 
 /* -------------------------- Exports ------------------------------- */
-export { fetchProperties, score, cardHTML, currency, normalizeRow };
+export {
+  fetchProperties,
+  fetchSheetOrLocal,
+  fetchMatchesById, // name left in export list — may not exist but safe guard: will be undefined if not implemented
+  score,
+  cardHTML,
+  currency,
+  normalizeRow,
+  normalizeProperty,
+  initConfig,
+  bootstrapPropertiesAndRender,
+  renderListings,
+  loadMetro,
+  nearestMetroKm,
+  haversineKm
+};
 

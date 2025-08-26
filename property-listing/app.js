@@ -480,20 +480,5 @@ if (typeof document !== "undefined") {
 }
 
 /* -------------------------- Exports ------------------------------- */
-export {
-  fetchProperties,
-  fetchSheetOrLocal,
-  fetchMatchesById, // name left in export list — may not exist but safe guard: will be undefined if not implemented
-  score,
-  cardHTML,
-  currency,
-  normalizeRow,
-  normalizeProperty,
-  initConfig,
-  bootstrapPropertiesAndRender,
-  renderListings,
-  loadMetro,
-  nearestMetroKm,
-  haversineKm
-};
+export { fetchProperties, score, cardHTML, currency, normalizeRow };
 

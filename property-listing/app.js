@@ -232,15 +232,16 @@ let PROPERTIES_CACHE = [];   // array of normalized property objects
 
 /* -------------------------- Filtering & rendering ------------------ */
 /** Score function kept mostly as-is to compute ranking */
-function score(p, q = "", amenity = "") {
+export function score(p, q = "", amenity = "", opts = {}) {
+  if (typeof q === "object" && q) { opts = q; amenity = q.amenity || ""; q = q.q || ""; }
+
   let s = 0;
-  const text = (p.title + " " + p.project + " " + p.city + " " + p.locality).toLowerCase();
-  if (q) {
-    q.split(/\s+/).forEach((tok) => { if (text.includes(tok.toLowerCase())) s += 8; });
-  }
+  const text = ((p.title||"")+" "+(p.project||"")+" "+(p.city||"")+" "+(p.locality||"")+" "+(p.summary||"")).toLowerCase();
+  if (q) q.toLowerCase().split(/\s+/).filter(Boolean).forEach(tok => { if (text.includes(tok)) s += 8; });
+
   if (p.postedAt) {
-    const days = (Date.now() - new Date(p.postedAt).getTime())/86400000;
-    s += Math.max(0, 10 - Math.min(10, days/3));
+    const days = (Date.now() - new Date(p.postedAt).getTime()) / 86400000;
+    s += Math.max(0, 6 - Math.min(6, days/5));
   }
   if (p.pricePerSqftINR) {
     const v = p.pricePerSqftINR;
@@ -249,8 +250,15 @@ function score(p, q = "", amenity = "") {
   if (amenity && p.amenities) {
     const hit = p.amenities.some(a => a.toLowerCase().includes(amenity.toLowerCase()));
     if (hit) s += 6;
+  const wantMetro = !!opts.wantMetro, maxWalk = Math.max(1, Number(opts.maxWalk||10));
+  const km = Number.isFinite(p._metroKm) ? p._metroKm : null;
+  if (wantMetro && km !== null) {
+    const minutes = km * 12;
+    const metroScore = Math.max(0, 1 - (minutes / maxWalk));
+    s += 5 * metroScore;
   }
-  return s;
+
+  return Math.max(0, Math.min(MAX_SCORE, s));
 }
 
 /** Card HTML generator — unchanged shape so your UI remains the same */

@@ -14,19 +14,27 @@ const DEFAULT_SUPABASE_URL = "https://wedevtjjmdvngyshqdro.supabase.co";
 const SHEET_CSV_URL = () => (CFG.SHEET_CSV_URL || null);
 const METRO_JSON_URL = () => (CFG.METRO_JSON_URL || "./metro.json");
 
+async function loadConfig() {
+  try {
+    const res = await fetch("/.netlify/functions/config");
+    if (!res.ok) throw new Error("config fetch failed: " + res.status);
+    return await res.json();
+  } catch (e) {
+    console.warn('loadConfig failed:', e?.message || e);
+    return {}; // safe fallback
+  }
+}
+
 export async function initConfig() {
   if (typeof window !== "undefined" && window.CONFIG && window.CONFIG.SUPABASE_ANON_KEY) {
     CFG = Object.assign({}, CFG, window.CONFIG);
   } else {
-    try {
-      const r = await fetch('/.netlify/functions/config');
-      if (r.ok) {
-        const json = await r.json();
-        CFG = Object.assign({}, CFG, json);
-      }
-    } catch (e) {
-      console.warn('initConfig: server config fetch failed (OK for local):', e?.message || e);
-    }
+   try {
+    const json = await loadConfig();
+    CFG = Object.assign({}, CFG, json);
+  } catch (e) {
+    console.warn('initConfig: server config fetch failed (OK for local):', e?.message || e);
+  }
   }
 
   CFG.SUPABASE_URL = CFG.SUPABASE_URL || DEFAULT_SUPABASE_URL;

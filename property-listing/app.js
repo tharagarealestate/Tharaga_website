@@ -232,23 +232,24 @@ let PROPERTIES_CACHE = [];   // array of normalized property objects
 
 /* -------------------------- Filtering & rendering ------------------ */
 /** Score function kept mostly as-is to compute ranking */
-export function score(p, q = "", amenity = "", opts = {}) {
-  if (typeof q === "object" && q) { opts = q; amenity = q.amenity || ""; q = q.q || ""; }
-
+function score(p, q = "", amenity = "") {
   let s = 0;
-  const text = ((p.title||"")+" "+(p.project||"")+" "+(p.city||"")+" "+(p.locality||"")+" "+(p.summary||"")).toLowerCase();
-  if (q) q.toLowerCase().split(/\s+/).filter(Boolean).forEach(tok => { if (text.includes(tok)) s += 8; });
-
-  if (p.postedAt) {
-    const days = (Date.now() - new Date(p.postedAt).getTime()) / 86400000;
-    s += Math.max(0, 6 - Math.min(6, days/5));
+  const text = (p.title + " " + p.project + " " + p.city + " " + p.locality).toLowerCase();
+  if (q) {
+    q.split(/\s+/).forEach((tok) => { if (text.includes(tok.toLowerCase())) s += 8; });
   }
+  if (p.postedAt) {
+    const days = (Date.now() - new Date(p.postedAt).getTime())/86400000;
+    s += Math.max(0, 10 - Math.min(10, days/3));
+  }
+  if (p.pricePerSqftINR) {
+    const v = p.pricePerSqftINR;
+    if (v > 0) s += 6 * (1/(1 + Math.exp((v - 6000)/800)));
+  }
+  if (amenity && p.amenities) {
+    const hit = p.amenities.some(a => a.toLowerCase().includes(amenity.toLowerCase()));
+    if (hit) s += 6;
 
-  if (p.pricePerSqftINR) { const v=p.pricePerSqftINR; if (v>0) s += 6*(1/(1+Math.exp((v-6000)/800))); }
-
-  if (amenity && p.amenities?.some(a=>a.toLowerCase().includes(amenity.toLowerCase()))) s += 5;
-
-  if (p.is_verified) s += 3;
 
   const wantMetro = !!opts.wantMetro, maxWalk = Math.max(1, Number(opts.maxWalk||10));
   const km = Number.isFinite(p._metroKm) ? p._metroKm : null;

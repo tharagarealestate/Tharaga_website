@@ -232,16 +232,15 @@ let PROPERTIES_CACHE = [];   // array of normalized property objects
 
 /* -------------------------- Filtering & rendering ------------------ */
 /** Score function kept mostly as-is to compute ranking */
-export function score(p, q = "", amenity = "", opts = {}) {
-  if (typeof q === "object" && q) { opts = q; amenity = q.amenity || ""; q = q.q || ""; }
-
+function score(p, q = "", amenity = "") {
   let s = 0;
-  const text = ((p.title||"")+" "+(p.project||"")+" "+(p.city||"")+" "+(p.locality||"")+" "+(p.summary||"")).toLowerCase();
-  if (q) q.toLowerCase().split(/\s+/).filter(Boolean).forEach(tok => { if (text.includes(tok)) s += 8; });
-
+  const text = (p.title + " " + p.project + " " + p.city + " " + p.locality).toLowerCase();
+  if (q) {
+    q.split(/\s+/).forEach((tok) => { if (text.includes(tok.toLowerCase())) s += 8; });
+  }
   if (p.postedAt) {
-    const days = (Date.now() - new Date(p.postedAt).getTime()) / 86400000;
-    s += Math.max(0, 6 - Math.min(6, days/5));
+    const days = (Date.now() - new Date(p.postedAt).getTime())/86400000;
+    s += Math.max(0, 10 - Math.min(10, days/3));
   }
   if (p.pricePerSqftINR) {
     const v = p.pricePerSqftINR;

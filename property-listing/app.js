@@ -195,60 +195,100 @@ async function fetchProperties() {
   return await fetchFromLocalJSON();
 }
 
+/* ---------- metro helpers ---------- */
+let METRO = null;
+export async function loadMetro() {
+  if (METRO !== null) return METRO;
+  try {
+    const res = await fetch(METRO_JSON_URL(), { cache: "no-store" });
+    if (!res.ok) { METRO = []; return METRO; }
+    const j = await res.json();
+    METRO = Array.isArray(j) ? j : (j.stations || []);
+    return METRO;
+  } catch { METRO = []; return METRO; }
+}
+export function haversineKm(lat1, lon1, lat2, lon2) {
+  const toRad = d => d * Math.PI/180, R = 6371;
+  const dLat = toRad(lat2-lat1), dLon = toRad(lon2-lon1);
+  const a = Math.sin(dLat/2)**2 + Math.cos(toRad(lat1))*Math.cos(toRad(lat2))*Math.sin(dLon/2)**2;
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)); return R*c;
+}
+export function nearestMetroKm(lat, lng) {
+  if (!Number.isFinite(lat) || !Number.isFinite(lng) || !METRO?.length) return null;
+  let best = Infinity;
+  for (const s of METRO) {
+    const stationLat = Number(s.lat ?? s.latitude);
+    const stationLng = Number(s.lng ?? s.longitude);
+    if (!Number.isFinite(stationLat) || !Number.isFinite(stationLng)) continue;
+    const km = haversineKm(lat, lng, stationLat, stationLng);
+    if (km < best) best = km;
+  }
+  return Number.isFinite(best) ? best : null;
+}
+
+
 /* -------------------------- In-memory cache ------------------------ */
 let PROPERTIES_CACHE = [];   // array of normalized property objects
 
 /* -------------------------- Filtering & rendering ------------------ */
 /** Score function kept mostly as-is to compute ranking */
-function score(p, q = "", amenity = "") {
+export function score(p, q = "", amenity = "", opts = {}) {
+  if (typeof q === "object" && q) { opts = q; amenity = q.amenity || ""; q = q.q || ""; }
+
   let s = 0;
-  const text = (p.title + " " + p.project + " " + p.city + " " + p.locality).toLowerCase();
-  if (q) {
-    q.split(/\s+/).forEach((tok) => { if (text.includes(tok.toLowerCase())) s += 8; });
-  }
+  const text = ((p.title||"")+" "+(p.project||"")+" "+(p.city||"")+" "+(p.locality||"")+" "+(p.summary||"")).toLowerCase();
+  if (q) q.toLowerCase().split(/\s+/).filter(Boolean).forEach(tok => { if (text.includes(tok)) s += 8; });
+
   if (p.postedAt) {
-    const days = (Date.now() - new Date(p.postedAt).getTime())/86400000;
-    s += Math.max(0, 10 - Math.min(10, days/3));
+    const days = (Date.now() - new Date(p.postedAt).getTime()) / 86400000;
+    s += Math.max(0, 6 - Math.min(6, days/5));
   }
-  if (p.pricePerSqftINR) {
-    const v = p.pricePerSqftINR;
-    if (v > 0) s += 6 * (1/(1 + Math.exp((v - 6000)/800)));
+
+  if (p.pricePerSqftINR) { const v=p.pricePerSqftINR; if (v>0) s += 6*(1/(1+Math.exp((v-6000)/800))); }
+
+  if (amenity && p.amenities?.some(a=>a.toLowerCase().includes(amenity.toLowerCase()))) s += 5;
+
+  if (p.is_verified) s += 3;
+
+  const wantMetro = !!opts.wantMetro, maxWalk = Math.max(1, Number(opts.maxWalk||10));
+  const km = Number.isFinite(p._metroKm) ? p._metroKm : null;
+  if (wantMetro && km !== null) {
+    const minutes = km * 12;
+    const metroScore = Math.max(0, 1 - (minutes / maxWalk));
+    s += 5 * metroScore;
   }
-  if (amenity && p.amenities) {
-    const hit = p.amenities.some(a => a.toLowerCase().includes(amenity.toLowerCase()));
-    if (hit) s += 6;
-  }
-  return s;
+
+  return Math.max(0, Math.min(MAX_SCORE, s));
 }
 
+
 /** Card HTML generator — unchanged shape so your UI remains the same */
-function cardHTML(p, s) {
+export function cardHTML(p, s) {
   const img = (p.images && p.images[0]) || "";
-  const tags = [`${p.bhk||''} BHK`, `${p.carpetAreaSqft||'-'} sqft`, p.furnished||'', p.facing?`Facing ${p.facing}`:'' ]
-    .filter(Boolean).map(t=>`<span class="tag">${t}</span>`).join(' ');
+  const meta = [`${p.bhk||''} BHK`, `${p.carpetAreaSqft||'-'} sqft`, p.furnished||'', p.facing?`Facing ${p.facing}`:'' ]
+    .filter(Boolean).map(t=>`<span class="tag">${escapeHtml(t)}</span>`).join(' ');
   const price = p.priceDisplay || (p.priceINR ? currency(p.priceINR) : 'Price on request');
-  const pps = p.pricePerSqftINR ? `₹${p.pricePerSqftINR.toLocaleString('en-IN')}/sqft` : '';
-  return `<article class="card" style="display:flex;flex-direction:column">
+  const pps = p.pricePerSqftINR ? `₹${Number(p.pricePerSqftINR).toLocaleString('en-IN')}/sqft` : '';
+  const badge = p.is_verified ? 'Verified' : (p.listingStatus && p.listingStatus.toLowerCase() !== 'changed' ? p.listingStatus : '');
+  const metroChip = Number.isFinite(p._metroKm) ? `<span class="tag">${Math.round(p._metroKm*12)} min to metro</span>` : '';
+
+  return `<article class="card" data-id="${escapeHtml(p.id)}">
     <div class="card-img">
-      <img src="${escapeHtml(img)}" alt="${escapeHtml(p.title)}">
-      <div class="badge ribbon">${p.listingStatus || "Verified"}</div>
-      <div class="tag score">Match ${Math.round((s/30)*100)}%</div>
+      <img src="${escapeHtml(img)}" alt="${escapeHtml(p.title)}" loading="lazy">
+      ${badge ? `<div class="badge">${escapeHtml(badge)}</div>` : ''}
+      <div class="score">Match ${Math.round((s/ MAX_SCORE)*100)}%</div>
     </div>
-    <div style="padding:14px;display:flex;gap:12px;flex-direction:column">
+    <div class="card-body" style="padding:12px">
       <div>
-        <div style="font-weight:700;font-size:18px">${escapeHtml(p.title)}</div>
-        <div style="color:var(--muted);font-size:13px">${escapeHtml((p.locality||'') + (p.city ? ', ' + p.city : ''))}</div>
+        <div style="font-weight:700;font-size:16px">${escapeHtml(p.title)}</div>
+        <div class="meta" style="color:var(--muted)">${escapeHtml((p.locality||'') + (p.city ? ', ' + p.city : ''))}</div>
       </div>
-      <div class="row" style="justify-content:space-between">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px">
         <div style="font-weight:800">${escapeHtml(price)}</div>
         <div style="color:var(--muted);font-size:12px">${escapeHtml(pps)}</div>
       </div>
-      <div class="row" style="gap:8px;flex-wrap:wrap">${tags}</div>
-      <div class="row">
-        <a class="btn" href="./details.html?id=${encodeURIComponent(p.id)}">View details</a>
-        <a class="btn secondary" href="./details.html?id=${encodeURIComponent(p.id)}#map">📍 View on Map</a>
-        <a class="btn secondary" href="https://wa.me/${encodeURIComponent((p.owner && p.owner.whatsapp) || '')}?text=Hi%2C%20I%20saw%20${encodeURIComponent(p.title)}%20on%20Tharaga" target="_blank">WhatsApp</a>
-      </div>
+      <div style="margin-top:8px">${metroChip} ${meta}</div>
+      <div style="display:flex;gap:8px;margin-top:10px"><a class="btn" href="./details.html?id=${encodeURIComponent(p.id)}">View details</a></div>
     </div>
   </article>`;
 }
@@ -446,5 +486,20 @@ if (typeof document !== "undefined") {
 }
 
 /* -------------------------- Exports ------------------------------- */
-export { fetchProperties, score, cardHTML, currency, normalizeRow };
+export {
+  fetchProperties,
+  fetchSheetOrLocal,
+  fetchMatchesById, // name left in export list — may not exist but safe guard: will be undefined if not implemented
+  score,
+  cardHTML,
+  currency,
+  normalizeRow,
+  normalizeProperty,
+  initConfig,
+  bootstrapPropertiesAndRender,
+  renderListings,
+  loadMetro,
+  nearestMetroKm,
+  haversineKm
+};
 

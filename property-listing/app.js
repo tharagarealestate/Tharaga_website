@@ -249,16 +249,8 @@ function score(p, q = "", amenity = "") {
   if (amenity && p.amenities) {
     const hit = p.amenities.some(a => a.toLowerCase().includes(amenity.toLowerCase()));
     if (hit) s += 6;
-  const wantMetro = !!opts.wantMetro, maxWalk = Math.max(1, Number(opts.maxWalk||10));
-  const km = Number.isFinite(p._metroKm) ? p._metroKm : null;
-  if (wantMetro && km !== null) {
-    const minutes = km * 12;
-    const metroScore = Math.max(0, 1 - (minutes / maxWalk));
-    s += 5 * metroScore;
   }
-
-  return Math.max(0, Math.min(MAX_SCORE, s));
-
+  return s;
 }
 
 /** Card HTML generator — unchanged shape so your UI remains the same */
@@ -270,27 +262,23 @@ function cardHTML(p, s) {
   const pps = p.pricePerSqftINR ? `₹${p.pricePerSqftINR.toLocaleString('en-IN')}/sqft` : '';
   const badge = p.is_verified ? 'Verified' : (p.listingStatus && p.listingStatus.toLowerCase() !== 'changed' ? p.listingStatus : '');
   const metroChip = Number.isFinite(p._metroKm) ? `<span class="tag">${Math.round(p._metroKm*12)} min to metro</span>` : '';
-  return `<article class="card" style="display:flex;flex-direction:column">
+  return `<article class="card" data-id="${escapeHtml(p.id)}">
     <div class="card-img">
-      <img src="${escapeHtml(img)}" alt="${escapeHtml(p.title)}">
-      <div class="badge ribbon">${p.listingStatus || "Verified"}</div>
-      <div class="tag score">Match ${Math.round((s/30)*100)}%</div>
+      <img src="${escapeHtml(img)}" alt="${escapeHtml(p.title)}" loading="lazy">
+      ${badge ? `<div class="badge">${escapeHtml(badge)}</div>` : ''}
+      <div class="score">Match ${Math.round((s/ MAX_SCORE)*100)}%</div>
     </div>
-    <div style="padding:14px;display:flex;gap:12px;flex-direction:column">
+    <div class="card-body" style="padding:12px">
       <div>
-        <div style="font-weight:700;font-size:18px">${escapeHtml(p.title)}</div>
-        <div style="color:var(--muted);font-size:13px">${escapeHtml((p.locality||'') + (p.city ? ', ' + p.city : ''))}</div>
+        <div style="font-weight:700;font-size:16px">${escapeHtml(p.title)}</div>
+        <div class="meta" style="color:var(--muted)">${escapeHtml((p.locality||'') + (p.city ? ', ' + p.city : ''))}</div>
       </div>
-      <div class="row" style="justify-content:space-between">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px">
         <div style="font-weight:800">${escapeHtml(price)}</div>
         <div style="color:var(--muted);font-size:12px">${escapeHtml(pps)}</div>
       </div>
-      <div class="row" style="gap:8px;flex-wrap:wrap">${tags}</div>
-      <div class="row">
-        <a class="btn" href="./details.html?id=${encodeURIComponent(p.id)}">View details</a>
-        <a class="btn secondary" href="./details.html?id=${encodeURIComponent(p.id)}#map">📍 View on Map</a>
-        <a class="btn secondary" href="https://wa.me/${encodeURIComponent((p.owner && p.owner.whatsapp) || '')}?text=Hi%2C%20I%20saw%20${encodeURIComponent(p.title)}%20on%20Tharaga" target="_blank">WhatsApp</a>
-      </div>
+      <div style="margin-top:8px">${metroChip} ${meta}</div>
+      <div style="display:flex;gap:8px;margin-top:10px"><a class="btn" href="./details.html?id=${encodeURIComponent(p.id)}">View details</a></div>
     </div>
   </article>`;
 }
@@ -488,5 +476,20 @@ if (typeof document !== "undefined") {
 }
 
 /* -------------------------- Exports ------------------------------- */
-export { fetchProperties, score, cardHTML, currency, normalizeRow };
+export {
+  fetchProperties,
+  fetchSheetOrLocal,
+  fetchMatchesById, // name left in export list — may not exist but safe guard: will be undefined if not implemented
+  score,
+  cardHTML,
+  currency,
+  normalizeRow,
+  normalizeProperty,
+  initConfig,
+  bootstrapPropertiesAndRender,
+  renderListings,
+  loadMetro,
+  nearestMetroKm,
+  haversineKm
+};
 

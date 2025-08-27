@@ -390,7 +390,7 @@
       }
       const { error } = await supabase.auth.signInWithOtp({
         email,
-        options: { emailRedirectTo: "https://tharaga.co.in/login_signup/" }
+        options: { emailRedirectTo: "https://thriving-beijinho-ce44d5.netlify.app/login_signup/" }
       });
       if (error) setMsg(error.message);
       else setMsg('Magic link sent! Check your inbox (and spam).', true);

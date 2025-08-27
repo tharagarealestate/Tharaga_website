@@ -9,45 +9,110 @@
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap">
   <style>
     :root{
-      --bg:#0b1220;--card:#0f172a;--muted:#94a3b8;--txt:#e2e8f0;--acc:#22c55e;--acc2:#3b82f6;--warn:#f97316;--err:#ef4444
+      /* Tharaga Brand Palette */
+      --bg:#0a0a0a;          /* Deep Obsidian Background */
+      --card:#151515;        /* Charcoal Card Surface */
+      --muted:#9ca3af;       /* Muted Platinum Gray */
+      --txt:#f5f5f5;         /* Platinum White Text */
+      --acc:#d4af37;         /* Regal Gold (primary accent) */
+      --acc2:#16a34a;        /* Emerald Green (secondary accent) */
+      --warn:#f59e0b;        /* Amber Gold (warnings, classy) */
+      --err:#dc2626;         /* Rich Crimson (errors) */
     }
     *{box-sizing:border-box}
     html,body{height:100%}
-    body{margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial;background:radial-gradient(1200px 800px at 80% -10%,#213055 0%,transparent 60%),radial-gradient(900px 700px at -10% 20%,#15213c 0%,transparent 60%),var(--bg);color:var(--txt)}
+    body{
+      margin:0;
+      font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial;
+      background:
+        radial-gradient(1200px 800px at 80% -10%,#1c1c1c 0%,transparent 60%),
+        radial-gradient(900px 700px at -10% 20%,#111111 0%,transparent 60%),
+        var(--bg);
+      color:var(--txt);
+    }
     .container{min-height:100%;display:grid;grid-template-rows:auto 1fr auto}
-    header{display:flex;align-items:center;justify-content:space-between;padding:18px 20px}
-    header a, header button{color:var(--txt);text-decoration:none;font-weight:600;opacity:.9}
-    header a:hover{opacity:1}
+    header{
+      display:flex;align-items:center;justify-content:space-between;
+      padding:18px 20px;color:var(--txt);
+    }
+    header a, header button{color:var(--txt);text-decoration:none;font-weight:600;opacity:.85}
+    header a:hover{opacity:1;color:var(--acc)}
     main{display:grid;place-items:center;padding:24px}
-    .card{width:420px;max-width:95vw;background:linear-gradient(180deg,#1a0103,#5b1319);backdrop-filter:saturate(180%) blur(8px);border:1px solid rgba(148,163,184,.2);border-radius:16px;box-shadow:0 10px 40px rgba(0,0,0,.35);padding:22px}
-    h1{font-size:22px;margin:0 0 6px}
+    .card{
+      width:420px;max-width:95vw;
+      background:linear-gradient(180deg,#1a1a1a,#0f0f0f);
+      backdrop-filter:saturate(180%) blur(10px);
+      border:1px solid rgba(212,175,55,.25); /* subtle gold tint */
+      border-radius:16px;
+      box-shadow:0 10px 40px rgba(0,0,0,.55);
+      padding:22px;
+      color:var(--txt);
+    }
+    h1{font-size:22px;margin:0 0 6px;color:var(--acc)}
     p.muted{color:var(--muted);margin:0 0 16px;font-size:14px}
-    label{display:block;font-size:13px;margin:10px 0 6px;color:#cbd5e1}
-    input{width:100%;padding:12px 12px;border-radius:10px;border:1px solid #203058;background:#0b1325;color:var(--txt);outline:none}
-    input:focus{border-color:#3752a6;box-shadow:0 0 0 3px rgba(59,130,246,.15)}
-	.toggle-eye{position:absolute;top:50%;right:12px;transform:translateY(-50%);cursor:pointer;font-size:14px;opacity:.7}
-    .toggle-eye:hover{opacity:1}
+    label{display:block;font-size:13px;margin:10px 0 6px;color:var(--txt)}
+    input{
+      position: relative;width:100%;padding:12px 12px;border-radius:10px;padding-right: 40px;;
+      border:1px solid #333333;
+      background:#1e1e1e;
+      color:var(--txt);
+      outline:none;
+    }
+    input:focus{
+      border-color:var(--acc);
+      box-shadow:0 0 0 3px rgba(212,175,55,.25);
+    }
+
+    /* wrapper around input + icon */
+.input-pill {
+  position: relative;   /* anchor for the absolute icon */
+  width: 100%;
+}
+
+/* make sure the input leaves room for the icon */
+.input-pill input {
+  width: 100%;
+  padding-right: 44px;  /* provide space so text doesn't overlap the eye */
+  box-sizing: border-box;
+}
+    .toggle-eye{position:absolute;top:50%;right:12px;transform:translateY(-50%);cursor:pointer;font-size:14px;opacity:.7;color:var(--muted)}
+    .toggle-eye:hover{opacity:1;color:var(--acc)}
     .row{display:flex;gap:10px}
-    .btn{cursor:pointer;border:0;border-radius:10px;padding:12px 14px;font-weight:700}
-    .btn-primary{background:linear-gradient(180deg,#3b82f6,#2563eb);color:white}
-    .btn-ghost{background:transparent;border:1px solid #334155;color:#cbd5e1}
-    .btn-danger{background:linear-gradient(180deg,#ef4444,#b91c1c);color:white}
+    .btn{cursor:pointer;border:0;border-radius:10px;padding:12px 14px;font-weight:700;color:var(--txt)}
+    .btn-primary{background:linear-gradient(180deg,var(--acc),#b8860b);color:black}
+    .btn-ghost{background:transparent;border:1px solid #333333;color:var(--muted)}
+    .btn-danger{background:linear-gradient(180deg,var(--err),#7f1d1d);color:white}
     .hint{font-size:12px;color:var(--muted);margin-top:8px}
     .msg{margin-top:12px;font-size:14px}
-    .msg.ok{color:#86efac}
-    .msg.err{color:#fecaca}
-    .divider{height:1px;background:linear-gradient(90deg,transparent,#223047,transparent);margin:16px 0}
-    .pill{display:inline-flex;align-items:center;gap:8px;padding:8px 10px;border:1px solid #334155;border-radius:999px;background:rgba(15,23,42,.4);font-size:12px;color:#cbd5e1}
-    footer{padding:18px 20px;color:#94a3b8;font-size:12px;text-align:center}
+    .msg.ok{color:var(--acc2)}
+    .msg.err{color:#fca5a5}
+    .divider{height:1px;background:linear-gradient(90deg,transparent,#2d2d2d,transparent);margin:16px 0}
+    .pill{
+      display:inline-flex;align-items:center;gap:8px;
+      padding:8px 10px;
+      border:1px solid #333333;
+      border-radius:999px;
+      background:rgba(20,20,20,.6);
+      font-size:12px;
+      color:var(--muted)
+    }
+    footer{padding:18px 20px;color:var(--muted);font-size:12px;text-align:center}
     .hidden{display:none !important}
     .flex{display:flex;align-items:center;gap:10px}
     .right{margin-left:auto}
-    .copy{cursor:pointer;font-size:12px;opacity:.8}
-    .copy:hover{opacity:1}
-    .small-link{font-size:12px;color:#a5b4fc;text-decoration:none}
-    .small-link:hover{text-decoration:underline}
-    .success-block{background:#08210f;border:1px solid #1a3f26;border-radius:12px;padding:12px;margin-top:12px}
-  </style>
+    .copy{cursor:pointer;font-size:12px;opacity:.8;color:var(--muted)}
+    .copy:hover{opacity:1;color:var(--acc)}
+    .small-link{font-size:12px;color:var(--acc2);text-decoration:none}
+    .small-link:hover{text-decoration:underline;color:var(--acc)}
+    .success-block{
+      background:#0f1f12;
+      border:1px solid #224422;
+      border-radius:12px;
+      padding:12px;
+      margin-top:12px;
+      color:var(--acc2)
+    }
+</style>
 </head>
 <body>
   <div class="container">

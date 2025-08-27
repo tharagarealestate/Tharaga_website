@@ -10,4 +10,4 @@
  /login_signup/*     /login_signup/index.html 200
 
 # 3) SPA fallback for everything else
- /*                  /index.html             200
+ /*                  /index.html             200!

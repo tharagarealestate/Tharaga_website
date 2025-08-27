@@ -390,7 +390,7 @@
       }
       const { error } = await supabase.auth.signInWithOtp({
         email,
-        options: { emailRedirectTo: POST_AUTH_CALLBACK }
+        options: { emailRedirectTo: "https://tharaga.co.in/login_signup/" }
       });
       if (error) setMsg(error.message);
       else setMsg('Magic link sent! Check your inbox (and spam).', true);

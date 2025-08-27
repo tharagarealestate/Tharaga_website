@@ -8,46 +8,188 @@
   <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap">
   <style>
-    :root{
-      --bg:#0b1220;--card:#0f172a;--muted:#94a3b8;--txt:#e2e8f0;--acc:#22c55e;--acc2:#3b82f6;--warn:#f97316;--err:#ef4444
-    }
-    *{box-sizing:border-box}
-    html,body{height:100%}
-    body{margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial;background:radial-gradient(1200px 800px at 80% -10%,#213055 0%,transparent 60%),radial-gradient(900px 700px at -10% 20%,#15213c 0%,transparent 60%),var(--bg);color:var(--txt#0d0d0e)}
-    .container{min-height:100%;display:grid;grid-template-rows:auto 1fr auto}
-    header{display:flex;align-items:center;justify-content:space-between;padding:18px 20px;color:var(--txt#0d0d0e)}
-    header a, header button{color:var(--txt);text-decoration:none;font-weight:600;opacity:.9}
-    header a:hover{opacity:1}
-    main{display:grid;place-items:center;padding:24px}
-    .card{width:420px;max-width:95vw;background:linear-gradient(180deg,#FAF5EF,#F8F8F8);backdrop-filter:saturate(180%) blur(8px);border:1px solid rgba(148,163,184,.2);border-radius:16px;box-shadow:0 10px 40px rgba(0,0,0,.35);padding:22px;color:var(--txt#0d0d0e)}
-    h1{font-size:22px;margin:0 0 6px;color:var(--txt#0d0d0e)}
-    p.muted{color:var(--muted);margin:0 0 16px;font-size:14px}
-    label{display:block;font-size:13px;margin:10px 0 6px;color:#cbd5e1;color:var(--txt#0d0d0e)} 
-    input{width:100%;padding:12px 12px;border-radius:10px;border:1px solid #203058;background:#a0b9f5;color:var(--txt);outline:none}
-    input:focus{border-color:#3752a6;box-shadow:0 0 0 3px rgba(59,130,246,.15)}
-    .toggle-eye{position:absolute;top:50%;right:12px;transform:translateY(-50%);cursor:pointer;font-size:14px;opacity:.7}
-    .toggle-eye:hover{opacity:1}
-    .row{display:flex;gap:10px}
-    .btn{cursor:pointer;border:0;border-radius:10px;padding:12px 14px;font-weight:700;color:var(--txt#0d0d0e)}
-    .btn-primary{background:linear-gradient(180deg,#3b82f6,#2563eb);color:white}
-    .btn-ghost{background:transparent;border:1px solid #334155;color:#cbd5e1}
-    .btn-danger{background:linear-gradient(180deg,#ef4444,#b91c1c);color:white}
-    .hint{font-size:12px;color:var(--muted);margin-top:8px}
-    .msg{margin-top:12px;font-size:14px}
-    .msg.ok{color:#86efac}
-    .msg.err{color:#fecaca}
-    .divider{height:1px;background:linear-gradient(90deg,transparent,#223047,transparent);margin:16px 0}
-    .pill{display:inline-flex;align-items:center;gap:8px;padding:8px 10px;border:1px solid #334155;border-radius:999px;background:rgba(15,23,42,.4);font-size:12px;color:#cbd5e1}
-    footer{padding:18px 20px;color:#94a3b8;font-size:12px;text-align:center}
-    .hidden{display:none !important}
-    .flex{display:flex;align-items:center;gap:10px}
-    .right{margin-left:auto}
-    .copy{cursor:pointer;font-size:12px;opacity:.8}
-    .copy:hover{opacity:1}
-    .small-link{font-size:12px;color:#a5b4fc;text-decoration:none}
-    .small-link:hover{text-decoration:underline}
-    .success-block{background:#08210f;border:1px solid #1a3f26;border-radius:12px;padding:12px;margin-top:12px}
-  </style>
+  :root{
+    /* Tharaga — refined brand palette */
+    --bg: #071026;          /* deep midnight navy (page background) */
+    --bg-spot-1: #10213a;   /* radial gradient tone */
+    --bg-spot-2: #0f1724;   /* radial gradient tone */
+    --card-text: #071026;   /* text on light cards */
+    --muted: #94a3b8;       /* muted slate */
+    --txt: #f1f5f9;         /* primary page text (light) */
+    --acc: #16a34a;         /* emerald accent (trust) */
+    --acc2: #2563eb;        /* royal/brand blue (authority) */
+    --warn: #f59e0b;        /* warm amber */
+    --err: #dc2626;         /* error red */
+    --input-bg: #ffffff;    /* clean input surface */
+    --input-border: #cbd5e1;/* soft slate border for inputs */
+    --line: rgba(148,163,184,.2); /* thin line used for card borders */
+    --glass-01: rgba(255,255,255,0.04); /* subtle glass on dark */
+    --shadow-lg: 0 10px 40px rgba(2,6,23,.65);
+    --radius-md: 10px;
+    --radius-lg: 16px;
+  }
+
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0;
+    font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial;
+    background:
+      radial-gradient(1200px 800px at 80% -10%, var(--bg-spot-1) 0%, transparent 60%),
+      radial-gradient(900px 700px at -10% 20%, var(--bg-spot-2) 0%, transparent 60%),
+      var(--bg);
+    color:var(--txt);
+  }
+
+  .container{min-height:100%;display:grid;grid-template-rows:auto 1fr auto}
+
+  header{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:18px 20px;
+    color:var(--txt);
+  }
+  header a, header button{
+    color:var(--txt);
+    text-decoration:none;
+    font-weight:600;
+    opacity:.92;
+  }
+  header a:hover{opacity:1}
+
+  main{display:grid;place-items:center;padding:24px}
+
+  /* Card — light elevated surface to pop on dark page */
+  .card{
+    width:420px;
+    max-width:95vw;
+    background: linear-gradient(180deg, #FBF7F3, #F3F4F6); /* warm, premium paper */
+    backdrop-filter:saturate(180%) blur(8px);
+    border:1px solid var(--line);
+    border-radius:var(--radius-lg);
+    box-shadow:var(--shadow-lg);
+    padding:22px;
+    color:var(--card-text);
+  }
+
+  h1{font-size:22px;margin:0 0 6px;color:var(--txt)}
+  p.muted{color:var(--muted);margin:0 0 16px;font-size:14px}
+
+  label{
+    display:block;
+    font-size:13px;
+    margin:10px 0 6px;
+    color:#334155; /* darker label on light card */
+    font-weight:600;
+  }
+
+  /* Inputs — clear, high contrast, elegant */
+  input{
+    width:100%;
+    padding:12px 12px;
+    border-radius:var(--radius-md);
+    border:1px solid var(--input-border);
+    background:var(--input-bg);
+    color:var(--card-text);
+    outline:none;
+    transition:box-shadow .15s, border-color .12s, transform .06s;
+  }
+  input:focus{
+    border-color:var(--acc2);
+    box-shadow:0 0 0 6px rgba(37,99,235,.08);
+  }
+
+  .toggle-eye{
+    position:absolute;
+    top:50%;
+    right:12px;
+    transform:translateY(-50%);
+    cursor:pointer;
+    font-size:14px;
+    opacity:.7;
+  }
+  .toggle-eye:hover{opacity:1}
+
+  .row{display:flex;gap:10px}
+
+  .btn{
+    cursor:pointer;
+    border:0;
+    border-radius:10px;
+    padding:12px 14px;
+    font-weight:700;
+    color:var(--txt);
+  }
+
+  .btn-primary{
+    background:linear-gradient(180deg,var(--acc2),#1d4ed8);
+    color:white;
+    box-shadow:0 6px 18px rgba(29,78,216,.22);
+  }
+
+  .btn-ghost{
+    background:transparent;
+    border:1px solid rgba(255,255,255,.06); /* subtle ghost on dark header */
+    color:var(--txt);
+  }
+
+  .btn-danger{
+    background:linear-gradient(180deg,var(--err),#b91c1c);
+    color:white;
+  }
+
+  .hint{font-size:12px;color:var(--muted);margin-top:8px}
+
+  .msg{margin-top:12px;font-size:14px}
+  .msg.ok{color:var(--acc)}      /* green success */
+  .msg.err{color:var(--err)}    /* red error */
+
+  .divider{
+    height:1px;
+    background:linear-gradient(90deg,transparent,#cbd5e1,transparent);
+    margin:16px 0;
+  }
+
+  /* Pills used on dark hero — light glass with warm highlight */
+  .pill{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    padding:8px 10px;
+    border-radius:999px;
+    background:var(--glass-01);
+    border:1px solid rgba(255,255,255,.04);
+    font-size:12px;
+    color:var(--txt);
+  }
+
+  footer{
+    padding:18px 20px;
+    color:var(--muted);
+    font-size:12px;
+    text-align:center;
+  }
+
+  .hidden{display:none !important}
+  .flex{display:flex;align-items:center;gap:10px}
+  .right{margin-left:auto}
+  .copy{cursor:pointer;font-size:12px;opacity:.8}
+  .copy:hover{opacity:1}
+  .small-link{font-size:12px;color:var(--acc2);text-decoration:none}
+  .small-link:hover{text-decoration:underline}
+
+  /* Success confirmation block — rich, premium green */
+  .success-block{
+    background:#052f18;          /* deep green surface */
+    border:1px solid #14532d;    /* dark green border */
+    border-radius:12px;
+    padding:12px;
+    margin-top:12px;
+    color:#d1fae5;               /* light mint text */
+  }
+</style>
+
 </head>
 <body>
   <div class="container">

@@ -187,6 +187,8 @@
     </footer>
   </div>
 
+  <!-- ✅ Add Supabase library before your script -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.6/dist/umd/supabase.min.js"></script>
   <!-- Auth + Gate Logic -->
   <script type="module">
     // ========================= CONFIG =========================
@@ -203,30 +205,62 @@
     // ========================= IMPORT =========================
     import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
     const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-    window.supabase = supabase; // expose for DevTools
+    //window.supabase = supabase; // expose for DevTools
 
     (async () => {
-  // Supabase v2: automatically parses the hash if present
-  const { data, error } = await supabase.auth.getSession();
+  console.log('PAGE LOAD - location.href:', location.href);
+  console.log('PAGE LOAD - location.hash:', location.hash);
+  console.log('PAGE LOAD - location.search:', location.search);
 
-  if (error) {
-    console.error("Error getting session:", error);
-  } else if (!data.session) {
-    // Fallback: parse URL hash manually
-    const hash = window.location.hash.replace('#', '?');
-    const params = new URLSearchParams(hash);
-    const access_token = params.get('access_token');
-    const refresh_token = params.get('refresh_token');
-    if (access_token && refresh_token) {
+  try {
+    const { data, error } = await supabase.auth.getSession();
+    if (error) console.warn('getSession error', error);
+    if (data?.session) {
+      console.log('Session available from client:', data.session);
+      return;
+    }
+  } catch (e) {
+    console.warn('getSession thrown', e);
+  }
+
+  function parseTokensFromHashOrSearch() {
+    const hash = (window.location.hash || '').replace(/^#/, '?');
+    let params = new URLSearchParams(hash);
+    let access_token = params.get('access_token');
+    let refresh_token = params.get('refresh_token');
+
+    if (!access_token) {
+      const searchParams = new URLSearchParams(window.location.search);
+      access_token = searchParams.get('access_token') || access_token;
+      refresh_token = searchParams.get('refresh_token') || refresh_token;
+    }
+
+    if (!access_token) {
+      const mAccess = location.href.match(/access_token=([^&]+)/);
+      const mRefresh = location.href.match(/refresh_token=([^&]+)/);
+      if (mAccess) access_token = decodeURIComponent(mAccess[1]);
+      if (mRefresh) refresh_token = decodeURIComponent(mRefresh[1]);
+    }
+
+    return { access_token, refresh_token };
+  }
+
+  const { access_token, refresh_token } = parseTokensFromHashOrSearch();
+  console.log('Parsed tokens:', { access_token: !!access_token, refresh_token: !!refresh_token });
+
+  if (access_token && refresh_token) {
+    try {
       await supabase.auth.setSession({ access_token, refresh_token });
-      console.log("✅ Session set from redirect");
-      history.replaceState(null, '', window.location.pathname); // cleanup hash
+      console.log('✅ Session set from redirect tokens and stored by supabase-js');
+      history.replaceState(null, '', location.pathname);
+      return;
+    } catch (err) {
+      console.error('Failed to set session from tokens:', err);
     }
   } else {
-    console.log("✅ Session already available:", data.session);
+    console.log('No tokens found in URL after redirect — likely lost during host redirect.');
   }
 })();
-
 
     // ========================= UI HOOKS ========================
     const yearEl = document.getElementById('year');

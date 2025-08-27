@@ -62,6 +62,19 @@
       border-color:var(--acc);
       box-shadow:0 0 0 3px rgba(212,175,55,.25);
     }
+
+    /* wrapper around input + icon */
+.input-pill {
+  position: relative;   /* anchor for the absolute icon */
+  width: 100%;
+}
+
+/* make sure the input leaves room for the icon */
+.input-pill input {
+  width: 100%;
+  padding-right: 44px;  /* provide space so text doesn't overlap the eye */
+  box-sizing: border-box;
+}
     .toggle-eye{position:absolute;top:50%;right:12px;transform:translateY(-50%);cursor:pointer;font-size:14px;opacity:.7;color:var(--muted)}
     .toggle-eye:hover{opacity:1;color:var(--acc)}
     .row{display:flex;gap:10px}
@@ -138,8 +151,12 @@
           <div class="row">
             <div style="flex:1">
               <label for="password">Password <span class="hint">(optional — use Magic Link for fastest login)</span></label>
-              <input id="password" name="password" type="password" placeholder="••••••••" autocomplete="current-password">
-         	  <span id="toggleEye" class="toggle-eye">👁</span>
+
+              <!-- NEW: input wrapper that becomes the positioning context -->
+              <div class="input-pill" style="position:relative;">
+                <input id="password" name="password" type="password" placeholder="••••••••" autocomplete="current-password">
+                <span id="toggleEye" class="toggle-eye" role="button" aria-label="Show password">👁</span>
+              </div>
             </div>
           </div>
 

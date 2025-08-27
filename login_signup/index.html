@@ -203,6 +203,30 @@
     // ========================= IMPORT =========================
     import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
     const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    window.supabase = supabase; // expose for DevTools
+
+    (async () => {
+  // Supabase v2: automatically parses the hash if present
+  const { data, error } = await supabase.auth.getSession();
+
+  if (error) {
+    console.error("Error getting session:", error);
+  } else if (!data.session) {
+    // Fallback: parse URL hash manually
+    const hash = window.location.hash.replace('#', '?');
+    const params = new URLSearchParams(hash);
+    const access_token = params.get('access_token');
+    const refresh_token = params.get('refresh_token');
+    if (access_token && refresh_token) {
+      await supabase.auth.setSession({ access_token, refresh_token });
+      console.log("✅ Session set from redirect");
+      history.replaceState(null, '', window.location.pathname); // cleanup hash
+    }
+  } else {
+    console.log("✅ Session already available:", data.session);
+  }
+})();
+
 
     // ========================= UI HOOKS ========================
     const yearEl = document.getElementById('year');

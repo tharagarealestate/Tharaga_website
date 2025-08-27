@@ -13,18 +13,18 @@
     }
     *{box-sizing:border-box}
     html,body{height:100%}
-    body{margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial;background:radial-gradient(1200px 800px at 80% -10%,#213055 0%,transparent 60%),radial-gradient(900px 700px at -10% 20%,#15213c 0%,transparent 60%),var(--bg);color:var(--txt)}
+    body{margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial;background:radial-gradient(1200px 800px at 80% -10%,#213055 0%,transparent 60%),radial-gradient(900px 700px at -10% 20%,#15213c 0%,transparent 60%),var(--bg);color:var(--txt#0d0d0e)}
     .container{min-height:100%;display:grid;grid-template-rows:auto 1fr auto}
     header{display:flex;align-items:center;justify-content:space-between;padding:18px 20px}
     header a, header button{color:var(--txt);text-decoration:none;font-weight:600;opacity:.9}
     header a:hover{opacity:1}
     main{display:grid;place-items:center;padding:24px}
-    .card{width:420px;max-width:95vw;background:linear-gradient(180deg,#FAF5EF,#F8F8F8);backdrop-filter:saturate(180%) blur(8px);border:1px solid rgba(148,163,184,.2);border-radius:16px;box-shadow:0 10px 40px rgba(0,0,0,.35);padding:22px;--txt:#0d0d0e}
+    .card{width:420px;max-width:95vw;background:linear-gradient(180deg,#FAF5EF,#F8F8F8);backdrop-filter:saturate(180%) blur(8px);border:1px solid rgba(148,163,184,.2);border-radius:16px;box-shadow:0 10px 40px rgba(0,0,0,.35);padding:22px}
     h1{font-size:22px;margin:0 0 6px}
     p.muted{color:var(--muted);margin:0 0 16px;font-size:14px}
     label{display:block;font-size:13px;margin:10px 0 6px;color:#cbd5e1}
-    input{width:100%;padding:12px 12px;border-radius:10px;border:1px solid #203058;background:#0b1325;color:var(--txt);outline:none;.toggle-eye{position:absolute;top:50%;right:12px;transform:translateY(-50%);cursor:pointer;font-size:14px;opacity:.7}}
-    input:focus{border-color:#3752a6;box-shadow:0 0 0 3px rgba(59,130,246,.15)}
+    input{width:100%;padding:12px 12px;border-radius:10px;border:1px solid #203058;background:#0b1325;color:var(--txt);outline:none}
+    input:focus{border-color:#3752a6;box-shadow:0 0 0 3px rgba(59,130,246,.15);.toggle-eye{position:absolute;top:50%;right:12px;transform:translateY(-50%);cursor:pointer;font-size:14px;opacity:.7}}
     .toggle-eye:hover{opacity:1}
     .row{display:flex;gap:10px}
     .btn{cursor:pointer;border:0;border-radius:10px;padding:12px 14px;font-weight:700}

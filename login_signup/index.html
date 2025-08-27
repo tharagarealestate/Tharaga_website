@@ -1,316 +1,330 @@
-<!-- AUTH GATE: paste before </body> on your site -->
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap">
-<style>
-  /* Minimal polished modal + button styles (copy as-is or adapt) */
-  :root{--accent:#0f172a;--muted:#6b7280;--bg:rgba(3,7,18,0.6)}
-  .auth-overlay{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:9999;backdrop-filter:blur(3px);display:none}
-  .auth-modal{width:420px;max-width:95%;background:#fff;border-radius:12px;padding:20px;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial}
-  .auth-modal h2{margin:0 0 6px;font-size:20px}
-  .auth-modal p{color:var(--muted);margin:0 0 12px;font-size:13px}
-  .auth-row{display:flex;gap:8px;margin-bottom:10px}
-  .auth-row input{flex:1;padding:10px;border:1px solid #e6e9ef;border-radius:8px;font-size:14px}
-  .btn{padding:10px 14px;border-radius:8px;border:0;font-weight:600;cursor:pointer}
-  .btn-primary{background:#0f172a;color:#fff}
-  .btn-ghost{background:transparent;border:1px solid #e6e9ef;color:var(--accent)}
-  .auth-actions{display:flex;gap:8px;justify-content:space-between;align-items:center;margin-top:8px}
-  .auth-footer{font-size:13px;color:var(--muted);margin-top:12px;text-align:center}
-  .small{font-size:13px;color:var(--muted)}
-  .close-x{position:absolute;right:10px;top:8px;border:0;background:transparent;font-size:18px;cursor:pointer}
-</style>
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Login / Sign up • Tharaga</title>
+  <meta name="description" content="Secure login and signup for Tharaga partner portals and listings." />
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap">
+  <style>
+    :root{
+      --bg:#0b1220;--card:#0f172a;--muted:#94a3b8;--txt:#e2e8f0;--acc:#22c55e;--acc2:#3b82f6;--warn:#f97316;--err:#ef4444
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial;background:radial-gradient(1200px 800px at 80% -10%,#213055 0%,transparent 60%),radial-gradient(900px 700px at -10% 20%,#15213c 0%,transparent 60%),var(--bg);color:var(--txt)}
+    .container{min-height:100%;display:grid;grid-template-rows:auto 1fr auto}
+    header{display:flex;align-items:center;justify-content:space-between;padding:18px 20px}
+    header a, header button{color:var(--txt);text-decoration:none;font-weight:600;opacity:.9}
+    header a:hover{opacity:1}
+    main{display:grid;place-items:center;padding:24px}
+    .card{width:420px;max-width:95vw;background:linear-gradient(180deg,rgba(255,255,255,.04),rgba(255,255,255,.02));backdrop-filter:saturate(180%) blur(8px);border:1px solid rgba(148,163,184,.2);border-radius:16px;box-shadow:0 10px 40px rgba(0,0,0,.35);padding:22px}
+    h1{font-size:22px;margin:0 0 6px}
+    p.muted{color:var(--muted);margin:0 0 16px;font-size:14px}
+    label{display:block;font-size:13px;margin:10px 0 6px;color:#cbd5e1}
+    input{width:100%;padding:12px 12px;border-radius:10px;border:1px solid #203058;background:#0b1325;color:var(--txt);outline:none}
+    input:focus{border-color:#3752a6;box-shadow:0 0 0 3px rgba(59,130,246,.15)}
+    .row{display:flex;gap:10px}
+    .btn{cursor:pointer;border:0;border-radius:10px;padding:12px 14px;font-weight:700}
+    .btn-primary{background:linear-gradient(180deg,#3b82f6,#2563eb);color:white}
+    .btn-ghost{background:transparent;border:1px solid #334155;color:#cbd5e1}
+    .btn-danger{background:linear-gradient(180deg,#ef4444,#b91c1c);color:white}
+    .hint{font-size:12px;color:var(--muted);margin-top:8px}
+    .msg{margin-top:12px;font-size:14px}
+    .msg.ok{color:#86efac}
+    .msg.err{color:#fecaca}
+    .divider{height:1px;background:linear-gradient(90deg,transparent,#223047,transparent);margin:16px 0}
+    .pill{display:inline-flex;align-items:center;gap:8px;padding:8px 10px;border:1px solid #334155;border-radius:999px;background:rgba(15,23,42,.4);font-size:12px;color:#cbd5e1}
+    footer{padding:18px 20px;color:#94a3b8;font-size:12px;text-align:center}
+    .hidden{display:none !important}
+    .flex{display:flex;align-items:center;gap:10px}
+    .right{margin-left:auto}
+    .copy{cursor:pointer;font-size:12px;opacity:.8}
+    .copy:hover{opacity:1}
+    .small-link{font-size:12px;color:#a5b4fc;text-decoration:none}
+    .small-link:hover{text-decoration:underline}
+    .success-block{background:#08210f;border:1px solid #1a3f26;border-radius:12px;padding:12px;margin-top:12px}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <a href="/">← Back to Tharaga</a>
+      <span class="pill">Secure Auth • Supabase</span>
+    </header>
 
-<!-- Modal -->
-<div id="authOverlay" class="auth-overlay" aria-hidden="true">
-  <div class="auth-modal" role="dialog" aria-modal="true" aria-labelledby="authTitle">
-    <button id="authClose" class="close-x" title="Close">✕</button>
-    <div id="authBody">
-      <h2 id="authTitle">Sign in to continue</h2>
-      <p id="authSubtitle" class="small">Create an account or sign in to access partner portals and listings.</p>
+    <main>
+      <section class="card" aria-live="polite">
+        <h1>Sign in to continue</h1>
+        <p class="muted">Access partner portals (NoBroker, MagicBricks, etc.) and create/manage listings.</p>
 
-      <div style="margin-top:12px">
-        <!-- Email input -->
-        <div class="auth-row">
-          <input id="authEmail" placeholder="you@domain.com" type="email" autocomplete="email" />
+        <!-- session-state area (hidden until logged in) -->
+        <div id="authed" class="hidden">
+          <div class="success-block">
+            <div class="flex">
+              <strong>You're signed in</strong>
+              <span id="userEmail" class="right"></span>
+            </div>
+            <div id="continueWrap" class="flex" style="margin-top:8px">
+              <button id="continueBtn" class="btn btn-primary">Continue</button>
+              <a id="viewHome" class="btn btn-ghost" href="/">Go Home</a>
+              <button id="signOutBtn" class="btn btn-danger right">Sign out</button>
+            </div>
+          </div>
         </div>
 
-        <!-- Password input (optional; used for sign-in / sign-up) -->
-        <div class="auth-row">
-          <input id="authPassword" placeholder="Password (optional — magic link is recommended)" type="password" autocomplete="current-password" />
-        </div>
+        <!-- auth form (hidden if logged in) -->
+        <form id="authForm" autocomplete="on">
+          <label for="email">Email</label>
+          <input id="email" name="email" type="email" placeholder="you@domain.com" autocomplete="email" required>
 
-        <!-- Actions -->
-        <div class="auth-actions">
-          <button id="btnSignIn" class="btn btn-primary">Sign in / Magic link</button>
-          <button id="btnSignUp" class="btn btn-ghost">Sign up (email+password)</button>
-        </div>
+          <div class="row">
+            <div style="flex:1">
+              <label for="password">Password <span class="hint">(optional — use Magic Link for fastest login)</span></label>
+              <input id="password" name="password" type="password" placeholder="••••••••" autocomplete="current-password">
+            </div>
+          </div>
 
-        <div style="margin-top:10px">
-          <span class="small">Or</span>
-          <button id="btnSignOut" class="btn" style="margin-left:8px;display:none">Sign out</button>
-        </div>
+          <div class="row" style="margin-top:12px">
+            <button id="magicBtn" class="btn btn-primary" type="button">Continue with Magic Link</button>
+            <button id="pwdBtn" class="btn btn-ghost" type="button">Sign in with Password</button>
+          </div>
 
-        <div id="authMsg" class="auth-footer" aria-live="polite"></div>
-      </div>
-    </div>
+          <div class="row" style="margin-top:10px">
+            <button id="signupBtn" class="btn btn-ghost" type="button">Create Account</button>
+            <a id="forgotLink" class="small-link right" href="#">Forgot password?</a>
+          </div>
+
+          <div id="msg" class="msg" role="status"></div>
+        </form>
+
+        <div class="divider"></div>
+
+        <div class="hint">
+          Tip: If you reached this page after clicking a partner link, we'll return you there after sign-in.
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      © <span id="year"></span> Tharaga • Auth powered by Supabase • Netlify deploy ready
+    </footer>
   </div>
-</div>
 
-<script type="module">
-/*
-  Auth gate script (module)
-  - Requirements: fill SUPABASE_URL and SUPABASE_ANON_KEY below
-  - How it works:
-      * Intercepts clicks on links that match configured protected domains OR have data-protected="true".
-      * If not logged in -> opens modal; stores pending target in window.__pendingAuthTarget.
-      * After login success, navigates to stored target (same tab) or opens new tab depending on attribute.
-*/
+  <!-- Auth + Gate Logic -->
+  <script type="module">
+    // ========================= CONFIG =========================
+    // Fill these with your project values
+    const SUPABASE_URL = 'https://YOUR-PROJECT.supabase.co'; // <-- REQUIRED
+    const SUPABASE_ANON_KEY = 'YOUR_PUBLIC_ANON_KEY';         // <-- REQUIRED
 
-import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
+    // Domains we auto-protect when using the gate snippet on other pages
+    const PROTECTED_DOMAINS = ['nobroker', 'magicbricks', '99acres', 'housing.com', 'makaan', 'quikrhomes'];
 
-const SUPABASE_URL = 'https://wedevtjjmdvngyshqdro.supabase.co';    // <-- REPLACE
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndlZGV2dGpqbWR2bmd5c2hxZHJvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU0NzYwMzgsImV4cCI6MjA3MTA1MjAzOH0.Ex2c_sx358dFdygUGMVBohyTVto6fdEQ5nydDRh9m6M';                  // <-- REPLACE
+    // Callback page for magic links / email confirmations. Keep under your domain and add to Supabase Redirect URLs.
+    const POST_AUTH_CALLBACK = `${location.origin}/login_signup?post_auth=1`;
 
-const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    // ========================= IMPORT =========================
+    import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+    const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-// ----------------- UI bindings -----------------
-const overlay = document.getElementById('authOverlay');
-const closeBtn = document.getElementById('authClose');
-const btnSignIn = document.getElementById('btnSignIn');
-const btnSignUp = document.getElementById('btnSignUp');
-const btnSignOut = document.getElementById('btnSignOut');
-const emailInput = document.getElementById('authEmail');
-const passInput = document.getElementById('authPassword');
-const authMsg = document.getElementById('authMsg');
+    // ========================= UI HOOKS ========================
+    const yearEl = document.getElementById('year');
+    yearEl.textContent = new Date().getFullYear();
 
-function showModal(pendingTarget = null) {
-  window.__pendingAuthTarget = pendingTarget;
-  overlay.style.display = 'flex';
-  overlay.setAttribute('aria-hidden', 'false');
-}
-function hideModal() {
-  overlay.style.display = 'none';
-  overlay.setAttribute('aria-hidden', 'true');
-}
+    const form = document.getElementById('authForm');
+    const authed = document.getElementById('authed');
+    const magicBtn = document.getElementById('magicBtn');
+    const pwdBtn = document.getElementById('pwdBtn');
+    const signupBtn = document.getElementById('signupBtn');
+    const signOutBtn = document.getElementById('signOutBtn');
+    const continueBtn = document.getElementById('continueBtn');
+    const emailEl = document.getElementById('email');
+    const pwdEl = document.getElementById('password');
+    const msgEl = document.getElementById('msg');
+    const userEmail = document.getElementById('userEmail');
 
-closeBtn.onclick = () => hideModal();
-overlay.onclick = (e) => { if (e.target === overlay) hideModal(); }
+    // ========================= HELPERS =========================
+    const storage = {
+      get(){ try { return JSON.parse(localStorage.getItem('post_auth_target')||'null'); } catch { return null } },
+      set(v){ localStorage.setItem('post_auth_target', JSON.stringify(v)); },
+      clear(){ localStorage.removeItem('post_auth_target'); }
+    };
 
-// run on page init
-(async function onInit() {
-  try {
-    const { data } = await supabase.auth.getSession();
-    if (data?.session) {
-      // if user already logged in and we have a saved target — go there
-      const raw = localStorage.getItem('post_auth_target');
-      if (raw) {
-        const pending = JSON.parse(raw);
-        localStorage.removeItem('post_auth_target');
-        if (pending.openInNewTab) window.open(pending.href, '_blank');
-        else window.location.href = pending.href;
-      } else {
-        // optionally, if ?post_auth=1 and no target, send to homepage or last path
-        const params = new URLSearchParams(location.search);
-        if (params.get('post_auth') === '1') window.location.href = '/';
+    function setMsg(text, ok=false){
+      msgEl.textContent = text || '';
+      msgEl.className = 'msg' + (text? (ok? ' ok':' err') : '');
+    }
+
+    function getNextFromQuery(){
+      const p = new URLSearchParams(location.search);
+      return p.get('next');
+    }
+
+    function ensurePendingTargetFromQuery(){
+      // If ?next=something is present and no stored target, store it.
+      const next = getNextFromQuery();
+      if (next && !storage.get()) {
+        try {
+          const href = decodeURIComponent(next);
+          const openInNewTab = false;
+          storage.set({ href, openInNewTab });
+        } catch {}
       }
     }
-  } catch (e) {
-    console.error('auth init err', e);
-  }
-})();
 
-// ----------------- Auth helpers -----------------
-async function isLoggedIn() {
-  try {
-    const { data } = await supabase.auth.getSession();
-    return !!(data && data.session);
-  } catch (err) {
-    return false;
-  }
-}
-
-async function currentUserEmail() {
-  const { data } = await supabase.auth.getUser();
-  return data?.user?.email ?? null;
-}
-
-async function signInMagic(email) {
-  authMsg.textContent = 'Sending magic link... (check spam).';
-  // ensure we have saved pending target (could be null)
-  // (this value already saved on click interception)
-  const redirectTo = `${window.location.origin}/login_signup?post_auth=1`;
-  const { error } = await supabase.auth.signInWithOtp({
-    email,
-    options: {
-      emailRedirectTo: window.location.origin  // must be allowed in Supabase auth settings
+    function showAuthed(email){
+      userEmail.textContent = email ? `• ${email}` : '';
+      authed.classList.remove('hidden');
+      form.classList.add('hidden');
     }
-  });
-  if (error) authMsg.textContent = 'Error: ' + error.message;
-  else authMsg.textContent = 'Magic link sent. Check your email to continue.';
-}
+    function showForm(){
+      authed.classList.add('hidden');
+      form.classList.remove('hidden');
+    }
 
-async function signUpWithPassword(email, password) {
-  authMsg.textContent = 'Creating account...';
-  const { data, error } = await supabase.auth.signUp({
-    email,
-    password
-  });
-  if (error) authMsg.textContent = 'Error: ' + error.message;
-  else {
-    authMsg.textContent = 'Account created. Confirm via email if required.';
-    // Supabase signs user in automatically depending on settings; we'll monitor onAuthStateChange below
-  }
-}
+    // ========================= INIT ===========================
+    ensurePendingTargetFromQuery();
 
-async function signOut() {
-  await supabase.auth.signOut();
-  authMsg.textContent = 'Signed out.';
-  btnSignOut.style.display = 'none';
-}
-
-// Monitor auth state and auto-continue pending navigation
-supabase.auth.onAuthStateChange(async (event, session) => {
-  if (session && session.access_token) {
-    btnSignOut.style.display = 'inline-block';
-    hideModal();
-
-    // first check in-memory pending, otherwise check localStorage
-    const pending = window.__pendingAuthTarget || (() => {
-      const raw = localStorage.getItem('post_auth_target');
-      return raw ? JSON.parse(raw) : null;
+    // When page loads, if already signed in and have pending target, continue.
+    (async function onInit(){
+      try {
+        const { data } = await supabase.auth.getSession();
+        const session = data?.session;
+        const pending = storage.get();
+        if (session) {
+          showAuthed(session.user?.email);
+          if (pending) {
+            // small delay for UI feel
+            setTimeout(()=>{
+              storage.clear();
+              if (pending.openInNewTab) window.open(pending.href, '_blank');
+              else location.href = pending.href;
+            }, 400);
+          }
+        } else {
+          showForm();
+        }
+      } catch (e) {
+        console.error(e);
+        showForm();
+      }
     })();
 
-    if (pending) {
-      localStorage.removeItem('post_auth_target');
-      if (pending.openInNewTab) window.open(pending.href, '_blank');
-      else window.location.href = pending.href;
-      window.__pendingAuthTarget = null;
-    } else {
-      authMsg.textContent = 'Signed in.';
+    // Supabase will fire this when magic link lands or password sign-in completes
+    supabase.auth.onAuthStateChange((event, session) => {
+      if (session?.access_token) {
+        showAuthed(session.user?.email);
+        const pending = storage.get();
+        if (pending) {
+          storage.clear();
+          if (pending.openInNewTab) window.open(pending.href, '_blank');
+          else location.href = pending.href;
+        } else if (new URLSearchParams(location.search).get('post_auth') === '1') {
+          // If we came from an email and no target, go home
+          setTimeout(()=>{ location.href = '/'; }, 500);
+        }
+      }
+    });
+
+    // ========================= ACTIONS ========================
+    magicBtn.addEventListener('click', async () => {
+      const email = emailEl.value.trim();
+      if (!email) return setMsg('Enter a valid email');
+      setMsg('Sending magic link…');
+      // Ensure a pending target exists; if none, default to referer or home
+      if (!storage.get()) {
+        const fallback = document.referrer && new URL(document.referrer).origin === location.origin
+          ? new URL(document.referrer).pathname
+          : '/';
+        storage.set({ href: fallback, openInNewTab: false });
+      }
+      const { error } = await supabase.auth.signInWithOtp({
+        email,
+        options: { emailRedirectTo: POST_AUTH_CALLBACK }
+      });
+      if (error) setMsg(error.message);
+      else setMsg('Magic link sent! Check your inbox (and spam).', true);
+    });
+
+    pwdBtn.addEventListener('click', async () => {
+      const email = emailEl.value.trim();
+      const password = pwdEl.value;
+      if (!email || !password) return setMsg('Enter email + password');
+      setMsg('Signing in…');
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) setMsg(error.message);
+      else setMsg('Signed in ✓', true);
+    });
+
+    signupBtn.addEventListener('click', async () => {
+      const email = emailEl.value.trim();
+      const password = pwdEl.value;
+      if (!email || !password) return setMsg('Enter email + password to create account');
+      setMsg('Creating account…');
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: { emailRedirectTo: POST_AUTH_CALLBACK }
+      });
+      if (error) setMsg(error.message);
+      else setMsg('Account created. Check your email to confirm.', true);
+    });
+
+    signOutBtn?.addEventListener('click', async () => {
+      await supabase.auth.signOut();
+      storage.clear();
+      showForm();
+      setMsg('Signed out.', true);
+    });
+
+    continueBtn?.addEventListener('click', () => {
+      const pending = storage.get();
+      storage.clear();
+      if (pending) {
+        if (pending.openInNewTab) window.open(pending.href, '_blank');
+        else location.href = pending.href;
+      } else {
+        location.href = '/';
+      }
+    });
+
+    // ========================= OPTIONAL: "Gate snippet" for other pages =========================
+    // Copy the function below into any page where you want to protect links/buttons.
+    // Example usage:
+    //   enableAuthGate({ selector: 'a', protectedDomains: PROTECTED_DOMAINS });
+    //   // to explicitly protect any element: add data-protected="true", data-open-new-tab="true"
+    
+    window.enableAuthGate = function enableAuthGate({ selector = 'a', protectedDomains = PROTECTED_DOMAINS } = {}){
+      document.addEventListener('click', async (e) => {
+        const el = e.target.closest(selector);
+        if (!el) return;
+        const isExplicit = el.dataset?.protected === 'true';
+        const href = el.getAttribute?.('href');
+        const isButton = !href; // for buttons/CTAs
+        const openInNewTab = el.dataset?.openNewTab === 'true' || el.target === '_blank';
+
+        let needsProtect = isExplicit;
+        if (!needsProtect && href) {
+          try {
+            const url = new URL(href, location.href);
+            needsProtect = protectedDomains.some(d => url.hostname.includes(d));
+          } catch {}
+        }
+        if (!needsProtect) return;
+
+        // Check auth
+        const { data } = await supabase.auth.getSession();
+        if (data?.session) return; // already logged in, allow default
+
+        // Block and send to login page
+        e.preventDefault();
+        const target = href ? { href, openInNewTab } : { href: location.pathname + location.search + location.hash, openInNewTab:false };
+        localStorage.setItem('post_auth_target', JSON.stringify(target));
+        location.href = `/login_signup?next=${encodeURIComponent(target.href)}`;
+      }, true);
     }
-  } else {
-    btnSignOut.style.display = 'none';
-  }
-});
-
-// Hook up buttons
-btnSignIn.onclick = async (ev) => {
-  ev.preventDefault();
-  const email = emailInput.value.trim();
-  const pwd = passInput.value;
-  if (!email) { authMsg.textContent = 'Enter an email.'; return; }
-  // If password present -> try sign-in with password (optional)
-  if (pwd) {
-    authMsg.textContent = 'Signing in...';
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password: pwd });
-    if (error) authMsg.textContent = 'Error: ' + error.message;
-    else {
-      authMsg.textContent = 'Signed in.';
-    }
-  } else {
-    // send magic link / OTP (recommended)
-    await signInMagic(email);
-  }
-};
-
-btnSignUp.onclick = async (ev) => {
-  ev.preventDefault();
-  const email = emailInput.value.trim();
-  const pwd = passInput.value;
-  if (!email || !pwd) { authMsg.textContent = 'Provide email and password to sign up.'; return; }
-  await signUpWithPassword(email, pwd);
-};
-
-btnSignOut.onclick = async (ev) => { ev.preventDefault(); await signOut(); };
-
-// ----------------- Link protection -----------------
-/*
-  Protected behavior:
-  - Auto-detect external real-estate portals and protect them
-  - OR protect any element with data-protected="true"
-  - To explicitly protect an <a> tag add: data-protected="true" data-open-new-tab="true"
-*/
-const defaultProtectedDomains = [
-  'nobroker', 'magicbricks', '99acres', 'housing.com', 'makaan', 'quikrhomes'
-];
-
-function isDomainProtected(href) {
-  try {
-    const url = new URL(href, location.href);
-    return defaultProtectedDomains.some(d => url.hostname.includes(d));
-  } catch (err) {
-    return false;
-  }
-}
-
-async function handleDocumentClick(e) {
-  const a = e.target.closest && e.target.closest('a');
-  const btn = e.target.closest && e.target.closest('button');
-  let targetEl = a || btn;
-  if (!targetEl) return;
-
-  // if element has explicit data-protected attribute
-  const explicit = targetEl.dataset && targetEl.dataset.protected === 'true';
-
-  // If anchor: check href domain
-  if (a) {
-    const href = a.getAttribute('href');
-    if (!href || href.startsWith('#') || href.startsWith('mailto:') || href.startsWith('tel:')) return;
-    const openInNewTab = a.dataset.openNewTab === 'true' || a.target === '_blank';
-
-    const domainProtected = isDomainProtected(href);
-    if (!explicit && !domainProtected) return; // not protected
-
-    // Protected: stop default until auth check
-    e.preventDefault();
-
-    // If already logged in -> proceed
-    if (await isLoggedIn()) {
-      if (openInNewTab) window.open(href, '_blank');
-      else location.href = href;
-      return;
-    }
-
-    // -> Use localStorage so the target survives when user opens magic link in new tab
-
-    const pending = { href, openInNewTab };
-    localStorage.setItem('post_auth_target', JSON.stringify(pending));
-    showModal(pending);
-    // pre-fill email if we have it from previous session
-    const maybeEmail = await currentUserEmail();
-    if (maybeEmail) emailInput.value = maybeEmail;
-    return;
-  }
-
-  // If button has data-protected, intercept (for non-link CTAs)
-  if (btn && btn.dataset && btn.dataset.protected === 'true') {
-    e.preventDefault();
-    if (await isLoggedIn()) {
-      // allow default (trigger original handler) by re-dispatching click
-      btn.removeAttribute('data-protected'); // prevent loop
-      btn.click();
-      btn.dataset.protected = 'true'; // restore if needed
-      return;
-    } else {
-      window.__pendingAuthTarget = null;
-      showModal(null);
-      return;
-    }
-  }
-}
-
-// Listen to clicks on document (delegation)
-document.addEventListener('click', handleDocumentClick, true);
-
-// MutationObserver to re-scan newly added links (Softr or client-side rendered content)
-const observer = new MutationObserver((mutations) => {
-  // For performance we do not auto-modify DOM, but we could add data attributes here if you prefer
-  // Keep this hook if you want automatic marking of external links
-});
-observer.observe(document.body, { childList: true, subtree: true });
-
-// ----------------- Helper: auto-mark links you can change this list -----------------
-// If you prefer, mark specific links in your HTML:
-// <a href="https://nobroker.in/..." data-protected="true">...</a>
-// The script will respect data-protected and data-open-new-tab attributes
-
-// ----------------- End module -----------------
-</script>
+  </script>
+</body>
+</html>

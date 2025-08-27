@@ -66,8 +66,8 @@
 
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
 
-const SUPABASE_URL = 'https://YOUR-PROJECT.supabase.co';    // <-- REPLACE
-const SUPABASE_ANON_KEY = 'YOUR_ANON_KEY';                  // <-- REPLACE
+const SUPABASE_URL = 'https://wedevtjjmdvngyshqdro.supabase.co';    // <-- REPLACE
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndlZGV2dGpqbWR2bmd5c2hxZHJvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU0NzYwMzgsImV4cCI6MjA3MTA1MjAzOH0.Ex2c_sx358dFdygUGMVBohyTVto6fdEQ5nydDRh9m6M';                  // <-- REPLACE
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
@@ -94,6 +94,29 @@ function hideModal() {
 closeBtn.onclick = () => hideModal();
 overlay.onclick = (e) => { if (e.target === overlay) hideModal(); }
 
+// run on page init
+(async function onInit() {
+  try {
+    const { data } = await supabase.auth.getSession();
+    if (data?.session) {
+      // if user already logged in and we have a saved target — go there
+      const raw = localStorage.getItem('post_auth_target');
+      if (raw) {
+        const pending = JSON.parse(raw);
+        localStorage.removeItem('post_auth_target');
+        if (pending.openInNewTab) window.open(pending.href, '_blank');
+        else window.location.href = pending.href;
+      } else {
+        // optionally, if ?post_auth=1 and no target, send to homepage or last path
+        const params = new URLSearchParams(location.search);
+        if (params.get('post_auth') === '1') window.location.href = '/';
+      }
+    }
+  } catch (e) {
+    console.error('auth init err', e);
+  }
+})();
+
 // ----------------- Auth helpers -----------------
 async function isLoggedIn() {
   try {
@@ -111,6 +134,9 @@ async function currentUserEmail() {
 
 async function signInMagic(email) {
   authMsg.textContent = 'Sending magic link... (check spam).';
+  // ensure we have saved pending target (could be null)
+  // (this value already saved on click interception)
+  const redirectTo = `${window.location.origin}/login_signup?post_auth=1`;
   const { error } = await supabase.auth.signInWithOtp({
     email,
     options: {
@@ -143,24 +169,24 @@ async function signOut() {
 // Monitor auth state and auto-continue pending navigation
 supabase.auth.onAuthStateChange(async (event, session) => {
   if (session && session.access_token) {
-    // logged in
-    authMsg.textContent = 'Signed in as ' + (session.user?.email ?? '');
     btnSignOut.style.display = 'inline-block';
     hideModal();
 
-    // If there was a pending target, navigate now
-    const pending = window.__pendingAuthTarget;
+    // first check in-memory pending, otherwise check localStorage
+    const pending = window.__pendingAuthTarget || (() => {
+      const raw = localStorage.getItem('post_auth_target');
+      return raw ? JSON.parse(raw) : null;
+    })();
+
     if (pending) {
-      // open in same tab by default, open new tab if attribute requested
-      if (pending.openInNewTab) {
-        window.open(pending.href, '_blank');
-      } else {
-        window.location.href = pending.href;
-      }
+      localStorage.removeItem('post_auth_target');
+      if (pending.openInNewTab) window.open(pending.href, '_blank');
+      else window.location.href = pending.href;
       window.__pendingAuthTarget = null;
+    } else {
+      authMsg.textContent = 'Signed in.';
     }
   } else {
-    // signed out
     btnSignOut.style.display = 'none';
   }
 });
@@ -243,9 +269,11 @@ async function handleDocumentClick(e) {
       return;
     }
 
-    // Not logged in -> show modal and store pending
-    window.__pendingAuthTarget = { href, openInNewTab };
-    showModal({ href, openInNewTab });
+    // -> Use localStorage so the target survives when user opens magic link in new tab
+
+    const pending = { href, openInNewTab };
+    localStorage.setItem('post_auth_target', JSON.stringify(pending));
+    showModal(pending);
     // pre-fill email if we have it from previous session
     const maybeEmail = await currentUserEmail();
     if (maybeEmail) emailInput.value = maybeEmail;

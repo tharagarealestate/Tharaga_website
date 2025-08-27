@@ -52,7 +52,7 @@
     p.muted{color:var(--muted);margin:0 0 16px;font-size:14px}
     label{display:block;font-size:13px;margin:10px 0 6px;color:var(--txt)}
     input{
-      width:100%;padding:12px 12px;border-radius:10px;
+      position: relative;width:100%;padding-right: 40px ;border-radius:10px;
       border:1px solid #333333;
       background:#1e1e1e;
       color:var(--txt);
@@ -138,8 +138,8 @@
           <div class="row">
             <div style="flex:1">
               <label for="password">Password <span class="hint">(optional — use Magic Link for fastest login)</span></label>
-              <input id="password" name="password" type="password" placeholder="••••••••" autocomplete="current-password" id="toggleEye" class="toggle-eye">👁>
-         	 <!-- <span id="toggleEye" class="toggle-eye">👁</span> -->
+              <input id="password" name="password" type="password" placeholder="••••••••" autocomplete="current-password">
+         	  <span id="toggleEye" class="toggle-eye">👁</span>
             </div>
           </div>
 

@@ -19,12 +19,14 @@
     header a, header button{color:var(--txt);text-decoration:none;font-weight:600;opacity:.9}
     header a:hover{opacity:1}
     main{display:grid;place-items:center;padding:24px}
-    .card{width:420px;max-width:95vw;background:linear-gradient(180deg,#1a0103,rgba(255,255,255,.02));backdrop-filter:saturate(180%) blur(8px);border:1px solid rgba(148,163,184,.2);border-radius:16px;box-shadow:0 10px 40px rgba(0,0,0,.35);padding:22px}
+    .card{width:420px;max-width:95vw;background:linear-gradient(180deg,#1a0103,#5b1319);backdrop-filter:saturate(180%) blur(8px);border:1px solid rgba(148,163,184,.2);border-radius:16px;box-shadow:0 10px 40px rgba(0,0,0,.35);padding:22px}
     h1{font-size:22px;margin:0 0 6px}
     p.muted{color:var(--muted);margin:0 0 16px;font-size:14px}
     label{display:block;font-size:13px;margin:10px 0 6px;color:#cbd5e1}
     input{width:100%;padding:12px 12px;border-radius:10px;border:1px solid #203058;background:#0b1325;color:var(--txt);outline:none}
     input:focus{border-color:#3752a6;box-shadow:0 0 0 3px rgba(59,130,246,.15)}
+	.toggle-eye{position:absolute;top:50%;right:12px;transform:translateY(-50%);cursor:pointer;font-size:14px;opacity:.7}
+    .toggle-eye:hover{opacity:1}
     .row{display:flex;gap:10px}
     .btn{cursor:pointer;border:0;border-radius:10px;padding:12px 14px;font-weight:700}
     .btn-primary{background:linear-gradient(180deg,#3b82f6,#2563eb);color:white}
@@ -83,6 +85,8 @@
             <div style="flex:1">
               <label for="password">Password <span class="hint">(optional — use Magic Link for fastest login)</span></label>
               <input id="password" name="password" type="password" placeholder="••••••••" autocomplete="current-password">
+			  <input id="password" type="password" placeholder="••••••••">
+         	 <span id="toggleEye" class="toggle-eye">👁</span>
             </div>
           </div>
 
@@ -93,7 +97,8 @@
 
           <div class="row" style="margin-top:10px">
             <button id="signupBtn" class="btn btn-ghost" type="button">Create Account</button>
-            <a id="forgotLink" class="small-link right" href="#">Forgot password?</a>
+            <a id="forgotLink" class="small-link right" href="/reset-password">Forgot password?</a>
+
           </div>
 
           <div id="msg" class="msg" role="status"></div>
@@ -144,6 +149,7 @@
     const pwdEl = document.getElementById('password');
     const msgEl = document.getElementById('msg');
     const userEmail = document.getElementById('userEmail');
+	const toggleEye=document.getElementById('toggleEye');
 
     // ========================= HELPERS =========================
     const storage = {
@@ -183,6 +189,12 @@
       authed.classList.add('hidden');
       form.classList.remove('hidden');
     }
+	// === Password eye toggle ===
+    toggleEye.addEventListener('click',()=>{
+      const t=pwdEl.type==='password'?'text':'password';
+      pwdEl.type=t;
+      toggleEye.textContent=t==='password'?'👁':'🙈';
+    });
 
     // ========================= INIT ===========================
     ensurePendingTargetFromQuery();

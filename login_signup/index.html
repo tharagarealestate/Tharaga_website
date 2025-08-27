@@ -198,7 +198,7 @@
     const PROTECTED_DOMAINS = ['nobroker', 'magicbricks', '99acres', 'housing.com', 'makaan', 'quikrhomes'];
 
     // Callback page for magic links / email confirmations. Keep under your domain and add to Supabase Redirect URLs.
-    const POST_AUTH_CALLBACK = `${location.origin}/login_signup?post_auth=1`;
+    const POST_AUTH_CALLBACK = `${location.origin}/login_signup/?post_auth=1`;
 
     // ========================= IMPORT =========================
     import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';

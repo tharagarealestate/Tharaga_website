@@ -19,7 +19,7 @@
     header a, header button{color:var(--txt);text-decoration:none;font-weight:600;opacity:.9}
     header a:hover{opacity:1}
     main{display:grid;place-items:center;padding:24px}
-    .card{width:420px;max-width:95vw;background:linear-gradient(180deg,rgba(255,255,255,.04),rgba(255,255,255,.02));backdrop-filter:saturate(180%) blur(8px);border:1px solid rgba(148,163,184,.2);border-radius:16px;box-shadow:0 10px 40px rgba(0,0,0,.35);padding:22px}
+    .card{width:420px;max-width:95vw;background:linear-gradient(180deg,#1a0103,rgba(255,255,255,.02));backdrop-filter:saturate(180%) blur(8px);border:1px solid rgba(148,163,184,.2);border-radius:16px;box-shadow:0 10px 40px rgba(0,0,0,.35);padding:22px}
     h1{font-size:22px;margin:0 0 6px}
     p.muted{color:var(--muted);margin:0 0 16px;font-size:14px}
     label{display:block;font-size:13px;margin:10px 0 6px;color:#cbd5e1}
@@ -51,13 +51,13 @@
   <div class="container">
     <header>
       <a href="/">← Back to Tharaga</a>
-      <span class="pill">Secure Auth • Supabase</span>
+      <span class="pill">Verified Listings • Direct Owner</span>
     </header>
 
     <main>
       <section class="card" aria-live="polite">
         <h1>Sign in to continue</h1>
-        <p class="muted">Access partner portals (NoBroker, MagicBricks, etc.) and create/manage listings.</p>
+        <p class="muted">"Browse only approved builder projects — safe, transparent, and verified"</p>
 
         <!-- session-state area (hidden until logged in) -->
         <div id="authed" class="hidden">
@@ -108,7 +108,7 @@
     </main>
 
     <footer>
-      © <span id="year"></span> Tharaga • Auth powered by Supabase • Netlify deploy ready
+      © <span id="year"></span> Tharaga
     </footer>
   </div>
 
@@ -116,8 +116,8 @@
   <script type="module">
     // ========================= CONFIG =========================
     // Fill these with your project values
-    const SUPABASE_URL = 'https://YOUR-PROJECT.supabase.co'; // <-- REQUIRED
-    const SUPABASE_ANON_KEY = 'YOUR_PUBLIC_ANON_KEY';         // <-- REQUIRED
+    const SUPABASE_URL = 'https://wedevtjjmdvngyshqdro.supabase.co'; // <-- REQUIRED
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndlZGV2dGpqbWR2bmd5c2hxZHJvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU0NzYwMzgsImV4cCI6MjA3MTA1MjAzOH0.Ex2c_sx358dFdygUGMVBohyTVto6fdEQ5nydDRh9m6M';         // <-- REQUIRED
 
     // Domains we auto-protect when using the gate snippet on other pages
     const PROTECTED_DOMAINS = ['nobroker', 'magicbricks', '99acres', 'housing.com', 'makaan', 'quikrhomes'];

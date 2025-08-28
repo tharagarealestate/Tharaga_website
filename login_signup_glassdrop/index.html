@@ -138,6 +138,31 @@
     0% { transform: translateY(40px) scale(0.96); opacity: 0; }
     100% { transform: translateY(0) scale(1); opacity: 1; }
     }
+
+    .close-btn {
+    position: fixed;
+    top: 15px;
+    right: 20px;
+    background: linear-gradient(180deg, var(--acc), #b8860b, #8b6508);
+    border: none;
+    font-size: 24px;
+    font-weight: bold;
+    color: #111; /* near-black for readability */
+    cursor: pointer;
+    z-index: 9999;
+
+    /* Better aesthetics */
+    padding: 6px 12px;
+    border-radius: 50%; /* circular button */
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+    transition: all 0.3s ease;
+  }
+
+  .close-btn:hover {
+    color: #fff; /* white icon on hover */
+    background: linear-gradient(180deg, #b8860b, #8b6508, #5a3a02);
+    transform: scale(1.1); /* subtle zoom */
+  }
     
 </style>
 

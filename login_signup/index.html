@@ -325,6 +325,24 @@
       authed.classList.add('hidden');
       form.classList.remove('hidden');
     }
+
+    function getSessionFromUrl() {
+  // The tokens might be in the hash (after #) or in the query (after ?)
+  const raw = (window.location.hash && window.location.hash.slice(1)) || window.location.search.slice(1);
+  const params = new URLSearchParams(raw);
+  return {
+    access_token: params.get('access_token'),
+    refresh_token: params.get('refresh_token'),
+    expires_in: params.get('expires_in'),
+    provider_token: params.get('provider_token'),
+    error: params.get('error')
+  };
+}
+
+// usage
+const session = getSessionFromUrl();
+console.log('Parsed tokens:', session);
+
 	// === Password eye toggle ===
     toggleEye.addEventListener('click',()=>{
       const t=pwdEl.type==='password'?'text':'password';

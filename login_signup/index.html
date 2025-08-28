@@ -187,8 +187,6 @@
     </footer>
   </div>
 
-  <!-- ✅ Add Supabase library before your script -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.6/dist/umd/supabase.min.js"></script>
   <!-- Auth + Gate Logic -->
   <script type="module">
     // ========================= CONFIG =========================
@@ -207,68 +205,54 @@
     const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     window.supabase = supabase; // expose for DevTools
 
-    (async () => {
-    console.log('PAGE LOAD - location.href:', location.href);
-    console.log('PAGE LOAD - location.hash:', location.hash);
-    console.log('PAGE LOAD - location.search:', location.search);
-
-    // 1) Let the SDK try first (it may parse the hash automatically)
-    try {
-      const { data, error } = await supabase.auth.getSession();
-      if (error) console.warn('getSession error', error);
-      if (data?.session) {
-        console.log('Session available from client:', data.session);
-        // tidy up URL: remove post_auth param and hash if present
-        history.replaceState(null, '', location.pathname);
-        return;
-      }
-    } catch (e) {
-      console.warn('getSession thrown', e);
+    // ---------- INSERT: robust redirect token handler ----------
+async function handleRedirectTokens() {
+  // 1) SDK may already have a session stored (fast path)
+  try {
+    const { data } = await supabase.auth.getSession();
+    if (data?.session) {
+      return data.session;
     }
+  } catch (e) {
+    console.warn('getSession thrown', e);
+  }
 
-    // 2) Fallback: parse tokens manually from hash OR query OR raw URL (covers weird redirects)
-    function parseTokensFromHashOrSearch() {
-      // prefer fragment
-      const hash = (window.location.hash || '').replace(/^#/, '?');
-      let params = new URLSearchParams(hash);
-      let access_token = params.get('access_token');
-      let refresh_token = params.get('refresh_token');
+  // 2) Parse fragment (#access_token=...) first, then query
+  const rawHash = window.location.hash.replace(/^#/, '');
+  const params = new URLSearchParams(rawHash || window.location.search || '');
+  const access_token = params.get('access_token');
+  const refresh_token = params.get('refresh_token');
 
-      if (!access_token) {
-        // try querystring
-        const searchParams = new URLSearchParams(window.location.search);
-        access_token = searchParams.get('access_token') || access_token;
-        refresh_token = searchParams.get('refresh_token') || refresh_token;
-      }
-
-      if (!access_token) {
-        // last resort: find tokens embedded/encoded in the raw URL
-        const mAccess = location.href.match(/access_token=([^&]+)/);
-        const mRefresh = location.href.match(/refresh_token=([^&]+)/);
-        if (mAccess) access_token = decodeURIComponent(mAccess[1]);
-        if (mRefresh) refresh_token = decodeURIComponent(mRefresh[1]);
-      }
-
-      return { access_token, refresh_token };
+  if (access_token && refresh_token) {
+    // try to set the session
+    const { data, error } = await supabase.auth.setSession({ access_token, refresh_token });
+    if (error) {
+      console.error('Failed to setSession from redirect tokens', error);
+      return null;
     }
+    // Clean tokens from URL but keep other query params intact
+    const cleanedSearch = location.search
+      .replace(/([?&])access_token=[^&]*(&?)/g,'$1')
+      .replace(/([?&])refresh_token=[^&]*(&?)/g,'$1')
+      .replace(/(^\?|&$)/,'');
+    history.replaceState(null, '', location.pathname + (cleanedSearch ? '?' + cleanedSearch : ''));
 
-    const { access_token, refresh_token } = parseTokensFromHashOrSearch();
-    console.log('Parsed tokens:', { access_token: !!access_token, refresh_token: !!refresh_token });
+    return data?.session ?? null;
+  }
+  return null;
+}
 
-    if (access_token && refresh_token) {
-      try {
-        await supabase.auth.setSession({ access_token, refresh_token });
-        console.log('✅ Session set from redirect tokens and stored by supabase-js');
-        // remove tokens & query for cleanliness
-        history.replaceState(null, '', location.pathname);
-        return;
-      } catch (err) {
-        console.error('Failed to set session from tokens:', err);
-      }
-    } else {
-      console.log('No tokens found in URL after redirect — likely lost during host redirect.');
-    }
-  })();
+// Call it once on load
+(async () => {
+  console.log('PAGE LOAD - location.href:', location.href);
+  console.log('PAGE LOAD - location.hash:', location.hash);
+  console.log('PAGE LOAD - location.search:', location.search);
+
+  const session = await handleRedirectTokens();
+  console.log('handleRedirectTokens -> session?', !!session);
+  // don't return here; let the rest of onInit() decide UI state
+})();
+
 
     // ========================= UI HOOKS ========================
     const yearEl = document.getElementById('year');
@@ -304,17 +288,29 @@
       return p.get('next');
     }
 
+    function isSafeRedirect(href) {
+      try {
+        const url = new URL(href, location.origin);
+        // allow only same-origin or explicitly allowed origins (extend array if needed)
+        return url.origin === location.origin;
+      } catch { return false; }
+    }
+
     function ensurePendingTargetFromQuery(){
-      // If ?next=something is present and no stored target, store it.
-      const next = getNextFromQuery();
-      if (next && !storage.get()) {
-        try {
-          const href = decodeURIComponent(next);
-          const openInNewTab = false;
-          storage.set({ href, openInNewTab });
-        } catch {}
+      const next = new URLSearchParams(location.search).get('next');
+      if (!next || storage.get()) return;
+      try {
+        const url = new URL(next, location.origin); // handles relative or absolute
+        if (isSafeRedirect(url.href)) {
+          storage.set({ href: url.href, openInNewTab: false });
+        } else {
+          console.warn('Rejected unsafe next redirect:', url.href);
+        }
+      } catch (e) {
+        console.warn('Invalid next param', e);
       }
     }
+
 
     function showAuthed(email){
       userEmail.textContent = email ? `• ${email}` : '';
@@ -325,23 +321,6 @@
       authed.classList.add('hidden');
       form.classList.remove('hidden');
     }
-
-    function getSessionFromUrl() {
-  // The tokens might be in the hash (after #) or in the query (after ?)
-  const raw = (window.location.hash && window.location.hash.slice(1)) || window.location.search.slice(1);
-  const params = new URLSearchParams(raw);
-  return {
-    access_token: params.get('access_token'),
-    refresh_token: params.get('refresh_token'),
-    expires_in: params.get('expires_in'),
-    provider_token: params.get('provider_token'),
-    error: params.get('error')
-  };
-}
-
-// usage
-const session = getSessionFromUrl();
-console.log('Parsed tokens:', session);
 
 	// === Password eye toggle ===
     toggleEye.addEventListener('click',()=>{
@@ -361,13 +340,15 @@ console.log('Parsed tokens:', session);
         const pending = storage.get();
         if (session) {
           showAuthed(session.user?.email);
-          if (pending) {
-            // small delay for UI feel
+          if (pending && isSafeRedirect(pending.href)) {
             setTimeout(()=>{
               storage.clear();
               if (pending.openInNewTab) window.open(pending.href, '_blank');
               else location.href = pending.href;
             }, 400);
+          } else if (pending) {
+            console.warn('Blocked unsafe pending redirect:', pending.href);
+            storage.clear();
           }
         } else {
           showForm();
@@ -379,20 +360,22 @@ console.log('Parsed tokens:', session);
     })();
 
     // Supabase will fire this when magic link lands or password sign-in completes
-    supabase.auth.onAuthStateChange((event, session) => {
-      if (session?.access_token) {
-        showAuthed(session.user?.email);
-        const pending = storage.get();
-        if (pending) {
-          storage.clear();
-          if (pending.openInNewTab) window.open(pending.href, '_blank');
-          else location.href = pending.href;
-        } else if (new URLSearchParams(location.search).get('post_auth') === '1') {
-          // If we came from an email and no target, go home
-          setTimeout(()=>{ location.href = '/'; }, 500);
-        }
-      }
-    });
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+  if (session?.access_token) {
+    showAuthed(session.user?.email);
+    const pending = storage.get();
+    if (pending && isSafeRedirect(pending.href)) {
+      storage.clear();
+      if (pending.openInNewTab) window.open(pending.href, '_blank');
+      else location.href = pending.href;
+    } else if (new URLSearchParams(location.search).get('post_auth') === '1') {
+      setTimeout(()=>{ location.href = '/'; }, 500);
+    }
+  }
+});
+
+// unsubscribe on unload (optional, good practice)
+window.addEventListener('beforeunload', () => subscription?.unsubscribe());
 
     // ========================= ACTIONS ========================
     magicBtn.addEventListener('click', async () => {
@@ -446,15 +429,23 @@ console.log('Parsed tokens:', session);
     });
 
     continueBtn?.addEventListener('click', () => {
-      const pending = storage.get();
-      storage.clear();
-      if (pending) {
-        if (pending.openInNewTab) window.open(pending.href, '_blank');
-        else location.href = pending.href;
-      } else {
-        location.href = '/';
-      }
-    });
+  const pending = storage.get();
+
+  if (pending && isSafeRedirect(pending.href)) {
+    if (pending.openInNewTab) {
+      window.open(pending.href, '_blank');
+    } else {
+      location.href = pending.href;
+    }
+  } else if (pending) {
+    console.warn('Blocked unsafe pending redirect:', pending.href);
+    location.href = '/'; // fallback if pending exists but unsafe
+  } else {
+    location.href = '/'; // fallback if no pending redirect
+  }
+
+  storage.clear();
+});
 
     // ========================= OPTIONAL: "Gate snippet" for other pages =========================
     // Copy the function below into any page where you want to protect links/buttons.

@@ -112,20 +112,43 @@
       margin-top:12px;
       color:var(--acc2)
     }
+
+    /* Fullscreen dark glass backdrop */
+    .auth-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.65);
+    backdrop-filter: blur(6px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    padding: 20px;
+    }
+
+    /* Centered modal (your .card) */
+    .auth-modal {
+    animation: popupSlide 0.35s ease-out;
+    max-height: 95vh;
+    overflow-y: auto;
+    }
+
+    /* Sweet little animation */
+    @keyframes popupSlide {
+    0% { transform: translateY(40px) scale(0.96); opacity: 0; }
+    100% { transform: translateY(0) scale(1); opacity: 1; }
+    }
+    
 </style>
 
 
 </head>
-<body>
-  <div class="container">
-    <header>
-      <a href="https://tharaga.co.in/">← Back to Tharaga</a>
-      <span class="pill">Verified Listings • Direct Owner</span>
-    </header>
 
-    <main>
-      <section class="card" aria-live="polite">
-        <h1>Sign in to continue</h1>
+<body>
+  <div class="auth-overlay">
+    <section class="card auth-modal" aria-live="polite">
+      <!-- everything you already have inside main goes here -->
+      <h1>Sign in to continue</h1>
         <p class="muted">"Browse only approved builder projects — safe, transparent, and verified"</p>
 
         <!-- session-state area (hidden until logged in) -->
@@ -179,12 +202,9 @@
         <div class="hint">
           Tip: If you reached this page after clicking a partner link, we'll return you there after sign-in.
         </div>
-      </section>
-    </main>
+        <button class="close-btn" onclick="window.history.back()">×</button>
 
-    <footer>
-      © <span id="year"></span> Tharaga
-    </footer>
+    </section>
   </div>
 
   <!-- Auth + Gate Logic -->
@@ -244,7 +264,7 @@ async function handleRedirectTokens() {
   if (new URLSearchParams(location.search).get('post_auth') === '1') {
   history.replaceState(null, '', location.pathname);
   return null;
-}
+  }
 }
 
 // Call it once on load

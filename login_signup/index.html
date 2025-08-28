@@ -189,6 +189,7 @@
 
   <!-- Auth + Gate Logic -->
   <script type="module">
+    let hasRedirected = false;
     // ========================= CONFIG =========================
     // Fill these with your project values
     const SUPABASE_URL = 'https://wedevtjjmdvngyshqdro.supabase.co'; // <-- REQUIRED
@@ -240,6 +241,9 @@ async function handleRedirectTokens() {
     return data?.session ?? null;
   }
   return null;
+  if (new URLSearchParams(location.search).get('post_auth') === '1') {
+  history.replaceState(null, '', location.pathname);
+}
 }
 
 // Call it once on load
@@ -252,6 +256,7 @@ async function handleRedirectTokens() {
   console.log('handleRedirectTokens -> session?', !!session);
   // don't return here; let the rest of onInit() decide UI state
 })();
+
 
 
     // ========================= UI HOOKS ========================
@@ -415,7 +420,7 @@ window.addEventListener('beforeunload', () => subscription?.unsubscribe());
       const { error } = await supabase.auth.signUp({
         email,
         password,
-        options: { emailRedirectTo: POST_AUTH_CALLBACK }
+        options: { emailRedirectTo: "https://thriving-beijinho-ce44d5.netlify.app/login_signup/" }
       });
       if (error) setMsg(error.message);
       else setMsg('Account created. Check your email to confirm.', true);

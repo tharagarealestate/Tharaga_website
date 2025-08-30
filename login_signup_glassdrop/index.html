@@ -464,7 +464,7 @@ window.addEventListener('beforeunload', () => subscription?.unsubscribe());
       }
       const { error } = await supabase.auth.signInWithOtp({
         email,
-        options: { emailRedirectTo: "https://thriving-beijinho-ce44d5.netlify.app/login_signup/" }
+        options: { emailRedirectTo: POST_AUTH_CALLBACK }
       });
       if (error) setMsg(error.message);
       else setMsg('Magic link sent! Check your inbox (and spam).', true);
@@ -488,7 +488,7 @@ window.addEventListener('beforeunload', () => subscription?.unsubscribe());
       const { error } = await supabase.auth.signUp({
         email,
         password,
-        options: { emailRedirectTo: "https://thriving-beijinho-ce44d5.netlify.app/login_signup/" }
+        options: { emailRedirectTo: POST_AUTH_CALLBACK }
       });
       if (error) setMsg(error.message);
       else setMsg('Account created. Check your email to confirm.', true);

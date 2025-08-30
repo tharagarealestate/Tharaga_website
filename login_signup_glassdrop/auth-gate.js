@@ -5,6 +5,8 @@
 */
 (function () {
   'use strict';
+  const SUPABASE_URL = 'https://wedevtjjmdvngyshqdro.supabase.co';
+  const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndlZGV2dGpqbWR2bmd5c2hxZHJvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU0NzYwMzgsImV4cCI6MjA3MTA1MjAzOH0.Ex2c_sx358dFdygUGMVBohyTVto6fdEQ5nydDRh9m6M";
 
   /** CONFIG — update LOGIN_IFRAME_URL to your actual login/embed page */
   const LOGIN_IFRAME_URL = "/login_signup_glassdrop/"; // <-- replace if needed
@@ -285,6 +287,62 @@
     closeLoginModal,
     attachAuthGate
   };
+
+  // -------------------- Cross-tab auth sync --------------------
+// Listen for sign-ins that happen in *other* tabs (e.g. user clicked magic link email).
+// When another tab signs in Supabase will persist the session to localStorage — this code
+// subscribes and resumes any pending action (created earlier by attachAuthGate).
+(async function setupAuthCrossTabSync() {
+  try {
+    // prefer existing global client if available
+    let sClient = window.supabase;
+
+    // if no global client, dynamically import and create a minimal client using fallback keys
+    if (!sClient) {
+      // only try if fallback config exists (prevents noisy errors on pages that don't want it)
+      if (typeof SUPABASE_URL === 'undefined' || typeof SUPABASE_ANON_KEY === 'undefined') {
+        // nothing to do
+        return;
+      }
+      const mod = await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm');
+      sClient = mod.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+      // do not assign to window.supabase to avoid clobbering an existing client
+    }
+
+    // subscribe to auth change events — these fire across tabs when localStorage is updated
+    sClient.auth.onAuthStateChange((event, session) => {
+      // handle both explicit SIGNED_IN event and unexpected session present
+      if (event === 'SIGNED_IN' || session?.access_token) {
+        try {
+          // mark gate as logged in
+          window.__authGateLoggedIn = true;
+
+          // close modal if open
+          try { closeLoginModal(); } catch (e) { /* ignore */ }
+
+          // resolve any promise waiting for sign-in (openLoginModal({waitForSignIn:true}) path)
+          if (typeof signInResolve === 'function') {
+            try { signInResolve({ signedIn: true, user: session?.user || null }); } catch (e) {}
+            signInPromise = null; signInResolve = signInReject = null;
+          }
+
+          // resume pending action (buyer form submit that saved window.__authGatePendingAction)
+          if (window.__authGatePendingAction) {
+            const fn = window.__authGatePendingAction;
+            window.__authGatePendingAction = null;
+            try { fn(); } catch (err) { console.error('resume pending action failed', err); }
+          }
+        } catch (e) {
+          console.warn('authGate cross-tab handler error', e);
+        }
+      }
+    });
+  } catch (err) {
+    // non-fatal: if dynamic import fails we simply don't do cross-tab sync
+    console.warn('authGate cross-tab sync not available:', err);
+  }
+})();
+
 
   // quick debug hint in console
   console.debug && console.debug('authGate injected — use authGate.attachAuthGate(selector, actionFn)');

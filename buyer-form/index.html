@@ -341,7 +341,7 @@ form.addEventListener('submit', async (e) => {
    const { data: { user } } = await supabase.auth.getUser();
   if (!user) {
     // mark this submit to run after login
-    window.pendingBuyerFormSubmit = async () => {
+    window.pendingAction = () => {
       // re-dispatch the submit event — now supabase.getUser() will return the user.
       form.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
     };

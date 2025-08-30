@@ -11,14 +11,15 @@
   /** CONFIG — update LOGIN_IFRAME_URL to your actual login/embed page */
   const LOGIN_IFRAME_URL = "/login_signup_glassdrop/"; // <-- replace if needed
 
-  // Compute allowed origins safely
+    // Build allowed origin list robustly (supports absolute AND relative LOGIN_IFRAME_URL)
   let ALLOWED_IFRAME_ORIGINS = [];
   try {
-    ALLOWED_IFRAME_ORIGINS = [new URL(LOGIN_IFRAME_URL).origin];
+    // Use location.origin as base so relative paths work: new URL(relative, base)
+    ALLOWED_IFRAME_ORIGINS = [ new URL(LOGIN_IFRAME_URL, location.origin).origin ];
   } catch (e) {
-    // fall back to empty array — message handler will reject unknown origins
-    ALLOWED_IFRAME_ORIGINS = [];
-    console.warn('auth-gate: invalid LOGIN_IFRAME_URL', e);
+    // If even that fails, at least allow the current origin so embedded same-origin iframes work
+    ALLOWED_IFRAME_ORIGINS = [ location.origin ];
+    console.warn('auth-gate: invalid LOGIN_IFRAME_URL — falling back to current origin', e);
   }
 
   // Prevent double injection
@@ -47,10 +48,10 @@
   style.textContent = `
     #authGateModal { position: fixed; inset: 0; display: none; z-index: 2147483646; }
     #authGateModal .authgate-backdrop { display:flex; align-items:center; justify-content:center; inset:0; position:fixed; width:100%; height:100%; background: rgba(0,0,0,0.65); }
-    #authGateModal .authgate-dialog { width: min(1100px, 98%); height: min(850px, 92%); background: #fff; border-radius:12px; box-shadow: 0 12px 40px rgba(0,0,0,0.45); position:relative; display:flex; flex-direction:column; overflow:hidden; }
+    #authGateModal .authgate-dialog { width: min(1100px, 98%); height: min(850px, 92%); background: transparent; border-radius:12px; box-shadow: 0 12px 40px rgba(0,0,0,0.45); position:relative; display:flex; flex-direction:column; overflow:hidden; }
     #authGateModal .authgate-close { position:absolute; top:10px; right:12px; z-index:3; background:transparent; border:none; font-size:20px; cursor:pointer; padding:6px; }
-    #authGateModal .authgate-frame-wrap { flex:1; min-height:0; } 
-    #authGateModal iframe#authGateIframe { width:100%; height:100%; border:0; display:block; background:#fff; }
+    #authGateModal .authgate-frame-wrap { display:flex; align-items:center; justify-content:center; padding:28px; flex:1; min-height:0; } 
+    #authGateModal iframe#authGateIframe { width:100%; height:100%; border:0; display:block; background:transparent; border-radius:12px; }
     /* small screens */
     @media (max-width:420px) {
       #authGateModal .authgate-dialog { width:98%; height:98%; border-radius:6px; }
@@ -66,6 +67,15 @@
   const dialog = overlay.querySelector('.authgate-dialog');
   const iframe = document.getElementById('authGateIframe');
   const closeBtn = overlay.querySelector('.authgate-close');
+
+   // Make iframe visually transparent / rounded so parent overlay shows through (UX)
+  try {
+    iframe.setAttribute('allowtransparency', 'true'); // defensive attribute
+    iframe.style.background = 'transparent';
+    iframe.style.border = '0';
+    iframe.style.borderRadius = '12px';
+    iframe.style.overflow = 'hidden';
+  } catch (e) { /* ignore if DOM not ready */ }
 
   // Accessibility: track focus
   let lastFocused = null;
@@ -337,6 +347,29 @@
         }
       }
     });
+
+    // Robust fallback: listen for localStorage changes and re-check session (fires when the magic-link tab writes session)
+    window.addEventListener('storage', async (ev) => {
+      try {
+        const { data } = await sClient.auth.getSession();
+        const session = data?.session;
+        if (session && (session.access_token || session.user)) {
+          // same resume logic as onAuthStateChange
+          window.__authGateLoggedIn = true;
+          try { closeLoginModal(); } catch (_) {}
+          if (typeof signInResolve === 'function') {
+            try { signInResolve({ signedIn: true, user: session?.user || null }); } catch (_) {}
+            signInPromise = null; signInResolve = signInReject = null;
+          }
+          if (window.__authGatePendingAction) {
+            const fn = window.__authGatePendingAction;
+            window.__authGatePendingAction = null;
+            try { fn(); } catch (err) { console.error('resume pending action failed', err); }
+          }
+        }
+      } catch (e) { /* non-fatal */ }
+    });
+    
   } catch (err) {
     // non-fatal: if dynamic import fails we simply don't do cross-tab sync
     console.warn('authGate cross-tab sync not available:', err);

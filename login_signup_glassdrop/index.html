@@ -228,7 +228,8 @@
         <div class="hint">
           Tip: If you reached this page after clicking a partner link, we'll return you there after sign-in.
         </div>
-        <button class="close-btn" onclick="window.history.back()">×</button>
+        <button class="close-btn" onclick="(window.self!==window.parent) ? window.parent.postMessage({type:'close_login_modal'}, '*') : window.history.back()">×</button>
+
 
     </section>
     </main>
@@ -417,16 +418,34 @@ async function handleRedirectTokens() {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
   if (session?.access_token) {
     showAuthed(session.user?.email);
+
     const pending = storage.get();
-    if (pending && isSafeRedirect(pending.href)) {
-      storage.clear();
-      if (pending.openInNewTab) window.open(pending.href, '_blank');
-      else location.href = pending.href;
-    } else if (new URLSearchParams(location.search).get('post_auth') === '1') {
-      setTimeout(()=>{ location.href = '/'; }, 500);
+
+    // If embedded inside an iframe, postMessage to parent so they can resume flow
+    if (window.self !== window.parent) {
+      const msg = {
+        type: 'signed_in',
+        user: { id: session.user?.id, email: session.user?.email },
+        next: pending?.href || new URLSearchParams(location.search).get('next') || null
+      };
+      // Use specific origin instead of '*' when you know the parent origin.
+      window.parent.postMessage(msg, '*');
+
+      // Optionally clear local pending target (iframe can keep its copy)
+      // storage.clear();
+    } else {
+      // Not embedded — fallback to original behaviour (redirect to pending or home)
+      if (pending && isSafeRedirect(pending.href)) {
+        storage.clear();
+        if (pending.openInNewTab) window.open(pending.href, '_blank');
+        else location.href = pending.href;
+      } else if (new URLSearchParams(location.search).get('post_auth') === '1') {
+        setTimeout(()=>{ location.href = '/'; }, 500);
+      }
     }
   }
 });
+
 
 // unsubscribe on unload (optional, good practice)
 window.addEventListener('beforeunload', () => subscription?.unsubscribe());

@@ -169,7 +169,7 @@
     <!-- Your existing Google reCAPTCHA v2/v3 widget works with Netlify Forms 
     <div data-netlify-recaptcha="true" style="margin-top:12px;"></div>-->
 
-    <button id="submitBtn" type="submit" disabled
+    <button id="submitBtn" type="button" disabled
             style="margin-top:14px; width:100%; padding:12px; border:none; border-radius:10px; background:#0e0e0e; color:#fff; font-weight:600; cursor:not-allowed;">
       Get My Property Matches
     </button>
@@ -337,6 +337,20 @@
   // ---------- Replace the whole submit handler with this block ----------
 form.addEventListener('submit', async (e) => {
   e.preventDefault();
+
+   const { data: { user } } = await supabase.auth.getUser();
+  if (!user) {
+    // mark this submit to run after login
+    window.pendingBuyerFormSubmit = async () => {
+      // re-dispatch the submit event — now supabase.getUser() will return the user.
+      form.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
+    };
+
+    // open the centralized login modal (iframe). openLoginModal is added below.
+    openLoginModal(); 
+    return;
+  }
+
   if (otpVerifiedField.value !== 'true') { alert('Please verify OTP first.'); return; }
 
   submitBtn.disabled = true;
@@ -483,6 +497,23 @@ form.addEventListener('submit', async (e) => {
     });
   }
 </script>
+<script type="module" src="./login_signup_glassdrop/auth-gate.js"></script>
 
+<!-- Attach gate to submitBtn -->
+<script type="module">
+  // Wait until DOM is ready
+  document.addEventListener("DOMContentLoaded", () => {
+    if (window.authGate) {
+      window.authGate.attachAuthGate("#submitBtn", async () => {
+        // Trigger form submit programmatically
+        document.getElementById("buyerForm").dispatchEvent(
+          new Event("submit", { cancelable: true, bubbles: true })
+        );
+      });
+    } else {
+      console.error("authGate not loaded");
+    }
+  });
+</script>
 </body>
 </html>

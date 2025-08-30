@@ -9,6 +9,12 @@
   /** CONFIG — update LOGIN_IFRAME_URL to your actual login/embed page */
   const LOGIN_IFRAME_URL = "/login_signup_glassdrop/"; // <-- replace if needed
 
+  iframe.setAttribute('allowtransparency','true');   // allow transparent bg
+iframe.style.background = 'transparent';          // remove default white
+iframe.style.border = '0';                        // no border
+iframe.style.borderRadius = '12px';               // rounded corners
+iframe.style.overflow = 'hidden';                 // hide iframe scrollbars
+
   // Compute allowed origins safely
   let ALLOWED_IFRAME_ORIGINS = [];
   try {
@@ -45,9 +51,14 @@
   style.textContent = `
     #authGateModal { position: fixed; inset: 0; display: none; z-index: 2147483646; }
     #authGateModal .authgate-backdrop { display:flex; align-items:center; justify-content:center; inset:0; position:fixed; width:100%; height:100%; background: rgba(0,0,0,0.65); }
-    #authGateModal .authgate-dialog { width: min(1100px, 98%); height: min(850px, 92%); background: #fff; border-radius:12px; box-shadow: 0 12px 40px rgba(0,0,0,0.45); position:relative; display:flex; flex-direction:column; overflow:hidden; }
+    #authGateModal .authgate-dialog { width: min(1100px, 98%); height: min(850px, 92%); background: transparent; border-radius:12px; box-shadow: 0 12px 40px rgba(0,0,0,0.45); position:relative; display:flex; flex-direction:column; overflow:hidden; }
     #authGateModal .authgate-close { position:absolute; top:10px; right:12px; z-index:3; background:transparent; border:none; font-size:20px; cursor:pointer; padding:6px; }
-    #authGateModal .authgate-frame-wrap { flex:1; min-height:0; } 
+    #authGateModal .authgate-frame-wrap {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 28px;
+    } 
     #authGateModal iframe#authGateIframe { width:100%; height:100%; border:0; display:block; background:#fff; }
     /* small screens */
     @media (max-width:420px) {

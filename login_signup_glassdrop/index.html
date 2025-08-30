@@ -5,19 +5,18 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Login / Sign up • Tharaga</title>
   <meta name="description" content="Secure login and signup for Tharaga partner portals and listings." />
+   <!-- ---------- EMBED DETECTION: add class early so CSS can react ---------- -->
+  <script>
+    // If this page is inside an iframe, mark document so CSS can adapt
+    if (window.self !== window.top) {
+      try { document.documentElement.classList.add('embedded'); } catch (e) {}
+    }
+  </script>
   <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap">
   <style>
     :root{
-      /* Tharaga Brand Palette */
-      --bg:#0a0a0a;          /* Deep Obsidian Background */
-      --card:#151515;        /* Charcoal Card Surface */
-      --muted:#9ca3af;       /* Muted Platinum Gray */
-      --txt:#f5f5f5;         /* Platinum White Text */
-      --acc:#d4af37;         /* Regal Gold (primary accent) */
-      --acc2:#16a34a;        /* Emerald Green (secondary accent) */
-      --warn:#f59e0b;        /* Amber Gold (warnings, classy) */
-      --err:#dc2626;         /* Rich Crimson (errors) */
+      --bg:#0a0a0a; --card:#151515; --muted:#9ca3af; --txt:#f5f5f5; --acc:#d4af37; --acc2:#16a34a; --warn:#f59e0b; --err:#dc2626;
     }
     *{box-sizing:border-box}
     html,body{height:100%}
@@ -30,14 +29,14 @@
         var(--bg);
       color:var(--txt);
     }
-    .container{min-height:100%;display:grid;grid-template-rows:auto 1fr auto}
+    /*.container{min-height:100%;display:grid;grid-template-rows:auto 1fr auto}
     header{
       display:flex;align-items:center;justify-content:space-between;
       padding:18px 20px;color:var(--txt);
     }
     header a, header button{color:var(--txt);text-decoration:none;font-weight:600;opacity:.85}
     header a:hover{opacity:1;color:var(--acc)}
-    main{display:grid;place-items:center;padding:24px}
+    main{display:grid;place-items:center;padding:24px} */
     .card{
       width:420px;max-width:95vw;
       background:linear-gradient(180deg,#1a1a1a,#0f0f0f);
@@ -48,131 +47,87 @@
       padding:22px;
       color:var(--txt);
     }
-    h1{font-size:22px;margin:0 0 6px;color:var(--acc)}
-    p.muted{color:var(--muted);margin:0 0 16px;font-size:14px}
-    label{display:block;font-size:13px;margin:10px 0 6px;color:var(--txt)}
-    input{
-      position: relative;width:100%;padding:12px 12px;border-radius:10px;padding-right: 40px;;
-      border:1px solid #333333;
-      background:#1e1e1e;
-      color:var(--txt);
-      outline:none;
-    }
-    input:focus{
-      border-color:var(--acc);
-      box-shadow:0 0 0 3px rgba(212,175,55,.25);
-    }
-
-    /* wrapper around input + icon */
-.input-pill {
-  position: relative;   /* anchor for the absolute icon */
-  width: 100%;
-}
-
-/* make sure the input leaves room for the icon */
-.input-pill input {
-  width: 100%;
-  padding-right: 44px;  /* provide space so text doesn't overlap the eye */
-  box-sizing: border-box;
-}
-    .toggle-eye{position:absolute;top:50%;right:12px;transform:translateY(-50%);cursor:pointer;font-size:14px;opacity:.7;color:var(--muted)}
-    .toggle-eye:hover{opacity:1;color:var(--acc)}
-    .row{display:flex;gap:10px}
-    .btn{cursor:pointer;border:0;border-radius:10px;padding:12px 14px;font-weight:700;color:var(--txt)}
-    .btn-primary{background:linear-gradient(180deg,var(--acc),#b8860b);color:black}
-    .btn-ghost{background:transparent;border:1px solid #333333;color:var(--muted)}
-    .btn-danger{background:linear-gradient(180deg,var(--err),#7f1d1d);color:white}
-    .hint{font-size:12px;color:var(--muted);margin-top:8px}
-    .msg{margin-top:12px;font-size:14px}
-    .msg.ok{color:var(--acc2)}
-    .msg.err{color:#fca5a5}
-    .divider{height:1px;background:linear-gradient(90deg,transparent,#2d2d2d,transparent);margin:16px 0}
-    .pill{
-      display:inline-flex;align-items:center;gap:8px;
-      padding:8px 10px;
-      border:1px solid #333333;
-      border-radius:999px;
-      background:rgba(20,20,20,.6);
-      font-size:12px;
-      color:var(--muted)
-    }
-    footer{padding:18px 20px;color:var(--muted);font-size:12px;text-align:center}
-    .hidden{display:none !important}
-    .flex{display:flex;align-items:center;gap:10px}
-    .right{margin-left:auto}
-    .copy{cursor:pointer;font-size:12px;opacity:.8;color:var(--muted)}
-    .copy:hover{opacity:1;color:var(--acc)}
-    .small-link{font-size:12px;color:var(--acc2);text-decoration:none}
-    .small-link:hover{text-decoration:underline;color:var(--acc)}
-    .success-block{
-      background:#0f1f12;
-      border:1px solid #224422;
-      border-radius:12px;
-      padding:12px;
-      margin-top:12px;
-      color:var(--acc2)
-    }
-
-    /* Fullscreen dark glass backdrop */
+     /* Fullscreen dark glass backdrop used only when NOT embedded */
     .auth-overlay {
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.65);
-    backdrop-filter: blur(6px);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 9999;
-    padding: 20px;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.65);
+      backdrop-filter: blur(6px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+      padding: 20px;
     }
 
-    /* Centered modal (your .card) */
-    .auth-modal {
-    animation: popupSlide 0.35s ease-out;
-    max-height: 95vh;
-    overflow-y: auto;
-    }
+    /* Centered modal wrapper (the card sits inside) */
+    .auth-modal { animation: popupSlide 0.35s ease-out; max-height:95vh; overflow-y:auto; }
 
-    /* Sweet little animation */
-    @keyframes popupSlide {
-    0% { transform: translateY(40px) scale(0.96); opacity: 0; }
-    100% { transform: translateY(0) scale(1); opacity: 1; }
-    }
+    @keyframes popupSlide { 0% { transform: translateY(40px) scale(.96); opacity:0 } 100% { transform: translateY(0) scale(1); opacity:1 } }
 
+    /* Close button (standalone page) */
     .close-btn {
-    position: fixed;
-    top: 15px;
-    right: 20px;
-    background: linear-gradient(180deg, var(--acc), #b8860b, #8b6508);
-    border: none;
-    font-size: 24px;
-    font-weight: bold;
-    color: #111; /* near-black for readability */
-    cursor: pointer;
-    z-index: 9999;
+      position: fixed;
+      top: 15px; right: 20px;
+      background: linear-gradient(180deg, var(--acc), #b8860b, #8b6508);
+      border: none; font-size: 24px; font-weight: bold; color: #111; cursor:pointer; z-index:9999;
+      padding: 6px 12px; border-radius:50%; box-shadow:0 2px 6px rgba(0,0,0,.25); transition:all .2s;
+    }
+    .close-btn:hover { transform: scale(1.06); color:#fff; }
 
-    /* Better aesthetics */
-    padding: 6px 12px;
-    border-radius: 50%; /* circular button */
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
-    transition: all 0.3s ease;
-  }
+    /* small screen tweaks */
+    @media (max-width:420px){
+      .card{width:96vw;padding:16px}
+      .close-btn{top:8px;right:8px}
+    }
 
-  .close-btn:hover {
-    color: #fff; /* white icon on hover */
-    background: linear-gradient(180deg, #b8860b, #8b6508, #5a3a02);
-    transform: scale(1.1); /* subtle zoom */
-  }
-    
-</style>
+    /* ---------- EMBEDDED MODE OVERRIDES ---------- */
+    /* When embedded (iframe), we want the parent overlay to do the dimming. */
+    .embedded body, .embedded html {
+      /* ensure iframe background is transparent */
+      background: transparent !important;
+    }
 
+    /* make page-level overlay transparent so parent overlay shows through */
+    .embedded .auth-overlay {
+      background: transparent !important;
+      pointer-events: none; /* allow only the modal to receive pointer events */
+    }
 
+    /* enable pointer events on the modal only */
+    .embedded .auth-overlay .auth-modal {
+      pointer-events: auto;
+      background: transparent; /* keep modal wrapper transparent */
+      display:flex; align-items:center; justify-content:center;
+      min-height:0;
+    }
+
+    /* the card itself remains visually distinct inside the iframe */
+    .embedded .card {
+      border-radius: 12px;
+      box-shadow: 0 12px 30px rgba(0,0,0,0.5);
+      margin: 0 auto;
+    }
+
+    /* place the close button inside the iframe card area (not fixed full-screen) */
+    .embedded .close-btn {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      z-index: 10002;
+      transform: none;
+    }
+
+    /* ensure the modal content can scroll within the card if needed */
+    .embedded .auth-overlay { align-items: center; justify-content: center; padding: 10px; }
+  </style>
 </head>
 
 <body>
-  <div class="auth-overlay">
+  <!-- page-level overlay. In embedded mode this becomes transparent so parent overlay shows -->
+  <div class="auth-overlay" id="authOverlay">
     <main>
-    <section class="card auth-modal" aria-live="polite">
+    <section class="card auth-modal" aria-live="polite" id="authCard">
       <!-- everything you already have inside main goes here -->
       <h1>Sign in to continue</h1>
         <p class="muted">"Browse only approved builder projects — safe, transparent, and verified"</p>
@@ -216,24 +171,17 @@
 
           <div class="row" style="margin-top:10px">
             <button id="signupBtn" class="btn btn-ghost" type="button">Create Account</button>
-            <a id="forgotLink" class="small-link right" href="https://thriving-beijinho-ce44d5.netlify.app/reset_password/">Forgot password?</a>
+            <a id="forgotLink" class="small-link right" href="#">Forgot password?</a>
 
           </div>
 
           <div id="msg" class="msg" role="status"></div>
         </form>
-
-        <div class="divider"></div>
-
-        <div class="hint">
-          Tip: If you reached this page after clicking a partner link, we'll return you there after sign-in.
-        </div>
-        <button class="close-btn" onclick="(window.self!==window.parent) ? window.parent.postMessage({type:'close_login_modal'}, '*') : window.history.back()">×</button>
-
-
     </section>
     </main>
   </div>
+  <!-- single close button; it will be positioned absolute inside card when embedded -->
+  <button class="close-btn" id="closeBtn" aria-label="Close">×</button>
 
   <!-- Auth + Gate Logic -->
   <script type="module">
@@ -429,7 +377,7 @@ async function handleRedirectTokens() {
         next: pending?.href || new URLSearchParams(location.search).get('next') || null
       };
       // Use specific origin instead of '*' when you know the parent origin.
-      window.parent.postMessage(msg, '*');
+      window.parent.postMessage(msg, PARENT_ORIGIN);
 
       // Optionally clear local pending target (iframe can keep its copy)
       // storage.clear();
@@ -464,7 +412,7 @@ window.addEventListener('beforeunload', () => subscription?.unsubscribe());
       }
       const { error } = await supabase.auth.signInWithOtp({
         email,
-        options: { emailRedirectTo: "https://thriving-beijinho-ce44d5.netlify.app/login_signup/" }
+        options: { emailRedirectTo: POST_AUTH_CALLBACK }
       });
       if (error) setMsg(error.message);
       else setMsg('Magic link sent! Check your inbox (and spam).', true);
@@ -488,7 +436,7 @@ window.addEventListener('beforeunload', () => subscription?.unsubscribe());
       const { error } = await supabase.auth.signUp({
         email,
         password,
-        options: { emailRedirectTo: "https://thriving-beijinho-ce44d5.netlify.app/login_signup/" }
+        options: { emailRedirectTo: "${location.origin}/login_signup/?post_auth=1" }
       });
       if (error) setMsg(error.message);
       else setMsg('Account created. Check your email to confirm.', true);

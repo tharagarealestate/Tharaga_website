@@ -321,55 +321,41 @@
 
     // subscribe to auth change events — these fire across tabs when localStorage is updated
     sClient.auth.onAuthStateChange((event, session) => {
-      // handle both explicit SIGNED_IN event and unexpected session present
-      if (event === 'SIGNED_IN' || session?.access_token) {
-        try {
-          // mark gate as logged in
-          window.__authGateLoggedIn = true;
+  if (event === 'SIGNED_IN' || session?.access_token) {
+    try {
+      // Remote sign-in detected: mark logged-in state but DO NOT auto-resume or close UI.
+      window.__authGateRemoteSignedIn = true;
+      window.__authGateLoggedIn = true;
+      console.debug('authGate: sign-in detected in another tab — waiting for explicit continue signal');
+      // DON'T close modal or resume pending action here; wait for explicit user confirmation from the sign-in tab.
+    } catch (e) {
+      console.warn('authGate cross-tab handler error', e);
+    }
+  }
+});
 
-          // close modal if open
-          try { closeLoginModal(); } catch (e) { /* ignore */ }
-
-          // resolve any promise waiting for sign-in (openLoginModal({waitForSignIn:true}) path)
-          if (typeof signInResolve === 'function') {
-            try { signInResolve({ signedIn: true, user: session?.user || null }); } catch (e) {}
-            signInPromise = null; signInResolve = signInReject = null;
-          }
-
-          // resume pending action (buyer form submit that saved window.__authGatePendingAction)
-          if (window.__authGatePendingAction) {
-            const fn = window.__authGatePendingAction;
-            window.__authGatePendingAction = null;
-            try { fn(); } catch (err) { console.error('resume pending action failed', err); }
-          }
-        } catch (e) {
-          console.warn('authGate cross-tab handler error', e);
-        }
+    // Only resume pending action when the sign-in tab writes this explicit key
+window.addEventListener('storage', (ev) => {
+  try {
+    if (!ev.key) return;
+    if (ev.key === '__tharaga_magic_continue') {
+      // The user in the sign-in tab clicked Continue — now resume parent flow
+      window.__authGateLoggedIn = true;
+      try { closeLoginModal(); } catch (_) {}
+      if (signInPromise && signInResolve) {
+        try { signInResolve({ signedIn: true, user: null }); } catch (_) {}
+        signInPromise = null; signInResolve = signInReject = null;
       }
-    });
+      if (window.__authGatePendingAction) {
+        const fn = window.__authGatePendingAction;
+        window.__authGatePendingAction = null;
+        try { fn(); } catch (err) { console.error('resume pending action failed', err); }
+      }
+    }
+  } catch (e) { /* non-fatal */ }
+});
 
-    // Robust fallback: listen for localStorage changes and re-check session (fires when the magic-link tab writes session)
-    window.addEventListener('storage', async (ev) => {
-      try {
-        const { data } = await sClient.auth.getSession();
-        const session = data?.session;
-        if (session && (session.access_token || session.user)) {
-          // same resume logic as onAuthStateChange
-          window.__authGateLoggedIn = true;
-          try { closeLoginModal(); } catch (_) {}
-          if (typeof signInResolve === 'function') {
-            try { signInResolve({ signedIn: true, user: session?.user || null }); } catch (_) {}
-            signInPromise = null; signInResolve = signInReject = null;
-          }
-          if (window.__authGatePendingAction) {
-            const fn = window.__authGatePendingAction;
-            window.__authGatePendingAction = null;
-            try { fn(); } catch (err) { console.error('resume pending action failed', err); }
-          }
-        }
-      } catch (e) { /* non-fatal */ }
-    });
-    
+
   } catch (err) {
     // non-fatal: if dynamic import fails we simply don't do cross-tab sync
     console.warn('authGate cross-tab sync not available:', err);

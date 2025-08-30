@@ -293,6 +293,10 @@ async function handleRedirectTokens() {
   history.replaceState(null, '', location.pathname);
   return null;
   }
+
+  try {
+  localStorage.setItem('__tharaga_magic_confirmed', JSON.stringify({ ts: Date.now() }));
+} catch (e) { /* ignore */ }
 }
 
 // Call it once on load
@@ -395,6 +399,17 @@ async function handleRedirectTokens() {
         const pending = storage.get();
         if (session) {
           showAuthed(session.user?.email);
+
+          // If we are here because of a magic-link redirect from email, don't auto-redirect.
+          const isPostAuth = new URLSearchParams(location.search).get('post_auth') === '1';
+          if (isPostAuth) {
+            // Show a friendly message and require the user to click Continue (no automatic navigation)
+            setMsg('Thanks — you are signed in. Click Continue to return to the app.', true);
+            // leave UI visible (Continue button is present in markup)
+            return;
+          }
+
+          // Normal behaviour (not a magic-link tab): resume pending redirect automatically
           if (pending && isSafeRedirect(pending.href)) {
             setTimeout(()=>{
               storage.clear();
@@ -405,6 +420,7 @@ async function handleRedirectTokens() {
             console.warn('Blocked unsafe pending redirect:', pending.href);
             storage.clear();
           }
+        }
         } else {
           showForm();
         }
@@ -502,23 +518,27 @@ window.addEventListener('beforeunload', () => subscription?.unsubscribe());
     });
 
     continueBtn?.addEventListener('click', () => {
-  const pending = storage.get();
+      // notify other tabs the user confirmed and clicked Continue
+      try {
+        localStorage.setItem('__tharaga_magic_continue', JSON.stringify({ ts: Date.now(), next: pending?.href || null }));
+      } catch (e) {}
+      const pending = storage.get();
 
-  if (pending && isSafeRedirect(pending.href)) {
-    if (pending.openInNewTab) {
-      window.open(pending.href, '_blank');
-    } else {
-      location.href = pending.href;
-    }
-  } else if (pending) {
-    console.warn('Blocked unsafe pending redirect:', pending.href);
-    location.href = '/'; // fallback if pending exists but unsafe
-  } else {
-    location.href = '/'; // fallback if no pending redirect
-  }
+      if (pending && isSafeRedirect(pending.href)) {
+        if (pending.openInNewTab) {
+          window.open(pending.href, '_blank');
+        } else {
+          location.href = pending.href;
+        }
+      } else if (pending) {
+        console.warn('Blocked unsafe pending redirect:', pending.href);
+        location.href = '/'; // fallback if pending exists but unsafe
+      } else {
+        location.href = '/'; // fallback if no pending redirect
+      }
 
-  storage.clear();
-});
+      storage.clear();
+    });
 
     // ========================= OPTIONAL: "Gate snippet" for other pages =========================
     // Copy the function below into any page where you want to protect links/buttons.

@@ -268,15 +268,21 @@ async function getRecaptcha() {
     confirmationResult = await signInWithPhoneNumber(auth, e164, appVerifier);
     otpStatus.textContent = 'OTP sent. Please check your SMS.';
   } catch (err) {
-    console.error('send OTP error:', err);
-    otpStatus.textContent = (err?.code === 'auth/operation-not-allowed')
-      ? 'Phone sign-in is disabled in Firebase project.'
-      : 'Could not send OTP. Please try again.';
+  console.error('send OTP error:', err);
+  if (err.code === 'auth/too-many-requests') {
+    otpStatus.textContent = 'Too many attempts. Please wait a few minutes before retrying.';
+  } else if (err.code === 'auth/operation-not-allowed') {
+    otpStatus.textContent = 'Phone sign-in is not enabled in Firebase.';
+  } else {
+    otpStatus.textContent = 'Could not send OTP. Please try again.';
+  }
+  if (recaptchaVerifier) {
     try {
       const wid = await recaptchaVerifier.render();
       if (window.grecaptcha && wid) window.grecaptcha.reset(wid);
     } catch (_) {}
-  } finally {
+  }
+} finally {
     sendOtpBtn.disabled = false;
   }
 });

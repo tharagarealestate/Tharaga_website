@@ -221,22 +221,15 @@
   const otpVerifiedField  = document.getElementById('otp_verified');
   const otpInputs         = document.querySelectorAll('.otp-input');
 
-  // reCAPTCHA
-  function initRecaptcha() {
-    if (window.recaptchaVerifier) return;
-
-    window.recaptchaVerifier = new RecaptchaVerifier(
-      auth,
-      'otp-recaptcha',
-      {
-        size: 'invisible',
-        callback: (response) => {
-          console.log("reCAPTCHA solved:", response);
-        }
-      }
-    );
+  // reCAPTCHA (lazy init — do NOT call at top-level)
+let recaptchaVerifier = null;
+async function getRecaptcha() {
+  if (!recaptchaVerifier) {
+    recaptchaVerifier = new RecaptchaVerifier('otp-recaptcha', { size: 'invisible' }, auth);
+    await recaptchaVerifier.render();
   }
-  initRecaptcha();
+  return recaptchaVerifier;
+}
 
   // OTP helpers
   const getEnteredOTP = () => Array.from(otpInputs).map(i => i.value).join('');
@@ -262,35 +255,39 @@
 
   // Send OTP
   sendOtpBtn.addEventListener('click', async () => {
-    const raw = phoneInput.value.trim();
-    if (!/^[6-9]\d{9}$/.test(raw)) { alert('Enter a valid 10-digit Indian mobile number.'); return; }
-    otpBlock.style.display = 'block';
-    otpStatus.textContent = 'Sending OTP…';
-    sendOtpBtn.disabled = true;
+  const raw = phoneInput.value.trim();
+  if (!/^[6-9]\d{9}$/.test(raw)) { alert('Enter a valid 10-digit Indian mobile number.'); return; }
 
+  otpBlock.style.display = 'block';
+  otpStatus.textContent = 'Sending OTP…';
+  sendOtpBtn.disabled = true;
+
+  try {
+    const appVerifier = await getRecaptcha();
+    const e164 = '+91' + raw;
+    confirmationResult = await signInWithPhoneNumber(auth, e164, appVerifier);
+    otpStatus.textContent = 'OTP sent. Please check your SMS.';
+  } catch (err) {
+    console.error('send OTP error:', err);
+    otpStatus.textContent = (err?.code === 'auth/operation-not-allowed')
+      ? 'Phone sign-in is disabled in Firebase project.'
+      : 'Could not send OTP. Please try again.';
     try {
-      initRecaptcha();
-      const e164 = '+91' + raw;
-      confirmationResult = await signInWithPhoneNumber(auth, e164, window.recaptchaVerifier);
-      console.log("OTP sent:", confirmationResult);
-      otpStatus.textContent = 'OTP sent. Please check your SMS.';
-    } catch (err) {
-      console.error('send OTP error:', err);
-      otpStatus.textContent = 'Could not send OTP. Please try again.';
-      try {
-        const id = await window.recaptchaVerifier.render();
-        if (window.grecaptcha && id) window.grecaptcha.reset(id);
-      } catch (_) {}
-    } finally {
-      sendOtpBtn.disabled = false;
-    }
-  });
+      const wid = await recaptchaVerifier.render();
+      if (window.grecaptcha && wid) window.grecaptcha.reset(wid);
+    } catch (_) {}
+  } finally {
+    sendOtpBtn.disabled = false;
+  }
+});
+
 
   // Verify OTP
   verifyOtpBtn.addEventListener('click', async () => {
     try {
       const code = getEnteredOTP();
       if (code.length !== 6) { otpStatus.textContent = 'Please enter all 6 digits.'; return; }
+      if (!confirmationResult) { otpStatus.textContent = 'Please click “Send OTP” first.'; return; }
       await confirmationResult.confirm(code);
       otpStatus.textContent = 'Verified ✅';
       otpVerifiedField.value = 'true';
@@ -507,7 +504,8 @@ form.addEventListener('submit', async (e) => {
     });
   }
 </script>
-<script type="module" src="./login_signup_glassdrop/auth-gate.js"></script>
+<script src="./login_signup_glassdrop/auth-gate.js"></script>
+
 
 <!-- Attach gate to submitBtn -->
 <script type="module">

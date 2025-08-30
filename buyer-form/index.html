@@ -222,10 +222,19 @@
   const otpInputs         = document.querySelectorAll('.otp-input');
 
   // reCAPTCHA
-  function initRecaptcha(){
+  function initRecaptcha() {
     if (window.recaptchaVerifier) return;
-    window.recaptchaVerifier = new RecaptchaVerifier('otp-recaptcha', { size: 'invisible' }, auth);
-    window.recaptchaVerifier.render().then(() => {});
+
+    window.recaptchaVerifier = new RecaptchaVerifier(
+      auth,
+      'otp-recaptcha',
+      {
+        size: 'invisible',
+        callback: (response) => {
+          console.log("reCAPTCHA solved:", response);
+        }
+      }
+    );
   }
   initRecaptcha();
 
@@ -263,6 +272,7 @@
       initRecaptcha();
       const e164 = '+91' + raw;
       confirmationResult = await signInWithPhoneNumber(auth, e164, window.recaptchaVerifier);
+      console.log("OTP sent:", confirmationResult);
       otpStatus.textContent = 'OTP sent. Please check your SMS.';
     } catch (err) {
       console.error('send OTP error:', err);

@@ -7,7 +7,7 @@
   'use strict';
 
   /** CONFIG — update LOGIN_IFRAME_URL to your actual login/embed page */
-  const LOGIN_IFRAME_URL = "/login_signup_glassdrop/"; // <-- replace if needed
+  const LOGIN_IFRAME_URL = "https://thriving-beijinho-ce44d5.netlify.app/login_signup_glassdrop/"; // <-- replace if needed
 
   iframe.setAttribute('allowtransparency','true');   // allow transparent bg
 iframe.style.background = 'transparent';          // remove default white

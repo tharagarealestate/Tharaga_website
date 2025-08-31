@@ -311,7 +311,12 @@ try {
   };
 
   // Write to localStorage on this origin (this notifies same-origin listeners)
-  try { localStorage.setItem('__tharaga_magic_continue', JSON.stringify(payload)); } catch (e) { console.warn('Could not write magic continue', e); }
+  try { 
+    localStorage.setItem('__tharaga_magic_continue', JSON.stringify(payload)); 
+    localStorage.setItem('__tharaga_magic_confirmed', JSON.stringify({ ts: Date.now() })); // <--- ADD THIS
+  } catch (e) { 
+    console.warn('Could not write magic continue/confirmed', e); 
+  }
 
   // If embedded inside an iframe, also postMessage to parent (use parent_origin if passed)
   const parentOrigin = new URLSearchParams(location.search).get('parent_origin');
@@ -349,11 +354,6 @@ try {
 
   return null;
 }
-// DO NOT return here — let token handling continue
-
-  try {
-  localStorage.setItem('__tharaga_magic_confirmed', JSON.stringify({ ts: Date.now() }));
-} catch (e) { /* ignore */ }
 
 // Call it once on load
 (async () => {

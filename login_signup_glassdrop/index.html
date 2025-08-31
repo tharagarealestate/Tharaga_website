@@ -289,10 +289,11 @@ async function handleRedirectTokens() {
     return data?.session ?? null;
   }
   
-  if (new URLSearchParams(location.search).get('post_auth') === '1') {
+  const isPostAuth = new URLSearchParams(location.search).get('post_auth') === '1';
+if (isPostAuth) {
   history.replaceState(null, '', location.pathname);
-  
-  }
+}
+// DO NOT return here — let token handling continue
 
   try {
   localStorage.setItem('__tharaga_magic_confirmed', JSON.stringify({ ts: Date.now() }));

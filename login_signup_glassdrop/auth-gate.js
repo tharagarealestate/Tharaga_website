@@ -246,58 +246,63 @@
   });
 
   // Message receiver: only accept from configured origins
-  window.addEventListener('message', (ev) => {
-    const origin = ev.origin;
-    if (!isAllowedOrigin(origin)) return; // ignore unknown origins
+ window.addEventListener('message', (ev) => {
+  const origin = ev.origin;
+  if (!isAllowedOrigin(origin)) return; // ignore unknown origins
 
-    const msg = ev.data || {};
-    if (typeof msg !== 'object') return;
+  const msg = ev.data || {};
+  if (typeof msg !== 'object') return;
 
-    // expected messages from iframe: { type: 'signed_in' | 'close_login_modal', next?, user? }
-    if (msg.type === 'signed_in') {
-      // mark logged-in
-      window.__authGateLoggedIn = true;
+  // expected messages from iframe: { type: 'signed_in' | 'close_login_modal' | 'ping', next?, user? }
+  if (msg.type === 'signed_in') {
+    window.__authGateLoggedIn = true;
 
-      // close UI
-      closeLoginModal();
-
-      // resolve any waiting openLoginModal() promise
-      if (signInPromise && signInResolve) {
-        signInResolve({ signedIn: true, user: msg.user || null });
-        signInPromise = null; signInResolve = null; signInReject = null;
+    // Run pending action if any
+    if (window.__authGatePendingAction) {
+      try {
+        window.__authGatePendingAction();
+      } catch (e) {
+        console.error('Pending action failed', e);
       }
-
-      // Resume pending action if present
-      if (window.__authGatePendingAction) {
-        const fn = window.__authGatePendingAction;
-        window.__authGatePendingAction = null;
-        try { fn(); } catch (err) { console.error('resume pending action failed', err); }
-      }
-
-      // Optional safe redirect to in-app path (only allow same-origin next)
-      if (msg.next) {
-        try {
-          const u = new URL(msg.next, location.origin);
-          if (u.origin === location.origin) location.href = u.href;
-        } catch (e) { console.warn('invalid next from iframe', msg.next); }
-      }
-    } else if (msg.type === 'close_login_modal') {
-      closeLoginModal();
-    } else if (msg.type === 'ping') {
-      // optional handshake message from iframe — reply if needed
-      postMessageToIframe({ type: 'pong' });
-    } else {
-      // ignore other message types (safe default)
+      window.__authGatePendingAction = null;
     }
-  }, false);
 
-  // Expose API
-  window.authGate = {
-    openLoginModal: (opts) => openLoginModal(opts || {}),
-    closeLoginModal,
-    attachAuthGate
-  };
+    // Resolve promise if someone awaited
+    if (signInResolve) {
+      signInResolve({ signedIn: true, user: msg.user || null });
+      signInPromise = null; signInResolve = null; signInReject = null;
+    }
 
+    // Optional safe redirect (only allow same-origin)
+    if (msg.next) {
+      try {
+        const u = new URL(msg.next, location.origin);
+        if (u.origin === location.origin) location.href = u.href;
+      } catch (e) {
+        console.warn('invalid next from iframe', msg.next);
+      }
+    }
+
+    closeLoginModal();
+
+  } else if (msg.type === 'close_login_modal') {
+    closeLoginModal();
+
+  } else if (msg.type === 'ping') {
+    // optional handshake message from iframe
+    postMessageToIframe({ type: 'pong' });
+
+  } else {
+    // ignore unknown message types
+  }
+}, false);
+
+// Expose API
+window.authGate = {
+  openLoginModal: (opts) => openLoginModal(opts || {}),
+  closeLoginModal,
+  attachAuthGate
+};
   // -------------------- Cross-tab auth sync --------------------
 // Listen for sign-ins that happen in *other* tabs (e.g. user clicked magic link email).
 // When another tab signs in Supabase will persist the session to localStorage — this code

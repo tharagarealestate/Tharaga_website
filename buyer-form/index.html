@@ -348,19 +348,40 @@ async function getRecaptcha() {
 
   // Submit: embed → RPC → render
   // ---------- Replace the whole submit handler with this block ----------
-form.addEventListener('submit', async (e) => {
-  e.preventDefault();
+ e.preventDefault();
 
-   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) {
-    // mark this submit to run after login
-    window.pendingAction = () => {
-      // re-dispatch the submit event — now supabase.getUser() will return the user.
-      form.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
+  // safe getUser() (works if supabase client is present)
+  let currentUser = null;
+  try {
+    const res = await supabase.auth.getUser();
+    currentUser = res?.data?.user ?? null;
+  } catch (err) {
+    console.warn('getUser failed (treat as not signed in):', err);
+    currentUser = null;
+  }
+
+  // If not signed in: register a pending action (auth-gate expects __authGatePendingAction)
+  if (!currentUser) {
+    // store the exact action to resume (re-dispatch the submit event)
+    window.__authGatePendingAction = async () => {
+      try {
+        // re-trigger the submit (this time the user should be signed in)
+        form.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
+      } catch (err) {
+        console.error('resume pending action failed', err);
+      }
     };
 
-    // open the centralized login modal (iframe). openLoginModal is added below.
-    openLoginModal(); 
+    console.debug('buyer-form: queued pending action for auth gate, next=', location.pathname + location.search);
+
+    // Open the centralized login modal via the public API (authGate.openLoginModal).
+    // If authGate is not loaded for some reason, fallback to redirect to login page.
+    if (window.authGate && typeof window.authGate.openLoginModal === 'function') {
+      window.authGate.openLoginModal({ next: location.pathname + location.search });
+    } else {
+      // fallback for environments where authGate isn't present
+      location.href = `/login_signup?next=${encodeURIComponent(location.pathname + location.search)}`;
+    }
     return;
   }
 

@@ -470,13 +470,17 @@ async function handleRedirectTokens() {
       // storage.clear();
     } else {
       // Not embedded — fallback to original behaviour (redirect to pending or home)
-      if (pending && isSafeRedirect(pending.href)) {
-        storage.clear();
-        if (pending.openInNewTab) window.open(pending.href, '_blank');
-        else location.href = pending.href;
-      } else if (new URLSearchParams(location.search).get('post_auth') === '1') {
-        setMsg('Thanks — you are signed in. Click Continue to return to the app.', true);
-      }
+      if (new URLSearchParams(location.search).get('post_auth') === '1') {
+  setMsg('Thanks — you are signed in. Click Continue to return to the app.', true);
+  return; // STOP auto redirect
+}
+
+// Normal flows (not post_auth)
+if (pending && isSafeRedirect(pending.href)) {
+  storage.clear();
+  if (pending.openInNewTab) window.open(pending.href, '_blank');
+  else location.href = pending.href;
+}
     }
   }
 });

@@ -574,6 +574,7 @@ window.addEventListener('beforeunload', () => subscription?.unsubscribe());
           : '/';
         storage.set({ href: fallback, openInNewTab: false });
       }
+      console.debug && console.debug('magic link redirect target ->', POST_AUTH_CALLBACK);
       const { error } = await supabase.auth.signInWithOtp({
         email,
         options: { emailRedirectTo: POST_AUTH_CALLBACK }

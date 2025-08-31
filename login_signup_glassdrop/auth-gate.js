@@ -344,10 +344,20 @@ window.addEventListener('storage', (ev) => {
   if (ev.key === '__tharaga_magic_continue') {
     window.__authGateLoggedIn = true;
     try { closeLoginModal(); } catch (_) {}
-    if (signInPromise && signInResolve) { signInResolve(...); }
-    if (window.__authGatePendingAction) { ... fn(); }
-  }
-});
+     // resolve any awaiters
+    if (signInPromise && signInResolve) {
+      try { signInResolve({ signedIn: true }); } catch (_) {}
+      signInPromise = null; signInResolve = null; signInReject = null;
+    }
+
+    // run and clear the pending action (e.g., re-submit the form)
+    if (window.__authGatePendingAction) {
+      const fn = window.__authGatePendingAction;
+      window.__authGatePendingAction = null;
+      try { fn(); } catch (e) { console.error('pending action failed', e); }
+    }
+   }
+ });
 
 
   } catch (err) {

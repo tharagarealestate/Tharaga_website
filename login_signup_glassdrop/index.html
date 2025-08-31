@@ -291,7 +291,7 @@ async function handleRedirectTokens() {
   
   if (new URLSearchParams(location.search).get('post_auth') === '1') {
   history.replaceState(null, '', location.pathname);
-  return null;
+  
   }
 
   try {
@@ -456,7 +456,7 @@ async function handleRedirectTokens() {
         if (pending.openInNewTab) window.open(pending.href, '_blank');
         else location.href = pending.href;
       } else if (new URLSearchParams(location.search).get('post_auth') === '1') {
-        setTimeout(()=>{ location.href = '/'; }, 500);
+        setMsg('Thanks — you are signed in. Click Continue to return to the app.', true);
       }
     }
   }

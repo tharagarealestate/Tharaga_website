@@ -246,8 +246,12 @@
     // Domains we auto-protect when using the gate snippet on other pages
     //const PROTECTED_DOMAINS = ['nobroker', 'magicbricks', '99acres', 'housing.com', 'makaan', 'quikrhomes'];
 
-    // Callback page for magic links / email confirmations. Keep under your domain and add to Supabase Redirect URLs.
-    const POST_AUTH_CALLBACK = `${location.origin}/login_signup/?post_auth=1`;
+    // Callback page for magic links / email confirmations.
+    // Prefer parent_origin when iframe was opened by authGate — that ensures the magic link
+    // redirects back to the *main site origin* and allows cross-tab localStorage signalling.
+    const __qs = new URLSearchParams(location.search);
+    const PARENT_ORIGIN = (__qs.get('parent_origin') || location.origin).replace(/\/$/, '');
+    const POST_AUTH_CALLBACK = `${PARENT_ORIGIN}/login_signup/?post_auth=1`;
 
     // ========================= IMPORT =========================
     import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
@@ -289,6 +293,42 @@ async function handleRedirectTokens() {
         .replace(/([?&])refresh_token=[^&]*(&?)/g, '$1')
         .replace(/(^\?|&$)/, '');
       history.replaceState(null, '', location.pathname + (cleanedSearch ? '?' + cleanedSearch : ''));
+
+      // --- Notify other tabs / parent that magic link landed --- //
+try {
+  // derive a sensible 'next' if available
+  let pendingNext = null;
+  try {
+    pendingNext = JSON.parse(localStorage.getItem('post_auth_target') || 'null')?.href || new URLSearchParams(location.search).get('next') || null;
+  } catch (_e) {
+    pendingNext = new URLSearchParams(location.search).get('next') || null;
+  }
+
+  const payload = {
+    ts: Date.now(),
+    next: pendingNext,
+    user: data?.session?.user ? { id: data.session.user.id, email: data.session.user.email } : null
+  };
+
+  // Write to localStorage on this origin (this notifies same-origin listeners)
+  try { localStorage.setItem('__tharaga_magic_continue', JSON.stringify(payload)); } catch (e) { console.warn('Could not write magic continue', e); }
+
+  // If embedded inside an iframe, also postMessage to parent (use parent_origin if passed)
+  const parentOrigin = new URLSearchParams(location.search).get('parent_origin');
+  if (window.self !== window.parent) {
+    try {
+      if (parentOrigin) {
+        window.parent.postMessage({ type: 'signed_in', user: payload.user, next: payload.next }, parentOrigin);
+      } else {
+        // fallback — permissive, but parent-side will still validate origin against allowed list
+        window.parent.postMessage({ type: 'signed_in', user: payload.user, next: payload.next }, '*');
+      }
+    } catch (e) { /* ignore */ }
+  }
+} catch (e) {
+  console.warn('notify-magic-continue failed', e);
+}
+
 
       // Optionally mark confirmation (debugging / cross-tab awareness)
       try { localStorage.setItem('__tharaga_magic_confirmed', JSON.stringify({ ts: Date.now() })); } catch (_) {}

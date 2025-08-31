@@ -128,6 +128,14 @@
       // include referrer origin (optional) so iframe can detect origin for safe postMessage back
       params.set('parent_origin', location.origin);
       iframe.src = LOGIN_IFRAME_URL + (params.toString() ? ('?' + params.toString()) : '');
+      // Add iframe origin to the allowed list so postMessage from it is accepted
+    try {
+      const tmpUrl = new URL(iframe.src, location.href);
+      const iframeOrigin = tmpUrl.origin;
+      if (ALLOWED_IFRAME_ORIGINS.indexOf(iframeOrigin) === -1) {
+        ALLOWED_IFRAME_ORIGINS.push(iframeOrigin);
+      }
+    } catch (e) { /* ignore */ }
     } catch (e) {
       // fallback if URL building fails
       iframe.src = LOGIN_IFRAME_URL;
@@ -339,25 +347,36 @@ window.authGate = {
   }
 });
 
-    // Only resume pending action when the sign-in tab writes this explicit key
+// Only resume pending action when the sign-in tab writes this explicit key
 window.addEventListener('storage', (ev) => {
   if (ev.key === '__tharaga_magic_continue') {
+    // mark logged-in state
     window.__authGateLoggedIn = true;
+
+    // close modal (if open)
     try { closeLoginModal(); } catch (_) {}
-     // resolve any awaiters
+
+    // parse payload if present (ev.newValue is the written JSON string)
+    let payload = null;
+    try { payload = ev.newValue ? JSON.parse(ev.newValue) : null; } catch (parseErr) { payload = null; }
+
+    // debugging — remove or lower verbosity after testing
+    console.debug && console.debug('authGate.storage -> __tharaga_magic_continue', payload);
+
+    // Resolve any awaiting promise (if someone awaited authGate.openLoginModal({ waitForSignIn: true }))
     if (signInPromise && signInResolve) {
-      try { signInResolve({ signedIn: true }); } catch (_) {}
+      try { signInResolve(payload || { signedIn: true }); } catch (_) {}
       signInPromise = null; signInResolve = null; signInReject = null;
     }
 
-    // run and clear the pending action (e.g., re-submit the form)
+    // Run and clear the pending action (e.g., resume an earlier form submit)
     if (window.__authGatePendingAction) {
       const fn = window.__authGatePendingAction;
       window.__authGatePendingAction = null;
-      try { fn(); } catch (e) { console.error('pending action failed', e); }
+      try { fn(); } catch (e) { console.error('authGate: pending action failed', e); }
     }
-   }
- });
+  }
+});
 
 
   } catch (err) {

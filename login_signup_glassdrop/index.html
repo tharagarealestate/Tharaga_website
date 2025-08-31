@@ -418,13 +418,46 @@ async function handleRedirectTokens() {
     if (session) {
       showAuthed(session.user?.email);
 
-      // If we landed here because of magic-link redirect, require user to click Continue
       const isPostAuth = new URLSearchParams(location.search).get('post_auth') === '1';
-      if (isPostAuth) {
-        setMsg('Thanks — you are signed in. Click Continue to return to the app.', true);
-        // leave UI visible; do NOT auto-redirect
-        return;
-      }
+if (isPostAuth) {
+  // Friendly confirmation for the tab that opened the magic link
+  setMsg('Thanks — you are signed in. Returning to the app…', true);
+
+  // Read any pending target (auth-gate stored this earlier)
+  const pending = storage.get();
+
+  // Build payload to signal other tabs / parent windows
+  const continuePayload = {
+    ts: Date.now(),
+    next: pending?.href || new URLSearchParams(location.search).get('next') || null,
+    user: session?.user ? { id: session.user.id, email: session.user.email } : null
+  };
+
+  // 1) Signal other tabs (auth-gate listens for this key)
+  try {
+    localStorage.setItem('__tharaga_magic_continue', JSON.stringify(continuePayload));
+    // Keep __tharaga_magic_confirmed for backward compatibility if you want
+    try { localStorage.setItem('__tharaga_magic_confirmed', JSON.stringify({ ts: Date.now() })); } catch (_) {}
+  } catch (e) {
+    console.warn('Could not write magic-continue to localStorage', e);
+  }
+
+  // 2) If embedded inside an iframe, also postMessage to parent (immediate)
+  try {
+    if (window.self !== window.parent) {
+      window.parent.postMessage({
+        type: 'signed_in',
+        user: continuePayload.user,
+        next: continuePayload.next
+      }, '*'); // parent origin check happens in auth-gate; keeping '*' here to be permissive
+    }
+  } catch (e) { /* ignore */ }
+
+  // Leave the page visible so the user sees confirmation. The original tab (modal) will
+  // receive the storage event and resume the pending action automatically.
+  return;
+}
+
 
       // Normal behaviour (not a magic-link tab): resume pending redirect automatically
       if (pending && isSafeRedirect(pending.href)) {

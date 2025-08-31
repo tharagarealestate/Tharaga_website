@@ -336,23 +336,12 @@
 
     // Only resume pending action when the sign-in tab writes this explicit key
 window.addEventListener('storage', (ev) => {
-  try {
-    if (!ev.key) return;
-    if (ev.key === '__tharaga_magic_continue') {
-      // The user in the sign-in tab clicked Continue — now resume parent flow
-      window.__authGateLoggedIn = true;
-      try { closeLoginModal(); } catch (_) {}
-      if (signInPromise && signInResolve) {
-        try { signInResolve({ signedIn: true, user: null }); } catch (_) {}
-        signInPromise = null; signInResolve = signInReject = null;
-      }
-      if (window.__authGatePendingAction) {
-        const fn = window.__authGatePendingAction;
-        window.__authGatePendingAction = null;
-        try { fn(); } catch (err) { console.error('resume pending action failed', err); }
-      }
-    }
-  } catch (e) { /* non-fatal */ }
+  if (ev.key === '__tharaga_magic_continue') {
+    window.__authGateLoggedIn = true;
+    try { closeLoginModal(); } catch (_) {}
+    if (signInPromise && signInResolve) { signInResolve(...); }
+    if (window.__authGatePendingAction) { ... fn(); }
+  }
 });
 
 

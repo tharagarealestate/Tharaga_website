@@ -256,49 +256,64 @@
 
     // ---------- INSERT: robust redirect token handler ----------
 async function handleRedirectTokens() {
-  // 1) SDK may already have a session stored (fast path)
+  // 1) Fast path: SDK may already have a session
   try {
     const { data } = await supabase.auth.getSession();
-    if (data?.session) {
-      return data.session;
-    }
+    if (data?.session) return data.session;
   } catch (e) {
     console.warn('getSession thrown', e);
   }
 
+  // Is this a post-auth landing (we want to show manual Continue)? read now
+  const isPostAuth = new URLSearchParams(location.search).get('post_auth') === '1';
+
   // 2) Parse fragment (#access_token=...) first, then query
-  const rawHash = window.location.hash.replace(/^#/, '');
-  const params = new URLSearchParams(rawHash || window.location.search || '');
+  const rawHash = (location.hash || '').replace(/^#/, '');
+  // prefer hash (supabase places tokens in the fragment); fallback to search
+  const params = new URLSearchParams(rawHash || location.search || '');
   const access_token = params.get('access_token');
   const refresh_token = params.get('refresh_token');
 
   if (access_token && refresh_token) {
-    // try to set the session
-    const { data, error } = await supabase.auth.setSession({ access_token, refresh_token });
-    if (error) {
-      console.error('Failed to setSession from redirect tokens', error);
+    // try to set the session using tokens from URL
+    try {
+      const { data, error } = await supabase.auth.setSession({ access_token, refresh_token });
+      if (error) {
+        console.error('Failed to setSession from redirect tokens', error);
+        return null;
+      }
+      // Remove tokens from the URL (but keep other query params such as post_auth)
+      // Build cleaned search by removing token params from location.search (if present there)
+      const cleanedSearch = location.search
+        .replace(/([?&])access_token=[^&]*(&?)/g, '$1')
+        .replace(/([?&])refresh_token=[^&]*(&?)/g, '$1')
+        .replace(/(^\?|&$)/, '');
+      history.replaceState(null, '', location.pathname + (cleanedSearch ? '?' + cleanedSearch : ''));
+
+      // Optionally mark confirmation (debugging / cross-tab awareness)
+      try { localStorage.setItem('__tharaga_magic_confirmed', JSON.stringify({ ts: Date.now() })); } catch (_) {}
+
+      return data?.session ?? null;
+    } catch (err) {
+      console.error('setSession error', err);
       return null;
     }
-    // Clean tokens from URL but keep other query params intact
-    const cleanedSearch = location.search
-      .replace(/([?&])access_token=[^&]*(&?)/g,'$1')
-      .replace(/([?&])refresh_token=[^&]*(&?)/g,'$1')
-      .replace(/(^\?|&$)/,'');
-    history.replaceState(null, '', location.pathname + (cleanedSearch ? '?' + cleanedSearch : ''));
-
-    return data?.session ?? null;
   }
-  
-  const isPostAuth = new URLSearchParams(location.search).get('post_auth') === '1';
-if (isPostAuth) {
-  history.replaceState(null, '', location.pathname);
+
+  // If no tokens found but this is a post_auth landing we still keep the page visible
+  if (isPostAuth) {
+    // preserve URL (no tokens) and continue; caller (onInit) will show Continue UI
+    // do not return early — just return null (no session yet)
+    return null;
+  }
+
+  return null;
 }
 // DO NOT return here — let token handling continue
 
   try {
   localStorage.setItem('__tharaga_magic_confirmed', JSON.stringify({ ts: Date.now() }));
 } catch (e) { /* ignore */ }
-}
 
 // Call it once on load
 (async () => {
@@ -394,42 +409,45 @@ if (isPostAuth) {
 
     // When page loads, if already signed in and have pending target, continue.
     (async function onInit(){
-      try {
-        const { data } = await supabase.auth.getSession();
-        const session = data?.session;
-        const pending = storage.get();
-        if (session) {
-          showAuthed(session.user?.email);
+  try {
+    const { data } = await supabase.auth.getSession();
+    const session = data?.session;
+    const pending = storage.get();
 
-          // If we are here because of a magic-link redirect from email, don't auto-redirect.
-          const isPostAuth = new URLSearchParams(location.search).get('post_auth') === '1';
-          if (isPostAuth) {
-            // Show a friendly message and require the user to click Continue (no automatic navigation)
-            setMsg('Thanks — you are signed in. Click Continue to return to the app.', true);
-            // leave UI visible (Continue button is present in markup)
-            return;
-          }
+    // If already signed in
+    if (session) {
+      showAuthed(session.user?.email);
 
-          // Normal behaviour (not a magic-link tab): resume pending redirect automatically
-          if (pending && isSafeRedirect(pending.href)) {
-            setTimeout(()=>{
-              storage.clear();
-              if (pending.openInNewTab) window.open(pending.href, '_blank');
-              else location.href = pending.href;
-            }, 400);
-          } else if (pending) {
-            console.warn('Blocked unsafe pending redirect:', pending.href);
-            storage.clear();
-          }
-        }
-        } else {
-          showForm();
-        }
-      } catch (e) {
-        console.error(e);
-        showForm();
+      // If we landed here because of magic-link redirect, require user to click Continue
+      const isPostAuth = new URLSearchParams(location.search).get('post_auth') === '1';
+      if (isPostAuth) {
+        setMsg('Thanks — you are signed in. Click Continue to return to the app.', true);
+        // leave UI visible; do NOT auto-redirect
+        return;
       }
-    })();
+
+      // Normal behaviour (not a magic-link tab): resume pending redirect automatically
+      if (pending && isSafeRedirect(pending.href)) {
+        setTimeout(() => {
+          storage.clear();
+          if (pending.openInNewTab) window.open(pending.href, '_blank');
+          else location.href = pending.href;
+        }, 400);
+      } else if (pending) {
+        console.warn('Blocked unsafe pending redirect:', pending.href);
+        storage.clear();
+      }
+
+      return;
+    }
+
+    // Not signed in
+    showForm();
+  } catch (e) {
+    console.error(e);
+    showForm();
+  }
+})();
 
     // Supabase will fire this when magic link lands or password sign-in completes
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
@@ -519,27 +537,27 @@ window.addEventListener('beforeunload', () => subscription?.unsubscribe());
     });
 
     continueBtn?.addEventListener('click', () => {
-      // notify other tabs the user confirmed and clicked Continue
-      try {
-        localStorage.setItem('__tharaga_magic_continue', JSON.stringify({ ts: Date.now(), next: pending?.href || null }));
-      } catch (e) {}
-      const pending = storage.get();
+  // Read pending first
+  const pending = storage.get();
 
-      if (pending && isSafeRedirect(pending.href)) {
-        if (pending.openInNewTab) {
-          window.open(pending.href, '_blank');
-        } else {
-          location.href = pending.href;
-        }
-      } else if (pending) {
-        console.warn('Blocked unsafe pending redirect:', pending.href);
-        location.href = '/'; // fallback if pending exists but unsafe
-      } else {
-        location.href = '/'; // fallback if no pending redirect
-      }
+  // notify other tabs the user confirmed and clicked Continue
+  try {
+    localStorage.setItem('__tharaga_magic_continue', JSON.stringify({ ts: Date.now(), next: pending?.href || null }));
+  } catch (e) {}
 
-      storage.clear();
-    });
+  if (pending && isSafeRedirect(pending.href)) {
+    if (pending.openInNewTab) {
+      window.open(pending.href, '_blank');
+    } else {
+      location.href = pending.href;
+    }
+  } else {
+    // fallback
+    location.href = '/';
+  }
+
+  storage.clear();
+});
 
     // ========================= OPTIONAL: "Gate snippet" for other pages =========================
     // Copy the function below into any page where you want to protect links/buttons.

@@ -46,7 +46,7 @@
       backdrop-filter:saturate(180%) blur(10px);
       border:1px solid rgba(212,175,55,.25); /* subtle gold tint */
       border-radius:16px;
-      box-shadow:0 10px 40px rgba(0,0,0,.55);
+      box-shadow:0 0 40px rgba(0,0,0,.55);
       padding:22px;
       color:var(--txt);
     }
@@ -175,11 +175,9 @@
   <div class="auth-overlay">
     <main>
     <section class="card auth-modal" aria-live="polite">
-      <!-- everything you already have inside main goes here -->
       <h1>Sign in to continue</h1>
         <p class="muted">"Browse only approved builder projects — safe, transparent, and verified"</p>
 
-        <!-- session-state area (hidden until logged in) -->
         <div id="authed" class="hidden">
           <div class="success-block">
             <div class="flex">
@@ -194,7 +192,6 @@
           </div>
         </div>
 
-        <!-- auth form (hidden if logged in) -->
         <form id="authForm" autocomplete="on">
           <label for="email">Email</label>
           <input id="email" name="email" type="email" placeholder="you@domain.com" autocomplete="email" required>
@@ -203,7 +200,6 @@
             <div style="flex:1">
               <label for="password">Password <span class="hint">(optional — use Magic Link for fastest login)</span></label>
 
-              <!-- NEW: input wrapper that becomes the positioning context -->
               <div class="input-pill" style="position:relative;">
                 <input id="password" name="password" type="password" placeholder="••••••••" autocomplete="current-password">
                 <span id="toggleEye" class="toggle-eye" role="button" aria-label="Show password">👁</span>
@@ -237,12 +233,11 @@
     </main>
   </div>
 
-  <!-- Auth + Gate Logic -->
   <script type="module">
     //let hasRedirected = false;
     // ========================= CONFIG =========================
     const SUPABASE_URL = 'https://wedevtjjmdvngyshqdro.supabase.co'; // <-- REQUIRED
-    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndlZGV2dGpqbWR2bmd5c2hxZHJvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU0NzYwMzgsImV4cCI6MjA3MTA1MjAzOH0.Ex2c_sx358dFdygUGMVBohyTVto6fdEQ5nydDRh9m6M'; // <-- REQUIRED
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndlZGV2dGpqbWR2bmd5c2hxZHJvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU0NzYwMzgsImV4cCI6MjA3MTA1MjAzOH0.Ex2c_sx358dFdygUGMVBohyTVto6fdEQNnydDRh9m6M'; // <-- REQUIRED
 
     const __qs = new URLSearchParams(location.search);
     const FALLBACK_PARENT_ORIGIN = 'https://tharaga.co.in';
@@ -254,7 +249,7 @@
     const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     window.supabase = supabase; // expose for DevTools
 
-    // ---------- INSERT: robust redirect token handler ----------
+    // ---------- robust redirect token handler ----------
     async function handleRedirectTokens() {
       try {
         const { data } = await supabase.auth.getSession();
@@ -278,7 +273,6 @@
             return null;
           }
 
-          // --- 🔥 INSERTED SNIPPET (your request) ---
           try {
             const pendingNext = JSON.parse(localStorage.getItem('post_auth_target') || 'null')?.href
                                 || new URLSearchParams(location.search).get('next') || null;
@@ -292,8 +286,7 @@
           } catch (e) {
             console.warn('Could not write magic continue', e);
           }
-          // --- END INSERT ---
-
+          
           // Clean URL (remove tokens but keep others like post_auth)
           const cleanedSearch = location.search
             .replace(/([?&])access_token=[^&]*(&?)/g, '$1')
@@ -301,7 +294,7 @@
             .replace(/(^\?|&$)/, '');
           history.replaceState(null, '', location.pathname + (cleanedSearch ? '?' + cleanedSearch : ''));
 
-          // --- Notify parent/other tabs ---
+          // Notify parent/other tabs
           try {
             let pendingNext = null;
             try {
@@ -361,7 +354,6 @@
     })();
   
 
-
     // ========================= UI HOOKS ========================
     const yearEl = document.getElementById('year');
     if (yearEl) yearEl.textContent = new Date().getFullYear();
@@ -400,8 +392,7 @@
     function isSafeRedirect(href) {
       try {
         const url = new URL(href, location.origin);
-        // allow only same-origin or explicitly allowed origins (extend array if needed)
-        return url.origin === location.origin;
+        return url.origin === location.origin || url.origin === new URL(PARENT_ORIGIN).origin;
       } catch { return false; }
     }
 
@@ -409,11 +400,11 @@
       const next = new URLSearchParams(location.search).get('next');
       if (!next || storage.get()) return;
       try {
-        const url = new URL(next, location.origin); // handles relative or absolute
+        const url = new URL(next, location.origin);
         if (isSafeRedirect(url.href)) {
           storage.set({ href: url.href, openInNewTab: false });
         } else {
-          console.warn('Rejected unsafe next redirect:', url.href);
+          console.warn('Rejected unsafe next redirect (ensure isSafeRedirect allows PARENT_ORIGIN):', url.href);
         }
       } catch (e) {
         console.warn('Invalid next param', e);
@@ -441,127 +432,144 @@
     // ========================= INIT ===========================
     ensurePendingTargetFromQuery();
 
-    // When page loads, if already signed in and have pending target, continue.
     (async function onInit(){
-  try {
-    const { data } = await supabase.auth.getSession();
-    const session = data?.session;
-    const pending = storage.get();
+      try {
+        const { data } = await supabase.auth.getSession();
+        const session = data?.session;
+        const pending = storage.get();
+        const isPostAuth = new URLSearchParams(location.search).get('post_auth') === '1';
 
-    // If already signed in
-    if (session) {
-      showAuthed(session.user?.email);
+        // If already signed in
+        if (session) {
+          showAuthed(session.user?.email);
 
-      const isPostAuth = new URLSearchParams(location.search).get('post_auth') === '1';
-if (isPostAuth) {
-  // Friendly confirmation for the tab that opened the magic link
-  setMsg('Thanks — you are signed in. Returning to the app…', true);
+          // If this is the tab that processed the magic link
+          if (isPostAuth) {
+            setMsg('Thanks — you are signed in. Returning to the app…', true);
+            const pendingNextFromStorage = storage.get()?.href;
+            const nextFromQuery = new URLSearchParams(location.search).get('next');
+            const targetNext = pendingNextFromStorage || nextFromQuery;
 
-  // Read any pending target (auth-gate stored this earlier)
-  const pending = storage.get();
+            const continuePayload = {
+              ts: Date.now(),
+              next: targetNext,
+              user: session?.user ? { id: session.user.id, email: session.user.email } : null
+            };
 
-  // Build payload to signal other tabs / parent windows
-  const continuePayload = {
-    ts: Date.now(),
-    next: pending?.href || new URLSearchParams(location.search).get('next') || null,
-    user: session?.user ? { id: session.user.id, email: session.user.email } : null
-  };
+            // 1) Signal other tabs (auth-gate listens for this key)
+            try {
+              localStorage.setItem('__tharaga_magic_continue', JSON.stringify(continuePayload));
+              localStorage.setItem('__tharaga_magic_confirmed', JSON.stringify({ ts: Date.now() }));
+            } catch (e) {
+              console.warn('Could not write magic-continue to localStorage', e);
+            }
 
-  // 1) Signal other tabs (auth-gate listens for this key)
-  try {
-    localStorage.setItem('__tharaga_magic_continue', JSON.stringify(continuePayload));
-    // Keep __tharaga_magic_confirmed for backward compatibility if you want
-    try { localStorage.setItem('__tharaga_magic_confirmed', JSON.stringify({ ts: Date.now() })); } catch (_) {}
-  } catch (e) {
-    console.warn('Could not write magic-continue to localStorage', e);
-  }
+            // 2) If embedded inside an iframe, also postMessage to parent (immediate)
+            try {
+              if (window.self !== window.parent) {
+                const parentOrigin = new URLSearchParams(location.search).get('parent_origin');
+                window.parent.postMessage({
+                  type: 'signed_in',
+                  user: continuePayload.user,
+                  next: continuePayload.next
+                }, parentOrigin || '*');
+              }
+            } catch (e) { /* ignore */ }
 
-  // 2) If embedded inside an iframe, also postMessage to parent (immediate)
-  try {
-    if (window.self !== window.parent) {
-      window.parent.postMessage({
-        type: 'signed_in',
-        user: continuePayload.user,
-        next: continuePayload.next
-      }, '*'); // parent origin check happens in auth-gate; keeping '*' here to be permissive
-    }
-  } catch (e) { /* ignore */ }
+            // Automatic redirect to the `next` page if available
+            if (targetNext && isSafeRedirect(targetNext)) {
+                setTimeout(() => {
+                    storage.clear(); // Clear storage before redirecting
+                    location.href = targetNext;
+                }, 1000); // Give some time for message to propagate
+            } else if (window.self !== window.parent) {
+                // If embedded and no safe next target, try to close the modal directly
+                setTimeout(() => {
+                  window.parent.postMessage({type:'close_login_modal'}, new URLSearchParams(location.search).get('parent_origin') || '*');
+                }, 500);
+            } else {
+                // Fallback for standalone tab if no next target (go home)
+                setTimeout(() => {
+                  storage.clear();
+                  location.href = '/';
+                }, 1000);
+            }
 
-  // Leave the page visible so the user sees confirmation. The original tab (modal) will
-  // receive the storage event and resume the pending action automatically.
-  return;
-}
+            return;
+          }
 
+          // Normal behaviour (not a magic-link tab): resume pending redirect automatically
+          if (pending && isSafeRedirect(pending.href)) {
+            setTimeout(() => {
+              storage.clear();
+              if (pending.openInNewTab) window.open(pending.href, '_blank');
+              else location.href = pending.href;
+            }, 400);
+          } else if (pending) {
+            console.warn('Blocked unsafe pending redirect:', pending.href);
+            storage.clear();
+          }
 
-      // Normal behaviour (not a magic-link tab): resume pending redirect automatically
-      if (pending && isSafeRedirect(pending.href)) {
-        setTimeout(() => {
-          storage.clear();
-          if (pending.openInNewTab) window.open(pending.href, '_blank');
-          else location.href = pending.href;
-        }, 400);
-      } else if (pending) {
-        console.warn('Blocked unsafe pending redirect:', pending.href);
-        storage.clear();
+          return;
+        }
+
+        // Not signed in
+        showForm();
+      } catch (e) {
+        console.error(e);
+        showForm();
       }
+    })();
 
-      return;
-    }
-
-    // Not signed in
-    showForm();
-  } catch (e) {
-    console.error(e);
-    showForm();
-  }
-})();
-
-    // Supabase will fire this when magic link lands or password sign-in completes
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-  if (session?.access_token) {
-    showAuthed(session.user?.email);
+      // This listener handles state changes. For magic links, the page will already have been handled by onInit().
+      if (session?.access_token) {
+        showAuthed(session.user?.email);
 
-    const pending = storage.get();
+        const pending = storage.get();
+        const nextFromQuery = new URLSearchParams(location.search).get('next');
+        const targetNext = pending?.href || nextFromQuery;
 
-    // If embedded inside an iframe, postMessage to parent so they can resume flow
-    if (window.self !== window.parent) {
-      const msg = {
-        type: 'signed_in',
-        user: { id: session.user?.id, email: session.user?.email },
-        next: pending?.href || new URLSearchParams(location.search).get('next') || null
-      };
-      // Use specific origin instead of '*' when you know the parent origin.
-      window.parent.postMessage(msg, '*');
+        if (window.self !== window.parent) {
+          const msg = {
+            type: 'signed_in',
+            user: { id: session.user?.id, email: session.user?.email },
+            next: targetNext
+          };
+          window.parent.postMessage(msg, new URLSearchParams(location.search).get('parent_origin') || '*');
+        }
 
-      // Optionally clear local pending target (iframe can keep its copy)
-      // storage.clear();
-    } else {
-      // Not embedded — fallback to original behaviour (redirect to pending or home)
-      if (new URLSearchParams(location.search).get('post_auth') === '1') {
-  setMsg('Thanks — you are signed in. Click Continue to return to the app.', true);
-  return; // STOP auto redirect
-}
+        const isPostAuth = new URLSearchParams(location.search).get('post_auth') === '1';
 
-// Normal flows (not post_auth)
-if (pending && isSafeRedirect(pending.href)) {
-  storage.clear();
-  if (pending.openInNewTab) window.open(pending.href, '_blank');
-  else location.href = pending.href;
-}
-    }
-  }
-});
+        // Auto-redirect for magic links if not embedded, or if password sign-in has a pending target
+        if (isPostAuth || (event === 'SIGNED_IN' && pending && isSafeRedirect(pending.href))) {
+          setMsg('Signed in. Returning to the app...', true);
+          setTimeout(() => {
+            const redirectTarget = isPostAuth ? targetNext : pending?.href;
+            if (redirectTarget && isSafeRedirect(redirectTarget)) {
+              storage.clear();
+              location.href = redirectTarget;
+            } else {
+              storage.clear();
+              location.href = '/';
+            }
+          }, 1000);
+        } else {
+          setMsg('Signed in ✓', true); // Password sign-in, wait for user to click continue
+        }
+      }
+    });
 
 
-// unsubscribe on unload (optional, good practice)
-window.addEventListener('beforeunload', () => subscription?.unsubscribe());
+    // unsubscribe on unload (optional, good practice)
+    window.addEventListener('beforeunload', () => subscription?.unsubscribe());
 
     // ========================= ACTIONS ========================
     magicBtn.addEventListener('click', async () => {
       const email = emailEl.value.trim();
       if (!email) return setMsg('Enter a valid email');
       setMsg('Sending magic link…');
-      // Ensure a pending target exists; if none, default to referer or home
+      // Ensure a pending target exists
       if (!storage.get()) {
         const fallback = document.referrer && new URL(document.referrer).origin === location.origin
           ? new URL(document.referrer).pathname
@@ -609,33 +617,24 @@ window.addEventListener('beforeunload', () => subscription?.unsubscribe());
     });
 
     continueBtn?.addEventListener('click', () => {
-  // Read pending first
-  const pending = storage.get();
+      const pending = storage.get();
+      try {
+        localStorage.setItem('__tharaga_magic_continue', JSON.stringify({ ts: Date.now(), next: pending?.href || null }));
+      } catch (e) {}
 
-  // notify other tabs the user confirmed and clicked Continue
-  try {
-    localStorage.setItem('__tharaga_magic_continue', JSON.stringify({ ts: Date.now(), next: pending?.href || null }));
-  } catch (e) {}
-
-  if (pending && isSafeRedirect(pending.href)) {
-    if (pending.openInNewTab) {
-      window.open(pending.href, '_blank');
-    } else {
-      location.href = pending.href;
-    }
-  } else {
-    // fallback
-    location.href = '/';
-  }
-
-  storage.clear();
-});
+      if (pending && isSafeRedirect(pending.href)) {
+        if (pending.openInNewTab) {
+          window.open(pending.href, '_blank');
+        } else {
+          location.href = pending.href;
+        }
+      } else {
+        location.href = '/';
+      }
+      storage.clear();
+    });
 
     // ========================= OPTIONAL: "Gate snippet" for other pages =========================
-    // Copy the function below into any page where you want to protect links/buttons.
-    // Example usage:
-    //   enableAuthGate({ selector: 'a', protectedDomains: PROTECTED_DOMAINS });
-    //   // to explicitly protect any element: add data-protected="true", data-open-new-tab="true"
     
     window.enableAuthGate = function enableAuthGate({ selector = 'a', protectedDomains = [] } = {}){
       document.addEventListener('click', async (e) => {
@@ -643,7 +642,7 @@ window.addEventListener('beforeunload', () => subscription?.unsubscribe());
         if (!el) return;
         const isExplicit = el.dataset?.protected === 'true';
         const href = el.getAttribute?.('href');
-        const isButton = !href; // for buttons/CTAs
+        const isButton = !href;
         const openInNewTab = el.dataset?.openNewTab === 'true' || el.target === '_blank';
 
         let needsProtect = isExplicit;
@@ -657,7 +656,7 @@ window.addEventListener('beforeunload', () => subscription?.unsubscribe());
 
         // Check auth
         const { data } = await supabase.auth.getSession();
-        if (data?.session) return; // already logged in, allow default
+        if (data?.session) return;
 
         // Block and send to login page
         e.preventDefault();

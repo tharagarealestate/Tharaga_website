@@ -306,6 +306,7 @@ async function getRecaptcha() {
     }
   });
 </script>
+<script src="../login_signup_glassdrop/auth-gate.js"></script>
 
 <!-- Supabase + Transformers (browser) + Match + Render -->
 <script type="module">
@@ -346,6 +347,7 @@ async function getRecaptcha() {
   const form = document.getElementById('buyerForm');
   const submitBtn = document.getElementById('submitBtn');
   const otpVerifiedField = document.getElementById('otp_verified');
+
 
  // Submit: embed → RPC → render
   form.addEventListener("submit", async (e) => {
@@ -533,26 +535,8 @@ async function getRecaptcha() {
       container.appendChild(card);
     });
   }
+  
 </script>
-<script src="../login_signup_glassdrop/auth-gate.js"></script>
 
-
-
-<!-- Attach gate to submitBtn -->
-<script type="module">
-  // Wait until DOM is ready
-  document.addEventListener("DOMContentLoaded", () => {
-    if (window.authGate) {
-      window.authGate.attachAuthGate("#submitBtn", async () => {
-        // Trigger form submit programmatically
-        document.getElementById("buyerForm").dispatchEvent(
-          new Event("submit", { cancelable: true, bubbles: true })
-        );
-      });
-    } else {
-      console.error("authGate not loaded");
-    }
-  });
-</script>
 </body>
 </html>

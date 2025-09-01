@@ -7,6 +7,8 @@
   <meta name="description" content="Secure login and signup for Tharaga partner portals and listings." />
   <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap">
+  <script type="module" src="/js/fragment-handle.js" defer></script>
+
   <style>
     :root{
       /* Tharaga Brand Palette */
@@ -216,7 +218,7 @@
 
           <div class="row" style="margin-top:10px">
             <button id="signupBtn" class="btn btn-ghost" type="button">Create Account</button>
-            <a id="forgotLink" class="small-link right" href="https://thriving-beijinho-ce44d5.netlify.app/reset_password/">Forgot password?</a>
+            <a id="forgotLink" class="small-link right" href="/reset_password/">Forgot password?</a>
 
           </div>
 
@@ -237,7 +239,7 @@
 
   <!-- Auth + Gate Logic -->
   <script type="module">
-    let hasRedirected = false;
+    //let hasRedirected = false;
     // ========================= CONFIG =========================
     const SUPABASE_URL = 'https://wedevtjjmdvngyshqdro.supabase.co'; // <-- REQUIRED
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndlZGV2dGpqbWR2bmd5c2hxZHJvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU0NzYwMzgsImV4cCI6MjA3MTA1MjAzOH0.Ex2c_sx358dFdygUGMVBohyTVto6fdEQ5nydDRh9m6M'; // <-- REQUIRED
@@ -357,7 +359,7 @@
       const session = await handleRedirectTokens();
       console.log('handleRedirectTokens -> session?', !!session);
     })();
-  </script>
+  
 
 
     // ========================= UI HOOKS ========================
@@ -635,7 +637,7 @@ window.addEventListener('beforeunload', () => subscription?.unsubscribe());
     //   enableAuthGate({ selector: 'a', protectedDomains: PROTECTED_DOMAINS });
     //   // to explicitly protect any element: add data-protected="true", data-open-new-tab="true"
     
-    window.enableAuthGate = function enableAuthGate({ selector = 'a', protectedDomains = PROTECTED_DOMAINS } = {}){
+    window.enableAuthGate = function enableAuthGate({ selector = 'a', protectedDomains = [] } = {}){
       document.addEventListener('click', async (e) => {
         const el = e.target.closest(selector);
         if (!el) return;

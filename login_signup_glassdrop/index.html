@@ -539,7 +539,7 @@
       console.debug && console.debug('magic link redirect target ->', POST_AUTH_CALLBACK);
       const { error } = await supabase.auth.signInWithOtp({
         email,
-        options: { emailRedirectTo: POST_AUTH_CALLBACK }
+        options: { emailRedirectTo: "https://tharaga.co.in/auth/callback" }
       });
       if (error) setMsg(error.message);
       else setMsg('Magic link sent! Check your inbox (and spam).', true);
@@ -593,6 +593,21 @@
       }
       storage.clear();
     });
+
+    supabase.auth.onAuthStateChange((event, session) => {
+  if (event === "SIGNED_IN" && session) {
+    // Save user info for the opener tab
+    localStorage.setItem("__tharaga_magic_continue", JSON.stringify({
+      signedIn: true,
+      user: session.user
+    }));
+
+    // Close this popup tab automatically (optional)
+    if (window.opener) {
+      window.close();
+    }
+  }
+});
 
     // ========================= OPTIONAL: "Gate snippet" for other pages =========================
     

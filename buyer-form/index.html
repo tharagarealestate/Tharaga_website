@@ -324,6 +324,25 @@ async function getRecaptcha() {
   const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndlZGV2dGpqbWR2bmd5c2hxZHJvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU0NzYwMzgsImV4cCI6MjA3MTA1MjAzOH0.Ex2c_sx358dFdygUGMVBohyTVto6fdEQ5nydDRh9m6M";
   const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+  // --- Supabase readiness guard ---
+let supabaseReady = false;
+
+async function initSupabaseAuth() {
+  try {
+    const { data, error } = await supabase.auth.getSession();
+    if (error) {
+      console.error("Auth init failed:", error);
+    }
+    supabaseReady = true;
+    console.log("Supabase auth ready", data?.session);
+  } catch (err) {
+    console.error("Supabase init exception:", err);
+  }
+}
+
+// Kick off auth init immediately
+initSupabaseAuth();
+
   // Reuse the same model as ingestion
   const MODEL_ID = 'Xenova/e5-small-v2';
   let extractorPromise = null;
@@ -354,6 +373,12 @@ async function getRecaptcha() {
   // Submit: embed → RPC → render
 form.addEventListener("submit", async (e) => {
   e.preventDefault();
+
+  // 🟢 NEW: ensure supabase/auth-gate has loaded
+  if (!window.supabaseReady) {
+    alert("Login system is still loading. Please wait a moment and try again.");
+    return;
+  }
 
   // safe getUser() (works if supabase client is present)
   let currentUser = null;

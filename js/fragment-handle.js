@@ -37,9 +37,9 @@
       };
 
       try {
-        localStorage.setItem('__tharaga_magic_continue', JSON.stringify(payload));
-        localStorage.setItem('__tharaga_magic_confirmed', JSON.stringify({ ts: Date.now() }));
-      } catch (e) { console.warn('fragment-handle: could not write magic continue', e); }
+        localStorage.setItem('__tharaga_magic_confirmed', JSON.stringify(payload));
+        localStorage.setItem('__tharaga_magic_confirmed_timestamp', String(Date.now())); // optional extra
+      } catch (e) { console.warn('Could not write magic confirmed on parent', e); }
 
       // clean the URL (remove fragment tokens)
       try {

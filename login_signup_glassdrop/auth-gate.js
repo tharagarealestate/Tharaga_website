@@ -5,11 +5,13 @@
 */
 (function () {
   'use strict';
+  
   const SUPABASE_URL = 'https://wedevtjjmdvngyshqdro.supabase.co';
   const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndlZGV2dGpqbWR2bmd5c2hxZHJvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU0NzYwMzgsImV4cCI6MjA3MTA1MjAzOH0.Ex2c_sx358dFdygUGMVBohyTVto6fdEQ5nydDRh9m6M";
 
   /** CONFIG — update LOGIN_IFRAME_URL to your actual login/embed page */
   const LOGIN_IFRAME_URL = "/login_signup_glassdrop/"; // <-- replace if needed
+  const AUTO_RESUME_PENDING = false;
 
     // Build allowed origin list robustly (supports absolute AND relative LOGIN_IFRAME_URL)
   let ALLOWED_IFRAME_ORIGINS = [];
@@ -232,11 +234,18 @@
           return;
         }
 
-        // not logged in: block and store pending action
+        // not logged in: block and (optionally) store pending action
         evt.preventDefault && evt.preventDefault();
-        window.__authGatePendingAction = async () => {
-          try { await actionFn(evt); } catch (e) { console.error('pending action failed', e); }
-        };
+
+        if (AUTO_RESUME_PENDING) {
+          // Only store pending action if auto-resume behaviour is enabled
+          window.__authGatePendingAction = async () => {
+            try { await actionFn(evt); } catch (e) { console.error('pending action failed', e); }
+          };
+        } else {
+          // don't auto-resume — the user will re-click the CTA after signing in
+          window.__authGatePendingAction = null;
+        }
 
         // open modal — pass next for safe return when iframe posts next
         const next = (location.pathname + location.search);
@@ -263,47 +272,39 @@
 
   // expected messages from iframe: { type: 'signed_in' | 'close_login_modal' | 'ping', next?, user? }
   if (msg.type === 'signed_in') {
-    window.__authGateLoggedIn = true;
+  window.__authGateLoggedIn = true;
 
-    // Run pending action if any
-    if (window.__authGatePendingAction) {
-      try {
-        window.__authGatePendingAction();
-      } catch (e) {
-        console.error('Pending action failed', e);
-      }
-      window.__authGatePendingAction = null;
+  // If an explicit pending action exists and we are configured to auto-resume,
+  // run it. Otherwise just close modal and mark logged-in — let user re-click CTA.
+  if (AUTO_RESUME_PENDING && window.__authGatePendingAction) {
+    try {
+      window.__authGatePendingAction();
+    } catch (e) {
+      console.error('Pending action failed', e);
     }
-
-    // Resolve promise if someone awaited
-    if (signInResolve) {
-      signInResolve({ signedIn: true, user: msg.user || null });
-      signInPromise = null; signInResolve = null; signInReject = null;
-    }
-
-    // Optional safe redirect (only allow same-origin)
-    if (msg.next) {
-      try {
-        const u = new URL(msg.next, location.origin);
-        if (u.origin === location.origin) location.href = u.href;
-      } catch (e) {
-        console.warn('invalid next from iframe', msg.next);
-      }
-    }
-
-    closeLoginModal();
-
-  } else if (msg.type === 'close_login_modal') {
-    closeLoginModal();
-
-  } else if (msg.type === 'ping') {
-    // optional handshake message from iframe
-    postMessageToIframe({ type: 'pong' });
-
+    window.__authGatePendingAction = null;
   } else {
-    // ignore unknown message types
+    // don't auto-run pending action
+    try { closeLoginModal(); } catch (_) {}
   }
-}, false);
+
+  // Resolve promise if someone awaited
+  if (signInResolve) {
+    signInResolve({ signedIn: true, user: msg.user || null });
+    signInPromise = null; signInResolve = null; signInReject = null;
+  }
+
+  // Optional safe redirect (only allow same-origin) — keep current behaviour
+  if (msg.next) {
+    try {
+      const u = new URL(msg.next, location.origin);
+      if (u.origin === location.origin) location.href = u.href;
+    } catch (e) {
+      console.warn('invalid next from iframe', msg.next);
+    }
+  }
+}
+
 
 // Expose API
 window.authGate = {
@@ -349,41 +350,49 @@ window.authGate = {
 
 // Only resume pending action when the sign-in tab writes this explicit key
 window.addEventListener('storage', (ev) => {
-  if (ev.key === '__tharaga_magic_continue') {
-    // mark logged-in state
-    window.__authGateLoggedIn = true;
+  // react only to our magic keys
+  if (!ev || !ev.key) return;
 
-    // close modal (if open)
+  // ---------- confirmed: session established on another tab ----------
+  if (ev.key === '__tharaga_magic_confirmed') {
+    window.__authGateLoggedIn = true;
+    try { closeLoginModal(); } catch (_) {}
+    // resolve awaiting promise if any
+    let payload = null;
+    try { payload = ev.newValue ? JSON.parse(ev.newValue) : null; } catch (_) { payload = null; }
+    if (signInPromise && signInResolve) {
+      try { signInResolve(payload || { signedIn: true }); } catch (_) {}
+      signInPromise = null; signInResolve = null; signInReject = null;
+    }
+    // DO NOT run pending action here — user must click CTA again to proceed
+    return;
+  }
+
+  // ---------- continue: explicit confirm/click from login tab ----------
+  if (ev.key === '__tharaga_magic_continue') {
+    window.__authGateLoggedIn = true;
     try { closeLoginModal(); } catch (_) {}
 
-    // parse payload if present (ev.newValue is the written JSON string)
+    // parse payload
     let payload = null;
-    try { payload = ev.newValue ? JSON.parse(ev.newValue) : null; } catch (parseErr) { payload = null; }
+    try { payload = ev.newValue ? JSON.parse(ev.newValue) : null; } catch (_) { payload = null; }
 
-    // debugging — remove or lower verbosity after testing
-    console.debug && console.debug('authGate.storage -> __tharaga_magic_continue', payload);
-
-    // Resolve any awaiting promise (if someone awaited authGate.openLoginModal({ waitForSignIn: true }))
+    // resolve promise
     if (signInPromise && signInResolve) {
       try { signInResolve(payload || { signedIn: true }); } catch (_) {}
       signInPromise = null; signInResolve = null; signInReject = null;
     }
 
-    // Run and clear the pending action (e.g., resume an earlier form submit)
-    if (window.__authGatePendingAction) {
+    // run pending action only if AUTO_RESUME_PENDING is enabled
+    if (AUTO_RESUME_PENDING && window.__authGatePendingAction) {
       const fn = window.__authGatePendingAction;
       window.__authGatePendingAction = null;
       try { fn(); } catch (e) { console.error('authGate: pending action failed', e); }
     }
+    return;
   }
 });
 
-
-  } catch (err) {
-    // non-fatal: if dynamic import fails we simply don't do cross-tab sync
-    console.warn('authGate cross-tab sync not available:', err);
-  }
-})();
 
 
   // quick debug hint in console

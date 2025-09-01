@@ -237,7 +237,7 @@
     //let hasRedirected = false;
     // ========================= CONFIG =========================
     const SUPABASE_URL = 'https://wedevtjjmdvngyshqdro.supabase.co'; // <-- REQUIRED
-    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndlZGV2dGpqbWR2bmd5c2hxZHJvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU0NzYwMzgsImV4cCI6MjA3MTA1MjAzOH0.Ex2c_sx358dFdygUGMVBohyTVto6fdEQNnydDRh9m6M'; // <-- REQUIRED
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndlZGV2dGpqbWR2bmd5c2hxZHJvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU0NzYwMzgsImV4cCI6MjA3MTA1MjAzOH0.Ex2c_sx358dFdygUGMVBohyTVto6fdEQ5nydDRh9m6M'; // <-- REQUIRED
 
     const __qs = new URLSearchParams(location.search);
     const FALLBACK_PARENT_ORIGIN = 'https://tharaga.co.in';
@@ -266,40 +266,12 @@
       const refresh_token = params.get('refresh_token');
 
       if (access_token && refresh_token) {
-        try {
-          const { data, error } = await supabase.auth.setSession({ access_token, refresh_token });
-          if (error) {
-            console.error('Failed to setSession from redirect tokens', error);
-            return null;
-          }
-
+        // --- Notify other tabs / parent that magic link landed --- //
           try {
-            const pendingNext = JSON.parse(localStorage.getItem('post_auth_target') || 'null')?.href
-                                || new URLSearchParams(location.search).get('next') || null;
-            const payload = {
-              ts: Date.now(),
-              next: pendingNext,
-              user: data?.session?.user ? { id: data.session.user.id, email: data.session.user.email } : null
-            };
-            localStorage.setItem('__tharaga_magic_continue', JSON.stringify(payload));
-            localStorage.setItem('__tharaga_magic_confirmed', JSON.stringify({ ts: Date.now() }));
-          } catch (e) {
-            console.warn('Could not write magic continue', e);
-          }
-          
-          // Clean URL (remove tokens but keep others like post_auth)
-          const cleanedSearch = location.search
-            .replace(/([?&])access_token=[^&]*(&?)/g, '$1')
-            .replace(/([?&])refresh_token=[^&]*(&?)/g, '$1')
-            .replace(/(^\?|&$)/, '');
-          history.replaceState(null, '', location.pathname + (cleanedSearch ? '?' + cleanedSearch : ''));
-
-          // Notify parent/other tabs
-          try {
+            // derive a sensible 'next' if available
             let pendingNext = null;
             try {
-              pendingNext = JSON.parse(localStorage.getItem('post_auth_target') || 'null')?.href 
-                            || new URLSearchParams(location.search).get('next') || null;
+              pendingNext = JSON.parse(localStorage.getItem('post_auth_target') || 'null')?.href || new URLSearchParams(location.search).get('next') || null;
             } catch (_e) {
               pendingNext = new URLSearchParams(location.search).get('next') || null;
             }
@@ -310,32 +282,20 @@
               user: data?.session?.user ? { id: data.session.user.id, email: data.session.user.email } : null
             };
 
-            try { 
-              localStorage.setItem('__tharaga_magic_continue', JSON.stringify(payload)); 
-              localStorage.setItem('__tharaga_magic_confirmed', JSON.stringify({ ts: Date.now() })); 
-            } catch (e) { 
-              console.warn('Could not write magic continue/confirmed', e); 
-            }
+            // Write only the CONFIRMED key here — do NOT auto-write __tharaga_magic_continue.
+            try { localStorage.setItem('__tharaga_magic_confirmed', JSON.stringify(payload)); } catch (e) { console.warn('Could not write magic confirmed', e); }
 
+            // If embedded inside an iframe, also postMessage to parent (use parent_origin if passed)
             const parentOrigin = new URLSearchParams(location.search).get('parent_origin');
             if (window.self !== window.parent) {
               try {
-                if (parentOrigin) {
-                  window.parent.postMessage({ type: 'signed_in', user: payload.user, next: payload.next }, parentOrigin);
-                } else {
-                  window.parent.postMessage({ type: 'signed_in', user: payload.user, next: payload.next }, '*');
-                }
+                // parent should validate origin; we send payload.user and payload.next
+                window.parent.postMessage({ type: 'signed_in', user: payload.user, next: payload.next }, parentOrigin || '*');
               } catch (e) { /* ignore */ }
             }
           } catch (e) {
-            console.warn('notify-magic-continue failed', e);
+            console.warn('notify-magic-confirmed failed', e);
           }
-
-          return data?.session ?? null;
-        } catch (err) {
-          console.error('setSession error', err);
-          return null;
-        }
       }
 
       if (isPostAuth) {

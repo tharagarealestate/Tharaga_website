@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Tharaga — Verified Buyer Match</title>
   <link rel="stylesheet" href="./style.css">
+  <script src="/login_signup_glassdrop/auth-gate.js"></script>
+  <script type="module" src="/js/fragment-handle.js"></script>
 </head>
 <body>
 
@@ -306,6 +308,7 @@ async function getRecaptcha() {
   });
 </script>
 
+
 <!-- Supabase + Transformers (browser) + Match + Render -->
 <script type="module">
   import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
@@ -320,6 +323,25 @@ async function getRecaptcha() {
   const SUPABASE_URL = "https://wedevtjjmdvngyshqdro.supabase.co";
   const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndlZGV2dGpqbWR2bmd5c2hxZHJvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU0NzYwMzgsImV4cCI6MjA3MTA1MjAzOH0.Ex2c_sx358dFdygUGMVBohyTVto6fdEQ5nydDRh9m6M";
   const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  // --- Supabase readiness guard ---
+let supabaseReady = false;
+
+async function initSupabaseAuth() {
+  try {
+    const { data, error } = await supabase.auth.getSession();
+    if (error) {
+      console.error("Auth init failed:", error);
+    }
+    supabaseReady = true;
+    console.log("Supabase auth ready", data?.session);
+  } catch (err) {
+    console.error("Supabase init exception:", err);
+  }
+}
+
+// Kick off auth init immediately
+initSupabaseAuth();
 
   // Reuse the same model as ingestion
   const MODEL_ID = 'Xenova/e5-small-v2';
@@ -346,9 +368,17 @@ async function getRecaptcha() {
   const submitBtn = document.getElementById('submitBtn');
   const otpVerifiedField = document.getElementById('otp_verified');
 
+
  // Submit: embed → RPC → render
-  form.addEventListener("submit", async (e) => {
+  // Submit: embed → RPC → render
+form.addEventListener("submit", async (e) => {
   e.preventDefault();
+
+  // 🟢 NEW: ensure supabase/auth-gate has loaded
+  if (!window.supabaseReady) {
+    alert("Login system is still loading. Please wait a moment and try again.");
+    return;
+  }
 
   // safe getUser() (works if supabase client is present)
   let currentUser = null;
@@ -360,8 +390,21 @@ async function getRecaptcha() {
     currentUser = null;
   }
 
+  // helper: wait for window.authGate to appear
+  function waitForAuthGate(maxWait = 3000) {
+    return new Promise((resolve) => {
+      const start = Date.now();
+      (function check() {
+        if (window.authGate) return resolve(window.authGate);
+        if (Date.now() - start > maxWait) return resolve(null);
+        setTimeout(check, 100);
+      })();
+    });
+  }
+
   // If not signed in: register a pending action (auth-gate expects __authGatePendingAction)
   if (!currentUser) {
+    // keep a pending action for re-submission (auth-gate will not auto-run unless configured)
     window.__authGatePendingAction = async () => {
       try {
         // re-trigger the submit (this time the user should be signed in)
@@ -373,15 +416,40 @@ async function getRecaptcha() {
 
     console.debug('buyer-form: queued pending action for auth gate, next=', location.pathname + location.search);
 
-    if (window.authGate && typeof window.authGate.openLoginModal === 'function') {
-      window.authGate.openLoginModal({ next: location.pathname + location.search });
-    } else {
-      console.error("authGate missing — login modal cannot open");
-      alert("Login system not ready – please refresh and try again.");
+    // 1) try to wait short time for authGate to initialize
+    const gate = await waitForAuthGate(3000);
+    if (gate && typeof gate.openLoginModal === 'function') {
+      gate.openLoginModal({ next: location.pathname + location.search });
+      return;
     }
+
+    // 2) fallback: try to dynamically inject the script (relative path)
+    try {
+      await new Promise((resolve, reject) => {
+        const s = document.createElement('script');
+        s.src = '../login_signup_glassdrop/auth-gate.js'; // try relative fallback
+        s.onload = () => { console.debug('auth-gate dynamically loaded'); resolve(); };
+        s.onerror = (ev) => reject(new Error('dynamic auth-gate load failed'));
+        document.head.appendChild(s);
+      });
+
+      // give it a quick tick to initialize
+      await new Promise(r => setTimeout(r, 200));
+      if (window.authGate && typeof window.authGate.openLoginModal === 'function') {
+        window.authGate.openLoginModal({ next: location.pathname + location.search });
+        return;
+      }
+    } catch (err) {
+      console.warn('dynamic load of auth-gate failed', err);
+    }
+
+    // final fallback: user still not ready
+    console.error("authGate missing — login modal cannot open");
+    alert("Login system not ready – please refresh and try again.");
     return;
   }
 
+  // ... (rest of your submit logic remains unchanged starting from OTP check)
   if (otpVerifiedField.value !== 'true') { 
     alert('Please verify OTP first.'); 
     return; 
@@ -504,7 +572,8 @@ async function getRecaptcha() {
     submitBtn.disabled = false;
     submitBtn.textContent = 'Get My Property Matches';
   }
-}); // ✅ now properly closed
+}); // end submit handler
+
 
 // ---------- end replacement ----------
 
@@ -532,26 +601,8 @@ async function getRecaptcha() {
       container.appendChild(card);
     });
   }
+  
 </script>
-<script src="../login_signup_glassdrop/auth-gate.js"></script>
 
-
-
-<!-- Attach gate to submitBtn -->
-<script type="module">
-  // Wait until DOM is ready
-  document.addEventListener("DOMContentLoaded", () => {
-    if (window.authGate) {
-      window.authGate.attachAuthGate("#submitBtn", async () => {
-        // Trigger form submit programmatically
-        document.getElementById("buyerForm").dispatchEvent(
-          new Event("submit", { cancelable: true, bubbles: true })
-        );
-      });
-    } else {
-      console.error("authGate not loaded");
-    }
-  });
-</script>
 </body>
 </html>

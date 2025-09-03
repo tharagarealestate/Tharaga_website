@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Tharaga — Logging You In</title>
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #f9fafb;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      margin: 0;
+    }
+    .box {
+      background: #fff;
+      padding: 32px;
+      border-radius: 16px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+      max-width: 420px;
+      text-align: center;
+    }
+    h1 {
+      font-size: 20px;
+      font-weight: 700;
+      margin-bottom: 12px;
+      color: #166534;
+    }
+    p {
+      font-size: 15px;
+      color: #374151;
+      margin-top: 6px;
+      line-height: 1.4;
+    }
+    .error {
+      color: #dc2626;
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+  <div class="box">
+    <h1 id="status">Processing login...</h1>
+    <p id="msg">Please wait a moment while we log you into Tharaga.</p>
+  </div>
+
+  <script src="https://unpkg.com/@supabase/supabase-js"></script>
+  <script>
+    (async function() {
+      try {
+        // ⬇️ Replace with your actual Supabase project URL + anon key
+        const SUPABASE_URL = "https://wedevtjjmdvngyshqdro.supabase.co";
+        const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndlZGV2dGpqbWR2bmd5c2hxZHJvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU0NzYwMzgsImV4cCI6MjA3MTA1MjAzOH0.Ex2c_sx358dFdygUGMVBohyTVto6fdEQ5nydDRh9m6M";
+
+        const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        // Parse hash params from magic link
+        const params = new URLSearchParams(location.hash.substring(1));
+        const access_token = params.get("access_token");
+        const refresh_token = params.get("refresh_token");
+
+        if (access_token && refresh_token) {
+          // Set session in Supabase
+          const { error } = await supabase.auth.setSession({
+            access_token,
+            refresh_token
+          });
+
+          if (!error) {
+            // Signal to buyer-form tab
+            localStorage.setItem("__tharaga_magic_continue", Date.now().toString());
+
+            document.getElementById("status").textContent = "✅ Logged in successfully";
+            document.getElementById("msg").textContent =
+              "You’re now signed into Tharaga. Please return to your original page and click Continue to see your property listings.";
+          } else {
+            document.getElementById("status").textContent = "❌ Login Failed";
+            document.getElementById("msg").innerHTML =
+              "<span class='error'>There was a problem setting your session. Please try again.</span>";
+          }
+        } else {
+          document.getElementById("status").textContent = "⚠️ Invalid Link";
+          document.getElementById("msg").innerHTML =
+            "<span class='error'>This magic link is invalid or expired. Please request a new one.</span>";
+        }
+      } catch (err) {
+        console.error("Auth landing error", err);
+        document.getElementById("status").textContent = "❌ Error";
+        document.getElementById("msg").innerHTML =
+          "<span class='error'>Something went wrong. Please try again.</span>";
+      }
+    })();
+  </script>
+</body>
+</html>

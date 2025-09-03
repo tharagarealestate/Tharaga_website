@@ -12,7 +12,7 @@
   /** CONFIG — update LOGIN_IFRAME_URL to your actual login/embed page */
   // make explicit to avoid directory/index surprises:
   const LOGIN_IFRAME_URL = "/login_signup_glassdrop/index.html";
-  const AUTO_RESUME_PENDING = true;
+  const AUTO_RESUME_PENDING = false;
 
   // Build allowed origin list robustly (supports absolute AND relative LOGIN_IFRAME_URL)
   let ALLOWED_IFRAME_ORIGINS = [];

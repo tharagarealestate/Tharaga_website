@@ -347,6 +347,51 @@ async function getRecaptcha() {
   const submitBtn = document.getElementById('submitBtn');
   const otpVerifiedField = document.getElementById('otp_verified');
 
+    // Restore pending form values (if user returned after sign-in)
+  (function restorePendingForm(){
+    try {
+      const saved = sessionStorage.getItem('tharaga_pending_buyer_form');
+      if (!saved) return;
+      const obj = JSON.parse(saved);
+      Object.keys(obj).forEach(k => {
+        // prefer form.elements[k] (works for inputs/selects/textareas)
+        const el = form.elements[k];
+        if (el) {
+          try { el.value = obj[k]; } catch (_) {}
+        } else {
+          // fallback: any element with matching name
+          const els = form.querySelectorAll(`[name="${k}"]`);
+          if (els && els.length) els.forEach(e => { try { e.value = obj[k]; } catch(_){} });
+        }
+      });
+      // gentle UX hint
+      setTimeout(()=> {
+        try {
+          form.scrollIntoView({behavior:'smooth', block:'center'});
+          // small inline hint (non-destructive)
+          const hint = document.createElement('div');
+          hint.style.cssText = 'text-align:center;margin:10px 0;color:#666;font-size:13px';
+          hint.textContent = 'You returned after signing in. Click "Get My Property Matches" to continue.';
+          form.insertBefore(hint, form.firstChild);
+        } catch(_){}
+      }, 350);
+    } catch (e) { console.warn('restore pending form failed', e); }
+  })();
+
+  // If another tab/modal signals successful auth, reload this page (so supabase session attaches)
+  window.addEventListener('storage', (e) => {
+    if (!e?.key) return;
+    if (e.key === '__tharaga_magic_continue' || e.key === '__tharaga_magic_confirmed') {
+      if (sessionStorage.getItem('tharaga_pending_buyer_form')) {
+        console.debug('Detected auth completion in another tab. Reloading to pick up new session.');
+        setTimeout(()=> location.reload(), 300);
+      } else {
+        console.debug('Auth completed but no pending buyer form — ignoring.');
+      }
+    }
+  });
+
+
  // Submit: embed → RPC → render
   form.addEventListener("submit", async (e) => {
   e.preventDefault();
@@ -362,26 +407,38 @@ async function getRecaptcha() {
   }
 
   // If not signed in: register a pending action (auth-gate expects __authGatePendingAction)
-  if (!currentUser) {
-    window.__authGatePendingAction = async () => {
-      try {
-        // re-trigger the submit (this time the user should be signed in)
-        form.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
-      } catch (err) {
-        console.error('resume pending action failed', err);
-      }
-    };
+    if (!currentUser) {
+    // Persist the current form values (so we can restore them after auth/reload).
+    try {
+      const f = new FormData(form);
+      const payload = Object.fromEntries(f.entries());
+      sessionStorage.setItem('tharaga_pending_buyer_form', JSON.stringify(payload));
+      sessionStorage.setItem('tharaga_pending_form_ts', Date.now().toString());
+    } catch (e) {
+      console.warn('Could not persist pending form', e);
+    }
 
-    console.debug('buyer-form: queued pending action for auth gate, next=', location.pathname + location.search);
+    // Save a post-auth target for the login page to know where the user came from.
+    try {
+      localStorage.setItem('post_auth_target', JSON.stringify({ href: location.pathname + location.search, openInNewTab: false }));
+    } catch (e) {
+      console.warn('Could not write post_auth_target', e);
+    }
+
+    console.debug('buyer-form: opened auth modal (NO auto-resume). next=', location.pathname + location.search);
 
     if (window.authGate && typeof window.authGate.openLoginModal === 'function') {
+      // Important: do NOT set an auto-resume action. We'll let the user click the button again.
       window.authGate.openLoginModal({ next: location.pathname + location.search });
+      // Friendly UX hint
+      try { alert('Please sign in (modal). After successful sign-in this page will reload and restore your form; then click "Get My Property Matches" again.'); } catch (_){}
     } else {
       console.error("authGate missing — login modal cannot open");
       alert("Login system not ready – please refresh and try again.");
     }
     return;
   }
+
 
   if (otpVerifiedField.value !== 'true') { 
     alert('Please verify OTP first.'); 
@@ -495,6 +552,11 @@ async function getRecaptcha() {
       budget: payload.budget || ''
     });
 
+    try {
+      sessionStorage.removeItem('tharaga_pending_buyer_form');
+      sessionStorage.removeItem('tharaga_pending_form_ts');
+    } catch(_) {}
+
     window.location.href = 'https://tharaga.co.in/verified-property-listings?' + params.toString();
 
   } catch (err) {
@@ -542,17 +604,31 @@ async function getRecaptcha() {
 <script type="module">
   // Wait until DOM is ready
   document.addEventListener("DOMContentLoaded", () => {
-    if (window.authGate) {
-      window.authGate.attachAuthGate("#submitBtn", async () => {
-        // Trigger form submit programmatically
-        document.getElementById("buyerForm").dispatchEvent(
-          new Event("submit", { cancelable: true, bubbles: true })
-        );
-      });
-    } else {
-      console.error("authGate not loaded");
-    }
-  });
+  if (window.authGate) {
+    // Mark the protected button with the gate and provide a NO-AUTO-RESUME callback.
+    // After sign-in we do NOT auto-submit; we restore UI and ask the user to click again.
+    window.authGate.attachAuthGate("#submitBtn", async () => {
+      try {
+        const saved = sessionStorage.getItem('tharaga_pending_buyer_form');
+        if (saved) {
+          const obj = JSON.parse(saved);
+          Object.keys(obj).forEach(k => {
+            const el = form.elements[k];
+            if (el) el.value = obj[k];
+          });
+        }
+      } catch (e) {
+        console.warn('attachAuthGate restore failed', e);
+      }
+      submitBtn.disabled = false;
+      submitBtn.style.cursor = 'pointer';
+      try { alert('Signed in — please click "Get My Property Matches" to run your search.'); } catch(_) {}
+    });
+  } else {
+    console.error("authGate not loaded");
+  }
+});
+
 </script>
 </body>
 </html>

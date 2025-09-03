@@ -535,20 +535,27 @@ if (isPostAuth) {
 
       // Optionally clear local pending target (iframe can keep its copy)
       // storage.clear();
-    } else {
-      // Not embedded — fallback to original behaviour (redirect to pending or home)
-      if (new URLSearchParams(location.search).get('post_auth') === '1') {
-  setMsg('Thanks — you are signed in. Click Continue to return to the app.', true);
-  return; // STOP auto redirect
-}
+        } else {
+      // Not embedded — DO NOT auto-redirect the login tab.
+      // Instead, signal other tabs (localStorage) and give the user instructions.
+      try {
+        const continuePayload = {
+          ts: Date.now(),
+          next: pending?.href || new URLSearchParams(location.search).get('next') || null,
+          user: session?.user ? { id: session.user.id, email: session.user.email } : null
+        };
+        try { localStorage.setItem('__tharaga_magic_continue', JSON.stringify(continuePayload)); } catch(_) {}
+        try { localStorage.setItem('__tharaga_magic_confirmed', JSON.stringify({ ts: Date.now() })); } catch(_) {}
+      } catch (e) { console.warn('could not write magic continue', e); }
 
-// Normal flows (not post_auth)
-if (pending && isSafeRedirect(pending.href)) {
-  storage.clear();
-  if (pending.openInNewTab) window.open(pending.href, '_blank');
-  else location.href = pending.href;
-}
+      // Try to close the tab if it was opened as a popup
+      try { window.close(); } catch (_) {}
+
+      setMsg('Signed in. You can now return to the page where you filled the form and click "Get My Property Matches".', true);
+      storage.clear();
+      return;
     }
+
   }
 });
 
@@ -608,28 +615,30 @@ window.addEventListener('beforeunload', () => subscription?.unsubscribe());
       setMsg('Signed out.', true);
     });
 
-    continueBtn?.addEventListener('click', () => {
-  // Read pending first
+    continueBtn?.addEventListener('click', async () => {
   const pending = storage.get();
 
-  // notify other tabs the user confirmed and clicked Continue
+  // Signal other tabs and parent that sign-in completed (but DO NOT redirect this tab automatically)
   try {
-    localStorage.setItem('__tharaga_magic_continue', JSON.stringify({ ts: Date.now(), next: pending?.href || null }));
-  } catch (e) {}
+    const payload = { ts: Date.now(), next: pending?.href || null };
+    localStorage.setItem('__tharaga_magic_continue', JSON.stringify(payload));
+    try { localStorage.setItem('__tharaga_magic_confirmed', JSON.stringify({ ts: Date.now() })); } catch(_) {}
+  } catch (e) { console.warn('Could not set magic continue', e); }
 
-  if (pending && isSafeRedirect(pending.href)) {
-    if (pending.openInNewTab) {
-      window.open(pending.href, '_blank');
-    } else {
-      location.href = pending.href;
+  // If inside iframe/modal postMessage the parent as a best-effort signal
+  try {
+    if (window.self !== window.parent) {
+      window.parent.postMessage({ type: 'signed_in', user: null, next: pending?.href || null }, '*');
     }
-  } else {
-    // fallback
-    location.href = '/';
-  }
+  } catch (e) { console.warn('postMessage failed', e); }
 
+  // Try to close the tab if it's a popup; otherwise stay here and show confirmation
+  try { window.close(); } catch (_) {}
+
+  setMsg('Signed in. You can now return to the page where you filled the form and click "Get My Property Matches" to continue.', true);
   storage.clear();
 });
+
 
     // ========================= OPTIONAL: "Gate snippet" for other pages =========================
     // Copy the function below into any page where you want to protect links/buttons.
@@ -663,7 +672,8 @@ window.addEventListener('beforeunload', () => subscription?.unsubscribe());
         e.preventDefault();
         const target = href ? { href, openInNewTab } : { href: location.pathname + location.search + location.hash, openInNewTab:false };
         localStorage.setItem('post_auth_target', JSON.stringify(target));
-        location.href = `/login_signup?next=${encodeURIComponent(target.href)}`;
+        const url = `/login_signup?next=${encodeURIComponent(target.href)}&post_auth=1&parent_origin=${encodeURIComponent(location.origin)}`;
+        location.href = url;
       }, true);
     }
   </script>

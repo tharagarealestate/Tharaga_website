@@ -5,7 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Tharaga — Verified Buyer Match</title>
   <link rel="stylesheet" href="./style.css">
-  <script src="/auth-gate.js"></script>
+  <script type="module" src="./login_signup_glassdrop/auth-gate.js"></script>
+  <script src="../login_signup_glassdrop/auth-gate.js"></script>
   <script type="module" src="/js/fragment-handle.js"></script>
 </head>
 <body>
@@ -427,7 +428,7 @@ form.addEventListener("submit", async (e) => {
     try {
       await new Promise((resolve, reject) => {
         const s = document.createElement('script');
-        s.src = '/auth-gate.js'; // try relative fallback
+        s.src = '../login_signup_glassdrop/auth-gate.js'; // try relative fallback
         s.onload = () => { console.debug('auth-gate dynamically loaded'); resolve(); };
         s.onerror = (ev) => reject(new Error('dynamic auth-gate load failed'));
         document.head.appendChild(s);

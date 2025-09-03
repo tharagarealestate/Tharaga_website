@@ -248,7 +248,7 @@
     const FALLBACK_PARENT_ORIGIN = 'https://tharaga.co.in';
     const PARENT_ORIGIN = (__qs.get('parent_origin') || FALLBACK_PARENT_ORIGIN || location.origin).replace(/\/$/, '');
     const POST_AUTH_CALLBACK = `${PARENT_ORIGIN}/auth-landing/?post_auth=1&parent_origin=${encodeURIComponent(PARENT_ORIGIN)}`;
-    await supabase.auth.signInWithOtp({ email, options: { emailRedirectTo: redirectTo } });
+    //await supabase.auth.signInWithOtp({ email, options: { emailRedirectTo: redirectTo } });
 
     // ========================= IMPORT =========================
     import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';

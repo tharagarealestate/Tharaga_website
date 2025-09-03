@@ -56,13 +56,57 @@
       #authGateModal .authgate-close { top:6px; right:8px; }
     }
   `;
-  document.head && document.head.appendChild(style);
-  document.body.appendChild(overlay);
+    // ---------------- Safe DOM mount ----------------
+  // Append style + overlay only once, and only when the DOM is ready.
+  function mountAuthGateElements() {
+    try {
+      // avoid double-mounts
+      if (document.getElementById('authGateModal')) return;
 
-  const modal = overlay.querySelector('.authgate-backdrop');
-  const dialog = overlay.querySelector('.authgate-dialog');
-  const iframe = document.getElementById('authGateIframe');
-  const closeBtn = overlay.querySelector('.authgate-close');
+      // append style to head (if present)
+      if (document.head) {
+        document.head.appendChild(style);
+      } else {
+        // fallback: wait until DOM ready
+        document.addEventListener('DOMContentLoaded', function addStyleOnce() {
+          document.removeEventListener('DOMContentLoaded', addStyleOnce);
+          document.head && document.head.appendChild(style);
+        }, { once: true });
+      }
+
+      // append overlay when body is available
+      if (document.body) {
+        document.body.appendChild(overlay);
+      } else {
+        document.addEventListener('DOMContentLoaded', function addOverlayOnce() {
+          document.removeEventListener('DOMContentLoaded', addOverlayOnce);
+          document.body && document.body.appendChild(overlay);
+        }, { once: true });
+      }
+    } catch (err) {
+      console.warn('auth-gate: mount failed', err);
+    }
+  }
+
+  mountAuthGateElements();
+
+  // Now query nodes from the overlay (use overlay.querySelector so it works even before appended)
+  // If the overlay hasn't been inserted yet, these will be null — so we also provide a fallback to wait.
+  let modal = overlay.querySelector('.authgate-backdrop');
+  let dialog = overlay.querySelector('.authgate-dialog');
+  let iframe = overlay.querySelector('#authGateIframe');
+  let closeBtn = overlay.querySelector('.authgate-close');
+
+  if (!modal || !dialog || !iframe || !closeBtn) {
+    // Ensure they are obtained once DOMContentLoaded runs
+    document.addEventListener('DOMContentLoaded', function findElementsOnce() {
+      document.removeEventListener('DOMContentLoaded', findElementsOnce);
+      modal = overlay.querySelector('.authgate-backdrop');
+      dialog = overlay.querySelector('.authgate-dialog');
+      iframe = overlay.querySelector('#authGateIframe');
+      closeBtn = overlay.querySelector('.authgate-close');
+    }, { once: true });
+  }
 
   try {
     iframe.setAttribute('allowtransparency', 'true');
@@ -163,14 +207,19 @@
   }
 
   function postMessageToIframe(msg) {
-    try {
-      const url = new URL(iframe.src);
-      const origin = url.origin;
-      if (isAllowedOrigin(origin)) {
-        iframe.contentWindow && iframe.contentWindow.postMessage(msg, origin);
-      }
-    } catch (e) {}
+  try {
+    const src = iframe && iframe.src ? iframe.src : '';
+    if (!src) return;
+    const url = new URL(src, location.href);
+    const origin = url.origin;
+    if (isAllowedOrigin(origin) && iframe.contentWindow) {
+      iframe.contentWindow.postMessage(msg, origin);
+    }
+  } catch (e) {
+    console.warn('auth-gate: postMessageToIframe failed', e);
   }
+}
+
 
   async function attachAuthGate(selector, actionFn) {
     const nodes = (typeof selector === 'string') ? document.querySelectorAll(selector)

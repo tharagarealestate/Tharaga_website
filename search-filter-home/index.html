@@ -4,6 +4,8 @@
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <script type="module" src="/js/fragment-handle.js"></script>
+  <!-- use ONE include, absolute path, and defer it so DOM is present -->
+  <script src="/login_signup_glassdrop/auth-gate.js" defer></script>
   <title>Tharaga — Home Search</title>
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -306,9 +308,6 @@
       cityEl.addEventListener('change', ()=> sessionStorage.setItem('tharaga_home_city', cityEl.value));
     })();
   </script>
-
-<script type="module" src="/login_signup_glassdrop/auth-gate.js"></script>
-<script src="/login_signup_glassdrop/auth-gate.js"></script>
 
 
 </body>

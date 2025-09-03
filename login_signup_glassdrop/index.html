@@ -247,13 +247,7 @@
     const __qs = new URLSearchParams(location.search);
     const FALLBACK_PARENT_ORIGIN = 'https://tharaga.co.in';
     const PARENT_ORIGIN = (__qs.get('parent_origin') || FALLBACK_PARENT_ORIGIN || location.origin).replace(/\/$/, '');
-    const POST_AUTH_CALLBACK = "https://tharaga.co.in/auth-landing/";
-    const redirectTo = "https://tharaga.co.in/auth-landing/?parent_origin=https://tharaga.co.in";
-
-    await supabase.auth.signInWithOtp({
-      email,
-      options: { emailRedirectTo: redirectTo }
-    });
+    const POST_AUTH_CALLBACK = `${PARENT_ORIGIN}/auth-landing/?post_auth=1&parent_origin=${encodeURIComponent(PARENT_ORIGIN)}`;
 
     // ========================= IMPORT =========================
     import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
@@ -571,16 +565,19 @@ window.addEventListener('beforeunload', () => subscription?.unsubscribe());
 
     // ========================= ACTIONS ========================
     magicBtn.addEventListener('click', async () => {
-      const email = emailEl.value.trim();
-      if (!email) return setMsg('Enter a valid email');
-      setMsg('Sending magic link…');
-      // Ensure a pending target exists; if none, default to referer or home
-      if (!storage.get()) {
-        const fallback = document.referrer && new URL(document.referrer).origin === location.origin
-          ? new URL(document.referrer).pathname
-          : '/';
-        storage.set({ href: fallback, openInNewTab: false });
-      }
+    const email = emailEl.value.trim();
+    if (!email) return setMsg('Enter a valid email');
+    setMsg('Sending magic link…');
+
+    // persist where to go after auth (already in your code)
+    if (!storage.get()) {
+      const fallback = document.referrer && new URL(document.referrer).origin === location.origin
+        ? new URL(document.referrer).pathname
+        : '/';
+      storage.set({ href: fallback, openInNewTab: false });
+    }
+
+    try {
       console.debug && console.debug('magic link redirect target ->', POST_AUTH_CALLBACK);
       const { error } = await supabase.auth.signInWithOtp({
         email,
@@ -588,7 +585,12 @@ window.addEventListener('beforeunload', () => subscription?.unsubscribe());
       });
       if (error) setMsg(error.message);
       else setMsg('Magic link sent! Check your inbox (and spam).', true);
-    });
+    } catch (err) {
+      console.error('send magic link failed', err);
+      setMsg('Failed to send magic link. Try again.');
+    }
+  });
+
 
     pwdBtn.addEventListener('click', async () => {
       const email = emailEl.value.trim();

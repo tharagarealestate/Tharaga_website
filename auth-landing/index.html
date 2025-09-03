@@ -93,5 +93,18 @@
       }
     })();
   </script>
+  <script>
+(function(){
+  try {
+    if (location.hash.includes('access_token') && !location.pathname.startsWith('/auth-landing')) {
+      if (sessionStorage.getItem('tharaga_auth_forwarded')) return;
+      sessionStorage.setItem('tharaga_auth_forwarded', '1');
+      const target = '/auth-landing/' + location.search + location.hash;
+      location.replace(target);
+    }
+  } catch (e) { console.error(e); }
+})();
+</script>
+
 </body>
 </html>

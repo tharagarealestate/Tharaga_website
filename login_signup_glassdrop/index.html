@@ -247,7 +247,7 @@
     const __qs = new URLSearchParams(location.search);
     const FALLBACK_PARENT_ORIGIN = 'https://tharaga.co.in';
     const PARENT_ORIGIN = (__qs.get('parent_origin') || FALLBACK_PARENT_ORIGIN || location.origin).replace(/\/$/, '');
-    const POST_AUTH_CALLBACK = `${PARENT_ORIGIN}/auth-landing/?post_auth=1&parent_origin=${encodeURIComponent(PARENT_ORIGIN)}`;
+    const POST_AUTH_CALLBACK = `${location.origin}/auth-landing/?post_auth=1&parent_origin=${encodeURIComponent(location.origin)}`;
 
     // ========================= IMPORT =========================
     import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';

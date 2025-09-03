@@ -1,0 +1,25 @@
+<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Continue to Tharaga</title></head><body style="font-family:Inter,Arial,sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;background:#f7f7f8">
+  <div style="max-width:720px;padding:28px;border-radius:12px;background:#fff;box-shadow:0 8px 30px rgba(0,0,0,.08);text-align:center">
+    <h2>Continue signing in to Tharaga</h2>
+    <p>Tap the button below to finish signing in. This prevents email clients from accidentally consuming the sign-in token.</p>
+    <a id="go" role="button" style="display:inline-block;margin-top:18px;padding:12px 20px;border-radius:10px;background:#d4af37;color:#111;font-weight:700;text-decoration:none">Continue to Tharaga</a>
+    <p style="margin-top:12px;font-size:13px;color:#666">If the button doesn’t work, copy & paste the link provided in the email into your browser.</p>
+  </div>
+<script>
+  (function(){
+    const params = new URLSearchParams(location.search);
+    const conf = params.get('confirmation_url');
+    if (!conf) {
+      document.getElementById('go').textContent = 'Invalid link';
+      document.getElementById('go').style.pointerEvents = 'none';
+      return;
+    }
+    const btn = document.getElementById('go');
+    btn.addEventListener('click', ()=> {
+      // navigate to the actual Supabase confirmation url (this will redirect on success to your auth-landing)
+      location.href = decodeURIComponent(conf);
+    });
+  })();
+</script>
+</body></html>

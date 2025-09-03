@@ -162,13 +162,13 @@
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndlZGV2dGpqbWR2bmd5c2hxZHJvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU0NzYwMzgsImV4cCI6MjA3MTA1MjAzOH0.Ex2c_sx358dFdygUGMVBohyTVto6fdEQ5nydDRh9m6M';         // <-- REQUIRED
 	
 	// Make sure this exact URL is present in Supabase Auth Redirect URLs
-    const POST_RESET_CALLBACK = `${location.origin}/reset-password`;
+    const POST_RESET_CALLBACK = `${location.origin}/reset_password`;
 
     // Domains we auto-protect when using the gate snippet on other pages
     const PROTECTED_DOMAINS = ['nobroker', 'magicbricks', '99acres', 'housing.com', 'makaan', 'quikrhomes'];
 
     // Callback page for magic links / email confirmations. Keep under your domain and add to Supabase Redirect URLs.
-    const POST_AUTH_CALLBACK = `${location.origin}/login_signup?post_auth=1`;
+    //const POST_AUTH_CALLBACK = `${location.origin}/login_signup?post_auth=1`;
 
     // ========================= IMPORT =========================
     import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';

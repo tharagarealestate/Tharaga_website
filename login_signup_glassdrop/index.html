@@ -239,19 +239,13 @@
   <script type="module">
     let hasRedirected = false;
     // ========================= CONFIG =========================
-    // Fill these with your project values
     const SUPABASE_URL = 'https://wedevtjjmdvngyshqdro.supabase.co'; // <-- REQUIRED
-    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndlZGV2dGpqbWR2bmd5c2hxZHJvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU0NzYwMzgsImV4cCI6MjA3MTA1MjAzOH0.Ex2c_sx358dFdygUGMVBohyTVto6fdEQ5nydDRh9m6M';         // <-- REQUIRED
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndlZGV2dGpqbWR2bmd5c2hxZHJvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU0NzYwMzgsImV4cCI6MjA3MTA1MjAzOH0.Ex2c_sx358dFdygUGMVBohyTVto6fdEQ5nydDRh9m6M'; // <-- REQUIRED
 
-    // Domains we auto-protect when using the gate snippet on other pages
-    //const PROTECTED_DOMAINS = ['nobroker', 'magicbricks', '99acres', 'housing.com', 'makaan', 'quikrhomes'];
-
-    // Callback page for magic links / email confirmations.
-    // Prefer parent_origin when iframe was opened by authGate — that ensures the magic link
-    // redirects back to the *main site origin* and allows cross-tab localStorage signalling.
     const __qs = new URLSearchParams(location.search);
-    const PARENT_ORIGIN = (__qs.get('parent_origin') || location.origin).replace(/\/$/, '');
-    const POST_AUTH_CALLBACK = `${PARENT_ORIGIN}/login_signup_glassdrop/?post_auth=1`;
+    const FALLBACK_PARENT_ORIGIN = 'https://tharaga.co.in';
+    const PARENT_ORIGIN = (__qs.get('parent_origin') || FALLBACK_PARENT_ORIGIN || location.origin).replace(/\/$/, '');
+    const POST_AUTH_CALLBACK = `${PARENT_ORIGIN}/login_signup/?post_auth=1`;
 
     // ========================= IMPORT =========================
     import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
@@ -259,113 +253,111 @@
     window.supabase = supabase; // expose for DevTools
 
     // ---------- INSERT: robust redirect token handler ----------
-async function handleRedirectTokens() {
-  // 1) Fast path: SDK may already have a session
-  try {
-    const { data } = await supabase.auth.getSession();
-    if (data?.session) return data.session;
-  } catch (e) {
-    console.warn('getSession thrown', e);
-  }
+    async function handleRedirectTokens() {
+      try {
+        const { data } = await supabase.auth.getSession();
+        if (data?.session) return data.session;
+      } catch (e) {
+        console.warn('getSession thrown', e);
+      }
 
-  // Is this a post-auth landing (we want to show manual Continue)? read now
-  const isPostAuth = new URLSearchParams(location.search).get('post_auth') === '1';
+      const isPostAuth = new URLSearchParams(location.search).get('post_auth') === '1';
 
-  // 2) Parse fragment (#access_token=...) first, then query
-  const rawHash = (location.hash || '').replace(/^#/, '');
-  // prefer hash (supabase places tokens in the fragment); fallback to search
-  const params = new URLSearchParams(rawHash || location.search || '');
-  const access_token = params.get('access_token');
-  const refresh_token = params.get('refresh_token');
+      const rawHash = (location.hash || '').replace(/^#/, '');
+      const params = new URLSearchParams(rawHash || location.search || '');
+      const access_token = params.get('access_token');
+      const refresh_token = params.get('refresh_token');
 
-  if (access_token && refresh_token) {
-    // try to set the session using tokens from URL
-    try {
-      const { data, error } = await supabase.auth.setSession({ access_token, refresh_token });
-      if (error) {
-        console.error('Failed to setSession from redirect tokens', error);
+      if (access_token && refresh_token) {
+        try {
+          const { data, error } = await supabase.auth.setSession({ access_token, refresh_token });
+          if (error) {
+            console.error('Failed to setSession from redirect tokens', error);
+            return null;
+          }
+
+          // --- 🔥 INSERTED SNIPPET (your request) ---
+          try {
+            const pendingNext = JSON.parse(localStorage.getItem('post_auth_target') || 'null')?.href
+                                || new URLSearchParams(location.search).get('next') || null;
+            const payload = {
+              ts: Date.now(),
+              next: pendingNext,
+              user: data?.session?.user ? { id: data.session.user.id, email: data.session.user.email } : null
+            };
+            localStorage.setItem('__tharaga_magic_continue', JSON.stringify(payload));
+            localStorage.setItem('__tharaga_magic_confirmed', JSON.stringify({ ts: Date.now() }));
+          } catch (e) {
+            console.warn('Could not write magic continue', e);
+          }
+          // --- END INSERT ---
+
+          // Clean URL (remove tokens but keep others like post_auth)
+          const cleanedSearch = location.search
+            .replace(/([?&])access_token=[^&]*(&?)/g, '$1')
+            .replace(/([?&])refresh_token=[^&]*(&?)/g, '$1')
+            .replace(/(^\?|&$)/, '');
+          history.replaceState(null, '', location.pathname + (cleanedSearch ? '?' + cleanedSearch : ''));
+
+          // --- Notify parent/other tabs ---
+          try {
+            let pendingNext = null;
+            try {
+              pendingNext = JSON.parse(localStorage.getItem('post_auth_target') || 'null')?.href 
+                            || new URLSearchParams(location.search).get('next') || null;
+            } catch (_e) {
+              pendingNext = new URLSearchParams(location.search).get('next') || null;
+            }
+
+            const payload = {
+              ts: Date.now(),
+              next: pendingNext,
+              user: data?.session?.user ? { id: data.session.user.id, email: data.session.user.email } : null
+            };
+
+            try { 
+              localStorage.setItem('__tharaga_magic_continue', JSON.stringify(payload)); 
+              localStorage.setItem('__tharaga_magic_confirmed', JSON.stringify({ ts: Date.now() })); 
+            } catch (e) { 
+              console.warn('Could not write magic continue/confirmed', e); 
+            }
+
+            const parentOrigin = new URLSearchParams(location.search).get('parent_origin');
+            if (window.self !== window.parent) {
+              try {
+                if (parentOrigin) {
+                  window.parent.postMessage({ type: 'signed_in', user: payload.user, next: payload.next }, parentOrigin);
+                } else {
+                  window.parent.postMessage({ type: 'signed_in', user: payload.user, next: payload.next }, '*');
+                }
+              } catch (e) { /* ignore */ }
+            }
+          } catch (e) {
+            console.warn('notify-magic-continue failed', e);
+          }
+
+          return data?.session ?? null;
+        } catch (err) {
+          console.error('setSession error', err);
+          return null;
+        }
+      }
+
+      if (isPostAuth) {
         return null;
       }
-      // Remove tokens from the URL (but keep other query params such as post_auth)
-      // Build cleaned search by removing token params from location.search (if present there)
-      const cleanedSearch = location.search
-        .replace(/([?&])access_token=[^&]*(&?)/g, '$1')
-        .replace(/([?&])refresh_token=[^&]*(&?)/g, '$1')
-        .replace(/(^\?|&$)/, '');
-      history.replaceState(null, '', location.pathname + (cleanedSearch ? '?' + cleanedSearch : ''));
-
-      // --- Notify other tabs / parent that magic link landed --- //
-try {
-  // derive a sensible 'next' if available
-  let pendingNext = null;
-  try {
-    pendingNext = JSON.parse(localStorage.getItem('post_auth_target') || 'null')?.href || new URLSearchParams(location.search).get('next') || null;
-  } catch (_e) {
-    pendingNext = new URLSearchParams(location.search).get('next') || null;
-  }
-
-  const payload = {
-    ts: Date.now(),
-    next: pendingNext,
-    user: data?.session?.user ? { id: data.session.user.id, email: data.session.user.email } : null
-  };
-
-  // Write to localStorage on this origin (this notifies same-origin listeners)
-  try { 
-    localStorage.setItem('__tharaga_magic_continue', JSON.stringify(payload)); 
-    localStorage.setItem('__tharaga_magic_confirmed', JSON.stringify({ ts: Date.now() })); // <--- ADD THIS
-  } catch (e) { 
-    console.warn('Could not write magic continue/confirmed', e); 
-  }
-
-  // If embedded inside an iframe, also postMessage to parent (use parent_origin if passed)
-  const parentOrigin = new URLSearchParams(location.search).get('parent_origin');
-  if (window.self !== window.parent) {
-    try {
-      if (parentOrigin) {
-        window.parent.postMessage({ type: 'signed_in', user: payload.user, next: payload.next }, parentOrigin);
-      } else {
-        // fallback — permissive, but parent-side will still validate origin against allowed list
-        window.parent.postMessage({ type: 'signed_in', user: payload.user, next: payload.next }, '*');
-      }
-    } catch (e) { /* ignore */ }
-  }
-} catch (e) {
-  console.warn('notify-magic-continue failed', e);
-}
-
-
-      // Optionally mark confirmation (debugging / cross-tab awareness)
-      try { localStorage.setItem('__tharaga_magic_confirmed', JSON.stringify({ ts: Date.now() })); } catch (_) {}
-
-      return data?.session ?? null;
-    } catch (err) {
-      console.error('setSession error', err);
       return null;
     }
-  }
 
-  // If no tokens found but this is a post_auth landing we still keep the page visible
-  if (isPostAuth) {
-    // preserve URL (no tokens) and continue; caller (onInit) will show Continue UI
-    // do not return early — just return null (no session yet)
-    return null;
-  }
+    (async () => {
+      console.log('PAGE LOAD - location.href:', location.href);
+      console.log('PAGE LOAD - location.hash:', location.hash);
+      console.log('PAGE LOAD - location.search:', location.search);
 
-  return null;
-}
-
-// Call it once on load
-(async () => {
-  console.log('PAGE LOAD - location.href:', location.href);
-  console.log('PAGE LOAD - location.hash:', location.hash);
-  console.log('PAGE LOAD - location.search:', location.search);
-
-  const session = await handleRedirectTokens();
-  console.log('handleRedirectTokens -> session?', !!session);
-  // don't return here; let the rest of onInit() decide UI state
-})();
-
+      const session = await handleRedirectTokens();
+      console.log('handleRedirectTokens -> session?', !!session);
+    })();
+  </script>
 
 
     // ========================= UI HOOKS ========================
@@ -669,7 +661,7 @@ window.addEventListener('beforeunload', () => subscription?.unsubscribe());
         e.preventDefault();
         const target = href ? { href, openInNewTab } : { href: location.pathname + location.search + location.hash, openInNewTab:false };
         localStorage.setItem('post_auth_target', JSON.stringify(target));
-        location.href = `/login_signup_glassdrop?next=${encodeURIComponent(target.href)}`;
+        location.href = `/login_signup?next=${encodeURIComponent(target.href)}`;
       }, true);
     }
   </script>

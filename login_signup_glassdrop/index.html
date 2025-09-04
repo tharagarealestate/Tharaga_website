@@ -680,7 +680,7 @@ window.addEventListener('beforeunload', () => subscription?.unsubscribe());
         e.preventDefault();
         const target = href ? { href, openInNewTab } : { href: location.pathname + location.search + location.hash, openInNewTab:false };
         localStorage.setItem('post_auth_target', JSON.stringify(target));
-        const url = `/login_signup?next=${encodeURIComponent(target.href)}&post_auth=1&parent_origin=${encodeURIComponent(location.origin)}`;
+        const url = `/login_signup_glassdrop?next=${encodeURIComponent(target.href)}&post_auth=1&parent_origin=${encodeURIComponent(location.origin)}`;
         location.href = url;
       }, true);
     }

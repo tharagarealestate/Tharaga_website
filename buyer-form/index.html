@@ -385,11 +385,8 @@ async function getRecaptcha() {
       if (sessionStorage.getItem('tharaga_pending_buyer_form')) {
         console.debug('Detected auth completion in another tab. Reloading to pick up new session.');
         setTimeout(()=> location.reload(), 300);
-      } else {
-        console.debug('Auth completed but no pending buyer form — ignoring.');
-      }
-    // OPTIONAL: display email if we have it in payload
-    try {
+      } 
+      try {
       const payload = JSON.parse(localStorage.getItem('__tharaga_magic_continue') || 'null');
       if (payload?.user?.email) {
         const hint = document.createElement('div');
@@ -614,6 +611,23 @@ async function getRecaptcha() {
 
 <!-- Attach gate to submitBtn -->
 <script type="module">
+
+  // Handle confirmation_url (magic link redirect)
+const urlParams = new URLSearchParams(window.location.search);
+const confUrl = urlParams.get("confirmation_url");
+if (confUrl) {
+  try {
+    const { data, error } = await supabase.auth.exchangeCodeForSession(confUrl);
+    if (error) console.error("Session exchange failed:", error);
+    else {
+      console.debug("Session established from confirmation_url");
+      localStorage.setItem("__tharaga_magic_confirmed", JSON.stringify(data));
+    }
+  } catch (err) {
+    console.error("exchangeCodeForSession failed:", err);
+  }
+}
+
   // Wait until DOM is ready
   document.addEventListener("DOMContentLoaded", () => {
   if (window.authGate) {
@@ -632,8 +646,10 @@ async function getRecaptcha() {
       } catch (e) {
         console.warn('attachAuthGate restore failed', e);
       }
-      submitBtn.disabled = false;
-      submitBtn.style.cursor = 'pointer';
+      if (otpVerifiedField.value === 'true') {
+        submitBtn.disabled = false;
+        submitBtn.style.cursor = 'pointer';
+      }
       try { alert('Signed in — please click "Get My Property Matches" to run your search.'); } catch(_) {}
     });
   } else {

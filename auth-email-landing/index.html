@@ -48,27 +48,13 @@
 
       btn.addEventListener('click', () => {
         btn.disabled = true;
-        btn.textContent = 'Opening verification…';
+        btn.textContent = 'Redirecting…';
 
-        // user gesture -> try open in a new tab (preferred)
-        let opened = null;
-        try { opened = window.open(decodedConf, '_blank', 'noopener,noreferrer'); } catch (err) { opened = null; }
-        // best-effort: if the user opened this from another tab that has an opener, let it know we opened the verify flow
-        try {
-          if (window.opener) window.opener.postMessage({ type: 'verify_opened' }, '*');
-        } catch (e) { /* ignore */ }
-
-        // if popup blocked -> navigate this tab (guarantees verification)
-        if (!opened) {
-          try { location.href = decodedConf; return; } catch (e) {}
-        }
-
-        // show fallback after short delay so users have an option if opener blocked messaging
-        setTimeout(() => {
-          fallback.style.display = 'inline-block';
-          btn.textContent = 'Verification opened — return to Tharaga tab';
-        }, 1500);
+        // Always forward to your login_signup_glassdrop handler
+        const target = 'https://tharaga.co.in/login_signup_glassdrop/?confirmation_url=' + encodeURIComponent(decodedConf);
+        window.location.replace(target);
       });
+
 
       console.log('auth-landing ready. confirmation_url (inspect):', decodedConf);
     })();

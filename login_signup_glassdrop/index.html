@@ -580,20 +580,72 @@ if (isPostAuth) {
 window.addEventListener('beforeunload', () => subscription?.unsubscribe());
 
 // ========================= MAGIC LINK MESSAGE LISTENER =========================
-// This allows the "auth-email-landing" tab to notify this page that login is complete
-window.addEventListener("message", (event) => {
+// This extended handler accepts:
+//  - old messages: 'supabase-login-complete' and 'signed_in' (keeps your original behaviour)
+//  - NEW: 'tharaga_token_transfer' used by fragment-handle on tharaga.co.in to hand tokens to this auth host
+window.addEventListener("message", async (event) => {
   try {
-    // Security check: only trust messages from your auth domain or main site
+    // Trust only your known origins (restrict this list in production)
     const allowedOrigins = [
       "https://auth.tharaga.co.in",
-      "https://tharaga.co.in"
+      "https://tharaga.co.in",
+      // If you still use the Netlify preview host in production add it here (exact host only)
+      // "https://thriving-beijinho-ce44d5.netlify.app"
     ];
     if (!allowedOrigins.includes(event.origin)) {
       console.warn("Ignored postMessage from unexpected origin:", event.origin);
       return;
     }
 
-    if (event.data?.type === "supabase-login-complete" || event.data?.type === "signed_in") {
+    const type = event.data?.type;
+
+    // ---------- NEW: token transfer from tharaga.co.in (fragment-handle) ----------
+    if (type === "tharaga_token_transfer") {
+      try {
+        const { access_token, refresh_token, next: incomingNext, user: incomingUser } = event.data || {};
+        if (!access_token || !refresh_token) {
+          console.warn('tharaga_token_transfer missing tokens');
+          return;
+        }
+
+        // Set session on this origin (reuse existing supabase client)
+        const { data, error } = await supabase.auth.setSession({ access_token, refresh_token });
+        if (error) {
+          console.warn('tharaga_token_transfer setSession failed', error);
+          return;
+        }
+
+        // Build payload and write the same localStorage keys other pages expect
+        const payload = {
+          ts: Date.now(),
+          next: incomingNext || null,
+          user: data?.session?.user ? { id: data.session.user.id, email: data.session.user.email } : (incomingUser || null)
+        };
+        try {
+          localStorage.setItem('__tharaga_magic_continue', JSON.stringify(payload));
+          localStorage.setItem('__tharaga_magic_confirmed', JSON.stringify(payload));
+        } catch (e) { console.warn('Could not write magic continue/confirmed', e); }
+
+        // Update UI on this auth page (show authed state)
+        try {
+          showAuthed(payload.user?.email);
+          // focus continue button for UX
+          const cont = document.getElementById('continueBtn');
+          if (cont) cont.focus();
+        } catch (_e) {}
+
+        // If embedded, postMessage parent so parent can resume flow quickly
+        if (window.self !== window.parent) {
+          try { window.parent.postMessage({ type: 'signed_in', user: payload.user, next: payload.next }, '*'); } catch (_) {}
+        }
+      } catch (err) {
+        console.error('tharaga_token_transfer handler failed', err);
+      }
+      return; // done handling tharaga_token_transfer
+    }
+
+    // ---------- existing behaviour: supabase-login-complete / signed_in ----------
+    if (type === "supabase-login-complete" || type === "signed_in") {
       console.log("Received login complete via postMessage", event.data);
 
       // Activate continue container
@@ -606,14 +658,17 @@ window.addEventListener("message", (event) => {
         if (userEmail) userEmail.textContent = `• ${event.data.user.email}`;
       }
 
-      // Auto-highlight the continue button if desired
+      // Auto-focus the continue button if desired
       const cont = document.getElementById("continueBtn");
       if (cont) cont.focus();
+      return;
     }
+
   } catch (err) {
     console.error("postMessage handler failed", err);
   }
 });
+
 
     // ========================= ACTIONS ========================
     magicBtn.addEventListener('click', async () => {

@@ -26,53 +26,50 @@
   </div>
 
   <script>
-    (function(){
-      const params = new URLSearchParams(location.search);
-      const conf = params.get('confirmation_url');
-      const btn = document.getElementById('verifyBtn');
-      const fallback = document.getElementById('fallback');
+(function(){
+  const params = new URLSearchParams(location.search);
+  const conf = params.get('confirmation_url');
+  const btn = document.getElementById('verifyBtn');
 
-      if (!conf) {
-        document.querySelector('.msg').textContent = '❌ Invalid or expired link.';
-        btn.disabled = true;
-        return;
+  if (!conf) {
+    document.querySelector('.msg').textContent = '❌ Invalid or expired link.';
+    btn.disabled = true;
+    return;
+  }
+
+  const decodedConf = decodeURIComponent(conf);
+
+  btn.addEventListener('click', async () => {
+    btn.disabled = true;
+    btn.textContent = 'Verifying…';
+
+    try {
+      // Open verify URL ONCE (in a hidden popup)
+      const verifyWin = window.open(decodedConf, '_blank', 'width=500,height=600,noopener');
+
+      // Immediately notify the opener tab
+      if (window.opener) {
+        window.opener.postMessage({
+          type: 'tharaga_verify_clicked',
+          confirmation_url: decodedConf
+        }, '*'); // tighten origin in prod
       }
 
-      const decodedConf = decodeURIComponent(conf);
-      // --- resilient fallback: send user to the auth page which will open the verify URL ---
-      /* Build fallback that points at the auth page and includes the full confirmation URL.
-        If verification is opened but no opener exists (friend / other browser), the user
-        can click this to land on login_signup_glassdrop which will itself open the
-        confirmation_url and complete the token flow there. */
-      fallback.href = 'https://auth.tharaga.co.in/login_signup_glassdrop/?confirmation_url=' + encodeURIComponent(decodedConf);
+      // Change button UX
+      setTimeout(() => {
+        btn.textContent = '✅ Verified — return to your Tharaga tab';
+      }, 1200);
 
-      btn.addEventListener('click', () => {
-        btn.disabled = true;
-        btn.textContent = 'Opening verification…';
+    } catch (e) {
+      console.error('verifyBtn error:', e);
+      btn.disabled = false;
+      btn.textContent = 'Verify & Return to Tharaga';
+    }
+  });
 
-        let opened = null;
-        try { opened = window.open(decodedConf, '_blank', 'noopener,noreferrer'); } catch (err) { opened = null; }
+  console.log('auth-email-landing ready. confirmation_url:', decodedConf);
+})();
+</script>
 
-        // announce we opened (best-effort)
-        try {
-          if (window.opener) window.opener.postMessage({ type: 'verify_opened' }, '*');
-        } catch (e) {}
-
-        if (!opened) {
-          try { location.href = decodedConf; return; } catch (e) {}
-        }
-
-        // UX: turn button into a tick and show fallback
-        setTimeout(() => {
-          btn.textContent = '✔️ Verification opened';
-          fallback.style.display = 'inline-block';
-        }, 1200);
-      });
-
-
-
-      console.log('auth-landing ready. confirmation_url (inspect):', decodedConf);
-    })();
-  </script>
 </body>
 </html>

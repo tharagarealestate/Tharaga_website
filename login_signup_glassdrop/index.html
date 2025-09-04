@@ -599,6 +599,39 @@ window.addEventListener("message", async (event) => {
 
     const type = event.data?.type;
 
+        // ---------- NEW: verify button clicked from auth-email-landing ----------
+    if (type === 'tharaga_verify_clicked') {
+      try {
+        const confirmationUrl = event.data?.confirmation_url;
+        if (!confirmationUrl) {
+          console.warn('verify_clicked missing confirmation_url');
+          return;
+        }
+
+        // Call Supabase verify endpoint once
+        const resp = await fetch(confirmationUrl, { credentials: 'include' });
+        let result = null;
+        try { result = await resp.json(); } catch(_) {}
+
+        if (resp.ok) {
+          console.log('✅ Verification success:', result);
+          // Show authed UI
+          document.querySelector('#authed')?.classList.remove('hidden');
+          document.querySelector('#authForm')?.classList.add('hidden');
+          const cont = document.querySelector('#continueBtn');
+          if (cont) cont.style.display = 'block';
+        } else {
+          console.error('Verification failed:', result);
+          alert('Verification failed — link may have expired.');
+        }
+      } catch (err) {
+        console.error('tharaga_verify_clicked handler error:', err);
+        alert('Verification error — please retry.');
+      }
+      return; // stop, don’t fall through to other handlers
+    }
+
+
     // ---------- NEW: token transfer from tharaga.co.in (fragment-handle) ----------
     if (type === "tharaga_token_transfer") {
       try {

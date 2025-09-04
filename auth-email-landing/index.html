@@ -5,104 +5,62 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Continue to Tharaga</title>
   <style>
-    body {
-      font-family: Inter, Arial, sans-serif;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      height: 100vh;
-      background: #f7f7f8;
-      margin: 0;
-    }
-    .card {
-      max-width: 720px;
-      padding: 28px;
-      border-radius: 12px;
-      background: #fff;
-      box-shadow: 0 8px 30px rgba(0,0,0,.08);
-      text-align: center;
-    }
-    h2 {
-      margin-top: 0;
-      font-size: 22px;
-      font-weight: 700;
-    }
-    .msg {
-      font-size: 15px;
-      color: #333;
-      margin-top: 10px;
-      margin-bottom: 20px;
-    }
-    .note {
-      margin-top: 14px;
-      font-size: 13px;
-      color: #666;
-    }
-    #fallback-btn {
-      display: inline-block;
-      margin-top: 18px;
-      padding: 12px 20px;
-      border-radius: 10px;
-      background: #d4af37;
-      color: #111;
-      font-weight: 700;
-      text-decoration: none;
-    }
-    #fallback-btn:disabled {
-      opacity: 0.6;
-      pointer-events: none;
-    }
+    body{font-family:Inter,Arial,sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;background:#f7f7f8;margin:0}
+    .card{max-width:720px;padding:28px;border-radius:12px;background:#fff;box-shadow:0 8px 30px rgba(0,0,0,.08);text-align:center}
+    h2{margin:0 0 10px;font-size:22px}
+    .msg{font-size:15px;color:#333;margin:8px 0 16px}
+    .note{font-size:13px;color:#666;margin-top:12px}
+    .btn{display:inline-block;margin-top:18px;padding:12px 20px;border-radius:10px;background:#d4af37;color:#111;font-weight:700;text-decoration:none;cursor:pointer;border:0}
+    .btn[disabled]{opacity:.6;pointer-events:none}
   </style>
 </head>
 <body>
-  <div class="card">
+  <div class="card" role="main" aria-live="polite">
     <h2>Continue signing in to Tharaga</h2>
-    <p class="msg">✅ You’re almost there. Please return to your Tharaga tab to finish signing in.</p>
-    <a id="fallback-btn" href="#" style="display:none;">Continue to Tharaga</a>
-    <p class="note">If the login doesn’t complete, copy & paste the link provided in the email into your browser.</p>
+    <p class="msg">✅ You’re almost there. Click the button below to verify the magic link — then return to the tab where you started to finish signing in.</p>
+
+    <button id="verifyBtn" class="btn">Verify & Return to Tharaga</button>
+    <a id="fallback" class="btn" style="display:none;margin-left:8px;background:#111;color:#fff;text-decoration:none" href="https://tharaga.co.in">Go to Tharaga</a>
+
+    <p class="note">If the verification doesn't complete, copy & paste the link from the email into your browser.</p>
   </div>
 
   <script>
     (function(){
       const params = new URLSearchParams(location.search);
       const conf = params.get('confirmation_url');
-      const msg = document.querySelector('.msg');
-      const btn = document.getElementById('fallback-btn');
+      const btn = document.getElementById('verifyBtn');
+      const fallback = document.getElementById('fallback');
 
       if (!conf) {
-        msg.textContent = '❌ Invalid or expired link.';
+        document.querySelector('.msg').textContent = '❌ Invalid or expired link.';
+        btn.disabled = true;
         return;
       }
 
       const decodedConf = decodeURIComponent(conf);
 
-      // 1. Consume Supabase confirmation silently
-      fetch(decodedConf, { credentials: "include" })
-        .then(() => {
-          // 2. Notify opener (main tab) that login is complete
-          let notified = false;
-          try {
-            if (window.opener) {
-              window.opener.postMessage({ type: "supabase-login-complete" }, "*");
-              notified = true;
-            }
-          } catch (err) {
-            console.warn("Could not notify opener:", err);
-          }
+      btn.addEventListener('click', () => {
+        btn.disabled = true;
+        btn.textContent = 'Opening verification…';
 
-          if (notified) {
-            msg.textContent = "✅ You’re signed in! Return to your Tharaga tab to continue.";
-          } else {
-            // 3. Show fallback button if opener isn’t available
-            msg.textContent = "✅ Sign-in confirmed. Click below to continue.";
-            btn.style.display = "inline-block";
-            btn.href = "https://tharaga.co.in";
-          }
-        })
-        .catch(err => {
-          console.error("Error consuming confirmation:", err);
-          msg.textContent = '⚠️ Could not complete login. Please try again.';
-        });
+        // user gesture -> try open in a new tab (preferred)
+        let opened = null;
+        try { opened = window.open(decodedConf, '_blank', 'noopener,noreferrer'); } catch (err) { opened = null; }
+
+        // if popup blocked -> navigate this tab (guarantees verification)
+        if (!opened) {
+          try { location.href = decodedConf; return; } catch (e) {}
+        }
+
+        // show fallback after short delay so users have an option if opener blocked messaging
+        setTimeout(() => {
+          fallback.style.display = 'inline-block';
+          btn.textContent = 'Verification opened — return to Tharaga tab';
+        }, 1500);
+      });
+
+      console.log('auth-landing ready. confirmation_url (inspect):', decodedConf);
     })();
   </script>
 </body>

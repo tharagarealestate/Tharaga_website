@@ -40,32 +40,46 @@
   const decodedConf = decodeURIComponent(conf);
 
   btn.addEventListener('click', async () => {
-    btn.disabled = true;
-    btn.textContent = 'Verifying…';
+  btn.disabled = true;
+  btn.textContent = 'Verifying…';
 
-    try {
-      // Open verify URL ONCE (in a hidden popup)
-      const verifyWin = window.open(decodedConf, '_blank', 'width=500,height=600,noopener');
+  try {
+    // Directly call the confirmation URL without opening a new window
+    const resp = await fetch(decodedConf, { credentials: 'include' });
+    let result = null;
+    try { result = await resp.json(); } catch(_) {}
 
-      // Immediately notify the opener tab
-      if (window.opener) {
-        window.opener.postMessage({
-          type: 'tharaga_verify_clicked',
-          confirmation_url: decodedConf
-        }, '*'); // tighten origin in prod
+    if (resp.ok) {
+      // ✅ Success: update button text
+      btn.textContent = '✅ Verified — return to your Tharaga tab';
+      btn.disabled = false;
+
+      // Notify the login_signup_glassdrop page (parent/other tab)
+      window.opener?.postMessage({
+        type: 'tharaga_verify_clicked',
+        confirmation_url: decodedConf
+      }, '*'); // production: replace '*' with origin of your login page
+
+      // Optional: trigger next step directly if embedded
+      if (window.self !== window.parent) {
+        window.parent.postMessage({ type: 'signed_in', next: null }, '*');
       }
 
-      // Change button UX
-      setTimeout(() => {
-        btn.textContent = '✅ Verified — return to your Tharaga tab';
-      }, 1200);
-
-    } catch (e) {
-      console.error('verifyBtn error:', e);
+    } else {
+      console.error('Verification failed:', result);
       btn.disabled = false;
       btn.textContent = 'Verify & Return to Tharaga';
+      alert('Verification failed — link may have expired.');
     }
-  });
+
+  } catch (err) {
+    console.error('verifyBtn error:', err);
+    btn.disabled = false;
+    btn.textContent = 'Verify & Return to Tharaga';
+    alert('Verification error — please retry.');
+  }
+});
+
 
   console.log('auth-email-landing ready. confirmation_url:', decodedConf);
 })();

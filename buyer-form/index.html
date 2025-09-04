@@ -611,52 +611,49 @@ async function getRecaptcha() {
 
 <!-- Attach gate to submitBtn -->
 <script type="module">
-
+document.addEventListener("DOMContentLoaded", async () => {
   // Handle confirmation_url (magic link redirect)
-const urlParams = new URLSearchParams(window.location.search);
-const confUrl = urlParams.get("confirmation_url");
-if (confUrl) {
-  try {
-    const { data, error } = await supabase.auth.exchangeCodeForSession(confUrl);
-    if (error) console.error("Session exchange failed:", error);
-    else {
-      console.debug("Session established from confirmation_url");
-      localStorage.setItem("__tharaga_magic_confirmed", JSON.stringify(data));
+  const urlParams = new URLSearchParams(window.location.search);
+  const confUrl = urlParams.get("confirmation_url");
+  if (confUrl) {
+    try {
+      const { data, error } = await supabase.auth.exchangeCodeForSession(confUrl);
+      if (error) console.error("Session exchange failed:", error);
+      else {
+        console.debug("Session established from confirmation_url");
+        localStorage.setItem("__tharaga_magic_confirmed", JSON.stringify(data));
+      }
+    } catch (err) {
+      console.error("exchangeCodeForSession failed:", err);
     }
-  } catch (err) {
-    console.error("exchangeCodeForSession failed:", err);
   }
-}
 
-  // Wait until DOM is ready
-  document.addEventListener("DOMContentLoaded", () => {
+  // Attach authGate to submitBtn
   if (window.authGate) {
-    // Mark the protected button with the gate and provide a NO-AUTO-RESUME callback.
-    // After sign-in we do NOT auto-submit; we restore UI and ask the user to click again.
     window.authGate.attachAuthGate("#submitBtn", async () => {
+      // Restore pending form
       try {
         const saved = sessionStorage.getItem('tharaga_pending_buyer_form');
         if (saved) {
           const obj = JSON.parse(saved);
           Object.keys(obj).forEach(k => {
             const el = form.elements[k];
-            if (el) el.value = obj[k];
+            if (el && k !== 'otp_verified') el.value = obj[k]; // preserve OTP verified
           });
         }
-      } catch (e) {
-        console.warn('attachAuthGate restore failed', e);
-      }
+      } catch (e) { console.warn('attachAuthGate restore failed', e); }
+
+      // Only enable submit if OTP verified
       if (otpVerifiedField.value === 'true') {
-        submitBtn.disabled = false;
-        submitBtn.style.cursor = 'pointer';
+        submitBtn.disabled = !(otpVerifiedField.value === 'true' && currentUser);
+        submitBtn.style.cursor = submitBtn.disabled ? 'not-allowed' : 'pointer';
       }
-      
     });
   } else {
     console.error("authGate not loaded");
   }
 });
-
 </script>
+
 </body>
 </html>

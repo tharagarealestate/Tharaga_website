@@ -39,6 +39,12 @@
       }
 
       const decodedConf = decodeURIComponent(conf);
+      // --- resilient fallback: send user to the auth page which will open the verify URL ---
+      /* Build fallback that points at the auth page and includes the full confirmation URL.
+        If verification is opened but no opener exists (friend / other browser), the user
+        can click this to land on login_signup_glassdrop which will itself open the
+        confirmation_url and complete the token flow there. */
+      fallback.href = 'https://auth.tharaga.co.in/login_signup_glassdrop/?confirmation_url=' + encodeURIComponent(decodedConf);
 
       btn.addEventListener('click', () => {
         btn.disabled = true;
@@ -47,6 +53,10 @@
         // user gesture -> try open in a new tab (preferred)
         let opened = null;
         try { opened = window.open(decodedConf, '_blank', 'noopener,noreferrer'); } catch (err) { opened = null; }
+        // best-effort: if the user opened this from another tab that has an opener, let it know we opened the verify flow
+        try {
+          if (window.opener) window.opener.postMessage({ type: 'verify_opened' }, '*');
+        } catch (e) { /* ignore */ }
 
         // if popup blocked -> navigate this tab (guarantees verification)
         if (!opened) {

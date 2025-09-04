@@ -22,6 +22,26 @@
       return;
     }
 
+    try {
+      const payload = {
+        ts: Date.now(),
+        next: null, // will be overwritten below
+        user: data?.session?.user ? { id: data.session.user.id, email: data.session.user.email } : null
+      };
+
+      if (window.opener && typeof window.opener.postMessage === 'function') {
+        window.opener.postMessage({
+          type: 'tharaga_token_transfer',
+          access_token,
+          refresh_token,
+          next: null, // will be overwritten below
+          user: payload.user
+        }, '*'); // tighten origin in prod
+      }
+    } catch (e) {
+      console.warn('fragment-handle: could not postMessage to opener', e);
+    }
+
     // try to derive pendingNext (best-effort)
     let pendingNext = null;
     try {

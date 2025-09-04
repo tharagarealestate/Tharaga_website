@@ -688,7 +688,7 @@ window.addEventListener("message", async (event) => {
       console.debug && console.debug('magic link redirect target ->', POST_AUTH_CALLBACK);
       const { error } = await supabase.auth.signInWithOtp({
         email,
-        options: { emailRedirectTo: POST_AUTH_CALLBACK }
+        options: { emailRedirectTo: POST_AUTH_CALLBACK, redirectTo: POST_AUTH_CALLBACK }
       });
       if (error) setMsg(error.message);
       else setMsg('Magic link sent! Check your inbox (and spam).', true);

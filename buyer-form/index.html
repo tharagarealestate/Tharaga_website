@@ -407,46 +407,22 @@ async function getRecaptcha() {
 
   // safe getUser() (works if supabase client is present)
   let currentUser = null;
-  try {
-    const res = await supabase.auth.getUser();
-    currentUser = res?.data?.user ?? null;
-  } catch (err) {
-    console.warn('getUser failed (treat as not signed in):', err);
-    currentUser = null;
+try {
+  // Wait for any active session
+  const { data: sessionData } = await supabase.auth.getSession();
+  currentUser = sessionData?.user ?? null;
+} catch (err) {
+  console.warn('getSession failed:', err);
+}
+
+// Only open auth modal if user clicks submit **and is not logged in yet**
+if (!currentUser) {
+  alert('Please sign in first.');
+  if (window.authGate?.openLoginModal) {
+    window.authGate.openLoginModal({ next: location.pathname + location.search });
   }
-
-  // If not signed in: register a pending action (auth-gate expects __authGatePendingAction)
-    if (!currentUser) {
-    // Persist the current form values (so we can restore them after auth/reload).
-    try {
-      const f = new FormData(form);
-      const payload = Object.fromEntries(f.entries());
-      sessionStorage.setItem('tharaga_pending_buyer_form', JSON.stringify(payload));
-      sessionStorage.setItem('tharaga_pending_form_ts', Date.now().toString());
-    } catch (e) {
-      console.warn('Could not persist pending form', e);
-    }
-
-    // Save a post-auth target for the login page to know where the user came from.
-    try {
-      localStorage.setItem('post_auth_target', JSON.stringify({ href: location.pathname + location.search, openInNewTab: false }));
-    } catch (e) {
-      console.warn('Could not write post_auth_target', e);
-    }
-
-    console.debug('buyer-form: opened auth modal (NO auto-resume). next=', location.pathname + location.search);
-
-    if (window.authGate && typeof window.authGate.openLoginModal === 'function') {
-      // Important: do NOT set an auto-resume action. We'll let the user click the button again.
-      window.authGate.openLoginModal({ next: location.pathname + location.search });
-      // Friendly UX hint
-      try { alert('Please sign in (modal). After successful sign-in this page will reload and restore your form; then click "Get My Property Matches" again.'); } catch (_){}
-    } else {
-      console.error("authGate missing — login modal cannot open");
-      alert("Login system not ready – please refresh and try again.");
-    }
-    return;
-  }
+  return;
+}
 
 
   if (otpVerifiedField.value !== 'true') { 

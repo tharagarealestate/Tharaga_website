@@ -563,6 +563,42 @@ if (isPostAuth) {
 // unsubscribe on unload (optional, good practice)
 window.addEventListener('beforeunload', () => subscription?.unsubscribe());
 
+// ========================= MAGIC LINK MESSAGE LISTENER =========================
+// This allows the "auth-email-landing" tab to notify this page that login is complete
+window.addEventListener("message", (event) => {
+  try {
+    // Security check: only trust messages from your auth domain or main site
+    const allowedOrigins = [
+      "https://auth.tharaga.co.in",
+      "https://tharaga.co.in"
+    ];
+    if (!allowedOrigins.includes(event.origin)) {
+      console.warn("Ignored postMessage from unexpected origin:", event.origin);
+      return;
+    }
+
+    if (event.data?.type === "supabase-login-complete" || event.data?.type === "signed_in") {
+      console.log("Received login complete via postMessage", event.data);
+
+      // Activate continue container
+      document.querySelector("#authed")?.classList.remove("hidden");
+      document.querySelector("#authForm")?.classList.add("hidden");
+
+      // If user info was provided, show it
+      if (event.data.user?.email) {
+        const userEmail = document.getElementById("userEmail");
+        if (userEmail) userEmail.textContent = `• ${event.data.user.email}`;
+      }
+
+      // Auto-highlight the continue button if desired
+      const cont = document.getElementById("continueBtn");
+      if (cont) cont.focus();
+    }
+  } catch (err) {
+    console.error("postMessage handler failed", err);
+  }
+});
+
     // ========================= ACTIONS ========================
     magicBtn.addEventListener('click', async () => {
     const email = emailEl.value.trim();

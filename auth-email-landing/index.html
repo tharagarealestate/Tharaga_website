@@ -1,216 +1,94 @@
-<!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Continue to Tharaga</title>
-  <style>
-    body{font-family:Inter,Arial,sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;background:#f7f7f8;margin:0}
-    .card{max-width:720px;padding:28px;border-radius:12px;background:#fff;box-shadow:0 8px 30px rgba(0,0,0,.08);text-align:center}
-    h2{margin:0 0 10px;font-size:22px}
-    .msg{font-size:15px;color:#333;margin:8px 0 16px}
-    .note{font-size:13px;color:#666;margin-top:12px}
-    .btn{display:inline-block;margin-top:18px;padding:12px 20px;border-radius:10px;background:#d4af37;color:#111;font-weight:700;text-decoration:none;cursor:pointer;border:0}
-    .btn[disabled]{opacity:.6;pointer-events:none}
-  </style>
-</head>
-<body>
-  <div class="card" role="main" aria-live="polite">
-    <h2>Continue signing in to Tharaga</h2>
-    <p class="msg">✅ You’re almost there. Click the button below to verify the magic link — then return to the tab where you started to finish signing in.</p>
-
-    <button id="verifyBtn" class="btn">Verify & Return to Tharaga</button>
-    <a id="fallback" class="btn" style="display:none;margin-left:8px;background:#111;color:#fff;text-decoration:none" href="https://tharaga.co.in">Go to Tharaga</a>
-
-    <p class="note">If the verification doesn't complete, copy & paste the link from the email into your browser.</p>
-  </div>
-
+<!-- only the <script type="module"> block to replace your current one -->
 <script type="module">
 import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
 
-// Use your existing project values
 const SUPABASE_URL = "https://wedevtjjmdvngyshqdro.supabase.co";
-const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndlZGV2dGpqbWR2bmd5c2hxZHJvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU0NzYwMzgsImV4cCI6MjA3MTA1MjAzOH0.Ex2c_sx358dFdygUGMVBohyTVto6fdEQ5nydDRh9m6M";
+const SUPABASE_ANON_KEY = "YOUR_ANON_KEY_HERE"; // keep your anon key
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 (function(){
   const params = new URLSearchParams(location.search);
-  const codeQuery = params.get('code'); // PKCE / OAuth auth code
-  const accessTokenQuery = params.get('access_token'); // implicit flow (rare)
-  const rawConf = params.get('confirmation_url'); // your email template currently sends this
+  const rawConf = params.get('confirmation_url'); // email template sends this
   const btn = document.getElementById('verifyBtn');
   const fallback = document.getElementById('fallback');
 
-  if (!codeQuery && !rawConf && !accessTokenQuery) {
+  function parseHash(h) {
+    if (!h) return {};
+    const hash = h.replace(/^#/, '');
+    const sp = new URLSearchParams(hash);
+    return {
+      access_token: sp.get('access_token'),
+      refresh_token: sp.get('refresh_token'),
+      expires_in: sp.get('expires_in'),
+      token_type: sp.get('token_type'),
+    };
+  }
+
+  async function finishWithSessionFromHash() {
+    const { access_token, refresh_token } = parseHash(location.hash);
+    if (!access_token && !refresh_token) return false;
+
+    try {
+      // setSession will persist the session client-side
+      const { data, error } = await supabase.auth.setSession({
+        access_token,
+        refresh_token
+      });
+      if (error) throw error;
+
+      btn.textContent = '✅ Verified — returning...';
+      btn.disabled = true;
+
+      // notify opener (if using popup/modal) and other tabs
+      try {
+        window.opener?.postMessage({ type: 'tharaga_verify_clicked', user: data.user }, '*');
+      } catch (e) { /* ignore */ }
+
+      try {
+        localStorage.setItem('__tharaga_magic_continue', JSON.stringify({ user: data.user, at: Date.now() }));
+      } catch (_) {}
+
+      // clean the URL (remove fragment)
+      try { history.replaceState({}, document.title, location.pathname); } catch(_) {}
+
+      // optionally close the window after a short delay
+      setTimeout(()=> { try { window.close(); } catch(_) {} }, 700);
+      return true;
+    } catch (err) {
+      console.error('setSession failed:', err);
+      return false;
+    }
+  }
+
+  // If we were redirected back from Supabase verify (tokens in hash), finish immediately
+  (async ()=> {
+    if (location.hash && (location.hash.includes('access_token') || location.hash.includes('refresh_token'))) {
+      const done = await finishWithSessionFromHash();
+      if (done) return;
+      // if setSession failed, allow normal UI to show fallback
+    }
+  })();
+
+  if (!rawConf) {
     document.querySelector('.msg').textContent = '❌ Invalid or expired link.';
     btn.disabled = true;
-    console.warn('No code, confirmation_url, or access_token found in URL:', location.href);
     return;
   }
 
-  function safeDecode(v){ try{ return decodeURIComponent(v); }catch(e){ return v; } }
+  const decodedConf = decodeURIComponent(rawConf);
+  console.log('auth-email-landing ready. confirmation_url (decoded):', decodedConf);
 
-  // Extract token/token_hash/code from a confirmation_url string
-  function extractTokenFromConfirmationUrl(conf) {
-    try {
-      const u = new URL(conf);
-      // token param is usually a token hash in confirmation URLs from Supabase
-      return {
-        full: conf,
-        token: u.searchParams.get('token') || null,
-        token_hash: u.searchParams.get('token_hash') || null,
-        code: u.searchParams.get('code') || null,
-        access_token: u.searchParams.get('access_token') || null
-      };
-    } catch (e) {
-      return { full: conf, token: null };
-    }
-  }
-
-  // Build candidates in meaning order:
-  // 1) PKCE auth code (if present)
-  // 2) access_token (implicit flow)
-  // 3) confirmation_url -> token/token_hash
-  const candidates = [];
-  if (codeQuery) candidates.push({type: 'pkce_code', value: codeQuery});
-  if (accessTokenQuery) candidates.push({type: 'access_token', value: accessTokenQuery});
-
-  if (rawConf) {
-    const decoded = safeDecode(rawConf);
-    candidates.push({type:'confirmation_url_full', value: decoded});
-    const extracted = extractTokenFromConfirmationUrl(decoded);
-    if (extracted.code) candidates.push({type:'extracted_code', value: extracted.code});
-    if (extracted.token_hash) candidates.push({type:'extracted_token_hash', value: extracted.token_hash});
-    if (extracted.token) candidates.push({type:'extracted_token', value: extracted.token});
-    if (extracted.access_token) candidates.push({type:'extracted_access_token', value: extracted.access_token});
-  }
-
-  // as last resort, try the whole location.href
-  candidates.push({type:'current_url', value: location.href});
-
-  console.debug('auth-email-landing will try candidates:', candidates.map(c=>c.type));
-
+  // When user clicks Verify, navigate to the actual Supabase verify URL.
+  // Supabase will handle verification server-side and redirect back to this page
+  // with tokens in the fragment (e.g. #access_token=...&refresh_token=...).
   btn.addEventListener('click', async () => {
     btn.disabled = true;
-    btn.textContent = 'Verifying…';
+    btn.textContent = 'Opening magic link…';
+    // Redirect the browser to the real supabase verify endpoint
+    window.location.href = decodedConf;
+  });
 
-    let success = false;
-    let lastErr = null;
-
-    for (const cand of candidates) {
-      try {
-        console.info('Trying candidate:', cand.type, '(truncated)', (cand.value||'').slice(0,200));
-
-        // PKCE code: use exchangeCodeForSession (only valid if this is a PKCE redirect)
-        if (cand.type === 'pkce_code' || cand.type === 'extracted_code') {
-          const { data, error } = await supabase.auth.exchangeCodeForSession(cand.value).catch(e => ({ error: e }));
-          console.debug('exchangeCodeForSession result:', data, error);
-          if (!error && data?.session?.user) {
-            const user = data.session.user;
-            success = true;
-            // success UI + notify
-            btn.textContent = '✅ Verified — returning...';
-            try { window.opener?.postMessage({ type:'tharaga_verify_clicked', user }, '*'); } catch(_) {}
-            try { localStorage.setItem('__tharaga_magic_continue', JSON.stringify({ user, method:'pkce', at:Date.now() })); } catch(_) {}
-            setTimeout(()=>{ try{ window.close(); } catch(_){} }, 700);
-            break;
-          } else {
-            lastErr = error || new Error('no session created via exchangeCodeForSession');
-            console.warn('PKCE candidate failed:', lastErr);
-            continue;
-          }
-        }
-
-        // Access token (implicit flow) — set session directly if present
-        if (cand.type === 'access_token' || cand.type === 'extracted_access_token') {
-          // Set using setSession — this stores access/refresh in client storage
-          const fakeHash = `#access_token=${encodeURIComponent(cand.value)}&token_type=bearer`;
-          // The SDK offers setSession; but the easiest is to call exchangeCodeForSession? No — use setSession if available
-          // Try setSession (it accepts object {access_token, refresh_token} or full session). We'll attempt basic approach:
-          // NOTE: if your email sent refresh_token in fragment you can parse and call setSession properly.
-          try {
-            const possiblyTokens = {}; // we don't have refresh token here — skip
-            lastErr = new Error('access_token candidate not handled automatically in this script');
-            console.warn('access_token candidate present but this script does not parse refresh_token — consider using implicit flow handler on your site.');
-            continue;
-          } catch (e) {
-            lastErr = e;
-            continue;
-          }
-        }
-
-        // confirmation_url full or extracted token/token_hash -> use verifyOtp with token_hash for magic link flows
-        if (cand.type === 'confirmation_url_full' || cand.type === 'extracted_token' || cand.type === 'extracted_token_hash') {
-          // pick token_hash first if available, else token
-          const tokenCandidate = (cand.type === 'extracted_token_hash' || cand.type === 'extracted_token') ? cand.value : null;
-          // If this candidate is the full confirmation URL, extract token now:
-          let tokenToTry = tokenCandidate;
-          if (!tokenToTry && cand.type === 'confirmation_url_full') {
-            try {
-              const u = new URL(cand.value);
-              tokenToTry = u.searchParams.get('token') || u.searchParams.get('token_hash') || u.searchParams.get('code');
-            } catch (e) { tokenToTry = null; }
-          }
-          if (!tokenToTry) {
-            lastErr = new Error('no token found in confirmation_url candidate');
-            console.warn('No token found for candidate', cand);
-            continue;
-          }
-
-          // Call verifyOtp — treat the found token as token_hash (recommended for server-side PKCE/magic link)
-          console.info('Calling verifyOtp with token_hash (truncated):', (tokenToTry||'').slice(0,40));
-          const { data, error } = await supabase.auth.verifyOtp({ token_hash: tokenToTry, type: 'email' }).catch(e => ({ error: e }));
-          console.debug('verifyOtp result:', data, error);
-          if (!error && data?.session?.user) {
-            const user = data.session.user;
-            success = true;
-            btn.textContent = '✅ Verified — returning...';
-            try { window.opener?.postMessage({ type:'tharaga_verify_clicked', user }, '*'); } catch(_) {}
-            try { localStorage.setItem('__tharaga_magic_continue', JSON.stringify({ user, method:'verifyOtp', at:Date.now() })); } catch(_) {}
-            setTimeout(()=>{ try{ window.close(); } catch(_){} }, 700);
-            break;
-          } else {
-            lastErr = error || new Error('verifyOtp did not produce a session');
-            console.warn('verifyOtp candidate failed:', lastErr);
-            continue;
-          }
-        }
-
-        // current_url or other fallback: try exchanging raw value once more with exchangeCodeForSession
-        if (cand.type === 'current_url') {
-          const { data, error } = await supabase.auth.exchangeCodeForSession(cand.value).catch(e => ({ error: e }));
-          if (!error && data?.session?.user) {
-            const user = data.session.user;
-            success = true;
-            btn.textContent = '✅ Verified — returning...';
-            try { window.opener?.postMessage({ type:'tharaga_verify_clicked', user }, '*'); } catch(_) {}
-            try { localStorage.setItem('__tharaga_magic_continue', JSON.stringify({ user, method:'exchange_fallback', at:Date.now() })); } catch(_) {}
-            setTimeout(()=>{ try{ window.close(); } catch(_){} }, 700);
-            break;
-          } else {
-            lastErr = error || new Error('fallback exchange failed');
-            console.warn('fallback candidate failed', lastErr);
-            continue;
-          }
-        }
-
-      } catch (err) {
-        lastErr = err;
-        console.error('Candidate attempt threw:', err);
-      }
-    } // end for
-
-    if (!success) {
-      console.error('All candidates failed. Last error:', lastErr);
-      fallback.style.display = 'inline-block';
-      btn.disabled = false;
-      btn.textContent = 'Verify & Return to Tharaga';
-      alert('Verification failed — link may have expired or session could not be created. See console for details.');
-    }
-  }); // end click handler
-
+  // Show fallback link if the user wants to go manually
+  fallback.href = 'https://tharaga.co.in';
 })();
 </script>
-
-</body>
-</html>

@@ -25,65 +25,57 @@
     <p class="note">If the verification doesn't complete, copy & paste the link from the email into your browser.</p>
   </div>
 
-  <script>
-(function(){
-  const params = new URLSearchParams(location.search);
-  const conf = params.get('confirmation_url');
-  const btn = document.getElementById('verifyBtn');
+  <script type="module">
+    import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
 
-  if (!conf) {
-    document.querySelector('.msg').textContent = '❌ Invalid or expired link.';
-    btn.disabled = true;
-    return;
-  }
+    // Supabase client (browser-safe anon)
+    const SUPABASE_URL = "https://wedevtjjmdvngyshqdro.supabase.co";
+    const SUPABASE_ANON_KEY = "YOUR_ANON_KEY_HERE"; // replace with actual anon key
+    const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-  const decodedConf = decodeURIComponent(conf);
+    (function(){
+      const params = new URLSearchParams(location.search);
+      const conf = params.get('confirmation_url');
+      const btn = document.getElementById('verifyBtn');
 
-  btn.addEventListener('click', async () => {
-  btn.disabled = true;
-  btn.textContent = 'Verifying…';
-
-  try {
-    // Directly call the confirmation URL without opening a new window
-    const resp = await fetch(decodedConf, { credentials: 'include' });
-    let result = null;
-    try { result = await resp.json(); } catch(_) {}
-
-    if (resp.ok) {
-      // ✅ Success: update button text
-      btn.textContent = '✅ Verified — return to your Tharaga tab';
-      btn.disabled = false;
-
-      // Notify the login_signup_glassdrop page (parent/other tab)
-      window.opener?.postMessage({
-        type: 'tharaga_verify_clicked',
-        confirmation_url: decodedConf
-      }, '*'); // production: replace '*' with origin of your login page
-
-      // Optional: trigger next step directly if embedded
-      if (window.self !== window.parent) {
-        window.parent.postMessage({ type: 'signed_in', next: null }, '*');
+      if (!conf) {
+        document.querySelector('.msg').textContent = '❌ Invalid or expired link.';
+        btn.disabled = true;
+        return;
       }
 
-    } else {
-      console.error('Verification failed:', result);
-      btn.disabled = false;
-      btn.textContent = 'Verify & Return to Tharaga';
-      alert('Verification failed — link may have expired.');
-    }
+      const decodedConf = decodeURIComponent(conf);
 
-  } catch (err) {
-    console.error('verifyBtn error:', err);
-    btn.disabled = false;
-    btn.textContent = 'Verify & Return to Tharaga';
-    alert('Verification error — please retry.');
-  }
-});
+      btn.addEventListener('click', async () => {
+        btn.disabled = true;
+        btn.textContent = 'Verifying…';
 
+        try {
+          // ✅ Exchange magic link for session
+          const { data, error } = await supabase.auth.exchangeCodeForSession(decodedConf);
+          if (error || !data?.session?.user) throw error || new Error("Session not created");
 
-  console.log('auth-email-landing ready. confirmation_url:', decodedConf);
-})();
-</script>
+          // Success UI
+          btn.textContent = '✅ Verified — return to your Tharaga tab';
+          btn.disabled = false;
 
+          // Notify main tab
+          window.opener?.postMessage({
+            type: 'tharaga_verify_clicked',
+            confirmation_url: decodedConf,
+            user: data.session.user
+          }, '*');
+
+        } catch (err) {
+          console.error('Verification error:', err);
+          btn.disabled = false;
+          btn.textContent = 'Verify & Return to Tharaga';
+          alert('Verification failed — link may have expired or session could not be created.');
+        }
+      });
+
+      console.log('auth-email-landing ready. confirmation_url:', decodedConf);
+    })();
+  </script>
 </body>
 </html>

@@ -47,13 +47,18 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
   // extract ?code= from the confirmation_url
   function extractCode(val) {
-    try {
-      const u = new URL(val);
-      return u.searchParams.get('code') || u.searchParams.get('access_token') || val;
-    } catch (e) {
-      return val;
-    }
+  try {
+    const u = new URL(val);
+    return (
+      u.searchParams.get('code') ||          // OAuth / PKCE style
+      u.searchParams.get('token') ||         // Supabase magic link
+      u.searchParams.get('access_token') ||  // Legacy fallback
+      val
+    );
+  } catch (e) {
+    return val;
   }
+}
   const code = extractCode(decodeURIComponent(rawConf));
   console.log("auth-email-landing ready. extracted code:", code);
 

@@ -25,74 +25,135 @@
     <p class="note">If the verification doesn't complete, copy & paste the link from the email into your browser.</p>
   </div>
 
-  <!-- only the <script type="module"> block shown -->
 <script type="module">
 import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
 
+// ⇢ Use your existing project values (kept same as your other pages)
 const SUPABASE_URL = "https://wedevtjjmdvngyshqdro.supabase.co";
-const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndlZGV2dGpqbWR2bmd5c2hxZHJvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU0NzYwMzgsImV4cCI6MjA3MTA1MjAzOH0.Ex2c_sx358dFdygUGMVBohyTVto6fdEQ5nydDRh9m6M"; 
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndlZGV2dGpqbWR2bmd5c2hxZHJvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU0NzYwMzgsImV4cCI6MjA3MTA1MjAzOH0.Ex2c_sx358dFdygUGMVBohyTVto6fdEQ5nydDRh9m6M";
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 (function(){
   const params = new URLSearchParams(location.search);
-  const rawConf = params.get('confirmation_url'); // email template always sends this
+  const rawConf = params.get('confirmation_url'); // your email template uses this
+  const codeParam = params.get('code') || params.get('token') || params.get('access_token'); // direct code/token if present
   const btn = document.getElementById('verifyBtn');
   const fallback = document.getElementById('fallback');
 
-  if (!rawConf) {
+  if (!rawConf && !codeParam) {
     document.querySelector('.msg').textContent = '❌ Invalid or expired link.';
     btn.disabled = true;
+    console.warn('No confirmation_url or code/token in URL:', location.href);
     return;
   }
 
-  // extract ?code= from the confirmation_url
-  function extractCode(val) {
-  try {
-    const u = new URL(val);
-    return (
-      u.searchParams.get('code') ||          // OAuth / PKCE style
-      u.searchParams.get('token') ||         // Supabase magic link
-      u.searchParams.get('access_token') ||  // Legacy fallback
-      val
-    );
-  } catch (e) {
-    return val;
+  // Safe decode helper (attempt decode once)
+  function safeDecode(v) {
+    try {
+      return decodeURIComponent(v);
+    } catch (e) {
+      return v;
+    }
   }
-}
-  const code = extractCode(decodeURIComponent(rawConf));
-  console.log("auth-email-landing ready. extracted code:", code);
 
+  // Given an input string that is likely a URL, extract common token/code names
+  function extractFromUrlString(s) {
+    try {
+      const u = new URL(s);
+      return {
+        full: s,
+        decoded: s,
+        code: u.searchParams.get('code'),
+        token: u.searchParams.get('token'),
+        access_token: u.searchParams.get('access_token'),
+        redirect_to: u.searchParams.get('redirect_to')
+      };
+    } catch (e) {
+      return { full: s, decoded: s };
+    }
+  }
+
+  // Build ordered list of candidate strings to try with exchangeCodeForSession()
+  const candidates = [];
+  // 1) if email template gave an encoded confirmation_url, add decoded full URL first
+  if (rawConf) {
+    const decoded = safeDecode(rawConf);
+    candidates.push(decoded);
+    // add extracted token/code from it
+    const extracted = extractFromUrlString(decoded);
+    if (extracted.code) candidates.push(extracted.code);
+    if (extracted.token) candidates.push(extracted.token);
+    if (extracted.access_token) candidates.push(extracted.access_token);
+    // also try the raw (un-decoded) confirmation_url
+    candidates.push(rawConf);
+  }
+  // 2) direct code/token from top-level query string
+  if (codeParam) candidates.push(codeParam);
+  // 3) as a last resort try the full current URL
+  candidates.push(window.location.href);
+
+  // Deduplicate and filter empty
+  const tried = [];
+  const uniqCandidates = [...new Set(candidates)].filter(Boolean);
+
+  console.debug('auth-email-landing candidates to try:', uniqCandidates);
+
+  // Do not auto-run exchange (keeps email-preview safe). Run on button click.
   btn.addEventListener('click', async () => {
     btn.disabled = true;
     btn.textContent = 'Verifying…';
 
-    try {
-      const { data, error } = await supabase.auth.exchangeCodeForSession(code);
-      if (error || !data?.session?.user) throw error || new Error("Session not created");
+    let success = false;
+    let lastErr = null;
+    for (const cand of uniqCandidates) {
+      try {
+        console.info('Attempting exchangeCodeForSession with candidate (truncated):', cand.slice(0,200));
+        // call exchange — supabase.client returns { data, error }
+        const res = await supabase.auth.exchangeCodeForSession(cand).catch(e => ({ error: e }));
+        console.debug('exchange result:', res);
+        if (!res.error && res.data?.session?.user) {
+          // success
+          const user = res.data.session.user;
+          console.log('Auth success for user:', user.email || user.id);
+          btn.textContent = '✅ Verified — returning...';
+          // notify opener
+          try {
+            window.opener?.postMessage({
+              type: 'tharaga_verify_clicked',
+              confirmation_candidate: cand,
+              user
+            }, '*');
+          } catch (e) { console.warn('postMessage failed', e); }
+          // set localStorage to trigger storage listeners in other tabs
+          try {
+            localStorage.setItem('__tharaga_magic_continue', JSON.stringify({ user, confirmation_candidate: cand, at: Date.now() }));
+          } catch (e) { console.warn('localStorage write failed', e); }
 
-      btn.textContent = '✅ Verified — returning...';
+          // small delay for UX before close
+          setTimeout(()=> {
+            try { window.close(); } catch(_) {}
+          }, 700);
 
-      // notify opener (login_signup_glassdrop)
-      window.opener?.postMessage({
-        type: 'tharaga_verify_clicked',
-        user: data.session.user
-      }, '*');
+          success = true;
+          break;
+        } else {
+          lastErr = res?.error || new Error('No session created for candidate');
+          console.warn('Candidate failed:', cand.slice(0,200), lastErr);
+        }
+      } catch (err) {
+        lastErr = err;
+        console.error('exchange attempt threw:', err);
+      }
+    }
 
-      // also store in localStorage for other tabs
-      localStorage.setItem('__tharaga_magic_continue', JSON.stringify({
-        user: data.session.user,
-        at: Date.now()
-      }));
-
-      // close after short delay
-      setTimeout(()=> { window.close(); }, 700);
-
-    } catch (err) {
-      console.error('Verification error:', err);
+    if (!success) {
+      console.error('All candidates failed. Last error:', lastErr);
       fallback.style.display = 'inline-block';
       btn.disabled = false;
       btn.textContent = 'Verify & Return to Tharaga';
-      alert('Verification failed — link may have expired or session could not be created.');
+      // show a clearer message in console for debugging:
+      console.info('Candidates tried (in order):', uniqCandidates);
+      alert('Verification failed — link may have expired or session could not be created. See console for details.');
     }
   });
 })();

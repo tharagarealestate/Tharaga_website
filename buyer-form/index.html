@@ -590,26 +590,75 @@ if (!currentUser) {
 let currentUser = null;
 
 async function ensureSupabaseSession() {
-  const { data: { session } } = await supabase.auth.getSession();
-  if (session?.user) {
-    currentUser = session.user;
-    return currentUser;
-  }
-
-  const urlParams = new URLSearchParams(window.location.search);
-  const confUrl = urlParams.get("confirmation_url");
-  if (confUrl) {
-    try {
-      const { data, error } = await supabase.auth.exchangeCodeForSession(confUrl);
-      if (!error && data?.session?.user) currentUser = data.session.user;
-      window.history.replaceState({}, document.title, window.location.pathname + window.location.search.replace(/(&|\?)confirmation_url=[^&]+/, ''));
+  try {
+    console.log('ensureSupabaseSession: checking supabase session...');
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session?.user) {
+      currentUser = session.user;
+      console.log('ensureSupabaseSession: session exists', currentUser.email);
       return currentUser;
-    } catch(err) {
-      console.error("exchangeCodeForSession failed:", err);
     }
+
+    // no session yet — check for confirmation_url / code in the URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const confUrl = urlParams.get("confirmation_url") || urlParams.get("access_token") || urlParams.get("code");
+    if (confUrl) {
+      console.log('ensureSupabaseSession: found conf param:', confUrl);
+      try {
+        let res = await supabase.auth.exchangeCodeForSession(confUrl).catch(e => ({ error: e }));
+        console.log('exchange (as-is) result:', res);
+        if ((res.error || !res.data?.session) && confUrl) {
+          // try extracting token/code from confUrl if it's a URL
+          let parsed;
+          try {
+            const u = new URL(confUrl);
+            parsed = u.searchParams.get('code') || u.searchParams.get('access_token') || confUrl;
+          } catch (_) {
+            const m = confUrl.match(/code=([^&]+)/);
+            parsed = m ? decodeURIComponent(m[1]) : confUrl;
+          }
+          if (parsed && parsed !== confUrl) {
+            res = await supabase.auth.exchangeCodeForSession(parsed).catch(e => ({ error: e }));
+            console.log('exchange (parsed) result:', res);
+          }
+        }
+
+        if (!res.error && res.data?.session?.user) {
+          currentUser = res.data.session.user;
+          // remove confirmation param from URL (clean UX)
+          window.history.replaceState({}, document.title, window.location.pathname + window.location.search.replace(/(&|\?)confirmation_url=[^&]+/, ''));
+          console.log('ensureSupabaseSession: exchange success for', currentUser.email);
+          return currentUser;
+        } else {
+          console.warn('ensureSupabaseSession: exchange did not create session', res?.error || res);
+        }
+      } catch (err) {
+        console.error('ensureSupabaseSession: exchangeCodeForSession failed', err);
+      }
+    }
+
+  } catch (e) {
+    console.error('ensureSupabaseSession top-level error', e);
   }
   return null;
 }
+
+// pick up the popup's postMessage if it sends one
+window.addEventListener('message', (ev) => {
+  try {
+    if (!ev?.data) return;
+    if (ev.data.type === 'tharaga_verify_clicked') {
+      console.log('Received auth postMessage:', ev.data);
+      // write to localStorage so the storage handler also triggers (and for parity)
+      try {
+        localStorage.setItem('__tharaga_magic_continue', JSON.stringify(ev.data));
+      } catch (e) { console.warn('Could not write __tharaga_magic_continue', e); }
+      // optionally reload to pick up new session
+      setTimeout(()=> location.reload(), 250);
+    }
+  } catch (e) { console.warn('message handler error', e); }
+});
+
 
 document.addEventListener("DOMContentLoaded", async () => {
   const form = document.getElementById('buyerForm');

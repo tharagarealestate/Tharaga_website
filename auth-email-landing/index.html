@@ -25,57 +25,73 @@
     <p class="note">If the verification doesn't complete, copy & paste the link from the email into your browser.</p>
   </div>
 
-  <script type="module">
-    import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
+  <!-- only the <script type="module"> block shown -->
+<script type="module">
+import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
 
-    // Supabase client (browser-safe anon)
-    const SUPABASE_URL = "https://wedevtjjmdvngyshqdro.supabase.co";
-    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndlZGV2dGpqbWR2bmd5c2hxZHJvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU0NzYwMzgsImV4cCI6MjA3MTA1MjAzOH0.Ex2c_sx358dFdygUGMVBohyTVto6fdEQ5nydDRh9m6M"; // replace with actual anon key
-    const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const SUPABASE_URL = "https://wedevtjjmdvngyshqdro.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndlZGV2dGpqbWR2bmd5c2hxZHJvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU0NzYwMzgsImV4cCI6MjA3MTA1MjAzOH0.Ex2c_sx358dFdygUGMVBohyTVto6fdEQ5nydDRh9m6M"; 
+const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    (function(){
-      const params = new URLSearchParams(location.search);
-      const conf = params.get('confirmation_url');
-      const btn = document.getElementById('verifyBtn');
+(function(){
+  const params = new URLSearchParams(location.search);
+  const rawConf = params.get('confirmation_url'); // email template always sends this
+  const btn = document.getElementById('verifyBtn');
+  const fallback = document.getElementById('fallback');
 
-      if (!conf) {
-        document.querySelector('.msg').textContent = '❌ Invalid or expired link.';
-        btn.disabled = true;
-        return;
-      }
+  if (!rawConf) {
+    document.querySelector('.msg').textContent = '❌ Invalid or expired link.';
+    btn.disabled = true;
+    return;
+  }
 
-      const decodedConf = decodeURIComponent(conf);
+  // extract ?code= from the confirmation_url
+  function extractCode(val) {
+    try {
+      const u = new URL(val);
+      return u.searchParams.get('code') || u.searchParams.get('access_token') || val;
+    } catch (e) {
+      return val;
+    }
+  }
+  const code = extractCode(decodeURIComponent(rawConf));
+  console.log("auth-email-landing ready. extracted code:", code);
 
-      btn.addEventListener('click', async () => {
-        btn.disabled = true;
-        btn.textContent = 'Verifying…';
+  btn.addEventListener('click', async () => {
+    btn.disabled = true;
+    btn.textContent = 'Verifying…';
 
-        try {
-          // ✅ Exchange magic link for session
-          const { data, error } = await supabase.auth.exchangeCodeForSession(decodedConf);
-          if (error || !data?.session?.user) throw error || new Error("Session not created");
+    try {
+      const { data, error } = await supabase.auth.exchangeCodeForSession(code);
+      if (error || !data?.session?.user) throw error || new Error("Session not created");
 
-          // Success UI
-          btn.textContent = '✅ Verified — return to your Tharaga tab';
-          btn.disabled = false;
+      btn.textContent = '✅ Verified — returning...';
 
-          // Notify main tab
-          window.opener?.postMessage({
-            type: 'tharaga_verify_clicked',
-            confirmation_url: decodedConf,
-            user: data.session.user
-          }, '*');
+      // notify opener (login_signup_glassdrop)
+      window.opener?.postMessage({
+        type: 'tharaga_verify_clicked',
+        user: data.session.user
+      }, '*');
 
-        } catch (err) {
-          console.error('Verification error:', err);
-          btn.disabled = false;
-          btn.textContent = 'Verify & Return to Tharaga';
-          alert('Verification failed — link may have expired or session could not be created.');
-        }
-      });
+      // also store in localStorage for other tabs
+      localStorage.setItem('__tharaga_magic_continue', JSON.stringify({
+        user: data.session.user,
+        at: Date.now()
+      }));
 
-      console.log('auth-email-landing ready. confirmation_url:', decodedConf);
-    })();
-  </script>
+      // close after short delay
+      setTimeout(()=> { window.close(); }, 700);
+
+    } catch (err) {
+      console.error('Verification error:', err);
+      fallback.style.display = 'inline-block';
+      btn.disabled = false;
+      btn.textContent = 'Verify & Return to Tharaga';
+      alert('Verification failed — link may have expired or session could not be created.');
+    }
+  });
+})();
+</script>
+
 </body>
 </html>

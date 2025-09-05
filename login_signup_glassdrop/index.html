@@ -249,22 +249,6 @@
     const PARENT_ORIGIN = (__qs.get('parent_origin') || FALLBACK_PARENT_ORIGIN || location.origin).replace(/\/$/, '');
     const POST_AUTH_CALLBACK = `https://auth.tharaga.co.in/login_signup_glassdrop/?post_auth=1&parent_origin=${encodeURIComponent(PARENT_ORIGIN)}`;
     
-    // --- Handle fallback: if this page was opened with ?confirmation_url=..., navigate to that URL so Supabase can verify and redirect back with tokens --- 
-    (function handleConfirmationParam() {
-      const conf = __qs.get('confirmation_url') || null;
-      if (!conf) return;
-
-      // avoid loops if tokens already present in location.hash
-      if (/#access_token=/.test(location.hash || '')) return;
-
-      try {
-        // Navigate to the Supabase verify URL (this will redirect back to this page with tokens)
-        location.href = decodeURIComponent(conf);
-      } catch (e) {
-        console.warn('Could not navigate to confirmation_url', e);
-      }
-    })();
-
     // ========================= IMPORT =========================
     import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
     const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);

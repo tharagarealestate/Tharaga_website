@@ -406,13 +406,13 @@ async function getRecaptcha() {
   e.preventDefault();
 
   // safe getUser() (works if supabase client is present)
-  let currentUser = null;
-try {
-  // Wait for any active session
-  const { data: sessionData } = await supabase.auth.getSession();
-  currentUser = sessionData?.user ?? null;
-} catch (err) {
-  console.warn('getSession failed:', err);
+  const currentUser = await ensureSupabaseSession();
+if (!currentUser) {
+  alert('Please sign in first.');
+  if (window.authGate?.openLoginModal) {
+    window.authGate.openLoginModal({ next: location.pathname + location.search });
+  }
+  return;
 }
 
 // Only open auth modal if user clicks submit **and is not logged in yet**
@@ -587,24 +587,35 @@ if (!currentUser) {
 
 <!-- Attach gate to submitBtn -->
 <script type="module">
-document.addEventListener("DOMContentLoaded", async () => {
-  // Handle confirmation_url (magic link redirect)
+let currentUser = null;
+
+async function ensureSupabaseSession() {
+  const { data: { session } } = await supabase.auth.getSession();
+  if (session?.user) {
+    currentUser = session.user;
+    return currentUser;
+  }
+
   const urlParams = new URLSearchParams(window.location.search);
   const confUrl = urlParams.get("confirmation_url");
   if (confUrl) {
     try {
       const { data, error } = await supabase.auth.exchangeCodeForSession(confUrl);
-      if (error) console.error("Session exchange failed:", error);
-      else {
-        console.debug("Session established from confirmation_url");
-        localStorage.setItem("__tharaga_magic_confirmed", JSON.stringify(data));
-      }
-    } catch (err) {
+      if (!error && data?.session?.user) currentUser = data.session.user;
+      window.history.replaceState({}, document.title, window.location.pathname + window.location.search.replace(/(&|\?)confirmation_url=[^&]+/, ''));
+      return currentUser;
+    } catch(err) {
       console.error("exchangeCodeForSession failed:", err);
     }
   }
+  return null;
+}
 
-  // Attach authGate to submitBtn
+document.addEventListener("DOMContentLoaded", async () => {
+  const form = document.getElementById('buyerForm');
+  const submitBtn = document.getElementById('submitBtn');
+  const otpVerifiedField = document.getElementById('otp_verified');
+
   if (window.authGate) {
     window.authGate.attachAuthGate("#submitBtn", async () => {
       // Restore pending form
@@ -614,15 +625,22 @@ document.addEventListener("DOMContentLoaded", async () => {
           const obj = JSON.parse(saved);
           Object.keys(obj).forEach(k => {
             const el = form.elements[k];
-            if (el && k !== 'otp_verified') el.value = obj[k]; // preserve OTP verified
+            if (el && k !== 'otp_verified') el.value = obj[k];
           });
         }
       } catch (e) { console.warn('attachAuthGate restore failed', e); }
 
-      // Only enable submit if OTP verified
-      if (otpVerifiedField.value === 'true') {
-        submitBtn.disabled = !(otpVerifiedField.value === 'true' && currentUser);
-        submitBtn.style.cursor = submitBtn.disabled ? 'not-allowed' : 'pointer';
+      // Step 3: enable submit if OTP verified and user logged in
+      const user = await ensureSupabaseSession();
+      submitBtn.disabled = !(otpVerifiedField.value === 'true' && user);
+      submitBtn.style.cursor = submitBtn.disabled ? 'not-allowed' : 'pointer';
+
+      // Step 4: show signed-in email
+      if (user?.email) {
+        const hint = document.createElement('div');
+        hint.style.cssText = "margin:10px 0;color:#333;font-size:14px;font-weight:500;text-align:center";
+        hint.textContent = `Signed in as ${user.email}`;
+        document.querySelector("#buyer-intake")?.prepend(hint);
       }
     });
   } else {
@@ -630,6 +648,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 });
 </script>
+
 
 </body>
 </html>

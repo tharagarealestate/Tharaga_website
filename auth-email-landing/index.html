@@ -1,94 +1,90 @@
-<!-- only the <script type="module"> block to replace your current one -->
-<script type="module">
-import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
+<body>
+  <div class="msg">Please verify your email:</div>
 
-const SUPABASE_URL = "https://wedevtjjmdvngyshqdro.supabase.co";
-const SUPABASE_ANON_KEY = "YOUR_ANON_KEY_HERE"; // keep your anon key
-const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  <button id="verifyBtn">Continue to Tharaga</button>
+  <p>If the button doesn’t work, <a id="fallback" href="#">click here</a></p>
 
-(function(){
-  const params = new URLSearchParams(location.search);
-  const rawConf = params.get('confirmation_url'); // email template sends this
-  const btn = document.getElementById('verifyBtn');
-  const fallback = document.getElementById('fallback');
+  <!-- only the <script type="module"> block to replace your current one -->
+  <script type="module">
+    import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
 
-  function parseHash(h) {
-    if (!h) return {};
-    const hash = h.replace(/^#/, '');
-    const sp = new URLSearchParams(hash);
-    return {
-      access_token: sp.get('access_token'),
-      refresh_token: sp.get('refresh_token'),
-      expires_in: sp.get('expires_in'),
-      token_type: sp.get('token_type'),
-    };
-  }
+    const SUPABASE_URL = "https://wedevtjjmdvngyshqdro.supabase.co";
+    const SUPABASE_ANON_KEY = "YOUR_ANON_KEY_HERE"; // keep your anon key
+    const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-  async function finishWithSessionFromHash() {
-    const { access_token, refresh_token } = parseHash(location.hash);
-    if (!access_token && !refresh_token) return false;
+    (function(){
+      const params = new URLSearchParams(location.search);
+      const rawConf = params.get('confirmation_url'); // email template sends this
+      const btn = document.getElementById('verifyBtn');
+      const fallback = document.getElementById('fallback');
 
-    try {
-      // setSession will persist the session client-side
-      const { data, error } = await supabase.auth.setSession({
-        access_token,
-        refresh_token
+      function parseHash(h) {
+        if (!h) return {};
+        const hash = h.replace(/^#/, '');
+        const sp = new URLSearchParams(hash);
+        return {
+          access_token: sp.get('access_token'),
+          refresh_token: sp.get('refresh_token'),
+          expires_in: sp.get('expires_in'),
+          token_type: sp.get('token_type'),
+        };
+      }
+
+      async function finishWithSessionFromHash() {
+        const { access_token, refresh_token } = parseHash(location.hash);
+        if (!access_token && !refresh_token) return false;
+
+        try {
+          const { data, error } = await supabase.auth.setSession({
+            access_token,
+            refresh_token
+          });
+          if (error) throw error;
+
+          btn.textContent = '✅ Verified — returning...';
+          btn.disabled = true;
+
+          try {
+            window.opener?.postMessage({ type: 'tharaga_verify_clicked', user: data.user }, '*');
+          } catch (e) { /* ignore */ }
+
+          try {
+            localStorage.setItem('__tharaga_magic_continue', JSON.stringify({ user: data.user, at: Date.now() }));
+          } catch (_) {}
+
+          try { history.replaceState({}, document.title, location.pathname); } catch(_) {}
+
+          setTimeout(()=> { try { window.close(); } catch(_) {} }, 700);
+          return true;
+        } catch (err) {
+          console.error('setSession failed:', err);
+          return false;
+        }
+      }
+
+      (async ()=> {
+        if (location.hash && (location.hash.includes('access_token') || location.hash.includes('refresh_token'))) {
+          const done = await finishWithSessionFromHash();
+          if (done) return;
+        }
+      })();
+
+      if (!rawConf) {
+        document.querySelector('.msg').textContent = '❌ Invalid or expired link.';
+        btn.disabled = true;
+        return;
+      }
+
+      const decodedConf = decodeURIComponent(rawConf);
+      console.log('auth-email-landing ready. confirmation_url (decoded):', decodedConf);
+
+      btn.addEventListener('click', async () => {
+        btn.disabled = true;
+        btn.textContent = 'Opening magic link…';
+        window.location.href = decodedConf;
       });
-      if (error) throw error;
 
-      btn.textContent = '✅ Verified — returning...';
-      btn.disabled = true;
-
-      // notify opener (if using popup/modal) and other tabs
-      try {
-        window.opener?.postMessage({ type: 'tharaga_verify_clicked', user: data.user }, '*');
-      } catch (e) { /* ignore */ }
-
-      try {
-        localStorage.setItem('__tharaga_magic_continue', JSON.stringify({ user: data.user, at: Date.now() }));
-      } catch (_) {}
-
-      // clean the URL (remove fragment)
-      try { history.replaceState({}, document.title, location.pathname); } catch(_) {}
-
-      // optionally close the window after a short delay
-      setTimeout(()=> { try { window.close(); } catch(_) {} }, 700);
-      return true;
-    } catch (err) {
-      console.error('setSession failed:', err);
-      return false;
-    }
-  }
-
-  // If we were redirected back from Supabase verify (tokens in hash), finish immediately
-  (async ()=> {
-    if (location.hash && (location.hash.includes('access_token') || location.hash.includes('refresh_token'))) {
-      const done = await finishWithSessionFromHash();
-      if (done) return;
-      // if setSession failed, allow normal UI to show fallback
-    }
-  })();
-
-  if (!rawConf) {
-    document.querySelector('.msg').textContent = '❌ Invalid or expired link.';
-    btn.disabled = true;
-    return;
-  }
-
-  const decodedConf = decodeURIComponent(rawConf);
-  console.log('auth-email-landing ready. confirmation_url (decoded):', decodedConf);
-
-  // When user clicks Verify, navigate to the actual Supabase verify URL.
-  // Supabase will handle verification server-side and redirect back to this page
-  // with tokens in the fragment (e.g. #access_token=...&refresh_token=...).
-  btn.addEventListener('click', async () => {
-    btn.disabled = true;
-    btn.textContent = 'Opening magic link…';
-    // Redirect the browser to the real supabase verify endpoint
-    window.location.href = decodedConf;
-  });
-
-  // Show fallback link if the user wants to go manually
-  fallback.href = 'https://tharaga.co.in';
-})();
-</script>
+      fallback.href = 'https://tharaga.co.in';
+    })();
+  </script>
+</body>

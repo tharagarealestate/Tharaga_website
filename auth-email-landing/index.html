@@ -47,48 +47,63 @@
   </div>
 
   <script>
-    // --- Extract Supabase confirmation URL from query string ---
-    const urlParams = new URLSearchParams(window.location.search);
-    const rawConf = urlParams.get("confirmation_url");
-    const confirmation_url = rawConf ? decodeURIComponent(rawConf) : null;
+  // --- Extract Supabase confirmation URL (if present) ---
+  const urlParams = new URLSearchParams(window.location.search);
+  const rawConf = urlParams.get("confirmation_url");
+  const confirmation_url = rawConf ? decodeURIComponent(rawConf) : null;
 
-    // --- Notify parent (popup/iframe flow) ---
-    function notifyParent() {
-      if (!confirmation_url) return;
-      const msg = { type: "tharaga_verify_clicked", confirmation_url };
+  // --- Check if tokens are already in hash (direct Supabase redirect) ---
+  const hasTokens = location.hash.includes("access_token") || location.hash.includes("refresh_token");
 
-      try {
-        if (window.opener) {
-          window.opener.postMessage(msg, "*");
-        } else if (window.parent && window.self !== window.parent) {
-          window.parent.postMessage(msg, "*");
-        }
-      } catch (e) {
-        console.warn("postMessage failed", e);
+  // --- Notify parent (popup/iframe flow) ---
+  function notifyParent(payload = {}) {
+    try {
+      if (window.opener) {
+        window.opener.postMessage(payload, "*");
+      } else if (window.parent && window.self !== window.parent) {
+        window.parent.postMessage(payload, "*");
       }
+    } catch (e) {
+      console.warn("postMessage failed", e);
     }
+  }
 
-    // --- Standalone auto-redirect (direct tab from email) ---
-    if (confirmation_url && window.self === window.parent && !window.opener) {
+  // --- Main flow ---
+  if (confirmation_url) {
+    // Case 1: We got confirmation_url query param → redirect
+    if (window.self === window.parent && !window.opener) {
       setTimeout(() => {
         window.location.href = confirmation_url;
-      }, 600); // slight delay to show UI
+      }, 600);
     } else {
-      // Otherwise, fire notifyParent (for iframe/popup use)
-      notifyParent();
+      notifyParent({ type: "tharaga_verify_clicked", confirmation_url });
     }
+  } else if (hasTokens) {
+    // Case 2: Supabase already redirected with tokens in hash
+    notifyParent({ type: "tharaga_verify_tokens", hash: location.hash });
+    // In standalone tab, just show success message instead of "no link"
+    document.querySelector("h1").textContent = "✅ Email confirmed!";
+    document.querySelector("p").textContent = "You may now return to Tharaga.";
+    const btn = document.getElementById("verifyBtn");
+    btn.textContent = "Go to Tharaga";
+    btn.onclick = () => { window.location.href = "https://tharaga.co.in"; };
+  } else {
+    // Case 3: No confirmation_url and no tokens
+    alert("No confirmation link found.");
+  }
 
-    // --- Manual button fallback ---
-    document.getElementById("verifyBtn").addEventListener("click", () => {
-      if (confirmation_url) {
-        // If in popup/iframe → notify again
-        notifyParent();
-        // Also open Supabase verify directly
-        window.location.href = confirmation_url;
-      } else {
-        alert("No confirmation link found.");
-      }
-    });
-  </script>
+  // --- Manual button fallback ---
+  document.getElementById("verifyBtn").addEventListener("click", () => {
+    if (confirmation_url) {
+      notifyParent({ type: "tharaga_verify_clicked", confirmation_url });
+      window.location.href = confirmation_url;
+    } else if (hasTokens) {
+      window.location.href = "https://tharaga.co.in";
+    } else {
+      alert("No confirmation link found.");
+    }
+  });
+</script>
+
 </body>
 </html>

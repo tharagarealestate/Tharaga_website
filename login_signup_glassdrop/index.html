@@ -293,6 +293,12 @@
             console.warn('Could not write magic continue', e);
           }
           // --- END INSERT ---
+          if (!isIframe && pendingNext && isSafeRedirect(pendingNext)) {
+            setTimeout(() => {
+              location.href = pendingNext;
+            }, 400);
+          }
+
 
           // Clean URL (remove tokens but keep others like post_auth)
           const cleanedSearch = location.search
@@ -520,8 +526,17 @@ if (isPostAuth) {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
   if (session?.access_token) {
     showAuthed(session.user?.email);
-
+    
     const pending = storage.get();
+    const isIframe = window.self !== window.parent;
+
+    // If NOT embedded (standalone tab) and we have a safe redirect target → auto redirect
+    if (!isIframe && pending?.href && isSafeRedirect(pending.href)) {
+      setTimeout(() => {
+        storage.clear();
+        location.href = pending.href;
+      }, 400);
+    }
 
     // If embedded inside an iframe, postMessage to parent so they can resume flow
     if (window.self !== window.parent) {

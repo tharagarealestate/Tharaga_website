@@ -5,105 +5,128 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Email verification • Tharaga</title>
   <style>
-    body {
-      margin: 0;
-      font-family: Inter, system-ui, sans-serif;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      height: 100vh;
-      background: #0a0a0a;
-      color: #f5f5f5;
-    }
-    .card {
-      background: linear-gradient(180deg,#1a1a1a,#0f0f0f);
-      border: 1px solid rgba(212,175,55,.25);
-      border-radius: 16px;
-      box-shadow: 0 10px 40px rgba(0,0,0,.55);
-      padding: 24px;
-      width: 420px;
-      max-width: 95vw;
-      text-align: center;
-    }
-    h1 { color: #d4af37; font-size: 22px; margin-bottom: 12px; }
-    p { color: #9ca3af; font-size: 14px; }
-    button {
-      margin-top: 20px;
-      cursor: pointer;
-      border: 0;
-      border-radius: 10px;
-      padding: 12px 16px;
-      font-weight: 700;
-      background: linear-gradient(180deg,#d4af37,#b8860b);
-      color: #111;
-    }
+    body { margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial;
+      display:flex;align-items:center;justify-content:center;height:100vh;
+      background:#0a0a0a;color:#f5f5f5; }
+    .card { background:linear-gradient(180deg,#1a1a1a,#0f0f0f);
+      border:1px solid rgba(212,175,55,.25);border-radius:16px;padding:24px;
+      width:420px;max-width:95vw;text-align:center;box-shadow:0 10px 40px rgba(0,0,0,.55); }
+    h1 { color:#d4af37;font-size:22px;margin-bottom:12px; }
+    p { color:#9ca3af;font-size:14px; }
+    button { margin-top:20px; cursor:pointer; border:0; border-radius:10px;
+      padding:12px 16px; font-weight:700; background:linear-gradient(180deg,#d4af37,#b8860b);
+      color:#111; }
   </style>
 </head>
 <body>
   <div class="card">
-    <h1>Confirming your email…</h1>
-    <p>If this page doesn’t continue automatically, click below.</p>
+    <h1 id="title">Confirming your email…</h1>
+    <p id="subtitle">If this page doesn’t continue automatically, click below.</p>
     <button id="verifyBtn">Verify & Continue</button>
   </div>
 
   <script>
-  // --- Extract Supabase confirmation URL (if present) ---
-  const urlParams = new URLSearchParams(window.location.search);
-  const rawConf = urlParams.get("confirmation_url");
-  const confirmation_url = rawConf ? decodeURIComponent(rawConf) : null;
+    // params + helpers
+    const params = new URLSearchParams(window.location.search);
+    const rawConf = params.get('confirmation_url');
+    const confirmation_url = rawConf ? decodeURIComponent(rawConf) : null;
+    const parentOrigin = params.get('parent_origin') || null;
+    const nextParam = params.get('next') || null;
+    const rawHash = location.hash.replace(/^#/, '');
+    const hashParams = new URLSearchParams(rawHash);
+    const access_token = hashParams.get('access_token');
+    const refresh_token = hashParams.get('refresh_token');
+    const hasTokens = !!(access_token || refresh_token);
 
-  // --- Check if tokens are already in hash (direct Supabase redirect) ---
-  const hasTokens = location.hash.includes("access_token") || location.hash.includes("refresh_token");
+    function postToParent(msg) {
+      try {
+        const target = parentOrigin || '*';
+        if (window.opener) window.opener.postMessage(msg, target);
+        else if (window.parent && window.self !== window.parent) window.parent.postMessage(msg, target);
+      } catch (e) { console.warn('postMessage failed', e); }
+    }
 
-  // --- Notify parent (popup/iframe flow) ---
-  function notifyParent(payload = {}) {
-    try {
-      if (window.opener) {
-        window.opener.postMessage(payload, "*");
-      } else if (window.parent && window.self !== window.parent) {
-        window.parent.postMessage(payload, "*");
+    async function verifyViaFetch(url) {
+      try {
+        const resp = await fetch(url, { credentials: 'include' });
+        let body = null;
+        try { body = await resp.json(); } catch(_) { /* ignore */ }
+        if (!resp.ok) {
+          console.error('verify failed', resp.status, body);
+          alert('Verification failed or expired.');
+          return false;
+        }
+
+        // write the localStorage signal so other same-origin tabs receive it
+        const payload = { ts: Date.now(), next: nextParam || null, user: body?.user || null };
+        try {
+          localStorage.setItem('__tharaga_magic_continue', JSON.stringify(payload));
+          localStorage.setItem('__tharaga_magic_confirmed', JSON.stringify({ ts: Date.now() }));
+        } catch (e) { console.warn('localStorage write failed', e); }
+
+        // also notify any opener/parent if present
+        postToParent({ type: 'tharaga_verify_clicked', confirmation_url: url, payload });
+
+        // update UI
+        document.getElementById('title').textContent = '✅ Email confirmed!';
+        document.getElementById('subtitle').textContent = 'You can return to Tharaga or close this tab.';
+        const btn = document.getElementById('verifyBtn');
+        btn.textContent = 'Go to Tharaga';
+        btn.onclick = () => { window.location.href = 'https://tharaga.co.in'; };
+        return true;
+      } catch (err) {
+        console.error('verify fetch error', err);
+        alert('Verification error — please retry.');
+        return false;
       }
-    } catch (e) {
-      console.warn("postMessage failed", e);
     }
-  }
 
-  // --- Main flow ---
-  if (confirmation_url) {
-    // Case 1: We got confirmation_url query param → redirect
-    if (window.self === window.parent && !window.opener) {
-      setTimeout(() => {
-        window.location.href = confirmation_url;
-      }, 600);
-    } else {
-      notifyParent({ type: "tharaga_verify_clicked", confirmation_url });
-    }
-  } else if (hasTokens) {
-    // Case 2: Supabase already redirected with tokens in hash
-    notifyParent({ type: "tharaga_verify_tokens", hash: location.hash });
-    // In standalone tab, just show success message instead of "no link"
-    document.querySelector("h1").textContent = "✅ Email confirmed!";
-    document.querySelector("p").textContent = "You may now return to Tharaga.";
-    const btn = document.getElementById("verifyBtn");
-    btn.textContent = "Go to Tharaga";
-    btn.onclick = () => { window.location.href = "https://tharaga.co.in"; };
-  } else {
-    // Case 3: No confirmation_url and no tokens
-    alert("No confirmation link found.");
-  }
+    // main flow:
+    (async () => {
+      const btn = document.getElementById('verifyBtn');
 
-  // --- Manual button fallback ---
-  document.getElementById("verifyBtn").addEventListener("click", () => {
-    if (confirmation_url) {
-      notifyParent({ type: "tharaga_verify_clicked", confirmation_url });
-      window.location.href = confirmation_url;
-    } else if (hasTokens) {
-      window.location.href = "https://tharaga.co.in";
-    } else {
-      alert("No confirmation link found.");
-    }
-  });
-</script>
+      // CASE A: confirmation_url present (email template flow)
+      if (confirmation_url) {
+        const isPopupOrIframe = !!window.opener || (window.parent && window.self !== window.parent);
 
+        if (isPopupOrIframe) {
+          // notify parent (parent will call the verify endpoint server-side)
+          postToParent({ type: 'tharaga_verify_clicked', confirmation_url, next: nextParam || null });
+          // keep UI so user can click fallback
+          btn.onclick = () => postToParent({ type: 'tharaga_verify_clicked', confirmation_url, next: nextParam || null });
+          return;
+        } else {
+          // standalone tab: call the confirmation URL directly (server-side verify)
+          await verifyViaFetch(confirmation_url);
+          return;
+        }
+      }
+
+      // CASE B: Supabase already redirected back with tokens in hash
+      if (hasTokens) {
+        const isPopupOrIframe = !!window.opener || (window.parent && window.self !== window.parent);
+
+        if (isPopupOrIframe) {
+          // send tokens to parent for direct token transfer (parent will setSession)
+          postToParent({
+            type: 'tharaga_token_transfer',
+            access_token, refresh_token,
+            next: nextParam || null
+          });
+          document.getElementById('title').textContent = '✅ Verified — returning...';
+          setTimeout(()=>{ try { window.close(); } catch(_){} }, 700);
+          return;
+        } else {
+          // standalone: redirect to your auth page which will parse tokens from hash
+          const redirectTo = `/login_signup_glassdrop/?post_auth=1#${rawHash}`;
+          setTimeout(()=> { location.href = redirectTo; }, 200);
+          return;
+        }
+      }
+
+      // CASE C: nothing found
+      btn.onclick = () => alert('No confirmation link found.');
+    })();
+  </script>
 </body>
 </html>

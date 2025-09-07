@@ -252,6 +252,7 @@
     // ========================= IMPORT =========================
     import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
     const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    const isIframe = window.self !== window.parent;
     window.supabase = supabase; // expose for DevTools
 
     // ---------- INSERT: robust redirect token handler ----------
@@ -576,6 +577,30 @@ if (isPostAuth) {
 
 
 // unsubscribe on unload (optional, good practice)
+
+// React to magic-continue written by auth-email-landing (other tab)
+window.addEventListener('storage', (ev) => {
+  if (ev.key !== '__tharaga_magic_continue' || !ev.newValue) return;
+  try {
+    const payload = JSON.parse(ev.newValue);
+    // show authed UI
+    document.querySelector('#authed')?.classList.remove('hidden');
+    document.querySelector('#authForm')?.classList.add('hidden');
+    const cont = document.getElementById('continueBtn');
+    if (cont) { cont.style.display = 'block'; cont.focus(); }
+    if (payload?.user?.email) {
+      const ue = document.getElementById('userEmail');
+      if (ue) ue.textContent = `• ${payload.user.email}`;
+    }
+    setMsg('Signed in. You can now return to the page where you filled the form and click "Get My Property Matches".', true);
+    // optionally clear local pending target
+    try { storage.clear(); } catch(_) {}
+  } catch (err) {
+    console.warn('storage event handler error', err);
+  }
+});
+
+
 window.addEventListener('beforeunload', () => subscription?.unsubscribe());
 
 // ========================= MAGIC LINK MESSAGE LISTENER =========================
@@ -588,8 +613,7 @@ window.addEventListener("message", async (event) => {
     const allowedOrigins = [
       "https://auth.tharaga.co.in",
       "https://tharaga.co.in",
-      // If you still use the Netlify preview host in production add it here (exact host only)
-      // "https://thriving-beijinho-ce44d5.netlify.app"
+      // "https://thriving-beijinho-ce44d5.netlify.app" // optional preview
     ];
     if (!allowedOrigins.includes(event.origin)) {
       console.warn("Ignored postMessage from unexpected origin:", event.origin);
@@ -598,38 +622,75 @@ window.addEventListener("message", async (event) => {
 
     const type = event.data?.type;
 
-        // ---------- NEW: verify button clicked from auth-email-landing ----------
-    if (type === 'tharaga_verify_clicked') {
+    // ---------- NEW: verify button clicked from auth-email-landing ----------
+    if (type === "tharaga_verify_clicked") {
       try {
         const confirmationUrl = event.data?.confirmation_url;
         if (!confirmationUrl) {
-          console.warn('verify_clicked missing confirmation_url');
+          console.warn("verify_clicked missing confirmation_url");
           return;
         }
 
         // Call Supabase verify endpoint once
-        const resp = await fetch(confirmationUrl, { credentials: 'include' });
+        const resp = await fetch(confirmationUrl, { credentials: "include" });
         let result = null;
-        try { result = await resp.json(); } catch(_) {}
+        try {
+          result = await resp.json();
+        } catch (_) {}
 
         if (resp.ok) {
-          console.log('✅ Verification success:', result);
+          console.log("✅ Verification success:", result);
+          // 🔥 FIX: ensure Supabase has a real session
+          if (result?.access_token && result?.refresh_token) {
+            try {
+              const { data, error } = await supabase.auth.setSession({
+                access_token: result.access_token,
+                refresh_token: result.refresh_token
+              });
+              if (error) {
+                console.error("setSession failed", error);
+              } else {
+                console.log("Supabase session set:", data?.session?.user?.email);
+              }
+            } catch (e) {
+              console.error("Error calling setSession", e);
+            }
+          }
           // Show authed UI
-          document.querySelector('#authed')?.classList.remove('hidden');
-          document.querySelector('#authForm')?.classList.add('hidden');
-          const cont = document.querySelector('#continueBtn');
-          if (cont) cont.style.display = 'block';
+          document.querySelector("#authed")?.classList.remove("hidden");
+          document.querySelector("#authForm")?.classList.add("hidden");
+          const cont = document.querySelector("#continueBtn");
+          if (cont) cont.style.display = "block";
+
+          // --- NEW: write the same localStorage signal so other same-origin tabs pick it up ---
+          try {
+            const payload = {
+              ts: Date.now(),
+              next: new URLSearchParams(location.search).get("next") || null,
+              user: result?.user || null,
+            };
+            localStorage.setItem(
+              "__tharaga_magic_continue",
+              JSON.stringify(payload)
+            );
+            localStorage.setItem(
+              "__tharaga_magic_confirmed",
+              JSON.stringify({ ts: Date.now() })
+            );
+          } catch (e) {
+            console.warn("Could not write magic continue", e);
+          }
         } else {
-          console.error('Verification failed:', result);
-          alert('Verification failed — link may have expired.');
+          console.error("Verification failed:", result);
+          alert("Verification failed — link may have expired.");
         }
       } catch (err) {
-        console.error('tharaga_verify_clicked handler error:', err);
-        alert('Verification error — please retry.');
+        console.error("tharaga_verify_clicked handler error:", err);
+        alert("Verification error — please retry.");
       }
+
       return; // stop, don’t fall through to other handlers
     }
-
 
     // ---------- NEW: token transfer from tharaga.co.in (fragment-handle) ----------
     if (type === "tharaga_token_transfer") {

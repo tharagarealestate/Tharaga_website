@@ -97,7 +97,7 @@
           return;
         } else {
           // standalone tab: call the confirmation URL directly (server-side verify)
-          await verifyViaFetch(confirmation_url);
+          window.location.href = confirmation_url;;
           return;
         }
       }

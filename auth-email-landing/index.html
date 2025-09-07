@@ -29,14 +29,14 @@
     // params + helpers
     const params = new URLSearchParams(window.location.search);
     const rawConf = params.get('confirmation_url');
-    const confirmation_url = rawConf ? decodeURIComponent(rawConf) : null;
+    const confirmation_url = rawConf || null;
     const parentOrigin = params.get('parent_origin') || null;
     const nextParam = params.get('next') || null;
     const rawHash = location.hash.replace(/^#/, '');
     const hashParams = new URLSearchParams(rawHash);
-    const access_token = hashParams.get('access_token');
-    const refresh_token = hashParams.get('refresh_token');
-    const hasTokens = !!(access_token || refresh_token);
+    const access_token = hashParams.get('access_token') || params.get('access_token');
+    const refresh_token = hashParams.get('refresh_token') || params.get('refresh_token');
+    const hasTokens = !!(access_token && refresh_token);
 
     function postToParent(msg) {
       try {
@@ -87,19 +87,11 @@
 
       // CASE A: confirmation_url present (email template flow)
       if (confirmation_url) {
-        const isPopupOrIframe = !!window.opener || (window.parent && window.self !== window.parent);
-
-        if (isPopupOrIframe) {
-          // notify parent (parent will call the verify endpoint server-side)
-          postToParent({ type: 'tharaga_verify_clicked', confirmation_url, next: nextParam || null });
-          // keep UI so user can click fallback
-          btn.onclick = () => postToParent({ type: 'tharaga_verify_clicked', confirmation_url, next: nextParam || null });
-          return;
-        } else {
-          // standalone tab: call the confirmation URL directly (server-side verify)
-          window.location.href = confirmation_url;;
-          return;
-        }
+        // Button fallback (in case auto redirect is blocked)
+        btn.onclick = () => { window.location.href = confirmation_url; };
+        // Auto-redirect shortly to let the DOM paint first
+        setTimeout(() => { window.location.href = confirmation_url; }, 300);
+        return;
       }
 
       // CASE B: Supabase already redirected back with tokens in hash
@@ -118,7 +110,8 @@
           return;
         } else {
           // standalone: redirect to your auth page which will parse tokens from hash
-          const redirectTo = `/login_signup_glassdrop/?post_auth=1#${rawHash}`;
+          const finalHash = rawHash || new URLSearchParams({ access_token, refresh_token }).toString();
+          const redirectTo = `/login_signup_glassdrop/?post_auth=1#${finalHash}`;
           setTimeout(()=> { location.href = redirectTo; }, 200);
           return;
         }

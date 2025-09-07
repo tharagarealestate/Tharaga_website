@@ -26,100 +26,120 @@
   </div>
 
   <script>
-    // params + helpers
-    const params = new URLSearchParams(window.location.search);
-    const rawConf = params.get('confirmation_url');
-    const confirmation_url = rawConf || null;
-    const parentOrigin = params.get('parent_origin') || null;
-    const nextParam = params.get('next') || null;
-    const rawHash = location.hash.replace(/^#/, '');
-    const hashParams = new URLSearchParams(rawHash);
-    const access_token = hashParams.get('access_token') || params.get('access_token');
-    const refresh_token = hashParams.get('refresh_token') || params.get('refresh_token');
-    const hasTokens = !!(access_token && refresh_token);
+  // Diagnostic logging (will show in console)
+  console.log('[auth-email-landing] location.href=', location.href);
+  console.log('[auth-email-landing] location.search=', location.search);
+  console.log('[auth-email-landing] location.hash=', location.hash);
 
-    function postToParent(msg) {
-      try {
-        const target = parentOrigin || '*';
-        if (window.opener) window.opener.postMessage(msg, target);
-        else if (window.parent && window.self !== window.parent) window.parent.postMessage(msg, target);
-      } catch (e) { console.warn('postMessage failed', e); }
+  // helpers to read params from either search or hash
+  function readParams(sourceSearch = location.search, sourceHash = location.hash) {
+    const s = new URLSearchParams(sourceSearch.replace(/^\?/, ''));
+    const h = new URLSearchParams((sourceHash || '').replace(/^#/, ''));
+    return { s, h };
+  }
+
+  const { s: searchParams, h: hashParams } = readParams();
+  // Try to find confirmation_url either in query or (rarely) in hash
+  const rawConfFromSearch = searchParams.get('confirmation_url');
+  const rawConfFromHash = hashParams.get('confirmation_url');
+  const rawConf = rawConfFromSearch || rawConfFromHash || null;
+  // NOTE: do not blindly decode; try safe decode only if it looks encoded
+  let confirmation_url = rawConf;
+  if (rawConf) {
+    try {
+      // if it contains %3A pattern, decode once and confirm it looks like an http(s) URL
+      if (/%3A|%2F/.test(rawConf)) {
+        const d = decodeURIComponent(rawConf);
+        if (/^https?:\/\//i.test(d)) confirmation_url = d;
+      }
+    } catch (e) {
+      console.warn('[auth-email-landing] decodeURIComponent failed', e);
     }
+  }
 
-    async function verifyViaFetch(url) {
-      try {
-        const resp = await fetch(url, { credentials: 'include' });
-        let body = null;
-        try { body = await resp.json(); } catch(_) { /* ignore */ }
-        if (!resp.ok) {
-          console.error('verify failed', resp.status, body);
-          alert('Verification failed or expired.');
-          return false;
-        }
+  // tokens may appear in hash or query; accept either
+  const access_token = hashParams.get('access_token') || searchParams.get('access_token') || null;
+  const refresh_token = hashParams.get('refresh_token') || searchParams.get('refresh_token') || null;
+  const hasTokens = !!(access_token || refresh_token);
 
-        // write the localStorage signal so other same-origin tabs receive it
-        const payload = { ts: Date.now(), next: nextParam || null, user: body?.user || null };
-        try {
-          localStorage.setItem('__tharaga_magic_continue', JSON.stringify(payload));
-          localStorage.setItem('__tharaga_magic_confirmed', JSON.stringify({ ts: Date.now() }));
-        } catch (e) { console.warn('localStorage write failed', e); }
+  // detect error param (e.g. #error=... & error_description=...)
+  const error = hashParams.get('error') || searchParams.get('error') || null;
+  const error_description = hashParams.get('error_description') || searchParams.get('error_description') || null;
 
-        // also notify any opener/parent if present
-        postToParent({ type: 'tharaga_verify_clicked', confirmation_url: url, payload });
+  const parentOrigin = searchParams.get('parent_origin') || null;
+  const nextParam = searchParams.get('next') || null;
 
-        // update UI
-        document.getElementById('title').textContent = '✅ Email confirmed!';
-        document.getElementById('subtitle').textContent = 'You can return to Tharaga or close this tab.';
-        const btn = document.getElementById('verifyBtn');
-        btn.textContent = 'Go to Tharaga';
-        btn.onclick = () => { window.location.href = 'https://tharaga.co.in'; };
-        return true;
-      } catch (err) {
-        console.error('verify fetch error', err);
-        alert('Verification error — please retry.');
-        return false;
-      }
+  function postToParent(msg) {
+    try {
+      const target = parentOrigin || '*';
+      if (window.opener) window.opener.postMessage(msg, target);
+      else if (window.parent && window.self !== window.parent) window.parent.postMessage(msg, target);
+    } catch (e) { console.warn('[auth-email-landing] postToParent failed', e); }
+  }
+
+  // UI references
+  const titleEl = document.getElementById('title');
+  const subtitleEl = document.getElementById('subtitle');
+  const btn = document.getElementById('verifyBtn');
+
+  // If Supabase returned an error in the hash/query, show it clearly
+  if (error) {
+    console.warn('[auth-email-landing] Auth error detected', error, error_description);
+    titleEl.textContent = 'Verification failed';
+    subtitleEl.textContent = (error_description ? decodeURIComponent(error_description) : 'Verification failed or link expired.');
+    btn.textContent = 'Request a new magic link';
+    btn.onclick = () => { window.location.href = 'https://tharaga.co.in/login_signup_glassdrop'; };
+    // notify opener/parent that verification failed
+    postToParent({ type: 'tharaga_verify_failed', error, error_description });
+    // stop further processing
+    console.log('[auth-email-landing] stopped due to error in URL');
+  } else if (confirmation_url) {
+    // If confirmation_url present — always redirect to it (auto + button fallback)
+    console.log('[auth-email-landing] confirmation_url detected ->', confirmation_url);
+    titleEl.textContent = 'Confirming your email…';
+    subtitleEl.textContent = 'Redirecting to complete verification — if nothing happens, click the button.';
+    btn.textContent = 'Verify & Continue';
+    btn.onclick = () => { window.location.href = confirmation_url; };
+    // allow short pause for user to see UI, then navigate
+    setTimeout(() => { window.location.href = confirmation_url; }, 250);
+  } else if (hasTokens) {
+    // If tokens already present in this tab (Supabase redirected back with tokens)
+    console.log('[auth-email-landing] tokens found in URL', { access_token: !!access_token, refresh_token: !!refresh_token });
+    const isPopupOrIframe = !!window.opener || (window.parent && window.self !== window.parent);
+
+    if (isPopupOrIframe) {
+      postToParent({
+        type: 'tharaga_token_transfer',
+        access_token, refresh_token,
+        next: nextParam || null
+      });
+      titleEl.textContent = '✅ Verified — returning...';
+      subtitleEl.textContent = 'If this tab does not close automatically, you can close it.';
+      btn.textContent = 'Close';
+      btn.onclick = () => { try { window.close(); } catch(_) { /* ignore */ } };
+      setTimeout(() => { try { window.close(); } catch(_) {} }, 700);
+    } else {
+      // standalone: build a hash if tokens were in query
+      const finalHash = (location.hash.replace(/^#/, '') || new URLSearchParams({ access_token, refresh_token }).toString());
+      const redirectTo = `/login_signup_glassdrop/?post_auth=1#${finalHash}`;
+      console.log('[auth-email-landing] redirecting standalone to', redirectTo);
+      titleEl.textContent = 'Redirecting you back to the app…';
+      subtitleEl.textContent = 'If nothing happens, click the button.';
+      btn.textContent = 'Continue';
+      btn.onclick = () => { location.href = redirectTo; };
+      setTimeout(() => { location.href = redirectTo; }, 250);
     }
+  } else {
+    // Nothing found — show clearer diagnostic instructions
+    console.warn('[auth-email-landing] no confirmation_url and no tokens found');
+    titleEl.textContent = 'No confirmation link found';
+    subtitleEl.textContent = 'The link appears invalid or expired. Open the magic link in your browser (not Gmail preview) or request a new link.';
+    btn.textContent = 'Open inbox / Request a new link';
+    btn.onclick = () => { window.location.href = 'https://tharaga.co.in/login_signup_glassdrop'; };
+    // Post failure to parent if any (so popup parent can show a message)
+    postToParent({ type: 'tharaga_verify_missing', href: location.href });
+  }
+</script>
 
-    // main flow:
-    (async () => {
-      const btn = document.getElementById('verifyBtn');
-
-      // CASE A: confirmation_url present (email template flow)
-      if (confirmation_url) {
-        // Button fallback (in case auto redirect is blocked)
-        btn.onclick = () => { window.location.href = confirmation_url; };
-        // Auto-redirect shortly to let the DOM paint first
-        setTimeout(() => { window.location.href = confirmation_url; }, 300);
-        return;
-      }
-
-      // CASE B: Supabase already redirected back with tokens in hash
-      if (hasTokens) {
-        const isPopupOrIframe = !!window.opener || (window.parent && window.self !== window.parent);
-
-        if (isPopupOrIframe) {
-          // send tokens to parent for direct token transfer (parent will setSession)
-          postToParent({
-            type: 'tharaga_token_transfer',
-            access_token, refresh_token,
-            next: nextParam || null
-          });
-          document.getElementById('title').textContent = '✅ Verified — returning...';
-          setTimeout(()=>{ try { window.close(); } catch(_){} }, 700);
-          return;
-        } else {
-          // standalone: redirect to your auth page which will parse tokens from hash
-          const finalHash = rawHash || new URLSearchParams({ access_token, refresh_token }).toString();
-          const redirectTo = `/login_signup_glassdrop/?post_auth=1#${finalHash}`;
-          setTimeout(()=> { location.href = redirectTo; }, 200);
-          return;
-        }
-      }
-
-      // CASE C: nothing found
-      btn.onclick = () => alert('No confirmation link found.');
-    })();
-  </script>
 </body>
 </html>

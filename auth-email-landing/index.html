@@ -32,22 +32,6 @@
   console.log('[auth-email-landing] location.search=', location.search);
   console.log('[auth-email-landing] location.hash=', location.hash);
 
-  // show debug data (remove in production)
-  const debugEl = document.getElementById('debug');
-  if (debugEl) {
-    debugEl.style.display = 'block';
-    debugEl.textContent = [
-      'href: ' + location.href,
-      'search: ' + location.search,
-      'hash: ' + location.hash,
-      'confirmation_url: ' + (confirmation_url || '—'),
-      'access_token: ' + (access_token ? 'present' : 'absent'),
-      'refresh_token: ' + (refresh_token ? 'present' : 'absent'),
-      'error: ' + (error || '—'),
-      'error_description: ' + (error_description || '—')
-    ].join('\n');
-}
-
 
   // helpers to read params from either search or hash
   function readParams(sourceSearch = location.search, sourceHash = location.hash) {
@@ -87,6 +71,22 @@
 
   const parentOrigin = searchParams.get('parent_origin') || null;
   const nextParam = searchParams.get('next') || null;
+
+  // show debug data (optional: keep in dev only)
+  const debugEl = document.getElementById('debug');
+  if (debugEl) {
+    debugEl.style.display = 'block';
+    debugEl.textContent = [
+      'href: ' + location.href,
+      'search: ' + location.search,
+      'hash: ' + location.hash,
+      'confirmation_url: ' + (confirmation_url || '—'),
+      'access_token: ' + (access_token ? 'present' : 'absent'),
+      'refresh_token: ' + (refresh_token ? 'present' : 'absent'),
+      'error: ' + (error || '—'),
+      'error_description: ' + (error_description || '—')
+    ].join('\n');
+  }
 
   function postToParent(msg) {
     try {

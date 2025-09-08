@@ -321,6 +321,7 @@ async function getRecaptcha() {
   const SUPABASE_URL = "https://wedevtjjmdvngyshqdro.supabase.co";
   const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndlZGV2dGpqbWR2bmd5c2hxZHJvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU0NzYwMzgsImV4cCI6MjA3MTA1MjAzOH0.Ex2c_sx358dFdygUGMVBohyTVto6fdEQ5nydDRh9m6M";
   const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  window.supabase = supabase;
 
   // Reuse the same model as ingestion
   const MODEL_ID = 'Xenova/e5-small-v2';
@@ -405,29 +406,28 @@ async function getRecaptcha() {
   form.addEventListener("submit", async (e) => {
   e.preventDefault();
 
-  // safe getUser() (works if supabase client is present)
-  const currentUser = await ensureSupabaseSession();
-if (!currentUser) {
-  alert('Please sign in first.');
-  if (window.authGate?.openLoginModal) {
-    window.authGate.openLoginModal({ next: location.pathname + location.search });
+  // Check session
+  const currentUser = await ensureSupabaseSession?.() || (await window.supabase?.auth.getSession()).data?.session?.user || null;
+  if (!currentUser) {
+    // persist current form to restore after auth
+    try {
+      const f = new FormData(form);
+      const obj = Object.fromEntries(f.entries());
+      sessionStorage.setItem('tharaga_pending_buyer_form', JSON.stringify(obj));
+      sessionStorage.setItem('tharaga_pending_form_ts', String(Date.now()));
+    } catch (_) {}
+
+    alert('Please sign in first.');
+
+    if (window.authGate?.openLoginModal) {
+      window.authGate.openLoginModal({ next: location.pathname + location.search });
+    }
+    return;
   }
-  return;
-}
 
-// Only open auth modal if user clicks submit **and is not logged in yet**
-if (!currentUser) {
-  alert('Please sign in first.');
-  if (window.authGate?.openLoginModal) {
-    window.authGate.openLoginModal({ next: location.pathname + location.search });
-  }
-  return;
-}
-
-
-  if (otpVerifiedField.value !== 'true') { 
-    alert('Please verify OTP first.'); 
-    return; 
+  if (otpVerifiedField.value !== 'true') {
+    alert('Please verify OTP first.');
+    return;
   }
 
   submitBtn.disabled = true;
@@ -584,17 +584,25 @@ if (!currentUser) {
 <script src="../login_signup_glassdrop/auth-gate.js"></script>
 
 
-
 <!-- Attach gate to submitBtn -->
 <script type="module">
 let currentUser = null;
 
+
 async function ensureSupabaseSession() {
   try {
+    if (!supabase) return null;
+
+    // First attempt
+    const { data: { session: sess1 } } = await supabase.auth.getSession();
+    if (sess1?.user) return sess1.user;
+
     console.log('ensureSupabaseSession: checking supabase session...');
-    const { data: { session } } = await supabase.auth.getSession();
-    if (session?.user) {
-      currentUser = session.user;
+
+    // Second attempt
+    const { data: { session: sess2 } } = await supabase.auth.getSession();
+    if (sess2?.user) {
+      currentUser = sess2.user;
       console.log('ensureSupabaseSession: session exists', currentUser.email);
       return currentUser;
     }
@@ -664,6 +672,15 @@ document.addEventListener("DOMContentLoaded", async () => {
   const form = document.getElementById('buyerForm');
   const submitBtn = document.getElementById('submitBtn');
   const otpVerifiedField = document.getElementById('otp_verified');
+
+  submitBtn.addEventListener('click', () => {
+    try {
+      const f = new FormData(form);
+      const obj = Object.fromEntries(f.entries());
+      sessionStorage.setItem('tharaga_pending_buyer_form', JSON.stringify(obj));
+      sessionStorage.setItem('tharaga_pending_form_ts', String(Date.now()));
+    } catch (_) {}
+  }, true); // capture so it runs before auth-gate
 
   if (window.authGate) {
     window.authGate.attachAuthGate("#submitBtn", async () => {

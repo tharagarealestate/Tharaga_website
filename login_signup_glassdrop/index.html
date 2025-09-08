@@ -272,84 +272,68 @@
       const refresh_token = params.get('refresh_token');
 
       if (access_token && refresh_token) {
-        try {
-          const { data, error } = await supabase.auth.setSession({ access_token, refresh_token });
-          if (error) {
-            console.error('Failed to setSession from redirect tokens', error);
-            return null;
-          }
+        let pendingNext = null;
+      try {
+        pendingNext = JSON.parse(localStorage.getItem('post_auth_target') || 'null')?.href
+                      || new URLSearchParams(location.search).get('next')
+                      || null;
+      } catch (_) {}
 
-          // --- 🔥 INSERTED SNIPPET (your request) ---
-          try {
-            const pendingNext = JSON.parse(localStorage.getItem('post_auth_target') || 'null')?.href
-                                || new URLSearchParams(location.search).get('next') || null;
-            const payload = {
-              ts: Date.now(),
-              next: pendingNext,
-              user: data?.session?.user ? { id: data.session.user.id, email: data.session.user.email } : null
-            };
-            localStorage.setItem('__tharaga_magic_continue', JSON.stringify(payload));
-            localStorage.setItem('__tharaga_magic_confirmed', JSON.stringify({ ts: Date.now() }));
-          } catch (e) {
-            console.warn('Could not write magic continue', e);
-          }
-          // --- END INSERT ---
-          if (!isIframe && pendingNext && isSafeRedirect(pendingNext)) {
-            setTimeout(() => {
-              location.href = pendingNext;
-            }, 400);
-          }
-
-
-          // Clean URL (remove tokens but keep others like post_auth)
-          const cleanedSearch = location.search
-            .replace(/([?&])access_token=[^&]*(&?)/g, '$1')
-            .replace(/([?&])refresh_token=[^&]*(&?)/g, '$1')
-            .replace(/(^\?|&$)/, '');
-          history.replaceState(null, '', location.pathname + (cleanedSearch ? '?' + cleanedSearch : ''));
-
-          // --- Notify parent/other tabs ---
-          try {
-            let pendingNext = null;
-            try {
-              pendingNext = JSON.parse(localStorage.getItem('post_auth_target') || 'null')?.href 
-                            || new URLSearchParams(location.search).get('next') || null;
-            } catch (_e) {
-              pendingNext = new URLSearchParams(location.search).get('next') || null;
-            }
-
-            const payload = {
-              ts: Date.now(),
-              next: pendingNext,
-              user: data?.session?.user ? { id: data.session.user.id, email: data.session.user.email } : null
-            };
-
-            try { 
-              localStorage.setItem('__tharaga_magic_continue', JSON.stringify(payload)); 
-              localStorage.setItem('__tharaga_magic_confirmed', JSON.stringify({ ts: Date.now() })); 
-            } catch (e) { 
-              console.warn('Could not write magic continue/confirmed', e); 
-            }
-
-            const parentOrigin = new URLSearchParams(location.search).get('parent_origin');
-            if (window.self !== window.parent) {
-              try {
-                if (parentOrigin) {
-                  window.parent.postMessage({ type: 'signed_in', user: payload.user, next: payload.next }, parentOrigin);
-                } else {
-                  window.parent.postMessage({ type: 'signed_in', user: payload.user, next: payload.next }, '*');
-                }
-              } catch (e) { /* ignore */ }
-            }
-          } catch (e) {
-            console.warn('notify-magic-continue failed', e);
-          }
-
-          return data?.session ?? null;
-        } catch (err) {
-          console.error('setSession error', err);
+      try {
+        const { data, error } = await supabase.auth.setSession({ access_token, refresh_token });
+        if (error) {
+          console.error('Failed to setSession from redirect tokens', error);
           return null;
         }
+
+        try {
+          const payload = {
+            ts: Date.now(),
+            next: pendingNext,
+            user: data?.session?.user ? { id: data.session.user.id, email: data.session.user.email } : null
+          };
+          localStorage.setItem('__tharaga_magic_continue', JSON.stringify(payload));
+          localStorage.setItem('__tharaga_magic_confirmed', JSON.stringify({ ts: Date.now() }));
+        } catch (e) {
+          console.warn('Could not write magic continue', e);
+        }
+
+        if (!isIframe && pendingNext && isSafeRedirect(pendingNext)) {
+          setTimeout(() => { location.href = pendingNext; }, 400);
+        }
+
+        // Clean URL (remove tokens but keep others like post_auth)
+        const cleanedSearch = location.search
+          .replace(/([?&])access_token=[^&]*(&?)/g, '$1')
+          .replace(/([?&])refresh_token=[^&]*(&?)/g, '$1')
+          .replace(/(^\?|&$)/, '');
+        history.replaceState(null, '', location.pathname + (cleanedSearch ? '?' + cleanedSearch : ''));
+
+        // --- Notify parent/other tabs ---
+        try {
+          const payload = {
+            ts: Date.now(),
+            next: pendingNext,
+            user: data?.session?.user ? { id: data.session.user.id, email: data.session.user.email } : null
+          };
+          try {
+            localStorage.setItem('__tharaga_magic_continue', JSON.stringify(payload));
+            localStorage.setItem('__tharaga_magic_confirmed', JSON.stringify({ ts: Date.now() }));
+          } catch (e) { console.warn('Could not write magic continue/confirmed', e); }
+
+          const parentOrigin = new URLSearchParams(location.search).get('parent_origin');
+          if (window.self !== window.parent) {
+            window.parent.postMessage({ type: 'signed_in', user: payload.user, next: payload.next }, parentOrigin || '*');
+          }
+        } catch (e) {
+          console.warn('notify-magic-continue failed', e);
+        }
+
+        return data?.session ?? null;
+      } catch (err) {
+        console.error('setSession error', err);
+        return null;
+      }
       }
 
       if (isPostAuth) {

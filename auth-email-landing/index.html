@@ -23,6 +23,7 @@
     <h1 id="title">Confirming your email…</h1>
     <p id="subtitle">If this page doesn’t continue automatically, click below.</p>
     <button id="verifyBtn">Verify & Continue</button>
+    <pre id="debug" style="text-align:left;color:#ddd;margin-top:12px;display:none;background:#071013;padding:8px;border-radius:8px;font-size:12px;"></pre>
   </div>
 
   <script>
@@ -30,6 +31,23 @@
   console.log('[auth-email-landing] location.href=', location.href);
   console.log('[auth-email-landing] location.search=', location.search);
   console.log('[auth-email-landing] location.hash=', location.hash);
+
+  // show debug data (remove in production)
+  const debugEl = document.getElementById('debug');
+  if (debugEl) {
+    debugEl.style.display = 'block';
+    debugEl.textContent = [
+      'href: ' + location.href,
+      'search: ' + location.search,
+      'hash: ' + location.hash,
+      'confirmation_url: ' + (confirmation_url || '—'),
+      'access_token: ' + (access_token ? 'present' : 'absent'),
+      'refresh_token: ' + (refresh_token ? 'present' : 'absent'),
+      'error: ' + (error || '—'),
+      'error_description: ' + (error_description || '—')
+    ].join('\n');
+}
+
 
   // helpers to read params from either search or hash
   function readParams(sourceSearch = location.search, sourceHash = location.hash) {
@@ -44,7 +62,7 @@
   const rawConfFromHash = hashParams.get('confirmation_url');
   const rawConf = rawConfFromSearch || rawConfFromHash || null;
   // NOTE: do not blindly decode; try safe decode only if it looks encoded
-  let confirmation_url = rawConf;
+  let confirmation_url = rawConf || null;
   if (rawConf) {
     try {
       // if it contains %3A pattern, decode once and confirm it looks like an http(s) URL
@@ -60,7 +78,8 @@
   // tokens may appear in hash or query; accept either
   const access_token = hashParams.get('access_token') || searchParams.get('access_token') || null;
   const refresh_token = hashParams.get('refresh_token') || searchParams.get('refresh_token') || null;
-  const hasTokens = !!(access_token || refresh_token);
+  // require both tokens (safe check)
+  const hasTokens = !!(access_token && refresh_token);
 
   // detect error param (e.g. #error=... & error_description=...)
   const error = hashParams.get('error') || searchParams.get('error') || null;

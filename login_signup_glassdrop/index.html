@@ -247,7 +247,7 @@
     const __qs = new URLSearchParams(location.search);
     const FALLBACK_PARENT_ORIGIN = 'https://tharaga.co.in';
     const PARENT_ORIGIN = (__qs.get('parent_origin') || FALLBACK_PARENT_ORIGIN || location.origin).replace(/\/$/, '');
-    const POST_AUTH_CALLBACK = `https://auth.tharaga.co.in/login_signup_glassdrop/?post_auth=1&parent_origin=${encodeURIComponent(PARENT_ORIGIN)}`;
+    //const POST_AUTH_CALLBACK = `https://auth.tharaga.co.in/login_signup_glassdrop/?post_auth=1&parent_origin=${encodeURIComponent(PARENT_ORIGIN)}`;
     
     // ========================= IMPORT =========================
     import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
@@ -443,6 +443,9 @@
       const t=pwdEl.type==='password'?'text':'password';
       pwdEl.type=t;
       toggleEye.textContent=t==='password'?'👁':'🙈';
+    });
+    toggleEye.addEventListener('keydown', e => {
+      if (e.key === 'Enter' || e.key === ' ') toggleEye.click();
     });
 
     // ========================= INIT ===========================
@@ -778,7 +781,7 @@ window.addEventListener("message", async (event) => {
     }
 
     try {
-      console.debug && console.debug('magic link redirect target ->', POST_AUTH_CALLBACK);
+      console.debug && console.debug('magic link redirect target ->', "https://auth.tharaga.co.in/auth-email-landing/");
       const { error } = await supabase.auth.signInWithOtp({
         email,
         options: { emailRedirectTo: "https://auth.tharaga.co.in/auth-email-landing/" }

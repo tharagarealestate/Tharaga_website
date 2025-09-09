@@ -1,45 +1,36 @@
-// --- Salvage handler: run immediately on main site to recover Supabase hash redirects ---
+// --- Salvage Supabase hash on main site ---
 (function(){
   try {
-    // Only run on the main site, not on the auth subdomain
     if (location.origin !== 'https://tharaga.co.in') return;
 
     const rawHash = (location.hash || '').replace(/^#/, '');
     if (!rawHash) return;
 
-    const qp = new URLSearchParams(rawHash);
-    const accessToken = qp.get('access_token');
-    const refreshToken = qp.get('refresh_token');
-    const hasError = qp.get('error') || qp.get('error_code');
+    const qs = new URLSearchParams(rawHash);
+    const at = qs.get('access_token');
+    const rt = qs.get('refresh_token');
+    const err = qs.get('error') || qs.get('error_code');
 
-    // If Supabase dropped tokens on the main site, move this tab to the auth domain
-    if (accessToken && refreshToken) {
+    // If tokens landed on main site, move this tab to the auth domain
+    if (at && rt) {
       const backNext = location.pathname + location.search;
       const authUrl =
         `https://auth.tharaga.co.in/login_signup_glassdrop/?post_auth=1` +
         `&parent_origin=${encodeURIComponent(location.origin)}` +
         `&next=${encodeURIComponent(backNext)}` +
         `#${rawHash}`;
-
-      // Replace so back button doesn't land on the broken hash page
       location.replace(authUrl);
       return;
     }
 
-    // If we landed with an error hash (e.g., otp_expired), clear hash and open the login modal
-    if (hasError) {
-      try { history.replaceState(null, '', location.pathname + location.search); } catch (_) {}
-      const openGate = () => window.authGate?.openLoginModal?.({ next: location.pathname + location.search });
-      if (window.authGate?.openLoginModal) {
-        openGate();
-      } else {
-        // If auth-gate loads later, open once available
-        window.addEventListener('load', () => {
-          try { openGate(); } catch (_) {}
-        }, { once: true });
-      }
+    // If error hash (e.g., otp_expired), clear hash and open login modal
+    if (err) {
+      try { history.replaceState(null, '', location.pathname + location.search); } catch(_) {}
+      const open = () => window.authGate?.openLoginModal?.({ next: location.pathname + location.search });
+      if (window.authGate?.openLoginModal) open();
+      else window.addEventListener('load', () => { try { open(); } catch(_){ } }, { once: true });
     }
-  } catch (_) {}
+  } catch(_) {}
 })();
 
 // /js/fragment-handle.js  (REPLACE file with this)

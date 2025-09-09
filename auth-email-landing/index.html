@@ -106,12 +106,21 @@
     console.warn('[auth-email-landing] Auth error detected', error, error_description);
     titleEl.textContent = 'Verification failed';
     subtitleEl.textContent = (error_description ? decodeURIComponent(error_description) : 'Verification failed or link expired.');
-    btn.textContent = 'Request a new magic link';
-    btn.onclick = () => { window.location.href = 'https://tharaga.co.in/login_signup_glassdrop'; };
-    // notify opener/parent that verification failed
-    postToParent({ type: 'tharaga_verify_failed', error, error_description });
-    // stop further processing
-    console.log('[auth-email-landing] stopped due to error in URL');
+
+    // Build a bounce-back URL that resumes the flow
+    const redir =
+      `https://auth.tharaga.co.in/login_signup_glassdrop/?post_auth=1` +
+      (parentOrigin ? `&parent_origin=${encodeURIComponent(parentOrigin)}` : '') +
+      (nextParam ? `&next=${encodeURIComponent(nextParam)}` : '');
+
+    btn.textContent = 'Continue';
+    btn.onclick = () => { window.location.href = redir; };
+
+    // Let the parent know, but don’t leave the user stuck here
+    postToParent({ type: 'tharaga_verify_failed', error, error_description, next: nextParam || null });
+
+    // Short auto-forward so the original tab/modal can resume
+    setTimeout(() => { window.location.href = redir; }, 600);
   } else if (confirmation_url) {
     // If confirmation_url present — always redirect to it (auto + button fallback)
     console.log('[auth-email-landing] confirmation_url detected ->', confirmation_url);
@@ -140,7 +149,11 @@
     } else {
       // standalone: build a hash if tokens were in query
       const finalHash = (location.hash.replace(/^#/, '') || new URLSearchParams({ access_token, refresh_token }).toString());
-      const redirectTo = `/login_signup_glassdrop/?post_auth=1#${finalHash}`;
+      const redirectTo =
+      `/login_signup_glassdrop/?post_auth=1` +
+      (parentOrigin ? `&parent_origin=${encodeURIComponent(parentOrigin)}` : '') +
+      (nextParam ? `&next=${encodeURIComponent(nextParam)}` : '') +
+      `#${finalHash}`;
       console.log('[auth-email-landing] redirecting standalone to', redirectTo);
       titleEl.textContent = 'Redirecting you back to the app…';
       subtitleEl.textContent = 'If nothing happens, click the button.';

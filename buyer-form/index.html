@@ -344,9 +344,9 @@ async function getRecaptcha() {
     return { min: null, max: null };
   }
 
-  const form = document.getElementById('buyerForm');
-  const submitBtn = document.getElementById('submitBtn');
-  const otpVerifiedField = document.getElementById('otp_verified');
+  const matchForm = document.getElementById('buyerForm');
+  const matchSubmitBtn = document.getElementById('submitBtn');
+  const matchOtpVerified = document.getElementById('otp_verified');
 
     // Restore pending form values (if user returned after sign-in)
   (function restorePendingForm(){
@@ -356,7 +356,7 @@ async function getRecaptcha() {
       const obj = JSON.parse(saved);
       Object.keys(obj).forEach(k => {
         // prefer form.elements[k] (works for inputs/selects/textareas)
-        const el = form.elements[k];
+        const el = matchForm.elements[k];
         if (el) {
           try { el.value = obj[k]; } catch (_) {}
         } else {
@@ -403,7 +403,7 @@ async function getRecaptcha() {
 
 
  // Submit: embed → RPC → render
-  form.addEventListener("submit", async (e) => {
+  matchForm.addEventListener("submit", async (e) => {
   e.preventDefault();
 
   // Check session
@@ -425,16 +425,16 @@ async function getRecaptcha() {
     return;
   }
 
-  if (otpVerifiedField.value !== 'true') {
+  if (matchOtpVerified.value !== 'true') {
     alert('Please verify OTP first.');
     return;
   }
 
-  submitBtn.disabled = true;
-  submitBtn.textContent = 'Finding matches…';
+  matchSubmitBtn.disabled = true;
+  matchSubmitBtn.textContent = 'Finding matches…';
 
   try {
-    const f = new FormData(form);
+    const f = new FormData(matchForm);
     const payload = Object.fromEntries(f.entries());
 
     // 1) Build the query text
@@ -549,8 +549,8 @@ async function getRecaptcha() {
     alert('Matching failed: ' + (err?.message || err));
   } finally {
     // Re-enable button (this runs even though we redirected — harmless)
-    submitBtn.disabled = false;
-    submitBtn.textContent = 'Get My Property Matches';
+    matchSubmitBtn.disabled = false;
+    matchSubmitBtn.textContent = 'Get My Property Matches';
   }
 }); // ✅ now properly closed
 
@@ -657,37 +657,33 @@ window.addEventListener('message', (ev) => {
 
 
 document.addEventListener("DOMContentLoaded", async () => {
-  const form = document.getElementById('buyerForm');
-  const submitBtn = document.getElementById('submitBtn');
-  const otpVerifiedField = document.getElementById('otp_verified');
+  const gateForm = document.getElementById('buyerForm');
+  const gateSubmitBtn = document.getElementById('submitBtn');
+  const gateOtpVerified = document.getElementById('otp_verified');
 
-  submitBtn.addEventListener('click', () => {
-    try {
-      const f = new FormData(form);
-      const obj = Object.fromEntries(f.entries());
-      sessionStorage.setItem('tharaga_pending_buyer_form', JSON.stringify(obj));
-      sessionStorage.setItem('tharaga_pending_form_ts', String(Date.now()));
-    } catch (_) {}
-  }, true); // capture so it runs before auth-gate
+  gateSubmitBtn.addEventListener('click', () => {
+    const f = new FormData(gateForm);
+    const obj = Object.fromEntries(f.entries());
+    sessionStorage.setItem('tharaga_pending_buyer_form', JSON.stringify(obj));
+    sessionStorage.setItem('tharaga_pending_form_ts', String(Date.now()));
+  }, true);
 
   if (window.authGate) {
     window.authGate.attachAuthGate("#submitBtn", async () => {
       // Restore pending form
-      try {
-        const saved = sessionStorage.getItem('tharaga_pending_buyer_form');
-        if (saved) {
-          const obj = JSON.parse(saved);
-          Object.keys(obj).forEach(k => {
-            const el = form.elements[k];
-            if (el && k !== 'otp_verified') el.value = obj[k];
-          });
-        }
-      } catch (e) { console.warn('attachAuthGate restore failed', e); }
+      const saved = sessionStorage.getItem('tharaga_pending_buyer_form');
+      if (saved) {
+        const obj = JSON.parse(saved);
+        Object.keys(obj).forEach(k => {
+          const el = gateForm.elements[k];
+          if (el && k !== 'otp_verified') el.value = obj[k];
+        });
+      }
 
       // Step 3: enable submit if OTP verified and user logged in
       const user = await ensureSupabaseSession();
-      submitBtn.disabled = !(otpVerifiedField.value === 'true' && user);
-      submitBtn.style.cursor = submitBtn.disabled ? 'not-allowed' : 'pointer';
+      gateSubmitBtn.disabled = !(gateOtpVerified.value === 'true' && user);
+      gateSubmitBtn.style.cursor = gateSubmitBtn.disabled ? 'not-allowed' : 'pointer';
 
       // Step 4: show signed-in email
       if (user?.email) {

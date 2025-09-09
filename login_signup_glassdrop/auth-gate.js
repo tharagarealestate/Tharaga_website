@@ -271,12 +271,17 @@
     // expected: { type: 'signed_in' | 'close_login_modal' | 'ping', next?, user? }
     if (msg.type === 'signed_in') {
         window.__authGateLoggedIn = true;
-
-        // Keep modal OPEN so iframe shows “Continue”
-        if (signInResolve) { try { signInResolve({ signedIn: true, user: msg.user || null }); } catch (_) {} signInPromise = signInResolve = signInReject = null; }
-
-        // Do NOT auto-redirect on 'next' here. Let user click Continue in iframe.
+        // Keep modal OPEN so iframe can show the “Continue” container
+        if (signInResolve) {
+          try { signInResolve({ signedIn: true, user: msg.user || null }); } catch (_) {}
+          signInPromise = null; signInResolve = null; signInReject = null;
+        }
+        return;
       }
+    if (msg.type === 'close_login_modal') {
+        try { closeLoginModal(); } catch (_) {}
+        return;
+      }  
   }); // <-- THIS closes the message handler (was missing previously)
 
   // Expose API

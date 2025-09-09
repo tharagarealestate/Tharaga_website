@@ -519,12 +519,12 @@ if (isPostAuth) {
     const isIframe = window.self !== window.parent;
 
     // If NOT embedded (standalone tab) and we have a safe redirect target → auto redirect
-    if (!isIframe && pending?.href && isSafeRedirect(pending.href)) {
-      setTimeout(() => {
-        storage.clear();
-        location.href = pending.href;
-      }, 400);
-    }
+    // if (!isIframe && pending?.href && isSafeRedirect(pending.href)) {
+    //   setTimeout(() => {
+    //     storage.clear();
+    //     location.href = pending.href;
+    //   }, 400);
+    // }
 
     // If embedded inside an iframe, postMessage to parent so they can resume flow
     if (window.self !== window.parent) {
@@ -823,28 +823,26 @@ window.addEventListener("message", async (event) => {
     });
 
     continueBtn?.addEventListener('click', async () => {
-  const pending = storage.get();
+      const pending = storage.get();
 
-  // Signal other tabs and parent that sign-in completed (but DO NOT redirect this tab automatically)
-  try {
-    const payload = { ts: Date.now(), next: pending?.href || null };
-    localStorage.setItem('__tharaga_magic_continue', JSON.stringify(payload));
-    try { localStorage.setItem('__tharaga_magic_confirmed', JSON.stringify({ ts: Date.now() })); } catch(_) {}
-  } catch (e) { console.warn('Could not set magic continue', e); }
+      try {
+        const payload = { ts: Date.now(), next: pending?.href || null };
+        localStorage.setItem('__tharaga_magic_continue', JSON.stringify(payload));
+        try { localStorage.setItem('__tharaga_magic_confirmed', JSON.stringify({ ts: Date.now() })); } catch(_) {}
+      } catch (e) { console.warn('Could not set magic continue', e); }
 
-  // If inside iframe/modal postMessage the parent as a best-effort signal
-  try {
-    if (window.self !== window.parent) {
-      window.parent.postMessage({ type: 'signed_in', user: null, next: pending?.href || null }, '*');
-    }
-  } catch (e) { console.warn('postMessage failed', e); }
+      try {
+        if (window.self !== window.parent) {
+          window.parent.postMessage({ type: 'signed_in', user: null, next: pending?.href || null }, '*');
+          window.parent.postMessage({ type: 'close_login_modal' }, '*'); // add this line
+        }
+      } catch (e) { console.warn('postMessage failed', e); }
 
-  // Try to close the tab if it's a popup; otherwise stay here and show confirmation
-  try { window.close(); } catch (_) {}
+      try { window.close(); } catch (_) {}
 
-  setMsg('Signed in. You can now return to the page where you filled the form and click "Get My Property Matches" to continue.', true);
-  storage.clear();
-});
+      setMsg('Signed in. You can now return to the page where you filled the form and click "Get My Property Matches" to continue.', true);
+      storage.clear();
+    });
 
 
     // ========================= OPTIONAL: "Gate snippet" for other pages =========================

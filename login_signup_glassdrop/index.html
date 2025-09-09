@@ -298,9 +298,9 @@
           console.warn('Could not write magic continue', e);
         }
 
-        if (!isIframe && pendingNext && isSafeRedirect(pendingNext)) {
-          setTimeout(() => { location.href = pendingNext; }, 400);
-        }
+        // if (!isIframe && pendingNext && isSafeRedirect(pendingNext)) {
+        //   setTimeout(() => { location.href = pendingNext; }, 400);
+        // }
 
         // Clean URL (remove tokens but keep others like post_auth)
         const cleanedSearch = location.search
@@ -769,7 +769,7 @@ window.addEventListener("message", async (event) => {
         const next = pending?.href || new URLSearchParams(location.search).get('next') || '/';
         const parentOrigin = PARENT_ORIGIN;
         const emailRedirectTo =
-          `https://auth.tharaga.co.in/auth-email-landing/?parent_origin=${encodeURIComponent(parentOrigin)}&next=${encodeURIComponent(next)}`;
+          `https://auth.tharaga.co.in/auth-email-landing/?parent_origin=${encodeURIComponent(PARENT_ORIGIN)}&next=${encodeURIComponent(storage.get()?.href || '/')}`;
 
         const { error } = await supabase.auth.signInWithOtp({
           email,
@@ -804,7 +804,7 @@ window.addEventListener("message", async (event) => {
       const next = pending?.href || new URLSearchParams(location.search).get('next') || '/';
       const parentOrigin = PARENT_ORIGIN;
       const emailRedirectTo =
-        `https://auth.tharaga.co.in/auth-email-landing/?parent_origin=${encodeURIComponent(parentOrigin)}&next=${encodeURIComponent(next)}`;
+        `https://auth.tharaga.co.in/auth-email-landing/?parent_origin=${encodeURIComponent(PARENT_ORIGIN)}&next=${encodeURIComponent(storage.get()?.href || '/')}`;
 
       const { error } = await supabase.auth.signUp({
         email,

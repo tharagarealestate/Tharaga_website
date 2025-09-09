@@ -270,31 +270,13 @@
 
     // expected: { type: 'signed_in' | 'close_login_modal' | 'ping', next?, user? }
     if (msg.type === 'signed_in') {
-      window.__authGateLoggedIn = true;
+        window.__authGateLoggedIn = true;
 
-      if (AUTO_RESUME_PENDING && window.__authGatePendingAction) {
-        try {
-          window.__authGatePendingAction();
-        } catch (e) { console.error('Pending action failed', e); }
-        window.__authGatePendingAction = null;
-      } else {
-        try { closeLoginModal(); } catch (_) {}
-      }
+        // Keep modal OPEN so iframe shows “Continue”
+        if (signInResolve) { try { signInResolve({ signedIn: true, user: msg.user || null }); } catch (_) {} signInPromise = signInResolve = signInReject = null; }
 
-      if (signInResolve) {
-        signInResolve({ signedIn: true, user: msg.user || null });
-        signInPromise = null; signInResolve = null; signInReject = null;
+        // Do NOT auto-redirect on 'next' here. Let user click Continue in iframe.
       }
-
-      if (msg.next) {
-        try {
-          const u = new URL(msg.next, location.origin);
-          if (u.origin === location.origin) location.href = u.href;
-        } catch (e) {
-          console.warn('invalid next from iframe', msg.next);
-        }
-      }
-    }
   }); // <-- THIS closes the message handler (was missing previously)
 
   // Expose API
@@ -332,33 +314,20 @@
         if (!ev || !ev.key) return;
 
         if (ev.key === '__tharaga_magic_confirmed') {
-          window.__authGateLoggedIn = true;
-          try { closeLoginModal(); } catch (_) {}
-          let payload = null;
-          try { payload = ev.newValue ? JSON.parse(ev.newValue) : null; } catch (_) { payload = null; }
-          if (signInPromise && signInResolve) {
-            try { signInResolve(payload || { signedIn: true }); } catch (_) {}
-            signInPromise = null; signInResolve = null; signInReject = null;
-          }
-          return;
+            window.__authGateLoggedIn = true;
+            // Keep modal OPEN so iframe shows “Continue”
+            // Resolve any waiters if present
+            if (signInResolve) { try { signInResolve({ signedIn: true }); } catch (_) {} signInPromise = signInResolve = signInReject = null; }
+            return;
         }
 
         if (ev.key === '__tharaga_magic_continue') {
           window.__authGateLoggedIn = true;
-          try { closeLoginModal(); } catch (_) {}
-          let payload = null;
-          try { payload = ev.newValue ? JSON.parse(ev.newValue) : null; } catch (_) { payload = null; }
-          if (signInPromise && signInResolve) {
-            try { signInResolve(payload || { signedIn: true }); } catch (_) {}
-            signInPromise = null; signInResolve = null; signInReject = null;
-          }
-          if (AUTO_RESUME_PENDING && window.__authGatePendingAction) {
-            const fn = window.__authGatePendingAction;
-            window.__authGatePendingAction = null;
-            try { fn(); } catch (e) { console.error('authGate: pending action failed', e); }
-          }
+          // Keep modal OPEN so iframe shows “Continue”
+          if (signInResolve) { try { signInResolve({ signedIn: true }); } catch (_) {} signInPromise = signInResolve = signInReject = null; }
           return;
         }
+
       });
 
     } catch (e) {

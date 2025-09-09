@@ -587,25 +587,16 @@ async function getRecaptcha() {
 <!-- Attach gate to submitBtn -->
 <script type="module">
 let currentUser = null;
-
+const supabaseClient = window.supabase;
 
 async function ensureSupabaseSession() {
   try {
-    if (!supabase) return null;
+    const client = window.supabase;
+    if (!client) return null;
 
-    // First attempt
-    const { data: { session: sess1 } } = await supabase.auth.getSession();
-    if (sess1?.user) return sess1.user;
-
-    console.log('ensureSupabaseSession: checking supabase session...');
-
-    // Second attempt
-    const { data: { session: sess2 } } = await supabase.auth.getSession();
-    if (sess2?.user) {
-      currentUser = sess2.user;
-      console.log('ensureSupabaseSession: session exists', currentUser.email);
-      return currentUser;
-    }
+    const sessRes = await client.auth.getSession();
+    const sess = sessRes?.data?.session;
+    if (sess?.user) return sess.user;
 
     // no session yet — check for confirmation_url / code in the URL
     const urlParams = new URLSearchParams(window.location.search);
@@ -613,10 +604,9 @@ async function ensureSupabaseSession() {
     if (confUrl) {
       console.log('ensureSupabaseSession: found conf param:', confUrl);
       try {
-        let res = await supabase.auth.exchangeCodeForSession(confUrl).catch(e => ({ error: e }));
+        let res = await client.auth.exchangeCodeForSession(confUrl).catch(e => ({ error: e }));
         console.log('exchange (as-is) result:', res);
         if ((res.error || !res.data?.session) && confUrl) {
-          // try extracting token/code from confUrl if it's a URL
           let parsed;
           try {
             const u = new URL(confUrl);
@@ -626,17 +616,16 @@ async function ensureSupabaseSession() {
             parsed = m ? decodeURIComponent(m[1]) : confUrl;
           }
           if (parsed && parsed !== confUrl) {
-            res = await supabase.auth.exchangeCodeForSession(parsed).catch(e => ({ error: e }));
+            res = await client.auth.exchangeCodeForSession(parsed).catch(e => ({ error: e }));
             console.log('exchange (parsed) result:', res);
           }
         }
 
         if (!res.error && res.data?.session?.user) {
-          currentUser = res.data.session.user;
-          // remove confirmation param from URL (clean UX)
+          const user = res.data.session.user;
           window.history.replaceState({}, document.title, window.location.pathname + window.location.search.replace(/(&|\?)confirmation_url=[^&]+/, ''));
-          console.log('ensureSupabaseSession: exchange success for', currentUser.email);
-          return currentUser;
+          console.log('ensureSupabaseSession: exchange success for', user.email);
+          return user;
         } else {
           console.warn('ensureSupabaseSession: exchange did not create session', res?.error || res);
         }
@@ -650,7 +639,6 @@ async function ensureSupabaseSession() {
   }
   return null;
 }
-
 // pick up the popup's postMessage if it sends one
 window.addEventListener('message', (ev) => {
   try {

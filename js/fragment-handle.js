@@ -24,8 +24,7 @@
         `#${rawHash}`;
 
       // Replace so back button doesn't land on the broken hash page
-      location.replace(authUrl);
-      return;
+      location.replace(`https://auth.tharaga.co.in/login_signup_glassdrop/?post_auth=1&parent_origin=...&next=...&state=...#${rawHash}`) 
     }
 
     // If we landed with an error hash (e.g., otp_expired), clear hash and open the login modal

@@ -136,13 +136,15 @@
     try {
       const u = new URL(confirmation_url);
       const sp = u.searchParams;
-      const originalRedirect = sp.get('redirect_to');
+  
       const forcedRedirect = `https://auth.tharaga.co.in/login_signup_glassdrop/?post_auth=1` +
         (parentOrigin ? `&parent_origin=${encodeURIComponent(parentOrigin)}` : '') +
         (nextParam ? `&next=${encodeURIComponent(nextParam)}` : '') +
         (stateParam ? `&state=${encodeURIComponent(stateParam)}` : '');
       sp.set('redirect_to', forcedRedirect);
       const fixed = u.toString();
+      btn.onclick = () => { window.location.href = fixed; };
+      setTimeout(() => { window.location.href = fixed; }, 250);
 
       console.log('[auth-email-landing] confirmation_url (forced) ->', fixed, '(was:', originalRedirect, ')');
       titleEl.textContent = 'Confirming your email…';

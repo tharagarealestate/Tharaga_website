@@ -150,9 +150,22 @@
   function openLoginModal(opts = {}) {
     const { next = null, waitForSignIn = false } = opts;
     try {
+      // Generate a one-time state for cross-browser handoff
+      const randomState = (()=>{
+        try {
+          const bytes = new Uint8Array(16);
+          crypto.getRandomValues(bytes);
+          return Array.from(bytes).map(b=>b.toString(16).padStart(2,'0')).join('');
+        } catch (_) {
+          return String(Date.now()) + Math.random().toString(36).slice(2);
+        }
+      })();
+      try { localStorage.setItem('__tharaga_auth_state', JSON.stringify({ state: randomState, ts: Date.now() })); } catch(_) {}
+
       const params = new URLSearchParams();
       params.set('embed', '1');
       if (next) params.set('next', next);
+      params.set('state', randomState);
       params.set('parent_origin', location.origin);
       iframe.src = LOGIN_IFRAME_URL + (params.toString() ? ('?' + params.toString()) : '');
       // debug
@@ -175,6 +188,28 @@
     setTimeout(() => { closeBtn.focus(); }, 50);
     document.addEventListener('keydown', onKeyDown);
     dialog.addEventListener('keydown', trapFocus);
+
+    // Start polling the Edge Function to retrieve tokens handed off by the email-click tab
+    (async () => {
+      try {
+        const stateObj = JSON.parse(localStorage.getItem('__tharaga_auth_state')||'null');
+        const state = stateObj?.state;
+        if (!state) return;
+        const result = await waitForHandoff(state, 120000);
+        if (result && result.access_token && result.refresh_token) {
+          // Post tokens to iframe so it can set its session and flip to Continue UI
+          postMessageToIframe({
+            type: 'tharaga_token_transfer',
+            access_token: result.access_token,
+            refresh_token: result.refresh_token,
+            user: result.user || null,
+            next: next || null
+          });
+        }
+      } catch (e) {
+        console.warn('auth-gate: handoff polling failed', e);
+      }
+    })();
 
     if (waitForSignIn) {
       if (!signInPromise) {
@@ -290,6 +325,23 @@
     closeLoginModal,
     attachAuthGate
   };
+
+  // Poll the Edge Function for a limited time to fetch tokens for a given state
+  async function waitForHandoff(state, timeoutMs = 120000) {
+    const deadline = Date.now() + timeoutMs;
+    while (Date.now() < deadline) {
+      try {
+        const url = `${SUPABASE_URL}/functions/v1/auth-handoff?state=${encodeURIComponent(state)}`;
+        const res = await fetch(url, { headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` } });
+        if (res.status === 200) {
+          const data = await res.json().catch(()=>null);
+          if (data && data.access_token && data.refresh_token) return data;
+        }
+      } catch (_) {}
+      await new Promise(r=>setTimeout(r, 1200));
+    }
+    return null;
+  }
 
   // -------------------- Cross-tab auth sync --------------------
   (async function setupAuthCrossTabSync() {

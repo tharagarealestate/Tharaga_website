@@ -1,36 +1,47 @@
-// --- Salvage Supabase hash on main site ---
+// --- Salvage handler: run immediately on main site to recover Supabase hash redirects ---
 (function(){
   try {
+    // Only run on the main site, not on the auth subdomain
     if (location.origin !== 'https://tharaga.co.in') return;
 
     const rawHash = (location.hash || '').replace(/^#/, '');
     if (!rawHash) return;
 
-    const qs = new URLSearchParams(rawHash);
-    const at = qs.get('access_token');
-    const rt = qs.get('refresh_token');
-    const err = qs.get('error') || qs.get('error_code');
+    const qp = new URLSearchParams(rawHash);
+    const accessToken = qp.get('access_token');
+    const refreshToken = qp.get('refresh_token');
+    const hasError = qp.get('error') || qp.get('error_code');
 
-    // If tokens landed on main site, move this tab to the auth domain
-    if (at && rt) {
+    // If Supabase dropped tokens on the main site, move this tab to the auth domain
+    if (accessToken && refreshToken) {
       const backNext = location.pathname + location.search;
+      const state = new URLSearchParams(location.search).get('state') || (function(){ try { return JSON.parse(localStorage.getItem('__tharaga_auth_state')||'null')?.state||null; } catch(_) { return null; } })();
       const authUrl =
         `https://auth.tharaga.co.in/login_signup_glassdrop/?post_auth=1` +
         `&parent_origin=${encodeURIComponent(location.origin)}` +
         `&next=${encodeURIComponent(backNext)}` +
+        (state ? `&state=${encodeURIComponent(state)}` : '') +
         `#${rawHash}`;
+
+      // Replace so back button doesn't land on the broken hash page
       location.replace(authUrl);
       return;
     }
 
-    // If error hash (e.g., otp_expired), clear hash and open login modal
-    if (err) {
-      try { history.replaceState(null, '', location.pathname + location.search); } catch(_) {}
-      const open = () => window.authGate?.openLoginModal?.({ next: location.pathname + location.search });
-      if (window.authGate?.openLoginModal) open();
-      else window.addEventListener('load', () => { try { open(); } catch(_){ } }, { once: true });
+    // If we landed with an error hash (e.g., otp_expired), clear hash and open the login modal
+    if (hasError) {
+      try { history.replaceState(null, '', location.pathname + location.search); } catch (_) {}
+      const openGate = () => window.authGate?.openLoginModal?.({ next: location.pathname + location.search });
+      if (window.authGate?.openLoginModal) {
+        openGate();
+      } else {
+        // If auth-gate loads later, open once available
+        window.addEventListener('load', () => {
+          try { openGate(); } catch (_) {}
+        }, { once: true });
+      }
     }
-  } catch(_) {}
+  } catch (_) {}
 })();
 
 // /js/fragment-handle.js  (REPLACE file with this)
@@ -48,7 +59,7 @@
     // dynamic import of supabase client
     const { createClient } = await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm');
     const SUPABASE_URL = 'https://wedevtjjmdvngyshqdro.supabase.co';
-    const SUPABASE_ANON_KEY = 'REPLACE_WITH_YOUR_ANON_KEY'; // keep same anon key as other pages
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndlZGV2dGpqbWR2bmd5c2hxZHJvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU0NzYwMzgsImV4cCI6MjA3MTA1MjAzOH0.Ex2c_sx358dFdygUGMVBohyTVto6fdEQ5nydDRh9m6M';
     const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     const { data, error } = await supabase.auth.setSession({ access_token, refresh_token });

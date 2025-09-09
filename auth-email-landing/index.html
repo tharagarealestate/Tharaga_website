@@ -71,6 +71,26 @@
 
   const parentOrigin = searchParams.get('parent_origin') || null;
   const nextParam = searchParams.get('next') || null;
+  const stateParam = searchParams.get('state') || null;
+
+  // Supabase config for Edge Function handoff
+  const SUPABASE_URL = 'https://wedevtjjmdvngyshqdro.supabase.co';
+  const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndlZGV2dGpqbWR2bmd5c2hxZHJvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU0NzYwMzgsImV4cCI6MjA3MTA1MjAzOH0.Ex2c_sx358dFdygUGMVBohyTVto6fdEQ5nydDRh9m6M';
+
+  async function postHandoff(state, access_token, refresh_token) {
+    if (!state || !access_token || !refresh_token) return;
+    try {
+      await fetch(`${SUPABASE_URL}/functions/v1/auth-handoff`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': SUPABASE_ANON_KEY,
+          'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+        },
+        body: JSON.stringify({ state, access_token, refresh_token })
+      });
+    } catch (_) {}
+  }
 
   // show debug data (optional: keep in dev only)
   const debugEl = document.getElementById('debug');
@@ -112,18 +132,41 @@
     postToParent({ type: 'tharaga_verify_failed', error, error_description, next: nextParam || null });
     setTimeout(() => { window.location.href = redir; }, 600);
   } else if (confirmation_url) {
-    // If confirmation_url present — always redirect to it (auto + button fallback)
-    console.log('[auth-email-landing] confirmation_url detected ->', confirmation_url);
-    titleEl.textContent = 'Confirming your email…';
-    subtitleEl.textContent = 'Redirecting to complete verification — if nothing happens, click the button.';
-    btn.textContent = 'Verify & Continue';
-    btn.onclick = () => { window.location.href = confirmation_url; };
-    // allow short pause for user to see UI, then navigate
-    setTimeout(() => { window.location.href = confirmation_url; }, 250);
+    // Force redirect_to to AUTH DOMAIN login page, not main site
+    try {
+      const u = new URL(confirmation_url);
+      const sp = u.searchParams;
+      const originalRedirect = sp.get('redirect_to');
+      const forcedRedirect = `https://auth.tharaga.co.in/login_signup_glassdrop/?post_auth=1` +
+        (parentOrigin ? `&parent_origin=${encodeURIComponent(parentOrigin)}` : '') +
+        (nextParam ? `&next=${encodeURIComponent(nextParam)}` : '') +
+        (stateParam ? `&state=${encodeURIComponent(stateParam)}` : '');
+      sp.set('redirect_to', forcedRedirect);
+      const fixed = u.toString();
+
+      console.log('[auth-email-landing] confirmation_url (forced) ->', fixed, '(was:', originalRedirect, ')');
+      titleEl.textContent = 'Confirming your email…';
+      subtitleEl.textContent = 'Redirecting to complete verification — if nothing happens, click the button.';
+      btn.textContent = 'Verify & Continue';
+      btn.onclick = () => { window.location.href = fixed; };
+      setTimeout(() => { window.location.href = fixed; }, 250);
+    } catch (e) {
+      console.warn('[auth-email-landing] could not force redirect_to, using given URL');
+      titleEl.textContent = 'Confirming your email…';
+      subtitleEl.textContent = 'Redirecting to complete verification — if nothing happens, click the button.';
+      btn.textContent = 'Verify & Continue';
+      btn.onclick = () => { window.location.href = confirmation_url; };
+      setTimeout(() => { window.location.href = confirmation_url; }, 250);
+    }
   } else if (hasTokens) {
     // If tokens already present in this tab (Supabase redirected back with tokens)
     console.log('[auth-email-landing] tokens found in URL', { access_token: !!access_token, refresh_token: !!refresh_token });
     const isPopupOrIframe = !!window.opener || (window.parent && window.self !== window.parent);
+
+    // Cross-browser handoff: best-effort POST tokens to Edge Function if state is present
+    if (stateParam) {
+      try { await postHandoff(stateParam, access_token, refresh_token); } catch(_) {}
+    }
 
     if (isPopupOrIframe) {
       postToParent({
@@ -143,6 +186,7 @@
       `/login_signup_glassdrop/?post_auth=1` +
       (parentOrigin ? `&parent_origin=${encodeURIComponent(parentOrigin)}` : '') +
       (nextParam ? `&next=${encodeURIComponent(nextParam)}` : '') +
+      (stateParam ? `&state=${encodeURIComponent(stateParam)}` : '') +
       `#${finalHash}`;
       console.log('[auth-email-landing] redirecting standalone to', redirectTo);
       titleEl.textContent = 'Redirecting you back to the app…';

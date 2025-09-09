@@ -355,25 +355,25 @@ async function getRecaptcha() {
       if (!saved) return;
       const obj = JSON.parse(saved);
       Object.keys(obj).forEach(k => {
-        // prefer form.elements[k] (works for inputs/selects/textareas)
+        // prefer matchForm.elements[k] (works for inputs/selects/textareas)
         const el = matchForm.elements[k];
         if (el) {
           try { el.value = obj[k]; } catch (_) {}
         } else {
           // fallback: any element with matching name
-          const els = form.querySelectorAll(`[name="${k}"]`);
+          const els = matchForm.querySelectorAll(`[name="${k}"]`);
           if (els && els.length) els.forEach(e => { try { e.value = obj[k]; } catch(_){} });
         }
       });
       // gentle UX hint
       setTimeout(()=> {
         try {
-          form.scrollIntoView({behavior:'smooth', block:'center'});
+          matchForm.scrollIntoView({behavior:'smooth', block:'center'});
           // small inline hint (non-destructive)
           const hint = document.createElement('div');
           hint.style.cssText = 'text-align:center;margin:10px 0;color:#666;font-size:13px';
           hint.textContent = 'You returned after signing in. Click "Get My Property Matches" to continue.';
-          form.insertBefore(hint, form.firstChild);
+          matchForm.insertBefore(hint, matchForm.firstChild);
         } catch(_){}
       }, 350);
     } catch (e) { console.warn('restore pending form failed', e); }
@@ -411,7 +411,7 @@ async function getRecaptcha() {
   if (!currentUser) {
     // persist current form to restore after auth
     try {
-      const f = new FormData(form);
+      const f = new FormData(matchForm);
       const obj = Object.fromEntries(f.entries());
       sessionStorage.setItem('tharaga_pending_buyer_form', JSON.stringify(obj));
       sessionStorage.setItem('tharaga_pending_form_ts', String(Date.now()));

@@ -769,7 +769,7 @@ window.addEventListener("message", async (event) => {
         const next = pending?.href || new URLSearchParams(location.search).get('next') || '/';
         const parentOrigin = PARENT_ORIGIN;
         const emailRedirectTo =
-          `https://auth.tharaga.co.in/auth-email-landing/?parent_origin=${encodeURIComponent(PARENT_ORIGIN)}&next=${encodeURIComponent(storage.get()?.href || '/')}`;
+          `https://auth.tharaga.co.in/auth-email-landing/?parent_origin=${encodeURIComponent(parentOrigin)}&next=${encodeURIComponent(next)}`;
 
         const { error } = await supabase.auth.signInWithOtp({
           email,
@@ -804,7 +804,7 @@ window.addEventListener("message", async (event) => {
       const next = pending?.href || new URLSearchParams(location.search).get('next') || '/';
       const parentOrigin = PARENT_ORIGIN;
       const emailRedirectTo =
-        `https://auth.tharaga.co.in/auth-email-landing/?parent_origin=${encodeURIComponent(PARENT_ORIGIN)}&next=${encodeURIComponent(storage.get()?.href || '/')}`;
+        `https://auth.tharaga.co.in/auth-email-landing/?parent_origin=${encodeURIComponent(parentOrigin)}&next=${encodeURIComponent(next)}`;
 
       const { error } = await supabase.auth.signUp({
         email,

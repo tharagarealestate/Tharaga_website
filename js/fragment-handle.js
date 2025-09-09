@@ -1,3 +1,47 @@
+// --- Salvage handler: run immediately on main site to recover Supabase hash redirects ---
+(function(){
+  try {
+    // Only run on the main site, not on the auth subdomain
+    if (location.origin !== 'https://tharaga.co.in') return;
+
+    const rawHash = (location.hash || '').replace(/^#/, '');
+    if (!rawHash) return;
+
+    const qp = new URLSearchParams(rawHash);
+    const accessToken = qp.get('access_token');
+    const refreshToken = qp.get('refresh_token');
+    const hasError = qp.get('error') || qp.get('error_code');
+
+    // If Supabase dropped tokens on the main site, move this tab to the auth domain
+    if (accessToken && refreshToken) {
+      const backNext = location.pathname + location.search;
+      const authUrl =
+        `https://auth.tharaga.co.in/login_signup_glassdrop/?post_auth=1` +
+        `&parent_origin=${encodeURIComponent(location.origin)}` +
+        `&next=${encodeURIComponent(backNext)}` +
+        `#${rawHash}`;
+
+      // Replace so back button doesn't land on the broken hash page
+      location.replace(authUrl);
+      return;
+    }
+
+    // If we landed with an error hash (e.g., otp_expired), clear hash and open the login modal
+    if (hasError) {
+      try { history.replaceState(null, '', location.pathname + location.search); } catch (_) {}
+      const openGate = () => window.authGate?.openLoginModal?.({ next: location.pathname + location.search });
+      if (window.authGate?.openLoginModal) {
+        openGate();
+      } else {
+        // If auth-gate loads later, open once available
+        window.addEventListener('load', () => {
+          try { openGate(); } catch (_) {}
+        }, { once: true });
+      }
+    }
+  } catch (_) {}
+})();
+
 // /js/fragment-handle.js  (REPLACE file with this)
 (async function handleFragmentTokensOnParent() {
   try {

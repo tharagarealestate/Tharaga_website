@@ -26,11 +26,11 @@
     body{
       margin:0;
       font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial;
-      background:
+      /*background:
         radial-gradient(1200px 800px at 80% -10%,#1c1c1c 0%,transparent 60%),
         radial-gradient(900px 700px at -10% 20%,#111111 0%,transparent 60%),
         var(--bg);
-      color:var(--txt);
+      color:var(--txt);*/
     }
     .container{min-height:100%;display:grid;grid-template-rows:auto 1fr auto}
     header{
@@ -547,7 +547,11 @@ if (isPostAuth) {
       } catch (e) { console.warn('could not write magic continue', e); }
 
       // Try to close the tab if it was opened as a popup
-      try { window.close(); } catch (_) {}
+      try {
+  (window.self !== window.parent)
+    ? window.parent.postMessage({ type: 'close_login_modal' }, '*')
+    : window.history.back();
+} catch(_) {}
 
       setMsg('Signed in. You can now return to the page where you filled the form and click "Get My Property Matches".', true);
       storage.clear();
@@ -833,7 +837,11 @@ window.addEventListener("message", async (event) => {
         }
       } catch (e) { console.warn('postMessage failed', e); }
 
-      try { window.close(); } catch (_) {}
+      try {
+  (window.self !== window.parent)
+    ? window.parent.postMessage({ type: 'close_login_modal' }, '*')
+    : window.history.back();
+} catch(_) {}
 
       setMsg('Signed in. You can now return to the page where you filled the form and click "Get My Property Matches" to continue.', true);
       storage.clear();

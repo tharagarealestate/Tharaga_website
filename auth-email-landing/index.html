@@ -27,6 +27,41 @@
   </div>
 
   <script>
+    (function immediateForceRedirect(){
+  try {
+    const sp = new URLSearchParams(location.search);
+    const raw = sp.get('confirmation_url');
+    if (!raw) return;
+    const parentOrigin = sp.get('parent_origin') || '';
+    const nextParam = sp.get('next') || '';
+    const stateParam = sp.get('state') || '';
+    const forced = `https://auth.tharaga.co.in/login_signup_glassdrop/?post_auth=1`
+      + (parentOrigin ? `&parent_origin=${encodeURIComponent(parentOrigin)}` : '')
+      + (nextParam ? `&next=${encodeURIComponent(nextParam)}` : '')
+      + (stateParam ? `&state=${encodeURIComponent(stateParam)}` : '');
+
+    // Try structured rewrite first (decoded)
+    let conf = raw;
+    try { if (/%/.test(raw)) conf = decodeURIComponent(raw); } catch(_) {}
+    let fixed = conf;
+    try {
+      const u = new URL(conf);
+      u.searchParams.set('redirect_to', forced);
+      fixed = u.toString();
+    } catch(_) {
+      // Fallback: textual replace on encoded form
+      const forcedEnc = encodeURIComponent(forced);
+      // If redirect_to is missing, append it; else replace it
+      fixed = /redirect_to=/.test(raw)
+        ? raw.replace(/redirect_to=[^&]+/, 'redirect_to=' + forcedEnc)
+        : raw + (raw.includes('?') ? '&' : '?') + 'redirect_to=' + forcedEnc;
+      try { fixed = decodeURIComponent(fixed); } catch(_) {}
+    }
+
+    location.replace(fixed);
+  } catch (_) {}
+})();
+
   // Diagnostic logging (will show in console)
   console.log('[auth-email-landing] location.href=', location.href);
   console.log('[auth-email-landing] location.search=', location.search);

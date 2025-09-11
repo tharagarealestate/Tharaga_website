@@ -355,12 +355,28 @@
         const err = qp.get('error');
         const errDesc = qp.get('error_description');
         if (isExpired || err) {
-          const msg = isExpired ? 'This magic link has expired. Please request a new link.' : (errDesc || 'There was a problem with the login link.');
+          // Hide the form and show a concise message
+          try { document.getElementById('authForm')?.classList.add('hidden'); } catch(_) {}
+          try { document.getElementById('authed')?.classList.add('hidden'); } catch(_) {}
+          const msg = isExpired ? 'Link expired. Returning to your page…' : (errDesc || 'There was a problem with the login link.');
           try { setMsg(msg, false); } catch(_) {}
+          // Notify parent (modal) so it can close gracefully
           try {
-            const magicBtnEl = document.getElementById('magicBtn');
-            if (magicBtnEl) magicBtnEl.textContent = 'Resend Magic Link';
+            const payload = { type: 'tharaga_verify_failed', error: err || null, error_code: qp.get('error_code') || null, error_description: errDesc || null };
+            if (window.self !== window.parent) {
+              window.parent.postMessage(payload, '*');
+            }
           } catch(_) {}
+          // Auto-close or go back after a short delay when opened standalone
+          setTimeout(() => {
+            try {
+              (window.self !== window.parent)
+                ? window.parent.postMessage({ type: 'close_login_modal' }, '*')
+                : window.history.back();
+            } catch(_) {
+              try { window.close(); } catch(__) {}
+            }
+          }, 1000);
         }
 
         // Prefill last email if available

@@ -12,6 +12,9 @@
   /** CONFIG — update LOGIN_IFRAME_URL to your actual login/embed page */
   // make explicit to avoid directory/index surprises:
   const LOGIN_IFRAME_URL = "https://auth.tharaga.co.in/login_signup_glassdrop/";
+  // New: inline login UI rendered into the iframe via srcdoc when true
+  const USE_INLINE_LOGIN = true;
+  const MAGIC_CONFIRM_URL = new URL('/magic-confirm.html', location.origin).href;
   const AUTO_RESUME_PENDING = false;
 
   // Build allowed origin list robustly (supports absolute AND relative LOGIN_IFRAME_URL)
@@ -22,6 +25,12 @@
     ALLOWED_IFRAME_ORIGINS = [ location.origin ];
     console.warn('auth-gate: invalid LOGIN_IFRAME_URL — falling back to current origin', e);
   }
+  // Allow same-origin messages when rendering inline login
+  try {
+    if (USE_INLINE_LOGIN && ALLOWED_IFRAME_ORIGINS.indexOf(location.origin) === -1) {
+      ALLOWED_IFRAME_ORIGINS.push(location.origin);
+    }
+  } catch(_) {}
 
   // Prevent double injection
   if (window.__authGateInjected) return;
@@ -36,6 +45,10 @@
     <div class="authgate-backdrop" part="backdrop" aria-hidden="true">
       <div class="authgate-dialog" role="dialog" aria-modal="true" aria-label="Sign in / Sign up">
         <button class="authgate-close" aria-label="Close login modal" title="Close">✕</button>
+        <div class="authgate-success" id="authGateSuccess" aria-live="polite" hidden>
+          <span class="authgate-check">✅</span>
+          <span id="authGateSuccessText">Welcome!</span>
+        </div>
         <div class="authgate-frame-wrap">
           <iframe id="authGateIframe" src="about:blank" frameborder="0" allow="clipboard-read; clipboard-write"></iframe>
         </div>
@@ -67,6 +80,9 @@
     #authGateModal .authgate-close { position:absolute; top:10px; right:12px; z-index:3; border:none; font-size:20px; cursor:pointer; padding:6px; display:none; }
     #authGateModal .authgate-frame-wrap { display:flex; align-items:center; justify-content:center; padding:28px; flex:1; min-height:0; } 
     #authGateModal iframe#authGateIframe { width:100%; height:100%; border:0; display:block; border-radius:12px; }
+    #authGateModal .authgate-success { position:absolute; left:12px; right:12px; top:12px; display:flex; align-items:center; gap:8px; background:#f0fdf4; color:#166534; border:1px solid #bbf7d0; border-radius:10px; padding:10px 12px; box-shadow:0 6px 18px rgba(0,0,0,.08); z-index:4; animation: authfade .35s ease; }
+    #authGateModal .authgate-check { font-size:18px; }
+    @keyframes authfade { from { opacity:0; transform: translateY(-6px); } to { opacity:1; transform: none; } }
     @media (max-width:420px) {
       #authGateModal .authgate-dialog { width:98%; height:98%; border-radius:6px; }
       #authGateModal .authgate-close { top:6px; right:8px; }
@@ -112,6 +128,8 @@
   let dialog = overlay.querySelector('.authgate-dialog');
   let iframe = overlay.querySelector('#authGateIframe');
   let closeBtn = overlay.querySelector('.authgate-close');
+  let successBanner = overlay.querySelector('#authGateSuccess');
+  let successText = overlay.querySelector('#authGateSuccessText');
 
   if (!modal || !dialog || !iframe || !closeBtn) {
     // Ensure they are obtained once DOMContentLoaded runs
@@ -121,6 +139,8 @@
       dialog = overlay.querySelector('.authgate-dialog');
       iframe = overlay.querySelector('#authGateIframe');
       closeBtn = overlay.querySelector('.authgate-close');
+      successBanner = overlay.querySelector('#authGateSuccess');
+      successText = overlay.querySelector('#authGateSuccessText');
     }, { once: true });
   }
 
@@ -178,23 +198,45 @@
       })();
       try { localStorage.setItem('__tharaga_auth_state', JSON.stringify({ state: randomState, ts: Date.now() })); } catch(_) {}
 
-      const params = new URLSearchParams();
-      params.set('embed', '1');
-      if (next) params.set('next', next);
-      params.set('state', randomState);
-      params.set('parent_origin', location.origin);
-      iframe.src = LOGIN_IFRAME_URL + (params.toString() ? ('?' + params.toString()) : '');
-      // debug
-      console.debug('auth-gate: opening iframe ->', iframe.src);
-      try {
-        const tmpUrl = new URL(iframe.src, location.href);
-        const iframeOrigin = tmpUrl.origin;
-        if (ALLOWED_IFRAME_ORIGINS.indexOf(iframeOrigin) === -1) {
-          ALLOWED_IFRAME_ORIGINS.push(iframeOrigin);
-        }
-      } catch (e) { /* ignore */ }
+      if (USE_INLINE_LOGIN) {
+        // Render a minimal login form directly inside the iframe (same-origin)
+        iframe.removeAttribute('src');
+        iframe.srcdoc = buildInlineLoginHTML({
+          supabaseUrl: SUPABASE_URL,
+          supabaseAnonKey: SUPABASE_ANON_KEY,
+          magicConfirmUrl: MAGIC_CONFIRM_URL,
+          next: next || '',
+        });
+        // If the user is already signed in on this page, reflect success and close
+        (async () => {
+          try {
+            const client = await ensureParentSupabaseClient();
+            const { data } = await client.auth.getSession();
+            if (data?.session?.user) {
+              showParentSuccess(data.session.user.email || null);
+              setTimeout(() => { try { closeLoginModal(); } catch(_) {} }, 1800);
+            }
+          } catch(_) {}
+        })();
+      } else {
+        const params = new URLSearchParams();
+        params.set('embed', '1');
+        if (next) params.set('next', next);
+        params.set('state', randomState);
+        params.set('parent_origin', location.origin);
+        iframe.src = LOGIN_IFRAME_URL + (params.toString() ? ('?' + params.toString()) : '');
+        // debug
+        console.debug('auth-gate: opening iframe ->', iframe.src);
+        try {
+          const tmpUrl = new URL(iframe.src, location.href);
+          const iframeOrigin = tmpUrl.origin;
+          if (ALLOWED_IFRAME_ORIGINS.indexOf(iframeOrigin) === -1) {
+            ALLOWED_IFRAME_ORIGINS.push(iframeOrigin);
+          }
+        } catch (e) { /* ignore */ }
+      }
     } catch (e) {
-      iframe.src = LOGIN_IFRAME_URL;
+      if (!USE_INLINE_LOGIN) iframe.src = LOGIN_IFRAME_URL;
     }
 
     lastFocused = document.activeElement;
@@ -290,6 +332,7 @@
       signInReject(new Error('Login modal closed'));
       signInPromise = null; signInResolve = null; signInReject = null;
     }
+    if (successBanner) { try { successBanner.hidden = true; } catch(_) {} }
   }
 
   function onKeyDown(e) {
@@ -364,11 +407,9 @@
     // expected: { type: 'signed_in' | 'close_login_modal' | 'ping', next?, user? }
     if (msg.type === 'signed_in') {
         window.__authGateLoggedIn = true;
-        // Keep modal OPEN so iframe can show the “Continue” container
-        if (signInResolve) {
-          try { signInResolve({ signedIn: true, user: msg.user || null }); } catch (_) {}
-          signInPromise = null; signInResolve = null; signInReject = null;
-        }
+        try { showParentSuccess(msg?.user?.email || null); } catch(_) {}
+        if (signInResolve) { try { signInResolve({ signedIn: true, user: msg.user || null }); } catch (_) {} signInPromise = signInResolve = signInReject = null; }
+        setTimeout(() => { try { closeLoginModal(); } catch(_) {} }, 1800);
         return;
       }
     if (msg.type === 'close_login_modal') {
@@ -383,6 +424,113 @@
     closeLoginModal,
     attachAuthGate
   };
+
+  function showParentSuccess(email) {
+    try {
+      if (!successBanner || overlay.style.display !== 'block') return;
+      successText.textContent = email ? `Welcome, ${email}! 🎉` : 'Welcome! 🎉';
+      successBanner.hidden = false;
+      setTimeout(() => { try { successBanner.hidden = true; } catch(_) {} }, 2000);
+    } catch (_) {}
+  }
+
+  // Build inline login HTML for iframe.srcdoc
+  function buildInlineLoginHTML({ supabaseUrl, supabaseAnonKey, magicConfirmUrl, next }) {
+    const safeNext = typeof next === 'string' ? next : '';
+    // NOTE: keep this minimal to avoid CSP issues
+    return `<!doctype html><html><head>
+      <meta charset="utf-8" />
+      <meta name="viewport" content="width=device-width, initial-scale=1" />
+      <title>Sign in</title>
+      <style>
+        body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;color:#111;}
+        .wrap{display:flex;align-items:center;justify-content:center;min-height:100vh;background:#f6f7f9}
+        .card{background:#fff;border:1px solid #e5e7eb;border-radius:12px;box-shadow:0 6px 22px rgba(0,0,0,.08);padding:22px;width:min(420px,95vw)}
+        h1{font-size:20px;margin:0 0 8px}
+        p{margin:0 0 12px;color:#444}
+        label{display:block;font-size:13px;margin:10px 0 6px;color:#222}
+        input{width:100%;padding:12px;border:1px solid #d0d7de;border-radius:10px;outline:none}
+        input:disabled{background:#f3f4f6}
+        .row{display:flex;gap:10px;margin-top:12px}
+        button{cursor:pointer;border:0;border-radius:10px;padding:12px 14px;font-weight:700}
+        .primary{background:#16a34a;color:#fff}
+        .ghost{background:#eef2ff;color:#1e293b}
+        .msg{margin-top:10px;font-size:14px}
+        .ok{color:#16a34a}
+        .err{color:#dc2626}
+        .success{display:none;margin-top:12px;padding:12px;border:1px solid #bbf7d0;background:#f0fdf4;border-radius:10px;color:#166534}
+        .success.show{display:block;animation:fade .35s ease}
+        .check{font-size:20px;margin-right:6px}
+        @keyframes fade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+      </style>
+    </head>
+    <body>
+      <div class="wrap">
+        <div class="card" aria-live="polite">
+          <h1>Login / Sign up</h1>
+          <p>Use your email. We'll send you a secure magic link.</p>
+          <form id="f" autocomplete="on">
+            <label for="em">Email</label>
+            <input id="em" name="email" type="email" placeholder="you@domain.com" required autocomplete="email" />
+            <div class="row">
+              <button id="go" class="primary" type="submit">Send Magic Link</button>
+              <button id="cancel" class="ghost" type="button">Cancel</button>
+            </div>
+            <div id="m" class="msg" role="status"></div>
+          </form>
+          <div id="s" class="success"><span class="check">✅</span><strong>Welcome!</strong> You're signed in. This will close…</div>
+        </div>
+      </div>
+      <script type="module">
+        import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+        const SUPABASE_URL = ${JSON.stringify(supabaseUrl)};
+        const SUPABASE_ANON_KEY = ${JSON.stringify(supabaseAnonKey)};
+        const MAGIC_CONFIRM_URL = ${JSON.stringify(magicConfirmUrl)};
+        const NEXT = ${JSON.stringify(safeNext)};
+        const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        const f = document.getElementById('f');
+        const em = document.getElementById('em');
+        const go = document.getElementById('go');
+        const cancelBtn = document.getElementById('cancel');
+        const msg = document.getElementById('m');
+        const success = document.getElementById('s');
+
+        function setMsg(t, ok){ msg.textContent = t||''; msg.className='msg'+(t? (ok?' ok':' err'):''); }
+        function disableForm(d){ em.disabled=d; go.disabled=d; }
+
+        cancelBtn.addEventListener('click', ()=>{
+          try { window.parent.postMessage({ type: 'close_login_modal' }, '*'); } catch(_) {}
+        });
+
+        f.addEventListener('submit', async (e)=>{
+          e.preventDefault();
+          const email = (em.value||'').trim();
+          if (!email) { setMsg('Enter a valid email'); em.focus(); return; }
+          disableForm(true);
+          setMsg('Check your email for a login link ✉️', true);
+          try {
+            const emailRedirectTo = MAGIC_CONFIRM_URL + (NEXT? ('?next='+encodeURIComponent(NEXT)) : '');
+            const { error } = await supabase.auth.signInWithOtp({ email, options: { emailRedirectTo } });
+            if (error) { setMsg(error.message); disableForm(false); return; }
+          } catch (err) {
+            setMsg('Failed to send magic link. Try again.');
+            disableForm(false);
+          }
+        });
+
+        // Reflect login state in this modal (same-origin session sync)
+        supabase.auth.onAuthStateChange((event, session)=>{
+          if (event === 'SIGNED_IN' && session?.user) {
+            try { setMsg(''); success.classList.add('show'); } catch(_) {}
+            setTimeout(()=>{
+              try { window.parent.postMessage({ type: 'close_login_modal' }, '*'); } catch(_) {}
+            }, 1800);
+          }
+        });
+      </script>
+    </body></html>`;
+  }
 
   // Poll the Edge Function for a limited time to fetch tokens for a given state
   async function waitForHandoff(state, timeoutMs = 120000) {
@@ -418,7 +566,9 @@
           try {
             window.__authGateRemoteSignedIn = true;
             window.__authGateLoggedIn = true;
-            console.debug('authGate: sign-in detected in another tab — waiting for explicit continue signal');
+            showParentSuccess(session?.user?.email || null);
+            // Auto-close shortly after success on parent
+            setTimeout(() => { try { closeLoginModal(); } catch(_) {} }, 1800);
           } catch (e) {
             console.warn('authGate cross-tab handler error', e);
           }
@@ -430,16 +580,23 @@
 
         if (ev.key === '__tharaga_magic_confirmed') {
             window.__authGateLoggedIn = true;
-            // Keep modal OPEN so iframe shows “Continue”
-            // Resolve any waiters if present
+            try {
+              const payload = JSON.parse(ev.newValue||'null');
+              showParentSuccess(payload?.user?.email || null);
+            } catch(_) {}
             if (signInResolve) { try { signInResolve({ signedIn: true }); } catch (_) {} signInPromise = signInResolve = signInReject = null; }
+            setTimeout(() => { try { closeLoginModal(); } catch(_) {} }, 1800);
             return;
         }
 
         if (ev.key === '__tharaga_magic_continue') {
           window.__authGateLoggedIn = true;
-          // Keep modal OPEN so iframe shows “Continue”
+          try {
+            const payload = JSON.parse(ev.newValue||'null');
+            showParentSuccess(payload?.user?.email || null);
+          } catch(_) {}
           if (signInResolve) { try { signInResolve({ signedIn: true }); } catch (_) {} signInPromise = signInResolve = signInReject = null; }
+          setTimeout(() => { try { closeLoginModal(); } catch(_) {} }, 1800);
           return;
         }
 

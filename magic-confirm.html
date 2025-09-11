@@ -23,15 +23,18 @@
     .ghost{background:#eef2ff;color:#1e293b}
     .mono{font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; font-size:12px; color:#111}
     .success{display:flex;align-items:center;gap:10px;background:#f0fdf4;border:1px solid #bbf7d0;color:#166534;padding:12px;border-radius:12px;margin-top:12px}
+    .error{display:flex;align-items:center;gap:10px;background:#fef2f2;border:1px solid #fecaca;color:#991b1b;padding:12px;border-radius:12px;margin-top:12px}
+    .muted{color:var(--muted)}
   </style>
 </head>
 <body>
   <main>
     <section class="card" aria-live="polite">
-      <div class="bigcheck">✅</div>
-      <h1>You're signed in</h1>
-      <p>Your account has been signed in successfully. You may now return to the main page.</p>
+      <div class="bigcheck" id="statusIcon">✅</div>
+      <h1 id="headline">You're signed in</h1>
+      <p id="subtext">Your account has been signed in successfully. You may now return to the main page.</p>
       <div id="emailNotice" class="mono"></div>
+      <p id="countdown" class="muted" style="margin-top:10px;display:none"></p>
       <div class="row">
         <button id="goHome" class="btn primary" type="button">Go to Main Page</button>
         <button id="closeTab" class="btn ghost" type="button">Close this Tab</button>
@@ -39,6 +42,10 @@
       <div id="syncMsg" class="success" style="display:none">
         <strong>All set.</strong>
         <span>This device has your session and other tabs will sync.</span>
+      </div>
+      <div id="errorMsg" class="error" style="display:none">
+        <strong>Link issue.</strong>
+        <span id="errorText">This link is expired or invalid. Redirecting to login…</span>
       </div>
     </section>
   </main>
@@ -48,6 +55,7 @@
     const SUPABASE_URL = 'https://wedevtjjmdvngyshqdro.supabase.co';
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndlZGV2dGpqbWR2bmd5c2hxZHJvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU0NzYwMzgsImV4cCI6MjA3MTA1MjAzOH0.Ex2c_sx358dFdygUGMVBohyTVto6fdEQ5nydDRh9m6M';
     const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    try { window.supabase = supabase; } catch(_) {}
 
     const qs = new URLSearchParams(location.search);
     const nextTarget = qs.get('next');
@@ -56,10 +64,19 @@
     const closeTab = document.getElementById('closeTab');
     const emailNotice = document.getElementById('emailNotice');
     const syncMsg = document.getElementById('syncMsg');
+    const statusIcon = document.getElementById('statusIcon');
+    const headline = document.getElementById('headline');
+    const subtext = document.getElementById('subtext');
+    const countdownEl = document.getElementById('countdown');
+    const errorBox = document.getElementById('errorMsg');
+    const errorText = document.getElementById('errorText');
 
     function safeUrl(href){
       try{ const u = new URL(href, location.origin); return u.origin === location.origin ? u.href : location.origin; }catch{ return location.origin; }
     }
+
+    const HOME_URL = 'https://tharaga.co.in/';
+    const LOGIN_URL = 'https://auth.tharaga.co.in/login_signup_glassdrop/';
 
     function signalTabs(session){
       try {
@@ -85,11 +102,14 @@
         try {
           const { data, error } = await supabase.auth.setSession({ access_token, refresh_token });
           if (!error) {
-            // Clean URL
             history.replaceState(null, '', location.pathname + (nextTarget? ('?next='+encodeURIComponent(nextTarget)) : ''));
             return data.session;
+          } else {
+            throw error;
           }
-        } catch(_) {}
+        } catch(e) {
+          throw e;
+        }
       }
 
       // 3) Try exchangeCodeForSession for ?code=… links
@@ -100,30 +120,67 @@
           if (!error) {
             history.replaceState(null, '', location.pathname + (nextTarget? ('?next='+encodeURIComponent(nextTarget)) : ''));
             return data.session;
+          } else {
+            throw error;
           }
         }
-      } catch(_) {}
+      } catch(e) { throw e; }
 
       return (await supabase.auth.getSession()).data?.session || null;
     }
 
+    function displayNameFromUser(user){
+      try {
+        const name = (user?.user_metadata?.full_name || '').trim();
+        if (name) return name;
+        const email = (user?.email || '').trim();
+        if (email) return email.split('@')[0].replace(/\b\w/g, c=>c.toUpperCase());
+      } catch(_) {}
+      return 'there';
+    }
+
+    function startCountdownAndRedirect(targetHref){
+      let remaining = 2;
+      countdownEl.style.display = 'block';
+      countdownEl.textContent = 'Redirecting in ' + remaining + 's…';
+      const t = setInterval(()=>{
+        remaining -= 1;
+        if (remaining <= 0){ clearInterval(t); location.href = targetHref; }
+        else { countdownEl.textContent = 'Redirecting in ' + remaining + 's…'; }
+      }, 1000);
+      setTimeout(()=>{ try { location.href = targetHref; } catch(_) {} }, 2000);
+    }
+
     (async function init(){
-      const session = await ensureSessionFromURL();
-      if (session?.user?.email) {
-        emailNotice.textContent = 'Signed in as ' + session.user.email;
+      try {
+        const session = await ensureSessionFromURL();
+        if (!session || !session.user) throw new Error('No session');
+        const who = displayNameFromUser(session.user);
+        headline.textContent = who + ', you\'re logged in!';
+        subtext.textContent = 'Taking you to the homepage…';
+        emailNotice.textContent = 'Signed in as ' + (session.user.email || who);
+        signalTabs(session);
+        syncMsg.style.display = 'flex';
+        const dest = HOME_URL;
+        startCountdownAndRedirect(dest);
+      } catch (err) {
+        try { statusIcon.textContent = '⚠️'; } catch(_) {}
+        headline.textContent = 'Login link problem';
+        subtext.textContent = 'We couldn\'t verify this magic link.';
+        errorText.textContent = 'This link is expired or invalid. Redirecting to login…';
+        errorBox.style.display = 'flex';
+        const dest = LOGIN_URL + (nextTarget ? ('?next=' + encodeURIComponent(nextTarget)) : '');
+        startCountdownAndRedirect(dest);
       }
-      signalTabs(session);
-      syncMsg.style.display = 'flex';
     })();
 
     goHome.addEventListener('click', ()=>{
-      const href = nextTarget ? safeUrl(nextTarget) : location.origin + '/';
+      const href = HOME_URL;
       location.href = href;
     });
     closeTab.addEventListener('click', ()=>{
       try { window.close(); } catch(_) {}
-      // Fallback: go home
-      const href = nextTarget ? safeUrl(nextTarget) : location.origin + '/';
+      const href = HOME_URL;
       location.href = href;
     });
 

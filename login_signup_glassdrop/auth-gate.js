@@ -45,33 +45,77 @@
 
   const style = document.createElement('style');
   style.textContent = `
-    #authGateModal { position: absolute; inset: 0; top: 0; 
+  /* ensure page/document spans full document */
+  html, body { height: 100%; margin: 0; }
+
+  /* root overlay */
+  #authGateModal {
+    position: absolute;
+    top: 0;
     left: 0;
-    width: 100%; 
-    min-height: 100%; display: none; z-index: 2147483646; }
-    #authGateModal .authgate-backdrop { display:flex; align-items:center; justify-content:center; inset:0;
-      display:flex; 
-      align-items:center; 
-      justify-content:center; 
-      position:absolute; 
-      top:0; 
-      left:0; 
-      width:100%; 
-      height:100%; 
-      min-height: 100%;
-      background: rgba(10,10,10,.35);
-      backdrop-filter: blur(8px) saturate(120%);
-      -webkit-backdrop-filter: blur(8px) saturate(120%);
-    }
-    #authGateModal .authgate-dialog { width: min(1100px, 98%); height: min(850px, 92%); position:relative; display:flex; flex-direction:column; overflow:hidden; }
-    #authGateModal .authgate-close { position:absolute; top:10px; right:12px; z-index:3; border:none; font-size:20px; cursor:pointer; padding:6px; display:none; }
-    #authGateModal .authgate-frame-wrap { display:flex; align-items:center; justify-content:center; padding:28px; flex:1; min-height:0; } 
-    #authGateModal iframe#authGateIframe { width:100%; height:100%; border:0; display:block; border-radius:12px; }
-    @media (max-width:420px) {
-      #authGateModal .authgate-dialog { width:98%; height:98%; border-radius:6px; }
-      #authGateModal .authgate-close { top:6px; right:8px; }
-    }
-  `;
+    width: 100%;
+    min-height: 100%;
+    display: none;
+    z-index: 2147483646;
+  }
+
+  /* backdrop that dims the page */
+  #authGateModal .authgate-backdrop {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    min-height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(10,10,10,.35);
+    backdrop-filter: blur(8px) saturate(120%);
+    -webkit-backdrop-filter: blur(8px) saturate(120%);
+  }
+
+  /* dialog container (keeps iframe centered) */
+  #authGateModal .authgate-dialog {
+    width: min(1100px, 98%);
+    height: min(850px, 92%);
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    /* make sure dialog itself does not add background/shadow */
+    background: transparent !important;
+    box-shadow: none !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+  }
+
+  /* remove padding around the frame so only the iframe shows */
+  #authGateModal .authgate-frame-wrap {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;            /* <-- removed padding */
+    flex: 1;
+    min-height: 0;
+    background: transparent !important;
+  }
+
+  /* force iframe to be fully transparent, no border, no shadow */
+  #authGateModal iframe#authGateIframe {
+    width: 100%;
+    height: 100%;
+    border: 0 !important;
+    display: block;
+    background: transparent !important;   /* important so browser honors it */
+    box-shadow: none !important;
+    border-radius: 0 !important;          /* remove rounded corners if you want */
+  }
+
+  @media (max-width:420px) {
+    #authGateModal .authgate-dialog { width:98%; height:98%; border-radius:6px; }
+    #authGateModal .authgate-close { top:6px; right:8px; }
+  }
+`;
     // ---------------- Safe DOM mount ----------------
   // Append style + overlay only once, and only when the DOM is ready.
   function mountAuthGateElements() {
@@ -128,7 +172,7 @@
     iframe.setAttribute('allowtransparency', 'true');
     iframe.style.background = 'transparent';
     iframe.style.border = '0';
-    iframe.style.borderRadius = '12px';
+    iframe.style.borderRadius = '0';
     iframe.style.overflow = 'hidden';
   } catch (e) { /* ignore */ }
 

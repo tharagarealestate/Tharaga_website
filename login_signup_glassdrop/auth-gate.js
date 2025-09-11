@@ -46,7 +46,11 @@
   const style = document.createElement('style');
   style.textContent = `
     #authGateModal { position: fixed; inset: 0; display: none; z-index: 2147483646; }
-    #authGateModal .authgate-backdrop { display:flex; align-items:center; justify-content:center; inset:0; position:fixed; width:100%; height:100%; background: transparent; }
+    #authGateModal .authgate-backdrop { display:flex; align-items:center; justify-content:center; inset:0; position:fixed; width:100%; height:100%;
+      background: rgba(10,10,10,.35);
+      backdrop-filter: blur(8px) saturate(120%);
+      -webkit-backdrop-filter: blur(8px) saturate(120%);
+    }
     #authGateModal .authgate-dialog { width: min(1100px, 98%); height: min(850px, 92%); background: transparent; border-radius:12px; box-shadow: 0 12px 40px rgba(0,0,0,0.45); position:relative; display:flex; flex-direction:column; overflow:hidden; }
     #authGateModal .authgate-close { position:absolute; top:10px; right:12px; z-index:3; background:transparent; border:none; font-size:20px; cursor:pointer; padding:6px; display:none; }
     #authGateModal .authgate-frame-wrap { display:flex; align-items:center; justify-content:center; padding:28px; flex:1; min-height:0; } 
@@ -189,6 +193,17 @@
     document.addEventListener('keydown', onKeyDown);
     dialog.addEventListener('keydown', trapFocus);
 
+    // Helper: ensure a Supabase client is available on this parent page
+    async function ensureParentSupabaseClient() {
+      try {
+        if (window.supabase && window.supabase.auth) return window.supabase;
+        const mod = await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm');
+        const c = mod.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        window.supabase = c; // cache for later
+        return c;
+      } catch (_) { return null; }
+    }
+
     // Start polling the Edge Function to retrieve tokens handed off by the email-click tab
     (async () => {
       try {
@@ -197,7 +212,22 @@
         if (!state) return;
         const result = await waitForHandoff(state, 120000);
         if (result && result.access_token && result.refresh_token) {
-          // Post tokens to iframe so it can set its session and flip to Continue UI
+          // 1) Set session on this PARENT page so the user is actually logged in here
+          try {
+            const client = await ensureParentSupabaseClient();
+            if (client && client.auth) {
+              await client.auth.setSession({ access_token: result.access_token, refresh_token: result.refresh_token });
+            }
+          } catch (_) { /* ignore */ }
+
+          // 2) Signal other tabs in this origin that login is complete
+          try {
+            const payload = { ts: Date.now(), next: next || null, user: result.user || null };
+            localStorage.setItem('__tharaga_magic_continue', JSON.stringify(payload));
+            localStorage.setItem('__tharaga_magic_confirmed', JSON.stringify(payload));
+          } catch (_) { /* ignore */ }
+
+          // 3) Post tokens to iframe so it can set its session and flip to Continue UI
           postMessageToIframe({
             type: 'tharaga_token_transfer',
             access_token: result.access_token,
@@ -205,6 +235,22 @@
             user: result.user || null,
             next: next || null
           });
+
+          // 4) Auto-close the modal and resume the original page
+          try {
+            closeLoginModal();
+          } catch (_) {}
+          try {
+            const safeNext = (function(){
+              if (!next) return null;
+              try { const u = new URL(next, location.origin); return u.origin === location.origin ? u.href : null; } catch { return null; }
+            })();
+            if (safeNext) {
+              setTimeout(() => { location.href = safeNext; }, 150);
+            } else {
+              setTimeout(() => { location.reload(); }, 150);
+            }
+          } catch (_) {}
         }
       } catch (e) {
         console.warn('auth-gate: handoff polling failed', e);

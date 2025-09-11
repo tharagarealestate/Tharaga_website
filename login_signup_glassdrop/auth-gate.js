@@ -45,10 +45,6 @@
 
   const style = document.createElement('style');
   style.textContent = `
-    html, body {
-      height: 100%;
-      margin: 0;
-    }
     #authGateModal { position: absolute; inset: 0; top: 0; 
     left: 0;
     width: 100%; 
@@ -63,9 +59,7 @@
       width:100%; 
       height:100%; 
       min-height: 100%;
-      background: rgba(10,10,10,.35);
-      backdrop-filter: blur(8px) saturate(120%);
-      -webkit-backdrop-filter: blur(8px) saturate(120%);
+    
     }
     #authGateModal .authgate-dialog { width: min(1100px, 98%); height: min(850px, 92%); position:relative; display:flex; flex-direction:column; overflow:hidden; }
     #authGateModal .authgate-close { position:absolute; top:10px; right:12px; z-index:3; background:transparent; border:none; font-size:20px; cursor:pointer; padding:6px; display:none; }

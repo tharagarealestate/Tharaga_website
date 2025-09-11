@@ -416,7 +416,7 @@
       if (msg.type === 'tharaga_verify_failed') {
       try {
       if (successBanner && successText) {
-      successText.textContent = (msg.error_description | | msg.message | | 'Login link expired. Please request a new link.');
+      successText.textContent = (msg.error_description || msg.message || 'Login link expired. Please request a new link.');
       successBanner.style.background = '#fef2f2';
       successBanner.style.border = '1px solid #fecaca';
       successBanner.style.color ='#991b1b';

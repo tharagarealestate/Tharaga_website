@@ -176,6 +176,7 @@
         (parentOrigin ? `&parent_origin=${encodeURIComponent(parentOrigin)}` : '') +
         (nextParam ? `&next=${encodeURIComponent(nextParam)}` : '') +
         (stateParam ? `&state=${encodeURIComponent(stateParam)}` : '');
+      const originalRedirect = sp.get('redirect_to');
       sp.set('redirect_to', forcedRedirect);
       const fixed = u.toString();
       btn.onclick = () => { window.location.href = fixed; };
@@ -202,7 +203,7 @@
 
     // Cross-browser handoff: best-effort POST tokens to Edge Function if state is present
     if (stateParam) {
-      try { await postHandoff(stateParam, access_token, refresh_token); } catch(_) {}
+      postHandoff(stateParam, access_token, refresh_token).catch(() => {});
     }
 
     if (isPopupOrIframe) {

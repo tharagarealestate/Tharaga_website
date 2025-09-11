@@ -46,9 +46,9 @@
   const style = document.createElement('style');
   style.textContent = `
     #authGateModal { position: fixed; inset: 0; display: none; z-index: 2147483646; }
-    #authGateModal .authgate-backdrop { display:flex; align-items:center; justify-content:center; inset:0; position:fixed; width:100%; height:100%; background: rgba(0,0,0,0.65); }
+    #authGateModal .authgate-backdrop { display:flex; align-items:center; justify-content:center; inset:0; position:fixed; width:100%; height:100%; background: transparent; }
     #authGateModal .authgate-dialog { width: min(1100px, 98%); height: min(850px, 92%); background: transparent; border-radius:12px; box-shadow: 0 12px 40px rgba(0,0,0,0.45); position:relative; display:flex; flex-direction:column; overflow:hidden; }
-    #authGateModal .authgate-close { position:absolute; top:10px; right:12px; z-index:3; background:transparent; border:none; font-size:20px; cursor:pointer; padding:6px; }
+    #authGateModal .authgate-close { position:absolute; top:10px; right:12px; z-index:3; background:transparent; border:none; font-size:20px; cursor:pointer; padding:6px; display:none; }
     #authGateModal .authgate-frame-wrap { display:flex; align-items:center; justify-content:center; padding:28px; flex:1; min-height:0; } 
     #authGateModal iframe#authGateIframe { width:100%; height:100%; border:0; display:block; background:transparent; border-radius:12px; }
     @media (max-width:420px) {
@@ -185,7 +185,7 @@
     overlay.style.display = 'block';
     overlay.setAttribute('aria-hidden', 'false');
     document.body.style.overflow = 'hidden';
-    setTimeout(() => { closeBtn.focus(); }, 50);
+    setTimeout(() => { try { if (closeBtn) closeBtn.focus(); } catch(_) {} }, 50);
     document.addEventListener('keydown', onKeyDown);
     dialog.addEventListener('keydown', trapFocus);
 
@@ -293,8 +293,8 @@
     });
   }
 
-  closeBtn.addEventListener('click', closeLoginModal);
-  modal.addEventListener('click', (ev) => { if (ev.target === modal) closeLoginModal(); });
+  if (closeBtn) closeBtn.addEventListener('click', closeLoginModal);
+  if (modal) modal.addEventListener('click', (ev) => { /* backdrop click disabled */ });
 
   // Message receiver: only accept from configured origins
   window.addEventListener('message', (ev) => {

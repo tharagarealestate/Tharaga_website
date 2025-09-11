@@ -574,6 +574,9 @@
         }
         const mod = await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm');
         sClient = mod.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        try { window.supabase = sClient; } catch(_) {}
+      } else {
+        try { window.supabase = sClient; } catch(_) {}
       }
 
       sClient.auth.onAuthStateChange((event, session) => {

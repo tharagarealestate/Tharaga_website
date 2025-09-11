@@ -32,16 +32,16 @@
   overlay.id = 'authGateModal';
   overlay.setAttribute('aria-hidden', 'true');
 
-  // overlay.innerHTML = `
-  //   <div class="authgate-backdrop" part="backdrop" aria-hidden="true">
-  //     <div class="authgate-dialog" role="dialog" aria-modal="true" aria-label="Sign in / Sign up">
-  //       <button class="authgate-close" aria-label="Close login modal" title="Close">✕</button>
-  //       <div class="authgate-frame-wrap">
-  //         <iframe id="authGateIframe" src="about:blank" frameborder="0" allow="clipboard-read; clipboard-write"></iframe>
-  //       </div>
-  //     </div>
-  //   </div>
-  // `;
+  overlay.innerHTML = `
+    <div class="authgate-backdrop" part="backdrop" aria-hidden="true">
+      <div class="authgate-dialog" role="dialog" aria-modal="true" aria-label="Sign in / Sign up">
+        <button class="authgate-close" aria-label="Close login modal" title="Close">✕</button>
+        <div class="authgate-frame-wrap">
+          <iframe id="authGateIframe" src="about:blank" frameborder="0" allow="clipboard-read; clipboard-write"></iframe>
+        </div>
+      </div>
+    </div>
+  `;
 
   const style = document.createElement('style');
   style.textContent = `

@@ -59,12 +59,14 @@
       width:100%; 
       height:100%; 
       min-height: 100%;
-    
+      background: rgba(10,10,10,.35);
+      backdrop-filter: blur(8px) saturate(120%);
+      -webkit-backdrop-filter: blur(8px) saturate(120%);
     }
     #authGateModal .authgate-dialog { width: min(1100px, 98%); height: min(850px, 92%); position:relative; display:flex; flex-direction:column; overflow:hidden; }
-    #authGateModal .authgate-close { position:absolute; top:10px; right:12px; z-index:3; background:transparent; border:none; font-size:20px; cursor:pointer; padding:6px; display:none; }
+    #authGateModal .authgate-close { position:absolute; top:10px; right:12px; z-index:3; border:none; font-size:20px; cursor:pointer; padding:6px; display:none; }
     #authGateModal .authgate-frame-wrap { display:flex; align-items:center; justify-content:center; padding:28px; flex:1; min-height:0; } 
-    #authGateModal iframe#authGateIframe { width:100%; height:100%; border:0; display:block; background:transparent; border-radius:12px; }
+    #authGateModal iframe#authGateIframe { width:100%; height:100%; border:0; display:block; border-radius:12px; }
     @media (max-width:420px) {
       #authGateModal .authgate-dialog { width:98%; height:98%; border-radius:6px; }
       #authGateModal .authgate-close { top:6px; right:8px; }

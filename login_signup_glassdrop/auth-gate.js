@@ -59,7 +59,7 @@
       width:100%; 
       height:100%; 
       min-height: 100%;
-      background: transparent;
+      background: transparent !important;
       backdrop-filter: none;
       -webkit-backdrop-filter: none;
     }

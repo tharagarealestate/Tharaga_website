@@ -346,6 +346,35 @@
       const session = await handleRedirectTokens();
       console.log('handleRedirectTokens -> session?', !!session);
     })();
+
+    // ---------- NEW: expired/invalid link UX + email remember ----------
+    (function handleExpiredAndPrefill(){
+      try {
+        const qp = new URLSearchParams(location.search);
+        const isExpired = qp.get('expired') === '1' || qp.get('error_code') === 'otp_expired';
+        const err = qp.get('error');
+        const errDesc = qp.get('error_description');
+        if (isExpired || err) {
+          const msg = isExpired ? 'This magic link has expired. Please request a new link.' : (errDesc || 'There was a problem with the login link.');
+          try { setMsg(msg, false); } catch(_) {}
+          try {
+            const magicBtnEl = document.getElementById('magicBtn');
+            if (magicBtnEl) magicBtnEl.textContent = 'Resend Magic Link';
+          } catch(_) {}
+        }
+
+        // Prefill last email if available
+        let lastEmail = null;
+        try { lastEmail = localStorage.getItem('__tharaga_last_email') || null; } catch(_) {}
+        if (!lastEmail) {
+          // Also check query param if provided by upstream
+          lastEmail = qp.get('email') || null;
+        }
+        if (lastEmail) {
+          try { document.getElementById('email').value = lastEmail; } catch(_) {}
+        }
+      } catch(_) {}
+    })();
   
 
 
@@ -765,6 +794,8 @@ window.addEventListener("message", async (event) => {
       }
 
       try {
+        // remember email locally for quick resend/rehydration
+        try { localStorage.setItem('__tharaga_last_email', email); } catch(_) {}
         const pending = storage.get();
         const next = pending?.href || new URLSearchParams(location.search).get('next') || '/';
         const parentOrigin = PARENT_ORIGIN;

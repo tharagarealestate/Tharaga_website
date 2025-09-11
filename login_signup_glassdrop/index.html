@@ -144,7 +144,28 @@
       100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
     }
 
-    /* removed in-iframe close button */
+   .close-btn {
+      position: absolute;
+      top: 10px;
+      right: 12px;
+      background: linear-gradient(180deg, var(--acc), #b8860b, #8b6508);
+      border: none;
+      font-size: 20px;
+      font-weight: bold;
+      color: #111; /* near-black for readability */
+      cursor: pointer;
+      z-index: 3;
+      padding: 6px 12px;
+      border-radius: 50%; /* circular button */
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+      transition: all 0.3s ease;
+    }
+
+  .close-btn:hover {
+    color: #fff; /* white icon on hover */
+    background: linear-gradient(180deg, #b8860b, #8b6508, #5a3a02);
+    transform: scale(1.1); /* subtle zoom */
+  }
     
 </style>
 
@@ -210,8 +231,7 @@
         <div class="hint">
           Tip: If you reached this page after clicking a partner link, we'll return you there after sign-in.
         </div>
-        
-
+        <button class="close-btn" onclick="(window.self!==window.parent) ? window.parent.postMessage({type:'close_login_modal'}, '*') : window.history.back()">×</button>
 
     </section>
     </main>

@@ -94,7 +94,19 @@
   }
 
   function render(ui, user){
-    ui.btn.textContent = user ? ('Hi, ' + firstName(user)) : 'Login / Signup';
+    var label;
+    if (user) {
+      try {
+        var full = (user && user.user_metadata && user.user_metadata.full_name) || '';
+        var email = (user && user.email) || '';
+        label = (full && full.trim()) || email || 'Account';
+      } catch(_) {
+        label = 'Account';
+      }
+    } else {
+      label = 'Login / Signup';
+    }
+    ui.btn.textContent = label;
     var init = ui.menu.querySelector('.auth-account-initial');
     if (init) init.textContent = initialFromUser(user);
   }

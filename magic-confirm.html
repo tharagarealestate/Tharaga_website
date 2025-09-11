@@ -157,11 +157,11 @@
         if (!session || !session.user) throw new Error('No session');
         const who = displayNameFromUser(session.user);
         headline.textContent = who + ', you\'re logged in!';
-        subtext.textContent = 'Taking you to the homepage…';
+        subtext.textContent = 'Taking you back to your page…';
         emailNotice.textContent = 'Signed in as ' + (session.user.email || who);
         signalTabs(session);
         syncMsg.style.display = 'flex';
-        const dest = HOME_URL;
+        const dest = nextTarget ? safeUrl(nextTarget) : HOME_URL;
         startCountdownAndRedirect(dest);
       } catch (err) {
         try { statusIcon.textContent = '⚠️'; } catch(_) {}

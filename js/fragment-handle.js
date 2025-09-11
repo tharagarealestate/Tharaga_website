@@ -27,28 +27,25 @@
       location.replace(authUrl);
     }
 
-    // If we landed with an error hash (e.g., otp_expired), clear hash and open the login modal
+    // If we landed with an error hash (e.g., otp_expired): redirect to dedicated confirmation handler
     if (hasError) {
-      try { history.replaceState(null, '', location.pathname + location.search); } catch (_) {}
-      // Inject a friendly banner so the user knows what happened
-      try {
-        const banner = document.createElement('div');
-        banner.setAttribute('role', 'alert');
-        banner.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:2147483647;background:#111827;color:#fde68a;border-bottom:1px solid #4b5563;padding:10px 14px;font-family:Inter,system-ui,Segoe UI,Roboto,Arial;font-size:14px;text-align:center;';
-        banner.textContent = 'Your login link was invalid or expired. A new login window will open. If it does not, please open the login again.';
-        document.body ? document.body.appendChild(banner) : document.addEventListener('DOMContentLoaded', () => document.body.appendChild(banner), { once: true });
-        setTimeout(() => { try { banner.remove(); } catch(_) {} }, 6000);
-      } catch(_) {}
+      const error = qp.get('error') || '';
+      const error_code = qp.get('error_code') || '';
+      const error_description = qp.get('error_description') || '';
+      const parent_origin = location.origin;
+      const next = location.pathname + location.search;
 
-      const openGate = () => window.authGate?.openLoginModal?.({ next: location.pathname + location.search });
-      if (window.authGate?.openLoginModal) {
-        openGate();
-      } else {
-        // If auth-gate loads later, open once available
-        window.addEventListener('load', () => {
-          try { openGate(); } catch (_) {}
-        }, { once: true });
-      }
+      // Build redirect to auth handler and pass error params for friendly UI and resend flow
+      const params = new URLSearchParams();
+      params.set('expired', '1');
+      params.set('parent_origin', parent_origin);
+      params.set('next', next);
+      if (error) params.set('error', error);
+      if (error_code) params.set('error_code', error_code);
+      if (error_description) params.set('error_description', error_description);
+
+      try { history.replaceState(null, '', location.pathname + location.search); } catch (_) {}
+      location.replace('https://auth.tharaga.co.in/auth-email-landing/?' + params.toString());
     }
   } catch (_) {}
 })();

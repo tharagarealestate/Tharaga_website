@@ -14,7 +14,8 @@
   const LOGIN_IFRAME_URL = "https://auth.tharaga.co.in/login_signup_glassdrop/";
   // New: inline login UI rendered into the iframe via srcdoc when true
   const USE_INLINE_LOGIN = false;
-  const MAGIC_CONFIRM_URL = new URL('/magic-confirm.html', location.origin).href;
+  // Always finalize on the main site, not the auth container
+  const MAGIC_CONFIRM_URL = 'https://tharaga.co.in/magic-confirm.html';
   const AUTO_RESUME_PENDING = false;
 
   // Build allowed origin list robustly (supports absolute AND relative LOGIN_IFRAME_URL)

@@ -332,9 +332,19 @@
       }
       }
 
-      if (isPostAuth) {
-        return null;
-      }
+      // If we landed with an error fragment (? or #) like otp_expired, send user to a friendly page (email landing or back to confirm)
+      try {
+        const err = params.get('error') || params.get('error_code');
+        if (err) {
+          const qs = new URLSearchParams(location.search);
+          const parent_origin = qs.get('parent_origin') || 'https://tharaga.co.in';
+          const next = qs.get('next') || '/';
+          const redirect = `https://tharaga.co.in/magic-confirm.html?next=${encodeURIComponent(next)}`;
+          setTimeout(()=>{ try { location.replace(redirect); } catch(_) {} }, 200);
+        }
+      } catch(_) {}
+
+      if (isPostAuth) { return null; }
       return null;
     }
 

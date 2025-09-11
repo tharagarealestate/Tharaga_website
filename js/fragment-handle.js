@@ -24,12 +24,22 @@
         `#${rawHash}`;
 
       // Replace so back button doesn't land on the broken hash page
-      location.replace(`https://auth.tharaga.co.in/login_signup_glassdrop/?post_auth=1&parent_origin=...&next=...&state=...#${rawHash}`) 
+      location.replace(authUrl);
     }
 
     // If we landed with an error hash (e.g., otp_expired), clear hash and open the login modal
     if (hasError) {
       try { history.replaceState(null, '', location.pathname + location.search); } catch (_) {}
+      // Inject a friendly banner so the user knows what happened
+      try {
+        const banner = document.createElement('div');
+        banner.setAttribute('role', 'alert');
+        banner.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:2147483647;background:#111827;color:#fde68a;border-bottom:1px solid #4b5563;padding:10px 14px;font-family:Inter,system-ui,Segoe UI,Roboto,Arial;font-size:14px;text-align:center;';
+        banner.textContent = 'Your login link was invalid or expired. A new login window will open. If it does not, please open the login again.';
+        document.body ? document.body.appendChild(banner) : document.addEventListener('DOMContentLoaded', () => document.body.appendChild(banner), { once: true });
+        setTimeout(() => { try { banner.remove(); } catch(_) {} }, 6000);
+      } catch(_) {}
+
       const openGate = () => window.authGate?.openLoginModal?.({ next: location.pathname + location.search });
       if (window.authGate?.openLoginModal) {
         openGate();

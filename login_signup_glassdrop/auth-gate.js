@@ -441,12 +441,10 @@
   };
 
   function showParentSuccess(email) {
-    try {
-      if (!successBanner || overlay.style.display !== 'block') return;
-      successText.textContent = email ? `Welcome, ${email}! 🎉` : 'Welcome! 🎉';
-      successBanner.hidden = false;
-      setTimeout(() => { try { successBanner.hidden = true; } catch(_) {} }, 2000);
-    } catch (_) {}
+    // Disabled: do not show the green "Welcome" banner in the parent modal
+    // Keeping this function as a no-op ensures existing flows that call it
+    // (message events, cross-tab sync) still work without UI side effects.
+    return;
   }
 
   // Build inline login HTML for iframe.srcdoc

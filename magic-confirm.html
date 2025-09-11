@@ -145,10 +145,13 @@
       countdownEl.textContent = 'Redirecting in ' + remaining + 's…';
       const t = setInterval(()=>{
         remaining -= 1;
-        if (remaining <= 0){ clearInterval(t); location.href = targetHref; }
+        if (remaining <= 0){ clearInterval(t); }
         else { countdownEl.textContent = 'Redirecting in ' + remaining + 's…'; }
       }, 1000);
-      setTimeout(()=>{ try { location.href = targetHref; } catch(_) {} }, 2000);
+      setTimeout(()=>{
+        try { window.close(); } catch(_) {}
+        try { location.replace(targetHref); } catch(_) {}
+      }, 2000);
     }
 
     (async function init(){

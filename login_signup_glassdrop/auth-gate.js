@@ -441,10 +441,15 @@
   };
 
   function showParentSuccess(email) {
-    // Disabled: do not show the green "Welcome" banner in the parent modal
-    // Keeping this function as a no-op ensures existing flows that call it
-    // (message events, cross-tab sync) still work without UI side effects.
-    return;
+    try {
+      if (!successBanner || !successText) return;
+      // Restore the green welcome banner in the parent modal
+      successText.textContent = email ? ("Welcome, " + email + "!") : "Welcome!";
+      successBanner.style.background = '#f0fdf4';
+      successBanner.style.border = '1px solid #bbf7d0';
+      successBanner.style.color = '#166534';
+      successBanner.hidden = false;
+    } catch (_) {}
   }
 
   // Build inline login HTML for iframe.srcdoc

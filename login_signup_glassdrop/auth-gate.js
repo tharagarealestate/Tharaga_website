@@ -46,7 +46,14 @@
   const style = document.createElement('style');
   style.textContent = `
     #authGateModal { position: fixed; inset: 0; display: none; z-index: 2147483646; }
-    #authGateModal .authgate-backdrop { display:flex; align-items:center; justify-content:center; inset:0; position:fixed;
+    #authGateModal .authgate-backdrop { display:flex; align-items:center; justify-content:center; inset:0;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      width: 100vw;
+      height: 100vh;
       background: rgba(10,10,10,.35);
       backdrop-filter: blur(8px) saturate(120%);
       -webkit-backdrop-filter: blur(8px) saturate(120%);

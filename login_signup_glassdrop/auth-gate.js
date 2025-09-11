@@ -13,7 +13,7 @@
   // make explicit to avoid directory/index surprises:
   const LOGIN_IFRAME_URL = "https://auth.tharaga.co.in/login_signup_glassdrop/";
   // New: inline login UI rendered into the iframe via srcdoc when true
-  const USE_INLINE_LOGIN = false;
+  const USE_INLINE_LOGIN = true;
   const MAGIC_CONFIRM_URL = new URL('/magic-confirm.html', location.origin).href;
   const AUTO_RESUME_PENDING = false;
 

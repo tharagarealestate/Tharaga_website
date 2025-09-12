@@ -214,7 +214,7 @@
 
           <div class="row" style="margin-top:10px">
             <button id="signupBtn" class="btn btn-ghost" type="button">Create Account</button>
-            <a id="forgotLink" class="small-link right" href="/reset_password/">Forgot password?</a>
+            <a id="forgotLink" class="small-link right" href="/Reset_password/">Forgot password?</a>
 
           </div>
 
@@ -447,6 +447,14 @@
       } catch { return false; }
     }
 
+    // Allow final redirects to either auth origin (this page) or the main site
+    function isAllowedFinalRedirect(href) {
+      try {
+        const url = new URL(href, location.origin);
+        return url.origin === location.origin || url.origin === 'https://tharaga.co.in';
+      } catch { return false; }
+    }
+
     function ensurePendingTargetFromQuery(){
       const next = new URLSearchParams(location.search).get('next');
       if (!next || storage.get()) return;
@@ -532,8 +540,16 @@ if (isPostAuth) {
     }
   } catch (e) { /* ignore */ }
 
-  // Leave the page visible so the user sees confirmation. The original tab (modal) will
-  // receive the storage event and resume the pending action automatically.
+  // If this page is embedded (iframe), let parent resume and keep this visible.
+  if (window.self !== window.parent) {
+    return;
+  }
+
+  // Standalone tab (opened from email): redirect to next or home shortly
+  const fallbackHome = 'https://tharaga.co.in/';
+  const targetNext = continuePayload.next;
+  const finalTarget = (targetNext && isAllowedFinalRedirect(targetNext)) ? targetNext : fallbackHome;
+  setTimeout(() => { try { location.replace(finalTarget); } catch(_) {} }, 700);
   return;
 }
 

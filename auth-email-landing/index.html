@@ -27,40 +27,8 @@
   </div>
 
   <script>
-    (function immediateForceRedirect(){
-  try {
-    const sp = new URLSearchParams(location.search);
-    const raw = sp.get('confirmation_url');
-    if (!raw) return;
-    const parentOrigin = sp.get('parent_origin') || '';
-    const nextParam = sp.get('next') || '';
-    const stateParam = sp.get('state') || '';
-    const forced = `https://auth.tharaga.co.in/login_signup_glassdrop/?post_auth=1`
-      + (parentOrigin ? `&parent_origin=${encodeURIComponent(parentOrigin)}` : '')
-      + (nextParam ? `&next=${encodeURIComponent(nextParam)}` : '')
-      + (stateParam ? `&state=${encodeURIComponent(stateParam)}` : '');
-
-    // Try structured rewrite first (decoded)
-    let conf = raw;
-    try { if (/%/.test(raw)) conf = decodeURIComponent(raw); } catch(_) {}
-    let fixed = conf;
-    try {
-      const u = new URL(conf);
-      u.searchParams.set('redirect_to', forced);
-      fixed = u.toString();
-    } catch(_) {
-      // Fallback: textual replace on encoded form
-      const forcedEnc = encodeURIComponent(forced);
-      // If redirect_to is missing, append it; else replace it
-      fixed = /redirect_to=/.test(raw)
-        ? raw.replace(/redirect_to=[^&]+/, 'redirect_to=' + forcedEnc)
-        : raw + (raw.includes('?') ? '&' : '?') + 'redirect_to=' + forcedEnc;
-      try { fixed = decodeURIComponent(fixed); } catch(_) {}
-    }
-
-    location.replace(fixed);
-  } catch (_) {}
-})();
+    // Note: Do NOT auto-redirect here. Some email clients prefetch links and would
+    // accidentally consume the magic link. We only redirect on explicit user click.
 
   // Diagnostic logging (will show in console)
   console.log('[auth-email-landing] location.href=', location.href);
@@ -193,7 +161,6 @@
       sp.set('redirect_to', forcedRedirect);
       const fixed = u.toString();
       btn.onclick = () => { window.location.href = fixed; };
-      setTimeout(() => { window.location.href = fixed; }, 250);
 
       console.log('[auth-email-landing] confirmation_url (forced) ->', fixed, '(was:', originalRedirect, ')');
       titleEl.textContent = 'Confirming your email…';
@@ -207,7 +174,6 @@
       subtitleEl.textContent = 'Redirecting to complete verification — if nothing happens, click the button.';
       btn.textContent = 'Verify & Continue';
       btn.onclick = () => { window.location.href = confirmation_url; };
-      setTimeout(() => { window.location.href = confirmation_url; }, 250);
     }
   } else if (hasTokens) {
     // If tokens already present in this tab (Supabase redirected back with tokens)
@@ -244,7 +210,6 @@
       subtitleEl.textContent = 'If nothing happens, click the button.';
       btn.textContent = 'Continue';
       btn.onclick = () => { location.href = redirectTo; };
-      setTimeout(() => { location.href = redirectTo; }, 250);
     }
   } else {
     // Nothing found — show clearer diagnostic instructions

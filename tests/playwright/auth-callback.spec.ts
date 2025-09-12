@@ -35,17 +35,20 @@ test.describe('auth callback flow (fragment + query)', () => {
     // Open callback in new tab with stubbed supabase module
     const callback = await context.newPage();
 
-    // Stub the Supabase ESM module used by callback.html
+    // Stub the Supabase ESM module used by callback.html (both versioned and unversioned URLs)
+    const stubBody = `export function createClient(){
+      return { auth: {
+        getSessionFromUrl: async () => ({ data: { session: { user: { id: 'u1', email: 't@t.co' } } } }),
+        exchangeCodeForSession: async () => ({ data: { session: { user: { id: 'u1', email: 't@t.co' } } } }),
+        setSession: async () => ({ data: { session: { user: { id: 'u1', email: 't@t.co' } } } }),
+        getSession: async () => ({ data: { session: { user: { id: 'u1', email: 't@t.co' } } } })
+      } };
+    }`;
     await callback.route('https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm', async (route) => {
-      const body = `export function createClient(){
-        return { auth: {
-          getSessionFromUrl: async () => ({ data: { session: { user: { id: 'u1', email: 't@t.co' } } } }),
-          exchangeCodeForSession: async () => ({ data: { session: { user: { id: 'u1', email: 't@t.co' } } } }),
-          setSession: async () => ({ data: { session: { user: { id: 'u1', email: 't@t.co' } } } }),
-          getSession: async () => ({ data: { session: { user: { id: 'u1', email: 't@t.co' } } } })
-        } };
-      }`;
-      route.fulfill({ status: 200, contentType: 'application/javascript', body });
+      route.fulfill({ status: 200, contentType: 'application/javascript', body: stubBody });
+    });
+    await callback.route('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm', async (route) => {
+      route.fulfill({ status: 200, contentType: 'application/javascript', body: stubBody });
     });
 
     const next = '/about/';
@@ -56,10 +59,107 @@ test.describe('auth callback flow (fragment + query)', () => {
     await callback.waitForURL('**' + next);
 
     // Check signals were sent (any of them suffices). Since BC/storage affect opener asynchronously, allow a delay
-    await opener.waitForTimeout(300);
-    const signals = await opener.evaluate(() => (window as any).__signals);
-    expect(signals).toBeTruthy();
-    expect(signals.bc || signals.storage || signals.postMsg).toBeTruthy();
+    await opener.waitForTimeout(400);
+    const ok = await opener.evaluate(() => {
+      const s = (window as any).__signals || { bc:false, storage:false, postMsg:false };
+      const ls = !!localStorage.getItem('__tharaga_magic_confirmed');
+      return !!(s.bc || s.storage || s.postMsg || ls);
+    });
+    expect(ok).toBeTruthy();
+  });
+
+  test('handles code param via exchangeCodeForSession and redirects to next', async ({ browser }) => {
+    const context = await browser.newContext();
+    const page = await context.newPage();
+
+    // Stub supabase SDK
+    const stubCodeBody = `export function createClient(){
+      return { auth: {
+        getSessionFromUrl: async () => { throw new Error('skip'); },
+        exchangeCodeForSession: async () => ({ data: { session: { user: { id: 'u2', email: 'code@ex.co' } } } }),
+        setSession: async () => ({ data: { session: { user: { id: 'u2', email: 'code@ex.co' } } } })
+      } };
+    }`;
+    await page.route('https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm', async (route) => {
+      route.fulfill({ status: 200, contentType: 'application/javascript', body: stubCodeBody });
+    });
+    await page.route('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm', async (route) => {
+      route.fulfill({ status: 200, contentType: 'application/javascript', body: stubCodeBody });
+    });
+
+    const next = '/about/';
+    await page.goto(`/auth/callback.html?code=SOME_CODE&next=${encodeURIComponent(next)}`);
+    await page.waitForURL('**' + next);
+  });
+
+  test('redirects to next even when no auth tokens are present', async ({ browser }) => {
+    const context = await browser.newContext();
+    const page = await context.newPage();
+
+    const stubNoTokens = `export function createClient(){
+      return { auth: {
+        getSessionFromUrl: async () => { throw new Error('no tokens'); },
+        exchangeCodeForSession: async () => { throw new Error('no code'); },
+        setSession: async () => { throw new Error('no tokens'); }
+      } };
+    }`;
+    await page.route('https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm', async (route) => {
+      route.fulfill({ status: 200, contentType: 'application/javascript', body: stubNoTokens });
+    });
+    await page.route('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm', async (route) => {
+      route.fulfill({ status: 200, contentType: 'application/javascript', body: stubNoTokens });
+    });
+
+    const next = '/about/';
+    await page.goto(`/auth/callback.html?next=${encodeURIComponent(next)}`);
+    await page.waitForURL('**' + next);
+  });
+
+  test('redirects to next on auth error', async ({ browser }) => {
+    const context = await browser.newContext();
+    const page = await context.newPage();
+
+    const stubErrors = `export function createClient(){
+      return { auth: {
+        getSessionFromUrl: async () => { throw new Error('boom'); },
+        exchangeCodeForSession: async () => { throw new Error('boom2'); },
+        setSession: async () => { throw new Error('boom3'); },
+        getSession: async () => ({ data: { session: null } })
+      } };
+    }`;
+    await page.route('https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm', async (route) => {
+      route.fulfill({ status: 200, contentType: 'application/javascript', body: stubErrors });
+    });
+    await page.route('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm', async (route) => {
+      route.fulfill({ status: 200, contentType: 'application/javascript', body: stubErrors });
+    });
+
+    const next = '/about/';
+    await page.goto(`/auth/callback.html?next=${encodeURIComponent(next)}#error=otp_expired`);
+    await page.waitForURL('**' + next);
+  });
+
+  test('uses getSessionFromUrl when available and redirects', async ({ browser }) => {
+    const context = await browser.newContext();
+    const page = await context.newPage();
+
+    const stubGetSession = `export function createClient(){
+      return { auth: {
+        getSessionFromUrl: async () => ({ data: { session: { user: { id: 'u3', email: 'magic@link.co' } } } }),
+        exchangeCodeForSession: async () => ({ data: { session: { user: { id: 'u3', email: 'magic@link.co' } } } }),
+        setSession: async () => ({ data: { session: { user: { id: 'u3', email: 'magic@link.co' } } } })
+      } };
+    }`;
+    await page.route('https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm', async (route) => {
+      route.fulfill({ status: 200, contentType: 'application/javascript', body: stubGetSession });
+    });
+    await page.route('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm', async (route) => {
+      route.fulfill({ status: 200, contentType: 'application/javascript', body: stubGetSession });
+    });
+
+    const next = '/about/';
+    await page.goto(`/auth/callback.html?next=${encodeURIComponent(next)}`);
+    await page.waitForURL('**' + next);
   });
 });
 

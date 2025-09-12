@@ -11,7 +11,6 @@
     pre.debug{background:#111;color:#fff;padding:12px;border-radius:8px;max-height:240px;overflow:auto;text-align:left;font-size:12px}
   </style>
   <script>
-    // Prevent embedding
     if (window.top !== window.self) {
       try { window.top.location = window.location.href; } catch(_) {}
     }
@@ -43,7 +42,6 @@
       }
     };
 
-    // Prefer an existing global client if repo defines it:
     const SUPABASE_URL = window.__SUPABASE_URL__ || 'https://wedevtjjmdvngyshqdro.supabase.co';
     const SUPABASE_ANON = window.__SUPABASE_ANON__ || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndlZGV2dGpqbWR2bmd5c2hxZHJvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU0NzYwMzgsImV4cCI6MjA3MTA1MjAzOH0.Ex2c_sx358dFdygUGMVBohyTVto6fdEQ5nydDRh9m6M';
     const supabase = window.supabase || createClient(SUPABASE_URL, SUPABASE_ANON, { auth: { persistSession: true } });
@@ -51,7 +49,6 @@
     const statusEl = document.getElementById('status');
     const detailEl = document.getElementById('detail');
     const qp = new URLSearchParams(location.search);
-    // support both next and redirect_to (some templates use redirect_to)
     const next = qp.get('next') || qp.get('redirect_to') || '/';
 
     const BROADCAST_CHANNEL_NAME = 'tharaga-auth';
@@ -63,23 +60,19 @@
 
     function notifySuccess(){
       dbg('notify', { next });
-      // broadcast
       try { bc && bc.postMessage({ type:'THARAGA_AUTH_SUCCESS', next }); } catch(e){ dbg('bc.err', e); }
-      // postMessage to opener if present
       try {
         if (window.opener && !window.opener.closed) {
           window.opener.postMessage({ type: 'THARAGA_AUTH_SUCCESS', next }, location.origin);
           dbg('postMessage to opener', true);
         }
       } catch (e) { dbg('postMessage.err', e); }
-      // localStorage ping for other tabs
       setLocalMarker({ ts: Date.now(), next });
     }
 
     function finalRedirect(){
       setTimeout(() => {
         try { window.close(); dbg('window.close() attempted', true); } catch(e){ dbg('window.close.err', e); }
-        // fallback to replace
         try { location.replace(next); dbg('location.replace', next); } catch(e){ dbg('location.replace.err', e); }
       }, 700);
     }
@@ -103,19 +96,15 @@
 
     async function attempt() {
       dbg('start', { href: location.href, hash: location.hash, search: location.search });
-
       try {
-        // 1) Preferred helper (if available): getSessionFromUrl({ storeSession: true })
         if (supabase && supabase.auth && typeof supabase.auth.getSessionFromUrl === 'function') {
           dbg('using', 'getSessionFromUrl');
-          // option to persist session on client; older SDK bug requires storeSession true in some versions
           await supabase.auth.getSessionFromUrl({ storeSession: true }).catch(e => { dbg('getSessionFromUrl.err', e); throw e; });
           dbg('getSessionFromUrl', 'ok');
           await finishWithSession('getSessionFromUrl');
           return;
         }
 
-        // 2) PKCE exchange ?code=
         const code = qp.get('code');
         if (code && supabase && supabase.auth && typeof supabase.auth.exchangeCodeForSession === 'function') {
           dbg('exchanging code', code);
@@ -126,9 +115,7 @@
           return;
         }
 
-        // 3) Hash fragment fallback: #access_token=...&refresh_token=...
         if (location.hash && location.hash.includes('access_token')) {
-          // convert to query-style
           const hashParams = new URLSearchParams(location.hash.replace(/^#/, '?'));
           const access_token = hashParams.get('access_token');
           const refresh_token = hashParams.get('refresh_token');
@@ -145,22 +132,16 @@
           }
         }
 
-        // 4) some email templates use 'token' query param and server verify flow -> show success message instructing user.
         const token = qp.get('token') || qp.get('token_hash');
         if (token) {
           dbg('found token param', token);
-          // If token is present but not consumable here, show success and redirect to app
-          // Optionally, try calling an endpoint to verify token server-side (out of scope)
           await finishWithSession('token param present');
           return;
         }
 
-        // nothing found
         dbg('no-auth-token', { hash: location.hash, search: location.search });
         onFailDisplay('No auth token found in the URL — try again from the app.');
-        // set an error marker
         try { localStorage.setItem('__tharaga_magic_error', JSON.stringify({ts:Date.now(), msg:'no_auth_token'})); } catch(e){}
-        // redirect back to root after short delay
         setTimeout(() => location.replace('/'), 3000);
 
       } catch (err) {
@@ -172,8 +153,8 @@
       }
     }
 
-    // run
     attempt();
   </script>
 </body>
 </html>
+

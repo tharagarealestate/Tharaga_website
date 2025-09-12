@@ -9,7 +9,7 @@ export default defineConfig({
     headless: true,
   },
   webServer: {
-    command: 'npx sirv-cli . --single --port 4173',
+    command: 'npx sirv-cli public --single --port 4173',
     port: 4173,
     reuseExistingServer: true,
   },

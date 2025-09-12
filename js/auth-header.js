@@ -202,12 +202,42 @@
         });
       } catch(_){ }
     }
+    // Listen for callback success via postMessage
+    window.addEventListener('message', function(ev){
+      if (ev.origin !== window.location.origin) return;
+      try {
+        var d = ev.data;
+        if (d && d.type === 'THARAGA_AUTH_SUCCESS') {
+          if (window.supabase && window.supabase.auth) {
+            window.supabase.auth.getSession().then(function(){
+              // re-render header
+              window.supabase.auth.getUser().then(function(res){
+                state.user = (res && res.data && res.data.user) ? res.data.user : state.user;
+                render(ui, state.user);
+              });
+            });
+          }
+        }
+      } catch(_){ }
+    });
     window.addEventListener('storage', function(ev){
       if (ev.key === '__tharaga_magic_continue' && ev.newValue){
         try {
           var p = JSON.parse(ev.newValue);
           state.user = p && p.user ? { email:p.user.email||null, user_metadata:{} } : state.user || { email:null, user_metadata:{} };
           render(ui, state.user);
+        } catch(_){ }
+      }
+      if (ev.key === '__tharaga_magic_confirmed'){
+        try {
+          if (window.supabase && window.supabase.auth) {
+            window.supabase.auth.getSession().then(function(){
+              window.supabase.auth.getUser().then(function(res){
+                state.user = (res && res.data && res.data.user) ? res.data.user : state.user;
+                render(ui, state.user);
+              });
+            });
+          }
         } catch(_){ }
       }
     });

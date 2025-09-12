@@ -12,10 +12,8 @@
   /** CONFIG — update LOGIN_IFRAME_URL to your actual login/embed page */
   // make explicit to avoid directory/index surprises:
   const LOGIN_IFRAME_URL = "https://auth.tharaga.co.in/login_signup_glassdrop/";
-  // New: inline login UI rendered into the iframe via srcdoc when true
+  // Inline login via srcdoc is disabled; iframe loads password form page
   const USE_INLINE_LOGIN = false;
-  // Complete magic-link on the auth container (avoids main-domain CF blocks)
-  const MAGIC_CONFIRM_URL = 'https://auth.tharaga.co.in/login_signup_glassdrop/';
   const AUTO_RESUME_PENDING = false;
 
   // Build allowed origin list robustly (supports absolute AND relative LOGIN_IFRAME_URL)
@@ -195,27 +193,7 @@
       })();
       try { localStorage.setItem('__tharaga_auth_state', JSON.stringify({ state: randomState, ts: Date.now() })); } catch(_) {}
 
-      if (USE_INLINE_LOGIN) {
-        // Render a minimal login form directly inside the iframe (same-origin)
-        iframe.removeAttribute('src');
-        iframe.srcdoc = buildInlineLoginHTML({
-          supabaseUrl: SUPABASE_URL,
-          supabaseAnonKey: SUPABASE_ANON_KEY,
-          magicConfirmUrl: MAGIC_CONFIRM_URL,
-          next: next || '',
-        });
-        // If the user is already signed in on this page, reflect success and close
-        (async () => {
-          try {
-            const client = await ensureParentSupabaseClient();
-            const { data } = await client.auth.getSession();
-            if (data?.session?.user) {
-              showParentSuccess(data.session.user.email || null);
-              setTimeout(() => { try { closeLoginModal(); } catch(_) {} }, 1800);
-            }
-          } catch(_) {}
-        })();
-      } else {
+      {
         const params = new URLSearchParams();
         params.set('embed', '1');
         if (next) params.set('next', next);
@@ -255,58 +233,7 @@
       } catch (_) { return null; }
     }
 
-    // Start polling the Edge Function to retrieve tokens handed off by the email-click tab
-    (async () => {
-      try {
-        const stateObj = JSON.parse(localStorage.getItem('__tharaga_auth_state')||'null');
-        const state = stateObj?.state;
-        if (!state) return;
-        const result = await waitForHandoff(state, 120000);
-        if (result && result.access_token && result.refresh_token) {
-          // 1) Set session on this PARENT page so the user is actually logged in here
-          try {
-            const client = await ensureParentSupabaseClient();
-            if (client && client.auth) {
-              await client.auth.setSession({ access_token: result.access_token, refresh_token: result.refresh_token });
-            }
-          } catch (_) { /* ignore */ }
-
-          // 2) Signal other tabs in this origin that login is complete
-          try {
-            const payload = { ts: Date.now(), next: next || null, user: result.user || null };
-            localStorage.setItem('__tharaga_magic_continue', JSON.stringify(payload));
-            localStorage.setItem('__tharaga_magic_confirmed', JSON.stringify(payload));
-          } catch (_) { /* ignore */ }
-
-          // 3) Post tokens to iframe so it can set its session and flip to Continue UI
-          postMessageToIframe({
-            type: 'tharaga_token_transfer',
-            access_token: result.access_token,
-            refresh_token: result.refresh_token,
-            user: result.user || null,
-            next: next || null
-          });
-
-          // 4) Auto-close the modal and resume the original page
-          try {
-            closeLoginModal();
-          } catch (_) {}
-          try {
-            const safeNext = (function(){
-              if (!next) return null;
-              try { const u = new URL(next, location.origin); return u.origin === location.origin ? u.href : null; } catch { return null; }
-            })();
-            if (safeNext) {
-              setTimeout(() => { location.href = safeNext; }, 150);
-            } else {
-              setTimeout(() => { location.reload(); }, 150);
-            }
-          } catch (_) {}
-        }
-      } catch (e) {
-        console.warn('auth-gate: handoff polling failed', e);
-      }
-    })();
+    // Magic-link disabled: no auth handoff polling.
 
     if (waitForSignIn) {
       if (!signInPromise) {
@@ -410,19 +337,7 @@
         return;
       }
 
-      if (msg.type === 'tharaga_verify_failed') {
-      try {
-      if (successBanner && successText) {
-      successText.textContent = (msg.error_description || msg.message || 'Login link expired. Please request a new link.');
-      successBanner.style.background = '#fef2f2';
-      successBanner.style.border = '1px solid #fecaca';
-      successBanner.style.color ='#991b1b';
-      successBanner.hidden = false;
-      }
-      } catch (_) {}
-      setTimeout(() => { try { closeLoginModal(); } catch(_) {}}, 1200);
-      return;
-        }
+    // No verify-failed handling needed for password auth.
         
     if (msg.type === 'close_login_modal') {
         try { closeLoginModal(); } catch (_) {}
@@ -449,121 +364,9 @@
     } catch (_) {}
   }
 
-  // Build inline login HTML for iframe.srcdoc
-  function buildInlineLoginHTML({ supabaseUrl, supabaseAnonKey, magicConfirmUrl, next }) {
-    const safeNext = typeof next === 'string' ? next : '';
-    // NOTE: keep this minimal to avoid CSP issues
-    return `<!doctype html><html><head>
-      <meta charset="utf-8" />
-      <meta name="viewport" content="width=device-width, initial-scale=1" />
-      <title>Sign in</title>
-      <style>
-        body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;color:#111;}
-        .wrap{display:flex;align-items:center;justify-content:center;min-height:100vh;background:#f6f7f9}
-        .card{background:#fff;border:1px solid #e5e7eb;border-radius:12px;box-shadow:0 6px 22px rgba(0,0,0,.08);padding:22px;width:min(420px,95vw)}
-        h1{font-size:20px;margin:0 0 8px}
-        p{margin:0 0 12px;color:#444}
-        label{display:block;font-size:13px;margin:10px 0 6px;color:#222}
-        input{width:100%;padding:12px;border:1px solid #d0d7de;border-radius:10px;outline:none}
-        input:disabled{background:#f3f4f6}
-        .row{display:flex;gap:10px;margin-top:12px}
-        button{cursor:pointer;border:0;border-radius:10px;padding:12px 14px;font-weight:700}
-        .primary{background:#16a34a;color:#fff}
-        .ghost{background:#eef2ff;color:#1e293b}
-        .msg{margin-top:10px;font-size:14px}
-        .ok{color:#16a34a}
-        .err{color:#dc2626}
-        .success{display:none;margin-top:12px;padding:12px;border:1px solid #bbf7d0;background:#f0fdf4;border-radius:10px;color:#166534}
-        .success.show{display:block;animation:fade .35s ease}
-        .check{font-size:20px;margin-right:6px}
-        @keyframes fade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
-      </style>
-    </head>
-    <body>
-      <div class="wrap">
-        <div class="card" aria-live="polite">
-          <h1>Login / Sign up</h1>
-          <p>Use your email. We'll send you a secure magic link.</p>
-          <form id="f" autocomplete="on">
-            <label for="em">Email</label>
-            <input id="em" name="email" type="email" placeholder="you@domain.com" required autocomplete="email" />
-            <div class="row">
-              <button id="go" class="primary" type="submit">Send Magic Link</button>
-              <button id="cancel" class="ghost" type="button">Cancel</button>
-            </div>
-            <div id="m" class="msg" role="status"></div>
-          </form>
-          <div id="s" class="success"><span class="check">✅</span><strong>Welcome!</strong> You're signed in. This will close…</div>
-        </div>
-      </div>
-      <script type="module">
-        import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
-        const SUPABASE_URL = ${JSON.stringify(supabaseUrl)};
-        const SUPABASE_ANON_KEY = ${JSON.stringify(supabaseAnonKey)};
-        const MAGIC_CONFIRM_URL = ${JSON.stringify(magicConfirmUrl)};
-        const NEXT = ${JSON.stringify(safeNext)};
-        const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  // Inline login HTML removed (magic link disabled).
 
-        const f = document.getElementById('f');
-        const em = document.getElementById('em');
-        const go = document.getElementById('go');
-        const cancelBtn = document.getElementById('cancel');
-        const msg = document.getElementById('m');
-        const success = document.getElementById('s');
-
-        function setMsg(t, ok){ msg.textContent = t||''; msg.className='msg'+(t? (ok?' ok':' err'):''); }
-        function disableForm(d){ em.disabled=d; go.disabled=d; }
-
-        cancelBtn.addEventListener('click', ()=>{
-          try { window.parent.postMessage({ type: 'close_login_modal' }, '*'); } catch(_) {}
-        });
-
-        f.addEventListener('submit', async (e)=>{
-          e.preventDefault();
-          const email = (em.value||'').trim();
-          if (!email) { setMsg('Enter a valid email'); em.focus(); return; }
-          disableForm(true);
-          setMsg('Check your email for a login link ✉️', true);
-          try {
-            const nextEnc = encodeURIComponent(NEXT || '/');
-            const callbackUrl = location.origin + '/auth/callback.html?next=' + nextEnc;
-            const { error } = await supabase.auth.signInWithOtp({ email, options: { emailRedirectTo: callbackUrl } });
-            if (error) { setMsg(error.message); disableForm(false); return; }
-          } catch (err) {
-            setMsg('Failed to send magic link. Try again.');
-            disableForm(false);
-          }
-        });
-
-        // Reflect login state in this modal (same-origin session sync)
-        supabase.auth.onAuthStateChange((event, session)=>{
-          if (event === 'SIGNED_IN' && session?.user) {
-            try { setMsg(''); success.classList.add('show'); } catch(_) {}
-            setTimeout(()=>{
-              try { window.parent.postMessage({ type: 'close_login_modal' }, '*'); } catch(_) {}
-            }, 1800);
-          }
-        });
-      </script>
-    </body></html>`;
-  }
-
-  // Poll the Edge Function for a limited time to fetch tokens for a given state
-  async function waitForHandoff(state, timeoutMs = 120000) {
-    const deadline = Date.now() + timeoutMs;
-    while (Date.now() < deadline) {
-      try {
-        const url = `${SUPABASE_URL}/functions/v1/auth-handoff?state=${encodeURIComponent(state)}`;
-        const res = await fetch(url, { headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` } });
-        if (res.status === 200) {
-          const data = await res.json().catch(()=>null);
-          if (data && data.access_token && data.refresh_token) return data;
-        }
-      } catch (_) {}
-      await new Promise(r=>setTimeout(r, 1200));
-    }
-    return null;
-  }
+  // Magic-link handoff function removed.
 
   // -------------------- Cross-tab auth sync --------------------
   (async function setupAuthCrossTabSync() {
@@ -595,30 +398,7 @@
       });
 
       window.addEventListener('storage', (ev) => {
-        if (!ev || !ev.key) return;
-
-        if (ev.key === '__tharaga_magic_confirmed') {
-            window.__authGateLoggedIn = true;
-            try {
-              const payload = JSON.parse(ev.newValue||'null');
-              showParentSuccess(payload?.user?.email || null);
-            } catch(_) {}
-            if (signInResolve) { try { signInResolve({ signedIn: true }); } catch (_) {} signInPromise = signInResolve = signInReject = null; }
-            setTimeout(() => { try { closeLoginModal(); } catch(_) {} }, 1800);
-            return;
-        }
-
-        if (ev.key === '__tharaga_magic_continue') {
-          window.__authGateLoggedIn = true;
-          try {
-            const payload = JSON.parse(ev.newValue||'null');
-            showParentSuccess(payload?.user?.email || null);
-          } catch(_) {}
-          if (signInResolve) { try { signInResolve({ signedIn: true }); } catch (_) {} signInPromise = signInResolve = signInReject = null; }
-          setTimeout(() => { try { closeLoginModal(); } catch(_) {} }, 1800);
-          return;
-        }
-
+        // No magic-link localStorage syncing in password-only mode
       });
 
     } catch (e) {
@@ -629,35 +409,4 @@
   console.debug && console.debug('authGate injected — use authGate.attachAuthGate(selector, actionFn)');
 })();
 
-/* AUTH: sendMagicLink (client-side only) */
-async function sendMagicLink(userEmail, next) {
-  if (typeof window === 'undefined') {
-    console.error('sendMagicLink must be called in browser context');
-    return { error: new Error('Must be client-side') };
-  }
-
-  const nextPath = next ? encodeURIComponent(next) : encodeURIComponent('/');
-  // Use canonical callback path (ensure matches Supabase Redirect URLs)
-  const callbackUrl = `${window.location.origin}/auth/callback.html?next=${nextPath}`;
-
-  try {
-    console.info('THARAGA_AUTH_DEBUG: sendMagicLink -> callbackUrl=', callbackUrl);
-    const { data, error } = await supabase.auth.signInWithOtp({
-      email: userEmail,
-      options: {
-        // MUST be exact full URL registered in Supabase Auth -> Redirect URLs
-        emailRedirectTo: callbackUrl
-      }
-    });
-
-    if (error) {
-      console.error('THARAGA_AUTH_DEBUG sendMagicLink error:', error);
-      return { error };
-    }
-    // show "check your mail" UI
-    return { data };
-  } catch (err) {
-    console.error('THARAGA_AUTH_DEBUG sendMagicLink throw:', err);
-    return { error: err };
-  }
-}
+// sendMagicLink helper removed (magic link disabled).

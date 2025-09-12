@@ -197,7 +197,7 @@
 
           <div class="row">
             <div style="flex:1">
-              <label for="password">Password <span class="hint">(optional — use Magic Link for fastest login)</span></label>
+              <label for="password">Password</label>
 
               <!-- NEW: input wrapper that becomes the positioning context -->
               <div class="input-pill" style="position:relative;">
@@ -208,14 +208,12 @@
           </div>
 
           <div class="row" style="margin-top:12px">
-            <button id="magicBtn" class="btn btn-primary" type="button">Continue with Magic Link</button>
-            <button id="pwdBtn" class="btn btn-ghost" type="button">Sign in with Password</button>
+            <button id="pwdBtn" class="btn btn-primary" type="button">Sign in</button>
+            <button id="signupBtn" class="btn btn-ghost" type="button">Create account</button>
           </div>
 
           <div class="row" style="margin-top:10px">
-            <button id="signupBtn" class="btn btn-ghost" type="button">Create Account</button>
             <a id="forgotLink" class="small-link right" href="/Reset_password/">Forgot password?</a>
-
           </div>
 
           <div id="msg" class="msg" role="status"></div>
@@ -252,111 +250,7 @@
     const isIframe = window.self !== window.parent;
     window.supabase = supabase; // expose for DevTools
 
-    // ---------- INSERT: robust redirect token handler ----------
-    async function handleRedirectTokens() {
-      try {
-        const { data } = await supabase.auth.getSession();
-        if (data?.session) return data.session;
-      } catch (e) {
-        console.warn('getSession thrown', e);
-      }
-
-      const isPostAuth = new URLSearchParams(location.search).get('post_auth') === '1';
-
-      const rawHash = (location.hash || '').replace(/^#/, '');
-      const params = new URLSearchParams(rawHash || location.search || '');
-      const access_token = params.get('access_token');
-      const refresh_token = params.get('refresh_token');
-
-      if (access_token && refresh_token) {
-        let pendingNext = null;
-      try {
-        pendingNext = JSON.parse(localStorage.getItem('post_auth_target') || 'null')?.href
-                      || new URLSearchParams(location.search).get('next')
-                      || null;
-      } catch (_) {}
-
-      try {
-        const { data, error } = await supabase.auth.setSession({ access_token, refresh_token });
-        if (error) {
-          console.error('Failed to setSession from redirect tokens', error);
-          return null;
-        }
-
-        try {
-          const payload = {
-            ts: Date.now(),
-            next: pendingNext,
-            user: data?.session?.user ? { id: data.session.user.id, email: data.session.user.email } : null
-          };
-          localStorage.setItem('__tharaga_magic_continue', JSON.stringify(payload));
-          localStorage.setItem('__tharaga_magic_confirmed', JSON.stringify({ ts: Date.now() }));
-        } catch (e) {
-          console.warn('Could not write magic continue', e);
-        }
-
-        // if (!isIframe && pendingNext && isSafeRedirect(pendingNext)) {
-        //   setTimeout(() => { location.href = pendingNext; }, 400);
-        // }
-
-        // Clean URL (remove tokens but keep others like post_auth)
-        const cleanedSearch = location.search
-          .replace(/([?&])access_token=[^&]*(&?)/g, '$1')
-          .replace(/([?&])refresh_token=[^&]*(&?)/g, '$1')
-          .replace(/(^\?|&$)/, '');
-        history.replaceState(null, '', location.pathname + (cleanedSearch ? '?' + cleanedSearch : ''));
-
-        // --- Notify parent/other tabs ---
-        try {
-          const payload = {
-            ts: Date.now(),
-            next: pendingNext,
-            user: data?.session?.user ? { id: data.session.user.id, email: data.session.user.email } : null
-          };
-          try {
-            localStorage.setItem('__tharaga_magic_continue', JSON.stringify(payload));
-            localStorage.setItem('__tharaga_magic_confirmed', JSON.stringify({ ts: Date.now() }));
-          } catch (e) { console.warn('Could not write magic continue/confirmed', e); }
-
-          const parentOrigin = new URLSearchParams(location.search).get('parent_origin');
-          if (window.self !== window.parent) {
-            window.parent.postMessage({ type: 'signed_in', user: payload.user, next: payload.next }, parentOrigin || '*');
-          }
-        } catch (e) {
-          console.warn('notify-magic-continue failed', e);
-        }
-
-        return data?.session ?? null;
-      } catch (err) {
-        console.error('setSession error', err);
-        return null;
-      }
-      }
-
-      // If we landed with an error fragment (? or #) like otp_expired, send user to a friendly page (email landing or back to confirm)
-      try {
-        const err = params.get('error') || params.get('error_code');
-        if (err) {
-          const qs = new URLSearchParams(location.search);
-          const parent_origin = qs.get('parent_origin') || 'https://tharaga.co.in';
-          const next = qs.get('next') || '/';
-          const redirect = `https://auth.tharaga.co.in/login_signup_glassdrop/?post_auth=1&parent_origin=${encodeURIComponent(parent_origin)}&next=${encodeURIComponent(next)}`;
-          setTimeout(()=>{ try { location.replace(redirect); } catch(_) {} }, 200);
-        }
-      } catch(_) {}
-
-      if (isPostAuth) { return null; }
-      return null;
-    }
-
-    (async () => {
-      console.log('PAGE LOAD - location.href:', location.href);
-      console.log('PAGE LOAD - location.hash:', location.hash);
-      console.log('PAGE LOAD - location.search:', location.search);
-
-      const session = await handleRedirectTokens();
-      console.log('handleRedirectTokens -> session?', !!session);
-    })();
+    // Magic-link is disabled. No redirect token handling is required.
 
     // ---------- NEW: expired/invalid link UX + email remember ----------
     (function handleExpiredAndPrefill(){
@@ -614,86 +508,27 @@ if (isPostAuth) {
   }
 })();
 
-    // Supabase will fire this when magic link lands or password sign-in completes
+    // React to password sign-in/signup completions
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-  if (session?.access_token) {
-    showAuthed(session.user?.email);
-    
-    const pending = storage.get();
-    const isIframe = window.self !== window.parent;
-
-    // If NOT embedded (standalone tab) and we have a safe redirect target → auto redirect
-    // if (!isIframe && pending?.href && isSafeRedirect(pending.href)) {
-    //   setTimeout(() => {
-    //     storage.clear();
-    //     location.href = pending.href;
-    //   }, 400);
-    // }
-
-    // If embedded inside an iframe, postMessage to parent so they can resume flow
-    if (window.self !== window.parent) {
-      const msg = {
-        type: 'signed_in',
-        user: { id: session.user?.id, email: session.user?.email },
-        next: pending?.href || new URLSearchParams(location.search).get('next') || null
-      };
-      // Use specific origin instead of '*' when you know the parent origin.
-      window.parent.postMessage(msg, '*');
-
-      // Optionally clear local pending target (iframe can keep its copy)
-      // storage.clear();
-        } else {
-      // Not embedded — DO NOT auto-redirect the login tab.
-      // Instead, signal other tabs (localStorage) and give the user instructions.
-      try {
-        const continuePayload = {
-          ts: Date.now(),
-          next: pending?.href || new URLSearchParams(location.search).get('next') || null,
-          user: session?.user ? { id: session.user.id, email: session.user.email } : null
-        };
-        try { localStorage.setItem('__tharaga_magic_continue', JSON.stringify(continuePayload)); } catch(_) {}
-        try { localStorage.setItem('__tharaga_magic_confirmed', JSON.stringify({ ts: Date.now() })); } catch(_) {}
-      } catch (e) { console.warn('could not write magic continue', e); }
-
-      // Try to close the tab if it was opened as a popup
-      try {
-  (window.self !== window.parent)
-    ? window.parent.postMessage({ type: 'close_login_modal' }, '*')
-    : window.history.back();
-} catch(_) {}
-
-      setMsg('Signed in. You can now return to the page where you filled the form and click "Get My Property Matches".', true);
-      storage.clear();
-      return;
-    }
-
-  }
-});
+      if (session?.access_token) {
+        showAuthed(session.user?.email);
+        const pending = storage.get();
+        if (window.self !== window.parent) {
+          const msg = {
+            type: 'signed_in',
+            user: { id: session.user?.id, email: session.user?.email },
+            next: pending?.href || new URLSearchParams(location.search).get('next') || null
+          };
+          window.parent.postMessage(msg, '*');
+        }
+      }
+    });
 
 
 // unsubscribe on unload (optional, good practice)
 
 // React to magic-continue written by auth-email-landing (other tab)
-window.addEventListener('storage', (ev) => {
-  if (ev.key !== '__tharaga_magic_continue' || !ev.newValue) return;
-  try {
-    const payload = JSON.parse(ev.newValue);
-    // show authed UI
-    document.querySelector('#authed')?.classList.remove('hidden');
-    document.querySelector('#authForm')?.classList.add('hidden');
-    const cont = document.getElementById('continueBtn');
-    if (cont) { cont.style.display = 'block'; cont.focus(); }
-    if (payload?.user?.email) {
-      const ue = document.getElementById('userEmail');
-      if (ue) ue.textContent = `• ${payload.user.email}`;
-    }
-    setMsg('Signed in. You can now return to the page where you filled the form and click "Get My Property Matches".', true);
-    // optionally clear local pending target
-    try { storage.clear(); } catch(_) {}
-  } catch (err) {
-    console.warn('storage event handler error', err);
-  }
-});
+// No cross-tab magic-link syncing needed.
 
 
 window.addEventListener('beforeunload', () => subscription?.unsubscribe());
@@ -702,195 +537,11 @@ window.addEventListener('beforeunload', () => subscription?.unsubscribe());
 // This extended handler accepts:
 //  - old messages: 'supabase-login-complete' and 'signed_in' (keeps your original behaviour)
 //  - NEW: 'tharaga_token_transfer' used by fragment-handle on tharaga.co.in to hand tokens to this auth host
-window.addEventListener("message", async (event) => {
-  try {
-    // Trust only your known origins (restrict this list in production)
-    const allowedOrigins = [
-      "https://auth.tharaga.co.in",
-      "https://tharaga.co.in",
-      // "https://thriving-beijinho-ce44d5.netlify.app" // optional preview
-    ];
-    if (!allowedOrigins.includes(event.origin)) {
-      console.warn("Ignored postMessage from unexpected origin:", event.origin);
-      return;
-    }
-
-    const type = event.data?.type;
-
-    // ---------- NEW: verify button clicked from auth-email-landing ----------
-    if (type === "tharaga_verify_clicked") {
-      try {
-        const confirmationUrl = event.data?.confirmation_url;
-        if (!confirmationUrl) {
-          console.warn("verify_clicked missing confirmation_url");
-          return;
-        }
-
-        // Call Supabase verify endpoint once
-        const resp = await fetch(confirmationUrl, { credentials: "include" });
-        let result = null;
-        try {
-          result = await resp.json();
-        } catch (_) {}
-
-        if (resp.ok) {
-          console.log("✅ Verification success:", result);
-          // 🔥 FIX: ensure Supabase has a real session
-          if (result?.access_token && result?.refresh_token) {
-            try {
-              const { data, error } = await supabase.auth.setSession({
-                access_token: result.access_token,
-                refresh_token: result.refresh_token
-              });
-              if (error) {
-                console.error("setSession failed", error);
-              } else {
-                console.log("Supabase session set:", data?.session?.user?.email);
-              }
-            } catch (e) {
-              console.error("Error calling setSession", e);
-            }
-          }
-          // Show authed UI
-          document.querySelector("#authed")?.classList.remove("hidden");
-          document.querySelector("#authForm")?.classList.add("hidden");
-          const cont = document.querySelector("#continueBtn");
-          if (cont) cont.style.display = "block";
-
-          // --- NEW: write the same localStorage signal so other same-origin tabs pick it up ---
-          try {
-            const payload = {
-              ts: Date.now(),
-              next: new URLSearchParams(location.search).get("next") || null,
-              user: result?.user || null,
-            };
-            localStorage.setItem(
-              "__tharaga_magic_continue",
-              JSON.stringify(payload)
-            );
-            localStorage.setItem(
-              "__tharaga_magic_confirmed",
-              JSON.stringify({ ts: Date.now() })
-            );
-          } catch (e) {
-            console.warn("Could not write magic continue", e);
-          }
-        } else {
-          console.error("Verification failed:", result);
-          alert("Verification failed — link may have expired.");
-        }
-      } catch (err) {
-        console.error("tharaga_verify_clicked handler error:", err);
-        alert("Verification error — please retry.");
-      }
-
-      return; // stop, don’t fall through to other handlers
-    }
-
-    // ---------- NEW: token transfer from tharaga.co.in (fragment-handle) ----------
-    if (type === "tharaga_token_transfer") {
-      try {
-        const { access_token, refresh_token, next: incomingNext, user: incomingUser } = event.data || {};
-        if (!access_token || !refresh_token) {
-          console.warn('tharaga_token_transfer missing tokens');
-          return;
-        }
-
-        // Set session on this origin (reuse existing supabase client)
-        const { data, error } = await supabase.auth.setSession({ access_token, refresh_token });
-        if (error) {
-          console.warn('tharaga_token_transfer setSession failed', error);
-          return;
-        }
-
-        // Build payload and write the same localStorage keys other pages expect
-        const payload = {
-          ts: Date.now(),
-          next: incomingNext || null,
-          user: data?.session?.user ? { id: data.session.user.id, email: data.session.user.email } : (incomingUser || null)
-        };
-        try {
-          localStorage.setItem('__tharaga_magic_continue', JSON.stringify(payload));
-          localStorage.setItem('__tharaga_magic_confirmed', JSON.stringify(payload));
-        } catch (e) { console.warn('Could not write magic continue/confirmed', e); }
-
-        // Update UI on this auth page (show authed state)
-        try {
-          showAuthed(payload.user?.email);
-          // focus continue button for UX
-          const cont = document.getElementById('continueBtn');
-          if (cont) cont.focus();
-        } catch (_e) {}
-
-        // If embedded, postMessage parent so parent can resume flow quickly
-        if (window.self !== window.parent) {
-          try { window.parent.postMessage({ type: 'signed_in', user: payload.user, next: payload.next }, '*'); } catch (_) {}
-        }
-      } catch (err) {
-        console.error('tharaga_token_transfer handler failed', err);
-      }
-      return; // done handling tharaga_token_transfer
-    }
-
-    // ---------- existing behaviour: supabase-login-complete / signed_in ----------
-    if (type === "supabase-login-complete" || type === "signed_in") {
-      console.log("Received login complete via postMessage", event.data);
-
-      // Activate continue container
-      document.querySelector("#authed")?.classList.remove("hidden");
-      document.querySelector("#authForm")?.classList.add("hidden");
-
-      // If user info was provided, show it
-      if (event.data.user?.email) {
-        const userEmail = document.getElementById("userEmail");
-        if (userEmail) userEmail.textContent = `• ${event.data.user.email}`;
-      }
-
-      // Auto-focus the continue button if desired
-      const cont = document.getElementById("continueBtn");
-      if (cont) cont.focus();
-      return;
-    }
-
-  } catch (err) {
-    console.error("postMessage handler failed", err);
-  }
-});
+// No cross-window messages are required other than our own post to parent after sign-in.
 
 
     // ========================= ACTIONS ========================
-   magicBtn.addEventListener('click', async () => {
-      const email = emailEl.value.trim();
-      if (!email) return setMsg('Enter a valid email');
-      setMsg('Sending magic link…');
-
-      // persist where to go after auth
-      if (!storage.get()) {
-        const fallback = document.referrer && new URL(document.referrer).origin === location.origin
-          ? new URL(document.referrer).pathname
-          : '/';
-        storage.set({ href: fallback, openInNewTab: false });
-      }
-
-      try {
-        // remember email locally for quick resend/rehydration
-        try { localStorage.setItem('__tharaga_last_email', email); } catch(_) {}
-        const pending = storage.get();
-        const next = pending?.href || new URLSearchParams(location.search).get('next') || '/';
-        const parentOrigin = PARENT_ORIGIN;
-        const callbackUrl = `${parentOrigin}/auth/callback.html?next=${encodeURIComponent(next || '/')}`;
-
-        const { error } = await supabase.auth.signInWithOtp({
-          email,
-          options: { emailRedirectTo: callbackUrl }
-        });
-        if (error) setMsg(error.message);
-        else setMsg('Magic link sent! Check your inbox (and spam).', true);
-      } catch (err) {
-        console.error('send magic link failed', err);
-        setMsg('Failed to send magic link. Try again.');
-      }
-    });
+    // Magic-link disabled: no handler.
 
 
     pwdBtn.addEventListener('click', async () => {
@@ -898,29 +549,28 @@ window.addEventListener("message", async (event) => {
       const password = pwdEl.value;
       if (!email || !password) return setMsg('Enter email + password');
       setMsg('Signing in…');
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
-      if (error) setMsg(error.message);
-      else setMsg('Signed in ✓', true);
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) { setMsg(error.message); return; }
+      setMsg('Signed in ✓', true);
+      // If embedded, immediately notify parent
+      try {
+        if (window.self !== window.parent) {
+          const pending = storage.get();
+          window.parent.postMessage({ type: 'signed_in', user: { id: data?.user?.id || null, email }, next: pending?.href || null }, '*');
+        }
+      } catch(_) {}
     });
 
     signupBtn.addEventListener('click', async () => {
       const email = emailEl.value.trim();
       const password = pwdEl.value;
       if (!email || !password) return setMsg('Enter email + password to create account');
+      if (password.length < 8) { setMsg('Password must be at least 8 characters'); return; }
       setMsg('Creating account…');
 
-      const pending = storage.get();
-      const next = pending?.href || new URLSearchParams(location.search).get('next') || '/';
-      const parentOrigin = PARENT_ORIGIN;
-      const callbackUrl = `${parentOrigin}/auth/callback.html?next=${encodeURIComponent(next || '/')}`;
-
-      const { error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: { emailRedirectTo: callbackUrl }
-      });
-      if (error) setMsg(error.message);
-      else setMsg('Account created. Check your email to confirm.', true);
+      const { error } = await supabase.auth.signUp({ email, password });
+      if (error) { setMsg(error.message); return; }
+      setMsg('Account created. You can sign in now.', true);
     });
 
     signOutBtn?.addEventListener('click', async () => {

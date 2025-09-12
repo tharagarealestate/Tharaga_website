@@ -202,6 +202,23 @@
         });
       } catch(_){ }
     }
+    // BroadcastChannel + storage + postMessage listeners
+    var bc = ('BroadcastChannel' in window) ? new BroadcastChannel('tharaga-auth') : null;
+    if (bc) {
+      bc.addEventListener('message', function(ev){
+        if (ev.data && ev.data.type === 'THARAGA_AUTH_SUCCESS') {
+          try { console.info('THARAGA_AUTH header: bc message', ev.data); } catch(_){ }
+          if (window.supabase && window.supabase.auth) {
+            window.supabase.auth.getSession().then(function(){
+              window.supabase.auth.getUser().then(function(res){
+                state.user = (res && res.data && res.data.user) ? res.data.user : state.user;
+                render(ui, state.user);
+              });
+            });
+          }
+        }
+      });
+    }
     // Listen for callback success via postMessage
     window.addEventListener('message', function(ev){
       if (ev.origin !== window.location.origin) return;

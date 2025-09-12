@@ -628,3 +628,36 @@
 
   console.debug && console.debug('authGate injected — use authGate.attachAuthGate(selector, actionFn)');
 })();
+
+/* AUTH: sendMagicLink (client-side only) */
+async function sendMagicLink(userEmail, next) {
+  if (typeof window === 'undefined') {
+    console.error('sendMagicLink must be called in browser context');
+    return { error: new Error('Must be client-side') };
+  }
+
+  const nextPath = next ? encodeURIComponent(next) : encodeURIComponent('/');
+  // Use canonical callback path (ensure matches Supabase Redirect URLs)
+  const callbackUrl = `${window.location.origin}/auth/callback.html?next=${nextPath}`;
+
+  try {
+    console.info('THARAGA_AUTH_DEBUG: sendMagicLink -> callbackUrl=', callbackUrl);
+    const { data, error } = await supabase.auth.signInWithOtp({
+      email: userEmail,
+      options: {
+        // MUST be exact full URL registered in Supabase Auth -> Redirect URLs
+        emailRedirectTo: callbackUrl
+      }
+    });
+
+    if (error) {
+      console.error('THARAGA_AUTH_DEBUG sendMagicLink error:', error);
+      return { error };
+    }
+    // show "check your mail" UI
+    return { data };
+  } catch (err) {
+    console.error('THARAGA_AUTH_DEBUG sendMagicLink throw:', err);
+    return { error: err };
+  }
+}

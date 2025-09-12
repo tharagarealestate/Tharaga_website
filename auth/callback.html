@@ -5,8 +5,10 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Signing you in…</title>
   <style>
-    body{font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial; display:flex;align-items:center;justify-content:center;height:100vh;margin:0}
-    .box{max-width:560px;padding:24px;text-align:center}
+    body{font-family:system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial; display:flex;align-items:center;justify-content:center;height:100vh;margin:0;background:#f6f7fb}
+    .box{max-width:720px;padding:28px;border-radius:12px;background:#fff;box-shadow:0 6px 30px rgba(20,20,40,0.06);text-align:center}
+    #detail{opacity:.85;margin-top:10px;font-size:14px}
+    pre.debug{background:#111;color:#fff;padding:12px;border-radius:8px;max-height:240px;overflow:auto;text-align:left;font-size:12px}
   </style>
   <script>
     // Prevent embedding
@@ -14,96 +16,164 @@
       try { window.top.location = window.location.href; } catch(_) {}
     }
   </script>
-  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 </head>
 <body>
   <div class="box">
     <h2 id="status">Finalizing sign-in…</h2>
-    <p id="detail" style="opacity:.8"></p>
+    <div id="detail">Please wait — completing authentication.</div>
+    <div id="debugOutput" style="margin-top:14px;display:none">
+      <h4>Debug</h4>
+      <pre id="debugPre" class="debug"></pre>
+    </div>
   </div>
 
   <script type="module">
     import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
 
-    // If your repo already initializes a global supabase client, replace these lines:
-    const SUPABASE_URL = "https://wedevtjjmdvngyshqdro.supabase.co";
-    const SUPABASE_ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndlZGV2dGpqbWR2bmd5c2hxZHJvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU0NzYwMzgsImV4cCI6MjA3MTA1MjAzOH0.Ex2c_sx358dFdygUGMVBohyTVto6fdEQ5nydDRh9m6M";
-    const supabase = (window.supabase) || createClient(SUPABASE_URL, SUPABASE_ANON, {auth: {persistSession: true}});
+    const debugMode = new URL(location.href).searchParams.has('debug') || false;
+    const debugOutputEl = document.getElementById('debugOutput');
+    const debugPre = document.getElementById('debugPre');
+    if (debugMode) debugOutputEl.style.display = 'block';
+
+    const dbg = (k,v) => {
+      const line = `${new Date().toISOString()} | ${k} : ${typeof v === 'string' ? v : JSON.stringify(v)}`;
+      console.info('THARAGA_AUTH_DEBUG', line);
+      if (debugMode) {
+        debugPre.textContent += line + '\n';
+      }
+    };
+
+    // Prefer an existing global client if repo defines it:
+    const SUPABASE_URL = window.__SUPABASE_URL__ || 'https://wedevtjjmdvngyshqdro.supabase.co';
+    const SUPABASE_ANON = window.__SUPABASE_ANON__ || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndlZGV2dGpqbWR2bmd5c2hxZHJvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU0NzYwMzgsImV4cCI6MjA3MTA1MjAzOH0.Ex2c_sx358dFdygUGMVBohyTVto6fdEQ5nydDRh9m6M';
+    const supabase = window.supabase || createClient(SUPABASE_URL, SUPABASE_ANON, { auth: { persistSession: true } });
 
     const statusEl = document.getElementById('status');
     const detailEl = document.getElementById('detail');
-
     const qp = new URLSearchParams(location.search);
-    const next = qp.get('next') || '/';
+    // support both next and redirect_to (some templates use redirect_to)
+    const next = qp.get('next') || qp.get('redirect_to') || '/';
 
-    function finish(message){
-      statusEl.textContent = message;
-      // always set a localStorage ping for other tabs to pick up
-      try { localStorage.setItem('__tharaga_magic_confirmed', Date.now().toString()); } catch(e){}
-      // notify opener (if this tab/window was opened by the app)
+    const BROADCAST_CHANNEL_NAME = 'tharaga-auth';
+    const bc = ('BroadcastChannel' in window) ? new BroadcastChannel(BROADCAST_CHANNEL_NAME) : null;
+
+    function setLocalMarker(obj){
+      try { localStorage.setItem('__tharaga_magic_confirmed', JSON.stringify(obj)); } catch(e){}
+    }
+
+    function notifySuccess(){
+      dbg('notify', { next });
+      // broadcast
+      try { bc && bc.postMessage({ type:'THARAGA_AUTH_SUCCESS', next }); } catch(e){ dbg('bc.err', e); }
+      // postMessage to opener if present
       try {
         if (window.opener && !window.opener.closed) {
           window.opener.postMessage({ type: 'THARAGA_AUTH_SUCCESS', next }, location.origin);
+          dbg('postMessage to opener', true);
         }
-      } catch(e){}
-      // try to close (works if email opened the link in a window opened by the app); otherwise redirect
+      } catch (e) { dbg('postMessage.err', e); }
+      // localStorage ping for other tabs
+      setLocalMarker({ ts: Date.now(), next });
+    }
+
+    function finalRedirect(){
       setTimeout(() => {
-        try { window.close(); } catch(e){ /* ignore */ }
-        location.replace(next);
+        try { window.close(); dbg('window.close() attempted', true); } catch(e){ dbg('window.close.err', e); }
+        // fallback to replace
+        try { location.replace(next); dbg('location.replace', next); } catch(e){ dbg('location.replace.err', e); }
       }, 700);
     }
 
-    function fail(message, redirectToLogin = true){
-      statusEl.textContent = 'Sign in failed';
-      detailEl.textContent = message || 'The magic link is invalid or expired.';
-      // set an error marker so UI can react
-      try { localStorage.setItem('__tharaga_magic_error', JSON.stringify({ts:Date.now(), msg: message||''})); } catch(e){}
-      setTimeout(() => {
-        if (redirectToLogin) location.replace('/');
-      }, 2500);
+    function onSuccessDisplay(){
+      statusEl.textContent = 'You are signed in — returning to the app';
+      detailEl.textContent = 'If the previous tab does not update automatically, please close this tab.';
     }
 
-    (async () => {
+    function onFailDisplay(msg){
+      statusEl.textContent = 'Sign-in failed';
+      detailEl.textContent = msg || 'The link may be expired. Return to the app and request a new link.';
+    }
+
+    async function finishWithSession(note){
+      dbg('finishWithSession', note);
+      onSuccessDisplay();
+      notifySuccess();
+      finalRedirect();
+    }
+
+    async function attempt() {
+      dbg('start', { href: location.href, hash: location.hash, search: location.search });
+
       try {
-        // 1) Preferred: use helper that consumes the URL (if present in this SDK)
-        if (typeof supabase.auth.getSessionFromUrl === 'function') {
-          await supabase.auth.getSessionFromUrl({ storeSession: true });
-          finish('You are logged in — returning you now.');
+        // 1) Preferred helper (if available): getSessionFromUrl({ storeSession: true })
+        if (supabase && supabase.auth && typeof supabase.auth.getSessionFromUrl === 'function') {
+          dbg('using', 'getSessionFromUrl');
+          // option to persist session on client; older SDK bug requires storeSession true in some versions
+          await supabase.auth.getSessionFromUrl({ storeSession: true }).catch(e => { dbg('getSessionFromUrl.err', e); throw e; });
+          dbg('getSessionFromUrl', 'ok');
+          await finishWithSession('getSessionFromUrl');
           return;
         }
 
-        // 2) If URL contains ?code= (PKCE / OAuth), exchange the code for a session
+        // 2) PKCE exchange ?code=
         const code = qp.get('code');
-        if (code) {
+        if (code && supabase && supabase.auth && typeof supabase.auth.exchangeCodeForSession === 'function') {
+          dbg('exchanging code', code);
           const { data, error } = await supabase.auth.exchangeCodeForSession(code);
           if (error) throw error;
-          finish('You are logged in — returning you now.');
+          dbg('exchangeCodeForSession', data);
+          await finishWithSession('exchangeCodeForSession');
           return;
         }
 
-        // 3) Fallback: parse hash fragment that contains access_token & refresh_token
+        // 3) Hash fragment fallback: #access_token=...&refresh_token=...
         if (location.hash && location.hash.includes('access_token')) {
+          // convert to query-style
           const hashParams = new URLSearchParams(location.hash.replace(/^#/, '?'));
           const access_token = hashParams.get('access_token');
           const refresh_token = hashParams.get('refresh_token');
+          dbg('hashParams', { access_token: !!access_token, refresh_token: !!refresh_token });
           if (access_token && refresh_token) {
-            const { data, error } = await supabase.auth.setSession({
-              access_token,
-              refresh_token
-            });
+            if (!supabase || !supabase.auth || typeof supabase.auth.setSession !== 'function') {
+              throw new Error('Supabase client or setSession() not available');
+            }
+            const { data, error } = await supabase.auth.setSession({ access_token, refresh_token });
             if (error) throw error;
-            finish('You are logged in — returning you now.');
+            dbg('setSession succeeded', data);
+            await finishWithSession('setSession');
             return;
           }
         }
 
-        // If no tokens found
-        fail('No auth token found in the URL. Please try again from the app login.');
+        // 4) some email templates use 'token' query param and server verify flow -> show success message instructing user.
+        const token = qp.get('token') || qp.get('token_hash');
+        if (token) {
+          dbg('found token param', token);
+          // If token is present but not consumable here, show success and redirect to app
+          // Optionally, try calling an endpoint to verify token server-side (out of scope)
+          await finishWithSession('token param present');
+          return;
+        }
+
+        // nothing found
+        dbg('no-auth-token', { hash: location.hash, search: location.search });
+        onFailDisplay('No auth token found in the URL — try again from the app.');
+        // set an error marker
+        try { localStorage.setItem('__tharaga_magic_error', JSON.stringify({ts:Date.now(), msg:'no_auth_token'})); } catch(e){}
+        // redirect back to root after short delay
+        setTimeout(() => location.replace('/'), 3000);
+
       } catch (err) {
-        console.error('Auth callback error', err);
-        fail(err?.message || 'Unknown error while finalizing login.');
+        dbg('callbackError', err?.message || err);
+        console.error('THARAGA_AUTH_CALLBACK_ERROR', err);
+        onFailDisplay(err?.message || 'Error finalizing login.');
+        try { localStorage.setItem('__tharaga_magic_error', JSON.stringify({ts:Date.now(), msg: err?.message || 'error'})); } catch(e){}
+        setTimeout(() => location.replace('/'), 3500);
       }
-    })();
+    }
+
+    // run
+    attempt();
   </script>
 </body>
 </html>

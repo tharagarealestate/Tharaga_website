@@ -27,7 +27,7 @@
   </div>
 
   <script type="module">
-    import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
+    import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
 
     const debugMode = new URL(location.href).searchParams.has('debug') || false;
     const debugOutputEl = document.getElementById('debugOutput');
@@ -97,6 +97,24 @@
     async function attempt() {
       dbg('start', { href: location.href, hash: location.hash, search: location.search });
       try {
+        // Prefer explicit fragment tokens first (offline-friendly)
+        if (location.hash && location.hash.includes('access_token')) {
+          const hashParams = new URLSearchParams(location.hash.replace(/^#/, '?'));
+          const access_token = hashParams.get('access_token');
+          const refresh_token = hashParams.get('refresh_token');
+          dbg('hashParams', { access_token: !!access_token, refresh_token: !!refresh_token });
+          if (access_token && refresh_token) {
+            if (!supabase || !supabase.auth || typeof supabase.auth.setSession !== 'function') {
+              throw new Error('Supabase client or setSession() not available');
+            }
+            const { data, error } = await supabase.auth.setSession({ access_token, refresh_token });
+            if (error) throw error;
+            dbg('setSession succeeded', data);
+            await finishWithSession('setSession');
+            return;
+          }
+        }
+
         if (supabase && supabase.auth && typeof supabase.auth.getSessionFromUrl === 'function') {
           dbg('using', 'getSessionFromUrl');
           await supabase.auth.getSessionFromUrl({ storeSession: true }).catch(e => { dbg('getSessionFromUrl.err', e); throw e; });
@@ -115,23 +133,6 @@
           return;
         }
 
-        if (location.hash && location.hash.includes('access_token')) {
-          const hashParams = new URLSearchParams(location.hash.replace(/^#/, '?'));
-          const access_token = hashParams.get('access_token');
-          const refresh_token = hashParams.get('refresh_token');
-          dbg('hashParams', { access_token: !!access_token, refresh_token: !!refresh_token });
-          if (access_token && refresh_token) {
-            if (!supabase || !supabase.auth || typeof supabase.auth.setSession !== 'function') {
-              throw new Error('Supabase client or setSession() not available');
-            }
-            const { data, error } = await supabase.auth.setSession({ access_token, refresh_token });
-            if (error) throw error;
-            dbg('setSession succeeded', data);
-            await finishWithSession('setSession');
-            return;
-          }
-        }
-
         const token = qp.get('token') || qp.get('token_hash');
         if (token) {
           dbg('found token param', token);
@@ -140,16 +141,16 @@
         }
 
         dbg('no-auth-token', { hash: location.hash, search: location.search });
-        onFailDisplay('No auth token found in the URL — try again from the app.');
+        onFailDisplay('No auth token found in the URL — returning to the app.');
         try { localStorage.setItem('__tharaga_magic_error', JSON.stringify({ts:Date.now(), msg:'no_auth_token'})); } catch(e){}
-        setTimeout(() => location.replace('/'), 3000);
+        setTimeout(() => location.replace(next), 1200);
 
       } catch (err) {
         dbg('callbackError', err?.message || err);
         console.error('THARAGA_AUTH_CALLBACK_ERROR', err);
-        onFailDisplay(err?.message || 'Error finalizing login.');
+        onFailDisplay('Returning to the app…');
         try { localStorage.setItem('__tharaga_magic_error', JSON.stringify({ts:Date.now(), msg: err?.message || 'error'})); } catch(e){}
-        setTimeout(() => location.replace('/'), 3500);
+        setTimeout(() => location.replace(next), 1200);
       }
     }
 

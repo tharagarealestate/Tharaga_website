@@ -525,8 +525,9 @@
           disableForm(true);
           setMsg('Check your email for a login link ✉️', true);
           try {
-            const emailRedirectTo = MAGIC_CONFIRM_URL + (NEXT? ('?next='+encodeURIComponent(NEXT)) : '');
-            const { error } = await supabase.auth.signInWithOtp({ email, options: { emailRedirectTo } });
+            const nextEnc = encodeURIComponent(NEXT || '/');
+            const callbackUrl = location.origin + '/auth/callback.html?next=' + nextEnc;
+            const { error } = await supabase.auth.signInWithOtp({ email, options: { emailRedirectTo: callbackUrl } });
             if (error) { setMsg(error.message); disableForm(false); return; }
           } catch (err) {
             setMsg('Failed to send magic link. Try again.');

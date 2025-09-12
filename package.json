@@ -1,0 +1,13 @@
+{
+  "name": "tharaga-auth-e2e",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test:e2e": "playwright test"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.47.2",
+    "sirv-cli": "^2.0.2"
+  }
+}
+

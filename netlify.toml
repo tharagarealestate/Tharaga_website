@@ -22,3 +22,8 @@
   from = "/reset_password/*"
   to = "/Reset_password/:splat"
   status = 301
+
+[[redirects]]
+  from = "/auth/*"
+  to = "/public/auth/:splat"
+  status = 200

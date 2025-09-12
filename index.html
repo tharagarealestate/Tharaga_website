@@ -47,7 +47,7 @@
     <a href="/reel-grid/">Reels</a>
     <a href="/registration/">Registration</a>
     <a href="/search-filter-home/">Search Filter</a>
-    <a href="#" id="loginSignupLink">Login/Signup</a>
+    <a href="#login" data-auth-open>Login/Signup</a>
     <a href="/Reset_password/">Reset password</a>
     <a href="/login_signup_glassdrop/">login popup</a>
     <a href="auth-landing/">auth landing</a>
@@ -62,19 +62,7 @@
     document.getElementById("year").textContent = new Date().getFullYear();
   </script>
   <script>
-    (function(){
-      var link = document.getElementById('loginSignupLink');
-      if (!link) return;
-      link.addEventListener('click', function(e){
-        e.preventDefault();
-        if (window.authGate && typeof window.authGate.openLoginModal === 'function') {
-          window.authGate.openLoginModal({ next: location.pathname + location.search });
-        } else {
-          // Fallback: navigate to the auth page directly
-          location.href = '/login_signup_glassdrop/';
-        }
-      });
-    })();
+    // Auth header script will hide this link and render an account button.
   </script>
 </body>
 </html>

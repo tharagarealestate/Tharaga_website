@@ -476,11 +476,9 @@ if (isPostAuth) {
     return;
   }
 
-  // Standalone tab (opened from email): redirect to next or home shortly
-  const fallbackHome = 'https://tharaga.co.in/';
-  const targetNext = continuePayload.next;
-  const finalTarget = (targetNext && isAllowedFinalRedirect(targetNext)) ? targetNext : fallbackHome;
-  setTimeout(() => { try { location.replace(finalTarget); } catch(_) {} }, 700);
+  // Standalone tab (opened from email): do NOT redirect away.
+  // Show a friendly confirmation and keep the page here.
+  setMsg('Email is verified. You can close this tab and return to the app.', true);
   return;
 }
 

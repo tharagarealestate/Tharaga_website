@@ -240,7 +240,8 @@
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndlZGV2dGpqbWR2bmd5c2hxZHJvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU0NzYwMzgsImV4cCI6MjA3MTA1MjAzOH0.Ex2c_sx358dFdygUGMVBohyTVto6fdEQ5nydDRh9m6M'; // <-- REQUIRED
 
     const __qs = new URLSearchParams(location.search);
-    const FALLBACK_PARENT_ORIGIN = 'https://tharaga.co.in';
+    // Prefer current origin so the email redirect callback lands on the same origin (enables storage/postMessage)
+    const FALLBACK_PARENT_ORIGIN = location.origin;
     const PARENT_ORIGIN = (__qs.get('parent_origin') || FALLBACK_PARENT_ORIGIN || location.origin).replace(/\/$/, '');
     const HANDOFF_STATE = (__qs.get('state') || (function(){ try { return JSON.parse(localStorage.getItem('__tharaga_auth_state')||'null')?.state||null; } catch(_) { return null; } })());
     //const POST_AUTH_CALLBACK = `https://auth.tharaga.co.in/login_signup_glassdrop/?post_auth=1&parent_origin=${encodeURIComponent(PARENT_ORIGIN)}`;

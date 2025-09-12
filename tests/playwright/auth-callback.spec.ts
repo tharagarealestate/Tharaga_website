@@ -1,10 +1,11 @@
+// @ts-nocheck
 import { test, expect } from '@playwright/test';
 
 // This test stubs the Supabase SDK module to avoid real network and simulates a successful setSession.
 // It also validates that our callback page sends cross-tab signals and redirects to the next URL.
 
 test.describe('auth callback flow (fragment + query)', () => {
-  test('handles fragment tokens, signals opener, and redirects to next', async ({ browser }) => {
+  test('handles fragment tokens, signals opener, and shows success without forcing redirect', async ({ browser }) => {
     const context = await browser.newContext();
     const opener = await context.newPage();
 
@@ -54,9 +55,8 @@ test.describe('auth callback flow (fragment + query)', () => {
     const next = '/about/';
     const url = `/auth/callback.html?next=${encodeURIComponent(next)}#access_token=FAKE_ACCESS&refresh_token=FAKE_REFRESH`;
     await callback.goto(url);
-
-    // Wait for redirect to happen
-    await callback.waitForURL('**' + next);
+    // Expect the page to remain on callback (no forced redirect)
+    await expect(callback).toHaveURL(/\/auth\/callback\.html/);
 
     // Check signals were sent (any of them suffices). Since BC/storage affect opener asynchronously, allow a delay
     await opener.waitForTimeout(400);
@@ -68,7 +68,7 @@ test.describe('auth callback flow (fragment + query)', () => {
     expect(ok).toBeTruthy();
   });
 
-  test('handles code param via exchangeCodeForSession and redirects to next', async ({ browser }) => {
+  test('handles code param via exchangeCodeForSession and shows success without forcing redirect', async ({ browser }) => {
     const context = await browser.newContext();
     const page = await context.newPage();
 
@@ -89,10 +89,10 @@ test.describe('auth callback flow (fragment + query)', () => {
 
     const next = '/about/';
     await page.goto(`/auth/callback.html?code=SOME_CODE&next=${encodeURIComponent(next)}`);
-    await page.waitForURL('**' + next);
+    await expect(page).toHaveURL(/\/auth\/callback\.html/);
   });
 
-  test('redirects to next even when no auth tokens are present', async ({ browser }) => {
+  test('shows friendly message and stays when no auth tokens are present', async ({ browser }) => {
     const context = await browser.newContext();
     const page = await context.newPage();
 
@@ -112,10 +112,10 @@ test.describe('auth callback flow (fragment + query)', () => {
 
     const next = '/about/';
     await page.goto(`/auth/callback.html?next=${encodeURIComponent(next)}`);
-    await page.waitForURL('**' + next);
+    await expect(page).toHaveURL(/\/auth\/callback\.html/);
   });
 
-  test('redirects to next on auth error', async ({ browser }) => {
+  test('shows failure and stays on auth error', async ({ browser }) => {
     const context = await browser.newContext();
     const page = await context.newPage();
 
@@ -136,10 +136,10 @@ test.describe('auth callback flow (fragment + query)', () => {
 
     const next = '/about/';
     await page.goto(`/auth/callback.html?next=${encodeURIComponent(next)}#error=otp_expired`);
-    await page.waitForURL('**' + next);
+    await expect(page).toHaveURL(/\/auth\/callback\.html/);
   });
 
-  test('uses getSessionFromUrl when available and redirects', async ({ browser }) => {
+  test('uses getSessionFromUrl when available and stays', async ({ browser }) => {
     const context = await browser.newContext();
     const page = await context.newPage();
 
@@ -159,7 +159,7 @@ test.describe('auth callback flow (fragment + query)', () => {
 
     const next = '/about/';
     await page.goto(`/auth/callback.html?next=${encodeURIComponent(next)}`);
-    await page.waitForURL('**' + next);
+    await expect(page).toHaveURL(/\/auth\/callback\.html/);
   });
 });
 

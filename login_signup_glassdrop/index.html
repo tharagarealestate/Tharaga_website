@@ -361,32 +361,68 @@
     (function handleExpiredAndPrefill(){
       try {
         const qp = new URLSearchParams(location.search);
-        const isExpired = qp.get('expired') === '1' || qp.get('error_code') === 'otp_expired';
-        const err = qp.get('error');
-        const errDesc = qp.get('error_description');
-        if (isExpired || err) {
+        const hp = new URLSearchParams((location.hash || '').replace(/^#/, ''));
+
+        const errorFromQuery = qp.get('error') || qp.get('error_code') || qp.get('error_description');
+        const errorFromHash = hp.get('error') || hp.get('error_code') || hp.get('error_description');
+        const errCode = qp.get('error_code') || hp.get('error_code') || '';
+        const err = qp.get('error') || hp.get('error') || '';
+        const errDesc = qp.get('error_description') || hp.get('error_description') || '';
+        const isExpired = qp.get('expired') === '1' || errCode === 'otp_expired';
+
+        if (isExpired || errorFromQuery || errorFromHash) {
           // Hide the form and show a concise message
           try { document.getElementById('authForm') ?. classList.add('hidden'); } catch(_) {}
           try { document.getElementById('authed') ?. classList.add('hidden'); } catch(_) {}
-          const msg = isExpired ? 'Link expired. Returning to your page ... ' : (errDesc || 'There was a problem with the login link.');
+          const msg = (isExpired || errCode === 'otp_expired') ? 'Link expired. Returning to your page ... ' : (errDesc || 'There was a problem with the login link.');
           try { setMsg(msg, false); } catch(_) {}
+
           // Notify parent (modal) so it can close gracefully
           try {
-          const payload = { type: 'tharaga_verify_failed', error: err || null, error_code: qp.get('error_code') || null, error_description: errDesc || null };
-          if (window.self !== window.parent) {
-          window.parent.postMessage(payload, '*');
-          }
+            const payload = { type: 'tharaga_verify_failed', error: err || null, error_code: errCode || null, error_description: errDesc || null };
+            if (window.self !== window.parent) {
+              window.parent.postMessage(payload, '*');
+            }
           } catch(_) {}
-          // Auto-close or go back after a short delay when opened standalone
-          setTimeout(() => {
-          try {
-          (window.self !== window.parent)
-          ? window.parent.postMessage({ type: 'close_login_modal' }, '*')
-          : window.history.back();
-          } catch(_) {
-          try { window.close(); } catch(_) {}
+
+          // If the error came from the hash fragment, clean it up once by moving it into a stable query param
+          if (errorFromHash) {
+            const cleanParams = new URLSearchParams(location.search);
+            cleanParams.set('post_auth', '1');
+            cleanParams.set('expired', '1');
+            const nextFromQS = qp.get('next');
+            if (nextFromQS) cleanParams.set('next', nextFromQS);
+            const parentOrigin = qp.get('parent_origin');
+            if (parentOrigin) cleanParams.set('parent_origin', parentOrigin);
+            const redirectSelf = location.pathname + '?' + cleanParams.toString();
+
+            setTimeout(() => {
+              try {
+                if (window.self !== window.parent) {
+                  window.parent.postMessage({ type: 'close_login_modal' }, '*');
+                } else {
+                  // Replace only if actually different (prevents loops)
+                  if ((location.pathname + location.search) !== redirectSelf) {
+                    try { history.replaceState(null, '', redirectSelf); } catch(_) {}
+                    location.replace(redirectSelf);
+                  }
+                }
+              } catch(_) {
+                try { window.close(); } catch(_) {}
+              }
+            }, 600);
+          } else {
+            // Query already reflects expired/error, do not navigate again; close modal or go back gracefully
+            setTimeout(() => {
+              try {
+                (window.self !== window.parent)
+                  ? window.parent.postMessage({ type: 'close_login_modal' }, '*')
+                  : window.history.back();
+              } catch(_) {
+                try { window.close(); } catch(_) {}
+              }
+            }, 900);
           }
-          }, 1000);
         }
 
         // Prefill last email if available

@@ -482,19 +482,9 @@ if (isPostAuth) {
   return;
 }
 
-
-      // Normal behaviour (not a magic-link tab): resume pending redirect automatically
-      if (pending && isSafeRedirect(pending.href)) {
-        setTimeout(() => {
-          storage.clear();
-          if (pending.openInNewTab) window.open(pending.href, '_blank');
-          else location.href = pending.href;
-        }, 400);
-      } else if (pending) {
-        console.warn('Blocked unsafe pending redirect:', pending.href);
-        storage.clear();
-      }
-
+      // No auto-redirect when an existing session is detected.
+      // Keep the confirmation UI like NoBroker/MagicBricks: user must choose Continue or Sign out.
+      setMsg('', true);
       return;
     }
 

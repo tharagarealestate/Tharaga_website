@@ -241,7 +241,6 @@
         <!-- Social sign-in -->
         <div class="row" style="margin-top:12px">
           <button id="oauthGoogle" class="btn btn-ghost" type="button">Continue with Google</button>
-          <button id="oauthGithub" class="btn btn-ghost" type="button">Continue with GitHub</button>
         </div>
         <button class="close-btn" onclick="(window.self!==window.parent) ? window.parent.postMessage({type:'close_login_modal'}, '*') : window.history.back()">×</button>
 
@@ -388,7 +387,6 @@
     const userEmail = document.getElementById('userEmail');
 	const toggleEye=document.getElementById('toggleEye');
     const oauthGoogle = document.getElementById('oauthGoogle');
-    const oauthGithub = document.getElementById('oauthGithub');
 
     // ========================= HELPERS =========================
     const storage = {
@@ -728,18 +726,7 @@ window.addEventListener('beforeunload', () => subscription?.unsubscribe());
           openModal('google');
         }
       });
-      oauthGithub?.addEventListener('click', (e)=>{
-        e.preventDefault();
-        const current = (emailEl.value || '').trim();
-        if (current){
-          (async ()=>{
-            const r = await checkEmailExists(current);
-            if (r.exists === false){ openModal('github'); } else { startOAuth('github'); }
-          })();
-        } else {
-          openModal('github');
-        }
-      });
+      // GitHub removed
     })();
 
 

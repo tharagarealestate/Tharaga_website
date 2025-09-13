@@ -69,6 +69,16 @@
 //
 // Google OAuth callback to register in Google Cloud Console and Supabase:
 //   https://wedevtjjmdvngyshqdro.supabase.co/auth/v1/callback
+//
+// Head Code (copy-paste at the end of <head>):
+// <!-- Durable Auth Header: include in order -->
+// <script src="https://auth.tharaga.co.in/login_signup_glassdrop/auth-gate.js" defer></script>
+// <script>
+//   window.DURABLE_AUTH_URL = 'https://auth.tharaga.co.in/login_signup_glassdrop/';
+//   window.AUTH_NAV = { profile: '/profile', dashboard: '/dashboard' };
+// </script>
+// <script src="/js/durable-auth-header.js" defer></script>
+// <!-- Optional: include the <style id="thg-auth-styles">…</style> block above instead of letting the script inject it. -->
 (function(){
   if (window.__thgAuthInstalledV1) return; window.__thgAuthInstalledV1 = true;
 

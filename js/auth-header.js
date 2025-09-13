@@ -102,6 +102,8 @@
         '<div class="auth-account-sep"></div>'+
         '<div class="auth-account-item" role="menuitem" tabindex="0" data-action="profile"><span>Profile</span></div>'+
         '<div class="auth-account-item" role="menuitem" tabindex="0" data-action="dashboard"><span>Dashboard</span></div>'+
+        '<div class="auth-account-item" role="menuitem" tabindex="0" data-action="settings"><span>Settings</span></div>'+
+        '<div class="auth-account-item" role="menuitem" tabindex="0" data-action="billing"><span>Billing</span></div>'+
         '<div class="auth-account-item" role="menuitem" tabindex="0" data-action="logout"><span>Logout</span></div>';
       wrap.appendChild(menu);
     }
@@ -176,6 +178,8 @@
       var act = item.getAttribute('data-action');
       if (act === 'profile'){ closeMenu(ui); try { location.href = (window.AUTH_NAV && window.AUTH_NAV.profile) || '/profile'; } catch(_){} return; }
       if (act === 'dashboard'){ closeMenu(ui); try { location.href = (window.AUTH_NAV && window.AUTH_NAV.dashboard) || '/dashboard'; } catch(_){} return; }
+      if (act === 'settings'){ closeMenu(ui); try { location.href = (window.AUTH_NAV && window.AUTH_NAV.settings) || '/settings'; } catch(_){} return; }
+      if (act === 'billing'){ closeMenu(ui); try { location.href = (window.AUTH_NAV && window.AUTH_NAV.billing) || '/billing'; } catch(_){} return; }
       if (act === 'logout'){
         try { await (window.supabase && window.supabase.auth && window.supabase.auth.signOut && window.supabase.auth.signOut()); } catch(_){ }
         try { localStorage.removeItem('__tharaga_magic_continue'); localStorage.removeItem('__tharaga_magic_confirmed'); } catch(_){ }
@@ -317,10 +321,32 @@
     }
 
     window.addEventListener('message', function(ev){
-      if (ev.origin !== window.location.origin) return;
       try {
         var d = ev.data;
+        // Accept token transfer only from allowed auth origin
+        var allowedAuthOrigin = (function(){
+          try { return new URL('https://auth.tharaga.co.in').origin; } catch(_) { return null; }
+        })();
+        if (d && d.type === 'tharaga_token_transfer' && allowedAuthOrigin && ev.origin === allowedAuthOrigin) {
+          if (window.supabase && window.supabase.auth && d.access_token && d.refresh_token) {
+            window.supabase.auth.setSession({ access_token: d.access_token, refresh_token: d.refresh_token }).then(function(){
+              try {
+                // Immediately reflect UI and fetch profile
+                window.supabase.auth.getUser().then(function(res){
+                  var u = (res && res.data && res.data.user) ? res.data.user : state.user;
+                  state.user = u;
+                  if (u){
+                    state.loadingProfile = true; render(ui, state);
+                    fetchProfile(u).then(function(p){ state.profile = p; state.loadingProfile = false; render(ui, state); });
+                  } else { render(ui, state); }
+                });
+              } catch(_){}
+            }).catch(function(_){});
+          }
+          return;
+        }
         if (d && d.type === 'THARAGA_AUTH_SUCCESS') {
+          if (ev.origin !== window.location.origin) return;
           if (window.supabase && window.supabase.auth) {
             window.supabase.auth.getSession().then(function(){
               window.supabase.auth.getUser().then(function(res){

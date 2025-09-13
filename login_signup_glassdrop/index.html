@@ -116,6 +116,11 @@
       margin-top:12px;
       color:var(--acc2)
     }
+    /* Tabs */
+    .tabs{display:flex;gap:8px;margin:6px 0 14px}
+    .tab{flex:1;display:inline-flex;align-items:center;justify-content:center;gap:8px;border:1px solid #333333;border-radius:999px;padding:8px 10px;background:rgba(20,20,20,.6);font-weight:700;color:var(--muted);cursor:pointer}
+    .tab[aria-selected="true"]{color:#111;background:linear-gradient(180deg,var(--acc),#b8860b);border-color:rgba(212,175,55,.35)}
+    .tab[disabled]{opacity:.6;cursor:not-allowed}
 
     /* OAuth pre-screen modal */
     .precheck-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.4);display:none;align-items:center;justify-content:center;z-index:2147483647}
@@ -188,6 +193,11 @@
       <h1>Sign in to continue</h1>
         <p class="muted">"Browse only approved builder projects — safe, transparent, and verified"</p>
 
+        <div class="tabs" role="tablist" aria-label="Authentication">
+          <button id="tabSignIn" class="tab" role="tab" aria-selected="true" aria-controls="authForm">Sign In</button>
+          <button id="tabSignUp" class="tab" role="tab" aria-selected="false" aria-controls="signupForm">Create Account</button>
+        </div>
+
         <!-- session-state area (hidden until logged in) -->
         <div id="authed" class="hidden">
           <div class="success-block">
@@ -204,7 +214,7 @@
         </div>
 
         <!-- auth form (hidden if logged in) -->
-        <form id="authForm" autocomplete="on">
+        <form id="authForm" role="tabpanel" aria-labelledby="tabSignIn" autocomplete="on">
           <label for="email">Email</label>
           <input id="email" name="email" type="email" placeholder="you@domain.com" autocomplete="email" required>
 
@@ -222,7 +232,6 @@
 
           <div class="row" style="margin-top:12px">
             <button id="pwdBtn" class="btn btn-primary" type="button">Sign in</button>
-            <button id="signupBtn" class="btn btn-ghost" type="button">Create account</button>
           </div>
 
           <div class="row" style="margin-top:10px">
@@ -237,6 +246,38 @@
         <div class="hint">
           Tip: If you reached this page after clicking a partner link, we'll return you there after sign-in.
         </div>
+
+        <!-- sign-up form -->
+        <form id="signupForm" role="tabpanel" aria-labelledby="tabSignUp" class="hidden" autocomplete="on">
+          <label for="su_email">Email</label>
+          <input id="su_email" name="email" type="email" placeholder="you@domain.com" autocomplete="email" required>
+
+          <div class="row">
+            <div style="flex:1">
+              <label for="su_password">Password</label>
+              <div class="input-pill" style="position:relative;">
+                <input id="su_password" name="password" type="password" placeholder="At least 8 characters" autocomplete="new-password">
+                <span id="toggleEyeSu1" class="toggle-eye" role="button" aria-label="Show password">👁</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="row">
+            <div style="flex:1">
+              <label for="su_password2">Confirm Password</label>
+              <div class="input-pill" style="position:relative;">
+                <input id="su_password2" name="password2" type="password" placeholder="Repeat password" autocomplete="new-password">
+                <span id="toggleEyeSu2" class="toggle-eye" role="button" aria-label="Show password">👁</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="row" style="margin-top:12px">
+            <button id="createBtn" class="btn btn-primary" type="button">Create account</button>
+          </div>
+
+          <div id="su_msg" class="msg" role="status"></div>
+        </form>
         
         <!-- Social sign-in -->
         <div class="row" style="margin-top:12px">
@@ -280,7 +321,7 @@
     
     // ========================= IMPORT =========================
     import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
-    const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true } });
     const isIframe = window.self !== window.parent;
     window.supabase = supabase; // expose for DevTools
 
@@ -376,9 +417,7 @@
 
     const form = document.getElementById('authForm');
     const authed = document.getElementById('authed');
-    const magicBtn = document.getElementById('magicBtn');
     const pwdBtn = document.getElementById('pwdBtn');
-    const signupBtn = document.getElementById('signupBtn');
     const signOutBtn = document.getElementById('signOutBtn');
     const continueBtn = document.getElementById('continueBtn');
     const emailEl = document.getElementById('email');
@@ -387,6 +426,17 @@
     const userEmail = document.getElementById('userEmail');
 	const toggleEye=document.getElementById('toggleEye');
     const oauthGoogle = document.getElementById('oauthGoogle');
+    // Tabs + Sign Up references
+    const signUpForm = document.getElementById('signupForm');
+    const tabSignIn = document.getElementById('tabSignIn');
+    const tabSignUp = document.getElementById('tabSignUp');
+    const suEmail = document.getElementById('su_email');
+    const suPwd1 = document.getElementById('su_password');
+    const suPwd2 = document.getElementById('su_password2');
+    const suMsg = document.getElementById('su_msg');
+    const createBtn = document.getElementById('createBtn');
+    const toggleEyeSu1 = document.getElementById('toggleEyeSu1');
+    const toggleEyeSu2 = document.getElementById('toggleEyeSu2');
 
     // ========================= HELPERS =========================
     const storage = {
@@ -398,6 +448,22 @@
     function setMsg(text, ok=false){
       msgEl.textContent = text || '';
       msgEl.className = 'msg' + (text? (ok? ' ok':' err') : '');
+    }
+    function setSuMsg(text, ok=false){
+      if (!suMsg) return;
+      suMsg.textContent = text || '';
+      suMsg.className = 'msg' + (text? (ok? ' ok':' err') : '');
+    }
+    function validateEmailFormat(v){
+      return /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v);
+    }
+    function mapAuthError(err){
+      const raw = (err?.message || '').toLowerCase();
+      if (raw.includes('invalid login credentials')) return 'Wrong email or password';
+      if (raw.includes('email not confirmed')) return 'Email not verified. Check your inbox.';
+      if (raw.includes('over quota') || raw.includes('rate limit')) return 'Too many attempts. Try again later.';
+      if (raw.includes('network') || raw.includes('fetch')) return 'Network error. Check your connection.';
+      return err?.message || 'Authentication failed';
     }
 
     function getNextFromQuery(){
@@ -441,10 +507,12 @@
       userEmail.textContent = email ? `• ${email}` : '';
       authed.classList.remove('hidden');
       form.classList.add('hidden');
+      if (signUpForm) signUpForm.classList.add('hidden');
     }
     function showForm(){
       authed.classList.add('hidden');
       form.classList.remove('hidden');
+      if (signUpForm) signUpForm.classList.add('hidden');
     }
 
 	// === Password eye toggle ===
@@ -456,6 +524,28 @@
     toggleEye.addEventListener('keydown', e => {
       if (e.key === 'Enter' || e.key === ' ') toggleEye.click();
     });
+
+    // Signup eyes
+    if (toggleEyeSu1) toggleEyeSu1.addEventListener('click',()=>{
+      const t=suPwd1.type==='password'?'text':'password';
+      suPwd1.type=t; toggleEyeSu1.textContent=t==='password'?'👁':'🙈';
+    });
+    if (toggleEyeSu2) toggleEyeSu2.addEventListener('click',()=>{
+      const t=suPwd2.type==='password'?'text':'password';
+      suPwd2.type=t; toggleEyeSu2.textContent=t==='password'?'👁':'🙈';
+    });
+
+    function switchTab(tab){
+      const isSignIn = tab === 'signin';
+      if (tabSignIn) tabSignIn.setAttribute('aria-selected', isSignIn ? 'true' : 'false');
+      if (tabSignUp) tabSignUp.setAttribute('aria-selected', isSignIn ? 'false' : 'true');
+      form.classList.toggle('hidden', !isSignIn);
+      if (signUpForm) signUpForm.classList.toggle('hidden', isSignIn);
+      setMsg(''); setSuMsg('');
+      try { (isSignIn ? emailEl : suEmail).focus(); } catch(_) {}
+    }
+    if (tabSignIn) tabSignIn.addEventListener('click', ()=> switchTab('signin'));
+    if (tabSignUp) tabSignUp.addEventListener('click', ()=> switchTab('signup'));
 
     // ========================= INIT ===========================
     ensurePendingTargetFromQuery();
@@ -581,13 +671,25 @@ window.addEventListener('beforeunload', () => subscription?.unsubscribe());
 
 
     pwdBtn.addEventListener('click', async () => {
-      const email = emailEl.value.trim();
+      const email = emailEl.value.trim().toLowerCase();
       const password = pwdEl.value;
-      if (!email || !password) return setMsg('Enter email + password');
-      setMsg('Signing in…');
+      if (!validateEmailFormat(email)) return setMsg('Enter a valid email');
+      if (!password) return setMsg('Enter your password');
+      setMsg('Signing in…', true);
+      pwdBtn.disabled = true;
+      try { localStorage.setItem('__tharaga_last_email', email); } catch(_){}
       const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-      if (error) { setMsg(error.message); return; }
+      if (error) {
+        const m = mapAuthError(error);
+        setMsg(m);
+        if ((error.message||'').toLowerCase().includes('email not confirmed')) {
+          try { await supabase.auth.resend({ type:'signup', email }); } catch(_){}
+        }
+        pwdBtn.disabled = false;
+        return;
+      }
       setMsg('Signed in ✓', true);
+      pwdBtn.disabled = false;
       // If embedded, immediately notify parent
       try {
         if (window.self !== window.parent) {
@@ -608,16 +710,22 @@ window.addEventListener('beforeunload', () => subscription?.unsubscribe());
       } catch(_) {}
     });
 
-    signupBtn.addEventListener('click', async () => {
-      const email = emailEl.value.trim();
-      const password = pwdEl.value;
-      if (!email || !password) return setMsg('Enter email + password to create account');
-      if (password.length < 8) { setMsg('Password must be at least 8 characters'); return; }
-      setMsg('Creating account…');
-
-      const { error } = await supabase.auth.signUp({ email, password });
-      if (error) { setMsg(error.message); return; }
-      setMsg('Account created. You can sign in now.', true);
+    if (createBtn) createBtn.addEventListener('click', async () => {
+      const email = (suEmail?.value || '').trim().toLowerCase();
+      const p1 = suPwd1?.value || '', p2 = suPwd2?.value || '';
+      if (!validateEmailFormat(email)) return setSuMsg('Enter a valid email');
+      if (!p1 || p1.length < 8) return setSuMsg('Password must be at least 8 characters');
+      if (p1 !== p2) return setSuMsg('Passwords do not match');
+      setSuMsg('Creating account…', true);
+      createBtn.disabled = true;
+      try { localStorage.setItem('__tharaga_last_email', email); } catch(_){}
+      const { data, error } = await supabase.auth.signUp({ email, password: p1 });
+      if (error) { setSuMsg(error.message); createBtn.disabled = false; return; }
+      setSuMsg('Account created. Check your email to verify.', true);
+      createBtn.disabled = false;
+      // switch to sign-in
+      try { emailEl.value = email; } catch(_){}
+      if (typeof switchTab === 'function') switchTab('signin');
     });
 
     // ---- OAuth: Google / GitHub ----

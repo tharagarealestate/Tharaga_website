@@ -333,7 +333,14 @@
         window.__authGateLoggedIn = true;
         try { showParentSuccess(msg?.user?.email || null); } catch(_) {}
         if (signInResolve) { try { signInResolve({ signedIn: true, user: msg.user || null }); } catch (_) {} signInPromise = signInResolve = signInReject = null; }
-        setTimeout(() => { try { closeLoginModal(); } catch(_) {} }, 1800);
+        const next = msg && msg.next ? String(msg.next) : null;
+        const isSafe = (()=>{ try { const u=new URL(next, location.href); return u.origin === location.origin; } catch(_) { return false; } })();
+        setTimeout(() => {
+          try { closeLoginModal(); } catch(_) {}
+          try {
+            if (next && isSafe) { location.href = next; }
+          } catch(_) {}
+        }, 1200);
         return;
       }
 

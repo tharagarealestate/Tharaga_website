@@ -224,6 +224,12 @@
         <div class="hint">
           Tip: If you reached this page after clicking a partner link, we'll return you there after sign-in.
         </div>
+        
+        <!-- Social sign-in -->
+        <div class="row" style="margin-top:12px">
+          <button id="oauthGoogle" class="btn btn-ghost" type="button">Continue with Google</button>
+          <button id="oauthGithub" class="btn btn-ghost" type="button">Continue with GitHub</button>
+        </div>
         <button class="close-btn" onclick="(window.self!==window.parent) ? window.parent.postMessage({type:'close_login_modal'}, '*') : window.history.back()">×</button>
 
     </section>
@@ -352,6 +358,8 @@
     const msgEl = document.getElementById('msg');
     const userEmail = document.getElementById('userEmail');
 	const toggleEye=document.getElementById('toggleEye');
+    const oauthGoogle = document.getElementById('oauthGoogle');
+    const oauthGithub = document.getElementById('oauthGithub');
 
     // ========================= HELPERS =========================
     const storage = {
@@ -584,6 +592,20 @@ window.addEventListener('beforeunload', () => subscription?.unsubscribe());
       if (error) { setMsg(error.message); return; }
       setMsg('Account created. You can sign in now.', true);
     });
+
+    // ---- OAuth: Google / GitHub ----
+    async function startOAuth(provider){
+      try {
+        setMsg('Redirecting to ' + provider + '…', true);
+        const next = getNextFromQuery();
+        const redirectTo = `${location.origin}${location.pathname}?post_auth=1&parent_origin=${encodeURIComponent(PARENT_ORIGIN)}${next ? `&next=${encodeURIComponent(next)}` : ''}`;
+        await supabase.auth.signInWithOAuth({ provider, options: { redirectTo } });
+      } catch (e) {
+        setMsg('Could not start ' + provider + ' sign in.');
+      }
+    }
+    oauthGoogle?.addEventListener('click', ()=> startOAuth('google'));
+    oauthGithub?.addEventListener('click', ()=> startOAuth('github'));
 
     signOutBtn?.addEventListener('click', async () => {
       await supabase.auth.signOut();

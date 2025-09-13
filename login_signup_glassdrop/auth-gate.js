@@ -291,8 +291,8 @@
       el.addEventListener('click', async (evt) => {
         let loggedIn = false;
         try {
-          if (window.supabase && supabase.auth) {
-            const res = await supabase.auth.getUser();
+          if (window.supabase && window.supabase.auth) {
+            const res = await window.supabase.auth.getUser();
             if (res?.data?.user) loggedIn = true;
           }
         } catch (_) {}

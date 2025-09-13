@@ -502,12 +502,25 @@ if (isPostAuth) {
         showAuthed(session.user?.email);
         const pending = storage.get();
         if (window.self !== window.parent) {
-          const msg = {
-            type: 'signed_in',
-            user: { id: session.user?.id, email: session.user?.email },
-            next: pending?.href || new URLSearchParams(location.search).get('next') || null
-          };
-          window.parent.postMessage(msg, '*');
+          try {
+            // First transfer tokens so parent origin can set its own session
+            const tokenMsg = {
+              type: 'tharaga_token_transfer',
+              access_token: session.access_token,
+              refresh_token: session.refresh_token,
+              user: { id: session.user?.id || null, email: session.user?.email || null },
+              next: pending?.href || new URLSearchParams(location.search).get('next') || null
+            };
+            window.parent.postMessage(tokenMsg, PARENT_ORIGIN);
+          } catch(_) {}
+          try {
+            const msg = {
+              type: 'signed_in',
+              user: { id: session.user?.id, email: session.user?.email },
+              next: pending?.href || new URLSearchParams(location.search).get('next') || null
+            };
+            window.parent.postMessage(msg, PARENT_ORIGIN);
+          } catch(_) {}
         }
       }
     });
@@ -544,7 +557,18 @@ window.addEventListener('beforeunload', () => subscription?.unsubscribe());
       try {
         if (window.self !== window.parent) {
           const pending = storage.get();
-          window.parent.postMessage({ type: 'signed_in', user: { id: data?.user?.id || null, email }, next: pending?.href || null }, '*');
+          try {
+            if (data?.session?.access_token && data?.session?.refresh_token) {
+              window.parent.postMessage({
+                type: 'tharaga_token_transfer',
+                access_token: data.session.access_token,
+                refresh_token: data.session.refresh_token,
+                user: { id: data?.user?.id || null, email },
+                next: pending?.href || null
+              }, PARENT_ORIGIN);
+            }
+          } catch(_) {}
+          window.parent.postMessage({ type: 'signed_in', user: { id: data?.user?.id || null, email }, next: pending?.href || null }, PARENT_ORIGIN);
         }
       } catch(_) {}
     });

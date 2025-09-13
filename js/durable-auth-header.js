@@ -78,7 +78,8 @@
 .thg-auth-overlay[aria-hidden="false"] .thg-auth-modal{ transform:translateY(0) scale(1); opacity:1; }
 .thg-auth-header{ display:flex; align-items:center; justify-content:space-between; padding:16px 18px; border-bottom:1px solid rgba(255,255,255,.08); }
 .thg-auth-title{ font-weight:700; font-size:16px; }
-.thg-auth-close{ appearance:none; background:transparent; border:0; color:#fff; opacity:.8; cursor:pointer; }
+.thg-auth-close{ appearance:none; background:linear-gradient(180deg,#d4af37,#b8860b,#8b6508); border:0; color:#111; cursor:pointer; font-weight:700; width:32px; height:32px; line-height:32px; border-radius:9999px; box-shadow:0 2px 6px rgba(0,0,0,.25); }
+.thg-auth-close:hover{ color:#fff; background:linear-gradient(180deg,#b8860b,#8b6508,#5a3a02); transform:scale(1.06); }
 .thg-auth-body{ padding:16px 18px 18px; }
 .thg-tabs{ display:flex; gap:6px; background:rgba(255,255,255,.06); padding:4px; border-radius:9999px; margin-bottom:16px; }
 .thg-tab{ flex:1; text-align:center; padding:8px 10px; border-radius:9999px; cursor:pointer; font-weight:600; color:#ddd; }
@@ -91,8 +92,9 @@
 .thg-link{ background:none; border:0; color:#7dd3fc; cursor:pointer; font-size:13px; padding:0; }
 .thg-btn-primary{ width:100%; appearance:none; background:#fff; color:#111; border:0; border-radius:10px; padding:10px 12px; font-weight:700; cursor:pointer; transition:transform .06s ease, box-shadow .06s ease; box-shadow:0 2px 0 rgba(255,255,255,.25); }
 .thg-btn-primary:active{ transform:translateY(1px); box-shadow:none; }
-.thg-oauth{ display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:10px; }
-.thg-oauth-btn{ appearance:none; background:#0f0f0f; color:#fff; border:1px solid rgba(255,255,255,.12); border-radius:10px; padding:10px 12px; cursor:pointer; font-weight:600; }
+.thg-oauth{ display:grid; grid-template-columns:1fr; gap:10px; margin-top:10px; }
+.thg-oauth-btn{ appearance:none; background:#0f0f0f; color:#fff; border:1px solid rgba(255,255,255,.12); border-radius:10px; padding:12px 14px; cursor:pointer; font-weight:700; }
+.thg-oauth-btn.google{ border-color:#333; background:#151515; }
 .thg-error{ background:rgba(239,68,68,.12); color:#fecaca; border:1px solid rgba(239,68,68,.35); border-radius:10px; padding:10px 12px; font-size:13px; display:none; }
 .thg-hint{ font-size:12px; opacity:.8; }
 .thg-loading-bar{ height:2px; width:0; background:#7dd3fc; border-radius:2px; transition:width .2s ease; }
@@ -103,6 +105,8 @@
 .thg-btn{ appearance:none; border-radius:10px; padding:8px 12px; cursor:pointer; border:1px solid rgba(255,255,255,.15); background:#0f0f0f; color:#fff; }
 .thg-btn-danger{ background:#ef4444; border-color:#ef4444; color:#fff; }
 @media (max-width:480px){ .thg-auth-wrap{ top:10px; right:10px; } .thg-auth-modal{ width:calc(100% - 16px); margin:0 8px; } .thg-auth-menu{ right:8px; } }
+/* tagline styling to match attached design */
+.thg-tagline{ color:#9ca3af; font-size:13px; margin:-4px 0 12px; }
 `;
     const style = document.createElement('style');
     style.id = 'thg-auth-styles';
@@ -149,11 +153,12 @@
       overlay.innerHTML = `
         <div class="thg-auth-modal" role="document" aria-labelledby="thg-auth-title">
           <div class="thg-auth-header">
-            <div class="thg-auth-title" id="thg-auth-title">Sign in</div>
+            <div class="thg-auth-title" id="thg-auth-title">Sign in to continue</div>
             <button class="thg-auth-close" type="button" aria-label="Close">✕</button>
           </div>
           <div class="thg-loading-bar" aria-hidden="true"></div>
           <div class="thg-auth-body">
+            <div class="thg-tagline">"Browse only approved builder projects — safe, transparent, and verified"</div>
             <div class="thg-tabs" role="tablist" aria-label="Authentication method">
               <button class="thg-tab" role="tab" id="thg-tab-signin" aria-controls="thg-panel-signin" aria-selected="true">Sign in</button>
               <button class="thg-tab" role="tab" id="thg-tab-signup" aria-controls="thg-panel-signup" aria-selected="false">Create account</button>
@@ -164,7 +169,7 @@
               <div class="thg-field"><label for="thg-si-password">Password</label><input id="thg-si-password" class="thg-input" type="password" autocomplete="current-password" placeholder="Your password" /></div>
               <div class="thg-actions"><button class="thg-link" type="button" id="thg-forgot">Forgot password?</button><span class="thg-hint"></span></div>
               <button class="thg-btn-primary" type="button" id="thg-signin-btn">Sign in</button>
-              <div class="thg-oauth"><button class="thg-oauth-btn" type="button" data-provider="google">Continue with Google</button><button class="thg-oauth-btn" type="button" data-provider="github">Continue with GitHub</button></div>
+              <div class="thg-oauth"><button class="thg-oauth-btn google" type="button" data-provider="google">Continue with Google</button></div>
             </div>
             <div id="thg-panel-signup" role="tabpanel" aria-labelledby="thg-tab-signup" hidden>
               <div class="thg-field"><label for="thg-su-name">Full name (optional)</label><input id="thg-su-name" class="thg-input" type="text" autocomplete="name" placeholder="Ada Lovelace" /></div>
@@ -172,7 +177,7 @@
               <div class="thg-field"><label for="thg-su-password">Password</label><input id="thg-su-password" class="thg-input" type="password" autocomplete="new-password" placeholder="At least 8 characters" /></div>
               <div class="thg-actions"><span class="thg-hint">Use a strong password. You can add name later.</span></div>
               <button class="thg-btn-primary" type="button" id="thg-signup-btn">Create account</button>
-              <div class="thg-oauth"><button class="thg-oauth-btn" type="button" data-provider="google">Sign up with Google</button><button class="thg-oauth-btn" type="button" data-provider="github">Sign up with GitHub</button></div>
+              <div class="thg-oauth"><button class="thg-oauth-btn google" type="button" data-provider="google">Sign up with Google</button></div>
             </div>
             <div id="thg-panel-reset" role="tabpanel" aria-labelledby="thg-tab-reset" hidden>
               <div class="thg-field"><label for="thg-rp-email">Email</label><input id="thg-rp-email" class="thg-input" type="email" autocomplete="email" placeholder="you@example.com" /></div>
@@ -265,7 +270,7 @@
     forgotBtn.addEventListener('click', function(){ showPanel(ui.overlay, 'reset', 'Reset password'); const el = ui.overlay.querySelector('#thg-rp-email'); const source = ui.overlay.querySelector('#thg-si-email'); if (source && el && source.value) el.value = source.value; if (el) el.focus(); });
     ui.overlay.querySelector('#thg-signin-btn').addEventListener('click', async function(){ if (!state.supabaseReady){ showError(ui.overlay, 'Authentication is not initialized.'); return; } const email = ui.overlay.querySelector('#thg-si-email').value.trim(); const password = ui.overlay.querySelector('#thg-si-password').value; if (!validateEmail(email)) { showError(ui.overlay, 'Enter a valid email.'); return; } if (!password || password.length < 6) { showError(ui.overlay, 'Enter your password.'); return; } clearError(ui.overlay); setModalLoading(ui.overlay, true); try{ const { error } = await window.supabase.auth.signInWithPassword({ email, password }); if (error) { showError(ui.overlay, error.message || 'Failed to sign in.'); } } catch(ex){ showError(ui.overlay, 'Network error. Please try again.'); } finally { setModalLoading(ui.overlay, false); } });
     ui.overlay.querySelector('#thg-signup-btn').addEventListener('click', async function(){ if (!state.supabaseReady){ showError(ui.overlay, 'Authentication is not initialized.'); return; } const name = ui.overlay.querySelector('#thg-su-name').value.trim(); const email = ui.overlay.querySelector('#thg-su-email').value.trim(); const password = ui.overlay.querySelector('#thg-su-password').value; if (!validateEmail(email)) { showError(ui.overlay, 'Enter a valid email.'); return; } if (!password || password.length < 8) { showError(ui.overlay, 'Password must be at least 8 characters.'); return; } clearError(ui.overlay); setModalLoading(ui.overlay, true); try{ const { error } = await window.supabase.auth.signUp({ email, password, options: { data: name ? { full_name: name } : {} } }); if (error) { showError(ui.overlay, error.message || 'Failed to create account.'); } else { showError(ui.overlay, 'Check your email to verify your account.'); } } catch(ex){ showError(ui.overlay, 'Network error. Please try again.'); } finally { setModalLoading(ui.overlay, false); } });
-    ui.overlay.querySelectorAll('.thg-oauth-btn').forEach(function(btn){ btn.addEventListener('click', async function(){ if (!state.supabaseReady){ showError(ui.overlay, 'Authentication is not initialized.'); return; } const provider = btn.getAttribute('data-provider'); clearError(ui.overlay); setModalLoading(ui.overlay, true); try{ const redirectTo = location.origin + location.pathname + location.search; await window.supabase.auth.signInWithOAuth({ provider, options: { redirectTo, skipBrowserRedirect: false } }); } catch(ex){ showError(ui.overlay, 'Failed to start ' + provider + ' sign in.'); setModalLoading(ui.overlay, false); } }); });
+    ui.overlay.querySelectorAll('.thg-oauth-btn').forEach(function(btn){ btn.addEventListener('click', async function(){ if (!state.supabaseReady){ showError(ui.overlay, 'Authentication is not initialized.'); return; } const provider = btn.getAttribute('data-provider'); clearError(ui.overlay); setModalLoading(ui.overlay, true); try{ const redirectTo = location.origin + location.pathname + location.search; const { data, error } = await window.supabase.auth.signInWithOAuth({ provider, options: { redirectTo, skipBrowserRedirect: true } }); if (error) { const msg = /provider is not enabled/i.test(error.message||'') ? 'Google sign-in is not available yet.' : (error.message || 'Could not start sign in.'); showError(ui.overlay, msg); setModalLoading(ui.overlay, false); return; } if (data && data.url){ location.href = data.url; } else { setModalLoading(ui.overlay, false); showError(ui.overlay, 'Could not start ' + provider + ' sign in.'); } } catch(ex){ showError(ui.overlay, 'Failed to start ' + provider + ' sign in.'); setModalLoading(ui.overlay, false); } }); });
     ui.overlay.querySelector('#thg-reset-btn').addEventListener('click', async function(){ if (!state.supabaseReady){ showError(ui.overlay, 'Authentication is not initialized.'); return; } const email = ui.overlay.querySelector('#thg-rp-email').value.trim(); if (!validateEmail(email)) { showError(ui.overlay, 'Enter a valid email.'); return; } clearError(ui.overlay); setModalLoading(ui.overlay, true); try{ const redirectTo = location.origin + location.pathname + location.search; const { error } = await window.supabase.auth.resetPasswordForEmail(email, { redirectTo }); if (error) { showError(ui.overlay, error.message || 'Failed to send reset link.'); } else { showError(ui.overlay, 'Reset link sent. Check your email.'); } } catch(ex){ showError(ui.overlay, 'Network error. Please try again.'); } finally { setModalLoading(ui.overlay, false); } });
     ui.overlay.querySelector('#thg-update-btn').addEventListener('click', async function(){ if (!state.supabaseReady){ showError(ui.overlay, 'Authentication is not initialized.'); return; } const password = ui.overlay.querySelector('#thg-up-password').value; if (!password || password.length < 8) { showError(ui.overlay, 'Password must be at least 8 characters.'); return; } clearError(ui.overlay); setModalLoading(ui.overlay, true); try{ const { error } = await window.supabase.auth.updateUser({ password }); if (error) { showError(ui.overlay, error.message || 'Failed to update password.'); } else { showPanel(ui.overlay, 'signin', 'Sign in'); showError(ui.overlay, 'Password updated. Please sign in.'); } } catch(ex){ showError(ui.overlay, 'Network error. Please try again.'); } finally { setModalLoading(ui.overlay, false); } });
     ui.confirmEl.querySelector('.thg-confirm-cancel').addEventListener('click', function(){ closeConfirm(ui); });

@@ -15,13 +15,13 @@
         '.auth-account-wrap{position:absolute;top:14px;right:16px;display:flex;align-items:center;z-index:2147483000;}'+
         '@media (min-width:1024px){.auth-account-wrap{top:16px;right:24px;}}'+
         '.auth-account-wrap.is-fixed{position:fixed;top:14px;right:16px;}'+
-        '.auth-account-btn{appearance:none;background:transparent;color:#111;border:1px solid rgba(0,0,0,.6);border-radius:9999px;padding:8px 14px;font-weight:600;cursor:pointer;line-height:1;white-space:nowrap;display:inline-flex;align-items:center;gap:8px;transition:background .15s ease,border-color .15s ease,color .15s ease;}'+
-        '.auth-account-btn:hover{background:rgba(0,0,0,.06)}'+
-        '.auth-account-btn .auth-btn-initial{width:22px;height:22px;border-radius:9999px;background:#111;color:#fff;display:none;align-items:center;justify-content:center;font-weight:700;font-size:11px;}'+
+        '.auth-account-btn{appearance:none;background:transparent;color:#fff;border:1px solid rgba(255,255,255,.9);border-radius:9999px;padding:8px 14px;font-weight:600;cursor:pointer;line-height:1;white-space:nowrap;display:inline-flex;align-items:center;gap:8px;transition:background .15s ease,border-color .15s ease,color .15s ease,box-shadow .15s ease;}'+
+        '.auth-account-btn:hover{background:rgba(255,255,255,.08)}'+
+        '.auth-account-btn .auth-btn-initial{width:22px;height:22px;border-radius:9999px;background:#fff;color:#111;display:none;align-items:center;justify-content:center;font-weight:700;font-size:11px;}'+
         '.auth-account-btn.is-authenticated .auth-btn-initial{display:inline-flex;}'+
-        '.auth-account-btn.is-authenticated::after{content:"";display:inline-block;width:0;height:0;border-left:5px solid transparent;border-right:5px solid transparent;border-top:6px solid rgba(0,0,0,.7);transition:transform .15s ease;transform-origin:center;}'+
+        '.auth-account-btn.is-authenticated::after{content:"";display:inline-block;width:0;height:0;border-left:5px solid transparent;border-right:5px solid transparent;border-top:6px solid rgba(255,255,255,.9);transition:transform .15s ease;transform-origin:center;}'+
         '.auth-account-btn[aria-expanded="true"].is-authenticated::after{transform:rotate(180deg);}'+
-        '.auth-account-btn .auth-btn-spinner{width:14px;height:14px;border-radius:9999px;border:2px solid rgba(0,0,0,.25);border-top-color:#111;display:none;animation:authspin .8s linear infinite;}'+
+        '.auth-account-btn .auth-btn-spinner{width:14px;height:14px;border-radius:9999px;border:2px solid rgba(255,255,255,.35);border-top-color:#fff;display:none;animation:authspin .8s linear infinite;}'+
         '.auth-account-btn.is-loading .auth-btn-spinner{display:inline-block;}'+
         '@keyframes authspin{to{transform:rotate(360deg);}}'+
         '.auth-account-menu{position:absolute;top:calc(100% + 10px);right:0;min-width:240px;background:#0b0b0b;color:#fff;border:1px solid rgba(255,255,255,.15);border-radius:12px;padding:8px;box-shadow:0 12px 34px rgba(0,0,0,.45);visibility:hidden;opacity:0;transform:translateY(-6px);pointer-events:none;transition:opacity .18s ease,transform .18s ease,visibility 0s linear .18s;z-index:2147483001;}'+
@@ -77,7 +77,7 @@
       btn.className = 'auth-account-btn';
       btn.setAttribute('aria-haspopup','menu');
       btn.setAttribute('aria-expanded','false');
-      btn.textContent = 'Login / Signup';
+      btn.textContent = 'Sign in';
       var avatar = document.createElement('span');
       avatar.className = 'auth-btn-initial';
       avatar.textContent = 'U';
@@ -102,8 +102,6 @@
         '<div class="auth-account-sep"></div>'+
         '<div class="auth-account-item" role="menuitem" tabindex="0" data-action="profile"><span>Profile</span></div>'+
         '<div class="auth-account-item" role="menuitem" tabindex="0" data-action="dashboard"><span>Dashboard</span></div>'+
-        '<div class="auth-account-item" role="menuitem" tabindex="0" data-action="settings"><span>Settings</span></div>'+
-        '<div class="auth-account-item" role="menuitem" tabindex="0" data-action="billing"><span>Billing</span></div>'+
         '<div class="auth-account-item" role="menuitem" tabindex="0" data-action="logout"><span>Logout</span></div>';
       wrap.appendChild(menu);
     }
@@ -153,7 +151,7 @@
     } else {
       ui.btn.classList.remove('is-authenticated');
       closeMenu(ui);
-      ui.btn.textContent = 'Login / Signup';
+      ui.btn.textContent = 'Sign in';
       if (avatar){ avatar.textContent = 'U'; ui.btn.prepend(avatar); }
     }
     if (state.loadingProfile){ ui.btn.classList.add('is-loading'); } else { ui.btn.classList.remove('is-loading'); }

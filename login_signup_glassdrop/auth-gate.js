@@ -337,6 +337,21 @@
         return;
       }
 
+    // token transfer for parent setSession
+    if (msg.type === 'tharaga_token_transfer' && msg.access_token && msg.refresh_token) {
+        (async () => {
+          try {
+            if (!window.supabase || !window.supabase.auth) {
+              const mod = await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm');
+              const client = mod.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+              try { window.supabase = client; } catch(_) {}
+            }
+            await window.supabase?.auth?.setSession({ access_token: msg.access_token, refresh_token: msg.refresh_token });
+          } catch (_) { /* noop */ }
+        })();
+        return;
+      }
+
     // No verify-failed handling needed for password auth.
         
     if (msg.type === 'close_login_modal') {

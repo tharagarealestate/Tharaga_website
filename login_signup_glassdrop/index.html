@@ -117,6 +117,19 @@
       color:var(--acc2)
     }
 
+    /* OAuth pre-screen modal */
+    .precheck-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.4);display:none;align-items:center;justify-content:center;z-index:2147483647}
+    .precheck-backdrop[aria-hidden="false"]{display:flex}
+    .precheck-modal{width:min(520px,94vw);background:linear-gradient(180deg,#1a1a1a,#0f0f0f);border:1px solid rgba(212,175,55,.25);border-radius:14px;box-shadow:0 24px 80px rgba(0,0,0,.55);padding:16px;color:var(--txt);animation:popupSlide .28s ease-out}
+    .precheck-title{font-weight:800;margin:2px 0 8px;color:var(--acc);font-size:18px}
+    .precheck-body{color:var(--muted);font-size:14px;margin-bottom:10px}
+    .precheck-row{display:flex;gap:10px;margin-top:12px}
+    .precheck-input{flex:1;padding:10px;border-radius:10px;border:1px solid #333;background:#1e1e1e;color:var(--txt)}
+    .precheck-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:12px}
+    .btn-gold{background:linear-gradient(180deg,var(--acc),#b8860b);color:#111}
+    .btn-plain{background:transparent;border:1px solid #333;color:var(--muted)}
+    .precheck-msg{font-size:13px;margin-top:8px}
+
     /* Remove fullscreen overlay background/effects */
   
 
@@ -235,6 +248,22 @@
     </section>
     </main>
   
+  <!-- OAuth Pre-screen Modal -->
+  <div id="oauthPrecheck" class="precheck-backdrop" aria-hidden="true" role="dialog" aria-modal="true" aria-label="Confirm account creation">
+    <div class="precheck-modal">
+      <div class="precheck-title" id="precheckTitle">Continue with provider</div>
+      <div class="precheck-body" id="precheckBody">Enter your email to continue.</div>
+      <div class="precheck-row">
+        <input id="precheckEmail" class="precheck-input" type="email" placeholder="you@domain.com" autocomplete="email" />
+      </div>
+      <div class="precheck-msg" id="precheckMsg"></div>
+      <div class="precheck-actions">
+        <button id="precheckCancel" class="btn btn-plain" type="button">Cancel</button>
+        <button id="precheckPrimary" class="btn btn-primary btn-gold" type="button">Continue</button>
+      </div>
+    </div>
+  </div>
+
 
   <!-- Auth + Gate Logic -->
   <script type="module">
@@ -604,8 +633,115 @@ window.addEventListener('beforeunload', () => subscription?.unsubscribe());
         setMsg('Could not start ' + provider + ' sign in.');
       }
     }
-    oauthGoogle?.addEventListener('click', ()=> startOAuth('google'));
-    oauthGithub?.addEventListener('click', ()=> startOAuth('github'));
+
+    async function checkEmailExists(email){
+      try {
+        const res = await fetch('/.netlify/functions/authCheckEmail', { method:'POST', headers:{ 'content-type':'application/json' }, body: JSON.stringify({ email }) });
+        if (!res.ok) return { exists: null };
+        return await res.json();
+      } catch (_) { return { exists: null }; }
+    }
+
+    (function setupOAuthPrecheck(){
+      const modal = document.getElementById('oauthPrecheck');
+      const title = document.getElementById('precheckTitle');
+      const body = document.getElementById('precheckBody');
+      const emailInput = document.getElementById('precheckEmail');
+      const msg = document.getElementById('precheckMsg');
+      const btnCancel = document.getElementById('precheckCancel');
+      const btnPrimary = document.getElementById('precheckPrimary');
+
+      let currentProvider = null;
+      let currentState = 'entry'; // 'entry' | 'consent'
+
+      function openModal(provider){
+        currentProvider = provider;
+        currentState = 'entry';
+        title.textContent = `Continue with ${provider.charAt(0).toUpperCase()+provider.slice(1)}`;
+        body.textContent = 'Enter your email so we can check if you already have an account.';
+        emailInput.value = (emailEl.value || '').trim();
+        msg.textContent = '';
+        btnPrimary.textContent = 'Check & Continue';
+        modal.setAttribute('aria-hidden','false');
+        modal.style.display = 'flex';
+        setTimeout(()=>{ try { emailInput.focus(); } catch(_){} }, 50);
+      }
+
+      function closeModal(){
+        modal.setAttribute('aria-hidden','true');
+        modal.style.display = 'none';
+        currentProvider = null;
+      }
+
+      async function handlePrimary(){
+        const email = (emailInput.value || '').trim().toLowerCase();
+        if (!email) { msg.textContent = 'Please enter your email.'; return; }
+        // remember email for convenience
+        try { localStorage.setItem('__tharaga_last_email', email); } catch(_){ }
+        if (currentState === 'entry'){
+          msg.textContent = 'Checking…';
+          const res = await checkEmailExists(email);
+          if (res.exists === true || res.exists === null) {
+            // proceed silently if user exists or unknown
+            try { emailEl.value = email; } catch(_){}
+            closeModal();
+            startOAuth(currentProvider);
+            return;
+          }
+          if (res.exists === false){
+            // show consent
+            currentState = 'consent';
+            title.textContent = 'Create a new account?';
+            body.textContent = `We couldn\'t find an account for ${email}. We can create one for you with ${currentProvider}.`;
+            msg.textContent = 'You can also use password sign up instead.';
+            btnPrimary.textContent = `Create with ${currentProvider}`;
+            return;
+          }
+        } else {
+          // consent state -> proceed to OAuth
+          try { emailEl.value = email; } catch(_){}
+          closeModal();
+          startOAuth(currentProvider);
+        }
+      }
+
+      btnCancel?.addEventListener('click', ()=>{
+        closeModal();
+        // offer password path by focusing email field on main form
+        try {
+          if (!emailEl.value) emailEl.value = emailInput.value;
+          emailEl.focus();
+        } catch(_){ }
+      });
+      btnPrimary?.addEventListener('click', handlePrimary);
+
+      oauthGoogle?.addEventListener('click', (e)=>{
+        e.preventDefault();
+        const current = (emailEl.value || '').trim();
+        if (current){
+          // direct precheck without modal
+          (async ()=>{
+            const r = await checkEmailExists(current);
+            if (r.exists === false){ openModal('google'); } else { startOAuth('google'); }
+          })();
+        } else {
+          openModal('google');
+        }
+      });
+      oauthGithub?.addEventListener('click', (e)=>{
+        e.preventDefault();
+        const current = (emailEl.value || '').trim();
+        if (current){
+          (async ()=>{
+            const r = await checkEmailExists(current);
+            if (r.exists === false){ openModal('github'); } else { startOAuth('github'); }
+          })();
+        } else {
+          openModal('github');
+        }
+      });
+    })();
+
 
     signOutBtn?.addEventListener('click', async () => {
       await supabase.auth.signOut();

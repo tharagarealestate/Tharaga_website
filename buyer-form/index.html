@@ -788,8 +788,14 @@ async function getRecaptcha() {
 
     alert('Please sign in first.');
 
-    if (window.authGate?.openLoginModal) {
-      window.authGate.openLoginModal({ next: location.pathname + location.search });
+    // Always open the SAME main header auth container for consistency
+    const nextUrl = location.pathname + location.search;
+    if (window.authGate?.triggerHeaderLogin) {
+      try { window.authGate.triggerHeaderLogin({ next: nextUrl }); } catch(_) {}
+    } else if (window.authGate?.openLoginModal) {
+      try { window.authGate.openLoginModal({ next: nextUrl }); } catch(_) {}
+    } else if (typeof window.__thgOpenAuthModal === 'function') {
+      try { window.__thgOpenAuthModal({ next: nextUrl }); } catch(_) {}
     }
     return;
   }

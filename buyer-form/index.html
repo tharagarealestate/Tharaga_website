@@ -312,6 +312,16 @@
   ready(function(){ hideLegacyAuthLinks(document); injectStyles(); const ui = createUI(); bindUI(ui); observeRerenders(); initSupabase(ui); window.addEventListener('storage', function(ev){ if (ev.key === 'supabase.auth.token'){ } }); window.addEventListener('beforeunload', function(){ try { state.sub && state.sub.unsubscribe && state.sub.unsubscribe(); } catch(_){} }); });
 })();
   </script>
+  <!-- Unified auth overlay include (overrides any legacy handlers) -->
+  <script src="https://auth.tharaga.co.in/login_signup_glassdrop/auth-gate.js" defer></script>
+  <script>
+    window.DURABLE_AUTH_URL = 'https://auth.tharaga.co.in/login_signup_glassdrop/';
+    window.AUTH_NAV = { profile: '/profile', dashboard: '/dashboard' };
+  </script>
+  <style>
+    /* Hide legacy inline auth header/modal; use unified full-page modal */
+    .thg-auth-wrap, .thg-auth-overlay{ display:none !important; }
+  </style>
 </head>
 <body>
 

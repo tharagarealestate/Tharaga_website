@@ -272,32 +272,32 @@
 
       // ---------- REPLACEMENT: attach auth-aware handler for Search ----------
       (function setupSearchClick() {
-        // wrapper that calls the existing go() inside the same IIFE scope
-        const runGo = () => {
-          try { go(); } catch (err) { console.error('runGo error', err); }
-        };
+        const runGo = () => { try { go(); } catch (err) { console.error('runGo error', err); } };
 
-        // If authGate exists, use it to gate the button action.
-        // Otherwise attach direct handler and retry later to "upgrade" once authGate loads.
-        if (window.authGate && typeof window.authGate.attachAuthGate === 'function') {
-          // Attach via authGate (this will call our runGo() when user is logged-in)
-          window.authGate.attachAuthGate('#homeSearchBtn', async (evt) => {
-            try { runGo(); } catch (err) { console.error('auth-gated search error', err); }
-          });
-        } else {
-          // no authGate yet — attach normal click so site still functions
-          btnEl.addEventListener('click', runGo);
-          // try to upgrade in ~200ms (if authGate is loaded later)
-          setTimeout(setupSearchClick, 200);
+        async function manualGateHandler(evt){
+          try {
+            let loggedIn = false;
+            if (window.supabase && window.supabase.auth) {
+              try { const res = await window.supabase.auth.getUser(); loggedIn = !!res?.data?.user; } catch(_) {}
+            }
+            if (!loggedIn && window.__authGateLoggedIn) loggedIn = true;
+            if (loggedIn) { runGo(); return; }
+            evt.preventDefault && evt.preventDefault();
+            if (!window.authGate || typeof window.authGate.openLoginModal !== 'function') { return; }
+            const next = (location.pathname + location.search);
+            window.authGate.openLoginModal({ next });
+          } catch (e) { console.error('manualGateHandler error', e); }
         }
 
-        // Make Enter trigger the button click (so it goes through authGate)
-        // Remove previous Enter handler if any and add safe one:
+        if (window.authGate && typeof window.authGate.attachAuthGate === 'function') {
+          window.authGate.attachAuthGate('#homeSearchBtn', async () => { runGo(); });
+        } else {
+          btnEl.addEventListener('click', manualGateHandler, { passive: false });
+          setTimeout(setupSearchClick, 400);
+        }
+
         qEl.addEventListener('keydown', (e) => {
-          if (e.key === 'Enter') {
-            e.preventDefault();
-            btnEl.click();
-          }
+          if (e.key === 'Enter') { e.preventDefault(); btnEl.click(); }
         });
       })();
 

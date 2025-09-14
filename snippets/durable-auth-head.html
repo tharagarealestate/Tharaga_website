@@ -13,8 +13,7 @@
   // window.AUTH_NAV.settings = '/settings';
 </script>
 
-<!-- 3) Load the durable auth header (UI + modal). This script will inject CSS if not present. -->
-<script src="/js/durable-auth-header.js" defer></script>
+<!-- 3) No separate header UI script is required. Auth modal is provided by auth-gate. -->
 
 <!-- Optional: Use static CSS instead of auto-injected. If you include the block below
      the script will not inject styles again (it checks for #thg-auth-styles). -->
@@ -83,4 +82,10 @@
 
 <!-- Info: Google OAuth callback URL to register (Google & Supabase) -->
 <!-- https://wedevtjjmdvngyshqdro.supabase.co/auth/v1/callback -->
+
+<!-- Notes:
+  - Add your site origins in Google Console → Authorized JavaScript origins (e.g., https://tharaga.co.in)
+  - Add your Site URL and Additional Redirect URLs in Supabase → Authentication → URL Configuration
+  - To open the modal manually from any button: window.authGate.openLoginModal({ next: location.pathname + location.search })
+-->
 

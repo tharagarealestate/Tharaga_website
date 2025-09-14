@@ -771,7 +771,7 @@ async function getRecaptcha() {
   e.preventDefault();
 
   // Check session
-  const currentUser = await ensureSupabaseSession?.() || (await window.supabase?.auth.getSession()).data?.session?.user || null;
+  const currentUser = await (window.ensureSupabaseSession?.()) || (await window.supabase?.auth.getSession()).data?.session?.user || null;
   if (!currentUser) {
     // persist current form to restore after auth
     try {
@@ -1002,6 +1002,8 @@ async function ensureSupabaseSession() {
   }
   return null;
 }
+// expose globally for other scripts to call
+window.ensureSupabaseSession = ensureSupabaseSession;
 // pick up the popup's postMessage if it sends one
 window.addEventListener('message', (ev) => {
   try {

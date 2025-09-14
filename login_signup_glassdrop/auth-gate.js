@@ -53,20 +53,18 @@
 
   const style = document.createElement('style');
   style.textContent = `
-    #authGateModal { position: absolute; inset: 0; top: 0; 
-    left: 0;
-    width: 100%; 
-    min-height: 100%; display: none; z-index: 2147483646; }
+    /* Use fixed positioning so the overlay always covers the entire viewport
+       regardless of ancestor positioning/overflow/transform contexts. */
+    #authGateModal { position: fixed; inset: 0; left: 0; width: 100vw; height: 100vh; display: none; z-index: 2147483646; }
     #authGateModal .authgate-backdrop { display:flex; align-items:center; justify-content:center; inset:0;
       display:flex; 
       align-items:center; 
       justify-content:center; 
-      position:absolute; 
+      position:fixed; 
       top:0; 
       left:0; 
-      width:100%; 
-      height:100%; 
-      min-height: 100%;
+      width:100vw; 
+      height:100vh; 
       background: rgba(10,10,10,.35);
       backdrop-filter: blur(8px) saturate(120%);
       -webkit-backdrop-filter: blur(8px) saturate(120%);

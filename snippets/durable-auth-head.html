@@ -1,11 +1,92 @@
-<!-- Durable Head Code (copy-paste into Durable settings: Header Code)
-     Self-contained authentication header + full-page modal (no external UI deps) -->
+<!-- Durable Head Code (copy-paste into Durable settings: Header Code) -->
 
-<style>
-.thg-auth-wrap{ display:none !important; }
-</style>
+<!-- 1) Load auth-gate (handles iframe auth modal + cross-tab sync) -->
+<script src="https://auth.tharaga.co.in/login_signup_glassdrop/auth-gate.js" defer></script>
 
+<!-- 2) Configure globals before the header script runs -->
 <script>
+  window.DURABLE_AUTH_URL = 'https://auth.tharaga.co.in/login_signup_glassdrop/';
+  window.AUTH_NAV = { profile: '/profile', dashboard: '/dashboard' };
+  // Optional: change to your routes if different
+  // window.AUTH_NAV = { profile: '/account', dashboard: '/app' };
+  // If you need a settings page link, the header detects it when set:
+  // window.AUTH_NAV.settings = '/settings';
+</script>
+
+<!-- 3) No separate header UI script is required. Auth modal is provided by auth-gate. -->
+
+<!-- Optional: Use static CSS instead of auto-injected. If you include the block below
+     the script will not inject styles again (it checks for #thg-auth-styles). -->
+<!--
+<style id="thg-auth-styles">
+.thg-auth-wrap{ position:absolute; top:14px; right:16px; display:flex; align-items:center; z-index:2147483000; }
+@media (min-width:1024px){ .thg-auth-wrap{ top:16px; right:24px; } }
+.thg-auth-wrap.is-fixed{ position:fixed; top:14px; right:16px; }
+.thg-auth-btn{ appearance:none;background:transparent;color:#fff;border:1px solid rgba(255,255,255,.9); border-radius:9999px;padding:8px 14px;font-weight:600;cursor:pointer;line-height:1;white-space:nowrap;display:inline-flex;align-items:center;gap:8px; transition:background .15s ease, border-color .15s ease, box-shadow .15s ease; }
+.thg-auth-btn:hover{background:rgba(255,255,255,.08)}
+.thg-auth-btn:focus-visible{ outline:2px solid #7dd3fc; outline-offset:2px; }
+.thg-auth-btn .thg-initial{ width:22px;height:22px;border-radius:9999px;background:#fff;color:#111;display:none;align-items:center;justify-content:center;font-weight:700;font-size:11px; }
+.thg-auth-btn.is-auth .thg-initial{ display:inline-flex; }
+.thg-auth-btn.is-auth::after{ content:""; display:inline-block; width:0; height:0; border-left:5px solid transparent; border-right:5px solid transparent; border-top:6px solid rgba(255,255,255,.9); transition:transform .15s ease; transform-origin:center; }
+.thg-auth-btn[aria-expanded="true"].is-auth::after{ transform:rotate(180deg); }
+.thg-spinner{ width:14px;height:14px;border-radius:9999px;border:2px solid rgba(255,255,255,.35);border-top-color:#fff; animation:thgspin .8s linear infinite; }
+@keyframes thgspin{ to{ transform:rotate(360deg); } }
+.thg-auth-menu{ position:absolute;top:calc(100% + 10px);right:0;min-width:280px;background:#0b0b0b;color:#fff; border:1px solid rgba(255,255,255,.15);border-radius:12px;padding:8px;box-shadow:0 12px 30px rgba(0,0,0,.45); visibility:hidden; opacity:0; transform:translateY(-6px) scale(.98); transform-origin:top right; pointer-events:none; transition:opacity .16s ease, transform .16s ease, visibility 0s linear .16s; z-index:2147483001; }
+.thg-auth-menu[aria-hidden="false"]{ visibility:visible; opacity:1; transform:translateY(0) scale(1); pointer-events:auto; transition:opacity .16s ease, transform .16s ease, visibility 0s linear 0s; }
+.thg-auth-item{ display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;text-decoration:none;color:#fff;cursor:pointer; }
+.thg-auth-item:hover{background:rgba(255,255,255,.08)}
+.thg-auth-item[tabindex]{outline:none}
+.thg-auth-item.is-header{ cursor:default;font-weight:700;opacity:.95; }
+.thg-auth-item.is-header:hover{background:transparent}
+.thg-auth-sep{ height:1px;background:rgba(255,255,255,.12);margin:6px 8px;border-radius:1px; }
+.thg-initial-lg{ width:28px;height:28px;border-radius:9999px;background:#fff;color:#111;display:inline-flex;align-items:center;justify-content:center;font-weight:700;font-size:12px; }
+.thg-name-wrap{ display:flex; flex-direction:column; min-width:0; }
+.thg-name{ overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:190px; }
+.thg-email{ opacity:.7; font-size:12px; overflow:hidden;text-overflow:ellipsis;white-space:nowrap; max-width:200px; }
+.thg-auth-overlay{ position:fixed; inset:0; background:rgba(0,0,0,.55); backdrop-filter:saturate(140%) blur(6px); display:flex; align-items:center; justify-content:center; z-index:2147483002; visibility:hidden; opacity:0; transition:opacity .18s ease, visibility 0s linear .18s; }
+.thg-auth-overlay[aria-hidden="false"]{ visibility:visible; opacity:1; transition:opacity .18s ease, visibility 0s linear 0s; }
+.thg-auth-modal{ width:100%; max-width:420px; background:linear-gradient(180deg, rgba(20,20,20,.98), rgba(12,12,12,.98)); color:#fff; border:1px solid rgba(255,255,255,.1); border-radius:16px; box-shadow:0 30px 60px rgba(0,0,0,.5); transform:translateY(10px) scale(.98); opacity:0; transition:transform .18s ease, opacity .18s ease; }
+.thg-auth-overlay[aria-hidden="false"] .thg-auth-modal{ transform:translateY(0) scale(1); opacity:1; }
+.thg-auth-header{ display:flex; align-items:center; justify-content:space-between; padding:16px 18px; border-bottom:1px solid rgba(255,255,255,.08); }
+.thg-auth-title{ font-weight:700; font-size:16px; }
+.thg-auth-close{ appearance:none; background:linear-gradient(180deg,#d4af37,#b8860b,#8b6508); border:0; color:#111; cursor:pointer; font-weight:700; width:32px; height:32px; line-height:32px; border-radius:9999px; box-shadow:0 2px 6px rgba(0,0,0,.25); }
+.thg-auth-close:hover{ color:#fff; background:linear-gradient(180deg,#b8860b,#8b6508,#5a3a02); transform:scale(1.06); }
+.thg-auth-body{ padding:16px 18px 18px; }
+.thg-tabs{ display:flex; gap:6px; background:rgba(255,255,255,.06); padding:4px; border-radius:9999px; margin-bottom:16px; }
+.thg-tab{ flex:1; text-align:center; padding:8px 10px; border-radius:9999px; cursor:pointer; font-weight:600; color:#ddd; }
+.thg-tab[aria-selected="true"]{ background:#fff; color:#111; }
+.thg-field{ display:flex; flex-direction:column; gap:6px; margin-bottom:12px; }
+.thg-field label{ font-size:12px; opacity:.85; }
+.thg-input{ appearance:none; background:#121212; color:#fff; border:1px solid rgba(255,255,255,.12); border-radius:10px; padding:10px 12px; }
+.thg-input:focus{ outline:2px solid #7dd3fc; outline-offset:2px; }
+.thg-actions{ display:flex; justify-content:space-between; align-items:center; margin:6px 0 12px; }
+.thg-link{ background:none; border:0; color:#7dd3fc; cursor:pointer; font-size:13px; padding:0; }
+.thg-btn-primary{ width:100%; appearance:none; background:#fff; color:#111; border:0; border-radius:10px; padding:10px 12px; font-weight:700; cursor:pointer; transition:transform .06s ease, box-shadow .06s ease; box-shadow:0 2px 0 rgba(255,255,255,.25); }
+.thg-btn-primary:active{ transform:translateY(1px); box-shadow:none; }
+.thg-oauth{ display:grid; grid-template-columns:1fr; gap:10px; margin-top:10px; }
+.thg-oauth-btn{ appearance:none; background:#0f0f0f; color:#fff; border:1px solid rgba(255,255,255,.12); border-radius:10px; padding:12px 14px; cursor:pointer; font-weight:700; }
+.thg-oauth-btn.google{ border-color:#333; background:#151515; }
+.thg-error{ background:rgba(239,68,68,.12); color:#fecaca; border:1px solid rgba(239,68,68,.35); border-radius:10px; padding:10px 12px; font-size:13px; display:none; }
+.thg-hint{ font-size:12px; opacity:.8; }
+.thg-loading-bar{ height:2px; width:0; background:#7dd3fc; border-radius:2px; transition:width .2s ease; }
+.thg-confirm{ position:fixed; inset:0; display:flex; align-items:center; justify-content:center; z-index:2147483003; background:rgba(0,0,0,.55); backdrop-filter:blur(3px); visibility:hidden; opacity:0; transition:opacity .16s ease, visibility 0s linear .16s; }
+.thg-confirm[aria-hidden="false"]{ visibility:visible; opacity:1; transition:opacity .16s ease, visibility 0s linear 0s; }
+.thg-confirm-card{ width:100%; max-width:360px; background:#141414; color:#fff; border:1px solid rgba(255,255,255,.12); border-radius:12px; padding:16px; box-shadow:0 24px 50px rgba(0,0,0,.5); }
+.thg-confirm-actions{ display:flex; gap:10px; justify-content:flex-end; margin-top:12px; }
+.thg-btn{ appearance:none; border-radius:10px; padding:8px 12px; cursor:pointer; border:1px solid rgba(255,255,255,.15); background:#0f0f0f; color:#fff; }
+.thg-btn-danger{ background:#ef4444; border-color:#ef4444; color:#fff; }
+@media (max-width:480px){ .thg-auth-wrap{ top:10px; right:10px; } .thg-auth-modal{ width:calc(100% - 16px); margin:0 8px; } .thg-auth-menu{ right:8px; } }
+.thg-tagline{ color:#9ca3af; font-size:13px; margin:-4px 0 12px; }
+</style>
+-->
+
+<!-- Info: Google OAuth callback URL to register (Google & Supabase) -->
+<!-- https://wedevtjjmdvngyshqdro.supabase.co/auth/v1/callback -->
+
+<!-- 4) Inline durable auth header UI (safe to paste into Durable Head Code) -->
+<script>
+// Durable top-right authentication header and modal (Supabase-based)
+// Works standalone when pasted into Durable Head Code
 (function(){
   if (window.__thgAuthInstalledV1) return; window.__thgAuthInstalledV1 = true;
 
@@ -111,6 +192,7 @@
 .thg-btn{ appearance:none; border-radius:10px; padding:8px 12px; cursor:pointer; border:1px solid rgba(255,255,255,.15); background:#0f0f0f; color:#fff; }
 .thg-btn-danger{ background:#ef4444; border-color:#ef4444; color:#fff; }
 @media (max-width:480px){ .thg-auth-wrap{ top:10px; right:10px; } .thg-auth-modal{ width:calc(100% - 16px); margin:0 8px; } .thg-auth-menu{ right:8px; } }
+/* tagline styling */
 .thg-tagline{ color:#9ca3af; font-size:13px; margin:-4px 0 12px; }
 `;
     const style = document.createElement('style');
@@ -307,4 +389,8 @@
   ready(function(){ hideLegacyAuthLinks(document); injectStyles(); const ui = createUI(); bindUI(ui); observeRerenders(); initSupabase(ui); window.addEventListener('storage', function(ev){ if (ev.key === 'supabase.auth.token'){ } }); window.addEventListener('beforeunload', function(){ try { state.sub && state.sub.unsubscribe && state.sub.unsubscribe(); } catch(_){} }); });
 })();
 </script>
-
+<!-- Notes:
+  - Add your site origins in Google Console → Authorized JavaScript origins (e.g., https://tharaga.co.in)
+  - Add your Site URL and Additional Redirect URLs in Supabase → Authentication → URL Configuration
+  - To open the modal manually from any button: window.authGate.openLoginModal({ next: location.pathname + location.search })
+-->

@@ -476,7 +476,7 @@
     <!-- Your existing Google reCAPTCHA v2/v3 widget works with Netlify Forms 
     <div data-netlify-recaptcha="true" style="margin-top:12px;"></div>-->
 
-    <button id="submitBtn" type="submit"
+    <button id="submitBtn" type="submit" disabled
             style="margin-top:14px; width:100%; padding:12px; border:none; border-radius:10px; background:#0e0e0e; color:#fff; font-weight:600; cursor:pointer;">
       Get My Property Matches
     </button>
@@ -611,6 +611,64 @@ async function getRecaptcha() {
       otpStatus.textContent = 'Invalid code. Please try again.';
     }
   });
+</script>
+
+<!-- Form validity + OTP gate: disable submit until ready -->
+<script type="module">
+  const formEl = document.getElementById('buyerForm');
+  const submitBtnEl = document.getElementById('submitBtn');
+  const otpVerifiedEl = document.getElementById('otp_verified');
+  const phoneEl = document.getElementById('phone');
+  const verifyOtpBtnEl = document.getElementById('verifyOtpBtn');
+  const sendOtpBtnEl = document.getElementById('sendOtpBtn');
+  const otpStatusEl = document.getElementById('otpStatus');
+
+  function isFieldsValid(){ try { return formEl.checkValidity(); } catch(_) { return false; } }
+  function updateSubmitState(){
+    const fieldsOk = isFieldsValid();
+    const otpOk = (otpVerifiedEl?.value === 'true');
+    const ready = !!(fieldsOk && otpOk);
+    if (submitBtnEl){ submitBtnEl.disabled = !ready; submitBtnEl.style.cursor = ready ? 'pointer' : 'not-allowed'; }
+  }
+
+  // Initial state
+  updateSubmitState();
+
+  // Re-evaluate on field changes
+  const requiredSelectors = [
+    '[name="name"]','[name="email"]','[name="phone"]','[name="location"]',
+    '[name="budget"]','[name="property_type"]','[name="timeline"]','[name="financing"]'
+  ];
+  requiredSelectors.forEach((sel)=>{
+    const el = formEl.querySelector(sel);
+    if (!el) return;
+    const evt = (el.tagName === 'SELECT') ? 'change' : 'input';
+    el.addEventListener(evt, updateSubmitState);
+  });
+
+  // If phone changes, require re-verification
+  if (phoneEl){
+    phoneEl.addEventListener('input', () => {
+      try { if (otpVerifiedEl) otpVerifiedEl.value = 'false'; } catch(_) {}
+      if (otpStatusEl) otpStatusEl.textContent = '';
+      updateSubmitState();
+    });
+  }
+
+  // When clicking Send OTP, also reset verified flag
+  if (sendOtpBtnEl){
+    sendOtpBtnEl.addEventListener('click', () => {
+      try { if (otpVerifiedEl) otpVerifiedEl.value = 'false'; } catch(_) {}
+      updateSubmitState();
+    });
+  }
+
+  // After Verify OTP click, re-check state (the other script sets otp_verified='true' on success)
+  if (verifyOtpBtnEl){ verifyOtpBtnEl.addEventListener('click', () => setTimeout(updateSubmitState, 0)); }
+
+  // Safety: periodic check in case state is changed programmatically
+  const intervalId = setInterval(updateSubmitState, 800);
+  window.addEventListener('beforeunload', () => { try { clearInterval(intervalId); } catch(_) {} });
 </script>
 
 <!-- Supabase + Transformers (browser) + Match + Render -->

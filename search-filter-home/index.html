@@ -283,7 +283,8 @@
             if (!loggedIn && window.__authGateLoggedIn) loggedIn = true;
             if (loggedIn) { runGo(); return; }
             evt.preventDefault && evt.preventDefault();
-            if (!window.authGate || typeof window.authGate.openLoginModal !== 'function') { return; }
+            // Fallback: if auth modal isnt available here, just proceed with search
+            if (!window.authGate || typeof window.authGate.openLoginModal !== 'function') { runGo(); return; }
             const next = (location.pathname + location.search);
             window.authGate.openLoginModal({ next });
           } catch (e) { console.error('manualGateHandler error', e); }

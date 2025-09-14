@@ -734,7 +734,7 @@ window.addEventListener('beforeunload', () => subscription?.unsubscribe());
         setMsg('Redirecting to ' + provider + '…', true);
         const next = getNextFromQuery();
         const redirectTo = `${location.origin}${location.pathname}?post_auth=1&parent_origin=${encodeURIComponent(PARENT_ORIGIN)}${next ? `&next=${encodeURIComponent(next)}` : ''}`;
-        await supabase.auth.signInWithOAuth({ provider, options: { redirectTo } });
+        await supabase.auth.signInWithOAuth({ provider, options: { redirectTo, queryParams: { prompt: 'select_account' } } });
       } catch (e) {
         setMsg('Could not start ' + provider + ' sign in.');
       }

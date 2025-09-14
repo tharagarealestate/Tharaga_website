@@ -435,7 +435,7 @@
         window.supabase = client;
       } catch(_) {}
     }
-    if (!window.supabase || !window.supabase.auth){ state.supabaseReady = false; state.loading = false; render(ui); console.warn('[thg-auth] window.supabase not found.'); return; }
+    if (!window.supabase || !window.supabase.auth){ state.supabaseReady = false; state.loading = false; render( ui); console.warn('[thg-auth] window.supabase not found.'); return; }
     state.supabaseReady = true;
     try{ const { data } = await window.supabase.auth.getSession(); state.user = data?.session?.user || null; } catch(_){ state.user = null; } finally { state.loading = false; render(ui); }
     try{

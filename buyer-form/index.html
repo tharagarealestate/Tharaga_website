@@ -1529,14 +1529,23 @@ async function getRecaptcha() {
 
     alert('Please sign in first.');
 
-    // Prefer clicking the top-right durable header button if present
     const nextUrl = location.pathname + location.search;
+
+    // If this page is embedded inside auth-gate's iframe, ask parent to open the global modal
+    try {
+      if (window.self !== window.parent) {
+        window.parent.postMessage({ type: 'open_login_modal', next: nextUrl }, '*');
+        return;
+      }
+    } catch(_) {}
+
+    // Prefer clicking the top-right durable header button if present
     try {
       const headerBtn = document.querySelector('.thg-auth-btn');
       if (headerBtn) { headerBtn.click(); return; }
     } catch(_) {}
 
-    // Fallbacks: unified auth modal
+    // Fallbacks: unified auth modal APIs
     if (window.authGate?.triggerHeaderLogin) {
       try { window.authGate.triggerHeaderLogin({ next: nextUrl }); return; } catch(_) {}
     }

@@ -193,12 +193,12 @@
             </div>
             <div id="thg-panel-reset" role="tabpanel" aria-labelledby="thg-tab-reset" hidden>
               <div class="thg-field"><label for="thg-rp-email">Email</label><input id="thg-rp-email" class="thg-input" type="email" autocomplete="email" placeholder="you@example.com" /></div>
-              <div class="thg-actions"><span class="thg-hint">We’ll email a password reset link.</span></div>
+              <div class="thg-actions"><span class="thg-hint">We'll email a password reset link.</span></div>
               <button class="thg-btn-primary" type="button" id="thg-reset-btn">Send reset link</button>
             </div>
             <div id="thg-panel-update" role="tabpanel" aria-labelledby="thg-tab-update" hidden>
               <div class="thg-field"><label for="thg-up-password">New password</label><input id="thg-up-password" class="thg-input" type="password" autocomplete="new-password" placeholder="Enter a new password" /></div>
-              <div class="thg-actions"><span class="thg-hint">You’re recovering your account.</span></div>
+              <div class="thg-actions"><span class="thg-hint">You're recovering your account.</span></div>
               <button class="thg-btn-primary" type="button" id="thg-update-btn">Update password</button>
             </div>
           </div>
@@ -517,7 +517,6 @@
           '<div class="thg-auth-sep"></div>' +
           '<div class="thg-auth-item" role="menuitem" tabindex="0" data-action="profile"><span>Profile</span></div>' +
           '<div class="thg-auth-item" role="menuitem" tabindex="0" data-action="dashboard"><span>Dashboard</span></div>' +
-          (AUTH_NAV.settings ? '<div class="thg-auth-item" role="menuitem" tabindex="0" data-action="settings"><span>Settings</span></div>' : '') +
           '<div class="thg-auth-item" role="menuitem" tabindex="0" data-action="logout"><span>Logout</span></div>';
         wrap.appendChild(menu);
       }
@@ -557,12 +556,12 @@
               </div>
               <div id="thg-panel-reset" role="tabpanel" aria-labelledby="thg-tab-reset" hidden>
                 <div class="thg-field"><label for="thg-rp-email">Email</label><input id="thg-rp-email" class="thg-input" type="email" autocomplete="email" placeholder="you@example.com" /></div>
-                <div class="thg-actions"><span class="thg-hint">We’ll email a password reset link.</span></div>
+                <div class="thg-actions"><span class="thg-hint">We'll email a password reset link.</span></div>
                 <button class="thg-btn-primary" type="button" id="thg-reset-btn">Send reset link</button>
               </div>
               <div id="thg-panel-update" role="tabpanel" aria-labelledby="thg-tab-update" hidden>
                 <div class="thg-field"><label for="thg-up-password">New password</label><input id="thg-up-password" class="thg-input" type="password" autocomplete="new-password" placeholder="Enter a new password" /></div>
-                <div class="thg-actions"><span class="thg-hint">You’re recovering your account.</span></div>
+                <div class="thg-actions"><span class="thg-hint">You're recovering your account.</span></div>
                 <button class="thg-btn-primary" type="button" id="thg-update-btn">Update password</button>
               </div>
             </div>
@@ -705,7 +704,7 @@
     <!-- Netlify Forms hidden helpers -->
     <input type="hidden" name="form-name" value="buyer-intake" />
     <p style="display:none;">
-      <label>Don’t fill this out if you’re human: <input name="bot-field" /></label>
+      <label>Don't fill this out if you're human: <input name="bot-field" /></label>
     </p>
 
     <!-- UTM + referrer capture -->
@@ -971,7 +970,7 @@ async function getRecaptcha() {
     try {
       const code = getEnteredOTP();
       if (code.length !== 6) { otpStatus.textContent = 'Please enter all 6 digits.'; return; }
-      if (!confirmationResult) { otpStatus.textContent = 'Please click “Send OTP” first.'; return; }
+      if (!confirmationResult) { otpStatus.textContent = 'Please click "Send OTP" first.'; return; }
       await confirmationResult.confirm(code);
       otpStatus.textContent = 'Verified ✅';
       otpVerifiedField.value = 'true';

@@ -473,7 +473,29 @@
 
   function observeRerenders(){ const mo = new MutationObserver(function(muts){ for (var i=0;i<muts.length;i++){ for (var j=0;j<muts[i].addedNodes.length;j++){ const n = muts[i].addedNodes[j]; if (n.nodeType !== 1) continue; hideLegacyAuthLinks(n); ensureContainer(); } } }); mo.observe(document.documentElement, { childList:true, subtree:true }); }
 
-  ready(function(){ hideLegacyAuthLinks(document); injectStyles(); const ui = createUI(); bindUI(ui); observeRerenders(); initSupabase(ui); window.addEventListener('storage', function(ev){ if (ev.key === 'supabase.auth.token'){ } }); window.addEventListener('beforeunload', function(){ try { state.sub && state.sub.unsubscribe && state.sub.unsubscribe(); } catch(_){} }); });
+  ready(function(){
+    hideLegacyAuthLinks(document);
+    injectStyles();
+    const ui = createUI();
+    bindUI(ui);
+    observeRerenders();
+    initSupabase(ui);
+
+    // Allow child iframes (e.g., Netlify buyer-form) to request opening the global login
+    window.addEventListener('message', function(ev){
+      try {
+        var data = ev && ev.data;
+        if (!data || typeof data !== 'object') return;
+        if (data.type === 'open_login_modal' || data.type === 'auth_open' || data.type === 'login_open' || data.type === 'trigger_header_login'){
+          try { ui.btn && ui.btn.click(); return; } catch(_){ }
+          try { openAuthModal(ui, { next: data.next || (location.pathname + location.search) }); } catch(_){}
+        }
+      } catch(_){ }
+    });
+
+    window.addEventListener('storage', function(ev){ if (ev.key === 'supabase.auth.token'){ } });
+    window.addEventListener('beforeunload', function(){ try { state.sub && state.sub.unsubscribe && state.sub.unsubscribe(); } catch(_){} });
+  });
 })();
 </script>
 <!-- Notes:

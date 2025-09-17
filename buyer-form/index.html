@@ -1413,5 +1413,31 @@ document.addEventListener("DOMContentLoaded", async () => {
 </script>
 
 
+<!-- Seamless auth sync for the submit button: if already signed in, proceed without opening login -->
+<script type="module">
+  document.addEventListener('DOMContentLoaded', async () => {
+    try {
+      if (!window.supabase || !window.supabase.auth) {
+        const mod = await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm');
+        const client = mod.createClient('https://wedevtjjmdvngyshqdro.supabase.co','eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndlZGV2dGpqbWR2bmd5c2hxZHJvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU0NzYwMzgsImV4cCI6MjA3MTA1MjAzOH0.Ex2c_sx358dFdygUGMVBohyTVto6fdEQ5nydDRh9m6M');
+        window.supabase = client;
+      }
+    } catch(_) {}
+
+    try {
+      const sess = await window.supabase?.auth?.getSession();
+      if (sess?.data?.session?.user) {
+        try { window.__authGateLoggedIn = true; } catch(_) {}
+      }
+    } catch(_) {}
+
+    try {
+      // Attach gate to ensure consistent behavior: opens login only if NOT logged in
+      window.authGate?.attachAuthGate?.('#submitBtn', () => {});
+    } catch(_) {}
+  });
+</script>
+
+
 </body>
 </html>

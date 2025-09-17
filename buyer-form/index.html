@@ -319,14 +319,11 @@
     window.DURABLE_AUTH_URL = 'https://auth.tharaga.co.in/login_signup_glassdrop/';
     window.AUTH_NAV = { profile: '/profile', dashboard: '/dashboard' };
   </script>
-  <!-- Hide global auth header button on buyer form page; modal still works -->
-  <style>
-    .thg-auth-wrap{ display:none !important; }
-  </style>
   
-  <!-- Durable top-right authentication header and modal (inline UI) -->
-  <script>
-  // Durable top-right authentication header and modal (Supabase-based)
+  
+  <!-- Durable top-right authentication header and modal (inline UI) [disabled; use durable-auth-head.html] -->
+  <script type="text/plain" data-disabled="true">
+  // [disabled here] Durable top-right authentication header and modal (Supabase-based)
   // Works standalone when pasted into Durable Head Code
   (function(){
     if (window.__thgAuthInstalledV1) return; window.__thgAuthInstalledV1 = true;

@@ -289,19 +289,20 @@
             if (!loggedIn && window.__authGateLoggedIn) loggedIn = true;
             if (loggedIn) { runGo(); return; }
             evt.preventDefault && evt.preventDefault();
-            // Fallback: if auth modal isnt available here, just proceed with search
-            if (!window.authGate || typeof window.authGate.openLoginModal !== 'function') { runGo(); return; }
             const next = (location.pathname + location.search);
-            window.authGate.openLoginModal({ next });
+            if (window.authGate && typeof window.authGate.triggerHeaderLogin === 'function') {
+              try { window.authGate.triggerHeaderLogin({ next }); } catch(_) {}
+              return;
+            }
+            if (window.authGate && typeof window.authGate.openLoginModal === 'function') {
+              try { window.authGate.openLoginModal({ next }); } catch(_) {}
+              return;
+            }
+            runGo();
           } catch (e) { console.error('manualGateHandler error', e); }
         }
 
-        if (window.authGate && typeof window.authGate.attachAuthGate === 'function') {
-          window.authGate.attachAuthGate('#homeSearchBtn', async () => { runGo(); });
-        } else {
-          btnEl.addEventListener('click', manualGateHandler, { passive: false });
-          setTimeout(setupSearchClick, 400);
-        }
+        btnEl.addEventListener('click', manualGateHandler, { passive: false });
 
         qEl.addEventListener('keydown', (e) => {
           if (e.key === 'Enter') { e.preventDefault(); btnEl.click(); }

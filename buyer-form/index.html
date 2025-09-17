@@ -1152,14 +1152,22 @@ async function getRecaptcha() {
 
     alert('Please sign in first.');
 
-    // Always open the SAME main header auth container for consistency
+    // Prefer clicking the top-right durable header button if present
     const nextUrl = location.pathname + location.search;
+    try {
+      const headerBtn = document.querySelector('.thg-auth-btn');
+      if (headerBtn) { headerBtn.click(); return; }
+    } catch(_) {}
+
+    // Fallbacks: unified auth modal
     if (window.authGate?.triggerHeaderLogin) {
-      try { window.authGate.triggerHeaderLogin({ next: nextUrl }); } catch(_) {}
-    } else if (window.authGate?.openLoginModal) {
-      try { window.authGate.openLoginModal({ next: nextUrl }); } catch(_) {}
-    } else if (typeof window.__thgOpenAuthModal === 'function') {
-      try { window.__thgOpenAuthModal({ next: nextUrl }); } catch(_) {}
+      try { window.authGate.triggerHeaderLogin({ next: nextUrl }); return; } catch(_) {}
+    }
+    if (window.authGate?.openLoginModal) {
+      try { window.authGate.openLoginModal({ next: nextUrl }); return; } catch(_) {}
+    }
+    if (typeof window.__thgOpenAuthModal === 'function') {
+      try { window.__thgOpenAuthModal({ next: nextUrl }); return; } catch(_) {}
     }
     return;
   }
@@ -1410,6 +1418,27 @@ document.addEventListener("DOMContentLoaded", async () => {
   // Rely on form submit handler to invoke window.authGate.openLoginModal (header modal) when needed.
   if (!window.authGate) { console.error("authGate not loaded"); }
 });
+</script>
+
+
+<!-- Seamless auth sync for the submit button: if already signed in, proceed without opening login -->
+<script type="module">
+  document.addEventListener('DOMContentLoaded', async () => {
+    try {
+      if (!window.supabase || !window.supabase.auth) {
+        const mod = await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm');
+        const client = mod.createClient('https://wedevtjjmdvngyshqdro.supabase.co','eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndlZGV2dGpqbWR2bmd5c2hxZHJvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU0NzYwMzgsImV4cCI6MjA3MTA1MjAzOH0.Ex2c_sx358dFdygUGMVBohyTVto6fdEQ5nydDRh9m6M');
+        window.supabase = client;
+      }
+    } catch(_) {}
+
+    try {
+      const sess = await window.supabase?.auth?.getSession();
+      if (sess?.data?.session?.user) {
+        try { window.__authGateLoggedIn = true; } catch(_) {}
+      }
+    } catch(_) {}
+  });
 </script>
 
 

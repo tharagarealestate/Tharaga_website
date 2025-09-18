@@ -282,6 +282,13 @@
 
         async function manualGateHandler(evt){
           try {
+            // Persist current search so user returns seamlessly after auth
+            try {
+              const payload = { city: (cityEl.value||''), q: (qEl.value||''), type: (selectedType||'') };
+              sessionStorage.setItem('tharaga_pending_home_search', JSON.stringify(payload));
+              sessionStorage.setItem('tharaga_pending_home_ts', String(Date.now()));
+            } catch(_) {}
+
             let loggedIn = false;
             if (window.supabase && window.supabase.auth) {
               try { const res = await window.supabase.auth.getUser(); loggedIn = !!res?.data?.user; } catch(_) {}
@@ -290,6 +297,13 @@
             if (loggedIn) { runGo(); return; }
             evt.preventDefault && evt.preventDefault();
             const next = (location.pathname + location.search);
+            // If embedded, ask parent to open the global modal
+            try {
+              if (window.self !== window.parent) {
+                window.parent.postMessage({ type: 'open_login_modal', next }, '*');
+                return;
+              }
+            } catch(_) {}
             if (window.authGate && typeof window.authGate.triggerHeaderLogin === 'function') {
               try { window.authGate.triggerHeaderLogin({ next }); } catch(_) {}
               return;
@@ -314,6 +328,26 @@
       if (savedCity) cityEl.value = savedCity;
       cityEl.addEventListener('change', ()=> sessionStorage.setItem('tharaga_home_city', cityEl.value));
     })();
+  </script>
+
+  <!-- Seamless auth sync for the search button: detect existing session early -->
+  <script type="module">
+    document.addEventListener('DOMContentLoaded', async () => {
+      try {
+        if (!window.supabase || !window.supabase.auth) {
+          const mod = await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm');
+          const client = mod.createClient('https://wedevtjjmdvngyshqdro.supabase.co','eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndlZGV2dGpqbWR2bmd5c2hxZHJvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU0NzYwMzgsImV4cCI6MjA3MTA1MjAzOH0.Ex2c_sx358dFdygUGMVBohyTVto6fdEQ5nydDRh9m6M');
+          window.supabase = client;
+        }
+      } catch(_) {}
+
+      try {
+        const sess = await window.supabase?.auth?.getSession();
+        if (sess?.data?.session?.user) {
+          try { window.__authGateLoggedIn = true; } catch(_) {}
+        }
+      } catch(_) {}
+    });
   </script>
 
 

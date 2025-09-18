@@ -529,13 +529,37 @@
     } catch(_){}
 
     // Allow child iframes (e.g., Netlify buyer-form) to request opening the global login
+    // Secure origin-validated postMessage listener (also supports legacy types)
+    const ALLOWED_IFRAME_ORIGINS = ['https://auth.tharaga.co.in'];
+
+    function openDurableHeaderBehavior(meta){
+      try {
+        var el = document.getElementById('durable-head')
+          || document.querySelector('header, [role="banner"], [data-section="header"], .site-header, nav')
+          || document.querySelector('.thg-auth-wrap');
+        if (el && el.scrollIntoView) {
+          el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+        if (ui && ui.btn) { ui.btn.click(); }
+      } catch (err) { console.error('openDurableHeaderBehavior error:', err); }
+    }
+    window.openDurableHeaderBehavior = openDurableHeaderBehavior;
+
     window.addEventListener('message', function(ev){
       try {
         var data = ev && ev.data;
         if (!data || typeof data !== 'object') return;
+        if (ev.origin && ALLOWED_IFRAME_ORIGINS.indexOf(ev.origin) === -1) return;
+
+        if (data.type === 'cta' && data.action === 'openDurableHead'){
+          console.log('Parent received openDurableHead from', ev.origin, data);
+          openDurableHeaderBehavior(data.meta || {});
+          return;
+        }
+
         if (data.type === 'open_login_modal' || data.type === 'auth_open' || data.type === 'login_open' || data.type === 'trigger_header_login'){
           try { ui.btn && ui.btn.click(); return; } catch(_){ }
-          try { openAuthModal(ui, { next: data.next || (location.pathname + location.search) }); } catch(_){}
+          try { openAuthModal(ui, { next: data.next || (location.pathname + location.search) }); } catch(_){ }
         }
       } catch(_){ }
     });

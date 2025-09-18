@@ -1528,11 +1528,13 @@ async function getRecaptcha() {
     } catch (_) {}
 
     const nextUrl = location.pathname + location.search;
+    const PARENT_ORIGIN = 'https://tharaga.co.in';
 
-    // If this page is embedded inside auth-gate's iframe, ask parent to open the global modal
+    // If this page is embedded inside an iframe, securely ask parent to open the global header/modal
     try {
       if (window.self !== window.parent) {
-        window.parent.postMessage({ type: 'open_login_modal', next: nextUrl }, '*');
+        const message = { type: 'cta', action: 'openDurableHead', meta: { from: 'feature-iframe', id: 'buyer-form', next: nextUrl, timestamp: Date.now() } };
+        window.parent.postMessage(message, PARENT_ORIGIN);
         return;
       }
     } catch(_) {}

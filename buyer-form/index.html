@@ -1302,8 +1302,23 @@ async function getRecaptcha() {
       sessionStorage.removeItem('tharaga_pending_form_ts');
     } catch(_) {}
 
-    // Redirect to local listings page with filters so it always responds
-    window.location.href = '/property-listing/index.html?' + params.toString();
+    // Redirect to listings page with filters. If embedded, request parent to navigate.
+    const listingUrl = '/property-listing/index.html?' + params.toString();
+    try {
+      if (window.self !== window.top) {
+        try {
+          const PARENT_ORIGIN = 'https://tharaga.co.in';
+          window.parent.postMessage({ type: 'open_listings', url: listingUrl, source: 'buyer-form' }, PARENT_ORIGIN);
+        } catch(_) {
+          // Fallback if origin-locked: permissive postMessage, then proceed to top redirect
+          try { window.parent.postMessage({ type: 'open_listings', url: listingUrl, source: 'buyer-form' }, '*'); } catch(__) {}
+        }
+        // Also attempt top-level navigation directly (allowed on user activation)
+        try { window.top.location.href = listingUrl; return; } catch(__) {}
+      }
+    } catch(_) {}
+    // Top-level page: normal same-tab navigation
+    window.location.href = listingUrl;
 
   } catch (err) {
     console.error(err);

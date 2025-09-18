@@ -296,6 +296,7 @@
             if (!loggedIn && window.__authGateLoggedIn) loggedIn = true;
             if (loggedIn) { runGo(); return; }
             evt.preventDefault && evt.preventDefault();
+            evt.stopPropagation && evt.stopPropagation();
             const next = (location.pathname + location.search);
             // If embedded, ask parent to open the global modal
             try {
@@ -304,20 +305,11 @@
                 return;
               }
             } catch(_) {}
-            if (window.authGate && typeof window.authGate.triggerHeaderLogin === 'function') {
-              try { window.authGate.triggerHeaderLogin({ next }); } catch(_) {}
-              return;
-            }
             // Prefer opening modal directly to avoid toggling an already-auth dropdown
             if (window.authGate && typeof window.authGate.openLoginModal === 'function') {
               try { window.authGate.openLoginModal({ next }); } catch(_) {}
               return;
             }
-            // As a last resort, only click header button if not authenticated
-            try {
-              const btn = document.querySelector('.thg-auth-btn');
-              if (btn && !btn.classList.contains('is-auth')) { btn.click(); return; }
-            } catch(_) {}
             runGo();
           } catch (e) { console.error('manualGateHandler error', e); }
         }

@@ -1302,7 +1302,8 @@ async function getRecaptcha() {
       sessionStorage.removeItem('tharaga_pending_form_ts');
     } catch(_) {}
 
-    window.location.href = 'https://tharaga.co.in/verified-property-listings?' + params.toString();
+    // Redirect to local listings page with filters so it always responds
+    window.location.href = '/property-listing/index.html?' + params.toString();
 
   } catch (err) {
     console.error(err);

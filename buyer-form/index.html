@@ -1124,14 +1124,21 @@ async function getRecaptcha() {
     } catch (e) { console.warn('restore pending form failed', e); }
   })();
 
-  // If another tab/modal signals successful auth, reload this page (so supabase session attaches)
+  // If another tab/modal signals successful auth, continue to listings if we have pending form
   window.addEventListener('storage', (e) => {
     if (!e?.key) return;
     if (e.key === '__tharaga_magic_continue' || e.key === '__tharaga_magic_confirmed') {
       if (sessionStorage.getItem('tharaga_pending_buyer_form')) {
-        console.debug('Detected auth completion in another tab. Reloading to pick up new session.');
-        setTimeout(()=> location.reload(), 300);
-      } 
+        // User just logged in; attempt to submit immediately to compute matches then redirect
+        setTimeout(async ()=>{
+          try {
+            const sess = await window.supabase?.auth?.getSession();
+            if (!sess?.data?.session?.user) return;
+            // Trigger a submit programmatically; native handler will take care of redirect
+            try { document.getElementById('submitBtn')?.click(); } catch(_) {}
+          } catch(_) {}
+        }, 300);
+      }
       try {
       const payload = JSON.parse(localStorage.getItem('__tharaga_magic_continue') || 'null');
       if (payload?.user?.email) {
@@ -1286,8 +1293,7 @@ async function getRecaptcha() {
       sessionStorage.setItem('tharaga_matches_v1', JSON.stringify({ meta, results: minimal }));
     } catch (e) {
       console.warn('Could not save matches to sessionStorage (size?):', e);
-      // fallback: render minimal matches on this page
-      return renderMatches(data || []);
+      // keep going; we still redirect via URL params
     }
 
     // Build query params (lightweight filters) and redirect to listing page

@@ -6,7 +6,8 @@
   // strip it to keep the homepage clean (tharaga.co.in without fragments).
   try {
     var rawHash = (location.hash || '').trim();
-    if (/^#https?:\/\//i.test(rawHash)) {
+    // Clean up cases like "#https://..." and the malformed "#https:/..."
+    if (/^#https?:\/+/.test(rawHash)) {
       var cleaned = location.href.replace(location.hash, '');
       history.replaceState(null, '', cleaned);
       return; // Nothing else to do

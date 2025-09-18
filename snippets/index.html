@@ -1,7 +1,8 @@
 <!-- Durable Head Code (copy-paste into Durable settings: Header Code) -->
 
 <!-- 0) Auto-open on load (optional) -->
-<script>window.AUTH_OPEN_ON_LOAD = true;</script>
+<!-- Default disabled to prevent unexpected login popup on home -->
+<script>window.AUTH_OPEN_ON_LOAD = false;</script>
 <!-- Show header Login/Signup button -->
 <script>window.AUTH_HIDE_HEADER = false;</script>
 
@@ -530,7 +531,7 @@
 
     // Allow child iframes (e.g., Netlify buyer-form) to request opening the global login
     // Secure origin-validated postMessage listener (also supports legacy types)
-    const ALLOWED_IFRAME_ORIGINS = ['https://auth.tharaga.co.in'];
+    const ALLOWED_IFRAME_ORIGINS = ['https://auth.tharaga.co.in', location.origin];
 
     function openDurableHeaderBehavior(meta){
       try {

@@ -850,7 +850,7 @@
     <!-- Your existing Google reCAPTCHA v2/v3 widget works with Netlify Forms 
     <div data-netlify-recaptcha="true" style="margin-top:12px;"></div>-->
 
-    <button id="submitBtn" type="submit" disabled
+    <button id="submitBtn" type="submit"
             style="margin-top:14px; width:100%; padding:12px; border:none; border-radius:10px; background:#0e0e0e; color:#fff; font-weight:600; cursor:pointer;">
       Get My Property Matches
     </button>
@@ -1005,7 +1005,7 @@ async function getRecaptcha() {
     if (submitBtnEl){ submitBtnEl.disabled = !ready; submitBtnEl.style.cursor = ready ? 'pointer' : 'not-allowed'; }
   }
 
-  // Initial state
+  // Initial state — do NOT disable the button hard; rely on validation + OTP state
   updateSubmitState();
 
   // Re-evaluate on field changes
@@ -1103,17 +1103,24 @@ async function getRecaptcha() {
           if (els && els.length) els.forEach(e => { try { e.value = obj[k]; } catch(_){} });
         }
       });
-      // gentle UX hint
-      setTimeout(()=> {
-        try {
-          matchForm.scrollIntoView({behavior:'smooth', block:'center'});
-          // small inline hint (non-destructive)
-          const hint = document.createElement('div');
-          hint.style.cssText = 'text-align:center;margin:10px 0;color:#666;font-size:13px';
-          hint.textContent = 'You returned after signing in. Click "Get My Property Matches" to continue.';
-          matchForm.insertBefore(hint, matchForm.firstChild);
-        } catch(_){}
-      }, 350);
+      // gentle UX hint — only scroll if we can confirm a recent auth return
+      const recently = (function(){
+        try { const ts = Number(sessionStorage.getItem('tharaga_pending_form_ts')||'0'); return (Date.now() - ts) < 10*60*1000; } catch(_) { return false; }
+      })();
+      const authSignal = (function(){
+        try { const obj = JSON.parse(localStorage.getItem('__tharaga_magic_continue')||'null'); return !!(obj && obj.user && obj.user.email); } catch(_) { return false; }
+      })();
+      if (recently && authSignal) {
+        setTimeout(()=> {
+          try {
+            matchForm.scrollIntoView({behavior:'smooth', block:'center'});
+            const hint = document.createElement('div');
+            hint.style.cssText = 'text-align:center;margin:10px 0;color:#666;font-size:13px';
+            hint.textContent = 'You returned after signing in. Click "Get My Property Matches" to continue.';
+            matchForm.insertBefore(hint, matchForm.firstChild);
+          } catch(_){}
+        }, 350);
+      }
     } catch (e) { console.warn('restore pending form failed', e); }
   })();
 

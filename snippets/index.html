@@ -3,6 +3,15 @@
 <!-- 0) Auto-open on load (optional) -->
 <!-- Default disabled to prevent unexpected login popup on home -->
 <script>window.AUTH_OPEN_ON_LOAD = false;</script>
+<!-- Defensive: clean malformed Durable fragments like #https:/auth... that some hosts prepend -->
+<script>
+  (function(){
+    try {
+      var h = (location.hash||'').trim();
+      if (/^#https?:\/+/.test(h)) { history.replaceState(null,'',location.href.replace(location.hash,'')); }
+    } catch(_) {}
+  })();
+</script>
 <!-- Show header Login/Signup button -->
 <script>window.AUTH_HIDE_HEADER = false;</script>
 
@@ -550,7 +559,18 @@
       try {
         var data = ev && ev.data;
         if (!data || typeof data !== 'object') return;
-        if (ev.origin && ALLOWED_IFRAME_ORIGINS.indexOf(ev.origin) === -1) return;
+        // Loosen origin checks for safe CTA from known child frames (e.g., Netlify buyer-form)
+        if (ev.origin && ALLOWED_IFRAME_ORIGINS.indexOf(ev.origin) === -1) {
+          var extraOk = false;
+          try {
+            var o = ev.origin || '';
+            if (/^https:\/\//.test(o)) {
+              if (o.indexOf('tharaga.co.in') !== -1 || o.indexOf('auth.tharaga.co.in') !== -1 || o.indexOf('netlify.app') !== -1) extraOk = true;
+              if (!extraOk && Array.isArray(window.ALLOWED_CHILD_ORIGINS) && window.ALLOWED_CHILD_ORIGINS.indexOf(o) !== -1) extraOk = true;
+            }
+          } catch(_) {}
+          if (!extraOk) return;
+        }
 
         if (data.type === 'cta' && data.action === 'openDurableHead'){
           console.log('Parent received openDurableHead from', ev.origin, data);

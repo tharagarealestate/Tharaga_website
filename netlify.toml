@@ -30,10 +30,6 @@
 
 [[redirects]]
   from = "/snippets"
-  to = "/snippets/durable-auth-head.html"
+  to = "/snippets/"
   status = 301
 
-[[redirects]]
-  from = "/snippets/"
-  to = "/snippets/durable-auth-head.html"
-  status = 200

@@ -145,7 +145,7 @@
 
   function ready(fn){ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',fn,{once:true});} else { fn(); } }
   function headerRoot(){ return document.querySelector('header, [role="banner"], [data-section="header"], .site-header, .Header, nav') || null; }
-  // Instead of hiding legacy/login links, wire them to trigger the header auth button
+  // Instead of hiding legacy/login links, wire them to open the modal directly
   function hideLegacyAuthLinks(root){
     var scope = (root || document);
     var selector = 'a[href="#login"], a[href="#signup"], [data-auth-open]';
@@ -155,14 +155,13 @@
       el.addEventListener('click', function(ev){
         try {
           ev.preventDefault();
-          // Prefer triggering the existing header Login/Signup button
-          var btn = document.querySelector('.thg-auth-btn');
-          if (btn) { btn.click(); return; }
-          // Fallback to opening the modal directly
+          // Always open the modal directly; never click the header button, to avoid
+          // accidentally toggling the account dropdown when the user is already signed in.
+          var next = location.pathname + location.search;
           if (window.authGate && typeof window.authGate.openLoginModal === 'function') {
-            window.authGate.openLoginModal({ next: location.pathname + location.search });
+            window.authGate.openLoginModal({ next });
           } else if (typeof window.__thgOpenAuthModal === 'function') {
-            window.__thgOpenAuthModal({ next: location.pathname + location.search });
+            window.__thgOpenAuthModal({ next });
           }
         } catch(_){ }
       }, { passive:false });
@@ -472,10 +471,10 @@
     ui.confirmEl.addEventListener('click', function(e){ if (e.target === ui.confirmEl) closeConfirm(ui); });
     ui.confirmEl.querySelector('.thg-confirm-ok').addEventListener('click', async function(){ try { await window.supabase?.auth?.signOut?.(); } catch(_){} closeConfirm(ui); });
     window.__thgOpenAuthModal = function(opts){ openAuthModal(ui, opts); };
-    // Expose a helper to programmatically trigger the header button from anywhere
+    // Expose a helper to programmatically open the auth modal (never toggles dropdown)
     window.authGate.triggerHeaderLogin = function(opts){
-      try { ui.btn && ui.btn.click(); }
-      catch(_){ try { openAuthModal(ui, opts||{ next: location.pathname + location.search }); } catch(__){} }
+      try { openAuthModal(ui, opts||{ next: location.pathname + location.search }); }
+      catch(_){ try { window.__thgOpenAuthModal && window.__thgOpenAuthModal(opts||{ next: location.pathname + location.search }); } catch(__){} }
     };
   }
 
@@ -553,7 +552,12 @@
         if (el && el.scrollIntoView) {
           el.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
-        if (ui && ui.btn) { ui.btn.click(); }
+        // If not authenticated, open the auth modal directly. If authenticated, do nothing.
+        var isAuthed = !!(state && state.user && state.user.email);
+        if (!isAuthed) {
+          try { openAuthModal(ui, { next: (meta && meta.next) || (location.pathname + location.search) }); }
+          catch(_) { try { window.__thgOpenAuthModal && window.__thgOpenAuthModal({ next: location.pathname + location.search }); } catch(__){} }
+        }
       } catch (err) { console.error('openDurableHeaderBehavior error:', err); }
     }
     window.openDurableHeaderBehavior = openDurableHeaderBehavior;
@@ -582,7 +586,9 @@
         }
 
         if (data.type === 'open_login_modal' || data.type === 'auth_open' || data.type === 'login_open' || data.type === 'trigger_header_login'){
-          try { ui.btn && ui.btn.click(); return; } catch(_){ }
+          // If already authenticated, ignore the request so no dropdown toggles.
+          if (state && state.user && state.user.email) { return; }
+          // Otherwise open the modal directly (never click the header button)
           try { openAuthModal(ui, { next: data.next || (location.pathname + location.search) }); } catch(_){ }
         }
       } catch(_){ }

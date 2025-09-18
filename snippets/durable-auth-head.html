@@ -478,6 +478,28 @@
     injectStyles();
     const ui = createUI();
     bindUI(ui);
+    // If there is no header on the host page, we use a fixed fallback button.
+    // On white/light backgrounds (like the Netlify snippet page), the default
+    // white-on-dark styling can be invisible. Add a light-theme override only
+    // for this fallback state to ensure visibility without affecting host sites
+    // that have their own headers.
+    try {
+      if (ui.wrap && ui.wrap.classList.contains('is-fixed') && !document.getElementById('thg-auth-fixed-contrast')){
+        const style = document.createElement('style');
+        style.id = 'thg-auth-fixed-contrast';
+        style.textContent = [
+          '.thg-auth-wrap.is-fixed .thg-auth-btn{color:#111;border:1px solid rgba(0,0,0,.85);background:rgba(0,0,0,.03)}',
+          '.thg-auth-wrap.is-fixed .thg-auth-btn:hover{background:rgba(0,0,0,.06)}',
+          '.thg-auth-wrap.is-fixed .thg-auth-btn:focus-visible{outline:2px solid #2563eb;outline-offset:2px}',
+          '.thg-auth-wrap.is-fixed .thg-auth-btn.is-auth::after{border-top-color:rgba(0,0,0,.85)}',
+          '.thg-auth-wrap.is-fixed .thg-auth-menu{background:#fff;color:#111;border:1px solid rgba(0,0,0,.12);box-shadow:0 12px 30px rgba(0,0,0,.12)}',
+          '.thg-auth-wrap.is-fixed .thg-auth-item:hover{background:rgba(0,0,0,.06)}',
+          '.thg-auth-wrap.is-fixed .thg-initial{background:#111;color:#fff}',
+          '.thg-auth-wrap.is-fixed .thg-initial-lg{background:#111;color:#fff}'
+        ].join('\n');
+        document.head && document.head.appendChild(style);
+      }
+    } catch(_){}
     observeRerenders();
     initSupabase(ui);
 

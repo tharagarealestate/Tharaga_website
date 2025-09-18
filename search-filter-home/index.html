@@ -247,7 +247,7 @@
 
   <script>
     (function(){
-      const LISTINGS_URL = "https://tharaga.co.in/property-listing/index.html";
+      const LISTINGS_URL = "/property-listing/index.html";
       let selectedType = "buy"; // default
 
       // Handle pill clicks
@@ -287,7 +287,7 @@
           }
         } catch(_) {}
         // Not embedded: same-tab navigation
-        window.location.href = url;
+        try { window.location.assign(url); } catch(_) { window.location.href = url; }
       }
 
       // ---------- REPLACEMENT: attach auth-aware handler for Search ----------
@@ -322,8 +322,8 @@
             if (window.authGate && typeof window.authGate.openLoginModal === 'function') {
               try { window.authGate.openLoginModal({ next }); } catch(_) {}
             }
-            // Always proceed to listings so the CTA responds immediately
-            runGo();
+            // Do NOT navigate yet; wait for successful login then resume.
+            return;
           } catch (e) { console.error('manualGateHandler error', e); }
         }
 
@@ -338,6 +338,39 @@
       const savedCity = sessionStorage.getItem('tharaga_home_city');
       if (savedCity) cityEl.value = savedCity;
       cityEl.addEventListener('change', ()=> sessionStorage.setItem('tharaga_home_city', cityEl.value));
+
+      // Resume pending search after successful login (same-tab redirect to full listings page)
+      async function resumeAfterLoginIfPending(){
+        try {
+          const ts = Number(sessionStorage.getItem('tharaga_pending_home_ts')||'0');
+          const recent = (Date.now() - ts) < 10*60*1000; // 10 minutes
+          const saved = JSON.parse(sessionStorage.getItem('tharaga_pending_home_search')||'null');
+          if (!recent || !saved) return;
+          // Ensure we have a user session
+          let user = null;
+          try { const r = await window.supabase?.auth?.getSession(); user = r?.data?.session?.user || null; } catch(_) {}
+          if (!user) return;
+          // Hydrate form for consistency
+          try {
+            if (saved.city) cityEl.value = saved.city;
+            if (typeof saved.q === 'string') qEl.value = saved.q;
+            if (saved.type) {
+              const pill = document.querySelector(`.filter-pill[data-type="${saved.type}"]`);
+              if (pill) pill.click();
+            }
+          } catch(_) {}
+          // Clear pending and navigate
+          try { sessionStorage.removeItem('tharaga_pending_home_search'); sessionStorage.removeItem('tharaga_pending_home_ts'); } catch(_) {}
+          go();
+        } catch(e){ console.warn('resumeAfterLoginIfPending failed', e); }
+      }
+
+      window.addEventListener('storage', (ev)=>{
+        if (ev && (ev.key === 'supabase.auth.token' || ev.key === '__tharaga_magic_continue' || ev.key === '__tharaga_magic_confirmed')){
+          setTimeout(resumeAfterLoginIfPending, 200);
+        }
+      });
+      document.addEventListener('DOMContentLoaded', ()=> setTimeout(resumeAfterLoginIfPending, 200));
     })();
   </script>
 

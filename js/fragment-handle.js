@@ -2,6 +2,17 @@
 ;(function(){
   'use strict';
 
+  // If the URL hash accidentally contains a full URL (e.g., "#https://…"),
+  // strip it to keep the homepage clean (tharaga.co.in without fragments).
+  try {
+    var rawHash = (location.hash || '').trim();
+    if (/^#https?:\/\//i.test(rawHash)) {
+      var cleaned = location.href.replace(location.hash, '');
+      history.replaceState(null, '', cleaned);
+      return; // Nothing else to do
+    }
+  } catch(_) {}
+
   // Fast exit if no hash params present
   if (!location.hash || location.hash.length < 2) return;
 

@@ -1793,16 +1793,55 @@ window.addEventListener('message', (ev) => {
 document.addEventListener("DOMContentLoaded", async () => {
   const gateForm = document.getElementById('buyerForm');
   const gateSubmitBtn = document.getElementById('submitBtn');
-  const gateOtpVerified = document.getElementById('otp_verified');
+  if (!gateForm || !gateSubmitBtn) return;
 
-  gateSubmitBtn.addEventListener('click', () => {
-    const f = new FormData(gateForm);
-    const obj = Object.fromEntries(f.entries());
-    sessionStorage.setItem('tharaga_pending_buyer_form', JSON.stringify(obj));
-    sessionStorage.setItem('tharaga_pending_form_ts', String(Date.now()));
+  // Capture click BEFORE native form validation runs; open global login if user is not signed in
+  gateSubmitBtn.addEventListener('click', async (ev) => {
+    // Persist form so the user returns seamlessly after auth
+    try {
+      const f = new FormData(gateForm);
+      const obj = Object.fromEntries(f.entries());
+      sessionStorage.setItem('tharaga_pending_buyer_form', JSON.stringify(obj));
+      sessionStorage.setItem('tharaga_pending_form_ts', String(Date.now()));
+    } catch(_) {}
+
+    // If already logged in, allow normal submit flow
+    let loggedIn = false;
+    try {
+      const sess = await window.supabase?.auth?.getSession();
+      loggedIn = !!(sess?.data?.session?.user);
+    } catch(_) {}
+    if (loggedIn) return;
+
+    // Not logged in — prevent submit and trigger the Durable header auth modal
+    ev.preventDefault();
+    ev.stopPropagation();
+    const nextUrl = location.pathname + location.search;
+
+    // If embedded, ask parent to open the global modal
+    try {
+      if (window.self !== window.parent) {
+        window.parent.postMessage({ type: 'open_login_modal', next: nextUrl }, '*');
+        return;
+      }
+    } catch(_) {}
+
+    // Prefer header trigger helper
+    if (window.authGate && typeof window.authGate.triggerHeaderLogin === 'function') {
+      try { window.authGate.triggerHeaderLogin({ next: nextUrl }); return; } catch(_) {}
+    }
+
+    // Fallback: click the header button if present
+    try { const btn = document.querySelector('.thg-auth-btn'); if (btn) { btn.click(); return; } } catch(_) {}
+
+    // Fallbacks: open via authGate or local inline
+    if (window.authGate && typeof window.authGate.openLoginModal === 'function') {
+      try { window.authGate.openLoginModal({ next: nextUrl }); return; } catch(_) {}
+    }
+    if (typeof window.__thgOpenAuthModal === 'function') {
+      try { window.__thgOpenAuthModal({ next: nextUrl }); return; } catch(_) {}
+    }
   }, true);
-  // Rely on form submit handler to invoke window.authGate.openLoginModal (header modal) when needed.
-  if (!window.authGate) { console.error("authGate not loaded"); }
 });
 </script>
 

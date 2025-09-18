@@ -591,6 +591,17 @@
           // Otherwise open the modal directly (never click the header button)
           try { openAuthModal(ui, { next: data.next || (location.pathname + location.search) }); } catch(_){ }
         }
+
+        // Navigation request from embedded forms to open listings in same tab
+        if (data.type === 'open_listings' && typeof data.url === 'string'){
+          try {
+            var o = ev.origin || '';
+            var allowed = ALLOWED_IFRAME_ORIGINS.indexOf(o) !== -1 || /tharaga\.co\.in|auth\.tharaga\.co\.in|netlify\.app/.test(o);
+            if (!allowed) return;
+          } catch(_) {}
+          try { location.href = data.url; } catch(_) {}
+          return;
+        }
       } catch(_){ }
     });
 

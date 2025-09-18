@@ -1286,8 +1286,7 @@ async function getRecaptcha() {
       sessionStorage.setItem('tharaga_matches_v1', JSON.stringify({ meta, results: minimal }));
     } catch (e) {
       console.warn('Could not save matches to sessionStorage (size?):', e);
-      // fallback: render minimal matches on this page
-      return renderMatches(data || []);
+      // Do not render inline; we always navigate to full listings page with URL filters
     }
 
     // Build query params (lightweight filters) and redirect to listing page
@@ -1303,7 +1302,7 @@ async function getRecaptcha() {
     } catch(_) {}
 
     // Redirect to listings page with filters. If embedded, request parent to navigate.
-    const listingUrl = '/property-listing/index.html?' + params.toString();
+    const listingUrl = 'https://tharaga.co.in/property-listing/index.html?' + params.toString();
     try {
       if (window.self !== window.top) {
         try {

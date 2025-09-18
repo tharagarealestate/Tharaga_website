@@ -1,5 +1,8 @@
 <!-- Durable Head Code (copy-paste into Durable settings: Header Code) -->
 
+<!-- 0) Auto-open on load (optional) -->
+<script>window.AUTH_OPEN_ON_LOAD = true;</script>
+
 <!-- 1) Load auth-gate (handles iframe auth modal + cross-tab sync) -->
 <script src="https://auth.tharaga.co.in/login_signup_glassdrop/auth-gate.js" defer></script>
 
@@ -253,7 +256,6 @@
 
 /* OAuth / secondary buttons */
 .thg-oauth{ display:grid; grid-template-columns:1fr; gap:10px; margin-top:10px; }
-.thg-oauth-btn{ appearance:none; background:#0f0f0f; color:#fff; border:1px solid rgba(255,255,255,.12); border-radius:12px; padding:12px 14px; cursor:pointer; font-weight:800; }
 .thg-oauth-btn.google{ border-color:#333; background:#151515; }
 
 /* Errors, hints, loading */

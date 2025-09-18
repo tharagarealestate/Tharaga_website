@@ -1150,6 +1150,7 @@ async function getRecaptcha() {
  // Submit: embed → RPC → render
   matchForm.addEventListener("submit", async (e) => {
   e.preventDefault();
+  e.stopPropagation();
 
   // Check session
   const currentUser = await (window.ensureSupabaseSession?.()) || (await window.supabase?.auth.getSession()).data?.session?.user || null;
@@ -1174,11 +1175,6 @@ async function getRecaptcha() {
       }
     } catch(_) {}
 
-    // Prefer global header trigger API first
-    if (window.authGate && typeof window.authGate.triggerHeaderLogin === 'function') {
-      try { window.authGate.triggerHeaderLogin({ next: nextUrl }); return; } catch(_) {}
-    }
-
     // Open login modal without toggling the header dropdown
     if (window.authGate && typeof window.authGate.openLoginModal === 'function') {
       try { window.authGate.openLoginModal({ next: nextUrl }); return; } catch(_) {}
@@ -1186,11 +1182,6 @@ async function getRecaptcha() {
     if (typeof window.__thgOpenAuthModal === 'function') {
       try { window.__thgOpenAuthModal({ next: nextUrl }); return; } catch(_) {}
     }
-    // Last resort: only click header button if it is not in authenticated state
-    try {
-      const headerBtn = document.querySelector('.thg-auth-btn');
-      if (headerBtn && !headerBtn.classList.contains('is-auth')) { headerBtn.click(); return; }
-    } catch(_) {}
     return;
   }
 
@@ -1469,15 +1460,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (typeof window.__thgOpenAuthModal === 'function') {
       try { window.__thgOpenAuthModal({ next: nextUrl }); return; } catch(_) {}
     }
-    // Fallback: header trigger helper (safe when not authenticated)
-    if (window.authGate && typeof window.authGate.triggerHeaderLogin === 'function') {
-      try { window.authGate.triggerHeaderLogin({ next: nextUrl }); return; } catch(_) {}
-    }
-    // Last resort: only click header button if it is not in authenticated state
-    try {
-      const btn = document.querySelector('.thg-auth-btn');
-      if (btn && !btn.classList.contains('is-auth')) { btn.click(); return; }
-    } catch(_) {}
+    // Avoid programmatically clicking the header button entirely
   }, true);
 });
 </script>

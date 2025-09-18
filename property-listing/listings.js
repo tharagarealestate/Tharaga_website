@@ -155,10 +155,10 @@ function applyQueryParams(){
 
     // Apply pills (Buy/Rent/Commercial)
     if (pillType) {
+      // Persist desired pill so wireUI picks it up reliably even if not yet bound
+      try { localStorage.setItem('activeFilterType', pillType); } catch(_) {}
       const pill = document.querySelector(`.filter-pill[data-type="${pillType}"]`);
-      if (pill) {
-        pill.click(); // triggers debounced apply inside wireUI
-      }
+      if (pill) { try { pill.click(); } catch(_) {} }
     }
 
     // Budget handling: supports label like "₹1Cr – ₹2Cr" or numeric minPrice/maxPrice

@@ -531,7 +531,7 @@
 
     // Allow child iframes (e.g., Netlify buyer-form) to request opening the global login
     // Secure origin-validated postMessage listener (also supports legacy types)
-    const ALLOWED_IFRAME_ORIGINS = ['https://auth.tharaga.co.in'];
+    const ALLOWED_IFRAME_ORIGINS = ['https://auth.tharaga.co.in', location.origin];
 
     function openDurableHeaderBehavior(meta){
       try {

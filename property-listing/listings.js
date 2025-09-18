@@ -87,6 +87,110 @@ function collectFilters(){
   return { q, mode, citySel, localitySel, minP, maxP, ptype, bhk, furnished, facing, minA, maxA, amenity, wantMetro, maxWalk, sort };
 }
 
+// ---- New: Parse and apply incoming URL params/session filters ----
+function parseBudgetLabelToRange(label){
+  if (!label) return { min: null, max: null };
+  const s = String(label);
+  if (/3\s*Cr\s*\+/.test(s)) return { min: 30000000, max: null };
+  if (/2\s*Cr\s*–\s*3\s*Cr/.test(s)) return { min: 20000000, max: 30000000 };
+  if (/1\s*Cr\s*–\s*2\s*Cr/.test(s)) return { min: 10000000, max: 20000000 };
+  if (/50\s*L\s*–\s*1\s*Cr/.test(s) || /₹?50\s*L/.test(s)) return { min: 5000000, max: 10000000 };
+  // Generic fallback: pull digits (assume INR) "min-max"
+  const nums = s.replace(/[^\d\-]+/g,'').split('-').map(n=>parseInt(n,10)).filter(Number.isFinite);
+  if (nums.length === 2) return { min: nums[0], max: nums[1] };
+  if (nums.length === 1) return { min: nums[0], max: null };
+  return { min: null, max: null };
+}
+
+function titleCase(str){
+  return String(str||'').toLowerCase().replace(/(^|\s)([a-z])/g, (m, p1, c)=> p1 + c.toUpperCase());
+}
+
+function applyQueryParams(){
+  try {
+    const params = new URLSearchParams(location.search);
+
+    // Support both buyer-form and home-search param names
+    const qParam = params.get('q') || params.get('location') || '';
+    const typeParam = (params.get('ptype') || params.get('type') || params.get('property_type') || '').toLowerCase();
+    const budgetLabel = params.get('budget') || '';
+    const cityParam = params.get('city') || '';
+
+    // Fallback to sessionStorage meta if URL empty
+    if (!qParam && !typeParam && !budgetLabel) {
+      try {
+        const saved = JSON.parse(sessionStorage.getItem('tharaga_matches_v1')||'null');
+        if (saved && saved.meta && saved.meta.search) {
+          if (!params.get('q') && saved.meta.search.location) params.set('q', saved.meta.search.location);
+          if (!params.get('property_type') && saved.meta.search.property_type) params.set('property_type', saved.meta.search.property_type);
+          if (!params.get('budget') && saved.meta.search.budget) params.set('budget', saved.meta.search.budget);
+        }
+      } catch(_){}
+    }
+
+    // Apply search text: prefer q, else location or city
+    const qEl = document.querySelector('#q');
+    const qValue = (params.get('q') || params.get('location') || cityParam || '').trim();
+    if (qEl && qValue) {
+      qEl.value = qValue;
+      qEl.dispatchEvent(new Event('input', { bubbles: true }));
+    }
+
+    // Apply property type select
+    const ptypeEl = document.querySelector('#ptype');
+    let ptypeVal = '';
+    if (typeParam) {
+      // If param looks like UI type (Apartment/Villa/Plot/Independent House)
+      const maybeUi = titleCase(typeParam);
+      const options = ptypeEl ? Array.from(ptypeEl.options).map(o=>o.value) : [];
+      if (options.includes(maybeUi)) ptypeVal = maybeUi;
+    }
+    // Also map buy/rent/commercial pill into mode (handled by pills below)
+    const pillType = ['buy','rent','commercial'].includes(typeParam) ? typeParam : '';
+
+    if (ptypeEl && ptypeVal) {
+      ptypeEl.value = ptypeVal;
+      ptypeEl.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+
+    // Apply pills (Buy/Rent/Commercial)
+    if (pillType) {
+      const pill = document.querySelector(`.filter-pill[data-type="${pillType}"]`);
+      if (pill) {
+        pill.click(); // triggers debounced apply inside wireUI
+      }
+    }
+
+    // Budget handling: supports label like "₹1Cr – ₹2Cr" or numeric minPrice/maxPrice
+    const minFromQuery = parseInt(params.get('minPrice')||'',10);
+    const maxFromQuery = parseInt(params.get('maxPrice')||'',10);
+    let minPrice = Number.isFinite(minFromQuery) ? minFromQuery : null;
+    let maxPrice = Number.isFinite(maxFromQuery) ? maxFromQuery : null;
+    if (!minPrice && !maxPrice && budgetLabel) {
+      const rng = parseBudgetLabelToRange(budgetLabel);
+      minPrice = rng.min; maxPrice = rng.max;
+    }
+
+    // Push into hidden inputs and sliders if present
+    const minHidden = document.getElementById('minPrice');
+    const maxHidden = document.getElementById('maxPrice');
+    const minSlider = document.getElementById('priceMinSlider');
+    const maxSlider = document.getElementById('priceMaxSlider');
+
+    if (minPrice != null && minHidden) { minHidden.value = String(minPrice); }
+    if (maxPrice != null && maxHidden) { maxHidden.value = String(maxPrice); }
+
+    // Update slider UI first so app.js can sync hidden + progress, then fire change
+    if (minPrice != null && minSlider) { try { minSlider.value = String(minPrice); minSlider.dispatchEvent(new Event('input', { bubbles: true })); } catch(_){} }
+    if (maxPrice != null && maxSlider) { try { maxSlider.value = String(maxPrice); maxSlider.dispatchEvent(new Event('input', { bubbles: true })); } catch(_){} }
+
+    // Finally, ensure apply happens at least once with new values
+    document.querySelector('#apply')?.dispatchEvent(new Event('click', { bubbles: true }));
+  } catch (e) {
+    console.warn('applyQueryParams failed', e);
+  }
+}
+
 function apply(){
   const F = collectFilters();
 
@@ -255,6 +359,8 @@ async function init(){
   } catch(e){
     console.error("Init failed:", e);
   }
+  // Hydrate filters from URL/session BEFORE wiring UI and initial apply
+  applyQueryParams();
   wireUI();
   apply();
 }

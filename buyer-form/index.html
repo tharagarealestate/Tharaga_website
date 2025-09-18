@@ -1179,19 +1179,18 @@ async function getRecaptcha() {
       try { window.authGate.triggerHeaderLogin({ next: nextUrl }); return; } catch(_) {}
     }
 
-    // Then try clicking the top-right durable header button if present
-    try {
-      const headerBtn = document.querySelector('.thg-auth-btn');
-      if (headerBtn) { headerBtn.click(); return; }
-    } catch(_) {}
-
-    // Fallbacks: open via authGate or local modal
+    // Open login modal without toggling the header dropdown
     if (window.authGate && typeof window.authGate.openLoginModal === 'function') {
       try { window.authGate.openLoginModal({ next: nextUrl }); return; } catch(_) {}
     }
     if (typeof window.__thgOpenAuthModal === 'function') {
       try { window.__thgOpenAuthModal({ next: nextUrl }); return; } catch(_) {}
     }
+    // Last resort: only click header button if it is not in authenticated state
+    try {
+      const headerBtn = document.querySelector('.thg-auth-btn');
+      if (headerBtn && !headerBtn.classList.contains('is-auth')) { headerBtn.click(); return; }
+    } catch(_) {}
     return;
   }
 
@@ -1463,21 +1462,22 @@ document.addEventListener("DOMContentLoaded", async () => {
       }
     } catch(_) {}
 
-    // Prefer header trigger helper
-    if (window.authGate && typeof window.authGate.triggerHeaderLogin === 'function') {
-      try { window.authGate.triggerHeaderLogin({ next: nextUrl }); return; } catch(_) {}
-    }
-
-    // Fallback: click the header button if present
-    try { const btn = document.querySelector('.thg-auth-btn'); if (btn) { btn.click(); return; } } catch(_) {}
-
-    // Fallbacks: open via authGate or local inline
+    // Prefer opening the modal directly to avoid toggling an already-auth dropdown
     if (window.authGate && typeof window.authGate.openLoginModal === 'function') {
       try { window.authGate.openLoginModal({ next: nextUrl }); return; } catch(_) {}
     }
     if (typeof window.__thgOpenAuthModal === 'function') {
       try { window.__thgOpenAuthModal({ next: nextUrl }); return; } catch(_) {}
     }
+    // Fallback: header trigger helper (safe when not authenticated)
+    if (window.authGate && typeof window.authGate.triggerHeaderLogin === 'function') {
+      try { window.authGate.triggerHeaderLogin({ next: nextUrl }); return; } catch(_) {}
+    }
+    // Last resort: only click header button if it is not in authenticated state
+    try {
+      const btn = document.querySelector('.thg-auth-btn');
+      if (btn && !btn.classList.contains('is-auth')) { btn.click(); return; }
+    } catch(_) {}
   }, true);
 });
 </script>

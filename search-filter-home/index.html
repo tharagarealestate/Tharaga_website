@@ -308,10 +308,16 @@
               try { window.authGate.triggerHeaderLogin({ next }); } catch(_) {}
               return;
             }
+            // Prefer opening modal directly to avoid toggling an already-auth dropdown
             if (window.authGate && typeof window.authGate.openLoginModal === 'function') {
               try { window.authGate.openLoginModal({ next }); } catch(_) {}
               return;
             }
+            // As a last resort, only click header button if not authenticated
+            try {
+              const btn = document.querySelector('.thg-auth-btn');
+              if (btn && !btn.classList.contains('is-auth')) { btn.click(); return; }
+            } catch(_) {}
             runGo();
           } catch (e) { console.error('manualGateHandler error', e); }
         }

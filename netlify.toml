@@ -27,3 +27,13 @@
   from = "/auth/*"
   to = "/public/auth/:splat"
   status = 200
+
+[[redirects]]
+  from = "/snippets"
+  to = "/snippets/durable-auth-head.html"
+  status = 301
+
+[[redirects]]
+  from = "/snippets/"
+  to = "/snippets/durable-auth-head.html"
+  status = 200

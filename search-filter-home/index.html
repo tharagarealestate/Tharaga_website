@@ -247,7 +247,7 @@
 
   <script>
     (function(){
-      const LISTINGS_URL = "https://tharaga.co.in/verified-property-listings";
+      const LISTINGS_URL = "/property-listing/index.html";
       let selectedType = "buy"; // default
 
       // Handle pill clicks
@@ -273,7 +273,7 @@
         if (q)    params.set('q', q);
 
         const sep = LISTINGS_URL.includes('?') ? '&' : '?';
-        window.open(LISTINGS_URL + (params.toString() ? (sep + params.toString()) : ""), "_blank");
+        window.location.href = LISTINGS_URL + (params.toString() ? (sep + params.toString()) : "");
       }
 
       // ---------- REPLACEMENT: attach auth-aware handler for Search ----------
@@ -302,14 +302,13 @@
             try {
               if (window.self !== window.parent) {
                 window.parent.postMessage({ type: 'open_login_modal', next }, '*');
-                return;
               }
             } catch(_) {}
             // Prefer opening modal directly to avoid toggling an already-auth dropdown
             if (window.authGate && typeof window.authGate.openLoginModal === 'function') {
               try { window.authGate.openLoginModal({ next }); } catch(_) {}
-              return;
             }
+            // Always proceed to listings so the CTA responds immediately
             runGo();
           } catch (e) { console.error('manualGateHandler error', e); }
         }

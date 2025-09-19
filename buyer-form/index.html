@@ -1510,6 +1510,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 <!-- Seamless auth sync for the submit button: if already signed in, proceed without opening login -->
 <script type="module">
   document.addEventListener('DOMContentLoaded', async () => {
+    // Ensure Supabase client exists
     try {
       if (!window.supabase || !window.supabase.auth) {
         const mod = await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm');
@@ -1518,37 +1519,74 @@ document.addEventListener("DOMContentLoaded", async () => {
       }
     } catch(_) {}
 
+    const emailInput = document.querySelector('#buyerForm [name="email"]');
+    const noticeEl = document.getElementById('emailNotice');
+
+    function prevent(e){ try { e.preventDefault(); } catch(_) {} }
+
+    function lockBuyerEmail(email){
+      if (!emailInput || !email) return;
+      emailInput.value = email;
+      emailInput.setAttribute('data-session-email', email);
+      emailInput.readOnly = true;
+      emailInput.setAttribute('aria-readonly','true');
+      emailInput.style.background = '#f5f5f5';
+      emailInput.style.cursor = 'not-allowed';
+      emailInput.title = 'Email is locked to your account';
+      try {
+        emailInput.addEventListener('beforeinput', prevent);
+        emailInput.addEventListener('keydown', prevent);
+        emailInput.addEventListener('paste', prevent);
+        emailInput.addEventListener('drop', prevent);
+      } catch(_) {}
+      try { if (noticeEl) noticeEl.style.display = 'none'; } catch(_) {}
+    }
+
+    function unlockBuyerEmail(){
+      if (!emailInput) return;
+      emailInput.readOnly = false;
+      try { emailInput.removeAttribute('aria-readonly'); } catch(_) {}
+      emailInput.style.background = '';
+      emailInput.style.cursor = '';
+      emailInput.title = '';
+      try { emailInput.removeAttribute('data-session-email'); } catch(_) {}
+    }
+
+    // Initial sync from current session
     try {
       const sess = await window.supabase?.auth?.getSession();
-      if (sess?.data?.session?.user) {
+      const user = sess?.data?.session?.user || null;
+      if (user?.email) {
         try { window.__authGateLoggedIn = true; } catch(_) {}
-        // Autofill email from session into buyer form for consistency with header
-        try {
-          const user = sess.data.session.user;
-          const emailInput = document.querySelector('#buyerForm [name="email"]');
-          if (user?.email && emailInput) {
-            // Always sync and lock to the authenticated email
-            emailInput.value = user.email;
-            emailInput.setAttribute('data-session-email', user.email);
-            // Lock the email field to the authenticated user's email
-            try {
-              emailInput.readOnly = true;
-              emailInput.setAttribute('aria-readonly','true');
-              emailInput.style.background = '#f5f5f5';
-              emailInput.style.cursor = 'not-allowed';
-              emailInput.title = 'Email is locked to your account';
-              // Prevent editing of the locked email field
-              emailInput.addEventListener('beforeinput', (e)=> e.preventDefault());
-              emailInput.addEventListener('keydown', (e)=> e.preventDefault());
-              emailInput.addEventListener('paste', (e)=> e.preventDefault());
-              emailInput.addEventListener('drop', (e)=> e.preventDefault());
-              emailInput.addEventListener('input', ()=> { if (emailInput.value !== user.email) emailInput.value = user.email; });
-              const noticeEl = document.getElementById('emailNotice');
-              if (noticeEl) noticeEl.style.display = 'none';
-            } catch(__) {}
-          }
-        } catch(_) {}
+        lockBuyerEmail(user.email);
+      } else {
+        unlockBuyerEmail();
       }
+    } catch(_) {}
+
+    // Keep in sync with auth state changes
+    try {
+      const { data: sub } = window.supabase?.auth?.onAuthStateChange?.((event, session) => {
+        const u = session?.user || null;
+        if (u?.email) lockBuyerEmail(u.email); else unlockBuyerEmail();
+      }) || {};
+      try { window.__buyerFormAuthSub = sub?.subscription || sub || null; } catch(_) {}
+    } catch(_) {}
+
+    // Also respond to cross-tab/window auth signals
+    try {
+      if ('BroadcastChannel' in window) {
+        const bc = new BroadcastChannel('tharaga-auth');
+        bc.addEventListener('message', (ev) => {
+          try { const email = ev?.data?.user?.email || null; if (email) lockBuyerEmail(email); } catch(_) {}
+        });
+      }
+      window.addEventListener('message', (ev) => {
+        try { if (ev?.data?.type === 'THARAGA_AUTH_SUCCESS' && ev?.data?.user?.email) lockBuyerEmail(ev.data.user.email); } catch(_) {}
+      });
+      window.addEventListener('storage', () => {
+        try { const payload = JSON.parse(localStorage.getItem('__tharaga_magic_continue') || 'null'); if (payload?.user?.email) lockBuyerEmail(payload.user.email); } catch(_) {}
+      });
     } catch(_) {}
   });
 </script>

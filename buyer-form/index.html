@@ -1071,10 +1071,6 @@ async function getRecaptcha() {
   import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
   import { pipeline }     from "https://cdn.jsdelivr.net/npm/@xenova/transformers@2.14.1/dist/transformers.min.js";
 
-  const embedder = await pipeline(
-  "feature-extraction",
-  "Xenova/e5-small-v2"
-);
 
   // ——— Paste your Supabase anon config (browser-safe) ———
   const SUPABASE_URL = "https://wedevtjjmdvngyshqdro.supabase.co";
@@ -1531,7 +1527,8 @@ document.addEventListener("DOMContentLoaded", async () => {
           const user = sess.data.session.user;
           const emailInput = document.querySelector('#buyerForm [name="email"]');
           if (user?.email && emailInput) {
-            if (!emailInput.value) emailInput.value = user.email;
+            // Always sync and lock to the authenticated email
+            emailInput.value = user.email;
             emailInput.setAttribute('data-session-email', user.email);
             // Lock the email field to the authenticated user's email
             try {
@@ -1540,8 +1537,11 @@ document.addEventListener("DOMContentLoaded", async () => {
               emailInput.style.background = '#f5f5f5';
               emailInput.style.cursor = 'not-allowed';
               emailInput.title = 'Email is locked to your account';
+              // Prevent editing of the locked email field
+              emailInput.addEventListener('beforeinput', (e)=> e.preventDefault());
               emailInput.addEventListener('keydown', (e)=> e.preventDefault());
               emailInput.addEventListener('paste', (e)=> e.preventDefault());
+              emailInput.addEventListener('drop', (e)=> e.preventDefault());
               emailInput.addEventListener('input', ()=> { if (emailInput.value !== user.email) emailInput.value = user.email; });
               const noticeEl = document.getElementById('emailNotice');
               if (noticeEl) noticeEl.style.display = 'none';

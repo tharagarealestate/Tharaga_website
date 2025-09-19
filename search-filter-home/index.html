@@ -287,7 +287,7 @@
           }
         } catch(_) {}
         // Not embedded: same-tab navigation
-        window.location.href = url;
+        try { window.location.assign(url); } catch(_) { window.location.href = url; }
       }
 
       // ---------- REPLACEMENT: attach auth-aware handler for Search ----------
@@ -323,7 +323,7 @@
               try { window.authGate.openLoginModal({ next }); } catch(_) {}
             }
             // Do NOT navigate yet; wait for successful login then resume.
-            return;
+            runGo();
           } catch (e) { console.error('manualGateHandler error', e); }
         }
 

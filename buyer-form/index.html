@@ -1528,16 +1528,45 @@ document.addEventListener("DOMContentLoaded", async () => {
       if (!emailInput || !email) return;
       emailInput.value = email;
       emailInput.setAttribute('data-session-email', email);
+      // Fully lock: disable the visible field and submit via a synced hidden input
       emailInput.readOnly = true;
       emailInput.setAttribute('aria-readonly','true');
+      try { emailInput.setAttribute('autocomplete','off'); emailInput.setAttribute('autocapitalize','off'); emailInput.setAttribute('spellcheck','false'); } catch(_) {}
       emailInput.style.background = '#f5f5f5';
       emailInput.style.cursor = 'not-allowed';
       emailInput.title = 'Email is locked to your account';
+      try {
+        // create/update hidden mirror used for form submission
+        let hidden = document.getElementById('buyer-email-hidden');
+        if (!hidden) {
+          hidden = document.createElement('input');
+          hidden.type = 'hidden';
+          hidden.name = 'email';
+          hidden.id = 'buyer-email-hidden';
+          emailInput.parentElement && emailInput.parentElement.appendChild(hidden);
+        }
+        hidden.value = email;
+        // disable the interactive field and remove its name so it won't submit
+        emailInput.disabled = true;
+        try { emailInput.setAttribute('data-original-name', 'email'); emailInput.removeAttribute('name'); } catch(_) {}
+      } catch(_) {}
       try {
         emailInput.addEventListener('beforeinput', prevent);
         emailInput.addEventListener('keydown', prevent);
         emailInput.addEventListener('paste', prevent);
         emailInput.addEventListener('drop', prevent);
+        // If browser autocomplete attempts to change, immediately revert
+        const enforcer = function(){ try { if (emailInput.value !== email) { emailInput.value = email; } } catch(_) {} };
+        emailInput.addEventListener('input', enforcer);
+        emailInput.addEventListener('change', enforcer);
+        // MutationObserver as last resort
+        try {
+          if (!window.__emailLockObserver) {
+            const mo = new MutationObserver(()=>{ try { if (emailInput.getAttribute('data-session-email')) { if (emailInput.value !== email) emailInput.value = email; } } catch(_) {} });
+            mo.observe(emailInput, { attributes:true, attributeFilter:['value'] });
+            window.__emailLockObserver = mo;
+          }
+        } catch(_) {}
       } catch(_) {}
       try { if (noticeEl) noticeEl.style.display = 'none'; } catch(_) {}
     }
@@ -1545,11 +1574,18 @@ document.addEventListener("DOMContentLoaded", async () => {
     function unlockBuyerEmail(){
       if (!emailInput) return;
       emailInput.readOnly = false;
+      emailInput.disabled = false;
       try { emailInput.removeAttribute('aria-readonly'); } catch(_) {}
       emailInput.style.background = '';
       emailInput.style.cursor = '';
       emailInput.title = '';
       try { emailInput.removeAttribute('data-session-email'); } catch(_) {}
+      try {
+        // restore name for normal submission and remove hidden mirror
+        if (!emailInput.getAttribute('name')) emailInput.setAttribute('name', emailInput.getAttribute('data-original-name') || 'email');
+        const hidden = document.getElementById('buyer-email-hidden');
+        if (hidden && hidden.parentElement) hidden.parentElement.removeChild(hidden);
+      } catch(_) {}
     }
 
     // Initial sync from current session

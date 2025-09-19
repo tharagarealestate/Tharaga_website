@@ -729,6 +729,9 @@
         <span>Email</span>
         <input required type="email" name="email" placeholder="you@example.com"
                style="width:100%; padding:10px; border-radius:8px; border:1px solid #ddd;">
+        <small id="emailNotice" style="display:none;color:#b45309;margin-top:6px;display:block;">
+          Please enter your account email shown at the top-right header.
+        </small>
       </label>
     </div>
 
@@ -1019,6 +1022,24 @@ async function getRecaptcha() {
     const evt = (el.tagName === 'SELECT') ? 'change' : 'input';
     el.addEventListener(evt, updateSubmitState);
   });
+
+  // Email-session mismatch notifier
+  (function setupEmailNotice(){
+    try {
+      const emailEl = formEl.querySelector('[name="email"]');
+      const noticeEl = document.getElementById('emailNotice');
+      if (!emailEl || !noticeEl) return;
+      function check(){
+        const sessionEmail = emailEl.getAttribute('data-session-email') || '';
+        const val = (emailEl.value || '').trim();
+        const show = !!(sessionEmail && val && sessionEmail.toLowerCase() !== val.toLowerCase());
+        noticeEl.style.display = show ? 'block' : 'none';
+      }
+      emailEl.addEventListener('input', check);
+      emailEl.addEventListener('change', check);
+      setTimeout(check, 0);
+    } catch(_) {}
+  })();
 
   // If phone changes, require re-verification
   if (phoneEl){
@@ -1503,6 +1524,15 @@ document.addEventListener("DOMContentLoaded", async () => {
       const sess = await window.supabase?.auth?.getSession();
       if (sess?.data?.session?.user) {
         try { window.__authGateLoggedIn = true; } catch(_) {}
+        // Autofill email from session into buyer form for consistency with header
+        try {
+          const user = sess.data.session.user;
+          const emailInput = document.querySelector('#buyerForm [name="email"]');
+          if (user?.email && emailInput) {
+            if (!emailInput.value) emailInput.value = user.email;
+            emailInput.setAttribute('data-session-email', user.email);
+          }
+        } catch(_) {}
       }
     } catch(_) {}
   });

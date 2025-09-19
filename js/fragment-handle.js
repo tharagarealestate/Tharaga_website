@@ -3,7 +3,7 @@
   'use strict';
 
   // If the URL hash accidentally contains a full URL (e.g., "#https://…"),
-  // strip it to keep the homepage clean (tharaga.co.in without fragments).
+  // or is a stray "#" left by redirects, strip it to keep URLs clean.
   try {
     var rawHash = (location.hash || '').trim();
     // Clean up cases like "#https://..." and the malformed "#https:/..."
@@ -11,6 +11,12 @@
       var cleaned = location.href.replace(location.hash, '');
       history.replaceState(null, '', cleaned);
       return; // Nothing else to do
+    }
+    // Also clean lone "#" or "#/" fragments that sometimes remain after auth
+    if (rawHash === '#' || rawHash === '#/' || rawHash === '#%2F') {
+      var urlNoHash = location.href.replace(/#.*$/, '');
+      history.replaceState(null, '', urlNoHash);
+      return;
     }
   } catch(_) {}
 

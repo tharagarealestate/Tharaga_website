@@ -1330,7 +1330,9 @@ async function getRecaptcha() {
     } catch(_) {}
 
     // Redirect to listings page with filters. If embedded, request parent to navigate.
-    const listingUrl = '/property-listing/index.html?' + params.toString();
+    const LISTINGS_URL = 'https://tharaga.co.in/verified-property-listings';
+    const _sep = LISTINGS_URL.includes('?') ? '&' : '?';
+    const listingUrl = LISTINGS_URL + _sep + params.toString();
     try {
       if (window.self !== window.top) {
         try {
@@ -1531,6 +1533,19 @@ document.addEventListener("DOMContentLoaded", async () => {
           if (user?.email && emailInput) {
             if (!emailInput.value) emailInput.value = user.email;
             emailInput.setAttribute('data-session-email', user.email);
+            // Lock the email field to the authenticated user's email
+            try {
+              emailInput.readOnly = true;
+              emailInput.setAttribute('aria-readonly','true');
+              emailInput.style.background = '#f5f5f5';
+              emailInput.style.cursor = 'not-allowed';
+              emailInput.title = 'Email is locked to your account';
+              emailInput.addEventListener('keydown', (e)=> e.preventDefault());
+              emailInput.addEventListener('paste', (e)=> e.preventDefault());
+              emailInput.addEventListener('input', ()=> { if (emailInput.value !== user.email) emailInput.value = user.email; });
+              const noticeEl = document.getElementById('emailNotice');
+              if (noticeEl) noticeEl.style.display = 'none';
+            } catch(__) {}
           }
         } catch(_) {}
       }

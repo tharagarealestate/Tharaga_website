@@ -323,7 +323,7 @@
               try { window.authGate.openLoginModal({ next }); } catch(_) {}
             }
             // Do NOT navigate yet; wait for successful login then resume.
-            runGo();
+            return;
           } catch (e) { console.error('manualGateHandler error', e); }
         }
 

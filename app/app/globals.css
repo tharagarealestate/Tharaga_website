@@ -1,0 +1,23 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --deep-blue: #001F4D;
+  --gold: #D4AF37;
+  --brand-white: #FFFFFF;
+}
+
+html, body {
+  background: var(--brand-white);
+  color: var(--deep-blue);
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, Apple Color Emoji, Segoe UI Emoji;
+}
+
+.brand-gradient {
+  background: linear-gradient(135deg, #001F4D 0%, #0a2d6e 100%);
+}
+
+.gold-ring {
+  box-shadow: 0 0 0 1px rgba(212, 175, 55, 0.4);
+}

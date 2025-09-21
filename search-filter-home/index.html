@@ -270,7 +270,11 @@
         const params = new URLSearchParams();
         if (selectedType) params.set('type', selectedType);
         if (city) params.set('city', city);
-        if (q)    params.set('q', q);
+        if (q) {
+          params.set('q', q);
+          params.set('location', q);
+          params.set('locality', q);
+        }
 
         const sep = LISTINGS_URL.includes('?') ? '&' : '?';
         const url = LISTINGS_URL + (params.toString() ? (sep + params.toString()) : "");

@@ -1313,12 +1313,38 @@ async function getRecaptcha() {
       // keep going; we still redirect via URL params
     }
 
-    // Build query params (lightweight filters) and redirect to listing page
-    const params = new URLSearchParams({
-      location: payload.location || '',
-      property_type: payload.property_type || '',
-      budget: payload.budget || ''
-    });
+    // Build query params (mapped to listings page contract)
+    function buildRedirectParams(pd){
+      const params = new URLSearchParams();
+
+      // Preferred City/Area -> locality
+      if (pd.location) params.set('locality', pd.location);
+
+      // Budget mapping -> price_min/price_max
+      const budgetLabel = pd.budget || '';
+      const budgetMap = {
+        '₹50L – ₹1Cr': { min: 5000000,  max: 10000000 },
+        '₹1Cr – ₹2Cr': { min: 10000000, max: 20000000 },
+        '₹2Cr – ₹3Cr': { min: 20000000, max: 30000000 },
+        '₹3Cr+':        { min: 30000000, max: 99999999 }
+      };
+      const bm = budgetMap[budgetLabel] || null;
+      if (bm) { params.set('price_min', String(bm.min)); params.set('price_max', String(bm.max)); }
+
+      // Property Type -> type (lowercase)
+      if (pd.property_type) {
+        const t = String(pd.property_type).toLowerCase();
+        // map friendly variants
+        const map = { 'apartment':'apartment', 'villa':'villa', 'plot':'plot', 'commercial':'commercial', 'independent house':'villa' };
+        const tv = map[t] || t;
+        params.set('type', tv);
+      }
+
+      // Buying Timeline -> sort
+      if (pd.timeline && /ASAP/i.test(pd.timeline)) params.set('sort', 'newest'); else params.set('sort', 'ai_relevance');
+
+      return params;
+    }
 
     try {
       sessionStorage.removeItem('tharaga_pending_buyer_form');
@@ -1326,7 +1352,23 @@ async function getRecaptcha() {
     } catch(_) {}
 
     // Redirect to listings page with filters. If embedded, request parent to navigate.
+    // Persist preferences for future visits
+    try {
+      localStorage.setItem('tharaga_user_prefs', JSON.stringify({
+        locality: payload.location || '',
+        budget: payload.budget || '',
+        property_type: payload.property_type || '',
+        timeline: payload.timeline || ''
+      }));
+    } catch(_) {}
+
+    // Analytics hook (best-effort)
+    try {
+      if (window.gtag) window.gtag('event', 'form_to_listings', { page: 'buyer_form', method: 'submit', property_type: payload.property_type||'', budget: payload.budget||'' });
+    } catch(_) {}
+
     const LISTINGS_URL = 'https://tharaga.co.in/verified-property-listings';
+    const params = buildRedirectParams(payload);
     const _sep = LISTINGS_URL.includes('?') ? '&' : '?';
     const listingUrl = LISTINGS_URL + _sep + params.toString();
     try {
@@ -1342,7 +1384,12 @@ async function getRecaptcha() {
         try { window.top.location.href = listingUrl; return; } catch(__) {}
       }
     } catch(_) {}
-    // Top-level page: normal same-tab navigation
+    // Top-level page: show success + small delay then navigate
+    try {
+      const statusEl = document.getElementById('otpStatus');
+      if (statusEl) statusEl.textContent = '✓ Verified! Redirecting to your personalized property matches...';
+    } catch(_) {}
+    await new Promise(r => setTimeout(r, 1800));
     window.location.href = listingUrl;
 
   } catch (err) {

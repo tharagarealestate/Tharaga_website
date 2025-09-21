@@ -1127,7 +1127,11 @@ async function getRecaptcha() {
       const f = new FormData(frm);
       const pd = Object.fromEntries(f.entries());
       const params = new URLSearchParams();
-      if (pd.location) params.set('locality', pd.location);
+      if (pd.location) {
+        params.set('locality', pd.location);
+        params.set('location', pd.location);
+        params.set('q', pd.location);
+      }
       if (pd.property_type) params.set('type', String(pd.property_type).toLowerCase());
       const rng = parseBudgetRange(pd.budget || '');
       if (rng.min != null) params.set('price_min', String(rng.min));
@@ -1363,8 +1367,12 @@ async function getRecaptcha() {
     function buildRedirectParams(pd){
       const params = new URLSearchParams();
 
-      // Preferred City/Area -> locality
-      if (pd.location) params.set('locality', pd.location);
+      // Preferred City/Area -> locality + location + q
+      if (pd.location) {
+        params.set('locality', pd.location);
+        params.set('location', pd.location);
+        params.set('q', pd.location);
+      }
 
       // Budget mapping -> price_min/price_max
       const budgetLabel = pd.budget || '';

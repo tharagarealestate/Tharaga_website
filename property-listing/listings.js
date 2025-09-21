@@ -203,9 +203,6 @@ function applyQueryParams(){
     if (minPrice != null && minSlider) { try { minSlider.value = String(minPrice); minSlider.dispatchEvent(new Event('input', { bubbles: true })); } catch(_){} }
     if (maxPrice != null && maxSlider) { try { maxSlider.value = String(maxPrice); maxSlider.dispatchEvent(new Event('input', { bubbles: true })); } catch(_){} }
 
-    // Finally, ensure apply happens at least once with new values
-    document.querySelector('#apply')?.dispatchEvent(new Event('click', { bubbles: true }));
-
     // Apply locality selection if provided
     if (localityParam) {
       const locEl = document.querySelector('#locality');
@@ -213,6 +210,47 @@ function applyQueryParams(){
         const opt = Array.from(locEl.options).find(o => o.value.toLowerCase() === localityParam.toLowerCase());
         if (opt) { opt.selected = true; locEl.dispatchEvent(new Event('change', { bubbles: true })); }
       }
+    }
+
+    // ---- Additional URL params hydration (from buyer form / links) ----
+    // BHK
+    const bhkParam = params.get('bhk') || params.get('bedrooms');
+    if (bhkParam) {
+      const el = document.querySelector('#bhk');
+      if (el) { el.value = String(bhkParam); el.dispatchEvent(new Event('change', { bubbles: true })); }
+    }
+    // Furnished
+    const furnishedParam = params.get('furnished');
+    if (furnishedParam) {
+      const el = document.querySelector('#furnished');
+      if (el) { el.value = titleCase(furnishedParam); el.dispatchEvent(new Event('change', { bubbles: true })); }
+    }
+    // Facing
+    const facingParam = params.get('facing');
+    if (facingParam) {
+      const el = document.querySelector('#facing');
+      if (el) { el.value = titleCase(facingParam); el.dispatchEvent(new Event('change', { bubbles: true })); }
+    }
+    // Area
+    const minAreaParam = parseInt(params.get('area_min')||params.get('minArea')||'',10);
+    const maxAreaParam = parseInt(params.get('area_max')||params.get('maxArea')||'',10);
+    if (Number.isFinite(minAreaParam)) { const el = document.querySelector('#minArea'); if (el) { el.value = String(minAreaParam); el.dispatchEvent(new Event('input', { bubbles: true })); } }
+    if (Number.isFinite(maxAreaParam)) { const el = document.querySelector('#maxArea'); if (el) { el.value = String(maxAreaParam); el.dispatchEvent(new Event('input', { bubbles: true })); } }
+    // Amenity
+    const amenityParam = params.get('amenity') || params.get('amenities');
+    if (amenityParam) { const el = document.querySelector('#amenity'); if (el) { el.value = amenityParam.split(',')[0]; el.dispatchEvent(new Event('input', { bubbles: true })); } }
+    // Metro proximity
+    const nearMetroParam = params.get('near_metro') || params.get('metro');
+    const maxWalkParam = parseInt(params.get('max_walk')||params.get('walk')||params.get('maxWalk')||'',10);
+    const wantMetroEl = document.getElementById('wantMetro');
+    const maxWalkEl = document.getElementById('maxWalk');
+    if (wantMetroEl && (nearMetroParam === '1' || /^(true|yes|on)$/i.test(String(nearMetroParam||'')))) {
+      wantMetroEl.checked = true;
+      wantMetroEl.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+    if (Number.isFinite(maxWalkParam) && maxWalkEl) {
+      maxWalkEl.value = String(maxWalkParam);
+      maxWalkEl.dispatchEvent(new Event('change', { bubbles: true }));
     }
 
     // Map sort param: ai_relevance -> relevance
@@ -225,6 +263,9 @@ function applyQueryParams(){
         }
       }
     }
+
+    // Finally, ensure apply happens at least once with new values
+    document.querySelector('#apply')?.dispatchEvent(new Event('click', { bubbles: true }));
 
     // Mark deep link application and track
     FROM_PREFS = !!(qParam || typeParam || budgetLabel || localityParam || Number.isFinite(priceMinParam) || Number.isFinite(priceMaxParam) || sortParam);
@@ -239,8 +280,13 @@ function apply(){
 
   let filtered = ALL.filter(p=>{
     if (F.mode) {
-      const pc = String(p.category || p.propertyCategory || '').toLowerCase();
-      if (pc !== F.mode) return false;
+      const lc = String(p.category || p.propertyCategory || p.type || '').toLowerCase();
+      const isRent = /(rent|lease)/.test(lc);
+      const isCommercial = /(commercial|office|shop|retail|industrial)/.test(lc);
+      if (F.mode === 'rent') { if (!isRent) return false; }
+      else if (F.mode === 'commercial') { if (!isCommercial) return false; }
+      // For 'buy', do not hard-exclude unless explicitly marked as rent
+      else if (F.mode === 'buy') { if (isRent) return false; }
     }
     if (F.q) {
       const t = (p.title+' '+p.project+' '+p.city+' '+p.locality+' '+(p.address||'')+' '+(p.summary||'')).toLowerCase();
@@ -251,10 +297,10 @@ function apply(){
     if (F.localitySel.length && !(F.localitySel.includes("All") || F.localitySel.includes(p.locality))) return false;
     if (F.minP && (p.priceINR||0) < F.minP) return false;
     if (F.maxP && (p.priceINR||0) > F.maxP) return false;
-    if (F.ptype && p.type !== F.ptype) return false;
+    if (F.ptype && String(p.type||'').toLowerCase() !== String(F.ptype||'').toLowerCase()) return false;
     if (F.bhk && String(p.bhk)!==String(F.bhk)) return false;
-    if (F.furnished && p.furnished !== F.furnished) return false;
-    if (F.facing && p.facing !== F.facing) return false;
+    if (F.furnished && String(p.furnished||'').toLowerCase() !== String(F.furnished||'').toLowerCase()) return false;
+    if (F.facing && String(p.facing||'').toLowerCase() !== String(F.facing||'').toLowerCase()) return false;
     if (F.minA && (p.carpetAreaSqft||0) < F.minA) return false;
     if (F.maxA && (p.carpetAreaSqft||0) > F.maxA) return false;
     if (F.amenity && !(p.amenities||[]).some(a=>a.toLowerCase().includes(F.amenity.toLowerCase()))) return false;

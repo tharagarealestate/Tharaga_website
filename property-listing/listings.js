@@ -7,6 +7,7 @@ import * as App from './app.js?v=20250825';
 const PAGE_SIZE = 9;
 let ALL = [];
 let PAGE = 1;
+let FROM_PREFS = false; // indicates filters came from URL/localStorage prefs
 
 const deb = (fn, ms = 150) => { let t; return (...a) => { clearTimeout(t); t = setTimeout(() => fn(...a), ms); }; };
 
@@ -37,6 +38,7 @@ function hydrateLocalityOptions(selectedCities){
 function activeFilterBadges(filters){
   const wrap = document.querySelector('#activeFilters'); if(!wrap) return;
   const parts = [];
+  if (FROM_PREFS) parts.push(`<span class="tag" style="background:#fef3c7;color:#92400e">Filtered by your preferences</span>`);
   Object.entries(filters).forEach(([k,v])=>{
     if(v && (Array.isArray(v) ? v.length : String(v).trim()!=='') ){
       parts.push(`<span class="tag">${k}: ${Array.isArray(v)? v.join(', ') : v}</span>`);
@@ -115,6 +117,10 @@ function applyQueryParams(){
     const typeParam = (params.get('ptype') || params.get('type') || params.get('property_type') || '').toLowerCase();
     const budgetLabel = params.get('budget') || '';
     const cityParam = params.get('city') || '';
+    const localityParam = params.get('locality') || '';
+    const priceMinParam = parseInt(params.get('price_min')||'',10);
+    const priceMaxParam = parseInt(params.get('price_max')||'',10);
+    const sortParam = (params.get('sort') || '').toLowerCase();
 
     // Fallback to sessionStorage meta if URL empty
     if (!qParam && !typeParam && !budgetLabel) {
@@ -126,6 +132,19 @@ function applyQueryParams(){
           if (!params.get('budget') && saved.meta.search.budget) params.set('budget', saved.meta.search.budget);
         }
       } catch(_){}
+    }
+
+    // Progressive enhancement: fallback to stored preferences if URL is empty
+    if (![...params.keys()].length) {
+      try {
+        const prefs = JSON.parse(localStorage.getItem('tharaga_user_prefs')||'null');
+        if (prefs) {
+          if (prefs.locality) params.set('locality', prefs.locality);
+          if (prefs.property_type) params.set('type', String(prefs.property_type).toLowerCase());
+          if (prefs.budget) params.set('budget', prefs.budget);
+          if (prefs.timeline && /asap/i.test(prefs.timeline)) params.set('sort','newest');
+        }
+      } catch(_) {}
     }
 
     // Apply search text: prefer q, else location or city
@@ -161,9 +180,9 @@ function applyQueryParams(){
       if (pill) { try { pill.click(); } catch(_) {} }
     }
 
-    // Budget handling: supports label like "₹1Cr – ₹2Cr" or numeric minPrice/maxPrice
-    const minFromQuery = parseInt(params.get('minPrice')||'',10);
-    const maxFromQuery = parseInt(params.get('maxPrice')||'',10);
+    // Budget handling: supports label like "₹1Cr – ₹2Cr" or numeric minPrice/maxPrice or price_min/price_max
+    const minFromQuery = parseInt(params.get('minPrice')||'',10) || (Number.isFinite(priceMinParam) ? priceMinParam : NaN);
+    const maxFromQuery = parseInt(params.get('maxPrice')||'',10) || (Number.isFinite(priceMaxParam) ? priceMaxParam : NaN);
     let minPrice = Number.isFinite(minFromQuery) ? minFromQuery : null;
     let maxPrice = Number.isFinite(maxFromQuery) ? maxFromQuery : null;
     if (!minPrice && !maxPrice && budgetLabel) {
@@ -186,6 +205,30 @@ function applyQueryParams(){
 
     // Finally, ensure apply happens at least once with new values
     document.querySelector('#apply')?.dispatchEvent(new Event('click', { bubbles: true }));
+
+    // Apply locality selection if provided
+    if (localityParam) {
+      const locEl = document.querySelector('#locality');
+      if (locEl) {
+        const opt = Array.from(locEl.options).find(o => o.value.toLowerCase() === localityParam.toLowerCase());
+        if (opt) { opt.selected = true; locEl.dispatchEvent(new Event('change', { bubbles: true })); }
+      }
+    }
+
+    // Map sort param: ai_relevance -> relevance
+    if (sortParam) {
+      const sortEl = document.querySelector('#sort');
+      if (sortEl) {
+        const mapped = (sortParam === 'ai_relevance') ? 'relevance' : sortParam;
+        if (Array.from(sortEl.options).some(o=>o.value===mapped)) {
+          sortEl.value = mapped; sortEl.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+      }
+    }
+
+    // Mark deep link application and track
+    FROM_PREFS = !!(qParam || typeParam || budgetLabel || localityParam || Number.isFinite(priceMinParam) || Number.isFinite(priceMaxParam) || sortParam);
+    try { if (window.gtag && FROM_PREFS) window.gtag('event','listings_filters_applied',{ source:'deep_link' }); } catch(_) {}
   } catch (e) {
     console.warn('applyQueryParams failed', e);
   }

@@ -24,10 +24,19 @@ const CORS_HEADERS = {
 function parseBudget(band) {
   if (!band) return { min: null, max: null };
   const s = String(band).replace(/\s/g, '');
-  if (s.includes('₹50L') && s.includes('₹1Cr')) return { min: 50_00_000, max: 1_00_00_000 };
-  if (s.includes('₹1Cr') && s.includes('₹2Cr')) return { min: 1_00_00_000, max: 2_00_00_000 };
-  if (s.includes('₹2Cr') && s.includes('₹3Cr')) return { min: 2_00_00_000, max: 3_00_00_000 };
-  if (s.includes('₹3Cr')) return { min: 3_00_00_000, max: null };
+  if (/Below₹?20L/i.test(s)) return { min: 0, max: 20_00_000 };
+  if (s.includes('₹20L–₹30L') || s.includes('₹20L-₹30L')) return { min: 20_00_000, max: 30_00_000 };
+  if (s.includes('₹30L–₹40L') || s.includes('₹30L-₹40L')) return { min: 30_00_000, max: 40_00_000 };
+  if (s.includes('₹40L–₹50L') || s.includes('₹40L-₹50L')) return { min: 40_00_000, max: 50_00_000 };
+  if (s.includes('₹50L–₹75L') || s.includes('₹50L-₹75L')) return { min: 50_00_000, max: 75_00_000 };
+  if (s.includes('₹75L–₹1Cr') || s.includes('₹75L-₹1Cr')) return { min: 75_00_000, max: 1_00_00_000 };
+  if (s.includes('₹1Cr–₹1.5Cr') || s.includes('₹1Cr-₹1.5Cr')) return { min: 1_00_00_000, max: 1_50_00_000 };
+  if (s.includes('₹1.5Cr–₹2Cr') || s.includes('₹1.5Cr-₹2Cr')) return { min: 1_50_00_000, max: 2_00_00_000 };
+  if (s.includes('₹2Cr–₹3Cr') || s.includes('₹2Cr-₹3Cr')) return { min: 2_00_00_000, max: 3_00_00_000 };
+  if (s.includes('₹3Cr–₹5Cr') || s.includes('₹3Cr-₹5Cr')) return { min: 3_00_00_000, max: 5_00_00_000 };
+  if (s.includes('₹5Cr–₹7Cr') || s.includes('₹5Cr-₹7Cr')) return { min: 5_00_00_000, max: 7_00_00_000 };
+  if (s.includes('₹7Cr–₹10Cr') || s.includes('₹7Cr-₹10Cr')) return { min: 7_00_00_000, max: 10_00_00_000 };
+  if (s.includes('₹10Cr+')) return { min: 10_00_00_000, max: null };
   return { min: null, max: null };
 }
 

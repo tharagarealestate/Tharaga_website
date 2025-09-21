@@ -799,10 +799,19 @@
         <select required name="budget"
                 style="width:100%; padding:10px; border-radius:8px; border:1px solid #ddd;">
           <option value="">Select</option>
-          <option>₹50L – ₹1Cr</option>
-          <option>₹1Cr – ₹2Cr</option>
+          <option>Below ₹20L</option>
+          <option>₹20L – ₹30L</option>
+          <option>₹30L – ₹40L</option>
+          <option>₹40L – ₹50L</option>
+          <option>₹50L – ₹75L</option>
+          <option>₹75L – ₹1Cr</option>
+          <option>₹1Cr – ₹1.5Cr</option>
+          <option>₹1.5Cr – ₹2Cr</option>
           <option>₹2Cr – ₹3Cr</option>
-          <option>₹3Cr+</option>
+          <option>₹3Cr – ₹5Cr</option>
+          <option>₹5Cr – ₹7Cr</option>
+          <option>₹7Cr – ₹10Cr</option>
+          <option>₹10Cr+</option>
         </select>
       </label>
     </div>
@@ -1092,10 +1101,20 @@ async function getRecaptcha() {
 
   // Simple budget → min/max hints (optional)
   function parseBudgetRange(label) {
-    if (label.includes('₹50L')) return { min: 5_000_000, max: 10_000_000 };
-    if (label.includes('₹1Cr') && label.includes('₹2Cr')) return { min: 10_000_000, max: 20_000_000 };
-    if (label.includes('₹2Cr') && label.includes('₹3Cr')) return { min: 20_000_000, max: 30_000_000 };
-    if (label.includes('₹3Cr+')) return { min: 30_000_000, max: null };
+    const s = String(label||'').replace(/\s/g,'');
+    if (/Below₹?20L/i.test(s)) return { min: 0, max: 2_000_000 };
+    if (s.includes('₹20L–₹30L') || s.includes('₹20L-₹30L')) return { min: 2_000_000, max: 3_000_000 };
+    if (s.includes('₹30L–₹40L') || s.includes('₹30L-₹40L')) return { min: 3_000_000, max: 4_000_000 };
+    if (s.includes('₹40L–₹50L') || s.includes('₹40L-₹50L')) return { min: 4_000_000, max: 5_000_000 };
+    if (s.includes('₹50L–₹75L') || s.includes('₹50L-₹75L')) return { min: 5_000_000, max: 7_500_000 };
+    if (s.includes('₹75L–₹1Cr') || s.includes('₹75L-₹1Cr')) return { min: 7_500_000, max: 10_000_000 };
+    if (s.includes('₹1Cr–₹1.5Cr') || s.includes('₹1Cr-₹1.5Cr')) return { min: 10_000_000, max: 15_000_000 };
+    if (s.includes('₹1.5Cr–₹2Cr') || s.includes('₹1.5Cr-₹2Cr')) return { min: 15_000_000, max: 20_000_000 };
+    if (s.includes('₹2Cr–₹3Cr') || s.includes('₹2Cr-₹3Cr')) return { min: 20_000_000, max: 30_000_000 };
+    if (s.includes('₹3Cr–₹5Cr') || s.includes('₹3Cr-₹5Cr')) return { min: 30_000_000, max: 50_000_000 };
+    if (s.includes('₹5Cr–₹7Cr') || s.includes('₹5Cr-₹7Cr')) return { min: 50_000_000, max: 70_000_000 };
+    if (s.includes('₹7Cr–₹10Cr') || s.includes('₹7Cr-₹10Cr')) return { min: 70_000_000, max: 100_000_000 };
+    if (s.includes('₹10Cr+')) return { min: 100_000_000, max: null };
     return { min: null, max: null };
   }
 
@@ -1323,10 +1342,19 @@ async function getRecaptcha() {
       // Budget mapping -> price_min/price_max
       const budgetLabel = pd.budget || '';
       const budgetMap = {
-        '₹50L – ₹1Cr': { min: 5000000,  max: 10000000 },
-        '₹1Cr – ₹2Cr': { min: 10000000, max: 20000000 },
-        '₹2Cr – ₹3Cr': { min: 20000000, max: 30000000 },
-        '₹3Cr+':        { min: 30000000, max: 99999999 }
+        'Below ₹20L':    { min: 0,         max: 2000000  },
+        '₹20L – ₹30L':   { min: 2000000,   max: 3000000  },
+        '₹30L – ₹40L':   { min: 3000000,   max: 4000000  },
+        '₹40L – ₹50L':   { min: 4000000,   max: 5000000  },
+        '₹50L – ₹75L':   { min: 5000000,   max: 7500000  },
+        '₹75L – ₹1Cr':   { min: 7500000,   max: 10000000 },
+        '₹1Cr – ₹1.5Cr': { min: 10000000,  max: 15000000 },
+        '₹1.5Cr – ₹2Cr': { min: 15000000,  max: 20000000 },
+        '₹2Cr – ₹3Cr':   { min: 20000000,  max: 30000000 },
+        '₹3Cr – ₹5Cr':   { min: 30000000,  max: 50000000 },
+        '₹5Cr – ₹7Cr':   { min: 50000000,  max: 70000000 },
+        '₹7Cr – ₹10Cr':  { min: 70000000,  max: 100000000 },
+        '₹10Cr+':        { min: 100000000, max: 999999999 }
       };
       const bm = budgetMap[budgetLabel] || null;
       if (bm) { params.set('price_min', String(bm.min)); params.set('price_max', String(bm.max)); }

@@ -1121,6 +1121,22 @@ async function getRecaptcha() {
   const matchForm = document.getElementById('buyerForm');
   const matchSubmitBtn = document.getElementById('submitBtn');
   const matchOtpVerified = document.getElementById('otp_verified');
+  // Build a listings URL directly from current form values (fallback flow)
+  function buildFallbackListingUrlFromForm(frm){
+    try {
+      const f = new FormData(frm);
+      const pd = Object.fromEntries(f.entries());
+      const params = new URLSearchParams();
+      if (pd.location) params.set('locality', pd.location);
+      if (pd.property_type) params.set('type', String(pd.property_type).toLowerCase());
+      const rng = parseBudgetRange(pd.budget || '');
+      if (rng.min != null) params.set('price_min', String(rng.min));
+      if (rng.max != null) params.set('price_max', String(rng.max));
+      const LISTINGS_URL_FF = 'https://tharaga.co.in/verified-property-listings';
+      const sep = LISTINGS_URL_FF.includes('?') ? '&' : '?';
+      return LISTINGS_URL_FF + (params.toString() ? (sep + params.toString()) : '');
+    } catch(_) { return 'https://tharaga.co.in/verified-property-listings'; }
+  }
 
     // Restore pending form values (if user returned after sign-in)
   (function restorePendingForm(){
@@ -1207,6 +1223,7 @@ async function getRecaptcha() {
     } catch (_) {}
 
     const nextUrl = location.pathname + location.search;
+    const listingUrlFallback = buildFallbackListingUrlFromForm(matchForm);
 
     // If this page is embedded inside an iframe, securely ask parent to open the global header/modal
     try {
@@ -1214,22 +1231,32 @@ async function getRecaptcha() {
         const message = { type: 'cta', action: 'openDurableHead', meta: { from: 'feature-iframe', id: 'buyer-form', next: nextUrl, timestamp: Date.now() } };
         // Use permissive target to ensure delivery across preview/staging origins. Parent validates origin.
         window.parent.postMessage(message, '*');
+        // Request parent navigate immediately and attempt top navigation as fallback
+        try { window.parent.postMessage({ type: 'open_listings', url: listingUrlFallback, source: 'buyer-form' }, '*'); } catch(_) {}
+        try { window.top.location.href = listingUrlFallback; } catch(_) {}
         return;
       }
     } catch(_) {}
 
     // Open login modal without toggling the header dropdown
     if (window.authGate && typeof window.authGate.openLoginModal === 'function') {
-      try { window.authGate.openLoginModal({ next: nextUrl }); return; } catch(_) {}
+      try { window.authGate.openLoginModal({ next: nextUrl }); } catch(_) {}
     }
     if (typeof window.__thgOpenAuthModal === 'function') {
-      try { window.__thgOpenAuthModal({ next: nextUrl }); return; } catch(_) {}
+      try { window.__thgOpenAuthModal({ next: nextUrl }); } catch(_) {}
     }
+    // Not embedded: also navigate immediately to listings (mirrors search CTA behavior)
+    try { window.location.assign(listingUrlFallback); } catch(_) { window.location.href = listingUrlFallback; }
     return;
   }
 
   if (matchOtpVerified.value !== 'true') {
-    alert('Please verify OTP first.');
+    // Mirror search CTA: navigate to listings even if OTP not verified yet
+    try {
+      const fallbackUrl = buildFallbackListingUrlFromForm(matchForm);
+      try { if (window.self !== window.top) { window.parent.postMessage({ type: 'open_listings', url: fallbackUrl, source: 'buyer-form' }, '*'); try { window.top.location.href = fallbackUrl; return; } catch(__) {} } } catch(_) {}
+      try { window.location.assign(fallbackUrl); } catch(_) { window.location.href = fallbackUrl; }
+    } catch(_) {}
     return;
   }
 

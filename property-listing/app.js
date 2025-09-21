@@ -395,6 +395,55 @@ document.addEventListener('DOMContentLoaded', () => {
   updateUI();
 });
 
+// -------------------------- URL Hydration (baseline) --------------------------
+function titleCase(str){ return String(str||'').toLowerCase().replace(/(^|\s)([a-z])/g,(m,p1,c)=>p1+c.toUpperCase()); }
+
+function hydrateFromQueryParamsBasic(){
+  try {
+    const params = new URLSearchParams(location.search);
+    const qVal = (params.get('q') || params.get('location') || params.get('locality') || '').trim();
+    const priceMin = parseInt(params.get('price_min')||params.get('minPrice')||'',10);
+    const priceMax = parseInt(params.get('price_max')||params.get('maxPrice')||'',10);
+    const bhk = params.get('bhk') || params.get('bedrooms');
+    const ptype = params.get('ptype') || params.get('type');
+    const furnished = params.get('furnished');
+    const facing = params.get('facing');
+    const areaMin = parseInt(params.get('area_min')||params.get('minArea')||'',10);
+    const areaMax = parseInt(params.get('area_max')||params.get('maxArea')||'',10);
+    const amenity = params.get('amenity') || params.get('amenities');
+    const nearMetro = params.get('near_metro') || params.get('metro');
+    const maxWalk = parseInt(params.get('max_walk')||params.get('walk')||params.get('maxWalk')||'',10);
+    const sortParam = params.get('sort');
+
+    const qEl = document.getElementById('q');
+    if (qEl && qVal) { qEl.value = qVal; qEl.dispatchEvent(new Event('input', { bubbles:true })); }
+
+    const minHidden = document.getElementById('minPrice');
+    const maxHidden = document.getElementById('maxPrice');
+    const minSlider = document.getElementById('priceMinSlider');
+    const maxSlider = document.getElementById('priceMaxSlider');
+    if (Number.isFinite(priceMin) && minHidden) minHidden.value = String(priceMin);
+    if (Number.isFinite(priceMax) && maxHidden) maxHidden.value = String(priceMax);
+    // if sliders present already, sync them; otherwise the slider init reads hidden values
+    try { if (Number.isFinite(priceMin) && minSlider) { minSlider.value = String(priceMin); minSlider.dispatchEvent(new Event('input', { bubbles:true })); } } catch(_){ }
+    try { if (Number.isFinite(priceMax) && maxSlider) { maxSlider.value = String(priceMax); maxSlider.dispatchEvent(new Event('input', { bubbles:true })); } } catch(_){ }
+
+    const setSel = (id, val) => { const el = document.getElementById(id); if (el && val!=null && val!=='') { el.value = titleCase(String(val)); el.dispatchEvent(new Event('change', { bubbles:true })); } };
+    setSel('ptype', ptype);
+    setSel('bhk', bhk);
+    setSel('furnished', furnished);
+    setSel('facing', facing);
+    const minAreaEl = document.getElementById('minArea'); if (minAreaEl && Number.isFinite(areaMin)) { minAreaEl.value = String(areaMin); minAreaEl.dispatchEvent(new Event('input', { bubbles:true })); }
+    const maxAreaEl = document.getElementById('maxArea'); if (maxAreaEl && Number.isFinite(areaMax)) { maxAreaEl.value = String(areaMax); maxAreaEl.dispatchEvent(new Event('input', { bubbles:true })); }
+    const amenEl = document.getElementById('amenity'); if (amenEl && amenity) { amenEl.value = amenity.split(',')[0]; amenEl.dispatchEvent(new Event('input', { bubbles:true })); }
+    const metroEl = document.getElementById('wantMetro'); if (metroEl && (nearMetro==='1' || /^(true|yes|on)$/i.test(String(nearMetro||'')))) { metroEl.checked = true; metroEl.dispatchEvent(new Event('change', { bubbles:true })); }
+    const mwEl = document.getElementById('maxWalk'); if (mwEl && Number.isFinite(maxWalk)) { mwEl.value = String(maxWalk); mwEl.dispatchEvent(new Event('change', { bubbles:true })); }
+    const sortEl = document.getElementById('sort'); if (sortEl && sortParam) { sortEl.value = (sortParam==='ai_relevance' ? 'relevance' : sortParam); sortEl.dispatchEvent(new Event('change', { bubbles:true })); }
+  } catch (e) {
+    console.warn('hydrateFromQueryParamsBasic failed', e);
+  }
+}
+
 /* -------------------------- Filtering logic ------------------------ */
 /**
  * Apply filters based on UI controls:
@@ -450,7 +499,8 @@ async function initAndRender() {
     console.error("Failed to load properties:", e);
     PROPERTIES_CACHE = [];
   }
-
+  // Hydrate from URL before first render for parity with deep links
+  hydrateFromQueryParamsBasic();
   // initial render
   applyFiltersAndRender();
 

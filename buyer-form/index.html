@@ -1207,13 +1207,13 @@ async function getRecaptcha() {
     } catch (_) {}
 
     const nextUrl = location.pathname + location.search;
-    const PARENT_ORIGIN = 'https://tharaga.co.in';
 
     // If this page is embedded inside an iframe, securely ask parent to open the global header/modal
     try {
       if (window.self !== window.parent) {
         const message = { type: 'cta', action: 'openDurableHead', meta: { from: 'feature-iframe', id: 'buyer-form', next: nextUrl, timestamp: Date.now() } };
-        window.parent.postMessage(message, PARENT_ORIGIN);
+        // Use permissive target to ensure delivery across preview/staging origins. Parent validates origin.
+        window.parent.postMessage(message, '*');
         return;
       }
     } catch(_) {}
@@ -1401,14 +1401,8 @@ async function getRecaptcha() {
     const listingUrl = LISTINGS_URL + _sep + params.toString();
     try {
       if (window.self !== window.top) {
-        try {
-          const PARENT_ORIGIN = 'https://tharaga.co.in';
-          window.parent.postMessage({ type: 'open_listings', url: listingUrl, source: 'buyer-form' }, PARENT_ORIGIN);
-        } catch(_) {
-          // Fallback if origin-locked: permissive postMessage, then proceed to top redirect
-          try { window.parent.postMessage({ type: 'open_listings', url: listingUrl, source: 'buyer-form' }, '*'); } catch(__) {}
-        }
-        // Also attempt top-level navigation directly (allowed on user activation)
+        try { window.parent.postMessage({ type: 'open_listings', url: listingUrl, source: 'buyer-form' }, '*'); } catch(_) {}
+        // Also attempt top-level navigation directly as secondary fallback
         try { window.top.location.href = listingUrl; return; } catch(__) {}
       }
     } catch(_) {}

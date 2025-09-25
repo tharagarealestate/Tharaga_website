@@ -178,6 +178,14 @@ function applyQueryParams(){
       try { localStorage.setItem('activeFilterType', pillType); } catch(_) {}
       const pill = document.querySelector(`.filter-pill[data-type="${pillType}"]`);
       if (pill) { try { pill.click(); } catch(_) {} }
+    } else {
+      // If deep-link has filters but no explicit pill, default to 'buy'
+      const hasFilterSignal = !!(qParam || budgetLabel || localityParam || Number.isFinite(priceMinParam) || Number.isFinite(priceMaxParam) || sortParam);
+      if (hasFilterSignal) {
+        try { localStorage.setItem('activeFilterType', 'buy'); } catch(_) {}
+        const pill = document.querySelector(`.filter-pill[data-type="buy"]`);
+        if (pill) { try { pill.click(); } catch(_) {} }
+      }
     }
 
     // Budget handling: supports label like "₹1Cr – ₹2Cr" or numeric minPrice/maxPrice or price_min/price_max
@@ -203,12 +211,17 @@ function applyQueryParams(){
     if (minPrice != null && minSlider) { try { minSlider.value = String(minPrice); minSlider.dispatchEvent(new Event('input', { bubbles: true })); } catch(_){} }
     if (maxPrice != null && maxSlider) { try { maxSlider.value = String(maxPrice); maxSlider.dispatchEvent(new Event('input', { bubbles: true })); } catch(_){} }
 
-    // Apply locality selection if provided
+    // Apply locality selection if provided (supports comma separated list)
     if (localityParam) {
       const locEl = document.querySelector('#locality');
       if (locEl) {
-        const opt = Array.from(locEl.options).find(o => o.value.toLowerCase() === localityParam.toLowerCase());
-        if (opt) { opt.selected = true; locEl.dispatchEvent(new Event('change', { bubbles: true })); }
+        const wanted = String(localityParam).split(',').map(s=>s.trim().toLowerCase()).filter(Boolean);
+        let matched = 0;
+        Array.from(locEl.options).forEach(o => {
+          const val = String(o.value||'').toLowerCase();
+          if (wanted.includes(val)) { o.selected = true; matched++; }
+        });
+        if (matched>0) locEl.dispatchEvent(new Event('change', { bubbles: true }));
       }
     }
 
@@ -341,14 +354,14 @@ function goto(n){ PAGE = n; apply(); }
 window.goto = goto;
 
 function wireUI(){
-  document.querySelector('#apply')?.addEventListener('click', ()=>{ PAGE=1; apply(); });
+  document.querySelector('#apply')?.addEventListener('click', ()=>{ PAGE=1; apply(); syncUrlWithFilters(); });
 
   const debApply = deb(()=>{ PAGE=1; apply(); }, 120);
   ['#minPrice','#maxPrice','#minArea','#maxArea','#amenity','#q'].forEach(sel=>
     document.querySelector(sel)?.addEventListener('input', debApply)
   );
   ['#sort','#ptype','#bhk','#furnished','#facing','#city','#locality','#wantMetro','#maxWalk'].forEach(sel=>
-    document.querySelector(sel)?.addEventListener('change', ()=>{ PAGE=1; apply(); })
+    document.querySelector(sel)?.addEventListener('change', ()=>{ PAGE=1; apply(); syncUrlWithFilters(); })
   );
 
   document.querySelector('#pager')?.addEventListener('click', (e)=>{
@@ -428,6 +441,44 @@ function wireUI(){
   });
 }
 
+function syncUrlWithFilters(){
+  try{
+    const F = collectFilters();
+    const params = new URLSearchParams(location.search);
+    // Search text
+    if (F.q) { params.set('q', F.q); params.set('location', F.q); }
+    else { params.delete('q'); params.delete('location'); }
+
+    // Mode (pill)
+    const pill = document.querySelector('.filter-pill.active');
+    const mode = pill?.dataset?.type || 'buy';
+    if (mode && mode !== 'all') params.set('type', mode); else params.delete('type');
+
+    // Locality multi-select
+    const locs = (F.localitySel||[]).filter(v=>v && v!=='All');
+    if (locs.length) params.set('locality', locs.join(',')); else params.delete('locality');
+
+    // Price
+    if (F.minP) params.set('price_min', String(F.minP)); else params.delete('price_min');
+    if (F.maxP) params.set('price_max', String(F.maxP)); else params.delete('price_max');
+
+    // Other structured filters
+    if (F.ptype) params.set('ptype', String(F.ptype).toLowerCase()); else params.delete('ptype');
+    if (F.bhk) params.set('bhk', String(F.bhk)); else params.delete('bhk');
+    if (F.furnished) params.set('furnished', String(F.furnished).toLowerCase()); else params.delete('furnished');
+    if (F.facing) params.set('facing', String(F.facing).toLowerCase()); else params.delete('facing');
+    if (F.minA) params.set('area_min', String(F.minA)); else params.delete('area_min');
+    if (F.maxA) params.set('area_max', String(F.maxA)); else params.delete('area_max');
+    if (F.amenity) params.set('amenity', F.amenity); else params.delete('amenity');
+    if (F.wantMetro) params.set('near_metro', '1'); else params.delete('near_metro');
+    if (F.maxWalk) params.set('max_walk', String(F.maxWalk)); else params.delete('max_walk');
+    if (F.sort && F.sort !== 'relevance') params.set('sort', F.sort); else params.delete('sort');
+
+    const newUrl = `${location.pathname}?${params.toString()}`;
+    history.replaceState(null, '', newUrl);
+  } catch(e) { /* no-op */ }
+}
+
 async function enrichWithMetro(){
   const stations = await App.loadMetro();
   if (!stations.length) return; // no metro dataset → skip
@@ -451,7 +502,7 @@ async function init(){
     // If the URL has city/locality but no explicit q, prefer locality as search text for better matching
     try {
       const params = new URLSearchParams(location.search);
-      const qMissing = !(params.get('q') && params.get('q')!.trim());
+      const qMissing = !((params.get('q') || '').trim());
       const localityParam = params.get('locality') || '';
       if (qMissing && localityParam) {
         const qEl = document.querySelector('#q');

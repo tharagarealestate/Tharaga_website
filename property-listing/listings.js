@@ -384,6 +384,15 @@ function apply(){
 
   const total = filtered.length;
   const countEl = document.querySelector('#count'); if (countEl) countEl.textContent = `${total} result${total!==1?'s':''}`;
+  try {
+    const notice = document.getElementById('resultNotice');
+    if (notice) {
+      notice.hidden = false;
+      notice.textContent = `Showing ${Math.min(PAGE_SIZE, total)} of ${total} results`;
+      clearTimeout(notice.__t);
+      notice.__t = setTimeout(()=>{ try { notice.hidden = true; } catch(_){} }, 1500);
+    }
+  } catch(_){ }
 
   const pages = Math.max(1, Math.ceil(total / PAGE_SIZE));
   PAGE = Math.min(PAGE, pages);

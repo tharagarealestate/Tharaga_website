@@ -164,6 +164,12 @@ img{max-width:100%;display:block}
   color:#fff
 }
 
+/* Inline notice for new results */
+.result-notice{ margin:8px 0; padding:10px 12px; border-radius:10px; background:#fff7f8; border:1px solid #f8d9e2; color:#6e0d25; font-weight:600; }
+
+/* Toast */
+.toast{ position:fixed; left:50%; bottom:24px; transform:translateX(-50%); background:#111; color:#fff; padding:12px 14px; border-radius:12px; box-shadow:0 10px 32px rgba(0,0,0,.35); z-index:1000; }
+
 .card-img{position:relative;height:200px}
 .card-img img{
   width:100%;

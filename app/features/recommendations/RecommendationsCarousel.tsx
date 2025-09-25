@@ -5,6 +5,7 @@ import Image from 'next/image'
 import { clsx } from 'clsx'
 import type { RecommendationItem } from '@/types/recommendations'
 import { Tooltip } from '@/components/ui/Tooltip'
+import { fetchRecommendationsClient, readCookie } from '@/lib/api-client'
 
 type Props = {
   items?: RecommendationItem[]
@@ -13,7 +14,27 @@ type Props = {
 }
 
 export function RecommendationsCarousel({ items = [], isLoading = false, error = null }: Props) {
-  if (error) {
+  const [clientItems, setClientItems] = React.useState(items)
+  const [retrying, setRetrying] = React.useState(false)
+  const [clientError, setClientError] = React.useState<string | null>(null)
+
+  React.useEffect(() => {
+    // If server failed to load, attempt one client-side retry for resilience
+    if ((error || items.length === 0) && !retrying) {
+      const sid = readCookie('thg_sid')
+      if (!sid) return
+      setRetrying(true)
+      fetchRecommendationsClient({ session_id: sid, num_results: 6 })
+        .then((data) => {
+          setClientItems(data.items || [])
+          setClientError(null)
+        })
+        .catch(() => setClientError('Failed to load recommendations'))
+        .finally(() => setRetrying(false))
+    }
+  }, [error, items.length, retrying])
+
+  if (error && clientItems.length === 0 && !retrying) {
     return (
       <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-red-800">
         We’re having trouble loading recommendations. Please try again later.
@@ -31,12 +52,12 @@ export function RecommendationsCarousel({ items = [], isLoading = false, error =
         </div>
       </div>
       <ScrollableRow>
-        {isLoading ? (
+        {isLoading || retrying ? (
           Array.from({ length: 4 }).map((_, i) => <CardSkeleton key={i} />)
-        ) : items.length === 0 ? (
+        ) : (clientItems.length || items.length) === 0 ? (
           <EmptyState />
         ) : (
-          items.map((item) => <PropertyCard key={item.property_id} item={item} />)
+          (clientItems.length ? clientItems : items).map((item) => <PropertyCard key={item.property_id} item={item} />)
         )}
       </ScrollableRow>
     </div>

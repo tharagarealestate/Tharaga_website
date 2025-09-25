@@ -1625,6 +1625,25 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     const emailInput = document.querySelector('#buyerForm [name="email"]');
     const noticeEl = document.getElementById('emailNotice');
+    function readEmailFromLocalStorageCache(){
+      try {
+        // Preferred: value that Durable header writes for fast cross-page hydration
+        const cached = JSON.parse(localStorage.getItem('__tharaga_magic_continue') || 'null');
+        const email = cached?.user?.email || '';
+        if (email) return email;
+      } catch(_) {}
+      try {
+        // Supabase persists the session under this key; try to parse email without network
+        const raw = localStorage.getItem('supabase.auth.token');
+        if (raw) {
+          const j = JSON.parse(raw);
+          const email = j?.currentSession?.user?.email || j?.user?.email || j?.session?.user?.email || '';
+          if (email) return email;
+        }
+      } catch(_) {}
+      return '';
+    }
+
 
     function prevent(e){ try { e.preventDefault(); } catch(_) {} }
 
@@ -1692,7 +1711,13 @@ document.addEventListener("DOMContentLoaded", async () => {
       } catch(_) {}
     }
 
-    // Initial sync from current session
+    // Initial sync from local cache (no network) then confirm with Supabase
+    try {
+      const cachedEmail = readEmailFromLocalStorageCache();
+      if (cachedEmail) lockBuyerEmail(cachedEmail);
+    } catch(_) {}
+
+    // Initial sync from current session (network or persisted client)
     try {
       const sess = await window.supabase?.auth?.getSession();
       const user = sess?.data?.session?.user || null;

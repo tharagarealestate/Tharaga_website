@@ -33,3 +33,9 @@
   to = "/snippets/"
   status = 301
 
+[[redirects]]
+  from = "/verified-property-listings"
+  to = "/property-listing/"
+  status = 200
+  force = true
+

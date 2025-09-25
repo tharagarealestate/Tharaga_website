@@ -53,9 +53,10 @@
   width: 100%;
   border-radius: 8px;
   border: 1px solid #ddd;
+  padding: 10px;
   font-size: 14px;
   font-family: inherit;
-  transition: border-color 0.2s ease;
+  transition: border-color 0.2s ease, box-shadow .15s ease, transform .08s ease;
 }
 
 /* Uniform control heights so rows align perfectly */
@@ -74,6 +75,7 @@
 #buyer-intake textarea:focus {
   border-color: #0e0e0e;
   outline: none;
+  box-shadow: 0 0 0 3px rgba(110,13,37,.18);
 }
 
 /* ===== OTP Inputs ===== */
@@ -90,11 +92,14 @@
   text-align: center;
   border: 2px solid #ccc;
   border-radius: 8px;
-  transition: border-color 0.2s ease;
+  background:#fff;
+  box-shadow: 0 2px 10px rgba(0,0,0,.04);
+  transition: border-color 0.2s ease, box-shadow .15s ease;
 }
 .otp-input:focus {
   border-color: #0e0e0e;
   outline: none;
+  box-shadow: 0 0 0 3px rgba(110,13,37,.18);
 }
 
 /* ===== Buttons ===== */

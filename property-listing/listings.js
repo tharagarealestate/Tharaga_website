@@ -541,6 +541,23 @@ async function init(){
     // Early: hydrate from URL so visible controls reflect deep link immediately
     try { applyQueryParams(); } catch(_) {}
 
+    // Show premium skeletons while loading
+    try {
+      const res = document.querySelector('#results');
+      if (res) {
+        res.innerHTML = Array.from({length: 6}).map(()=>
+          '<div class="skeleton-card">\
+             <div class="skeleton-img"></div>\
+             <div class="skeleton-body">\
+               <div class="skeleton-line w70"></div>\
+               <div class="skeleton-line w50"></div>\
+               <div class="skeleton-line w30"></div>\
+             </div>\
+           </div>'
+        ).join('');
+      }
+    } catch(_) {}
+
     ALL = await App.fetchProperties();
     hydrateCityOptions(); hydrateLocalityOptions([]);
     await enrichWithMetro();

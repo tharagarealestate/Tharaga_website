@@ -208,6 +208,9 @@ img{max-width:100%;display:block}
   padding: 16px; /* 🔄 CHANGE: more compact */
   border: 1px solid #f0d9d9;
   box-shadow: 0 4px 24px rgba(110, 13, 37, 0.16); /* 🔄 CHANGE: softer shadow */
+  position: sticky;
+  top: 12px; /* stays visible while browsing results */
+  z-index: 10;
 }
 
 .filter-container:hover {
@@ -420,6 +423,22 @@ select[multiple] {
   background: var(--brand);
   color: white;
 }
+
+/* ====== Skeletons for premium loading feel ====== */
+.skeleton-card{
+  background:#fff;
+  border-radius:18px;
+  border:1px solid #f0d9d9;
+  overflow:hidden;
+  position:relative;
+}
+.skeleton-img{ height:200px; background:linear-gradient(90deg,#eee,#f6f6f6,#eee); background-size:200% 100%; animation:sk 1.2s infinite; }
+.skeleton-body{ padding:14px; }
+.skeleton-line{ height:12px; background:#eee; border-radius:8px; margin:10px 0; }
+.skeleton-line.w50{ width:50%; }
+.skeleton-line.w70{ width:70%; }
+.skeleton-line.w30{ width:30%; }
+@keyframes sk{ 0%{background-position:200% 0} 100%{background-position:-200% 0} }
 
 /* 🔹 Highlight effect when scrolled to map */
 .highlight {

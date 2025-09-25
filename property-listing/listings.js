@@ -367,7 +367,11 @@ function apply(){
   const slice = filtered.slice(start, start+PAGE_SIZE);
 
   const res = document.querySelector('#results');
-  if (res) res.innerHTML = slice.map(({p,s})=> App.cardHTML(p, s)).join('') || `<div class="empty">No properties found</div>`;
+  if (res) {
+    res.setAttribute('aria-live','polite');
+    res.setAttribute('role','region');
+    res.innerHTML = slice.map(({p,s})=> App.cardHTML(p, s)).join('') || `<div class="empty">No properties found</div>`;
+  }
 
   const pager = document.querySelector('#pager');
   if (pager) {
@@ -382,7 +386,20 @@ function goto(n){ PAGE = n; apply(); }
 window.goto = goto;
 
 function wireUI(){
-  document.querySelector('#apply')?.addEventListener('click', ()=>{ PAGE=1; apply(); syncUrlWithFilters(); });
+  const applyBtn = document.querySelector('#apply');
+  if (applyBtn) {
+    applyBtn.addEventListener('click', ()=>{
+      PAGE=1;
+      // UX: brief loading state + smooth scroll to results
+      const res = document.querySelector('#results');
+      const prev = applyBtn.textContent;
+      applyBtn.disabled = true; applyBtn.textContent = 'Applying…';
+      apply(); syncUrlWithFilters();
+      try { if (res) res.classList.add('highlight'); } catch(_) {}
+      try { if (res && res.scrollIntoView) res.scrollIntoView({ behavior:'smooth', block:'start' }); } catch(_) {}
+      setTimeout(()=>{ try { if (res) res.classList.remove('highlight'); } catch(_) {} applyBtn.disabled = false; applyBtn.textContent = prev; }, 300);
+    });
+  }
 
   const debApply = deb(()=>{ PAGE=1; apply(); }, 120);
   ['#minPrice','#maxPrice','#minArea','#maxArea','#amenity','#q'].forEach(sel=>

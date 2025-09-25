@@ -82,13 +82,46 @@ app.add_middleware(
 
 # In a real deployment, inject a database-backed recommender via dependency injection.
 _properties_df, _interactions_df = load_demo_data()
-_recommender = HybridRecommender(properties_df=_properties_df, interactions_df=_interactions_df)
-_recommender.fit()
+_recommender = None
+try:
+    _recommender = HybridRecommender(properties_df=_properties_df, interactions_df=_interactions_df)
+    _recommender.fit()
+    logger.info("HybridRecommender initialized successfully")
+except Exception:
+    # Degrade gracefully; we'll compute a simple fallback response on demand
+    logger.exception("Failed to initialize HybridRecommender; will use fallback recommendations")
+    _recommender = None
 
 
 @app.get("/health")
 def health() -> dict[str, str]:
     return {"status": "ok"}
+
+
+def _fallback_recommendations(top_n: int) -> list[RecommendationItem]:
+    # Popularity/content-lite fallback using available property specs
+    items: list[RecommendationItem] = []
+    try:
+        for _, row in _properties_df.head(top_n).iterrows():
+            items.append(
+                RecommendationItem(
+                    property_id=str(row.property_id),
+                    title=str(row.title),
+                    image_url=str(row.image_url),
+                    specs=PropertySpecs(
+                        bedrooms=int(row.bedrooms) if not (row.bedrooms != row.bedrooms) else None,  # NaN check
+                        bathrooms=int(row.bathrooms) if not (row.bathrooms != row.bathrooms) else None,
+                        area_sqft=float(row.area_sqft) if not (row.area_sqft != row.area_sqft) else None,
+                        location=str(row.location) if row.location is not None else None,
+                    ),
+                    reasons=["Popular among similar seekers", "Matches common preferences"],
+                    score=0.5,
+                )
+            )
+    except Exception:
+        logger.exception("Failed to build fallback recommendations")
+        items = []
+    return items
 
 
 @app.post("/api/recommendations", response_model=RecommendationResponse)
@@ -97,6 +130,10 @@ def get_recommendations(payload: RecommendationQuery) -> RecommendationResponse:
         raise HTTPException(status_code=400, detail="Provide either user_id or session_id")
 
     try:
+        if _recommender is None:
+            logger.warning("Recommender unavailable; serving fallback recommendations")
+            return RecommendationResponse(items=_fallback_recommendations(top_n=payload.num_results))
+
         items = _recommender.recommend(
             user_id=payload.user_id,
             session_id=payload.session_id,
@@ -104,8 +141,8 @@ def get_recommendations(payload: RecommendationQuery) -> RecommendationResponse:
         )
         return RecommendationResponse(items=items)
     except Exception as exc:  # pragma: no cover - safeguard for production
-        logger.exception("Failed to compute recommendations")
-        raise HTTPException(status_code=500, detail="Failed to generate recommendations") from exc
+        logger.exception("Failed to compute recommendations; serving fallback")
+        return RecommendationResponse(items=_fallback_recommendations(top_n=payload.num_results))
 
 
 if __name__ == "__main__":

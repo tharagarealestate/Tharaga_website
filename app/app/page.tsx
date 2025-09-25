@@ -1,8 +1,9 @@
 import { fetchRecommendations } from '@/lib/api'
+import type { RecommendationItem } from '@/types/recommendations'
 import { RecommendationsCarousel } from '@/features/recommendations/RecommendationsCarousel'
 
 export default async function Home() {
-  let items = []
+  let items: RecommendationItem[] = []
   let error: string | null = null
   try {
     const data = await fetchRecommendations({ session_id: 'demo', num_results: 6 })

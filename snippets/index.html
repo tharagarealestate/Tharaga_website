@@ -185,6 +185,38 @@
     const name = (meta.full_name || meta.name || meta.username || '').trim();
     return name || (user?.email || 'My Account');
   }
+  // Keep buyer-form email field in sync with header auth state (same-page or embedded)
+  function lockBuyerEmailInBuyerForm(email){
+    try {
+      const scope = document.getElementById('buyerForm') || document;
+      const emailInput = scope && scope.querySelector('#buyerForm [name="email"], form#buyerForm input[name="email"]');
+      if (!emailInput) return;
+      emailInput.value = email || '';
+      emailInput.setAttribute('data-session-email', email || '');
+      emailInput.readOnly = true; emailInput.setAttribute('aria-readonly','true');
+      emailInput.disabled = true;
+      try { emailInput.setAttribute('autocomplete','off'); emailInput.setAttribute('autocapitalize','off'); emailInput.setAttribute('spellcheck','false'); } catch(_){}
+      // create/update hidden mirror used for submission
+      let hidden = document.getElementById('buyer-email-hidden');
+      if (!hidden){ hidden = document.createElement('input'); hidden.type='hidden'; hidden.name='email'; hidden.id='buyer-email-hidden'; emailInput.parentElement && emailInput.parentElement.appendChild(hidden); }
+      hidden.value = email || '';
+      // prevent duplicate name submission
+      if (emailInput.getAttribute('name')) { emailInput.setAttribute('data-original-name','email'); emailInput.removeAttribute('name'); }
+    } catch(_){}
+  }
+  function unlockBuyerEmailInBuyerForm(){
+    try {
+      const scope = document.getElementById('buyerForm') || document;
+      const emailInput = scope && scope.querySelector('#buyerForm [data-session-email], form#buyerForm input[aria-readonly]');
+      if (!emailInput) return;
+      try { emailInput.readOnly = false; emailInput.disabled = false; emailInput.removeAttribute('aria-readonly'); emailInput.removeAttribute('data-session-email'); } catch(_){}
+      try { if (!emailInput.getAttribute('name')) emailInput.setAttribute('name', emailInput.getAttribute('data-original-name') || 'email'); } catch(_){}
+      const hidden = document.getElementById('buyer-email-hidden'); if (hidden && hidden.parentElement) hidden.parentElement.removeChild(hidden);
+    } catch(_){}
+  }
+  function setBuyerEmailLockFromUser(user){
+    try { if (user && user.email) lockBuyerEmailInBuyerForm(user.email); else unlockBuyerEmailInBuyerForm(); } catch(_){}
+  }
   function createEl(tag, cls, attrs){ const el = document.createElement(tag); if (cls) el.className = cls; if (attrs) for (var k in attrs) el.setAttribute(k, attrs[k]); return el; }
   function validateEmail(val){ return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val); }
   function ensureContainer(){
@@ -512,9 +544,9 @@
     }
     if (!window.supabase || !window.supabase.auth){ state.supabaseReady = false; state.loading = false; render( ui); console.warn('[thg-auth] window.supabase not found.'); return; }
     state.supabaseReady = true;
-    try{ const { data } = await window.supabase.auth.getSession(); state.user = data?.session?.user || null; } catch(_){ state.user = null; } finally { state.loading = false; render(ui); try { broadcastAuth(state.user); } catch(__) {} }
+    try{ const { data } = await window.supabase.auth.getSession(); state.user = data?.session?.user || null; } catch(_){ state.user = null; } finally { state.loading = false; render(ui); try { broadcastAuth(state.user); } catch(__) {} try { setBuyerEmailLockFromUser(state.user); } catch(__) {} }
     try{
-      const { data: sub } = window.supabase.auth.onAuthStateChange(function(event, session){ state.user = session?.user || null; render(ui); try { broadcastAuth(state.user); } catch(__) {} if (event === 'PASSWORD_RECOVERY'){ const overlay = ui.overlay; overlay.setAttribute('aria-hidden','false'); showPanel(overlay, 'update', 'Set new password'); setTimeout(function(){ const el = overlay.querySelector('#thg-up-password'); if (el) el.focus(); }, 0); } if (state.user && state.user.email){ if (state.nextUrl){ const to = state.nextUrl; state.nextUrl = null; try { closeAuthModal(ui); } catch(_){} location.href = to; } else { try { closeAuthModal(ui); } catch(_){} } } else { closeMenu(ui); } });
+      const { data: sub } = window.supabase.auth.onAuthStateChange(function(event, session){ state.user = session?.user || null; render(ui); try { broadcastAuth(state.user); } catch(__) {} try { setBuyerEmailLockFromUser(state.user); } catch(__) {} if (event === 'PASSWORD_RECOVERY'){ const overlay = ui.overlay; overlay.setAttribute('aria-hidden','false'); showPanel(overlay, 'update', 'Set new password'); setTimeout(function(){ const el = overlay.querySelector('#thg-up-password'); if (el) el.focus(); }, 0); } if (state.user && state.user.email){ if (state.nextUrl){ const to = state.nextUrl; state.nextUrl = null; try { closeAuthModal(ui); } catch(_){} location.href = to; } else { try { closeAuthModal(ui); } catch(_){} } } else { closeMenu(ui); } });
       state.sub = sub?.subscription || sub || null;
     } catch(_){ }
   }

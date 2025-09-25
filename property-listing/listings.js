@@ -92,15 +92,43 @@ function collectFilters(){
 // ---- New: Parse and apply incoming URL params/session filters ----
 function parseBudgetLabelToRange(label){
   if (!label) return { min: null, max: null };
-  const s = String(label);
+  const s = String(label).trim();
+
+  // Helper to parse "40L", "1.25Cr", plain integers (assume INR)
+  function parseINRToken(tok){
+    tok = String(tok).trim();
+    // Crores
+    let m = tok.match(/^(₹?\s*)?(\d+(?:\.\d+)?)\s*(cr|crore)s?/i);
+    if (m) return Math.round(parseFloat(m[2]) * 10000000);
+    // Lakhs
+    m = tok.match(/^(₹?\s*)?(\d+(?:\.\d+)?)\s*(l|lac|lakh)s?/i);
+    if (m) return Math.round(parseFloat(m[2]) * 100000);
+    // Plain number (already INR)
+    const n = parseInt(tok.replace(/[^0-9]/g, ''), 10);
+    return Number.isFinite(n) ? n : null;
+  }
+
+  // Common shortcuts
   if (/3\s*Cr\s*\+/.test(s)) return { min: 30000000, max: null };
-  if (/2\s*Cr\s*–\s*3\s*Cr/.test(s)) return { min: 20000000, max: 30000000 };
-  if (/1\s*Cr\s*–\s*2\s*Cr/.test(s)) return { min: 10000000, max: 20000000 };
-  if (/50\s*L\s*–\s*1\s*Cr/.test(s) || /₹?50\s*L/.test(s)) return { min: 5000000, max: 10000000 };
-  // Generic fallback: pull digits (assume INR) "min-max"
-  const nums = s.replace(/[^\d\-]+/g,'').split('-').map(n=>parseInt(n,10)).filter(Number.isFinite);
-  if (nums.length === 2) return { min: nums[0], max: nums[1] };
-  if (nums.length === 1) return { min: nums[0], max: null };
+
+  // Normalize common separators: en-dash, hyphen, "to"
+  const parts = s
+    .replace(/–/g, '-')
+    .replace(/—/g, '-')
+    .replace(/to/i, '-')
+    .split('-')
+    .map(t => t.trim())
+    .filter(Boolean);
+
+  if (parts.length === 2){
+    const min = parseINRToken(parts[0]);
+    const max = parseINRToken(parts[1]);
+    return { min: Number.isFinite(min) ? min : null, max: Number.isFinite(max) ? max : null };
+  }
+  if (parts.length === 1){
+    const only = parseINRToken(parts[0]);
+    return { min: Number.isFinite(only) ? only : null, max: null };
+  }
   return { min: null, max: null };
 }
 

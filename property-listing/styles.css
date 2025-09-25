@@ -303,6 +303,15 @@ select[multiple] {
   font-size: 12px;
 }
 
+/* Removable chips */
+.chip-rem{
+  display:inline-flex; align-items:center; gap:6px;
+  padding:6px 10px; border-radius:999px; border:1px solid #eee;
+  background:#fff; cursor:pointer; font-size:12px;
+  transition:background .15s ease, box-shadow .15s ease;
+}
+.chip-rem:hover{ background:#fff7f8; box-shadow:0 2px 8px rgba(110,13,37,.08); }
+
 /* === Price slider styling === */
 /* === Price dual slider === */
 .price-range{

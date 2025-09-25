@@ -40,11 +40,35 @@ function activeFilterBadges(filters){
   const parts = [];
   if (FROM_PREFS) parts.push(`<span class="tag" style="background:#fef3c7;color:#92400e">Filtered by your preferences</span>`);
   Object.entries(filters).forEach(([k,v])=>{
-    if(v && (Array.isArray(v) ? v.length : String(v).trim()!=='') ){
-      parts.push(`<span class="tag">${k}: ${Array.isArray(v)? v.join(', ') : v}</span>`);
-    }
+    if(!v) return;
+    const has = Array.isArray(v) ? v.length>0 : String(v).trim()!=='';
+    if(!has) return;
+    const label = Array.isArray(v)? v.join(', ') : v;
+    const chip = `<button class="chip-rem" data-key="${k}" type="button" aria-label="Remove ${k}"><span>${k}: ${label}</span> ✕</button>`;
+    parts.push(chip);
   });
   wrap.innerHTML = parts.join(' ');
+
+  // Wire remove handlers (clear specific filter then apply)
+  wrap.querySelectorAll('.chip-rem').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const key = btn.getAttribute('data-key');
+      switch(key){
+        case 'q': { const el=document.getElementById('q'); if(el) el.value=''; break; }
+        case 'city': { const el=document.getElementById('city'); if(el) Array.from(el.options).forEach(o=>o.selected=false); break; }
+        case 'locality': { setLocalityAllSelected(); break; }
+        case 'price': { const a=document.getElementById('minPrice'); const b=document.getElementById('maxPrice'); if(a) a.value=''; if(b) b.value=''; try{ document.getElementById('priceMinSlider').dispatchEvent(new Event('input',{bubbles:true})); document.getElementById('priceMaxSlider').dispatchEvent(new Event('input',{bubbles:true})); } catch(_){} break; }
+        case 'type': { const el=document.getElementById('ptype'); if(el) el.value=''; break; }
+        case 'bhk': { const el=document.getElementById('bhk'); if(el) el.value=''; break; }
+        case 'furnished': { const el=document.getElementById('furnished'); if(el) el.value=''; break; }
+        case 'facing': { const el=document.getElementById('facing'); if(el) el.value=''; break; }
+        case 'area': { const a=document.getElementById('minArea'); const b=document.getElementById('maxArea'); if(a) a.value=''; if(b) b.value=''; break; }
+        case 'amenity': { const el=document.getElementById('amenity'); if(el) el.value=''; break; }
+        case 'metro': { const wm=document.getElementById('wantMetro'); const mw=document.getElementById('maxWalk'); if(wm) wm.checked=false; if(mw) mw.value=10; break; }
+      }
+      PAGE=1; apply(); syncUrlWithFilters();
+    });
+  });
 }
 
 function collectFilters(){

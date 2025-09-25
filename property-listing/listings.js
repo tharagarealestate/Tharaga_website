@@ -486,6 +486,122 @@ function wireUI(){
     if (toActivate) setActivePill(toActivate);
   })();
 
+  // ======== Preset chips (budget/BHK) & recent searches ========
+  (function setupPresetsAndSaved(){
+    const PRESETS = {
+      budget: [
+        { label:'₹40L–₹50L', min:4000000, max:5000000 },
+        { label:'₹50L–₹75L', min:5000000, max:7500000 },
+        { label:'₹75L–₹1Cr', min:7500000, max:10000000 },
+        { label:'₹1Cr–₹1.5Cr', min:10000000, max:15000000 }
+      ],
+      bhk: ['1','2','3','4']
+    };
+
+    const presetWrap = document.getElementById('presetChips');
+    if (presetWrap && !presetWrap.dataset.ready){
+      presetWrap.dataset.ready='1';
+      // Budget
+      PRESETS.budget.forEach(b=>{
+        const btn = document.createElement('button');
+        btn.className = 'chip';
+        btn.textContent = `Budget: ${b.label}`;
+        btn.addEventListener('click', ()=>{
+          const a=document.getElementById('minPrice'); const c=document.getElementById('maxPrice');
+          if (a) a.value = String(b.min);
+          if (c) c.value = String(b.max);
+          try{ document.getElementById('priceMinSlider').value = String(b.min); document.getElementById('priceMinSlider').dispatchEvent(new Event('input',{bubbles:true})); } catch(_){}
+          try{ document.getElementById('priceMaxSlider').value = String(b.max); document.getElementById('priceMaxSlider').dispatchEvent(new Event('input',{bubbles:true})); } catch(_){}
+          PAGE=1; apply(); syncUrlWithFilters();
+        });
+        presetWrap.appendChild(btn);
+      });
+      // BHK
+      PRESETS.bhk.forEach(n=>{
+        const btn = document.createElement('button');
+        btn.className = 'chip';
+        btn.textContent = `${n} BHK`;
+        btn.addEventListener('click', ()=>{
+          const el=document.getElementById('bhk'); if(el){ el.value=String(n); el.dispatchEvent(new Event('change',{bubbles:true})); }
+          PAGE=1; apply(); syncUrlWithFilters();
+        });
+        presetWrap.appendChild(btn);
+      });
+    }
+
+    // Save search
+    const saveBtn = document.getElementById('saveSearch');
+    const recentWrap = document.getElementById('recentChips');
+    function snapshotFilters(){
+      const F = collectFilters();
+      return {
+        q: F.q, locality: F.localitySel, minP: F.minP, maxP: F.maxP, ptype: F.ptype, bhk: F.bhk,
+        furnished: F.furnished, facing: F.facing, minA: F.minA, maxA: F.maxA, amenity: F.amenity,
+        wantMetro: F.wantMetro, maxWalk: F.maxWalk, sort: F.sort
+      };
+    }
+    function filtersToLabel(f){
+      const parts = [];
+      if (f.q) parts.push(f.q);
+      if (f.locality && f.locality.length) parts.push(f.locality.join(','));
+      if (f.minP || f.maxP) parts.push(`₹${(f.minP||0).toLocaleString('en-IN')}-${(f.maxP||0).toLocaleString('en-IN')}`);
+      if (f.ptype) parts.push(f.ptype);
+      if (f.bhk) parts.push(`${f.bhk} BHK`);
+      return parts.join(' • ') || 'All properties';
+    }
+    function loadSaved(){ try { return JSON.parse(localStorage.getItem('tharaga_saved_searches')||'[]'); } catch(_) { return []; } }
+    function saveSaved(list){ try { localStorage.setItem('tharaga_saved_searches', JSON.stringify(list.slice(0,8))); } catch(_){} }
+    function same(a,b){ try { return JSON.stringify(a)===JSON.stringify(b); } catch(_) { return false; } }
+    function hydrateRecent(){
+      if (!recentWrap) return;
+      recentWrap.innerHTML = '';
+      const arr = loadSaved();
+      arr.forEach((item, idx)=>{
+        const btn = document.createElement('button');
+        btn.className = 'chip';
+        btn.textContent = filtersToLabel(item);
+        btn.title = 'Apply saved search';
+        btn.addEventListener('click', ()=>{
+          // Push into URL then re-hydrate controls via applyQueryParams
+          const params = new URLSearchParams(location.search);
+          params.set('q', item.q||''); if (!item.q) params.delete('q');
+          if (item.locality && item.locality.length) params.set('locality', item.locality.join(',')); else params.delete('locality');
+          if (item.minP) params.set('price_min', String(item.minP)); else params.delete('price_min');
+          if (item.maxP) params.set('price_max', String(item.maxP)); else params.delete('price_max');
+          if (item.ptype) params.set('ptype', String(item.ptype).toLowerCase()); else params.delete('ptype');
+          if (item.bhk) params.set('bhk', String(item.bhk)); else params.delete('bhk');
+          if (item.furnished) params.set('furnished', String(item.furnished).toLowerCase()); else params.delete('furnished');
+          if (item.facing) params.set('facing', String(item.facing).toLowerCase()); else params.delete('facing');
+          if (item.minA) params.set('area_min', String(item.minA)); else params.delete('area_min');
+          if (item.maxA) params.set('area_max', String(item.maxA)); else params.delete('area_max');
+          if (item.amenity) params.set('amenity', item.amenity); else params.delete('amenity');
+          if (item.wantMetro) params.set('near_metro','1'); else params.delete('near_metro');
+          if (item.maxWalk) params.set('max_walk', String(item.maxWalk)); else params.delete('max_walk');
+          if (item.sort && item.sort!=='relevance') params.set('sort', item.sort); else params.delete('sort');
+          history.replaceState(null, '', `${location.pathname}?${params.toString()}`);
+          applyQueryParams(); apply();
+        });
+        recentWrap.appendChild(btn);
+      });
+      if (saveBtn){
+        const current = snapshotFilters();
+        const arr2 = loadSaved();
+        const already = arr2.some(s => same(s, current));
+        saveBtn.disabled = already;
+        saveBtn.textContent = already ? 'Saved ✓' : 'Save search';
+      }
+    }
+    hydrateRecent();
+    if (saveBtn){
+      saveBtn.addEventListener('click', ()=>{
+        const s = snapshotFilters();
+        const arr = loadSaved();
+        if (!arr.some(x => same(x, s))){ arr.unshift(s); saveSaved(arr); }
+        hydrateRecent();
+      });
+    }
+  })();
+
   document.querySelector('#reset')?.addEventListener('click', ()=>{
     ['q','minPrice','maxPrice','ptype','bhk','furnished','facing','minArea','maxArea','amenity'].forEach(id=>{
       const el=document.getElementById(id); if(el) el.value='';

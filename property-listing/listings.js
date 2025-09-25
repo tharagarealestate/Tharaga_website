@@ -113,7 +113,7 @@ function applyQueryParams(){
     const params = new URLSearchParams(location.search);
 
     // Support both buyer-form and home-search param names
-    const qParam = params.get('q') || params.get('location') || '';
+    const qParam = params.get('q') || params.get('location') || params.get('locality') || '';
     const typeParam = (params.get('ptype') || params.get('type') || params.get('property_type') || '').toLowerCase();
     const budgetLabel = params.get('budget') || '';
     const cityParam = params.get('city') || '';
@@ -149,7 +149,7 @@ function applyQueryParams(){
 
     // Apply search text: prefer q, else location or city
     const qEl = document.querySelector('#q');
-    const qValue = (params.get('q') || params.get('location') || cityParam || '').trim();
+    const qValue = (params.get('q') || params.get('location') || params.get('locality') || cityParam || '').trim();
     if (qEl && qValue) {
       qEl.value = qValue;
       qEl.dispatchEvent(new Event('input', { bubbles: true }));
@@ -442,16 +442,39 @@ async function enrichWithMetro(){
 
 async function init(){
   try{
+    // Early: hydrate from URL so visible controls reflect deep link immediately
+    try { applyQueryParams(); } catch(_) {}
+
     ALL = await App.fetchProperties();
     hydrateCityOptions(); hydrateLocalityOptions([]);
     await enrichWithMetro();
+    // If the URL has city/locality but no explicit q, prefer locality as search text for better matching
+    try {
+      const params = new URLSearchParams(location.search);
+      const qMissing = !(params.get('q') && params.get('q')!.trim());
+      const localityParam = params.get('locality') || '';
+      if (qMissing && localityParam) {
+        const qEl = document.querySelector('#q');
+        if (qEl) { qEl.value = localityParam; qEl.dispatchEvent(new Event('input', { bubbles: true })); }
+      }
+    } catch(_) {}
   } catch(e){
     console.error("Init failed:", e);
   }
-  // Hydrate filters from URL/session BEFORE wiring UI and initial apply
+  // Re-apply hydration after options and data are ready (ensures locality/select mapping)
   applyQueryParams();
   wireUI();
   apply();
+
+  // Safety: re-run hydration a couple of times to catch any late-bound UI/async
+  try {
+    [200, 500, 900].forEach((ms)=> setTimeout(()=>{ try { applyQueryParams(); apply(); } catch(_){} }, ms));
+  } catch(_) {}
 }
 
-document.addEventListener('DOMContentLoaded', init);
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', init);
+} else {
+  // DOM is already parsed (e.g., scripts loaded late or tests fast) — run immediately
+  init();
+}

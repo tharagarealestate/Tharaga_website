@@ -25,18 +25,20 @@ export function RecommendationsCarousel({ items = [], isLoading = false, error =
     <div className="space-y-3">
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-semibold tracking-tight">Recommended for you</h2>
-      </div>
-      <div className="relative">
-        <div className="flex gap-4 overflow-x-auto pb-2">
-          {isLoading ? (
-            Array.from({ length: 4 }).map((_, i) => <CardSkeleton key={i} />)
-          ) : items.length === 0 ? (
-            <EmptyState />
-          ) : (
-            items.map((item) => <PropertyCard key={item.property_id} item={item} />)
-          )}
+        <div className="hidden md:flex items-center gap-2">
+          <NavButton direction="prev" />
+          <NavButton direction="next" />
         </div>
       </div>
+      <ScrollableRow>
+        {isLoading ? (
+          Array.from({ length: 4 }).map((_, i) => <CardSkeleton key={i} />)
+        ) : items.length === 0 ? (
+          <EmptyState />
+        ) : (
+          items.map((item) => <PropertyCard key={item.property_id} item={item} />)
+        )}
+      </ScrollableRow>
     </div>
   )
 }
@@ -79,6 +81,50 @@ function WhyContent({ reasons }: { reasons: string[] }) {
         <li key={i}>{reason}</li>
       ))}
     </ul>
+  )
+}
+
+function NavButton({ direction }: { direction: 'prev' | 'next' }) {
+  return (
+    <button
+      className="rounded-full border border-deepBlue/20 text-deepBlue/80 hover:text-deepBlue hover:bg-deepBlue/5 px-3 py-1 text-sm"
+      data-dir={direction}
+      aria-label={direction === 'prev' ? 'Previous' : 'Next'}
+      onClick={(e) => {
+        const container = (e.currentTarget as HTMLButtonElement).closest('[data-scroll-root]')?.querySelector('[data-scroll-row]') as HTMLElement | null
+        if (!container) return
+        const delta = direction === 'prev' ? -1 : 1
+        container.scrollBy({ left: delta * (container.clientWidth * 0.8), behavior: 'smooth' })
+      }}
+    >
+      {direction === 'prev' ? '‹' : '›'}
+    </button>
+  )
+}
+
+function ScrollableRow({ children }: { children: React.ReactNode }) {
+  const ref = React.useRef<HTMLDivElement>(null)
+  React.useEffect(() => {
+    const el = ref.current
+    if (!el) return
+    const onKey = (ev: KeyboardEvent) => {
+      if (ev.key === 'ArrowRight') el.scrollBy({ left: el.clientWidth * 0.8, behavior: 'smooth' })
+      if (ev.key === 'ArrowLeft') el.scrollBy({ left: -el.clientWidth * 0.8, behavior: 'smooth' })
+    }
+    el.addEventListener('keydown', onKey)
+    return () => el.removeEventListener('keydown', onKey)
+  }, [])
+  return (
+    <div data-scroll-root>
+      <div
+        ref={ref}
+        data-scroll-row
+        tabIndex={0}
+        className="flex gap-4 overflow-x-auto pb-2 scroll-smooth focus:outline-none"
+      >
+        {children}
+      </div>
+    </div>
   )
 }
 

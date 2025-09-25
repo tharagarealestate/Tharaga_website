@@ -4,7 +4,7 @@ import logging
 import os
 from typing import Optional
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 
 from .schemas import RecommendationQuery, RecommendationResponse, RecommendationItem, PropertySpecs
@@ -78,6 +78,28 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+@app.middleware("http")
+async def add_request_id_logging(request: Request, call_next):
+    request_id = request.headers.get("x-request-id") or request.headers.get("x-cloud-trace-context", "").split(";")[0]
+    try:
+        response = await call_next(request)
+    except Exception:
+        logger.exception("request_failed", extra={
+            "path": request.url.path,
+            "method": request.method,
+            "request_id": request_id,
+        })
+        raise
+    response.headers["x-request-id"] = request_id or ""
+    logger.info("request_completed", extra={
+        "path": request.url.path,
+        "method": request.method,
+        "status_code": getattr(response, 'status_code', None),
+        "request_id": request_id,
+    })
+    return response
 
 
 # In a real deployment, inject a database-backed recommender via dependency injection.

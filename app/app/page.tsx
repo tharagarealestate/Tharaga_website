@@ -1,12 +1,14 @@
 import { fetchRecommendations } from '@/lib/api'
 import type { RecommendationItem } from '@/types/recommendations'
 import { RecommendationsCarousel } from '@/features/recommendations/RecommendationsCarousel'
+import { getOrCreateSessionId } from '@/lib/session'
 
 export default async function Home() {
   let items: RecommendationItem[] = []
   let error: string | null = null
   try {
-    const data = await fetchRecommendations({ session_id: 'demo', num_results: 6 })
+    const sessionId = getOrCreateSessionId()
+    const data = await fetchRecommendations({ session_id: sessionId, num_results: 6 })
     items = data.items
   } catch (e) {
     error = 'Failed to load recommendations'

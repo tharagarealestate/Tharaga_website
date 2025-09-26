@@ -7,7 +7,7 @@ from typing import Optional
 
 from fastapi import FastAPI, HTTPException, Request
 from prometheus_client import Counter, Histogram, generate_latest, CONTENT_TYPE_LATEST
-from fastapi.responses import Response
+from fastapi.responses import Response, JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 
 from .schemas import RecommendationQuery, RecommendationResponse, RecommendationItem, PropertySpecs
@@ -113,8 +113,16 @@ async def add_request_id_logging(request: Request, call_next):
 
 @app.get("/metrics")
 def metrics() -> Response:
+    if os.getenv("ENABLE_METRICS", "false").lower() != "true":
+        raise HTTPException(status_code=404, detail="Not Found")
     data = generate_latest()
     return Response(content=data, media_type=CONTENT_TYPE_LATEST)
+
+
+@app.post("/api/__vitals")
+async def web_vitals(_: Request) -> JSONResponse:
+    # No-op collector endpoint to avoid 404s; can be wired to analytics later
+    return JSONResponse({"ok": True})
 
 
 # In a real deployment, inject a database-backed recommender via dependency injection.

@@ -413,6 +413,37 @@ function apply(){
       return `<button class="${cls}" data-page="${n}">${n}</button>`;
     }).join('');
   }
+
+  // Wire compare buttons after render
+  try {
+    const drawer = document.getElementById('compareDrawer');
+    const openBtn = document.getElementById('compareOpen');
+    const clearBtn = document.getElementById('compareClear');
+    const countEl = document.getElementById('compareCount');
+    const modal = document.getElementById('compareModal');
+    const closeBtn = document.getElementById('compareClose');
+    const grid = document.getElementById('compareGrid');
+    const sel = new Set(JSON.parse(localStorage.getItem('thg_compare_ids')||'[]'));
+
+    function persist(){ localStorage.setItem('thg_compare_ids', JSON.stringify(Array.from(sel))); }
+    function updateDrawer(){ const n=sel.size; if (!drawer) return; drawer.hidden = n===0; if (countEl) countEl.textContent = String(n); }
+    function renderModal(){ if (!grid) return; const props = ALL.filter(p=> sel.has(String(p.id))); grid.innerHTML = props.map(p=> `<div class="card"><div class="card-img" style="height:140px"><img class="blur-up" loading="lazy" src="${(p.images&&p.images[0])||''}" onload="this.classList.remove('blur-up')"></div><div style="padding:10px"><div style="font-weight:700">${p.title}</div><div style="color:var(--muted);font-size:12px">${p.locality||''}${p.city?', '+p.city:''}</div><div style="margin-top:6px" class="row"><span class="tag">${p.bhk||'-'} BHK</span><span class="tag">${p.carpetAreaSqft||'-'} sqft</span></div></div></div>`).join(''); }
+
+    document.querySelectorAll('.btn-compare').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        const id = btn.getAttribute('data-id');
+        if (!id) return;
+        if (sel.has(id)) sel.delete(id); else sel.add(id);
+        persist(); updateDrawer();
+        try { const t=document.getElementById('toast'); if (t){ t.textContent = sel.has(id)? 'Added to compare' : 'Removed from compare'; t.hidden=false; clearTimeout(t.__t); t.__t=setTimeout(()=>{ t.hidden=true; }, 1200); } } catch(_){}
+      });
+    });
+    updateDrawer();
+    clearBtn?.addEventListener('click', ()=>{ sel.clear(); persist(); updateDrawer(); });
+    openBtn?.addEventListener('click', ()=>{ if (!modal) return; renderModal(); modal.hidden=false; });
+    closeBtn?.addEventListener('click', ()=>{ if (modal) modal.hidden=true; });
+    modal?.querySelector('.compare-backdrop')?.addEventListener('click', ()=>{ modal.hidden=true; });
+  } catch(_){ }
 }
 
 function goto(n){ PAGE = n; apply(); }
@@ -433,6 +464,7 @@ function wireUI(){
       setTimeout(()=>{ try { if (res) res.classList.remove('highlight'); } catch(_) {} applyBtn.disabled = false; applyBtn.textContent = prev; }, 300);
       // Toast for saved search match state refresh
       try { const saveBtn=document.getElementById('saveSearch'); saveBtn && saveBtn.dispatchEvent(new Event('thg-refresh-saved', { bubbles:false })); } catch(_) {}
+      try{ const pill=document.getElementById('newResultsPill'); pill.hidden=true; } catch(_){}
     });
   }
 
@@ -441,7 +473,7 @@ function wireUI(){
     document.querySelector(sel)?.addEventListener('input', debApply)
   );
   ['#sort','#ptype','#bhk','#furnished','#facing','#city','#locality','#wantMetro','#maxWalk'].forEach(sel=>
-    document.querySelector(sel)?.addEventListener('change', ()=>{ PAGE=1; apply(); syncUrlWithFilters(); })
+    document.querySelector(sel)?.addEventListener('change', ()=>{ PAGE=1; apply(); syncUrlWithFilters(); try{ const pill=document.getElementById('newResultsPill'); pill.hidden=false; clearTimeout(pill.__t); pill.__t=setTimeout(()=>{ pill.hidden=true; }, 1800); } catch(_){} })
   );
 
   document.querySelector('#pager')?.addEventListener('click', (e)=>{

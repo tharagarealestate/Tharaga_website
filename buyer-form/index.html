@@ -1781,14 +1781,16 @@ document.addEventListener("DOMContentLoaded", async () => {
     } catch(_) {}
 
     // Initial sync from current session (network or persisted client)
+    // IMPORTANT: Do not unlock on a null/unknown session here to avoid flicker
+    // when the client is still hydrating the persisted session. We only lock
+    // if we definitively have a user; otherwise we keep whatever cached state
+    // we already applied above.
     try {
       const sess = await window.supabase?.auth?.getSession();
       const user = sess?.data?.session?.user || null;
       if (user?.email) {
         try { window.__authGateLoggedIn = true; } catch(_) {}
         lockBuyerEmail(user.email);
-      } else {
-        unlockBuyerEmail();
       }
     } catch(_) {}
 
@@ -1796,7 +1798,15 @@ document.addEventListener("DOMContentLoaded", async () => {
     try {
       const { data: sub } = window.supabase?.auth?.onAuthStateChange?.((event, session) => {
         const u = session?.user || null;
-        if (u?.email) lockBuyerEmail(u.email); else unlockBuyerEmail();
+        if (u?.email) {
+          lockBuyerEmail(u.email);
+          return;
+        }
+        // Only unlock on explicit sign-out/delete events; do NOT unlock on
+        // INITIAL_SESSION or other transitional events to prevent clearing.
+        if (event === 'SIGNED_OUT' || event === 'USER_DELETED') {
+          unlockBuyerEmail();
+        }
       }) || {};
       try { window.__buyerFormAuthSub = sub?.subscription || sub || null; } catch(_) {}
     } catch(_) {}
@@ -1806,14 +1816,28 @@ document.addEventListener("DOMContentLoaded", async () => {
       if ('BroadcastChannel' in window) {
         const bc = new BroadcastChannel('tharaga-auth');
         bc.addEventListener('message', (ev) => {
-          try { const email = ev?.data?.user?.email || null; if (email) lockBuyerEmail(email); } catch(_) {}
+          try {
+            const email = ev?.data?.user?.email || null;
+            if (email) { lockBuyerEmail(email); return; }
+            // Optional sign-out signal from header
+            if (ev?.data?.type === 'THARAGA_AUTH_SIGNED_OUT') {
+              unlockBuyerEmail();
+            }
+          } catch(_) {}
         });
       }
       window.addEventListener('message', (ev) => {
-        try { if (ev?.data?.type === 'THARAGA_AUTH_SUCCESS' && ev?.data?.user?.email) lockBuyerEmail(ev.data.user.email); } catch(_) {}
+        try {
+          if (ev?.data?.type === 'THARAGA_AUTH_SUCCESS' && ev?.data?.user?.email) { lockBuyerEmail(ev.data.user.email); return; }
+          if (ev?.data?.type === 'THARAGA_AUTH_SIGNED_OUT' || ev?.data?.type === 'THARAGA_AUTH_SIGNED_OUT_TEST') { unlockBuyerEmail(); return; }
+        } catch(_) {}
       });
       window.addEventListener('storage', () => {
-        try { const payload = JSON.parse(localStorage.getItem('__tharaga_magic_continue') || 'null'); if (payload?.user?.email) lockBuyerEmail(payload.user.email); } catch(_) {}
+        try {
+          const payload = JSON.parse(localStorage.getItem('__tharaga_magic_continue') || 'null');
+          if (payload?.user?.email) { lockBuyerEmail(payload.user.email); }
+          else { unlockBuyerEmail(); }
+        } catch(_) {}
       });
     } catch(_) {}
   });

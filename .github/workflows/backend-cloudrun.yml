@@ -1,35 +1,10 @@
-name: Backend - Build & Deploy (Cloud Run)
+name: Backend - Build & Deploy (Cloud Run) [disabled]
 
 on:
-  push:
-    branches: [ main ]
-    paths:
-      - 'backend/**'
+  workflow_dispatch:
 
 jobs:
-  build-deploy:
+  noop:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - name: Set up gcloud
-        uses: google-github-actions/setup-gcloud@v2
-        with:
-          project_id: ${{ secrets.GCP_PROJECT_ID }}
-          service_account_key: ${{ secrets.GCP_SA_KEY }}
-          export_default_credentials: true
-      - name: Configure Docker auth
-        run: gcloud auth configure-docker us-central1-docker.pkg.dev -q
-      - name: Build & push image
-        working-directory: backend
-        run: |
-          IMAGE=us-central1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/tharaga/tharaga-backend:${{ github.sha }}
-          gcloud builds submit --tag "$IMAGE" .
-          echo "IMAGE=$IMAGE" >> $GITHUB_ENV
-      - name: Deploy to Cloud Run
-        run: |
-          gcloud run deploy tharaga-backend \
-            --region us-central1 \
-            --image "$IMAGE" \
-            --platform managed \
-            --allow-unauthenticated \
-            --set-env-vars LOG_LEVEL=INFO,ALLOWED_ORIGINS=*
+      - run: echo "Switched to Cloud Build triggers for backend deployment."

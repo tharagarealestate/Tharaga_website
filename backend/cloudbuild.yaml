@@ -1,7 +1,27 @@
+substitutions:
+  _REGION: 'us-central1'
+  _SERVICE: 'tharaga-backend'
+  _REPO: 'tharaga'
+
 steps:
-- name: 'gcr.io/cloud-builders/docker'
-  args: ['build','-t','gcr.io/$PROJECT_ID/tharaga-backend:$SHORT_SHA','.']
-- name: 'gcr.io/cloud-builders/docker'
-  args: ['push','gcr.io/$PROJECT_ID/tharaga-backend:$SHORT_SHA']
+  # Build and push to Artifact Registry
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['build','-t','${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/${_SERVICE}:$SHORT_SHA','.']
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push','${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/${_SERVICE}:$SHORT_SHA']
+
+  # Deploy to Cloud Run
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: gcloud
+    args:
+      - 'run'
+      - 'deploy'
+      - '${_SERVICE}'
+      - '--region=${_REGION}'
+      - '--image=${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/${_SERVICE}:$SHORT_SHA'
+      - '--platform=managed'
+      - '--allow-unauthenticated'
+      - '--set-env-vars=LOG_LEVEL=INFO,ALLOWED_ORIGINS=*'
+
 images:
-- 'gcr.io/$PROJECT_ID/tharaga-backend:$SHORT_SHA'
+  - '${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/${_SERVICE}:$SHORT_SHA'

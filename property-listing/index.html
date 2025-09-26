@@ -190,6 +190,21 @@
       </div>
     </section>
 
+    <!-- Premium toolbar: presets, recent searches, save search -->
+    <section class="filter-toolbar" style="margin:10px 0 6px">
+      <div class="row" id="presetChips" style="gap:8px; flex-wrap:wrap"></div>
+      <div class="row" style="justify-content:space-between; gap:8px; margin-top:8px; align-items:center">
+        <div id="recentChips" class="row" style="gap:8px; flex-wrap:wrap"></div>
+        <div class="row" style="gap:10px; align-items:center">
+          <label for="autoApplyToggle" class="row" style="gap:6px; align-items:center; font-size:13px; color:var(--muted)">
+            <input id="autoApplyToggle" type="checkbox" />
+            <span>Auto-apply</span>
+          </label>
+          <button id="saveSearch" class="btn ghost">Save search</button>
+        </div>
+      </div>
+    </section>
+
     <!-- ✅ MAP SECTION -->
   <!--<section id="mapSection" style="margin:20px 0;">
     <div id="map" style="height: 500px; width: 100%; border-radius: 10px;"></div>
@@ -201,10 +216,36 @@
       <div class="row" id="activeFilters" style="gap:8px"></div>
     </section>
 
+    <div id="resultNotice" class="result-notice" aria-live="polite" role="status" hidden></div>
     <section id="results" class="grid" style="grid-template-columns:repeat(auto-fill,minmax(300px,1fr));"></section>
     <div id="pager" class="pager"></div>
   </main>
 
   <footer class="footer">© Tharaga — Safe, Transparent, Verified</footer>
+  <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+  <button id="newResultsPill" class="pill-floating" type="button" hidden>New results</button>
+
+  <!-- Compare drawer -->
+  <div id="compareDrawer" class="compare-drawer" hidden>
+    <div class="container" style="display:flex;align-items:center;justify-content:space-between;gap:10px">
+      <div><strong id="compareCount">0</strong> selected for compare</div>
+      <div class="row" style="gap:8px">
+        <button id="compareClear" class="btn secondary" type="button">Clear</button>
+        <button id="compareOpen" class="btn" type="button">Compare</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Compare modal -->
+  <div id="compareModal" class="compare-modal" hidden>
+    <div class="compare-backdrop"></div>
+    <div class="compare-card">
+      <div class="row" style="justify-content:space-between;align-items:center">
+        <div style="font-weight:800">Compare properties</div>
+        <button id="compareClose" class="btn ghost" type="button">Close</button>
+      </div>
+      <div id="compareGrid" class="grid" style="grid-template-columns:repeat(auto-fit,minmax(260px,1fr));margin-top:12px"></div>
+    </div>
+  </div>
 </body>
 </html>

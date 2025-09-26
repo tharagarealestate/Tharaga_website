@@ -696,6 +696,14 @@
   </h3>
   <p style="text-align:center; margin:0 0 16px;">OTP-verified leads only. No spam. No brokerage.</p>
 
+  <!-- Quick presets -->
+  <div id="bf-presets" class="row" style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-bottom:10px">
+    <button type="button" class="chip" data-bf="budget" data-min="4000000" data-max="5000000">Budget: ₹40L–₹50L</button>
+    <button type="button" class="chip" data-bf="budget" data-min="5000000" data-max="7500000">Budget: ₹50L–₹75L</button>
+    <button type="button" class="chip" data-bf="bhk" data-val="2">2 BHK</button>
+    <button type="button" class="chip" data-bf="bhk" data-val="3">3 BHK</button>
+  </div>
+
   <!-- Netlify Forms attrs -->
   <form name="buyer-intake"
         method="POST"
@@ -1077,6 +1085,32 @@ async function getRecaptcha() {
 
 <!-- Supabase + Transformers (browser) + Match + Render -->
 <script type="module">
+  // Buyer-form presets: budget and BHK chips
+  const wrap = document.getElementById('bf-presets');
+  if (wrap) {
+    wrap.addEventListener('click', (e)=>{
+      const b = e.target.closest('.chip'); if (!b) return;
+      const t = b.getAttribute('data-bf');
+      if (t === 'budget'){
+        const min = Number(b.getAttribute('data-min')); const max = Number(b.getAttribute('data-max'));
+        const sel = document.querySelector('#buyerForm select[name="budget"]');
+        if (sel){
+          const label = (min===4000000 && max===5000000)?'₹40L – ₹50L': (min===5000000 && max===7500000)?'₹50L – ₹75L':'';
+          if (label){ sel.value = label; sel.dispatchEvent(new Event('change',{bubbles:true})); }
+        }
+      }
+      if (t === 'bhk'){
+        const v = b.getAttribute('data-val');
+        const sel = document.querySelector('#buyerForm select[name="property_type"]');
+        // Keep type unchanged; just append hint to notes or set BHK if a field exists later
+        try {
+          const notes = document.querySelector('#buyerForm textarea[name="notes"]');
+          if (notes && v && !/bhk/i.test(notes.value)) notes.value = (notes.value? (notes.value+"; "):"") + `${v} BHK preferred`;
+        } catch(_){}
+      }
+    });
+  }
+</script>
   import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
   import { pipeline }     from "https://cdn.jsdelivr.net/npm/@xenova/transformers@2.14.1/dist/transformers.min.js";
 

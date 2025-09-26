@@ -733,10 +733,38 @@
                style="width:100%; padding:10px; border-radius:8px; border:1px solid #ddd;">
       </label>
 
+      <script>
+      (function(){
+        try {
+          var inp = document.querySelector('#buyerForm [name="email"]');
+          if (!inp) return;
+          function readCached(){
+            try { var cached = JSON.parse(localStorage.getItem('__tharaga_magic_continue')||'null'); var em = cached && cached.user && cached.user.email || ''; if (em) return em; } catch(_){}
+            try { var raw = localStorage.getItem('supabase.auth.token'); if (raw){ var j = JSON.parse(raw); var em2 = (j && (j.currentSession && j.currentSession.user && j.currentSession.user.email)) || (j && j.user && j.user.email) || (j && j.session && j.session.user && j.session.user.email) || ''; if (em2) return em2; } } catch(_){}
+            return '';
+          }
+          var email = readCached();
+          if (email){
+            inp.value = email;
+            inp.setAttribute('data-session-email', email);
+            inp.readOnly = true; inp.disabled = true; inp.setAttribute('aria-readonly','true');
+            try { inp.setAttribute('autocomplete','off'); inp.setAttribute('autocapitalize','off'); inp.setAttribute('spellcheck','false'); } catch(_){}
+            try {
+              var hid = document.getElementById('buyer-email-hidden');
+              if (!hid){ hid = document.createElement('input'); hid.type='hidden'; hid.name='email'; hid.id='buyer-email-hidden'; inp.parentElement && inp.parentElement.appendChild(hid); }
+              hid.value = email;
+            } catch(_){ }
+            try { var badge = document.getElementById('emailLockBadge'); if (badge) badge.style.display = 'inline-block'; } catch(_){}
+          }
+        } catch(_){ }
+      })();
+      </script>
+
       <label style="display:block;">
         <span>Email</span>
         <input required type="email" name="email" placeholder="you@example.com"
                style="width:100%; padding:10px; border-radius:8px; border:1px solid #ddd;">
+        <div id="emailLockBadge" style="display:none;margin-top:6px;width:max-content;padding:4px 8px;border-radius:999px;border:1px solid #a7f3d0;background:#ecfdf5;color:#065f46;font-size:12px;font-weight:600;">🔒 Locked to your account</div>
         <small id="emailNotice" style="display:none;color:#b45309;margin-top:6px;display:block;">
           Please enter your account email shown at the top-right header.
         </small>
@@ -1706,6 +1734,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         emailInput.disabled = true;
         try { emailInput.setAttribute('data-original-name', 'email'); emailInput.removeAttribute('name'); } catch(_) {}
       } catch(_) {}
+      try { const badge = document.getElementById('emailLockBadge'); if (badge) badge.style.display = 'inline-block'; } catch(_) {}
       try {
         emailInput.addEventListener('beforeinput', prevent);
         emailInput.addEventListener('keydown', prevent);
@@ -1742,6 +1771,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         const hidden = document.getElementById('buyer-email-hidden');
         if (hidden && hidden.parentElement) hidden.parentElement.removeChild(hidden);
       } catch(_) {}
+      try { const badge = document.getElementById('emailLockBadge'); if (badge) badge.style.display = 'none'; } catch(_) {}
     }
 
     // Initial sync from local cache (no network) then confirm with Supabase

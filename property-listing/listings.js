@@ -736,6 +736,16 @@ async function enrichWithMetro(){
 
 async function init(){
   try{
+    // Ensure compare modal starts closed and has basic close handlers bound immediately
+    try {
+      const modalEarly = document.getElementById('compareModal');
+      const closeEarly = document.getElementById('compareClose');
+      const backdropEarly = modalEarly?.querySelector('.compare-backdrop');
+      if (modalEarly) modalEarly.hidden = true;
+      closeEarly?.addEventListener('click', ()=>{ try { modalEarly.hidden = true; } catch(_){} });
+      backdropEarly?.addEventListener('click', ()=>{ try { modalEarly.hidden = true; } catch(_){} });
+    } catch(_) {}
+
     // Early: hydrate from URL so visible controls reflect deep link immediately
     try { applyQueryParams(); } catch(_) {}
 

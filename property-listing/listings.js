@@ -469,11 +469,14 @@ function wireUI(){
   }
 
   const debApply = deb(()=>{ PAGE=1; apply(); }, 120);
+  const autoToggle = document.getElementById('autoApplyToggle');
+  const handleInput = ()=>{ if (autoToggle?.checked){ PAGE=1; apply(); syncUrlWithFilters(); } else { debApply(); } };
   ['#minPrice','#maxPrice','#minArea','#maxArea','#amenity','#q'].forEach(sel=>
-    document.querySelector(sel)?.addEventListener('input', debApply)
+    document.querySelector(sel)?.addEventListener('input', handleInput)
   );
+  const handleChange = ()=>{ PAGE=1; apply(); syncUrlWithFilters(); try{ const pill=document.getElementById('newResultsPill'); pill.hidden=false; clearTimeout(pill.__t); pill.__t=setTimeout(()=>{ pill.hidden=true; }, 1800); } catch(_){} };
   ['#sort','#ptype','#bhk','#furnished','#facing','#city','#locality','#wantMetro','#maxWalk'].forEach(sel=>
-    document.querySelector(sel)?.addEventListener('change', ()=>{ PAGE=1; apply(); syncUrlWithFilters(); try{ const pill=document.getElementById('newResultsPill'); pill.hidden=false; clearTimeout(pill.__t); pill.__t=setTimeout(()=>{ pill.hidden=true; }, 1800); } catch(_){} })
+    document.querySelector(sel)?.addEventListener('change', ()=>{ if (autoToggle?.checked){ PAGE=1; apply(); syncUrlWithFilters(); } else { handleChange(); } })
   );
 
   document.querySelector('#pager')?.addEventListener('click', (e)=>{
@@ -641,7 +644,16 @@ function wireUI(){
         const arr = loadSaved();
         if (!arr.some(x => same(x, s))){ arr.unshift(s); saveSaved(arr); }
         hydrateRecent();
-        try { const t=document.getElementById('toast'); if (t){ t.textContent='Search saved'; t.hidden=false; clearTimeout(t.__t); t.__t=setTimeout(()=>{ t.hidden=true; }, 1400); } } catch(_){}
+        try { 
+          const t=document.getElementById('toast'); 
+          if (t){ 
+            t.innerHTML='Search saved <span class="actions"><button class="link" id="toastUndo">Undo</button></span>';
+            t.hidden=false; clearTimeout(t.__t); t.__t=setTimeout(()=>{ t.hidden=true; }, 4000);
+            // Undo: remove the very latest saved search
+            const undo = ()=>{ const cur = loadSaved(); cur.shift(); saveSaved(cur); hydrateRecent(); t.hidden=true; };
+            const btn = document.getElementById('toastUndo'); if (btn) btn.onclick = undo;
+          }
+        } catch(_){}
       });
       // Allow other flows to refresh saved-button state
       saveBtn.addEventListener('thg-refresh-saved', hydrateRecent);

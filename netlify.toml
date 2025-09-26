@@ -60,9 +60,5 @@
     Permissions-Policy = "geolocation=(), microphone=()"
     Content-Security-Policy = "default-src 'self'; img-src 'self' https: data:; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; connect-src 'self' https://api.tharaga.co.in; frame-ancestors 'none'; base-uri 'self'"
 
-[context.production.environment]
-  NEXT_PUBLIC_API_URL = "https://api.tharaga.co.in"
-
-[context.deploy-preview.environment]
-  NEXT_PUBLIC_API_URL = "https://api.tharaga.co.in"
+## Rely on /api proxy; no public API base URL exposed
 

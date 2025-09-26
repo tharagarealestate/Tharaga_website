@@ -4,6 +4,14 @@ const nextConfig = {
   experimental: {
     typedRoutes: true,
   },
+  async rewrites() {
+    // Ensure /api in Next dev maps to real backend if proxy not present
+    const apiBase = process.env.NEXT_PUBLIC_API_URL
+    if (apiBase) {
+      return [{ source: '/api/:path*', destination: `${apiBase}/api/:path*` }]
+    }
+    return []
+  },
   images: {
     remotePatterns: [
       { protocol: 'https', hostname: 'picsum.photos' },

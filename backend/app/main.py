@@ -1,10 +1,13 @@
 from __future__ import annotations
 
 import logging
+import time
 import os
 from typing import Optional
 
 from fastapi import FastAPI, HTTPException, Request
+from prometheus_client import Counter, Histogram, generate_latest, CONTENT_TYPE_LATEST
+from fastapi.responses import Response
 from fastapi.middleware.cors import CORSMiddleware
 
 from .schemas import RecommendationQuery, RecommendationResponse, RecommendationItem, PropertySpecs
@@ -70,6 +73,8 @@ def get_allowed_origins() -> list[str]:
 
 
 app = FastAPI(title="Tharaga Recommendations API", version="0.1.0")
+REQUEST_COUNT = Counter("http_requests_total", "Total HTTP requests", ["method", "path", "status"])
+REQUEST_LATENCY = Histogram("http_request_duration_seconds", "HTTP request latency", ["method", "path"])
 
 app.add_middleware(
     CORSMiddleware,
@@ -83,6 +88,7 @@ app.add_middleware(
 @app.middleware("http")
 async def add_request_id_logging(request: Request, call_next):
     request_id = request.headers.get("x-request-id") or request.headers.get("x-cloud-trace-context", "").split(";")[0]
+    start = time.time()
     try:
         response = await call_next(request)
     except Exception:
@@ -91,6 +97,7 @@ async def add_request_id_logging(request: Request, call_next):
             "method": request.method,
             "request_id": request_id,
         })
+        REQUEST_COUNT.labels(method=request.method, path=request.url.path, status="500").inc()
         raise
     response.headers["x-request-id"] = request_id or ""
     logger.info("request_completed", extra={
@@ -99,7 +106,15 @@ async def add_request_id_logging(request: Request, call_next):
         "status_code": getattr(response, 'status_code', None),
         "request_id": request_id,
     })
+    REQUEST_COUNT.labels(method=request.method, path=request.url.path, status=str(getattr(response, 'status_code', ''))).inc()
+    REQUEST_LATENCY.labels(method=request.method, path=request.url.path).observe(time.time() - start)
     return response
+
+
+@app.get("/metrics")
+def metrics() -> Response:
+    data = generate_latest()
+    return Response(content=data, media_type=CONTENT_TYPE_LATEST)
 
 
 # In a real deployment, inject a database-backed recommender via dependency injection.

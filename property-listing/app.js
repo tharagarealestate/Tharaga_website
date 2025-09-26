@@ -278,7 +278,6 @@ function cardHTML(p, s) {
       <div class="row" style="gap:8px;flex-wrap:wrap">${tags}</div>
       <div style="display:flex;gap:8px;margin-top:10px">
         <a class="btn" href="./details.html?id=${encodeURIComponent(p.id)}">View details</a>
-        <button class="btn ghost btn-compare" data-id="${escapeHtml(p.id)}" type="button">Compare</button>
       </div>
     </div>
   </article>`;

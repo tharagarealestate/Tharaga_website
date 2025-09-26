@@ -176,6 +176,11 @@ img{max-width:100%;display:block}
   height:100%;
   object-fit:cover
 }
+
+/* Blur-up lazy image */
+.blur-up{ filter:blur(12px); transform:scale(1.02); }
+.blur-up:not([src]){ visibility:hidden; }
+.blur-up{ transition: filter .3s ease, transform .3s ease; }
 .card-img .ribbon{position:absolute;left:12px;top:12px}
 .card-img .score{position:absolute;right:12px;top:12px}
 

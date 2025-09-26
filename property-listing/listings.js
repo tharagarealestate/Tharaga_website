@@ -431,6 +431,8 @@ function wireUI(){
       try { if (res) res.classList.add('highlight'); } catch(_) {}
       try { if (res && res.scrollIntoView) res.scrollIntoView({ behavior:'smooth', block:'start' }); } catch(_) {}
       setTimeout(()=>{ try { if (res) res.classList.remove('highlight'); } catch(_) {} applyBtn.disabled = false; applyBtn.textContent = prev; }, 300);
+      // Toast for saved search match state refresh
+      try { const saveBtn=document.getElementById('saveSearch'); saveBtn && saveBtn.dispatchEvent(new Event('thg-refresh-saved', { bubbles:false })); } catch(_) {}
     });
   }
 
@@ -607,7 +609,10 @@ function wireUI(){
         const arr = loadSaved();
         if (!arr.some(x => same(x, s))){ arr.unshift(s); saveSaved(arr); }
         hydrateRecent();
+        try { const t=document.getElementById('toast'); if (t){ t.textContent='Search saved'; t.hidden=false; clearTimeout(t.__t); t.__t=setTimeout(()=>{ t.hidden=true; }, 1400); } } catch(_){}
       });
+      // Allow other flows to refresh saved-button state
+      saveBtn.addEventListener('thg-refresh-saved', hydrateRecent);
     }
   })();
 

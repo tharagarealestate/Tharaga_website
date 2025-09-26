@@ -262,7 +262,7 @@ function cardHTML(p, s) {
   const pps = p.pricePerSqftINR ? `₹${p.pricePerSqftINR.toLocaleString('en-IN')}/sqft` : '';
   return `<article class="card" style="display:flex;flex-direction:column">
     <div class="card-img">
-      <img src="${escapeHtml(img)}" alt="${escapeHtml(p.title)}">
+      <img class="blur-up" loading="lazy" src="${escapeHtml(img)}" alt="${escapeHtml(p.title)}" onload="this.classList.remove('blur-up')">
       <div class="badge ribbon">${p.listingStatus || "Verified"}</div>
       <div class="tag score">Match ${Math.round((s/30)*100)}%</div>
     </div>

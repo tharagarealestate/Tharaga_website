@@ -4,34 +4,26 @@ test.describe('Buyer Form - Email autofill and lock', () => {
   test('locks email after auth signal and mirrors into hidden input', async ({ page }) => {
     await page.goto('/buyer-form/')
 
-    // Simulate signed-in event the page listens to
+    // Simulate signed-in event the page listens to (set before navigation)
     const userEmail = 'user@example.com'
-    await page.evaluate((email) => {
-      try { window.postMessage({ type: 'THARAGA_AUTH_SUCCESS', user: { email } }, '*') } catch(_) {}
-      try {
-        if ('BroadcastChannel' in window) {
-          const bc = new BroadcastChannel('tharaga-auth');
-          bc.postMessage({ user: { email } })
-        }
-      } catch(_) {}
+    await page.addInitScript((email) => {
       try { localStorage.setItem('__tharaga_magic_continue', JSON.stringify({ user: { email }, ts: Date.now() })) } catch(_) {}
     }, userEmail)
 
-    // Reload so the page's early cache hydrator locks the field from localStorage
+    // Reload so init script is applied and the page locking code runs on load
     await page.reload()
 
     const emailInput = page.locator('#buyerForm [name="email"], #buyerForm input[data-session-email]')
 
-    // Wait for the lock to apply (field disabled OR data-session-email present)
-    const disabledOrTagged = page.locator('#buyerForm input[disabled], #buyerForm input[data-session-email]')
-    await expect(disabledOrTagged.first()).toBeVisible({ timeout: 10000 })
+    // Wait for the lock to apply (field disabled OR hidden mirror created)
+    await page.waitForFunction(() => !!document.querySelector('#buyerForm input[disabled]') || !!document.querySelector('#buyer-email-hidden'))
 
     // The visible field should have data-session-email and be disabled/read-only
     const hasSessionAttr = await page.locator('#buyerForm input[data-session-email]').count()
     expect(hasSessionAttr).toBeGreaterThan(0)
 
     // Hidden mirror should exist with name=email and same value
-    const hidden = page.locator('#buyerForm input[type="hidden"][name="email"]')
+    const hidden = page.locator('#buyerForm input#buyer-email-hidden[type="hidden"][name="email"]')
     await expect(hidden).toHaveValue(userEmail)
   })
 })

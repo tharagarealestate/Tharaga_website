@@ -15,20 +15,19 @@
 <!-- Show header Login/Signup button -->
 <script>window.AUTH_HIDE_HEADER = false;</script>
 
-<!-- 1) Load auth-gate (handles iframe auth modal + cross-tab sync) -->
-<script src="https://auth.tharaga.co.in/login_signup_glassdrop/auth-gate.js" defer></script>
-
-<!-- 2) Configure globals before the header script runs -->
+<!-- 1) Configure globals BEFORE loading scripts -->
 <script>
-  window.DURABLE_AUTH_URL = 'https://auth.tharaga.co.in/login_signup_glassdrop/';
   window.AUTH_NAV = { profile: '/profile', dashboard: '/dashboard' };
-  // Optional: change to your routes if different
+  // Optional routes:
   // window.AUTH_NAV = { profile: '/account', dashboard: '/app' };
-  // If you need a settings page link, the header detects it when set:
   // window.AUTH_NAV.settings = '/settings';
+  window.DURABLE_AUTH_URL = 'https://auth.tharaga.co.in/login_signup_glassdrop/';
   // Optional: auto-open the auth modal on page load
-  // window.AUTH_OPEN_ON_LOAD = true; // or use ?auth_open=1 in the URL
+  // window.AUTH_OPEN_ON_LOAD = true; // or use ?auth_open=1
 </script>
+
+<!-- 2) Load auth-gate (handles iframe auth modal + cross-tab sync) -->
+<script src="/login_signup_glassdrop/auth-gate.js" defer></script>
 
 <!-- 3) No separate header UI script is required. Auth modal is provided by auth-gate. -->
 

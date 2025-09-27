@@ -81,5 +81,15 @@ trace.zip
 # ==========================================
 .netlify/
 
+<<<<<<< HEAD
 # Keep Playwright test specs tracked
 !tests/playwright/**
+=======
+# Track Playwright specs
+!tests/playwright/**
+
+
+# Track Playwright specs
+!tests/playwright/**
+
+>>>>>>> dd6f385 (feat: Add auth modal stub and update tests)

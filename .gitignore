@@ -62,3 +62,18 @@ pnpm-lock.yaml
 # ==========================================
 # Ignore all "bckup" folders anywhere in repo
 **/bckup/
+
+# ==========================================
+# Playwright / E2E artifacts (unwanted in production)
+# ==========================================
+test-results/
+playwright-report/
+playwright/
+tmp/
+*.trace.zip
+trace.zip
+
+# ==========================================
+# Netlify local artifacts
+# ==========================================
+.netlify/

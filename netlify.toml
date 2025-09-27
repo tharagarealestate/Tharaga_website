@@ -1,8 +1,8 @@
 [build]
   base = "app"
-  command = "npm install && npm run build"
+  command = "npm install && node ../scripts/copy-static.cjs && npm run build"
   publish = ".next"
-  functions = "netlify/functions"
+  functions = "../netlify/functions"
 
 [[plugins]]
   package = "@netlify/plugin-nextjs"
@@ -27,10 +27,6 @@
   to = "/Reset_password/:splat"
   status = 301
 
-[[redirects]]
-  from = "/auth/*"
-  to = "/public/auth/:splat"
-  status = 200
 
 [[redirects]]
   from = "/snippets"

@@ -8,10 +8,13 @@ export default defineConfig({
     baseURL: process.env.PLAYWRIGHT_BASE_URL || 'http://localhost:4173',
     headless: true,
   },
-  webServer: {
-    command: 'npx sirv-cli . --single --port 4173',
-    port: 4173,
-    reuseExistingServer: true,
-  },
+  outputDir: 'tmp/playwright',
+  webServer: process.env.PLAYWRIGHT_BASE_URL
+    ? undefined
+    : {
+        command: 'npx sirv-cli . --single --port 4173',
+        port: 4173,
+        reuseExistingServer: true,
+      },
 });
 

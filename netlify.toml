@@ -60,3 +60,8 @@
 
 ## Rely on /api proxy; no public API base URL exposed
 
+[[redirects]]
+  from = "/verified-property-listings"
+  to = "/property-listing/"
+  status = 200
+  force = true

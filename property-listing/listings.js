@@ -40,11 +40,35 @@ function activeFilterBadges(filters){
   const parts = [];
   if (FROM_PREFS) parts.push(`<span class="tag" style="background:#fef3c7;color:#92400e">Filtered by your preferences</span>`);
   Object.entries(filters).forEach(([k,v])=>{
-    if(v && (Array.isArray(v) ? v.length : String(v).trim()!=='') ){
-      parts.push(`<span class="tag">${k}: ${Array.isArray(v)? v.join(', ') : v}</span>`);
-    }
+    if(!v) return;
+    const has = Array.isArray(v) ? v.length>0 : String(v).trim()!=='';
+    if(!has) return;
+    const label = Array.isArray(v)? v.join(', ') : v;
+    const chip = `<button class="chip-rem" data-key="${k}" type="button" aria-label="Remove ${k}"><span>${k}: ${label}</span> ✕</button>`;
+    parts.push(chip);
   });
   wrap.innerHTML = parts.join(' ');
+
+  // Wire remove handlers (clear specific filter then apply)
+  wrap.querySelectorAll('.chip-rem').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const key = btn.getAttribute('data-key');
+      switch(key){
+        case 'q': { const el=document.getElementById('q'); if(el) el.value=''; break; }
+        case 'city': { const el=document.getElementById('city'); if(el) Array.from(el.options).forEach(o=>o.selected=false); break; }
+        case 'locality': { setLocalityAllSelected(); break; }
+        case 'price': { const a=document.getElementById('minPrice'); const b=document.getElementById('maxPrice'); if(a) a.value=''; if(b) b.value=''; try{ document.getElementById('priceMinSlider').dispatchEvent(new Event('input',{bubbles:true})); document.getElementById('priceMaxSlider').dispatchEvent(new Event('input',{bubbles:true})); } catch(_){} break; }
+        case 'type': { const el=document.getElementById('ptype'); if(el) el.value=''; break; }
+        case 'bhk': { const el=document.getElementById('bhk'); if(el) el.value=''; break; }
+        case 'furnished': { const el=document.getElementById('furnished'); if(el) el.value=''; break; }
+        case 'facing': { const el=document.getElementById('facing'); if(el) el.value=''; break; }
+        case 'area': { const a=document.getElementById('minArea'); const b=document.getElementById('maxArea'); if(a) a.value=''; if(b) b.value=''; break; }
+        case 'amenity': { const el=document.getElementById('amenity'); if(el) el.value=''; break; }
+        case 'metro': { const wm=document.getElementById('wantMetro'); const mw=document.getElementById('maxWalk'); if(wm) wm.checked=false; if(mw) mw.value=10; break; }
+      }
+      PAGE=1; apply(); syncUrlWithFilters();
+    });
+  });
 }
 
 function collectFilters(){
@@ -92,15 +116,43 @@ function collectFilters(){
 // ---- New: Parse and apply incoming URL params/session filters ----
 function parseBudgetLabelToRange(label){
   if (!label) return { min: null, max: null };
-  const s = String(label);
+  const s = String(label).trim();
+
+  // Helper to parse "40L", "1.25Cr", plain integers (assume INR)
+  function parseINRToken(tok){
+    tok = String(tok).trim();
+    // Crores
+    let m = tok.match(/^(₹?\s*)?(\d+(?:\.\d+)?)\s*(cr|crore)s?/i);
+    if (m) return Math.round(parseFloat(m[2]) * 10000000);
+    // Lakhs
+    m = tok.match(/^(₹?\s*)?(\d+(?:\.\d+)?)\s*(l|lac|lakh)s?/i);
+    if (m) return Math.round(parseFloat(m[2]) * 100000);
+    // Plain number (already INR)
+    const n = parseInt(tok.replace(/[^0-9]/g, ''), 10);
+    return Number.isFinite(n) ? n : null;
+  }
+
+  // Common shortcuts
   if (/3\s*Cr\s*\+/.test(s)) return { min: 30000000, max: null };
-  if (/2\s*Cr\s*–\s*3\s*Cr/.test(s)) return { min: 20000000, max: 30000000 };
-  if (/1\s*Cr\s*–\s*2\s*Cr/.test(s)) return { min: 10000000, max: 20000000 };
-  if (/50\s*L\s*–\s*1\s*Cr/.test(s) || /₹?50\s*L/.test(s)) return { min: 5000000, max: 10000000 };
-  // Generic fallback: pull digits (assume INR) "min-max"
-  const nums = s.replace(/[^\d\-]+/g,'').split('-').map(n=>parseInt(n,10)).filter(Number.isFinite);
-  if (nums.length === 2) return { min: nums[0], max: nums[1] };
-  if (nums.length === 1) return { min: nums[0], max: null };
+
+  // Normalize common separators: en-dash, hyphen, "to"
+  const parts = s
+    .replace(/–/g, '-')
+    .replace(/—/g, '-')
+    .replace(/to/i, '-')
+    .split('-')
+    .map(t => t.trim())
+    .filter(Boolean);
+
+  if (parts.length === 2){
+    const min = parseINRToken(parts[0]);
+    const max = parseINRToken(parts[1]);
+    return { min: Number.isFinite(min) ? min : null, max: Number.isFinite(max) ? max : null };
+  }
+  if (parts.length === 1){
+    const only = parseINRToken(parts[0]);
+    return { min: Number.isFinite(only) ? only : null, max: null };
+  }
   return { min: null, max: null };
 }
 
@@ -178,6 +230,14 @@ function applyQueryParams(){
       try { localStorage.setItem('activeFilterType', pillType); } catch(_) {}
       const pill = document.querySelector(`.filter-pill[data-type="${pillType}"]`);
       if (pill) { try { pill.click(); } catch(_) {} }
+    } else {
+      // If deep-link has filters but no explicit pill, default to 'buy'
+      const hasFilterSignal = !!(qParam || budgetLabel || localityParam || Number.isFinite(priceMinParam) || Number.isFinite(priceMaxParam) || sortParam);
+      if (hasFilterSignal) {
+        try { localStorage.setItem('activeFilterType', 'buy'); } catch(_) {}
+        const pill = document.querySelector(`.filter-pill[data-type="buy"]`);
+        if (pill) { try { pill.click(); } catch(_) {} }
+      }
     }
 
     // Budget handling: supports label like "₹1Cr – ₹2Cr" or numeric minPrice/maxPrice or price_min/price_max
@@ -203,12 +263,17 @@ function applyQueryParams(){
     if (minPrice != null && minSlider) { try { minSlider.value = String(minPrice); minSlider.dispatchEvent(new Event('input', { bubbles: true })); } catch(_){} }
     if (maxPrice != null && maxSlider) { try { maxSlider.value = String(maxPrice); maxSlider.dispatchEvent(new Event('input', { bubbles: true })); } catch(_){} }
 
-    // Apply locality selection if provided
+    // Apply locality selection if provided (supports comma separated list)
     if (localityParam) {
       const locEl = document.querySelector('#locality');
       if (locEl) {
-        const opt = Array.from(locEl.options).find(o => o.value.toLowerCase() === localityParam.toLowerCase());
-        if (opt) { opt.selected = true; locEl.dispatchEvent(new Event('change', { bubbles: true })); }
+        const wanted = String(localityParam).split(',').map(s=>s.trim().toLowerCase()).filter(Boolean);
+        let matched = 0;
+        Array.from(locEl.options).forEach(o => {
+          const val = String(o.value||'').toLowerCase();
+          if (wanted.includes(val)) { o.selected = true; matched++; }
+        });
+        if (matched>0) locEl.dispatchEvent(new Event('change', { bubbles: true }));
       }
     }
 
@@ -319,6 +384,15 @@ function apply(){
 
   const total = filtered.length;
   const countEl = document.querySelector('#count'); if (countEl) countEl.textContent = `${total} result${total!==1?'s':''}`;
+  try {
+    const notice = document.getElementById('resultNotice');
+    if (notice) {
+      notice.hidden = false;
+      notice.textContent = `Showing ${Math.min(PAGE_SIZE, total)} of ${total} results`;
+      clearTimeout(notice.__t);
+      notice.__t = setTimeout(()=>{ try { notice.hidden = true; } catch(_){} }, 1500);
+    }
+  } catch(_){ }
 
   const pages = Math.max(1, Math.ceil(total / PAGE_SIZE));
   PAGE = Math.min(PAGE, pages);
@@ -326,7 +400,11 @@ function apply(){
   const slice = filtered.slice(start, start+PAGE_SIZE);
 
   const res = document.querySelector('#results');
-  if (res) res.innerHTML = slice.map(({p,s})=> App.cardHTML(p, s)).join('') || `<div class="empty">No properties found</div>`;
+  if (res) {
+    res.setAttribute('aria-live','polite');
+    res.setAttribute('role','region');
+    res.innerHTML = slice.map(({p,s})=> App.cardHTML(p, s)).join('') || `<div class="empty">No properties found</div>`;
+  }
 
   const pager = document.querySelector('#pager');
   if (pager) {
@@ -335,20 +413,48 @@ function apply(){
       return `<button class="${cls}" data-page="${n}">${n}</button>`;
     }).join('');
   }
+
+  // Compare feature removed — ensure any legacy localStorage is cleared and buttons do nothing
+  try {
+    localStorage.removeItem('thg_compare_ids');
+    document.querySelectorAll('.btn-compare').forEach(btn=>{
+      btn.style.display = 'none';
+      btn.replaceWith(btn.cloneNode(false));
+    });
+  } catch(_) {}
 }
 
 function goto(n){ PAGE = n; apply(); }
 window.goto = goto;
 
 function wireUI(){
-  document.querySelector('#apply')?.addEventListener('click', ()=>{ PAGE=1; apply(); });
+  const applyBtn = document.querySelector('#apply');
+  if (applyBtn) {
+    applyBtn.addEventListener('click', ()=>{
+      PAGE=1;
+      // UX: brief loading state + smooth scroll to results
+      const res = document.querySelector('#results');
+      const prev = applyBtn.textContent;
+      applyBtn.disabled = true; applyBtn.textContent = 'Applying…';
+      apply(); syncUrlWithFilters();
+      try { if (res) res.classList.add('highlight'); } catch(_) {}
+      try { if (res && res.scrollIntoView) res.scrollIntoView({ behavior:'smooth', block:'start' }); } catch(_) {}
+      setTimeout(()=>{ try { if (res) res.classList.remove('highlight'); } catch(_) {} applyBtn.disabled = false; applyBtn.textContent = prev; }, 300);
+      // Toast for saved search match state refresh
+      try { const saveBtn=document.getElementById('saveSearch'); saveBtn && saveBtn.dispatchEvent(new Event('thg-refresh-saved', { bubbles:false })); } catch(_) {}
+      try{ const pill=document.getElementById('newResultsPill'); pill.hidden=true; } catch(_){}
+    });
+  }
 
   const debApply = deb(()=>{ PAGE=1; apply(); }, 120);
+  const autoToggle = document.getElementById('autoApplyToggle');
+  const handleInput = ()=>{ if (autoToggle?.checked){ PAGE=1; apply(); syncUrlWithFilters(); } else { debApply(); } };
   ['#minPrice','#maxPrice','#minArea','#maxArea','#amenity','#q'].forEach(sel=>
-    document.querySelector(sel)?.addEventListener('input', debApply)
+    document.querySelector(sel)?.addEventListener('input', handleInput)
   );
+  const handleChange = ()=>{ PAGE=1; apply(); syncUrlWithFilters(); try{ const pill=document.getElementById('newResultsPill'); pill.hidden=false; clearTimeout(pill.__t); pill.__t=setTimeout(()=>{ pill.hidden=true; }, 1800); } catch(_){} };
   ['#sort','#ptype','#bhk','#furnished','#facing','#city','#locality','#wantMetro','#maxWalk'].forEach(sel=>
-    document.querySelector(sel)?.addEventListener('change', ()=>{ PAGE=1; apply(); })
+    document.querySelector(sel)?.addEventListener('change', ()=>{ if (autoToggle?.checked){ PAGE=1; apply(); syncUrlWithFilters(); } else { handleChange(); } })
   );
 
   document.querySelector('#pager')?.addEventListener('click', (e)=>{
@@ -404,6 +510,134 @@ function wireUI(){
     if (toActivate) setActivePill(toActivate);
   })();
 
+  // ======== Preset chips (budget/BHK) & recent searches ========
+  (function setupPresetsAndSaved(){
+    const PRESETS = {
+      budget: [
+        { label:'₹40L–₹50L', min:4000000, max:5000000 },
+        { label:'₹50L–₹75L', min:5000000, max:7500000 },
+        { label:'₹75L–₹1Cr', min:7500000, max:10000000 },
+        { label:'₹1Cr–₹1.5Cr', min:10000000, max:15000000 }
+      ],
+      bhk: ['1','2','3','4']
+    };
+
+    const presetWrap = document.getElementById('presetChips');
+    if (presetWrap && !presetWrap.dataset.ready){
+      presetWrap.dataset.ready='1';
+      // Budget
+      PRESETS.budget.forEach(b=>{
+        const btn = document.createElement('button');
+        btn.className = 'chip';
+        btn.textContent = `Budget: ${b.label}`;
+        btn.addEventListener('click', ()=>{
+          const a=document.getElementById('minPrice'); const c=document.getElementById('maxPrice');
+          if (a) a.value = String(b.min);
+          if (c) c.value = String(b.max);
+          try{ document.getElementById('priceMinSlider').value = String(b.min); document.getElementById('priceMinSlider').dispatchEvent(new Event('input',{bubbles:true})); } catch(_){}
+          try{ document.getElementById('priceMaxSlider').value = String(b.max); document.getElementById('priceMaxSlider').dispatchEvent(new Event('input',{bubbles:true})); } catch(_){}
+          PAGE=1; apply(); syncUrlWithFilters();
+        });
+        presetWrap.appendChild(btn);
+      });
+      // BHK
+      PRESETS.bhk.forEach(n=>{
+        const btn = document.createElement('button');
+        btn.className = 'chip';
+        btn.textContent = `${n} BHK`;
+        btn.addEventListener('click', ()=>{
+          const el=document.getElementById('bhk'); if(el){ el.value=String(n); el.dispatchEvent(new Event('change',{bubbles:true})); }
+          PAGE=1; apply(); syncUrlWithFilters();
+        });
+        presetWrap.appendChild(btn);
+      });
+    }
+
+    // Save search
+    const saveBtn = document.getElementById('saveSearch');
+    const recentWrap = document.getElementById('recentChips');
+    function snapshotFilters(){
+      const F = collectFilters();
+      return {
+        q: F.q, locality: F.localitySel, minP: F.minP, maxP: F.maxP, ptype: F.ptype, bhk: F.bhk,
+        furnished: F.furnished, facing: F.facing, minA: F.minA, maxA: F.maxA, amenity: F.amenity,
+        wantMetro: F.wantMetro, maxWalk: F.maxWalk, sort: F.sort
+      };
+    }
+    function filtersToLabel(f){
+      const parts = [];
+      if (f.q) parts.push(f.q);
+      if (f.locality && f.locality.length) parts.push(f.locality.join(','));
+      if (f.minP || f.maxP) parts.push(`₹${(f.minP||0).toLocaleString('en-IN')}-${(f.maxP||0).toLocaleString('en-IN')}`);
+      if (f.ptype) parts.push(f.ptype);
+      if (f.bhk) parts.push(`${f.bhk} BHK`);
+      return parts.join(' • ') || 'All properties';
+    }
+    function loadSaved(){ try { return JSON.parse(localStorage.getItem('tharaga_saved_searches')||'[]'); } catch(_) { return []; } }
+    function saveSaved(list){ try { localStorage.setItem('tharaga_saved_searches', JSON.stringify(list.slice(0,8))); } catch(_){} }
+    function same(a,b){ try { return JSON.stringify(a)===JSON.stringify(b); } catch(_) { return false; } }
+    function hydrateRecent(){
+      if (!recentWrap) return;
+      recentWrap.innerHTML = '';
+      const arr = loadSaved();
+      arr.forEach((item, idx)=>{
+        const btn = document.createElement('button');
+        btn.className = 'chip';
+        btn.textContent = filtersToLabel(item);
+        btn.title = 'Apply saved search';
+        btn.addEventListener('click', ()=>{
+          // Push into URL then re-hydrate controls via applyQueryParams
+          const params = new URLSearchParams(location.search);
+          params.set('q', item.q||''); if (!item.q) params.delete('q');
+          if (item.locality && item.locality.length) params.set('locality', item.locality.join(',')); else params.delete('locality');
+          if (item.minP) params.set('price_min', String(item.minP)); else params.delete('price_min');
+          if (item.maxP) params.set('price_max', String(item.maxP)); else params.delete('price_max');
+          if (item.ptype) params.set('ptype', String(item.ptype).toLowerCase()); else params.delete('ptype');
+          if (item.bhk) params.set('bhk', String(item.bhk)); else params.delete('bhk');
+          if (item.furnished) params.set('furnished', String(item.furnished).toLowerCase()); else params.delete('furnished');
+          if (item.facing) params.set('facing', String(item.facing).toLowerCase()); else params.delete('facing');
+          if (item.minA) params.set('area_min', String(item.minA)); else params.delete('area_min');
+          if (item.maxA) params.set('area_max', String(item.maxA)); else params.delete('area_max');
+          if (item.amenity) params.set('amenity', item.amenity); else params.delete('amenity');
+          if (item.wantMetro) params.set('near_metro','1'); else params.delete('near_metro');
+          if (item.maxWalk) params.set('max_walk', String(item.maxWalk)); else params.delete('max_walk');
+          if (item.sort && item.sort!=='relevance') params.set('sort', item.sort); else params.delete('sort');
+          history.replaceState(null, '', `${location.pathname}?${params.toString()}`);
+          applyQueryParams(); apply();
+        });
+        recentWrap.appendChild(btn);
+      });
+      if (saveBtn){
+        const current = snapshotFilters();
+        const arr2 = loadSaved();
+        const already = arr2.some(s => same(s, current));
+        saveBtn.disabled = already;
+        saveBtn.textContent = already ? 'Saved ✓' : 'Save search';
+      }
+    }
+    hydrateRecent();
+    if (saveBtn){
+      saveBtn.addEventListener('click', ()=>{
+        const s = snapshotFilters();
+        const arr = loadSaved();
+        if (!arr.some(x => same(x, s))){ arr.unshift(s); saveSaved(arr); }
+        hydrateRecent();
+        try { 
+          const t=document.getElementById('toast'); 
+          if (t){ 
+            t.innerHTML='Search saved <span class="actions"><button class="link" id="toastUndo">Undo</button></span>';
+            t.hidden=false; clearTimeout(t.__t); t.__t=setTimeout(()=>{ t.hidden=true; }, 4000);
+            // Undo: remove the very latest saved search
+            const undo = ()=>{ const cur = loadSaved(); cur.shift(); saveSaved(cur); hydrateRecent(); t.hidden=true; };
+            const btn = document.getElementById('toastUndo'); if (btn) btn.onclick = undo;
+          }
+        } catch(_){}
+      });
+      // Allow other flows to refresh saved-button state
+      saveBtn.addEventListener('thg-refresh-saved', hydrateRecent);
+    }
+  })();
+
   document.querySelector('#reset')?.addEventListener('click', ()=>{
     ['q','minPrice','maxPrice','ptype','bhk','furnished','facing','minArea','maxArea','amenity'].forEach(id=>{
       const el=document.getElementById(id); if(el) el.value='';
@@ -428,6 +662,44 @@ function wireUI(){
   });
 }
 
+function syncUrlWithFilters(){
+  try{
+    const F = collectFilters();
+    const params = new URLSearchParams(location.search);
+    // Search text
+    if (F.q) { params.set('q', F.q); params.set('location', F.q); }
+    else { params.delete('q'); params.delete('location'); }
+
+    // Mode (pill)
+    const pill = document.querySelector('.filter-pill.active');
+    const mode = pill?.dataset?.type || 'buy';
+    if (mode && mode !== 'all') params.set('type', mode); else params.delete('type');
+
+    // Locality multi-select
+    const locs = (F.localitySel||[]).filter(v=>v && v!=='All');
+    if (locs.length) params.set('locality', locs.join(',')); else params.delete('locality');
+
+    // Price
+    if (F.minP) params.set('price_min', String(F.minP)); else params.delete('price_min');
+    if (F.maxP) params.set('price_max', String(F.maxP)); else params.delete('price_max');
+
+    // Other structured filters
+    if (F.ptype) params.set('ptype', String(F.ptype).toLowerCase()); else params.delete('ptype');
+    if (F.bhk) params.set('bhk', String(F.bhk)); else params.delete('bhk');
+    if (F.furnished) params.set('furnished', String(F.furnished).toLowerCase()); else params.delete('furnished');
+    if (F.facing) params.set('facing', String(F.facing).toLowerCase()); else params.delete('facing');
+    if (F.minA) params.set('area_min', String(F.minA)); else params.delete('area_min');
+    if (F.maxA) params.set('area_max', String(F.maxA)); else params.delete('area_max');
+    if (F.amenity) params.set('amenity', F.amenity); else params.delete('amenity');
+    if (F.wantMetro) params.set('near_metro', '1'); else params.delete('near_metro');
+    if (F.maxWalk) params.set('max_walk', String(F.maxWalk)); else params.delete('max_walk');
+    if (F.sort && F.sort !== 'relevance') params.set('sort', F.sort); else params.delete('sort');
+
+    const newUrl = `${location.pathname}?${params.toString()}`;
+    history.replaceState(null, '', newUrl);
+  } catch(e) { /* no-op */ }
+}
+
 async function enrichWithMetro(){
   const stations = await App.loadMetro();
   if (!stations.length) return; // no metro dataset → skip
@@ -445,13 +717,30 @@ async function init(){
     // Early: hydrate from URL so visible controls reflect deep link immediately
     try { applyQueryParams(); } catch(_) {}
 
+    // Show premium skeletons while loading
+    try {
+      const res = document.querySelector('#results');
+      if (res) {
+        res.innerHTML = Array.from({length: 6}).map(()=>
+          '<div class="skeleton-card">\
+             <div class="skeleton-img"></div>\
+             <div class="skeleton-body">\
+               <div class="skeleton-line w70"></div>\
+               <div class="skeleton-line w50"></div>\
+               <div class="skeleton-line w30"></div>\
+             </div>\
+           </div>'
+        ).join('');
+      }
+    } catch(_) {}
+
     ALL = await App.fetchProperties();
     hydrateCityOptions(); hydrateLocalityOptions([]);
     await enrichWithMetro();
     // If the URL has city/locality but no explicit q, prefer locality as search text for better matching
     try {
       const params = new URLSearchParams(location.search);
-      const qMissing = !(params.get('q') && params.get('q')!.trim());
+      const qMissing = !((params.get('q') || '').trim());
       const localityParam = params.get('locality') || '';
       if (qMissing && localityParam) {
         const qEl = document.querySelector('#q');

@@ -260,9 +260,9 @@ function cardHTML(p, s) {
     .filter(Boolean).map(t=>`<span class="tag">${t}</span>`).join(' ');
   const price = p.priceDisplay || (p.priceINR ? currency(p.priceINR) : 'Price on request');
   const pps = p.pricePerSqftINR ? `₹${p.pricePerSqftINR.toLocaleString('en-IN')}/sqft` : '';
-  return `<article class="card" style="display:flex;flex-direction:column">
+  return `<article class="card" style="display:flex;flex-direction:column" data-prop-id="${escapeHtml(p.id)}">
     <div class="card-img">
-      <img src="${escapeHtml(img)}" alt="${escapeHtml(p.title)}">
+      <img class="blur-up" loading="lazy" src="${escapeHtml(img)}" alt="${escapeHtml(p.title)}" onload="this.classList.remove('blur-up')">
       <div class="badge ribbon">${p.listingStatus || "Verified"}</div>
       <div class="tag score">Match ${Math.round((s/30)*100)}%</div>
     </div>
@@ -276,7 +276,9 @@ function cardHTML(p, s) {
         <div style="color:var(--muted);font-size:12px">${escapeHtml(pps)}</div>
       </div>
       <div class="row" style="gap:8px;flex-wrap:wrap">${tags}</div>
-      <div style="display:flex;gap:8px;margin-top:10px"><a class="btn" href="./details.html?id=${encodeURIComponent(p.id)}">View details</a></div>
+      <div style="display:flex;gap:8px;margin-top:10px">
+        <a class="btn" href="./details.html?id=${encodeURIComponent(p.id)}">View details</a>
+      </div>
     </div>
   </article>`;
 }

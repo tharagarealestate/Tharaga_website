@@ -52,7 +52,11 @@
     X-Content-Type-Options = "nosniff"
     Referrer-Policy = "no-referrer"
     Permissions-Policy = "geolocation=(), microphone()"
+<<<<<<< HEAD
     Content-Security-Policy = "default-src 'self'; img-src 'self' https: data:; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://www.gstatic.com https://www.google.com https://auth.tharaga.co.in; style-src 'self' 'unsafe-inline'; connect-src 'self' https://api.tharaga.co.in https://wedevtjjmdvngyshqdro.supabase.co https://www.google.com https://www.googleapis.com https://www.gstatic.com https://auth.tharaga.co.in; frame-src 'self' https://www.google.com https://www.gstatic.com https://auth.tharaga.co.in; frame-ancestors 'self' https://tharaga.co.in https://www.tharaga.co.in; base-uri 'self'"
+=======
+    Content-Security-Policy = "default-src 'self'; img-src 'self' https: data:; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://www.gstatic.com https://www.google.com; style-src 'self' 'unsafe-inline'; connect-src 'self' https://api.tharaga.co.in https://wedevtjjmdvngyshqdro.supabase.co https://www.google.com https://www.googleapis.com https://www.gstatic.com; frame-src 'self' https://www.google.com https://www.gstatic.com; frame-ancestors 'self' https://tharaga.co.in https://www.tharaga.co.in; base-uri 'self'"
+>>>>>>> ba89d56 (Update CSP and Permissions-Policy, add netlify.toml for login_signup_glassdrop)
 
 ## Rely on /api proxy; no public API base URL exposed
 

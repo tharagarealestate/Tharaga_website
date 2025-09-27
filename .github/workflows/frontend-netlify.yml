@@ -42,6 +42,10 @@ jobs:
           npm ci || npm i
           npx playwright install --with-deps
       - name: Run E2E
+        if: ${{ !secrets.E2E_BASE_URL }}
+        run: npm run test:e2e
+      - name: Run E2E (external base URL)
+        if: ${{ secrets.E2E_BASE_URL }}
         env:
-          PLAYWRIGHT_BASE_URL: ${{ secrets.E2E_BASE_URL || 'http://localhost:4173' }}
+          PLAYWRIGHT_BASE_URL: ${{ secrets.E2E_BASE_URL }}
         run: npm run test:e2e

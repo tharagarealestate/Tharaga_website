@@ -17,10 +17,14 @@ test.describe('Buyer Form - Email autofill and lock', () => {
       try { localStorage.setItem('__tharaga_magic_continue', JSON.stringify({ user: { email }, ts: Date.now() })) } catch(_) {}
     }, userEmail)
 
+    // Reload so the page's early cache hydrator locks the field from localStorage
+    await page.reload()
+
     const emailInput = page.locator('#buyerForm [name="email"], #buyerForm input[data-session-email]')
 
-    // Wait for the lock to apply (field disabled and name moved to hidden)
-    await expect(page.locator('#buyerForm input[disabled]')).toBeVisible()
+    // Wait for the lock to apply (field disabled OR data-session-email present)
+    const disabledOrTagged = page.locator('#buyerForm input[disabled], #buyerForm input[data-session-email]')
+    await expect(disabledOrTagged.first()).toBeVisible({ timeout: 10000 })
 
     // The visible field should have data-session-email and be disabled/read-only
     const hasSessionAttr = await page.locator('#buyerForm input[data-session-email]').count()

@@ -1,0 +1,10 @@
+name: Backend - Build & Deploy (Cloud Run) [disabled]
+
+on:
+  workflow_dispatch:
+
+jobs:
+  noop:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "Switched to Cloud Build triggers for backend deployment."

@@ -1,10 +1,13 @@
 from __future__ import annotations
 
 import logging
+import time
 import os
 from typing import Optional
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
+from prometheus_client import Counter, Histogram, generate_latest, CONTENT_TYPE_LATEST
+from fastapi.responses import Response, JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 
 from .schemas import RecommendationQuery, RecommendationResponse, RecommendationItem, PropertySpecs
@@ -70,6 +73,8 @@ def get_allowed_origins() -> list[str]:
 
 
 app = FastAPI(title="Tharaga Recommendations API", version="0.1.0")
+REQUEST_COUNT = Counter("http_requests_total", "Total HTTP requests", ["method", "path", "status"])
+REQUEST_LATENCY = Histogram("http_request_duration_seconds", "HTTP request latency", ["method", "path"])
 
 app.add_middleware(
     CORSMiddleware,
@@ -80,15 +85,88 @@ app.add_middleware(
 )
 
 
+@app.middleware("http")
+async def add_request_id_logging(request: Request, call_next):
+    request_id = request.headers.get("x-request-id") or request.headers.get("x-cloud-trace-context", "").split(";")[0]
+    start = time.time()
+    try:
+        response = await call_next(request)
+    except Exception:
+        logger.exception("request_failed", extra={
+            "path": request.url.path,
+            "method": request.method,
+            "request_id": request_id,
+        })
+        REQUEST_COUNT.labels(method=request.method, path=request.url.path, status="500").inc()
+        raise
+    response.headers["x-request-id"] = request_id or ""
+    logger.info("request_completed", extra={
+        "path": request.url.path,
+        "method": request.method,
+        "status_code": getattr(response, 'status_code', None),
+        "request_id": request_id,
+    })
+    REQUEST_COUNT.labels(method=request.method, path=request.url.path, status=str(getattr(response, 'status_code', ''))).inc()
+    REQUEST_LATENCY.labels(method=request.method, path=request.url.path).observe(time.time() - start)
+    return response
+
+
+@app.get("/metrics")
+def metrics() -> Response:
+    if os.getenv("ENABLE_METRICS", "false").lower() != "true":
+        raise HTTPException(status_code=404, detail="Not Found")
+    data = generate_latest()
+    return Response(content=data, media_type=CONTENT_TYPE_LATEST)
+
+
+@app.post("/api/__vitals")
+async def web_vitals(_: Request) -> JSONResponse:
+    # No-op collector endpoint to avoid 404s; can be wired to analytics later
+    return JSONResponse({"ok": True})
+
+
 # In a real deployment, inject a database-backed recommender via dependency injection.
 _properties_df, _interactions_df = load_demo_data()
-_recommender = HybridRecommender(properties_df=_properties_df, interactions_df=_interactions_df)
-_recommender.fit()
+_recommender = None
+try:
+    _recommender = HybridRecommender(properties_df=_properties_df, interactions_df=_interactions_df)
+    _recommender.fit()
+    logger.info("HybridRecommender initialized successfully")
+except Exception:
+    # Degrade gracefully; we'll compute a simple fallback response on demand
+    logger.exception("Failed to initialize HybridRecommender; will use fallback recommendations")
+    _recommender = None
 
 
 @app.get("/health")
 def health() -> dict[str, str]:
     return {"status": "ok"}
+
+
+def _fallback_recommendations(top_n: int) -> list[RecommendationItem]:
+    # Popularity/content-lite fallback using available property specs
+    items: list[RecommendationItem] = []
+    try:
+        for _, row in _properties_df.head(top_n).iterrows():
+            items.append(
+                RecommendationItem(
+                    property_id=str(row.property_id),
+                    title=str(row.title),
+                    image_url=str(row.image_url),
+                    specs=PropertySpecs(
+                        bedrooms=int(row.bedrooms) if not (row.bedrooms != row.bedrooms) else None,  # NaN check
+                        bathrooms=int(row.bathrooms) if not (row.bathrooms != row.bathrooms) else None,
+                        area_sqft=float(row.area_sqft) if not (row.area_sqft != row.area_sqft) else None,
+                        location=str(row.location) if row.location is not None else None,
+                    ),
+                    reasons=["Popular among similar seekers", "Matches common preferences"],
+                    score=0.5,
+                )
+            )
+    except Exception:
+        logger.exception("Failed to build fallback recommendations")
+        items = []
+    return items
 
 
 @app.post("/api/recommendations", response_model=RecommendationResponse)
@@ -97,6 +175,10 @@ def get_recommendations(payload: RecommendationQuery) -> RecommendationResponse:
         raise HTTPException(status_code=400, detail="Provide either user_id or session_id")
 
     try:
+        if _recommender is None:
+            logger.warning("Recommender unavailable; serving fallback recommendations")
+            return RecommendationResponse(items=_fallback_recommendations(top_n=payload.num_results))
+
         items = _recommender.recommend(
             user_id=payload.user_id,
             session_id=payload.session_id,
@@ -104,8 +186,8 @@ def get_recommendations(payload: RecommendationQuery) -> RecommendationResponse:
         )
         return RecommendationResponse(items=items)
     except Exception as exc:  # pragma: no cover - safeguard for production
-        logger.exception("Failed to compute recommendations")
-        raise HTTPException(status_code=500, detail="Failed to generate recommendations") from exc
+        logger.exception("Failed to compute recommendations; serving fallback")
+        return RecommendationResponse(items=_fallback_recommendations(top_n=payload.num_results))
 
 
 if __name__ == "__main__":

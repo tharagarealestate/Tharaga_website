@@ -92,4 +92,11 @@ trace.zip
 # Track Playwright specs
 !tests/playwright/**
 
+<<<<<<< HEAD
 >>>>>>> dd6f385 (feat: Add auth modal stub and update tests)
+=======
+
+# Track Playwright specs
+!tests/playwright/**
+
+>>>>>>> f8d9e60 (test(e2e): force-add resolved buyer-form email test on PR branch)

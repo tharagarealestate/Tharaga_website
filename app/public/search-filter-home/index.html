@@ -1,0 +1,403 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <script type="module" src="/js/fragment-handle.js"></script>
+  <!-- Durable Auth: modal + gating (shared across pages) -->
+  <script src="https://auth.tharaga.co.in/login_signup_glassdrop/auth-gate.js" defer></script>
+  <script>
+    window.DURABLE_AUTH_URL = 'https://auth.tharaga.co.in/login_signup_glassdrop/';
+    window.AUTH_NAV = { profile: '/profile', dashboard: '/dashboard' };
+  </script>
+  <!-- use ONE include, absolute path, and defer it so DOM is present -->
+  <title>Tharaga — Home Search</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+
+  <style>
+    :root{
+      --brand:#6e0d25;
+      --brand-2:#8c1630;
+      --cream:#f7efe7;
+      --ink:#1b1b1b;
+      --muted:#6b7280;
+      --ring:rgba(110,13,37,.25);
+    }
+
+    *{box-sizing:border-box}
+    html,body{
+      margin:0;
+      padding:0;
+      background:var(--cream);
+      color:var(--ink);
+      font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+    }
+
+    .input, select{
+      width:100%;
+      padding:10px 12px;
+      font-size:14px;
+      background:#fff;
+      border:1px solid #e5e7eb;
+      border-radius:10px;
+      outline:0;
+      transition:.15s ease-in-out;
+    }
+    .input:hover, select:hover{
+      border-color:var(--brand);
+      background:#fffafa;
+      box-shadow:0 2px 6px rgba(110,13,37,.06);
+    }
+    .input:focus, select:focus{
+      border-color:var(--brand);
+      box-shadow:0 0 0 3px var(--ring);
+    }
+
+    .btn{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      gap:8px;
+      font-weight:700;
+      letter-spacing:.01em;
+      background:var(--brand);
+      color:#fff;
+      border:1px solid var(--brand);
+      border-radius:10px;
+      cursor:pointer;
+      padding:10px 20px;
+      transition:.15s ease-in-out;
+      white-space:nowrap;
+    }
+    .btn:hover{ filter:brightness(1.03) }
+    .btn:active{ transform:translateY(1px) }
+
+    .home-shell{ padding:12px 16px; }
+    .home-search-container{
+      max-width:900px;
+      margin:12px auto 10px;
+      background:linear-gradient(180deg,#fff,#fdf9f7);
+      border:1px solid #f0d9d9;
+      border-radius:16px;
+      padding:10px;
+      box-shadow:0 4px 24px rgba(110,13,37,.16);
+      transition:transform .2s ease, box-shadow .2s ease;
+    }
+    .home-search-container:hover{
+      transform:translateY(-2px);
+      box-shadow:0 16px 36px rgba(110,13,37,.16);
+    }
+    .home-search-container:focus-within{
+      box-shadow:0 0 0 3px var(--ring), 0 16px 36px rgba(110,13,37,.16);
+    }
+
+    /* Pill Row */
+    .pill-row {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+    .filter-pill {
+      flex: 1;
+      padding: 8px 12px;
+      border-radius: 999px;
+      border: 1px solid var(--brand);
+      background: #fff;
+      color: var(--brand);
+      font-weight: 600;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .filter-pill.active {
+      background: var(--brand);
+      color: #fff;
+    }
+    .filter-pill:hover {
+      background: var(--brand-2);
+      color: #fff;
+    }
+
+    .home-search-row{
+      display:grid;
+      grid-template-columns:180px 1fr 118px; /* desktop: City | Search | Button */
+      align-items:stretch;
+      gap:0;
+    }
+    .home-seg{ border-radius:0 }
+    .home-seg--left{ border-top-left-radius:10px; border-bottom-left-radius:10px }
+    .home-seg--right{ border-top-right-radius:10px; border-bottom-right-radius:10px }
+    .home-input{ border-left:none; border-right:none }
+
+    .home-input-wrap{ position:relative }
+    .home-icon{
+      position:absolute;
+      left:12px; top:50%;
+      transform:translateY(-50%);
+      color:var(--muted);
+      pointer-events:none;
+    }
+    .home-input{ padding-left:36px }
+
+    /* ========== MOBILE COMPACT MODE (to prevent inner scroll in iframe) ========== */
+    @media (max-width:640px){
+      /* tighten outer spacing */
+      .home-shell{ padding:6px 8px; }
+      .home-search-container{
+        margin:4px auto 6px;
+        padding:6px;
+        border-radius:12px;
+        box-shadow:0 2px 12px rgba(110,13,37,.12);
+      }
+
+      /* compact pills, single line, scrollable if needed (no wrap) */
+      .pill-row{
+        gap:6px;
+        margin-bottom:6px;
+        overflow:auto;
+        -webkit-overflow-scrolling:touch;
+        scrollbar-width:none;
+      }
+      .pill-row::-webkit-scrollbar{ display:none; }
+      .filter-pill{
+        flex: 0 0 auto;          /* prevent stretching */
+        padding:6px 10px;
+        font-size:12px;
+        line-height:1.1;
+      }
+
+      /* 30% / 70% for city/search, button drops below centered */
+      .home-search-row{
+        grid-template-columns:30% 70%;
+        gap:6px;
+      }
+      #homeSearchBtn{
+        grid-column:1 / -1;
+        justify-self:center;
+        height:34px;            /* explicit small height */
+        padding:0 12px;
+        font-size:12px;
+        margin-top:4px;
+      }
+
+      /* shrink controls */
+      .input, select{
+        font-size:12px;
+        padding:6px 10px;
+        height:34px;            /* important for total height */
+      }
+
+      /* smaller icon & left padding so the input stays short */
+      .home-input{ padding-left:30px; }
+      .home-input-wrap .home-icon{
+        left:10px;
+        /* SVG size is set inline below via width/height for crispness */
+      }
+
+      /* undo side borders you removed on desktop (keeps visual consistency) */
+      .home-input{
+        border-left:1px solid #e5e7eb;
+        border-right:1px solid #e5e7eb;
+      }
+
+      /* round corners when items aren’t in one line */
+      .home-seg,
+      .home-seg--left,
+      .home-seg--right{ border-radius:10px }
+    }
+  </style>
+</head>
+<body>
+
+  <main class="home-shell">
+    <section class="home-search-container" aria-label="Property quick search">
+      
+      <!-- Pill Row (kept; just smaller on mobile) -->
+      <div class="pill-row">
+        <button class="filter-pill active" data-type="buy">Buy</button>
+        <button class="filter-pill" data-type="rent">Rent</button>
+        <button class="filter-pill" data-type="commercial">Commercial</button>
+      </div>
+
+      <div class="home-search-row">
+        <select id="homeCity" class="home-seg home-seg--left" aria-label="Select city">
+          <option value="" selected disabled>Select City</option>
+          <option>Chennai</option>
+          <option>Coimbatore</option>
+          <option>Madurai</option>
+        </select>
+
+        <div class="home-input-wrap">
+          <!-- SVG icon is reduced on mobile by CSS and inline size here -->
+          <svg class="home-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M21 21l-4.35-4.35M10.5 18a7.5 7.5 0 1 1 0-15 7.5 7.5 0 0 1 0 15Z"
+                  stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          <input id="homeQuery" class="input home-input" placeholder="Search up to 3 localities or landmarks" aria-label="Locality search">
+        </div>
+
+        <button id="homeSearchBtn" class="btn home-seg home-seg--right" type="button">
+          <span>Search</span>
+        </button>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    (function(){
+      const LISTINGS_URL = "https://tharaga.co.in/verified-property-listings";
+      let selectedType = "buy"; // default
+
+      // Handle pill clicks
+      document.querySelectorAll('.filter-pill').forEach(btn => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('.filter-pill').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          selectedType = btn.dataset.type;
+        });
+      });
+
+      const cityEl  = document.getElementById('homeCity');
+      const qEl     = document.getElementById('homeQuery');
+      const btnEl   = document.getElementById('homeSearchBtn');
+
+      function go(){
+        const city = (cityEl.value || "").trim();
+        const q    = (qEl.value || "").trim();
+
+        const params = new URLSearchParams();
+        if (selectedType) params.set('type', selectedType);
+        if (city) params.set('city', city);
+        if (q) {
+          params.set('q', q);
+          params.set('location', q);
+          params.set('locality', q);
+        }
+
+        const sep = LISTINGS_URL.includes('?') ? '&' : '?';
+        const url = LISTINGS_URL + (params.toString() ? (sep + params.toString()) : "");
+        // If embedded inside an iframe, request parent to navigate; also try top-level navigation
+        try {
+          if (window.self !== window.top) {
+            try {
+              const PARENT_ORIGIN = 'https://tharaga.co.in';
+              window.parent.postMessage({ type: 'open_listings', url, source: 'search-filter-home' }, PARENT_ORIGIN);
+            } catch(_) {
+              try { window.parent.postMessage({ type: 'open_listings', url, source: 'search-filter-home' }, '*'); } catch(__) {}
+            }
+            try { window.top.location.href = url; return; } catch(__) {}
+          }
+        } catch(_) {}
+        // Not embedded: same-tab navigation
+        try { window.location.assign(url); } catch(_) { window.location.href = url; }
+      }
+
+      // ---------- REPLACEMENT: attach auth-aware handler for Search ----------
+      (function setupSearchClick() {
+        const runGo = () => { try { go(); } catch (err) { console.error('runGo error', err); } };
+
+        async function manualGateHandler(evt){
+          try {
+            // Persist current search so user returns seamlessly after auth
+            try {
+              const payload = { city: (cityEl.value||''), q: (qEl.value||''), type: (selectedType||'') };
+              sessionStorage.setItem('tharaga_pending_home_search', JSON.stringify(payload));
+              sessionStorage.setItem('tharaga_pending_home_ts', String(Date.now()));
+            } catch(_) {}
+
+            let loggedIn = false;
+            if (window.supabase && window.supabase.auth) {
+              try { const res = await window.supabase.auth.getUser(); loggedIn = !!res?.data?.user; } catch(_) {}
+            }
+            if (!loggedIn && window.__authGateLoggedIn) loggedIn = true;
+            if (loggedIn) { runGo(); return; }
+            evt.preventDefault && evt.preventDefault();
+            evt.stopPropagation && evt.stopPropagation();
+            const next = (location.pathname + location.search);
+            // If embedded, ask parent to open the global modal
+            try {
+              if (window.self !== window.parent) {
+                window.parent.postMessage({ type: 'open_login_modal', next }, '*');
+              }
+            } catch(_) {}
+            // Prefer opening modal directly to avoid toggling an already-auth dropdown
+            if (window.authGate && typeof window.authGate.openLoginModal === 'function') {
+              try { window.authGate.openLoginModal({ next }); } catch(_) {}
+            }
+            // Do NOT navigate yet; wait for successful login then resume.
+            runGo();
+          } catch (e) { console.error('manualGateHandler error', e); }
+        }
+
+        btnEl.addEventListener('click', manualGateHandler, { passive: false });
+
+        qEl.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter') { e.preventDefault(); btnEl.click(); }
+        });
+      })();
+
+
+      const savedCity = sessionStorage.getItem('tharaga_home_city');
+      if (savedCity) cityEl.value = savedCity;
+      cityEl.addEventListener('change', ()=> sessionStorage.setItem('tharaga_home_city', cityEl.value));
+
+      // Resume pending search after successful login (same-tab redirect to full listings page)
+      async function resumeAfterLoginIfPending(){
+        try {
+          const ts = Number(sessionStorage.getItem('tharaga_pending_home_ts')||'0');
+          const recent = (Date.now() - ts) < 10*60*1000; // 10 minutes
+          const saved = JSON.parse(sessionStorage.getItem('tharaga_pending_home_search')||'null');
+          if (!recent || !saved) return;
+          // Ensure we have a user session
+          let user = null;
+          try { const r = await window.supabase?.auth?.getSession(); user = r?.data?.session?.user || null; } catch(_) {}
+          if (!user) return;
+          // Hydrate form for consistency
+          try {
+            if (saved.city) cityEl.value = saved.city;
+            if (typeof saved.q === 'string') qEl.value = saved.q;
+            if (saved.type) {
+              const pill = document.querySelector(`.filter-pill[data-type="${saved.type}"]`);
+              if (pill) pill.click();
+            }
+          } catch(_) {}
+          // Clear pending and navigate
+          try { sessionStorage.removeItem('tharaga_pending_home_search'); sessionStorage.removeItem('tharaga_pending_home_ts'); } catch(_) {}
+          go();
+        } catch(e){ console.warn('resumeAfterLoginIfPending failed', e); }
+      }
+
+      window.addEventListener('storage', (ev)=>{
+        if (ev && (ev.key === 'supabase.auth.token' || ev.key === '__tharaga_magic_continue' || ev.key === '__tharaga_magic_confirmed')){
+          setTimeout(resumeAfterLoginIfPending, 200);
+        }
+      });
+      document.addEventListener('DOMContentLoaded', ()=> setTimeout(resumeAfterLoginIfPending, 200));
+    })();
+  </script>
+
+  <!-- Seamless auth sync for the search button: detect existing session early -->
+  <script type="module">
+    document.addEventListener('DOMContentLoaded', async () => {
+      try {
+        if (!window.supabase || !window.supabase.auth) {
+          const mod = await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm');
+          const client = mod.createClient('https://wedevtjjmdvngyshqdro.supabase.co','eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndlZGV2dGpqbWR2bmd5c2hxZHJvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU0NzYwMzgsImV4cCI6MjA3MTA1MjAzOH0.Ex2c_sx358dFdygUGMVBohyTVto6fdEQ5nydDRh9m6M');
+          window.supabase = client;
+        }
+      } catch(_) {}
+
+      try {
+        const sess = await window.supabase?.auth?.getSession();
+        if (sess?.data?.session?.user) {
+          try { window.__authGateLoggedIn = true; } catch(_) {}
+        }
+      } catch(_) {}
+    });
+  </script>
+
+
+</body>
+</html>

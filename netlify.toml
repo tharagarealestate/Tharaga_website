@@ -13,6 +13,47 @@
   status = 200
   force = true
 
+# Normalize common microsite paths and ensure trailing slash
+[[redirects]]
+  from = "/about"
+  to = "/about/"
+  status = 301
+
+[[redirects]]
+  from = "/buyer-form"
+  to = "/buyer-form/"
+  status = 301
+
+[[redirects]]
+  from = "/property-listing"
+  to = "/property-listing/"
+  status = 301
+
+[[redirects]]
+  from = "/rating"
+  to = "/rating/"
+  status = 301
+
+[[redirects]]
+  from = "/reel-grid"
+  to = "/reel-grid/"
+  status = 301
+
+[[redirects]]
+  from = "/registration"
+  to = "/registration/"
+  status = 301
+
+[[redirects]]
+  from = "/search-filter-home"
+  to = "/search-filter-home/"
+  status = 301
+
+[[redirects]]
+  from = "/Reset_password"
+  to = "/Reset_password/"
+  status = 301
+
 [[redirects]]
   from = "/auth-email-landing"
   to = "/auth-email-landing/"
@@ -73,3 +114,14 @@
   from = "/app"
   to = "/app/"
   status = 301
+
+# Final catch-all: let Next handle /app/*, otherwise serve static index.html
+[[redirects]]
+  from = "/app/*"
+  to = "/app/:splat"
+  status = 200
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

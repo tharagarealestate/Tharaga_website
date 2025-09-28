@@ -73,9 +73,6 @@ tmp/
 *.trace.zip
 trace.zip
 
-# Keep Playwright test specs tracked
-!tests/playwright/**
-
 # ==========================================
 # Netlify local artifacts
 # ==========================================
@@ -93,6 +90,7 @@ trace.zip
 !tests/playwright/**
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> dd6f385 (feat: Add auth modal stub and update tests)
 =======
 
@@ -100,3 +98,5 @@ trace.zip
 !tests/playwright/**
 
 >>>>>>> f8d9e60 (test(e2e): force-add resolved buyer-form email test on PR branch)
+=======
+>>>>>>> 4903590 (fix: widen CSP for OTP/auth; add auth modal stub; stabilize Playwright tests; track specs)

@@ -112,17 +112,7 @@ async function main() {
     }
   }
 
-  // Also copy root index.html as unified.html so Netlify can serve it at "/"
-  // via redirect without conflicting with Next root route.
-  const rootIndex = path.join(repoRoot, 'index.html');
-  if (await pathExists(rootIndex)) {
-    const destUnified = path.join(nextPublic, 'unified.html');
-    await copyFile(rootIndex, destUnified);
-    console.log('[copy-static] Copied root index.html -> public/unified.html');
-  } else {
-    console.log('[copy-static] No root index.html found to copy as unified.html');
-  }
-
+  // Do not copy root index.html to avoid clobbering Next's root route
   console.log('[copy-static] Done.');
 }
 

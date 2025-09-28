@@ -77,3 +77,6 @@ trace.zip
 # Netlify local artifacts
 # ==========================================
 .netlify/
+
+# Keep Playwright test specs tracked
+!tests/playwright/**

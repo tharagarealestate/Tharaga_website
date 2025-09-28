@@ -36,7 +36,7 @@
 ## Serve unified static homepage at root instead of Next.js app route
 [[redirects]]
   from = "/"
-  to = "/unified.html"
+  to = "/app/unified.html"
   status = 200
   force = true
 

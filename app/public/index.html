@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Tharaga — Home</title>
+  <script type="module" src="/js/fragment-handle.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="/js/premium.css">
+  <script src="/js/auth-modal-stub.js" defer></script>
+  
+</head>
+<body>
+  <header class="premium">
+    <div class="container nav-bar">
+      <a class="brand" href="/"><span class="dot" aria-hidden="true"></span><span>Tharaga</span></a>
+
+      <nav class="nav">
+        <a href="/property-listing/">Properties</a>
+        <a href="/search-filter-home/">Search</a>
+        <a href="/rating/">Ratings</a>
+        <a href="/snippets/">Login/Signup</a>
+        <a href="/app/">AI App</a>
+      </nav>
+      <div class="cta-row">
+        <a class="btn" href="/login_signup_glassdrop/">Login</a>
+        <a class="btn primary" href="/login_signup_glassdrop/">Sign up</a>
+      </div>
+    </div>
+  </header>
+
+  <section class="hero">
+    <div class="container hero-inner">
+      <h1>Premium real estate, verified and curated</h1>
+      <p>Explore verified listings and AI recommendations designed for serious buyers and trusted builders.</p>
+
+      <div class="actions">
+        <a class="btn primary" href="/property-listing/">Browse properties</a>
+        <a class="btn" href="/search-filter-home/">Search filters</a>
+      </div>
+    </div>
+  </section>
+
+  <div class="container" style="padding:24px 0">
+    <nav class="nav" aria-label="Quick links">
+      <a href="/about/">About</a>
+      <a href="/buyer-form/">Buyer Form</a>
+      <a href="/reel-grid/">Reels</a>
+      <a href="/registration/">Registration</a>
+      <a href="/Reset_password/">Reset password</a>
+      <a href="auth-landing/">auth landing</a>
+      <a href="auth-email-landing/">auth email landing</a>
+    </nav>
+  </div>
+
+  <footer class="footer">
+    <div class="container" style="display:flex;align-items:center;justify-content:space-between;gap:12px">
+
+      <div>© <span id="year"></span> Tharaga</div>
+      <div class="links">
+        <a href="/about/">About</a>
+        <a href="/rating/">Ratings</a>
+        <a href="/Reset_password/">Reset Password</a>
+      </div>
+    </div>
+  </footer>
+  <script>
+  // Auth header is loaded via external script for reuse across pages
+  </script>
+  
+  <script>
+    document.getElementById("year").textContent = new Date().getFullYear();
+  </script>
+  <script>
+    // Auth header script will hide this link and render an account button.
+  </script>
+</body>
+</html>

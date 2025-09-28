@@ -2,6 +2,7 @@ import { fetchRecommendations } from '@/lib/api'
 import type { RecommendationItem } from '@/types/recommendations'
 import { RecommendationsCarousel } from '@/features/recommendations/RecommendationsCarousel'
 import { getOrCreateSessionId } from '@/lib/session'
+import Link from 'next/link'
 
 export default async function Home() {
   let items: RecommendationItem[] = []
@@ -36,7 +37,7 @@ export default async function Home() {
         </header>
         <RecommendationsCarousel items={items} isLoading={false} error={error} />
         <div className="mt-4">
-          <a href="/properties" className="text-deepBlue/80 hover:text-deepBlue underline">View all recommended properties</a>
+          <Link href="/properties" className="text-deepBlue/80 hover:text-deepBlue underline">View all recommended properties</Link>
         </div>
       </section>
     </main>

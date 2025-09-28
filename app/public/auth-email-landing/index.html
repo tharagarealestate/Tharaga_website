@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Email confirmation • Tharaga</title>
+  <meta name="robots" content="noindex" />
+  <style>
+    :root{ --bg:#0a0a0a; --txt:#f5f5f5; --muted:#9ca3af; --acc:#16a34a; --err:#dc2626 }
+    html,body{height:100%}
+    body{ margin:0; font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial; background:var(--bg); color:var(--txt); display:grid; place-items:center; }
+    .card{ width:540px; max-width:92vw; background:#111; border:1px solid rgba(255,255,255,.08); border-radius:14px; padding:18px; box-shadow:0 10px 40px rgba(0,0,0,.55); }
+    h1{ font-size:20px; margin:0 0 8px; }
+    p{ margin:.25rem 0; color:var(--muted) }
+    a.btn{ display:inline-block; margin-top:10px; color:#111; background:linear-gradient(180deg,#22c55e,#16a34a); text-decoration:none; font-weight:700; padding:10px 14px; border-radius:10px }
+    .ok{ color:#86efac }
+    .err{ color:#fecaca }
+    code{ color:#ddd; word-break:break-all }
+  </style>
+</head>
+<body>
+  <main class="card" aria-live="polite">
+    <h1>Confirming your email…</h1>
+    <p id="status">Please wait while we complete your verification.</p>
+    <p id="fallback" class="ok" style="display:none"></p>
+    <p id="error" class="err" style="display:none"></p>
+  </main>
+
+  <script>
+  (function(){
+    'use strict';
+    // Keep this in sync with other files
+    var SUPABASE_ORIGIN = 'https://wedevtjjmdvngyshqdro.supabase.co';
+
+    function set(elId, text){ try { var el = document.getElementById(elId); el.textContent = text; el.style.display = text ? '' : 'none'; } catch(_) {} }
+    function show(id){ try { document.getElementById(id).style.display = ''; } catch(_){} }
+    function hide(id){ try { document.getElementById(id).style.display = 'none'; } catch(_){} }
+
+    try {
+      var params = new URLSearchParams(location.search);
+      var confirmationUrl = params.get('confirmation_url');
+
+      if (!confirmationUrl) {
+        hide('fallback');
+        set('error', 'Missing confirmation_url parameter in the link.');
+        return;
+      }
+
+      // Do NOT decode again. URLSearchParams.get() already returns a decoded string.
+      var url;
+      try {
+        url = new URL(confirmationUrl);
+      } catch (e) {
+        hide('fallback');
+        set('error', 'The confirmation link is invalid.');
+        return;
+      }
+
+      // Allow only our Supabase project verify endpoint for safety
+      if (url.origin !== SUPABASE_ORIGIN || !/\/auth\/v1\/verify$/i.test(url.pathname)) {
+        hide('fallback');
+        set('error', 'Blocked unexpected confirmation destination.');
+        return;
+      }
+
+      // Provide a manual fallback link in case auto-redirect is blocked
+      var anchor = '<a class="btn" href="' + confirmationUrl.replace(/"/g,'&quot;') + '">Continue</a>';
+      set('fallback', 'If you are not redirected automatically, click: ');
+      document.getElementById('fallback').innerHTML = 'If you are not redirected automatically, click: ' + anchor;
+      show('fallback');
+
+      // Redirect fast, but allow paint first
+      setTimeout(function(){ location.replace(confirmationUrl); }, 60);
+    } catch (err) {
+      console.error(err);
+      hide('fallback');
+      set('error', 'Unexpected error while processing your confirmation.');
+    }
+  })();
+  </script>
+</body>
+</html>
+

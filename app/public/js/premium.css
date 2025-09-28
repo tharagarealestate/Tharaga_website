@@ -1,0 +1,37 @@
+:root{
+  --deep:#001F4D;
+  --ink:#0B1020;
+  --gold:#D4AF37;
+  --muted:#4B5565;
+  --bg:#FFFFFF;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial}
+header.premium{
+  position:sticky;top:0;z-index:30;background:rgba(255,255,255,.8);backdrop-filter:saturate(160%) blur(8px);
+  border-bottom:1px solid rgba(0,31,77,.08)
+}
+.container{max-width:1200px;margin:0 auto;padding:0 16px}
+.nav-bar{display:flex;align-items:center;justify-content:space-between;padding:14px 0}
+.brand{display:flex;align-items:center;gap:10px;font-weight:700}
+.brand .dot{width:20px;height:20px;border-radius:6px;background:var(--deep)}
+.nav a{color:rgba(11,16,32,.8);text-decoration:none;margin:0 10px;font-size:14px}
+.nav a:hover{color:var(--ink)}
+.cta-row{display:flex;gap:8px}
+.btn{display:inline-flex;align-items:center;justify-content:center;height:40px;padding:0 14px;border-radius:12px;font-weight:600;border:1px solid rgba(0,31,77,.18);background:#fff;color:var(--ink);text-decoration:none}
+.btn:hover{background:rgba(0,31,77,.05)}
+.btn.primary{background:var(--deep);color:#fff;border-color:transparent}
+.btn.primary:hover{filter:brightness(1.03)}
+.hero{background:linear-gradient(135deg,#001F4D 0%, #0a2d6e 100%);color:#fff}
+.hero-inner{padding:64px 0}
+.hero h1{font-size:40px;line-height:1.1;margin:0 0 8px}
+.hero p{opacity:.9;margin:0 0 16px}
+.hero .actions{display:flex;gap:10px;margin-top:16px}
+.footer{border-top:1px solid rgba(0,31,77,.08);padding:24px 0;color:rgba(11,16,32,.75);font-size:14px;background:#fff}
+.footer .links{display:flex;gap:18px}
+/* Card */
+.card{background:#fff;border:1px solid rgba(0,31,77,.08);border-radius:16px;box-shadow:0 2px 16px rgba(0,31,77,.08)}
+/* Focus */
+:where(a,button,input,select,textarea):focus-visible{outline:2px solid rgba(212,175,55,.75);outline-offset:2px}
+/* Scrollbar */
+@media (hover:hover) and (pointer:fine){*::-webkit-scrollbar{height:10px;width:10px}*::-webkit-scrollbar-thumb{background:rgba(0,31,77,.25);border-radius:9999px}*::-webkit-scrollbar-track{background:rgba(0,31,77,.06)}}

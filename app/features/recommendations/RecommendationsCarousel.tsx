@@ -17,6 +17,7 @@ export function RecommendationsCarousel({ items = [], isLoading = false, error =
   const [clientItems, setClientItems] = React.useState(items)
   const [retrying, setRetrying] = React.useState(false)
   const [clientError, setClientError] = React.useState<string | null>(null)
+  const hasItems = (clientItems.length || items.length) > 0
 
   React.useEffect(() => {
     // If server failed to load, attempt one client-side retry for resilience
@@ -36,7 +37,7 @@ export function RecommendationsCarousel({ items = [], isLoading = false, error =
 
   if (error && clientItems.length === 0 && !retrying) {
     return (
-      <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-red-800">
+      <div className="rounded-2xl border border-red-200 bg-red-50/80 p-4 text-red-800 shadow-subtle">
         We’re having trouble loading recommendations. Please try again later.
       </div>
     )
@@ -45,7 +46,7 @@ export function RecommendationsCarousel({ items = [], isLoading = false, error =
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold tracking-tight">Recommended for you</h2>
+        <h2 className="sr-only">Recommended for you</h2>
         <div className="hidden md:flex items-center gap-2">
           <NavButton direction="prev" />
           <NavButton direction="next" />
@@ -54,7 +55,7 @@ export function RecommendationsCarousel({ items = [], isLoading = false, error =
       <ScrollableRow>
         {isLoading || retrying ? (
           Array.from({ length: 4 }).map((_, i) => <CardSkeleton key={i} />)
-        ) : (clientItems.length || items.length) === 0 ? (
+        ) : !hasItems ? (
           <EmptyState />
         ) : (
           (clientItems.length ? clientItems : items).map((item) => <PropertyCard key={item.property_id} item={item} />)
@@ -66,7 +67,7 @@ export function RecommendationsCarousel({ items = [], isLoading = false, error =
 
 function PropertyCard({ item }: { item: RecommendationItem }) {
   return (
-    <div className="min-w-[280px] max-w-[320px] rounded-xl bg-brandWhite shadow-subtle border border-deepBlue/10 overflow-hidden">
+    <div className="min-w-[280px] max-w-[320px] rounded-2xl bg-brandWhite shadow-subtle hover:shadow-premium transition-shadow border border-deepBlue/10 overflow-hidden">
       <div className="relative h-40 w-full">
         <Image src={item.image_url} alt={item.title} fill className="object-cover" sizes="(max-width: 768px) 80vw, 320px" />
       </div>
@@ -151,8 +152,8 @@ function ScrollableRow({ children }: { children: React.ReactNode }) {
 
 function CardSkeleton() {
   return (
-    <div className="min-w-[280px] max-w-[320px] rounded-xl bg-brandWhite shadow-subtle border border-deepBlue/10 overflow-hidden animate-pulse">
-      <div className="h-40 w-full bg-deepBlue/10" />
+    <div className="min-w-[280px] max-w-[320px] rounded-2xl bg-brandWhite shadow-subtle border border-deepBlue/10 overflow-hidden">
+      <div className="h-40 w-full bg-gradient-to-r from-deepBlue/10 via-deepBlue/5 to-deepBlue/10 bg-[length:200%_100%] animate-shimmer" />
       <div className="p-3 space-y-2">
         <div className="h-4 w-3/4 bg-deepBlue/10 rounded" />
         <div className="h-3 w-2/3 bg-deepBlue/10 rounded" />
@@ -163,7 +164,7 @@ function CardSkeleton() {
 
 function EmptyState() {
   return (
-    <div className="min-w-[280px] rounded-xl border border-deepBlue/10 bg-brandWhite p-6 text-center">
+    <div className="min-w-[280px] rounded-2xl border border-deepBlue/10 bg-brandWhite p-6 text-center shadow-subtle">
       <p className="text-deepBlue/70">No recommendations yet. Explore properties to get tailored picks.</p>
     </div>
   )

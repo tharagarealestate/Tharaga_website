@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Tharaga Reviews</title>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/js/premium.css">
   <style>
     body {
       background: #faf8f6;
@@ -88,6 +89,22 @@
   </style>
 </head>
 <body>
+  <header class="premium">
+    <div class="container nav-bar">
+      <a class="brand" href="/"><span class="dot" aria-hidden="true"></span><span>Tharaga</span></a>
+      <nav class="nav">
+        <a href="/property-listing/">Properties</a>
+        <a href="/search-filter-home/">Search</a>
+        <a href="/rating/">Ratings</a>
+        <a href="/snippets/">Login/Signup</a>
+        <a href="/app/">AI App</a>
+      </nav>
+      <div class="cta-row">
+        <a class="btn" href="/login_signup_glassdrop/">Login</a>
+        <a class="btn primary" href="/login_signup_glassdrop/">Sign up</a>
+      </div>
+    </div>
+  </header>
   <!-- Heading -->
   <h2 class="review-heading">Builders &amp; Buyers Speak</h2>
 
@@ -118,6 +135,16 @@
       </div>
     </div>
   </div>
-  
+  <footer class="footer">
+    <div class="container" style="display:flex;align-items:center;justify-content:space-between;gap:12px">
+      <div>© <span id="year"></span> Tharaga</div>
+      <div class="links">
+        <a href="/about/">About</a>
+        <a href="/rating/">Ratings</a>
+        <a href="/Reset_password/">Reset Password</a>
+      </div>
+    </div>
+  </footer>
+  <script>document.getElementById('year') && (document.getElementById('year').textContent = new Date().getFullYear());</script>
 </body>
 </html>

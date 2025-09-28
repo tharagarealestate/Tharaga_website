@@ -20,6 +20,7 @@ test.describe('Top-right auth header', () => {
       });
     }
 
+    // The Durable header modal is injected on snippets page; ensure it opened
     const overlay = page.locator('.thg-auth-overlay');
     await expect(overlay).toHaveAttribute('aria-hidden', /false|true/);
   });

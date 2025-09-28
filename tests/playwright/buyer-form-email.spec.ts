@@ -4,14 +4,18 @@ test.describe('Buyer Form - Email autofill and lock', () => {
   test('locks email after auth signal and mirrors into hidden input', async ({ page }) => {
     await page.goto('/buyer-form/')
 
-    // Set cache BEFORE scripts run, then reload so the page locks immediately
+    // Simulate signed-in event the page listens to (set before navigation)
     const userEmail = 'user@example.com'
     await page.addInitScript((email) => {
       try { localStorage.setItem('__tharaga_magic_continue', JSON.stringify({ user: { email }, ts: Date.now() })) } catch(_) {}
     }, userEmail)
+
+    // Reload so init script is applied and the page locking code runs on load
     await page.reload()
 
-    // Wait for the lock to apply (disabled state or hidden mirror present)
+    const emailInput = page.locator('#buyerForm [name="email"], #buyerForm input[data-session-email]')
+
+    // Wait for the lock to apply (field disabled and name moved to hidden)
     await page.waitForFunction(() => !!document.querySelector('#buyerForm input[disabled]') || !!document.querySelector('#buyer-email-hidden'))
 
     // The visible field should have data-session-email and be disabled/read-only

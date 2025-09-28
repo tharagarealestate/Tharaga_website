@@ -35,6 +35,9 @@ export default async function Home() {
           <p className="text-deepBlue/70">Premium picks based on your session.</p>
         </header>
         <RecommendationsCarousel items={items} isLoading={false} error={error} />
+        <div className="mt-4">
+          <a href="/properties" className="text-deepBlue/80 hover:text-deepBlue underline">View all recommended properties</a>
+        </div>
       </section>
     </main>
   )

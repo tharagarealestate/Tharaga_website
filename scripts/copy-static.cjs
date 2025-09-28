@@ -112,7 +112,18 @@ async function main() {
     }
   }
 
-  // Do not copy root index.html to avoid clobbering Next's root route
+  // Copy root homepage into Next public so root "/" serves the premium UX
+  try {
+    const rootIndex = path.join(repoRoot, 'index.html');
+    if (await pathExists(rootIndex)) {
+      const destIndex = path.join(nextPublic, 'index.html');
+      await copyFile(rootIndex, destIndex);
+      console.log('[copy-static] Copied root index.html to Next public');
+    }
+  } catch (e) {
+    console.warn('[copy-static] Warning: unable to copy root index.html', e && e.message);
+  }
+
   console.log('[copy-static] Done.');
 }
 

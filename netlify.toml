@@ -8,6 +8,12 @@
   package = "@netlify/plugin-nextjs"
 
 [[redirects]]
+  from = "/"
+  to = "/index.html"
+  status = 200
+  force = true
+
+[[redirects]]
   from = "/auth-email-landing"
   to = "/auth-email-landing/"
   status = 301
@@ -61,3 +67,9 @@
   to = "/property-listing/"
   status = 200
   force = true
+
+## Ensure Next.js app remains accessible under /app
+[[redirects]]
+  from = "/app"
+  to = "/app/"
+  status = 301

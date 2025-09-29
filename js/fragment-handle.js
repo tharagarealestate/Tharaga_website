@@ -2,6 +2,9 @@
 ;(function(){
   'use strict';
 
+  // Add an "embedded" class to the body when inside an iframe so pages can tweak UX
+  try { if (window.self !== window.parent) { try { document.body.classList.add('embedded'); } catch(_){} } } catch(_){}
+
   // If the URL hash accidentally contains a full URL (e.g., "#https://…"),
   // or is a stray "#" left by redirects, strip it to keep URLs clean.
   try {

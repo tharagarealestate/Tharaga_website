@@ -6,9 +6,7 @@
 
 [[plugins]]
   package = "@netlify/plugin-nextjs"
-  [plugins.inputs]
-    # Let Next.js handle only the app and its assets; serve everything else statically
-    includedRoutes = ["/app/*", "/_next/*"]
+
 
 [[redirects]]
   from = "/"

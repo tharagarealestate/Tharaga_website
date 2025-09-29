@@ -2,9 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>India Property Registration Fee Calculator</title>
-  <link rel="stylesheet" href="/js/premium.css">
   <style>
     body {
       font-family: 'Segoe UI', sans-serif;
@@ -46,22 +44,6 @@
   </style>
 </head>
 <body>
-  <header class="premium">
-    <div class="container nav-bar">
-      <a class="brand" href="/"><span class="dot" aria-hidden="true"></span><span>Tharaga</span></a>
-      <nav class="nav">
-        <a href="/property-listing/">Properties</a>
-        <a href="/search-filter-home/">Search</a>
-        <a href="/rating/">Ratings</a>
-        <a href="/snippets/">Login/Signup</a>
-        <a href="/app/">AI App</a>
-      </nav>
-      <div class="cta-row">
-        <a class="btn" href="/login_signup_glassdrop/">Login</a>
-        <a class="btn primary" href="/login_signup_glassdrop/">Sign up</a>
-      </div>
-    </div>
-  </header>
 
   <h2>India Property Registration Fee Calculator</h2>
 
@@ -113,16 +95,6 @@
 
   <div class="result" id="result"></div>
 
-  <footer class="footer">
-    <div class="container" style="display:flex;align-items:center;justify-content:space-between;gap:12px">
-      <div>© <span id="year"></span> Tharaga</div>
-      <div class="links">
-        <a href="/about/">About</a>
-        <a href="/rating/">Ratings</a>
-        <a href="/Reset_password/">Reset Password</a>
-      </div>
-    </div>
-  </footer>
   <script>
     function calculate() {
       const price = parseFloat(document.getElementById("price").value);
@@ -185,7 +157,8 @@
         <strong>Total Registration Charges:</strong> ₹${total.toLocaleString()}
       `;
     }
-    document.getElementById('year') && (document.getElementById('year').textContent = new Date().getFullYear());
   </script>
+  
+
 </body>
 </html>

@@ -15,7 +15,11 @@ test.describe('Buyer Form - Email autofill and lock', () => {
 
     const emailInput = page.locator('#buyerForm [name="email"], #buyerForm input[data-session-email]')
 
+<<<<<<< HEAD
     // Wait for the lock to apply (field disabled and name moved to hidden)
+=======
+    // Wait for the lock to apply (field disabled OR hidden mirror created)
+>>>>>>> 746fac3 (feat: Add Playwright tests and improve test reliability)
     await page.waitForFunction(() => !!document.querySelector('#buyerForm input[disabled]') || !!document.querySelector('#buyer-email-hidden'))
 
     // The visible field should have data-session-email and be disabled/read-only

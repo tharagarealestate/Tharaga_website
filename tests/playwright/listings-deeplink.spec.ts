@@ -9,10 +9,10 @@ test.describe('Verified listings deep-link hydration', () => {
     const url = (baseURL || 'http://localhost:4173') + '/property-listing/index.html' +
       '?type=buy&city=Chennai&locality=Anna%20Nagar&price_min=4000000&price_max=5000000&ptype=apartment&bhk=2&furnished=semi%20furnished&facing=east&area_min=900&area_max=1200&amenity=gym&near_metro=1&max_walk=12&sort=ai_relevance';
 
-    await page.goto(url, { waitUntil: 'domcontentloaded' });
+    await page.goto(url, { waitUntil: 'networkidle' });
 
-    // wait for results container to attach (not necessarily visible immediately)
-    await page.waitForSelector('#results', { state: 'attached' });
+    // wait for results and hydration; metro enrichment may delay first apply
+    await page.waitForSelector('#results');
     await expect(page.locator('#q')).toHaveValue(/Anna\s*Nagar/i, { timeout: 30000 });
     await expect(page.locator('#ptype')).toHaveValue('Apartment');
     await expect(page.locator('#bhk')).toHaveValue('2');

@@ -4,8 +4,6 @@ const nextConfig = {
   experimental: {
     typedRoutes: true,
   },
-  // Serve Next.js app under /app so the root can host the unified static site
-  basePath: '/app',
   async rewrites() {
     // Ensure /api in Next dev maps to real backend if proxy not present
     const apiBase = process.env.NEXT_PUBLIC_API_URL

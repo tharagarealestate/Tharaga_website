@@ -61,3 +61,15 @@
   to = "/property-listing/"
   status = 200
   force = true
+
+[[redirects]]
+  from = "/"
+  to = "/index.html"
+  status = 200
+  force = true
+
+# Final catch-all
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

@@ -63,12 +63,4 @@
   status = 200
   force = true
 
-[[redirects]]
-  from = "/app"
-  to = "/"
-  status = 301
 
-[[redirects]]
-  from = "/app/*"
-  to = "/:splat"
-  status = 301

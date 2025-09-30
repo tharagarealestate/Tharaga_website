@@ -2,8 +2,9 @@
 import { test, expect } from '@playwright/test';
 
 test.describe('Signup flow', () => {
-  test('shows non-blocking UI feedback when creating account', async ({ page, baseURL }) => {
-    await page.goto('/login_signup_glassdrop/');
+  test('shows non-blocking UI feedback when creating account', async ({ page }) => {
+    const base = 'http://localhost:4173/login_signup_glassdrop/';
+    await page.goto(base);
 
     // Helper to attempt signup
     const doSignup = async (email: string, password: string) => {

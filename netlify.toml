@@ -7,54 +7,6 @@
 [[plugins]]
   package = "@netlify/plugin-nextjs"
 
-
-[[redirects]]
-  from = "/"
-  to = "/index.html"
-  status = 200
-  force = true
-
-# Normalize common microsite paths and ensure trailing slash
-[[redirects]]
-  from = "/about"
-  to = "/about/"
-  status = 301
-
-[[redirects]]
-  from = "/buyer-form"
-  to = "/buyer-form/"
-  status = 301
-
-[[redirects]]
-  from = "/property-listing"
-  to = "/property-listing/"
-  status = 301
-
-[[redirects]]
-  from = "/rating"
-  to = "/rating/"
-  status = 301
-
-[[redirects]]
-  from = "/reel-grid"
-  to = "/reel-grid/"
-  status = 301
-
-[[redirects]]
-  from = "/registration"
-  to = "/registration/"
-  status = 301
-
-[[redirects]]
-  from = "/search-filter-home"
-  to = "/search-filter-home/"
-  status = 301
-
-[[redirects]]
-  from = "/Reset_password"
-  to = "/Reset_password/"
-  status = 301
-
 [[redirects]]
   from = "/auth-email-landing"
   to = "/auth-email-landing/"
@@ -99,8 +51,8 @@
     Strict-Transport-Security = "max-age=31536000; includeSubDomains; preload"
     X-Content-Type-Options = "nosniff"
     Referrer-Policy = "no-referrer"
-    Permissions-Policy = "geolocation=(), microphone()"
-    Content-Security-Policy = "default-src 'self'; img-src 'self' https: data:; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://www.gstatic.com https://www.google.com https://auth.tharaga.co.in; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; connect-src 'self' https://api.tharaga.co.in https://wedevtjjmdvngyshqdro.supabase.co https://www.google.com https://www.googleapis.com https://www.gstatic.com https://auth.tharaga.co.in; frame-src 'self' https://www.google.com https://www.gstatic.com https://auth.tharaga.co.in; frame-ancestors 'self' https://tharaga.co.in https://www.tharaga.co.in https://auth.tharaga.co.in; base-uri 'self'"
+    Permissions-Policy = "geolocation=(), microphone=()"
+    Content-Security-Policy = "default-src 'self'; img-src 'self' https: data:; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; connect-src 'self' https://api.tharaga.co.in https://wedevtjjmdvngyshqdro.supabase.co; frame-ancestors 'self' https://tharaga.co.in https://www.tharaga.co.in; base-uri 'self'"
 
 ## Rely on /api proxy; no public API base URL exposed
 
@@ -109,20 +61,3 @@
   to = "/property-listing/"
   status = 200
   force = true
-
-## Ensure Next.js app remains accessible under /app
-[[redirects]]
-  from = "/app"
-  to = "/app/"
-  status = 301
-
-# Final catch-all: let Next handle /app/*, otherwise serve static index.html
-[[redirects]]
-  from = "/app/*"
-  to = "/app/:splat"
-  status = 200
-
-[[redirects]]
-  from = "/*"
-  to = "/index.html"
-  status = 200

@@ -1,36 +1,38 @@
-﻿import { test, expect } from '@playwright/test'
+import { test, expect } from '@playwright/test'
 
 test.describe('Buyer Form - Email autofill and lock', () => {
   test('locks email after auth signal and mirrors into hidden input', async ({ page }) => {
     await page.goto('/buyer-form/')
 
+    // Simulate signed-in event the page listens to
     const userEmail = 'user@example.com'
-    await page.addInitScript((email) => {
+    await page.evaluate((email) => {
+      try { window.postMessage({ type: 'THARAGA_AUTH_SUCCESS', user: { email } }, '*') } catch(_) {}
+      try {
+        if ('BroadcastChannel' in window) {
+          const bc = new BroadcastChannel('tharaga-auth');
+          bc.postMessage({ user: { email } })
+        }
+      } catch(_) {}
       try { localStorage.setItem('__tharaga_magic_continue', JSON.stringify({ user: { email }, ts: Date.now() })) } catch(_) {}
     }, userEmail)
 
+    // Reload so the page's early cache hydrator locks the field from localStorage
     await page.reload()
 
-    await page.waitForFunction(() =>
-      !!document.querySelector('#buyerForm input[disabled]') ||
-      !!document.querySelector('#buyer-email-hidden')
-    )
+    const emailInput = page.locator('#buyerForm [name="email"], #buyerForm input[data-session-email]')
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-    // Wait for the lock to apply (field disabled and name moved to hidden)
-=======
-    // Wait for the lock to apply (field disabled OR hidden mirror created)
->>>>>>> 746fac3 (feat: Add Playwright tests and improve test reliability)
-    await page.waitForFunction(() => !!document.querySelector('#buyerForm input[disabled]') || !!document.querySelector('#buyer-email-hidden'))
+    // Wait for the lock to apply (field disabled OR data-session-email present)
+    const disabledOrTagged = page.locator('#buyerForm input[disabled], #buyerForm input[data-session-email]')
+    await expect(disabledOrTagged.first()).toBeVisible({ timeout: 10000 })
 
     // The visible field should have data-session-email and be disabled/read-only
-=======
->>>>>>> dd6f385 (feat: Add auth modal stub and update tests)
     const hasSessionAttr = await page.locator('#buyerForm input[data-session-email]').count()
     expect(hasSessionAttr).toBeGreaterThan(0)
 
-    const hidden = page.locator('#buyerForm input#buyer-email-hidden[type="hidden"][name="email"]')
+    // Hidden mirror should exist with name=email and same value
+    const hidden = page.locator('#buyerForm input[type="hidden"][name="email"]')
     await expect(hidden).toHaveValue(userEmail)
   })
 })
+

@@ -41,6 +41,13 @@
   status = 200
   force = true
 
+# Recommendations function fallback at /api/recommendations
+[[redirects]]
+  from = "/api/recommendations"
+  to = "/.netlify/functions/recommendations"
+  status = 200
+  force = true
+
 [[headers]]
   for = "/assets/*"
   [headers.values]

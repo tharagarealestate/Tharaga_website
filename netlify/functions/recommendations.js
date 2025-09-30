@@ -1,6 +1,15 @@
 exports.handler = async (event) => {
+  // Basic CORS support for client calls
+  const corsHeaders = {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type',
+  }
+  if (event.httpMethod === 'OPTIONS') {
+    return { statusCode: 204, headers: corsHeaders, body: '' }
+  }
   if (event.httpMethod !== 'POST') {
-    return { statusCode: 405, body: 'Method Not Allowed' }
+    return { statusCode: 405, headers: corsHeaders, body: 'Method Not Allowed' }
   }
   try {
     const body = JSON.parse(event.body || '{}')
@@ -18,9 +27,9 @@ exports.handler = async (event) => {
       reasons: ['Popular in your cohort', 'Matches preferences'],
       score: 0.5 + i * 0.01,
     }))
-    return { statusCode: 200, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ items }) }
+    return { statusCode: 200, headers: { 'Content-Type': 'application/json', ...corsHeaders }, body: JSON.stringify({ items }) }
   } catch (e) {
-    return { statusCode: 200, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ items: [] }) }
+    return { statusCode: 200, headers: { 'Content-Type': 'application/json', ...corsHeaders }, body: JSON.stringify({ items: [] }) }
   }
 }
 

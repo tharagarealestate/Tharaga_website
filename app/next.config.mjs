@@ -4,6 +4,7 @@ const nextConfig = {
   experimental: {
     typedRoutes: true,
   },
+  basePath: '/app',
   async rewrites() {
     // Ensure /api in Next dev maps to real backend if proxy not present
     const apiBase = process.env.NEXT_PUBLIC_API_URL

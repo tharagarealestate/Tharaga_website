@@ -8,6 +8,22 @@
   package = "@netlify/plugin-nextjs"
 
 [[redirects]]
+  from = "/"
+  to = "/index.html"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/app/*"
+  to = "/app/:splat"
+  status = 200
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+[[redirects]]
   from = "/auth-email-landing"
   to = "/auth-email-landing/"
   status = 301
@@ -26,7 +42,6 @@
   from = "/reset_password/*"
   to = "/Reset_password/:splat"
   status = 301
-
 
 [[redirects]]
   from = "/snippets"
@@ -51,7 +66,7 @@
     Strict-Transport-Security = "max-age=31536000; includeSubDomains; preload"
     X-Content-Type-Options = "nosniff"
     Referrer-Policy = "no-referrer"
-    Permissions-Policy = "geolocation=(), microphone=()"
+    Permissions-Policy = "geolocation=(), microphone()"
     Content-Security-Policy = "default-src 'self'; img-src 'self' https: data:; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; connect-src 'self' https://api.tharaga.co.in https://wedevtjjmdvngyshqdro.supabase.co; frame-ancestors 'self' https://tharaga.co.in https://www.tharaga.co.in; base-uri 'self'"
 
 ## Rely on /api proxy; no public API base URL exposed

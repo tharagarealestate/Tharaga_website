@@ -1,27 +1,13 @@
 [build]
   base = "app"
-  command = "npm install && node ../scripts/copy-static.cjs && npm run build"
+  command = "npm install && npm run build"
   publish = ".next"
   functions = "../netlify/functions"
 
 [[plugins]]
   package = "@netlify/plugin-nextjs"
 
-[[redirects]]
-  from = "/"
-  to = "/index.html"
-  status = 200
-  force = true
 
-[[redirects]]
-  from = "/app/*"
-  to = "/app/:splat"
-  status = 200
-
-[[redirects]]
-  from = "/*"
-  to = "/index.html"
-  status = 200
 
 [[redirects]]
   from = "/auth-email-landing"

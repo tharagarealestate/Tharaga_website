@@ -34,17 +34,17 @@
   to = "/snippets/"
   status = 301
 
+# Recommendations function at /api/recommendations (place BEFORE generic /api/*)
+[[redirects]]
+  from = "/api/recommendations"
+  to = "/.netlify/functions/recommendations"
+  status = 200
+  force = true
+
 ## Proxy API to Cloud Run to avoid browser CORS and keep origin stable
 [[redirects]]
   from = "/api/*"
   to = "https://api.tharaga.co.in/:splat"
-  status = 200
-  force = true
-
-# Recommendations function fallback at /api/recommendations
-[[redirects]]
-  from = "/api/recommendations"
-  to = "/.netlify/functions/recommendations"
   status = 200
   force = true
 

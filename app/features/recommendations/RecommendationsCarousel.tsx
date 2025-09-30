@@ -21,8 +21,12 @@ export function RecommendationsCarousel({ items = [], isLoading = false, error =
   React.useEffect(() => {
     // If server failed to load, attempt one client-side retry for resilience
     if ((error || items.length === 0) && !retrying) {
-      const sid = readCookie('thg_sid')
-      if (!sid) return
+      let sid = readCookie('thg_sid')
+      if (!sid) {
+        // create a client-side session id if missing
+        sid = `sid_${Date.now().toString(36)}_${Math.random().toString(36).slice(2)}`
+        document.cookie = `thg_sid=${encodeURIComponent(sid)}; path=/; max-age=${60 * 60 * 24 * 180}; samesite=lax`;
+      }
       setRetrying(true)
       fetchRecommendationsClient({ session_id: sid, num_results: 6 })
         .then((data) => {

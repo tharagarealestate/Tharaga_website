@@ -1,5 +1,4 @@
-import { redirect } from 'next/navigation'
+import Home from '../page'
 
-export default function LegacyAppRedirect() {
-  redirect('/')
-}
+// Legacy alias: serve the same home/AI experience at /app
+export default Home

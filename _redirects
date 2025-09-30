@@ -1,1 +1,4 @@
+/ /index.html 200
+/app/* /app/:splat 200
+/* /index.html 200
 /snippets/durable-auth-head.html   /snippets/   301

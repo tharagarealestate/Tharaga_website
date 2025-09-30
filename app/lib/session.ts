@@ -16,13 +16,18 @@ export function getOrCreateSessionId(): string {
   const sid = generateSessionId()
   // 180 days, Secure, Lax
   const maxAge = 60 * 60 * 24 * 180
-  store.set('thg_sid', sid, {
-    httpOnly: false,
-    sameSite: 'lax',
-    secure: true,
-    path: '/',
-    maxAge,
-  })
+  // In Server Components, cookies().set may throw; best-effort only.
+  try {
+    store.set('thg_sid', sid, {
+      httpOnly: false,
+      sameSite: 'lax',
+      secure: true,
+      path: '/',
+      maxAge,
+    })
+  } catch (_) {
+    // ignore; client code will ensure cookie exists
+  }
   return sid
 }
 

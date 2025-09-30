@@ -1,3 +1,3 @@
-export default function LegacyLayout({ children }: { children: React.ReactNode }) {
-  return children as any
-}
+import RootLayout from '../layout'
+
+export default RootLayout

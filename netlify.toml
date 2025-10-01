@@ -1,11 +1,14 @@
 [build]
   base = "app"
-  command = "npm install && node ../scripts/ensure-next-public-env.mjs && node ../scripts/copy-static.cjs && npm run build"
+  command = "npm install && npm --prefix ../netlify/functions install --no-audit --no-fund --omit=dev && node ../scripts/ensure-next-public-env.mjs && node ../scripts/copy-static.cjs && npm run build"
   publish = ".next"
   functions = "../netlify/functions"
 
 [[plugins]]
   package = "@netlify/plugin-nextjs"
+
+[[plugins]]
+  package = "@netlify/plugin-functions-install-core"
 
 
 

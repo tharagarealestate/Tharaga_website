@@ -41,6 +41,24 @@
   status = 200
   force = true
 
+[[redirects]]
+  from = "/api/admin/properties"
+  to = "/.netlify/functions/admin-properties-list"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/api/admin/verify"
+  to = "/.netlify/functions/admin-verify-property"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/api/leads"
+  to = "/.netlify/functions/lead-create"
+  status = 200
+  force = true
+
 # Recommendations function at /api/recommendations (place BEFORE generic /api/*)
 [[redirects]]
   from = "/api/recommendations"

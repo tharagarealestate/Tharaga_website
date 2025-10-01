@@ -1850,11 +1850,13 @@ document.addEventListener("DOMContentLoaded", async () => {
           if (ev?.data?.type === 'THARAGA_AUTH_SIGNED_OUT' || ev?.data?.type === 'THARAGA_AUTH_SIGNED_OUT_TEST') { unlockBuyerEmail(); return; }
         } catch(_) {}
       });
-      window.addEventListener('storage', () => {
+      window.addEventListener('storage', (e) => {
         try {
+          if (e && e.key && e.key !== '__tharaga_magic_continue' && e.key !== 'supabase.auth.token') return;
           const payload = JSON.parse(localStorage.getItem('__tharaga_magic_continue') || 'null');
-          if (payload?.user?.email) { lockBuyerEmail(payload.user.email); }
-          else { unlockBuyerEmail(); }
+          if (payload && payload.user && payload.user.email) { lockBuyerEmail(payload.user.email); return; }
+          // If cache cleared or token changed without email, unlock
+          unlockBuyerEmail();
         } catch(_) {}
       });
     } catch(_) {}

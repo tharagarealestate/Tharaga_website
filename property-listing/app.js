@@ -179,19 +179,23 @@ async function fetchFromLocalJSON() {
  * returns Array of normalized properties (not wrapped)
  */
 async function fetchProperties() {
-  // try supabase first
+  // Unified: first try our Netlify function (Supabase-backed), then fallbacks
+  try {
+    const res = await fetch('/api/properties-list', { cache: 'no-store' })
+    if (res.ok) {
+      const list = await res.json()
+      if (Array.isArray(list) && list.length) return list.map(normalizeRow)
+    }
+  } catch (_) {}
+
+  // try supabase directly (anon) as fallback
   try {
     const supa = await fetchFromSupabase();
     if (supa && supa.length) return supa;
-  } catch (e) {
-    // continue to fallback
-  }
+  } catch (_) {}
 
-  // try sheet
   const sheet = await fetchFromSheetCSV();
   if (sheet && sheet.length) return sheet;
-
-  // try local json
   return await fetchFromLocalJSON();
 }
 

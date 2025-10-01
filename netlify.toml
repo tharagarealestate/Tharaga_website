@@ -59,6 +59,12 @@
   status = 200
   force = true
 
+[[redirects]]
+  from = "/api/digest-send"
+  to = "/.netlify/functions/digest-send"
+  status = 200
+  force = true
+
 # Recommendations function at /api/recommendations (place BEFORE generic /api/*)
 [[redirects]]
   from = "/api/recommendations"

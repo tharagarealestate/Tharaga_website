@@ -372,7 +372,7 @@ function apply(){
     if (F.wantMetro && !Number.isFinite(p._metroKm)) return false;
     if (F.wantMetro && Number.isFinite(p._metroKm) && (p._metroKm*12) > F.maxWalk) return false;
     return true;
-  }).map(p=>({ p, s: App.score(p, { q: F.q, amenity: F.amenity, wantMetro: F.wantMetro, maxWalk: F.maxWalk }) }));
+  }).map(p=>({ p, s: App.score(p, F.q, F.amenity) }));
 
   switch(F.sort){
     case 'relevance': filtered.sort((a,b)=> b.s - a.s); break;
@@ -647,15 +647,16 @@ function wireUI(){
     const wm = document.getElementById('wantMetro'); if (wm) wm.checked = false;
     const mw = document.getElementById('maxWalk'); if (mw) mw.value = 10;
 
-    const allPill = document.querySelector('.filter-pill[data-type="all"]');
-    if (allPill) {
+    // Default back to 'buy' pill since there is no 'all' pill in UI
+    const buyPill = document.querySelector('.filter-pill[data-type="buy"]') || document.querySelector('.filter-pill');
+    if (buyPill) {
       document.querySelectorAll('.filter-pill').forEach(p => {
         p.classList.remove('active');
         p.setAttribute('aria-pressed','false');
       });
-      allPill.classList.add('active');
-      allPill.setAttribute('aria-pressed','true');
-      localStorage.setItem('activeFilterType', 'all');
+      buyPill.classList.add('active');
+      buyPill.setAttribute('aria-pressed','true');
+      localStorage.setItem('activeFilterType', 'buy');
     }
 
     PAGE=1; apply();

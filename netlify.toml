@@ -34,6 +34,13 @@
   to = "/snippets/"
   status = 301
 
+# Listings API
+[[redirects]]
+  from = "/api/properties-list"
+  to = "/.netlify/functions/properties-list"
+  status = 200
+  force = true
+
 # Recommendations function at /api/recommendations (place BEFORE generic /api/*)
 [[redirects]]
   from = "/api/recommendations"

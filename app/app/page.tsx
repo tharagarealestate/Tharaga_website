@@ -16,8 +16,16 @@ export default async function Home() {
 
   return (
     <main>
-      <section className="brand-gradient text-white">
-        <div className="mx-auto max-w-6xl px-6 py-8 md:py-10">
+      <section className="brand-gradient text-white relative overflow-hidden">
+        {/* AI themed background overlay */}
+        <div className="absolute inset-0 pointer-events-none">
+          <img
+            src="https://images.unsplash.com/photo-1504384308090-c894fdcc538d?auto=format&fit=crop&w=2000&q=60"
+            alt="AI abstract background"
+            className="h-full w-full object-cover opacity-20 mix-blend-overlay"
+          />
+        </div>
+        <div className="relative mx-auto max-w-6xl px-6 py-8 md:py-10">
           <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight">Verified homes. Smart matches.</h1>
           <p className="mt-2 text-white/90 max-w-xl text-sm md:text-base">Trustworthy listings and AI picks—built for serious buyers and builders.</p>
           <div className="mt-4 flex gap-3">
@@ -26,10 +34,14 @@ export default async function Home() {
           </div>
         </div>
       </section>
-      <section className="mx-auto max-w-6xl px-6 py-6">
-        <div className="mb-4">
-          <h2 className="text-lg md:text-xl font-bold text-deepBlue">Recommended for you</h2>
-          <p className="text-deepBlue/70 text-xs">Session‑aware matches</p>
+      <section className="relative mx-auto max-w-6xl px-6 py-6">
+        {/* Subtle transparent AI image behind cards to avoid stark white */}
+        <div className="pointer-events-none absolute inset-0 -z-10">
+          <img
+            src="https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&w=2000&q=50"
+            alt="Background texture"
+            className="h-full w-full object-cover opacity-6"
+          />
         </div>
         <RecommendationsCarousel items={items} isLoading={false} error={error} />
       </section>

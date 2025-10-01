@@ -48,12 +48,9 @@ export function RecommendationsCarousel({ items = [], isLoading = false, error =
 
   return (
     <div className="space-y-3">
-      <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold tracking-tight">Recommended for you</h2>
-        <div className="hidden md:flex items-center gap-2">
-          <NavButton direction="prev" />
-          <NavButton direction="next" />
-        </div>
+      <div className="hidden md:flex items-center justify-end gap-2">
+        <NavButton direction="prev" />
+        <NavButton direction="next" />
       </div>
       <ScrollableRow>
         {isLoading || retrying ? (

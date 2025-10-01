@@ -2,7 +2,7 @@
 // Checks whether an email exists in Supabase Auth (requires SERVICE ROLE)
 // Returns: { exists: true|false|null, reason?: string }
 
-export async function handler(event, context) {
+exports.handler = async function(event, context) {
 	try {
 		if (event.httpMethod !== 'POST') {
 			return {

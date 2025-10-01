@@ -35,6 +35,9 @@ export default async function Home() {
         </div>
       </section>
       <section className="relative mx-auto max-w-6xl px-6 py-6">
+        <div className="mb-3 text-center">
+          <h2 className="text-lg md:text-xl font-bold text-deepBlue">Recommended for you</h2>
+        </div>
         {/* Subtle transparent AI image behind cards to avoid stark white */}
         <div className="pointer-events-none absolute inset-0 -z-10">
           <img

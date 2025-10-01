@@ -13,6 +13,9 @@ const config: Config = {
         deepBlue: '#001F4D',
         gold: '#D4AF37',
         brandWhite: '#FFFFFF',
+        burgundy: '#6e0d25',
+        burgundyHover: '#9b213f',
+        cream: '#f7efe7',
       },
       fontFamily: {
         inter: ['Inter', 'ui-sans-serif', 'system-ui'],

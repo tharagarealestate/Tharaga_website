@@ -19,6 +19,15 @@ export default function AdminVerifyPage(){
   }
   useEffect(()=>{ load() },[])
 
+  async function loadMetrics(){
+    try{
+      const res = await fetch('/api/admin/metrics', { headers: { 'x-admin-token': process.env.NEXT_PUBLIC_ADMIN_TOKEN || '' } })
+      const j = await res.json();
+      if (j?.ok) setMsg(`7d: new ${j.newProps}, verified ${j.verifiedLast7}, leads ${j.leads}`)
+    } catch {}
+  }
+  useEffect(()=>{ loadMetrics() },[])
+
   async function verify(id: string){
     setBusy(true)
     try{

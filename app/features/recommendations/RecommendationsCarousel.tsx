@@ -69,10 +69,22 @@ export function RecommendationsCarousel({ items = [], isLoading = false, error =
 }
 
 function PropertyCard({ item }: { item: RecommendationItem }) {
+  const [loaded, setLoaded] = React.useState(false)
+  const blurDataURL = 'data:image/gif;base64,R0lGODlhAQABAAAAACw=' // tiny 1x1
   return (
     <div className="min-w-[280px] max-w-[320px] rounded-xl bg-brandWhite shadow-subtle border border-deepBlue/10 overflow-hidden">
-      <div className="relative h-40 w-full">
-        <Image src={item.image_url} alt={item.title} fill className="object-cover" sizes="(max-width: 768px) 80vw, 320px" />
+      <div className="relative h-40 w-full bg-deepBlue/10">
+        <Image
+          src={item.image_url}
+          alt={item.title}
+          fill
+          sizes="(max-width: 768px) 80vw, 320px"
+          placeholder="blur"
+          blurDataURL={blurDataURL}
+          priority={false}
+          className={clsx('object-cover transition-opacity duration-300', loaded ? 'opacity-100' : 'opacity-0')}
+          onLoadingComplete={() => setLoaded(true)}
+        />
       </div>
       <div className="p-3 space-y-2">
         <div className="flex items-start justify-between gap-2">

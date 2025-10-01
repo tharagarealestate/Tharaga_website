@@ -1,7 +1,5 @@
 export const dynamic = 'force-dynamic'
-import dynamic from 'next/dynamic'
-
-const AddPropertyPage = dynamic(() => import('./AddPropertyClient'), { ssr: false })
+import AddPropertyPage from './AddPropertyClient'
 
 export default function Page() {
   return <AddPropertyPage />

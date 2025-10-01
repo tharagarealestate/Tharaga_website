@@ -477,18 +477,20 @@
   function openConfirm(ui){ ui.confirmEl.setAttribute('aria-hidden','false'); }
   // Broadcast current auth state (email only) to child iframes, sibling tabs, and embedded forms
   function broadcastAuth(user){
-    try { window.__authGateLoggedIn = !!(user && user.email); } catch(_) {}
+    var loggedIn = !!(user && user.email);
+    try { window.__authGateLoggedIn = loggedIn; } catch(_) {}
     try {
-      localStorage.setItem('__tharaga_magic_continue', JSON.stringify({ user: user ? { email: user.email } : null, ts: Date.now() }));
+      localStorage.setItem('__tharaga_magic_continue', JSON.stringify({ user: loggedIn ? { email: user.email } : null, ts: Date.now() }));
     } catch(_) {}
     try {
+      var evtType = loggedIn ? 'THARAGA_AUTH_SUCCESS' : 'THARAGA_AUTH_SIGNED_OUT';
       if ('BroadcastChannel' in window){
         window.__thgAuthBC = window.__thgAuthBC || new BroadcastChannel('tharaga-auth');
-        window.__thgAuthBC.postMessage({ type:'THARAGA_AUTH_SUCCESS', user: user ? { email: user.email } : null });
+        window.__thgAuthBC.postMessage(loggedIn ? { type: evtType, user: { email: user.email } } : { type: evtType });
       }
     } catch(_) {}
     try {
-      var payload = { type: 'THARAGA_AUTH_SUCCESS', user: user ? { email: user.email } : null };
+      var payload = loggedIn ? { type: 'THARAGA_AUTH_SUCCESS', user: { email: user.email } } : { type: 'THARAGA_AUTH_SIGNED_OUT' };
       // Notify any embedded iframes (cross-origin safe via postMessage)
       var iframes = document.querySelectorAll('iframe');
       for (var i=0;i<iframes.length;i++){
@@ -523,7 +525,12 @@
     ui.overlay.querySelector('#thg-update-btn').addEventListener('click', async function(){ if (!state.supabaseReady){ showError(ui.overlay, 'Authentication is not initialized.'); return; } const password = ui.overlay.querySelector('#thg-up-password').value; if (!password || password.length < 8) { showError(ui.overlay, 'Password must be at least 8 characters.'); return; } clearError(ui.overlay); setModalLoading(ui.overlay, true); try{ const { error } = await window.supabase.auth.updateUser({ password }); if (error) { showError(ui.overlay, error.message || 'Failed to update password.'); } else { showPanel(ui.overlay, 'signin', 'Sign in'); showError(ui.overlay, 'Password updated. Please sign in.'); } } catch(ex){ showError(ui.overlay, 'Network error. Please try again.'); } finally { setModalLoading(ui.overlay, false); } });
     ui.confirmEl.querySelector('.thg-confirm-cancel').addEventListener('click', function(){ closeConfirm(ui); });
     ui.confirmEl.addEventListener('click', function(e){ if (e.target === ui.confirmEl) closeConfirm(ui); });
-    ui.confirmEl.querySelector('.thg-confirm-ok').addEventListener('click', async function(){ try { await window.supabase?.auth?.signOut?.(); } catch(_){} closeConfirm(ui); });
+    ui.confirmEl.querySelector('.thg-confirm-ok').addEventListener('click', async function(){
+      try { await window.supabase?.auth?.signOut?.(); } catch(_){ }
+      // Proactively broadcast sign-out so embedded forms unlock immediately
+      try { broadcastAuth(null); } catch(_){ }
+      closeConfirm(ui);
+    });
     window.__thgOpenAuthModal = function(opts){ openAuthModal(ui, opts); };
     // Expose a helper to programmatically open the auth modal (never toggles dropdown)
     window.authGate.triggerHeaderLogin = function(opts){

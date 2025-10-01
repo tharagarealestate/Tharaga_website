@@ -987,21 +987,35 @@ async function getRecaptcha() {
   const raw = phoneInput.value.trim();
   if (!/^[6-9]\d{9}$/.test(raw)) { alert('Enter a valid 10-digit Indian mobile number.'); return; }
 
+  // Clear previous OTP digits and focus first
+  try { otpInputs.forEach(i=> i.value=''); otpInputs[0]?.focus(); } catch(_) {}
+
   otpBlock.style.display = 'block';
   otpStatus.textContent = 'Sending OTP…';
   sendOtpBtn.disabled = true;
 
   try {
-    const appVerifier = await getRecaptcha();
+    // Ensure a fresh/valid invisible reCAPTCHA instance each attempt
+    let appVerifier;
+    try { appVerifier = await getRecaptcha(); } catch(_) { recaptchaVerifier = null; appVerifier = await getRecaptcha(); }
     const e164 = '+91' + raw;
     confirmationResult = await signInWithPhoneNumber(auth, e164, appVerifier);
     otpStatus.textContent = 'OTP sent. Please check your SMS.';
+    // Start a short resend cooldown for better UX and to avoid rate-limits
+    try {
+      let left = 30; // seconds
+      const prev = sendOtpBtn.textContent;
+      const tick = () => { if (left<=0){ sendOtpBtn.disabled=false; sendOtpBtn.textContent = prev || 'Send OTP'; return; } sendOtpBtn.textContent = `Resend (${left}s)`; left--; setTimeout(tick, 1000); };
+      tick();
+    } catch(_) {}
   } catch (err) {
   console.error('send OTP error:', err);
   if (err.code === 'auth/too-many-requests') {
     otpStatus.textContent = 'Too many attempts. Please wait a few minutes before retrying.';
   } else if (err.code === 'auth/operation-not-allowed') {
     otpStatus.textContent = 'Phone sign-in is not enabled in Firebase.';
+  } else if (err.code === 'auth/invalid-app-credential' || err.code === 'auth/missing-app-credential' || err.code === 'auth/invalid-verification-code') {
+    otpStatus.textContent = 'Captcha expired. Retrying… please click Send OTP again.';
   } else {
     otpStatus.textContent = 'Could not send OTP. Please try again.';
   }
@@ -1010,9 +1024,13 @@ async function getRecaptcha() {
       const wid = await recaptchaVerifier.render();
       if (window.grecaptcha && wid) window.grecaptcha.reset(wid);
     } catch (_) {}
+    // drop and recreate instance to be safe on next attempt
+    try { recaptchaVerifier.clear(); } catch(_) {}
+    try { recaptchaVerifier = null; } catch(_) {}
   }
 } finally {
-    sendOtpBtn.disabled = false;
+    // Keep disabled until cooldown finishes; if cooldown failed, enable now
+    try { if (!/Resend/.test(sendOtpBtn.textContent||'')) sendOtpBtn.disabled = false; } catch(_) { sendOtpBtn.disabled = false; }
   }
 });
 
@@ -1832,11 +1850,13 @@ document.addEventListener("DOMContentLoaded", async () => {
           if (ev?.data?.type === 'THARAGA_AUTH_SIGNED_OUT' || ev?.data?.type === 'THARAGA_AUTH_SIGNED_OUT_TEST') { unlockBuyerEmail(); return; }
         } catch(_) {}
       });
-      window.addEventListener('storage', () => {
+      window.addEventListener('storage', (e) => {
         try {
+          if (e && e.key && e.key !== '__tharaga_magic_continue' && e.key !== 'supabase.auth.token') return;
           const payload = JSON.parse(localStorage.getItem('__tharaga_magic_continue') || 'null');
-          if (payload?.user?.email) { lockBuyerEmail(payload.user.email); }
-          else { unlockBuyerEmail(); }
+          if (payload && payload.user && payload.user.email) { lockBuyerEmail(payload.user.email); return; }
+          // If cache cleared or token changed without email, unlock
+          unlockBuyerEmail();
         } catch(_) {}
       });
     } catch(_) {}

@@ -282,6 +282,7 @@ function cardHTML(p, s) {
       <div class="row" style="gap:8px;flex-wrap:wrap">${tags}</div>
       <div style="display:flex;gap:8px;margin-top:10px">
         <a class="btn" href="./details.html?id=${encodeURIComponent(p.id)}">View details</a>
+        <button class="btn" data-lead-id="${encodeURIComponent(p.id)}">Request details</button>
       </div>
     </div>
   </article>`;
@@ -519,6 +520,20 @@ async function initAndRender() {
   if (minHidden) minHidden.addEventListener("input", debounce(applyFiltersAndRender, 50));
   if (maxHidden) maxHidden.addEventListener("input", debounce(applyFiltersAndRender, 50));
   if (searchInput) searchInput.addEventListener("input", debounce(applyFiltersAndRender, 200));
+
+  // Lead CTA wiring
+  document.addEventListener('click', async (e)=>{
+    const btn = e.target.closest && e.target.closest('button[data-lead-id]'); if (!btn) return;
+    const property_id = btn.getAttribute('data-lead-id');
+    const name = prompt('Your name'); if (!name) return;
+    const phone = prompt('Phone (optional)') || '';
+    const email = prompt('Email (optional)') || '';
+    try{
+      const res = await fetch('/api/leads', { method:'POST', headers:{ 'Content-Type':'application/json' }, body: JSON.stringify({ property_id, name, phone, email }) })
+      const j = await res.json();
+      alert(j?.ok ? 'Thanks! We will contact you shortly.' : (j?.error || 'Failed'))
+    } catch(err){ alert('Failed') }
+  });
 }
 
 /* Init on DOM ready */

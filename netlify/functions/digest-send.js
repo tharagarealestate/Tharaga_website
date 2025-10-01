@@ -26,7 +26,7 @@ exports.handler = async () => {
       searches = data || []
     } catch { /* table may not exist; skip */ }
 
-    // For now, just compute simple matches; integrate email later
+    // For now, compute simple matches; integrate email (Resend) when RESEND_API_KEY present
     const matches = searches.map(s => ({
       search_id: s.id,
       email: s.email,

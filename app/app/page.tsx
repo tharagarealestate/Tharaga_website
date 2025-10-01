@@ -31,6 +31,7 @@ export default async function Home() {
           <div className="mt-4 flex gap-3">
             <a href="/property-listing/" className="inline-flex items-center justify-center rounded-lg bg-gold px-4 py-2 text-deepBlue font-semibold border border-transparent hover:brightness-105">Browse properties</a>
             <a href="/search-filter-home/" className="inline-flex items-center justify-center rounded-lg border border-white/40 px-4 py-2 font-semibold text-white/90 hover:bg-white/10">Filter search</a>
+            <a href="/builders/add-property" className="inline-flex items-center justify-center rounded-lg border border-white/40 px-4 py-2 font-semibold text-white/90 hover:bg-white/10">List a property</a>
           </div>
         </div>
       </section>

@@ -71,6 +71,12 @@
   status = 200
   force = true
 
+[[redirects]]
+  from = "/api/admin/leads"
+  to = "/.netlify/functions/admin-leads-list"
+  status = 200
+  force = true
+
 # Recommendations function at /api/recommendations (place BEFORE generic /api/*)
 [[redirects]]
   from = "/api/recommendations"

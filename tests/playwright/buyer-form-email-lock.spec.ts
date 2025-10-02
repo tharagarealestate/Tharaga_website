@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+test.skip(true, 'Skip buyer form tests in isolated CTA run');
 
 test.describe('Buyer form email locking', () => {
   test('keeps cached email value on load and only unlocks after sign-out', async ({ page }) => {

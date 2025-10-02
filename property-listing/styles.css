@@ -22,13 +22,12 @@ img{max-width:100%;display:block}
 .container{max-width:1100px;margin:0 auto;padding:24px}
 
 .header {
-  position: sticky;
-  top: 0;
-  z-index: 40;
+  position: static; /* scrolls with the page */
+  top: auto;
+  z-index: auto;
   color: var(--ink);
-  /* Solid background so header text never overlaps underlying content */
   background: var(--cream);
-  box-shadow: 0 8px 24px rgba(0,0,0,.05);
+  box-shadow: none;
 }
 .header .inner{
   display:flex;

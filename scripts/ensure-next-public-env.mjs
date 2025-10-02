@@ -8,11 +8,8 @@ import path from 'node:path'
 
 function main() {
   const appDir = path.resolve(process.cwd())
-  // When executed as prebuild from app/, process.cwd() is app/. Guard for safety.
-  const isAppDir = fs.existsSync(path.join(appDir, 'package.json')) && fs.existsSync(path.join(appDir, 'next.config.js')) === false
-
-  const targetDir = isAppDir ? appDir : path.resolve(appDir, 'app')
-  const envFile = path.join(targetDir, '.env.production')
+  // Always write to current working directory (the Next.js app root)
+  const envFile = path.join(appDir, '.env.production')
 
   const currentNextPublicUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
   const currentNextPublicAnon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY

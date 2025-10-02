@@ -521,5 +521,11 @@ select[multiple] {
 }
 .explain-row { display:flex; align-items:center; gap:12px; margin-bottom:8px; }
 .explain-row .bar { flex:1; height:10px; background:#f1e3e3; border-radius:6px; overflow:hidden; }
-.explain-row .bar > div { height:100%; background: linear-gradient(90deg,var(--brand),var(--brand-2)); }
+.explain-row .bar > div { height:100%; background: linear-gradient(90deg,var(--brand),var(--brand-2)); transition: width .25s ease; }
 .chip { display:inline-block; padding:6px 10px; border-radius:999px; background:#fff; border:1px solid #eee; margin-right:6px; font-size:12px; }
+
+/* Mobile bottom sheet filter affordance */
+@media (max-width: 720px){
+  .filter-container{ position:fixed; left:0; right:0; bottom:0; border-top-left-radius:16px; border-top-right-radius:16px; padding-bottom:68px; }
+  .filter-actions.right{ position:fixed; bottom:12px; left:12px; right:12px; justify-content:space-between; }
+}

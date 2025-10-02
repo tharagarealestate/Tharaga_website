@@ -85,10 +85,10 @@ export default function AddPropertyPage() {
 
   return (
     <main className="mx-auto max-w-3xl px-6 py-8">
-      <h1 className="text-2xl font-bold text-deepBlue mb-2">List your property</h1>
-      <p className="text-deepBlue/70 mb-6">Simple onboarding for builders. Logged in users can save drafts and submit for verification.</p>
+      <h1 className="text-2xl font-bold text-plum mb-2">List your property</h1>
+      <p className="text-plum/70 mb-6">Simple onboarding for builders. Logged in users can save drafts and submit for verification.</p>
 
-      {msg && <div className="mb-4 rounded-lg border border-deepBlue/10 bg-white p-3 text-sm text-deepBlue/80">{msg}</div>}
+      {msg && <div className="mb-4 rounded-lg border border-plum/10 bg-white p-3 text-sm text-plum/80">{msg}</div>}
 
       {step === 1 && (
         <form onSubmit={(e)=>{ e.preventDefault(); setStep(2) }} className="space-y-4">
@@ -140,7 +140,7 @@ export default function AddPropertyPage() {
             </div>
           </div>
           <div className="flex justify-end">
-            <button className="rounded-lg bg-deepBlue text-white px-4 py-2">Next</button>
+            <button className="rounded-lg bg-plum text-white px-4 py-2">Next</button>
           </div>
         </form>
       )}
@@ -160,15 +160,15 @@ export default function AddPropertyPage() {
           </div>
           <div className="flex items-center justify-between">
             <button type="button" className="rounded-lg border px-4 py-2" onClick={()=>setStep(1)}>Back</button>
-            <button disabled={busy} className="rounded-lg bg-gold text-deepBlue px-4 py-2 border border-transparent hover:brightness-105">Submit</button>
+            <button disabled={busy} className="rounded-lg bg-gold text-plum px-4 py-2 border border-transparent hover:brightness-105">Submit</button>
           </div>
         </form>
       )}
 
       {step === 3 && (
-        <div className="rounded-lg border border-deepBlue/10 bg-white p-4">
-          <div className="font-semibold text-deepBlue">Thanks! Your property is submitted.</div>
-          <div className="text-deepBlue/70 text-sm">We’ll verify details and make it visible to buyers shortly.</div>
+        <div className="rounded-lg border border-plum/10 bg-white p-4">
+          <div className="font-semibold text-plum">Thanks! Your property is submitted.</div>
+          <div className="text-plum/70 text-sm">We’ll verify details and make it visible to buyers shortly.</div>
         </div>
       )}
     </main>

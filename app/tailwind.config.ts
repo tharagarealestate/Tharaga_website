@@ -11,6 +11,8 @@ const config: Config = {
     extend: {
       colors: {
         deepBlue: '#001F4D',
+        plum: '#3b1c32',
+        plumLight: '#5b2848',
         gold: '#D4AF37',
         brandWhite: '#FFFFFF',
         burgundy: '#6e0d25',

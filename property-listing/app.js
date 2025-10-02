@@ -235,26 +235,72 @@ export function nearestMetroKm(lat, lng) {
 let PROPERTIES_CACHE = [];   // array of normalized property objects
 
 /* -------------------------- Filtering & rendering ------------------ */
-/** Score function kept mostly as-is to compute ranking */
-function score(p, q = "", amenity = "") {
-  let s = 0;
-  const text = (p.title + " " + p.project + " " + p.city + " " + p.locality).toLowerCase();
-  if (q) {
-    q.split(/\s+/).forEach((tok) => { if (text.includes(tok.toLowerCase())) s += 8; });
-  }
-  if (p.postedAt) {
+/**
+ * Personalizable scoring with explainable components.
+ * Components (0-10 each): text, recency, value, amenity, metro.
+ * Final score = sum(component * weight).
+ */
+function getWeights(){
+  try { const j = JSON.parse(localStorage.getItem('thg_weights')||'null'); if (j) return j; } catch(_){ }
+  return { text: 1.0, recency: 0.9, value: 1.1, amenity: 0.6, metro: 0.8 };
+}
+function setWeights(upd){
+  try {
+    const cur = getWeights();
+    const next = { ...cur, ...upd };
+    localStorage.setItem('thg_weights', JSON.stringify(next));
+    return next;
+  } catch(_) { return getWeights(); }
+}
+
+function clamp01(x){ return x < 0 ? 0 : (x > 1 ? 1 : x); }
+
+function componentScores(p, q = "", amenity = ""){
+  const textHay = (p.title + " " + p.project + " " + p.city + " " + p.locality + " " + (p.summary||"")).toLowerCase();
+  let textC = 0; if (q){ const toks = String(q).toLowerCase().split(/\s+/).filter(Boolean); let hits = 0; toks.forEach(t=>{ if (textHay.includes(t)) hits++; }); textC = clamp01(hits / Math.max(1, toks.length)) * 10; }
+
+  let recencyC = 5; // default mid if unknown
+  if (p.postedAt){
     const days = (Date.now() - new Date(p.postedAt).getTime())/86400000;
-    s += Math.max(0, 10 - Math.min(10, days/3));
+    // 0 days -> 10, 30 days -> 0
+    recencyC = clamp01(1 - (days/30)) * 10;
   }
+
+  let valueC = 0;
   if (p.pricePerSqftINR) {
     const v = p.pricePerSqftINR;
-    if (v > 0) s += 6 * (1/(1 + Math.exp((v - 6000)/800)));
+    // logistic into 0..1 centered around 6k with slope 800
+    valueC = clamp01(1/(1 + Math.exp((v - 6000)/800))) * 10;
   }
+
+  let amenityC = 0;
   if (amenity && p.amenities) {
-    const hit = p.amenities.some(a => a.toLowerCase().includes(amenity.toLowerCase()));
-    if (hit) s += 6;
+    const hit = p.amenities.some(a => a.toLowerCase().includes(String(amenity).toLowerCase()));
+    amenityC = hit ? 10 : 0;
   }
+
+  let metroC = 0;
+  if (Number.isFinite(p._metroKm)) {
+    // 0 km -> 10, 2km -> ~6, 5km -> ~3, >8km -> ~1
+    const km = Math.max(0, Number(p._metroKm));
+    metroC = clamp01(1/(1 + (km/2))) * 10;
+  }
+
+  return { textC, recencyC, valueC, amenityC, metroC };
+}
+
+function score(p, q = "", amenity = "") {
+  const w = getWeights();
+  const { textC, recencyC, valueC, amenityC, metroC } = componentScores(p, q, amenity);
+  const s = (textC * w.text) + (recencyC * w.recency) + (valueC * w.value) + (amenityC * w.amenity) + (metroC * w.metro);
   return s;
+}
+
+function explainScore(p, q = "", amenity = ""){
+  const w = getWeights();
+  const c = componentScores(p, q, amenity);
+  const total = (c.textC*w.text)+(c.recencyC*w.recency)+(c.valueC*w.value)+(c.amenityC*w.amenity)+(c.metroC*w.metro);
+  return { ...c, weights: w, total };
 }
 
 /** Card HTML generator — unchanged shape so your UI remains the same */
@@ -280,6 +326,7 @@ function cardHTML(p, s) {
         <div style="color:var(--muted);font-size:12px">${escapeHtml(pps)}</div>
       </div>
       <div class="row" style="gap:8px;flex-wrap:wrap">${tags}</div>
+      <div class="explain-inline" aria-hidden="true"></div>
       <div style="display:flex;gap:8px;margin-top:10px">
         <a class="btn" href="./details.html?id=${encodeURIComponent(p.id)}">View details</a>
         <button class="btn" data-lead-id="${encodeURIComponent(p.id)}">Request details</button>
@@ -545,5 +592,5 @@ if (typeof document !== "undefined") {
 }
 
 /* -------------------------- Exports ------------------------------- */
-export { fetchProperties, score, cardHTML, currency, normalizeRow };
+export { fetchProperties, score, cardHTML, currency, normalizeRow, explainScore, getWeights, setWeights };
 

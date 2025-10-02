@@ -4,6 +4,8 @@
 
 :root {
   --deep-blue: #001F4D;
+  --plum: #3b1c32; /* Harmonizes with burgundy; warm, trustworthy */
+  --plum-light: #5b2848;
   --gold: #D4AF37;
   --brand-white: #FFFFFF;
   --burgundy: #6e0d25;
@@ -18,7 +20,8 @@ html, body {
 }
 
 .brand-gradient {
-  background: linear-gradient(135deg, #001F4D 0%, #0a2d6e 100%);
+  /* Replace blue gradient with plum/burgundy harmony */
+  background: linear-gradient(135deg, var(--plum) 0%, var(--burgundy) 100%);
 }
 
 .gold-ring {

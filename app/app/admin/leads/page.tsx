@@ -20,12 +20,12 @@ export default function AdminLeadsPage(){
 
   return (
     <main className="mx-auto max-w-5xl px-6 py-8">
-      <h1 className="text-2xl font-bold text-deepBlue mb-2">Admin · Leads</h1>
-      {msg && <div className="mb-4 rounded-lg border border-deepBlue/10 bg-white p-3 text-sm text-deepBlue/80">{msg}</div>}
-      {busy && <div className="text-sm text-deepBlue/70">Loading…</div>}
-      <div className="overflow-auto rounded-lg border border-deepBlue/10 bg-white">
+      <h1 className="text-2xl font-bold text-plum mb-2">Admin · Leads</h1>
+      {msg && <div className="mb-4 rounded-lg border border-plum/10 bg-white p-3 text-sm text-plum/80">{msg}</div>}
+      {busy && <div className="text-sm text-plum/70">Loading…</div>}
+      <div className="overflow-auto rounded-lg border border-plum/10 bg-white">
         <table className="min-w-full text-sm">
-          <thead className="bg-deepBlue/5">
+          <thead className="bg-plum/5">
             <tr>
               <th className="px-3 py-2 text-left">When</th>
               <th className="px-3 py-2 text-left">Name</th>
@@ -36,7 +36,7 @@ export default function AdminLeadsPage(){
           </thead>
           <tbody>
             {rows.map(r => (
-              <tr key={r.id} className="border-t border-deepBlue/10">
+              <tr key={r.id} className="border-t border-plum/10">
                 <td className="px-3 py-2 whitespace-nowrap">{new Date(r.created_at).toLocaleString()}</td>
                 <td className="px-3 py-2">{r.name || '-'}</td>
                 <td className="px-3 py-2">

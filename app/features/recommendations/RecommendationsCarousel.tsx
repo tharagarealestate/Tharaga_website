@@ -5,6 +5,7 @@ import Image from 'next/image'
 import { clsx } from 'clsx'
 import type { RecommendationItem } from '@/types/recommendations'
 import { Tooltip } from '@/components/ui/Tooltip'
+import { LeadModal } from '@/components/lead/LeadModal'
 import { fetchRecommendationsClient, readCookie } from '@/lib/api-client'
 
 type Props = {
@@ -17,6 +18,7 @@ export function RecommendationsCarousel({ items = [], isLoading = false, error =
   const [clientItems, setClientItems] = React.useState(items)
   const [retrying, setRetrying] = React.useState(false)
   const [clientError, setClientError] = React.useState<string | null>(null)
+  const [leadFor, setLeadFor] = React.useState<string | null>(null)
 
   React.useEffect(() => {
     // If server failed to load, attempt one client-side retry for resilience
@@ -93,6 +95,10 @@ function PropertyCard({ item }: { item: RecommendationItem }) {
           </Tooltip>
         </div>
         <Specs specs={item.specs} />
+        <div className="mt-2 flex gap-2">
+          <button className="rounded-lg border px-3 py-1 text-sm" onClick={()=>setLeadFor(item.property_id)}>Request details</button>
+          <a href={`/property-listing/`} className="rounded-lg border px-3 py-1 text-sm">See similar</a>
+        </div>
       </div>
     </div>
   )
@@ -158,6 +164,7 @@ function ScrollableRow({ children }: { children: React.ReactNode }) {
       >
         {children}
       </div>
+      <LeadModal propertyId={leadFor||''} open={!!leadFor} onClose={()=>setLeadFor(null)} />
     </div>
   )
 }

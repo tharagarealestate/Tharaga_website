@@ -5,6 +5,7 @@ import Image from 'next/image'
 import { clsx } from 'clsx'
 import type { RecommendationItem } from '@/types/recommendations'
 import { Tooltip } from '@/components/ui/Tooltip'
+import { LeadModal } from '@/components/lead/LeadModal'
 import { fetchRecommendationsClient, readCookie } from '@/lib/api-client'
 
 type Props = {
@@ -17,6 +18,7 @@ export function RecommendationsCarousel({ items = [], isLoading = false, error =
   const [clientItems, setClientItems] = React.useState(items)
   const [retrying, setRetrying] = React.useState(false)
   const [clientError, setClientError] = React.useState<string | null>(null)
+  const [leadFor, setLeadFor] = React.useState<string | null>(null)
   // Ensure we attempt at most one client-side retry to avoid infinite loops
   const hasRetriedRef = React.useRef(false)
 
@@ -62,14 +64,17 @@ export function RecommendationsCarousel({ items = [], isLoading = false, error =
         ) : (clientItems.length || items.length) === 0 ? (
           <EmptyState />
         ) : (
-          (clientItems.length ? clientItems : items).map((item) => <PropertyCard key={item.property_id} item={item} />)
+          (clientItems.length ? clientItems : items).map((item) => (
+            <PropertyCard key={item.property_id} item={item} onLead={(id) => setLeadFor(id)} />
+          ))
         )}
       </ScrollableRow>
+      <LeadModal propertyId={leadFor ?? ''} open={!!leadFor} onClose={() => setLeadFor(null)} />
     </div>
   )
 }
 
-function PropertyCard({ item }: { item: RecommendationItem }) {
+function PropertyCard({ item, onLead }: { item: RecommendationItem; onLead: (propertyId: string) => void }) {
   const [loaded, setLoaded] = React.useState(false)
   const blurDataURL = 'data:image/gif;base64,R0lGODlhAQABAAAAACw=' // tiny 1x1
   return (
@@ -97,6 +102,14 @@ function PropertyCard({ item }: { item: RecommendationItem }) {
           </Tooltip>
         </div>
         <Specs specs={item.specs} />
+        <div className="mt-2 flex gap-2">
+          <button className="rounded-lg border px-3 py-1 text-sm" onClick={() => onLead(item.property_id)}>
+            Request details
+          </button>
+          <a href={`/property-listing/`} className="rounded-lg border px-3 py-1 text-sm">
+            See similar
+          </a>
+        </div>
       </div>
     </div>
   )

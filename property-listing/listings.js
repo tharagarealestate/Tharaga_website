@@ -330,7 +330,7 @@ function applyQueryParams(){
     }
 
     // Finally, ensure apply happens at least once with new values
-    document.querySelector('#apply')?.dispatchEvent(new Event('click', { bubbles: true }));
+    PAGE = 1; try { apply(); } catch(_) {}
 
     // Mark deep link application and track
     FROM_PREFS = !!(qParam || typeParam || budgetLabel || localityParam || Number.isFinite(priceMinParam) || Number.isFinite(priceMaxParam) || sortParam);
@@ -464,34 +464,18 @@ function goto(n){ PAGE = n; apply(); }
 window.goto = goto;
 
 function wireUI(){
-  const applyBtn = document.querySelector('#apply');
-  if (applyBtn) {
-    applyBtn.addEventListener('click', ()=>{
-      PAGE=1;
-      // UX: brief loading state + smooth scroll to results
-      const res = document.querySelector('#results');
-      const prev = applyBtn.textContent;
-      applyBtn.disabled = true; applyBtn.textContent = 'Applying…';
-      apply(); syncUrlWithFilters();
-      try { if (res) res.classList.add('highlight'); } catch(_) {}
-      try { if (res && res.scrollIntoView) res.scrollIntoView({ behavior:'smooth', block:'start' }); } catch(_) {}
-      setTimeout(()=>{ try { if (res) res.classList.remove('highlight'); } catch(_) {} applyBtn.disabled = false; applyBtn.textContent = prev; }, 300);
-      // Toast for saved search match state refresh
-      try { const saveBtn=document.getElementById('saveSearch'); saveBtn && saveBtn.dispatchEvent(new Event('thg-refresh-saved', { bubbles:false })); } catch(_) {}
-      try{ const pill=document.getElementById('newResultsPill'); pill.hidden=true; } catch(_){}
-    });
-  }
+  // Apply button no longer exists (auto-apply on change). Ensure saved-search button refreshes when filters change.
 
-  const debApply = deb(()=>{ PAGE=1; apply(); }, 120);
-  const autoToggle = document.getElementById('autoApplyToggle');
-  const handleInput = ()=>{ if (autoToggle?.checked){ PAGE=1; apply(); syncUrlWithFilters(); } else { debApply(); } };
-  ['#minPrice','#maxPrice','#minArea','#maxArea','#amenity','#q'].forEach(sel=>
-    document.querySelector(sel)?.addEventListener('input', handleInput)
-  );
-  const handleChange = ()=>{ PAGE=1; apply(); syncUrlWithFilters(); try{ const pill=document.getElementById('newResultsPill'); pill.hidden=false; clearTimeout(pill.__t); pill.__t=setTimeout(()=>{ pill.hidden=true; }, 1800); } catch(_){} };
-  ['#sort','#ptype','#bhk','#furnished','#facing','#city','#locality','#wantMetro','#maxWalk'].forEach(sel=>
-    document.querySelector(sel)?.addEventListener('change', ()=>{ if (autoToggle?.checked){ PAGE=1; apply(); syncUrlWithFilters(); } else { handleChange(); } })
-  );
+  // Auto-apply is always ON: any input/change immediately filters and syncs URL
+  const debApply = deb(()=>{ PAGE=1; apply(); syncUrlWithFilters(); }, 120);
+  ['#minPrice','#maxPrice','#minArea','#maxArea','#amenity','#q'].forEach(sel=>{
+    const el = document.querySelector(sel); if (!el) return;
+    el.addEventListener('input', debApply);
+  });
+  ['#sort','#ptype','#bhk','#furnished','#facing','#city','#locality','#wantMetro','#maxWalk'].forEach(sel=>{
+    const el = document.querySelector(sel); if (!el) return;
+    el.addEventListener('change', ()=>{ PAGE=1; apply(); syncUrlWithFilters(); try{ const pill=document.getElementById('newResultsPill'); pill.hidden=false; clearTimeout(pill.__t); pill.__t=setTimeout(()=>{ pill.hidden=true; }, 1800); } catch(_){} });
+  });
 
   // Natural language quick filter trigger
   const nlBtn = document.getElementById('nlQuick');

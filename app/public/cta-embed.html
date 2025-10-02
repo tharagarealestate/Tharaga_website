@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Tharaga — CTA Embed</title>
+  <style>
+    body { margin: 0; font-family: system-ui, sans-serif; background: transparent; }
+    .cta { background: #111; color: #fff; padding: 16px 20px; border-radius: 12px; width: min(680px, 92vw); margin: 0 auto; box-shadow: 0 10px 24px rgba(0,0,0,0.12); text-align: left; }
+    .cta h2 { margin: 0 0 8px; font-size: 1.25rem; }
+    .cta p { margin: 0 0 12px; color: #ddd; }
+    .row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+    input { flex: 1; min-width: 180px; padding: 10px 12px; border-radius: 10px; border: 1px solid #333; background: #1a1a1a; color: #fff; }
+    button { padding: 10px 16px; border-radius: 10px; border: 0; background: #c0002a; color: #fff; font-weight: 600; cursor: pointer; }
+    button:hover { filter: brightness(1.04); }
+    .modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.55); display: none; align-items: center; justify-content: center; padding: 20px; }
+    .modal { width: min(520px, 96vw); background: #111; color: #fff; border-radius: 14px; padding: 18px; box-shadow: 0 20px 40px rgba(0,0,0,0.25); }
+    .modal h3 { margin: 0 0 10px; font-size: 1.1rem; }
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    label { font-size: 0.9rem; color: #ddd; }
+    .modal input, .modal textarea { width: 100%; padding: 10px 12px; border-radius: 10px; border: 1px solid #2a2a2a; background: #1a1a1a; color: #fff; }
+    .modal textarea { min-height: 90px; resize: vertical; }
+    .actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 12px; }
+    .btn { padding: 10px 14px; border-radius: 10px; border: 0; cursor: pointer; }
+    .btn-secondary { background: #2a2a2a; color: #fff; }
+    .btn-primary { background: #c0002a; color: #fff; font-weight: 600; }
+    .note { font-size: 0.85rem; color: #bbb; margin-top: 10px; }
+  </style>
+</head>
+<body>
+  <section class="cta" id="buyer-cta">
+    <h2>Get 3 verified matches</h2>
+    <p>Share your WhatsApp or phone. Our team sends hand‑picked options fast.</p>
+    <div class="row">
+      <input id="cta-phone" type="tel" placeholder="WhatsApp / phone" inputmode="tel" />
+      <button id="open-microform" type="button">Continue</button>
+    </div>
+    <div class="note">Low effort, high signal: no spam, only verified listings.</div>
+  </section>
+
+  <div class="modal-backdrop" id="backdrop" role="dialog" aria-modal="true">
+    <div class="modal">
+      <h3>Tell us what you need</h3>
+      <div class="grid">
+        <div>
+          <label>Name</label>
+          <input id="lead-name" type="text" placeholder="Your name" />
+        </div>
+        <div>
+          <label>WhatsApp / phone</label>
+          <input id="lead-phone" type="tel" placeholder="Required" inputmode="tel" />
+        </div>
+        <div>
+          <label>Email (optional)</label>
+          <input id="lead-email" type="email" placeholder="you@example.com" />
+        </div>
+        <div>
+          <label>City / Budget (optional)</label>
+          <input id="lead-ctx" type="text" placeholder="e.g., Chennai · 70L" />
+        </div>
+        <div style="grid-column: 1 / -1;">
+          <label>Anything specific?</label>
+          <textarea id="lead-message" placeholder="Locality, BHK, timeline…"></textarea>
+        </div>
+      </div>
+      <div class="actions">
+        <button class="btn btn-secondary" id="lead-cancel" type="button">Cancel</button>
+        <button class="btn btn-primary" id="lead-submit" type="button">Request matches</button>
+      </div>
+      <div class="note" id="lead-note"></div>
+    </div>
+  </div>
+
+  <script>
+    const backdrop = document.getElementById('backdrop');
+    const openBtn = document.getElementById('open-microform');
+    const phoneInline = document.getElementById('cta-phone');
+    openBtn?.addEventListener('click', () => {
+      const phoneVal = (phoneInline?.value || '').trim();
+      const phoneInput = document.getElementById('lead-phone');
+      if (phoneVal && phoneInput) phoneInput.value = phoneVal;
+      backdrop.style.display = 'flex';
+    });
+    document.getElementById('lead-cancel')?.addEventListener('click', () => {
+      backdrop.style.display = 'none';
+      document.getElementById('lead-note').textContent = '';
+    });
+
+    async function submitLead() {
+      const name = (document.getElementById('lead-name').value || '').trim();
+      const phone = (document.getElementById('lead-phone').value || '').trim();
+      const email = (document.getElementById('lead-email').value || '').trim();
+      const ctx = (document.getElementById('lead-ctx').value || '').trim();
+      const message = (document.getElementById('lead-message').value || '').trim();
+      const note = document.getElementById('lead-note');
+      note.textContent = '';
+      if (!phone && !email) {
+        note.textContent = 'Provide WhatsApp/phone or email.';
+        return;
+      }
+      const btn = document.getElementById('lead-submit');
+      btn.disabled = true;
+      btn.textContent = 'Sending…';
+      try {
+        const payload = { property_id: null, name, phone, email, message: [ctx, message].filter(Boolean).join(' • ') };
+        const res = await fetch('/api/leads', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+        const data = await res.json();
+        if (data && data.ok) {
+          note.textContent = 'Thanks! We will WhatsApp you verified matches soon.';
+          setTimeout(() => { backdrop.style.display = 'none'; }, 900);
+        } else {
+          note.textContent = 'Could not submit right now. Please try again.';
+        }
+      } catch (e) {
+        note.textContent = 'Network issue. Please try again.';
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Request matches';
+      }
+    }
+    document.getElementById('lead-submit')?.addEventListener('click', submitLead);
+  </script>
+</body>
+</html>
+

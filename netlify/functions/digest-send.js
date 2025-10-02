@@ -26,7 +26,7 @@ exports.handler = async () => {
       searches = data || []
     } catch { /* table may not exist; skip */ }
 
-    // For now, compute simple matches; integrate email (Resend) when RESEND_API_KEY present
+    // For now, compute simple matches; if RESEND_API_KEY is present, email notifications (one-liner per user)
     const matches = searches.map(s => ({
       search_id: s.id,
       email: s.email,
@@ -39,6 +39,26 @@ exports.handler = async () => {
         return true
       }).length
     }))
+
+    // Optional: send emails
+    try {
+      if (process.env.RESEND_API_KEY && searches.length) {
+        const toNotify = searches.filter(s => s.count > 0 && s.email)
+        // Minimal notify (batch send); replace with proper template
+        await Promise.all(toNotify.slice(0, 100).map(s =>
+          fetch('https://api.resend.com/emails', {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${process.env.RESEND_API_KEY}`, 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              from: 'Tharaga <notify@tharaga.co.in>',
+              to: [s.email],
+              subject: `New properties in your saved search (${s.count})`,
+              html: `<p>You have ${s.count} new matches in the last 24h.</p><p><a href="https://auth.tharaga.co.in/property-listing/">View listings</a></p>`
+            })
+          })
+        ))
+      }
+    } catch {}
 
     return resp({ ok:true, new_props: props?.length||0, searches: matches })
   } catch (e) {

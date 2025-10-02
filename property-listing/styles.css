@@ -25,9 +25,10 @@ img{max-width:100%;display:block}
   position: sticky;
   top: 0;
   z-index: 40;
-  color: var(--ink); /* normal text color */
-  background: transparent; /* removed maroon background */
-  box-shadow: 0 8px 24px rgba(0,0,0,.05); /* softer shadow */
+  color: var(--ink);
+  /* Solid background so header text never overlaps underlying content */
+  background: var(--cream);
+  box-shadow: 0 8px 24px rgba(0,0,0,.05);
 }
 .header .inner{
   display:flex;
@@ -234,13 +235,12 @@ img{max-width:100%;display:block}
 /* === NEW FILTER BOX STYLES === */
 .filter-container {
   background: linear-gradient(180deg, #fff, #FAF5EF);
-  border-radius: 16px; /* 🔄 CHANGE: slightly smaller for sleekness */
-  padding: 16px; /* 🔄 CHANGE: more compact */
+  border-radius: 16px;
+  padding: 16px;
   border: 1px solid #f0d9d9;
-  box-shadow: 0 4px 24px rgba(110, 13, 37, 0.16); /* 🔄 CHANGE: softer shadow */
-  position: sticky;
-  top: 12px; /* stays visible while browsing results */
-  z-index: 10;
+  box-shadow: 0 4px 24px rgba(110, 13, 37, 0.16);
+  /* Normal scrolling: no sticky positioning */
+  position: static;
 }
 
 /* Mobile compact adjustments */
@@ -299,6 +299,14 @@ img{max-width:100%;display:block}
   /*-- align-items: end; */
 }
 
+/* 2-up inputs like Area (Min/Max) */
+.grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  align-items: center;
+}
+
 .filter-grid label {
   font-weight: 600;
   font-size: 14px; /* 🔄 CHANGE: smaller label font */
@@ -309,7 +317,7 @@ img{max-width:100%;display:block}
 
 .filter-actions {
   display: flex;
-  justify-content: space-between; /* 🔄 CHANGE: buttons spread apart for balance */
+  justify-content: flex-end; /* Only Reset button now */
   gap: 8px;
   margin-top: 8px;
 }
@@ -524,8 +532,8 @@ select[multiple] {
 .explain-row .bar > div { height:100%; background: linear-gradient(90deg,var(--brand),var(--brand-2)); transition: width .25s ease; }
 .chip { display:inline-block; padding:6px 10px; border-radius:999px; background:#fff; border:1px solid #eee; margin-right:6px; font-size:12px; }
 
-/* Mobile bottom sheet filter affordance */
+/* Remove mobile-bottom-sheet behavior entirely to avoid overlay issues */
 @media (max-width: 720px){
-  .filter-container{ position:fixed; left:0; right:0; bottom:0; border-top-left-radius:16px; border-top-right-radius:16px; padding-bottom:68px; }
-  .filter-actions.right{ position:fixed; bottom:12px; left:12px; right:12px; justify-content:space-between; }
+  .filter-container{ position: static; padding-bottom: 12px; }
+  .filter-actions.right{ position: static; }
 }

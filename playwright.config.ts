@@ -9,12 +9,7 @@ export default defineConfig({
     headless: true,
   },
   outputDir: 'tmp/playwright',
-  webServer: process.env.PLAYWRIGHT_BASE_URL
-    ? undefined
-    : {
-        command: 'npx sirv-cli . --single --port 4173',
-        port: 4173,
-        reuseExistingServer: true,
-      },
+  // Disable auto webServer because tests start their own static server
+  webServer: undefined,
 });
 

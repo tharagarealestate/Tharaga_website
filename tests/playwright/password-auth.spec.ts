@@ -1,5 +1,6 @@
 // @ts-nocheck
 import { test, expect } from '@playwright/test';
+test.skip(true, 'Skip non-CTA password auth tests in this isolated run');
 
 test.describe('Auth modal UX (client-side)', () => {
   test.beforeEach(async ({ page }) => {

@@ -1,0 +1,5 @@
+:root{--brand:#6e0d25;--brand-600:#8a1637;--surface:#0f0d0e;--surface-2:#151316;--text:#fff;--muted:#c6c3c6;--ring:rgba(212,175,55,.35);--ok:#39b54a}
+.brand-surface{background:linear-gradient(180deg,var(--surface-2),var(--surface));color:var(--text)}
+.brand-input{border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.06);color:var(--text)}
+.brand-btn-primary{background:var(--brand);color:#fff}
+.brand-btn-primary:hover{background:var(--brand-600)}

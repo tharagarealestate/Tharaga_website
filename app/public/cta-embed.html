@@ -4,62 +4,114 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Tharaga — CTA Embed</title>
+  <link rel="stylesheet" href="/app/public/css/brand.css" />
   <style>
-    body { margin: 0; font-family: system-ui, sans-serif; background: transparent; }
-    .cta { background: #111; color: #fff; padding: 16px 20px; border-radius: 12px; width: min(680px, 92vw); margin: 0 auto; box-shadow: 0 10px 24px rgba(0,0,0,0.12); text-align: left; }
-    .cta h2 { margin: 0 0 8px; font-size: 1.25rem; }
-    .cta p { margin: 0 0 12px; color: #ddd; }
-    .row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
-    input { flex: 1; min-width: 180px; padding: 10px 12px; border-radius: 10px; border: 1px solid #333; background: #1a1a1a; color: #fff; }
-    button { padding: 10px 16px; border-radius: 10px; border: 0; background: #c0002a; color: #fff; font-weight: 600; cursor: pointer; }
-    button:hover { filter: brightness(1.04); }
-    .modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.55); display: none; align-items: center; justify-content: center; padding: 20px; }
-    .modal { width: min(520px, 96vw); background: #111; color: #fff; border-radius: 14px; padding: 18px; box-shadow: 0 20px 40px rgba(0,0,0,0.25); }
-    .modal h3 { margin: 0 0 10px; font-size: 1.1rem; }
-    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-    label { font-size: 0.9rem; color: #ddd; }
-    .modal input, .modal textarea { width: 100%; padding: 10px 12px; border-radius: 10px; border: 1px solid #2a2a2a; background: #1a1a1a; color: #fff; }
-    .modal textarea { min-height: 90px; resize: vertical; }
-    .actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 12px; }
-    .btn { padding: 10px 14px; border-radius: 10px; border: 0; cursor: pointer; }
-    .btn-secondary { background: #2a2a2a; color: #fff; }
-    .btn-primary { background: #c0002a; color: #fff; font-weight: 600; }
-    .note { font-size: 0.85rem; color: #bbb; margin-top: 10px; }
+    /* Uses brand.css variables */
+
+    html, body { margin: 0; background: transparent; color: var(--text); font-family: Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial; }
+
+    .cta {
+      position: relative;
+      background: radial-gradient(1200px 200px at 20% -50%, rgba(110,13,37,0.45), transparent),
+                  linear-gradient(180deg, var(--surface-2), var(--surface));
+      color: var(--text);
+      padding: 18px 22px;
+      border-radius: 16px;
+      width: min(720px, 92vw);
+      margin: 0 auto;
+      box-shadow: 0 10px 28px rgba(0,0,0,0.22);
+      text-align: left;
+      border: 1px solid rgba(255,255,255,0.06);
+    }
+    .cta::after {
+      content: ""; position: absolute; inset: 0; border-radius: 16px; pointer-events: none;
+      box-shadow: 0 0 0 1px var(--ring) inset;
+      opacity: .35;
+    }
+    .cta h2 { margin: 0 0 6px; font-size: 1.25rem; letter-spacing: 0.2px; }
+    .cta p { margin: 0 0 12px; color: #e7e2e5; font-size: .95rem; }
+    .row { display: grid; grid-template-columns: 1fr auto; gap: 12px; align-items: center; }
+    .field-inline { position: relative; }
+    .field-inline input {
+      width: 100%; min-width: 200px; padding: 12px 14px; border-radius: 12px;
+      border: 1px solid rgba(255,255,255,0.08);
+      background: rgba(255,255,255,0.06);
+      color: var(--text);
+      outline: none;
+    }
+    .field-inline input::placeholder { color: rgba(255,255,255,0.6); }
+    .primary-btn {
+      padding: 12px 18px; border-radius: 12px; border: 0; background: var(--brand); color: #fff; font-weight: 700; cursor: pointer;
+      box-shadow: 0 6px 18px rgba(110,13,37,0.35);
+    }
+    .primary-btn:hover { background: var(--brand-600); }
+    .note { font-size: 0.82rem; color: #e7e2e5; margin-top: 10px; opacity: .85; }
+
+    .modal-backdrop { position: fixed; inset: 0; background: rgba(9, 7, 8, 0.58); display: none; align-items: center; justify-content: center; padding: 22px; backdrop-filter: blur(4px); }
+    .modal {
+      width: min(560px, 96vw); background: linear-gradient(180deg, var(--surface-2), var(--surface)); color: var(--text);
+      border-radius: 16px; padding: 18px; box-shadow: 0 24px 50px rgba(0,0,0,0.45); border: 1px solid rgba(255,255,255,0.06);
+    }
+    .modal h3 { margin: 0 0 12px; font-size: 1.1rem; }
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    @media (max-width: 560px) { .grid { grid-template-columns: 1fr; } }
+    label { font-size: 0.86rem; color: #e4dfe3; display: inline-block; margin-bottom: 6px; }
+    .modal input, .modal textarea {
+      width: 100%; padding: 11px 12px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.08);
+      background: rgba(255,255,255,0.06); color: var(--text); outline: none;
+    }
+    .modal input:focus, .modal textarea:focus { box-shadow: 0 0 0 2px var(--ring); border-color: transparent; }
+    .modal textarea { min-height: 96px; resize: vertical; }
+    .actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 14px; }
+    .btn { padding: 10px 14px; border-radius: 12px; border: 0; cursor: pointer; font-weight: 600; }
+    .btn-secondary { background: rgba(255,255,255,0.08); color: #fff; }
+    .btn-secondary:hover { background: rgba(255,255,255,0.12); }
+    .btn-primary { background: var(--brand); color: #fff; }
+    .btn-primary:hover { background: var(--brand-600); }
+    .hint { font-size: 0.8rem; color: #d7d0d5; }
+    .error { color: #ff6b6b; }
+    .ok { color: var(--ok); }
+    .visually-hidden { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); border: 0; }
   </style>
+  <script src="/js/analytics.js"></script>
 </head>
 <body>
   <section class="cta" id="buyer-cta">
     <h2>Get 3 verified matches</h2>
     <p>Share your WhatsApp or phone. Our team sends hand‑picked options fast.</p>
     <div class="row">
-      <input id="cta-phone" type="tel" placeholder="WhatsApp / phone" inputmode="tel" />
-      <button id="open-microform" type="button">Continue</button>
+      <div class="field-inline">
+        <label for="cta-phone" class="visually-hidden">WhatsApp or phone</label>
+        <input id="cta-phone" type="tel" placeholder="WhatsApp / phone" inputmode="tel" autocomplete="tel" />
+      </div>
+      <button id="open-microform" class="primary-btn" type="button" aria-haspopup="dialog" aria-controls="backdrop">Continue</button>
     </div>
     <div class="note">Low effort, high signal: no spam, only verified listings.</div>
   </section>
 
-  <div class="modal-backdrop" id="backdrop" role="dialog" aria-modal="true">
-    <div class="modal">
-      <h3>Tell us what you need</h3>
+  <div class="modal-backdrop" id="backdrop" aria-hidden="true">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="lead-title" aria-describedby="lead-note">
+      <h3 id="lead-title">Tell us what you need</h3>
       <div class="grid">
         <div>
-          <label>Name</label>
+          <label for="lead-name">Name</label>
           <input id="lead-name" type="text" placeholder="Your name" />
         </div>
+        <input id="lead-company" type="text" autocomplete="organization" style="position:absolute;left:-9999px;top:auto;width:1px;height:1px;opacity:0" aria-hidden="true" tabindex="-1" />
         <div>
-          <label>WhatsApp / phone</label>
-          <input id="lead-phone" type="tel" placeholder="Required" inputmode="tel" />
+          <label for="lead-phone">WhatsApp / phone</label>
+          <input id="lead-phone" type="tel" placeholder="Required" inputmode="tel" autocomplete="tel" />
         </div>
         <div>
-          <label>Email (optional)</label>
-          <input id="lead-email" type="email" placeholder="you@example.com" />
+          <label for="lead-email">Email (optional)</label>
+          <input id="lead-email" type="email" placeholder="you@example.com" autocomplete="email" />
         </div>
         <div>
-          <label>City / Budget (optional)</label>
+          <label for="lead-ctx">City / Budget (optional)</label>
           <input id="lead-ctx" type="text" placeholder="e.g., Chennai · 70L" />
         </div>
         <div style="grid-column: 1 / -1;">
-          <label>Anything specific?</label>
+          <label for="lead-message">Anything specific?</label>
           <textarea id="lead-message" placeholder="Locality, BHK, timeline…"></textarea>
         </div>
       </div>
@@ -67,24 +119,83 @@
         <button class="btn btn-secondary" id="lead-cancel" type="button">Cancel</button>
         <button class="btn btn-primary" id="lead-submit" type="button">Request matches</button>
       </div>
-      <div class="note" id="lead-note"></div>
+      <div class="note" id="lead-note" aria-live="polite"></div>
     </div>
   </div>
 
   <script>
+    // Elements
     const backdrop = document.getElementById('backdrop');
+    const modal = backdrop.querySelector('.modal');
     const openBtn = document.getElementById('open-microform');
     const phoneInline = document.getElementById('cta-phone');
-    openBtn?.addEventListener('click', () => {
+    const cancelBtn = document.getElementById('lead-cancel');
+
+    // Focus trap helpers
+    let lastFocused = null;
+    function getFocusable(){
+      return modal.querySelectorAll('a, button, input, textarea, select, [tabindex]:not([tabindex="-1"])');
+    }
+    function openModal(){
       const phoneVal = (phoneInline?.value || '').trim();
       const phoneInput = document.getElementById('lead-phone');
-      if (phoneVal && phoneInput) phoneInput.value = phoneVal;
+      if (phoneVal && phoneInput && !phoneInput.value) phoneInput.value = phoneVal;
+      lastFocused = document.activeElement;
       backdrop.style.display = 'flex';
-    });
-    document.getElementById('lead-cancel')?.addEventListener('click', () => {
+      backdrop.setAttribute('aria-hidden', 'false');
+      const f = getFocusable(); if (f.length) f[0].focus();
+    }
+    function closeModal(){
       backdrop.style.display = 'none';
+      backdrop.setAttribute('aria-hidden', 'true');
       document.getElementById('lead-note').textContent = '';
+      if (lastFocused && lastFocused.focus) setTimeout(()=> lastFocused.focus(), 0);
+    }
+
+    openBtn?.addEventListener('click', openModal);
+    cancelBtn?.addEventListener('click', closeModal);
+    backdrop.addEventListener('click', (e)=> { if (e.target === backdrop) closeModal(); });
+    modal.addEventListener('keydown', (e)=>{
+      if (e.key === 'Escape') { e.preventDefault(); closeModal(); return; }
+      if (e.key === 'Tab'){
+        const focusable = Array.from(getFocusable());
+        const first = focusable[0]; const last = focusable[focusable.length-1];
+        if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+        if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+      }
     });
+
+    // Allowed parent origins for embed postMessage
+    const ALLOWED_PARENTS = ['https://tharaga.co.in', 'https://www.tharaga.co.in', 'https://auth.tharaga.co.in', location.origin];
+    function postToParent(payload){
+      try {
+        const parentOrigin = (function(){ try { return new URL(document.referrer).origin; } catch(_) { return '*'; } })();
+        if (ALLOWED_PARENTS.includes(parentOrigin) || /tharaga\.co\.in/.test(parentOrigin)) {
+          window.parent.postMessage(payload, parentOrigin);
+        } else {
+          window.parent.postMessage(payload, '*');
+        }
+      } catch(_){}
+    }
+
+    function buildCtxFromQuery(){
+      const p = new URLSearchParams(location.search);
+      const parts = [];
+      const city = p.get('city');
+      const budget = p.get('budget');
+      if (city) parts.push(city);
+      if (budget) parts.push(budget);
+      return parts.join(' · ');
+    }
+
+    // Phone UX helpers
+    const waPreview = document.createElement('div');
+    waPreview.className = 'hint';
+    modal.querySelector('.actions').before(waPreview);
+    function normalizePhone(p){ return (p||'').replace(/[^\d+]/g,''); }
+    function whatsappLink(p){ const ph = normalizePhone(p); if (!ph) return ''; return `https://wa.me/${ph}`; }
+    const phoneEl = document.getElementById('lead-phone');
+    phoneEl.addEventListener('input', ()=>{ const link = whatsappLink(phoneEl.value); waPreview.textContent = link ? `WhatsApp link will open: ${link}` : ''; });
 
     async function submitLead() {
       const name = (document.getElementById('lead-name').value || '').trim();
@@ -94,32 +205,51 @@
       const message = (document.getElementById('lead-message').value || '').trim();
       const note = document.getElementById('lead-note');
       note.textContent = '';
-      if (!phone && !email) {
-        note.textContent = 'Provide WhatsApp/phone or email.';
-        return;
-      }
+      if (!phone && !email) { note.textContent = 'Provide WhatsApp/phone or email.'; note.className = 'note error'; (document.getElementById('lead-phone').focus()); return; }
+      if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { note.textContent = 'Enter a valid email.'; note.className = 'note error'; (document.getElementById('lead-email').focus()); return; }
+
       const btn = document.getElementById('lead-submit');
-      btn.disabled = true;
-      btn.textContent = 'Sending…';
+      btn.disabled = true; btn.textContent = 'Sending…';
+      const payload = { property_id: null, name, phone: normalizePhone(phone), email, message: [ctx || buildCtxFromQuery(), message].filter(Boolean).join(' • '), _hp: (document.getElementById('lead-company')||{}).value||'' };
       try {
-        const payload = { property_id: null, name, phone, email, message: [ctx, message].filter(Boolean).join(' • ') };
         const res = await fetch('/api/leads', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
         const data = await res.json();
         if (data && data.ok) {
-          note.textContent = 'Thanks! We will WhatsApp you verified matches soon.';
-          setTimeout(() => { backdrop.style.display = 'none'; }, 900);
+          note.textContent = 'Thanks! We will WhatsApp you verified matches soon.'; note.className = 'note ok';
+          try { window.thgTrack && window.thgTrack('cta_lead_ok', { location: 'cta-embed', phone: !!phone, email: !!email }); } catch(_){ }
+          postToParent({ type: 'tharaga_lead_ok', payload });
+          setTimeout(() => { closeModal(); }, 900);
         } else {
-          note.textContent = 'Could not submit right now. Please try again.';
+          note.textContent = (data && data.error) || 'Could not submit right now. Please try again.'; note.className = 'note error';
+          try { window.thgTrack && window.thgTrack('cta_lead_error', { location: 'cta-embed', error: (data && data.error)||'unknown' }); } catch(_){ }
+          postToParent({ type: 'tharaga_lead_error', error: (data && data.error) || 'unknown' });
         }
       } catch (e) {
-        note.textContent = 'Network issue. Please try again.';
-      } finally {
-        btn.disabled = false;
-        btn.textContent = 'Request matches';
-      }
+        note.textContent = 'Network issue. Please try again.'; note.className = 'note error';
+        try { window.thgTrack && window.thgTrack('cta_lead_error', { location: 'cta-embed', error: 'network' }); } catch(_){ }
+        postToParent({ type: 'tharaga_lead_error', error: 'network' });
+      } finally { btn.disabled = false; btn.textContent = 'Request matches'; }
     }
     document.getElementById('lead-submit')?.addEventListener('click', submitLead);
+    modal.addEventListener('keydown', (e)=>{ if (e.key === 'Enter' && (e.target.tagName === 'INPUT')) { e.preventDefault(); submitLead(); }});
+  </script>
+  <script>
+    // Prefill from query; support durable embed minimal layout
+    try {
+      const params = new URLSearchParams(location.search);
+      const inlinePhone = params.get('phone') || params.get('whatsapp') || '';
+      if (inlinePhone) { const el = document.getElementById('cta-phone'); if (el) el.value = inlinePhone; }
+
+      const map = [ ['lead-name', 'name'], ['lead-phone', 'phone'], ['lead-email', 'email'], ['lead-ctx','ctx'], ['lead-message','message'] ];
+      map.forEach(([id, key]) => { const v = params.get(key); if (v) { const el = document.getElementById(id); if (el) el.value = v; }});
+
+      if (params.get('embed') === 'cta') {
+        document.querySelectorAll('h1, nav, p, footer').forEach(el => el.style.display = 'none');
+        const cta = document.getElementById('buyer-cta'); if (cta) cta.style.marginTop = '0';
+      }
+
+      if (params.get('open') === '1') openModal();
+    } catch (e) {}
   </script>
 </body>
 </html>
-

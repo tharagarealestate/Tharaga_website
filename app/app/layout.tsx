@@ -9,7 +9,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body className="font-inter bg-brandWhite text-deepBlue">
+      <body className="font-inter bg-brandWhite text-plum">
         {children}
         {/* Web Vitals reporting */}
         <script dangerouslySetInnerHTML={{ __html: `

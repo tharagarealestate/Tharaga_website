@@ -17,10 +17,14 @@ export function RecommendationsCarousel({ items = [], isLoading = false, error =
   const [clientItems, setClientItems] = React.useState(items)
   const [retrying, setRetrying] = React.useState(false)
   const [clientError, setClientError] = React.useState<string | null>(null)
+  // Ensure we attempt at most one client-side retry to avoid infinite loops
+  const hasRetriedRef = React.useRef(false)
 
   React.useEffect(() => {
-    // If server failed to load, attempt one client-side retry for resilience
-    if ((error || items.length === 0) && !retrying) {
+    // Attempt a single client-side retry when SSR had an error or no items.
+    if (hasRetriedRef.current) return
+    if (error || items.length === 0) {
+      hasRetriedRef.current = true
       let sid = readCookie('thg_sid')
       if (!sid) {
         // create a client-side session id if missing
@@ -30,13 +34,13 @@ export function RecommendationsCarousel({ items = [], isLoading = false, error =
       setRetrying(true)
       fetchRecommendationsClient({ session_id: sid, num_results: 6 })
         .then((data) => {
-          setClientItems(data.items || [])
+          setClientItems(Array.isArray(data.items) ? data.items : [])
           setClientError(null)
         })
         .catch(() => setClientError('Failed to load recommendations'))
         .finally(() => setRetrying(false))
     }
-  }, [error, items.length, retrying])
+  }, [error, items.length])
 
   if (error && clientItems.length === 0 && !retrying) {
     return (
@@ -69,8 +73,8 @@ function PropertyCard({ item }: { item: RecommendationItem }) {
   const [loaded, setLoaded] = React.useState(false)
   const blurDataURL = 'data:image/gif;base64,R0lGODlhAQABAAAAACw=' // tiny 1x1
   return (
-    <div className="min-w-[280px] max-w-[320px] rounded-xl bg-brandWhite shadow-subtle border border-deepBlue/10 overflow-hidden">
-      <div className="relative h-40 w-full bg-deepBlue/10">
+    <div className="min-w-[280px] max-w-[320px] rounded-xl bg-brandWhite shadow-subtle border border-plum/10 overflow-hidden">
+      <div className="relative h-40 w-full bg-plum/10">
         <Image
           src={item.image_url}
           alt={item.title}
@@ -104,7 +108,7 @@ function Specs({ specs }: { specs: RecommendationItem['specs'] }) {
   if (specs.bathrooms) parts.push(`${specs.bathrooms} Bath`)
   if (specs.area_sqft) parts.push(`${Math.round(specs.area_sqft)} sqft`)
   if (specs.location) parts.push(specs.location)
-  return <p className="text-sm text-deepBlue/70">{parts.join(' • ')}</p>
+  return <p className="text-sm text-plum/70">{parts.join(' • ')}</p>
 }
 
 function WhyContent({ reasons }: { reasons: string[] }) {
@@ -121,7 +125,7 @@ function WhyContent({ reasons }: { reasons: string[] }) {
 function NavButton({ direction }: { direction: 'prev' | 'next' }) {
   return (
     <button
-      className="rounded-full border border-deepBlue/20 text-deepBlue/80 hover:text-deepBlue hover:bg-deepBlue/5 px-3 py-1 text-sm"
+      className="rounded-full border border-plum/20 text-plum/80 hover:text-plum hover:bg-plum/5 px-3 py-1 text-sm"
       data-dir={direction}
       aria-label={direction === 'prev' ? 'Previous' : 'Next'}
       onClick={(e) => {
@@ -164,11 +168,11 @@ function ScrollableRow({ children }: { children: React.ReactNode }) {
 
 function CardSkeleton() {
   return (
-    <div className="min-w-[280px] max-w-[320px] rounded-xl bg-brandWhite shadow-subtle border border-deepBlue/10 overflow-hidden animate-pulse">
-      <div className="h-40 w-full bg-deepBlue/10" />
+    <div className="min-w-[280px] max-w-[320px] rounded-xl bg-brandWhite shadow-subtle border border-plum/10 overflow-hidden animate-pulse">
+      <div className="h-40 w-full bg-plum/10" />
       <div className="p-3 space-y-2">
-        <div className="h-4 w-3/4 bg-deepBlue/10 rounded" />
-        <div className="h-3 w-2/3 bg-deepBlue/10 rounded" />
+        <div className="h-4 w-3/4 bg-plum/10 rounded" />
+        <div className="h-3 w-2/3 bg-plum/10 rounded" />
       </div>
     </div>
   )
@@ -176,8 +180,8 @@ function CardSkeleton() {
 
 function EmptyState() {
   return (
-    <div className="min-w-[280px] rounded-xl border border-deepBlue/10 bg-brandWhite p-6 text-center">
-      <p className="text-deepBlue/70">No recommendations yet. Explore properties to get tailored picks.</p>
+    <div className="min-w-[280px] rounded-xl border border-plum/10 bg-brandWhite p-6 text-center">
+      <p className="text-plum/70">No recommendations yet. Explore properties to get tailored picks.</p>
     </div>
   )
 }

@@ -9,9 +9,9 @@ exports.handler = async (event) => {
   if (event.httpMethod !== 'POST') return json({ error: 'Method not allowed' }, 405)
   try {
     const { property_id, name, email, phone, message } = JSON.parse(event.body || '{}')
-    if (!property_id || !(name || email || phone)) return { statusCode: 400, headers: corsJson(), body: JSON.stringify({ error: 'Missing required fields' }) }
+    if (!(name || email || phone)) return { statusCode: 400, headers: corsJson(), body: JSON.stringify({ error: 'Provide contact: phone or email' }) }
     const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE)
-    const { error } = await supabase.from('leads').insert([{ property_id, name, email, phone, message }])
+    const { error } = await supabase.from('leads').insert([{ property_id: property_id || null, name, email, phone, message }])
     if (error) return { statusCode: 200, headers: corsJson(), body: JSON.stringify({ error: error.message }) }
     return { statusCode: 200, headers: corsJson(), body: JSON.stringify({ ok: true }) }
   } catch (e) {

@@ -89,6 +89,12 @@ img{max-width:100%;display:block}
   box-shadow:0 16px 36px rgba(110,13,37,.16)
 }
 
+/* Micro-interactions */
+.card .btn { transition: transform .15s ease, box-shadow .15s ease; }
+.card .btn:hover { transform: translateY(-1px); box-shadow: 0 6px 14px rgba(110,13,37,.18); }
+.filter-pill { transition: background .2s ease, color .2s ease, transform .1s ease; }
+.filter-pill:active { transform: scale(0.98); }
+
 .grid{display:grid;gap:16px}
 .row{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
 
@@ -185,7 +191,8 @@ img{max-width:100%;display:block}
 .card-img img{
   width:100%;
   height:100%;
-  object-fit:cover
+  object-fit:cover;
+  aspect-ratio: 3 / 2;
 }
 
 /* Blur-up lazy image */
@@ -234,6 +241,15 @@ img{max-width:100%;display:block}
   position: sticky;
   top: 12px; /* stays visible while browsing results */
   z-index: 10;
+}
+
+/* Mobile compact adjustments */
+@media (max-width: 720px){
+  .container{ padding: 16px; }
+  .filter-container{ position: static; top: auto; padding: 12px; }
+  .top-row{ flex-direction: column; }
+  .filter-grid{ grid-template-columns: 1fr 1fr; }
+  .card-img{ height: 180px; }
 }
 
 .filter-container:hover {

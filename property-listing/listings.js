@@ -519,7 +519,12 @@ function wireUI(){
         { label:'₹75L–₹1Cr', min:7500000, max:10000000 },
         { label:'₹1Cr–₹1.5Cr', min:10000000, max:15000000 }
       ],
-      bhk: ['1','2','3','4']
+      bhk: ['1','2','3','4'],
+      personas: [
+        { id:'near_metro', label:'Near Metro', apply(){ const wm=document.getElementById('wantMetro'); const mw=document.getElementById('maxWalk'); if (wm) wm.checked=true; if (mw) mw.value=10; } },
+        { id:'value', label:'Best Value', apply(){ const s=document.getElementById('sort'); if (s) s.value='priceLow'; } },
+        { id:'luxury', label:'Luxury Homes', apply(){ const a=document.getElementById('minPrice'); if (a) a.value=String(20000000); const s=document.getElementById('sort'); if (s) s.value='newest'; } },
+      ]
     };
 
     const presetWrap = document.getElementById('presetChips');
@@ -547,6 +552,19 @@ function wireUI(){
         btn.textContent = `${n} BHK`;
         btn.addEventListener('click', ()=>{
           const el=document.getElementById('bhk'); if(el){ el.value=String(n); el.dispatchEvent(new Event('change',{bubbles:true})); }
+          PAGE=1; apply(); syncUrlWithFilters();
+        });
+        presetWrap.appendChild(btn);
+      });
+
+      // Personas
+      PRESETS.personas.forEach(p=>{
+        const btn = document.createElement('button');
+        btn.className = 'chip';
+        btn.textContent = p.label;
+        btn.title = 'Quick preference';
+        btn.addEventListener('click', ()=>{
+          try { p.apply(); } catch(_) {}
           PAGE=1; apply(); syncUrlWithFilters();
         });
         presetWrap.appendChild(btn);

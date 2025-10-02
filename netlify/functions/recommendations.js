@@ -18,33 +18,51 @@ exports.handler = async (event) => {
     const num = Math.max(1, Math.min(50, Number(body.num_results || 6)))
     const url = process.env.SUPABASE_URL
     const key = process.env.SUPABASE_SERVICE_ROLE
-    if (!url || !key) {
-      console.warn('[recs] Missing Supabase env. Returning empty list.')
+    const anon = process.env.SUPABASE_ANON_KEY
+    if (!url) {
+      console.warn('[recs] Missing Supabase URL. Returning empty list.')
       return { statusCode: 200, headers: { 'Content-Type': 'application/json', ...corsHeaders }, body: JSON.stringify({ items: [] }) }
     }
 
-    const supabase = createClient(url, key)
-    let q = supabase
-      .from('properties')
-      .select('id,title,city,locality,images,bedrooms,bathrooms,price_inr,sqft,listed_at')
-      .eq('is_verified', true)
-      .or('listing_status.eq.active,listing_status.is.null')
-      .order('listed_at', { ascending: false })
-      .limit(num)
-
-    if (body.city) q = q.eq('city', body.city)
-    if (body.locality) q = q.eq('locality', body.locality)
-
-    let { data, error } = await q
-    if (error) {
-      console.error('[recs] Primary query failed:', error?.message || error)
-      // Fallback: relax constraints to at least show something
-      const fallback = await supabase
+    let data = []
+    if (key) {
+      // Preferred: service role client
+      const supabase = createClient(url, key)
+      let q = supabase
         .from('properties')
         .select('id,title,city,locality,images,bedrooms,bathrooms,price_inr,sqft,listed_at')
+        .eq('is_verified', true)
+        .or('listing_status.eq.active,listing_status.is.null')
         .order('listed_at', { ascending: false })
         .limit(num)
-      data = fallback.data || []
+
+      if (body.city) q = q.eq('city', body.city)
+      if (body.locality) q = q.eq('locality', body.locality)
+
+      const res = await q
+      if (res.error) {
+        console.error('[recs] Primary query failed:', res.error?.message || res.error)
+        const fb = await supabase
+          .from('properties')
+          .select('id,title,city,locality,images,bedrooms,bathrooms,price_inr,sqft,listed_at')
+          .order('listed_at', { ascending: false })
+          .limit(num)
+        data = fb.data || []
+      } else {
+        data = res.data || []
+      }
+    } else if (anon) {
+      // Last-ditch fallback: REST with anon key (subject to RLS)
+      try {
+        const qs = new URLSearchParams();
+        qs.set('select', 'id,title,city,locality,images,bedrooms,bathrooms,price_inr,sqft,listed_at')
+        if (body.city) qs.set('city', `eq.${body.city}`)
+        const restUrl = `${url}/rest/v1/properties?${qs.toString()}`
+        const r = await fetch(restUrl, { headers: { apikey: anon, Authorization: `Bearer ${anon}`, Accept: 'application/json' } })
+        if (r.ok) data = await r.json(); else console.warn('[recs] REST anon fallback failed:', r.status)
+      } catch (e) { console.warn('[recs] REST anon exception', e?.message || e) }
+    } else {
+      console.warn('[recs] No service role or anon key available')
     }
 
     const items = (data || []).map(p => {

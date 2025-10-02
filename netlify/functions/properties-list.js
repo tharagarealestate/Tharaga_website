@@ -9,18 +9,26 @@ exports.handler = async () => {
     const url = process.env.SUPABASE_URL
     const key = process.env.SUPABASE_SERVICE_ROLE
     if (!url || !key) {
-      return json({ error: 'Supabase env missing' }, 500)
+      console.warn('[properties-list] Missing env SUPABASE_URL or SUPABASE_SERVICE_ROLE')
+      return json({ error: 'Supabase env missing', items: [] }, 200)
     }
     const supabase = createClient(url, key)
-    const { data, error } = await supabase
+    let { data, error } = await supabase
       .from('properties')
       .select('id,title,description,city,locality,property_type,bedrooms,bathrooms,price_inr,sqft,images,listed_at,furnished,facing,category,project,builder')
       .eq('is_verified', true)
       .or('listing_status.eq.active,listing_status.is.null')
       .order('listed_at', { ascending: false })
       .limit(200)
-
-    if (error) return json({ error: error.message, items: [] }, 200)
+    if (error) {
+      console.error('[properties-list] Primary query failed:', error?.message || error)
+      const fb = await supabase
+        .from('properties')
+        .select('id,title,description,city,locality,property_type,bedrooms,bathrooms,price_inr,sqft,images,listed_at,furnished,facing,category,project,builder')
+        .order('listed_at', { ascending: false })
+        .limit(200)
+      data = fb.data || []
+    }
 
     const out = (data || []).map(p => ({
       id: p.id,
@@ -44,7 +52,7 @@ exports.handler = async () => {
       address: '',
       lat: null,
       lng: null,
-      images: Array.isArray(p.images) ? p.images : [],
+      images: Array.isArray(p.images) ? p.images : (typeof p.images === 'string' ? (safeParseArray(p.images)) : []),
       amenities: [],
       rera: '',
       docsLink: '',
@@ -55,7 +63,12 @@ exports.handler = async () => {
 
     return json(out)
   } catch (e) {
+    console.error('[properties-list] Unexpected error:', e?.message || e)
     return json({ error: 'Unexpected', items: [] }, 200)
   }
+}
+
+function safeParseArray(s) {
+  try { const j = JSON.parse(s); return Array.isArray(j) ? j : [] } catch(_) { return [] }
 }
 

@@ -106,7 +106,8 @@
     X-Content-Type-Options = "nosniff"
     Referrer-Policy = "no-referrer"
     Permissions-Policy = "geolocation=(), microphone()"
-    Content-Security-Policy = "default-src 'self'; img-src 'self' https: data:; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; media-src 'self' https: data: blob:; connect-src 'self' https://api.tharaga.co.in https://wedevtjjmdvngyshqdro.supabase.co; frame-ancestors 'self' https://tharaga.co.in https://www.tharaga.co.in; base-uri 'self'"
+    # Broadened CSP to allow Firebase OTP (gstatic/google), Supabase storage, and analytics
+    Content-Security-Policy = "default-src 'self'; img-src 'self' https: data:; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://www.gstatic.com https://www.google.com https://www.googletagmanager.com; style-src 'self' 'unsafe-inline'; media-src 'self' https: data: blob:; connect-src 'self' https://api.tharaga.co.in https://wedevtjjmdvngyshqdro.supabase.co https://www.googleapis.com https://securetoken.googleapis.com https://identitytoolkit.googleapis.com; frame-src 'self' https://www.google.com https://www.gstatic.com; frame-ancestors 'self' https://tharaga.co.in https://www.tharaga.co.in; base-uri 'self'"
 
 ## Rely on /api proxy; no public API base URL exposed
 

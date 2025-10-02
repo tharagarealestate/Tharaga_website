@@ -4,9 +4,10 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Tharaga — CTA Embed</title>
-  <link rel="stylesheet" href="/app/public/css/brand.css" />
+  <link rel="stylesheet" href="/css/brand.css" />
   <style>
-    /* Uses brand.css variables */
+    /* Uses brand.css variables; provide fallbacks if it fails to load */
+    :root{--brand:#6e0d25;--brand-600:#8a1637;--surface:#0f0d0e;--surface-2:#151316;--text:#fff;--muted:#c6c3c6;--ring:rgba(212,175,55,.35);--ok:#39b54a}
 
     html, body { margin: 0; background: transparent; color: var(--text); font-family: Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial; }
 
@@ -244,7 +245,8 @@
       map.forEach(([id, key]) => { const v = params.get(key); if (v) { const el = document.getElementById(id); if (el) el.value = v; }});
 
       if (params.get('embed') === 'cta') {
-        document.querySelectorAll('h1, nav, p, footer').forEach(el => el.style.display = 'none');
+        // In embed mode, hide only top-level chrome, not CTA copy
+        document.querySelectorAll('body > h1, body > nav, body > footer').forEach(el => el.style.display = 'none');
         const cta = document.getElementById('buyer-cta'); if (cta) cta.style.marginTop = '0';
       }
 

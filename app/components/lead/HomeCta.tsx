@@ -1,0 +1,69 @@
+'use client'
+
+import React, { useState } from 'react'
+
+export function HomeCta() {
+  const [name, setName] = useState('')
+  const [phone, setPhone] = useState('')
+  const [email, setEmail] = useState('')
+  const [ctx, setCtx] = useState('')
+  const [message, setMessage] = useState('')
+  const [note, setNote] = useState('')
+  const [submitting, setSubmitting] = useState(false)
+
+  async function submit() {
+    setNote('')
+    if (!phone && !email) {
+      setNote('Provide WhatsApp/phone or email.')
+      return
+    }
+    setSubmitting(true)
+    try {
+      const payload = {
+        property_id: null,
+        name: name || undefined,
+        phone: phone || undefined,
+        email: email || undefined,
+        message: [ctx, message].filter(Boolean).join(' • '),
+      }
+      const res = await fetch('/api/leads', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      })
+      const data = await res.json()
+      if (data && data.ok) {
+        setNote('Thanks! We will WhatsApp you verified matches soon.')
+        setName(''); setPhone(''); setEmail(''); setCtx(''); setMessage('')
+      } else {
+        setNote('Could not submit right now. Please try again.')
+      }
+    } catch (_) {
+      setNote('Network issue. Please try again.')
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  return (
+    <section className="mx-auto w-full max-w-xl rounded-2xl bg-plum text-white p-4 shadow-xl">
+      <h2 className="m-0 text-lg font-bold">Get 3 verified matches</h2>
+      <p className="m-0 mt-1 text-white/90 text-sm">Share your WhatsApp or phone. Our team sends hand‑picked options fast.</p>
+      <div className="mt-3 grid grid-cols-1 gap-2">
+        <input className="rounded-xl border border-white/15 bg-white/10 px-3 py-2 outline-none placeholder:text-white/60" placeholder="Your name" value={name} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setName(e.target.value)} />
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+          <input className="rounded-xl border border-white/15 bg-white/10 px-3 py-2 outline-none placeholder:text-white/60" inputMode="tel" placeholder="WhatsApp / phone" value={phone} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPhone(e.target.value)} />
+          <input className="rounded-xl border border-white/15 bg-white/10 px-3 py-2 outline-none placeholder:text-white/60" type="email" placeholder="Email (optional)" value={email} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEmail(e.target.value)} />
+        </div>
+        <input className="rounded-xl border border-white/15 bg-white/10 px-3 py-2 outline-none placeholder:text-white/60" placeholder="City / Budget (optional)" value={ctx} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setCtx(e.target.value)} />
+        <textarea className="min-h-[80px] rounded-xl border border-white/15 bg-white/10 px-3 py-2 outline-none placeholder:text-white/60" placeholder="Anything specific? Locality, BHK, timeline…" value={message} onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setMessage(e.target.value)} />
+        <div className="flex items-center justify-end gap-2">
+          <button className="rounded-xl bg-white text-plum font-semibold px-4 py-2 disabled:opacity-60" onClick={submit} disabled={submitting}>{submitting ? 'Sending…' : 'Request matches'}</button>
+        </div>
+        {note ? <div className="text-sm text-white/90">{note}</div> : null}
+        <div className="text-xs text-white/70">Low effort, high signal: no spam, only verified listings.</div>
+      </div>
+    </section>
+  )
+}
+

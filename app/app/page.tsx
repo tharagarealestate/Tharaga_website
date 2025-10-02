@@ -1,9 +1,11 @@
+import React from 'react'
 import { fetchRecommendations } from '@/lib/api'
 import type { RecommendationItem } from '@/types/recommendations'
 import { RecommendationsCarousel } from '@/features/recommendations/RecommendationsCarousel'
+import { HomeCta } from '@/components/lead/HomeCta'
 import { getOrCreateSessionId } from '@/lib/session'
 
-export default async function Home() {
+export default async function Home({ searchParams }: { searchParams?: Record<string, string | string[]> }) {
   let items: RecommendationItem[] = []
   let error: string | null = null
   try {
@@ -14,8 +16,16 @@ export default async function Home() {
     error = 'Failed to load recommendations'
   }
 
+  // Embed mode: if ?embed=cta, render only the CTA client component
+  const embedParam = searchParams && typeof searchParams.embed === 'string' ? searchParams.embed : Array.isArray(searchParams?.embed) ? searchParams?.embed?.[0] : undefined
+  const isEmbed = embedParam === 'cta'
+
   return (
     <main>
+      {isEmbed ? (
+        <div className="px-4 py-6"><HomeCta /></div>
+      ) : (
+        <>
       <section className="brand-gradient text-white relative overflow-hidden">
         {/* AI themed background overlay */}
         <div className="absolute inset-0 pointer-events-none">
@@ -49,6 +59,8 @@ export default async function Home() {
         </div>
         <RecommendationsCarousel items={items} isLoading={false} error={error} />
       </section>
+        </>
+      )}
     </main>
   )
 }

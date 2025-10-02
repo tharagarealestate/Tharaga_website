@@ -80,6 +80,18 @@
   status = 200
   force = true
 
+[[redirects]]
+  from = "/api/admin/builders"
+  to = "/.netlify/functions/admin-builders-list"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/api/admin/builder-update"
+  to = "/.netlify/functions/admin-builder-update"
+  status = 200
+  force = true
+
 # Recommendations function at /api/recommendations (place BEFORE generic /api/*)
 [[redirects]]
   from = "/api/recommendations"

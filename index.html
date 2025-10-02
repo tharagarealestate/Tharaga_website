@@ -102,6 +102,7 @@
             <label for="lead-name">Name</label>
             <input id="lead-name" type="text" placeholder="Your name" />
           </div>
+          <input id="lead-company" type="text" autocomplete="organization" style="position:absolute;left:-9999px;top:auto;width:1px;height:1px;opacity:0" aria-hidden="true" tabindex="-1" />
           <div>
             <label for="lead-phone">WhatsApp / phone</label>
             <input id="lead-phone" type="tel" placeholder="Required" inputmode="tel" autocomplete="tel" />
@@ -172,6 +173,12 @@
       } catch(_){ }
     }
 
+    // Phone UX helpers
+    const waPreview = document.createElement('div'); waPreview.className='hint'; modal.querySelector('.actions').before(waPreview);
+    function normalizePhone(p){ return (p||'').replace(/[^\d+]/g,''); }
+    function whatsappLink(p){ const ph = normalizePhone(p); if (!ph) return ''; return `https://wa.me/${ph}`; }
+    const phoneEl = document.getElementById('lead-phone'); phoneEl.addEventListener('input', ()=>{ const link = whatsappLink(phoneEl.value); waPreview.textContent = link ? `WhatsApp link will open: ${link}` : ''; });
+
     async function submitLead(){
       const name = (document.getElementById('lead-name').value || '').trim();
       const phone = (document.getElementById('lead-phone').value || '').trim();
@@ -183,7 +190,7 @@
       if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){ note.textContent='Enter a valid email.'; note.className='note error'; document.getElementById('lead-email').focus(); return; }
       const btn = document.getElementById('lead-submit'); btn.disabled = true; btn.textContent = 'Sending…';
       try {
-        const payload = { property_id:null, name, phone, email, message:[ctx, message].filter(Boolean).join(' • ') };
+        const payload = { property_id:null, name, phone: normalizePhone(phone), email, message:[ctx, message].filter(Boolean).join(' • '), _hp: (document.getElementById('lead-company')||{}).value||'' };
         const res = await fetch('/api/leads', { method:'POST', headers:{ 'Content-Type':'application/json' }, body: JSON.stringify(payload) });
         const data = await res.json();
         if (data && data.ok){ note.textContent='Thanks! We will WhatsApp you verified matches soon.'; note.className='note ok'; try { window.thgTrack && window.thgTrack('cta_lead_ok', { location:'root-index', phone: !!phone, email: !!email }); } catch(_){} postToParent({ type:'tharaga_lead_ok', payload }); setTimeout(closeModal, 900); }

@@ -2,7 +2,7 @@
 // Version: 3
 // Notes: stable debouncer, accessible & persistent "pill" UI, same filtering logic.
 
-import * as App from './app.js?v=20250825';
+import * as App from './app.js?v=20251002';
 
 const PAGE_SIZE = 9;
 let ALL = [];
@@ -404,6 +404,42 @@ function apply(){
     res.setAttribute('aria-live','polite');
     res.setAttribute('role','region');
     res.innerHTML = slice.map(({p,s})=> App.cardHTML(p, s)).join('') || `<div class="empty">No properties found</div>`;
+    // Inject explain bars
+    try {
+      const cards = res.querySelectorAll('article.card');
+      cards.forEach((card, idx)=>{
+        const item = slice[idx]?.p; if (!item) return;
+        const explain = App.explainScore(item, F.q, F.amenity);
+        const host = card.querySelector('.explain-inline'); if (!host) return;
+        const parts = [
+          { key:'text', label:'Match', val:explain.textC, w:explain.weights.text },
+          { key:'recency', label:'Freshness', val:explain.recencyC, w:explain.weights.recency },
+          { key:'value', label:'Value', val:explain.valueC, w:explain.weights.value },
+          { key:'metro', label:'Metro', val:explain.metroC, w:explain.weights.metro },
+        ];
+        host.innerHTML = '<div class="explain-row">' + parts.map(p=>{
+          const pct = Math.round((p.val/10)*100);
+          return `<div class="explain-row" title="${p.label}"><div class="bar"><div style="width:${pct}%;"></div></div><span class="chip">${p.label}</span></div>`;
+        }).join('') + '</div>' +
+        `<div class="row" style="gap:6px;margin-top:6px"><small style="color:var(--muted)">Tune:</small>
+          <button class="chip" data-tune="value+">More value</button>
+          <button class="chip" data-tune="recency+">Newer</button>
+          <button class="chip" data-tune="metro+">Closer to metro</button>
+        </div>`;
+        // Tuners
+        host.querySelectorAll('[data-tune]').forEach(btn=>{
+          btn.addEventListener('click', ()=>{
+            const t = btn.getAttribute('data-tune');
+            const cur = App.getWeights();
+            const step = 0.1;
+            if (t==='value+') App.setWeights({ value: cur.value + step });
+            if (t==='recency+') App.setWeights({ recency: cur.recency + step });
+            if (t==='metro+') App.setWeights({ metro: cur.metro + step });
+            PAGE = 1; apply();
+          });
+        });
+      });
+    } catch(_) {}
   }
 
   const pager = document.querySelector('#pager');
@@ -456,6 +492,17 @@ function wireUI(){
   ['#sort','#ptype','#bhk','#furnished','#facing','#city','#locality','#wantMetro','#maxWalk'].forEach(sel=>
     document.querySelector(sel)?.addEventListener('change', ()=>{ if (autoToggle?.checked){ PAGE=1; apply(); syncUrlWithFilters(); } else { handleChange(); } })
   );
+
+  // Natural language quick filter trigger
+  const nlBtn = document.getElementById('nlQuick');
+  if (nlBtn){
+    nlBtn.addEventListener('click', ()=>{
+      const qEl = document.getElementById('q');
+      const text = (qEl?.value || '').trim();
+      if (!text) { try { qEl?.focus(); } catch(_) {} return; }
+      applyNaturalLanguage(text);
+    });
+  }
 
   document.querySelector('#pager')?.addEventListener('click', (e)=>{
     const b=e.target.closest('button'); if(!b) return;
@@ -717,6 +764,31 @@ function syncUrlWithFilters(){
     const newUrl = `${location.pathname}?${params.toString()}`;
     history.replaceState(null, '', newUrl);
   } catch(e) { /* no-op */ }
+}
+
+// === Natural language quick filter ===
+function parseNatural(text){
+  const out = {};
+  const t = String(text||'').toLowerCase();
+  // bhk
+  const bhk = t.match(/(\d+)\s*bhk/); if (bhk) out.bhk = bhk[1];
+  // price
+  const crore = t.match(/under\s*(\d+(?:\.\d+)?)\s*cr/); if (crore) { out.maxPrice = Math.round(parseFloat(crore[1])*10000000); }
+  const lakh = t.match(/under\s*(\d+(?:\.\d+)?)\s*l/); if (lakh) { out.maxPrice = Math.round(parseFloat(lakh[1])*100000); }
+  // near metro
+  if (/near\s*metro|close\s*to\s*metro/.test(t)) { out.wantMetro = true; out.maxWalk = 10; }
+  // locality/city — last word or after 'in'
+  const loc = t.match(/in\s+([a-z\s]+)$/); if (loc) out.q = loc[1].trim();
+  return out;
+}
+
+function applyNaturalLanguage(text){
+  const f = parseNatural(text);
+  if (f.bhk){ const el=document.getElementById('bhk'); if (el){ el.value = f.bhk; el.dispatchEvent(new Event('change',{bubbles:true})); } }
+  if (f.maxPrice){ const a=document.getElementById('maxPrice'); if (a){ a.value = String(f.maxPrice); a.dispatchEvent(new Event('input',{bubbles:true})); } try{ document.getElementById('priceMaxSlider').value = String(f.maxPrice); document.getElementById('priceMaxSlider').dispatchEvent(new Event('input',{bubbles:true})); } catch(_){} }
+  if (f.wantMetro){ const wm=document.getElementById('wantMetro'); if (wm){ wm.checked = true; wm.dispatchEvent(new Event('change',{bubbles:true})); } const mw=document.getElementById('maxWalk'); if (mw){ mw.value = String(f.maxWalk||10); mw.dispatchEvent(new Event('change',{bubbles:true})); } }
+  if (f.q){ const qEl=document.getElementById('q'); if (qEl){ qEl.value = f.q; qEl.dispatchEvent(new Event('input',{bubbles:true})); } }
+  PAGE=1; apply(); syncUrlWithFilters();
 }
 
 async function enrichWithMetro(){

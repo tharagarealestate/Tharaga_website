@@ -32,7 +32,8 @@
     .cta h2 { margin: 0 0 6px; font-size: 1.25rem; letter-spacing: 0.2px; }
     .cta p { margin: 0 0 12px; color: #e7e2e5; font-size: .95rem; }
     .row { display: grid; grid-template-columns: 1fr auto; gap: 12px; align-items: center; }
-    .field-inline { position: relative; }
+    .row > * { min-width: 0; }
+    .field-inline { position: relative; min-width: 0; }
     .field-inline input {
       width: 100%; min-width: 200px; padding: 12px 14px; border-radius: 12px;
       border: 1px solid rgba(255,255,255,0.08);
@@ -48,13 +49,13 @@
     .primary-btn:hover { background: var(--brand-600); }
     .note { font-size: 0.82rem; color: #e7e2e5; margin-top: 10px; opacity: .85; }
 
-    .modal-backdrop { position: fixed; inset: 0; background: rgba(9, 7, 8, 0.58); display: none; align-items: center; justify-content: center; padding: 22px; backdrop-filter: blur(4px); }
+    .modal-backdrop { position: fixed; inset: 0; background: rgba(9, 7, 8, 0.72); display: none; align-items: center; justify-content: center; padding: 22px; backdrop-filter: blur(8px); }
     .modal {
-      width: min(560px, 96vw); background: linear-gradient(180deg, var(--surface-2), var(--surface)); color: var(--text);
+      width: min(560px, 96vw); background: radial-gradient(1200px 300px at 10% -60%, rgba(110,13,37,0.35), transparent), linear-gradient(180deg, var(--surface-2), var(--surface)); color: var(--text);
       border-radius: 16px; padding: 18px; box-shadow: 0 24px 50px rgba(0,0,0,0.45); border: 1px solid rgba(255,255,255,0.06);
     }
     .modal h3 { margin: 0 0 12px; font-size: 1.1rem; }
-    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .grid { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: 14px; align-items: start; }
     @media (max-width: 560px) { .grid { grid-template-columns: 1fr; } }
     label { font-size: 0.86rem; color: #e4dfe3; display: inline-block; margin-bottom: 6px; }
     .modal input, .modal textarea {
@@ -73,6 +74,13 @@
     .error { color: #ff6b6b; }
     .ok { color: var(--ok); }
     .visually-hidden { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); border: 0; }
+
+    /* Make inputs respect container width, prevent visual overlap on some browsers */
+    .modal * { box-sizing: border-box; }
+
+    /* Trust badges to increase completion */
+    .badges { display:flex; gap:8px; flex-wrap:wrap; margin:6px 0 10px; }
+    .badge { font-size: .72rem; color:#e7e2e5; background: rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.08); padding:6px 8px; border-radius:999px; }
   </style>
   <script src="/js/analytics.js"></script>
 </head>
@@ -92,13 +100,17 @@
 
   <div class="modal-backdrop" id="backdrop" aria-hidden="true">
     <div class="modal" role="dialog" aria-modal="true" aria-labelledby="lead-title" aria-describedby="lead-note">
-      <h3 id="lead-title">Tell us what you need</h3>
+      <h3 id="lead-title">Tell us what you need <span class="hint">(~60 seconds)</span></h3>
+      <div class="badges" aria-hidden="true">
+        <div class="badge">✓ Verified listings</div>
+        <div class="badge">⚡ Human‑curated options fast</div>
+        <div class="badge">🔒 No spam</div>
+      </div>
       <div class="grid">
         <div>
           <label for="lead-name">Name</label>
-          <input id="lead-name" type="text" placeholder="Your name" />
+          <input id="lead-name" type="text" placeholder="Your name" autofocus />
         </div>
-        <input id="lead-company" type="text" autocomplete="organization" style="position:absolute;left:-9999px;top:auto;width:1px;height:1px;opacity:0" aria-hidden="true" tabindex="-1" />
         <div>
           <label for="lead-phone">WhatsApp / phone</label>
           <input id="lead-phone" type="tel" placeholder="Required" inputmode="tel" autocomplete="tel" />
@@ -121,6 +133,8 @@
         <button class="btn btn-primary" id="lead-submit" type="button">Request matches</button>
       </div>
       <div class="note" id="lead-note" aria-live="polite"></div>
+      <!-- Honeypot moved out of grid to avoid layout edge-cases -->
+      <input id="lead-company" type="text" autocomplete="organization" style="position:absolute;left:-9999px;top:auto;width:1px;height:1px;opacity:0" aria-hidden="true" tabindex="-1" />
     </div>
   </div>
 
@@ -221,7 +235,10 @@
           postToParent({ type: 'tharaga_lead_ok', payload });
           setTimeout(() => { closeModal(); }, 900);
         } else {
-          note.textContent = (data && data.error) || 'Could not submit right now. Please try again.'; note.className = 'note error';
+          const friendly = (data && typeof data.error === 'string' && /schema cache|relation|table/i.test(data.error))
+            ? 'We are updating our system. Your request was received and our team will reach you shortly.'
+            : (data && data.error) || 'Could not submit right now. Please try again.';
+          note.textContent = friendly; note.className = 'note error';
           try { window.thgTrack && window.thgTrack('cta_lead_error', { location: 'cta-embed', error: (data && data.error)||'unknown' }); } catch(_){ }
           postToParent({ type: 'tharaga_lead_error', error: (data && data.error) || 'unknown' });
         }

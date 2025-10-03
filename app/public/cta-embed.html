@@ -309,6 +309,26 @@
       for (const c of cities) { if (s.includes(c)) return c.replace('bangalore','bengaluru'); }
       return '';
     }
+    function parseBedroomsFromText(raw){
+      const s = (raw||'').toLowerCase();
+      const m = s.match(/(studio)|((\d+)\s*\+?\s*bhk)/);
+      if (!m) return 0;
+      if (m[1]) return 1; // studio ~ 1 BHK equivalent fallback
+      const num = parseInt(m[3]||'0', 10);
+      if (!num) return 0;
+      // Treat forms like "3+ BHK" as minimum
+      return num;
+    }
+    function parseSqftMin(raw){
+      const s = (raw||'').toLowerCase();
+      const m = s.match(/(\d+(?:\.\d+)?)\s*(k|k\+|sq\s*ft|sqft|ft2|ft)/);
+      if (!m) return 0;
+      let v = parseFloat(m[1]);
+      if (!isFinite(v)) return 0;
+      if (m[2] && m[2].startsWith('k')) v *= 1000;
+      if (v < 200) return 0; // ignore tiny numbers
+      return Math.round(v);
+    }
     function parseBudgetToInr(raw){
       const s = (raw||'').toString().trim().toLowerCase();
       if (!s) return 0;
@@ -324,14 +344,20 @@
       const p = new URLSearchParams(location.search);
       let city = (p.get('city')||'').trim();
       let budgetInr = 0;
+      const ctxEl = document.getElementById('lead-ctx');
+      const msgEl = document.getElementById('lead-message');
+      const ctx = (ctxEl?.value||'');
+      const msg = (msgEl?.value||'');
       if (!city) {
-        const ctx = (document.getElementById('lead-ctx')?.value||'');
         city = parseCityFromCtx(ctx);
         const bMatch = (ctx||'').match(/([0-9]+(?:\.[0-9]+)?\s*(?:l|lac|lakh|lacs|cr|crore|k)?)/i);
         if (bMatch) budgetInr = parseBudgetToInr(bMatch[0]);
       }
       const qBudget = p.get('budget'); if (qBudget && !budgetInr) budgetInr = parseBudgetToInr(qBudget);
-      return { city, budget_inr: budgetInr };
+      // Parse BHK and sqft from both ctx and message
+      const bedroomsMin = parseBedroomsFromText(`${ctx} ${msg}`);
+      const sqftMin = parseSqftMin(`${ctx} ${msg}`);
+      return { city, budget_inr: budgetInr, bedrooms_min: bedroomsMin || undefined, sqft_min: sqftMin || undefined };
     }
     function recCardHtml(item){
       const specs = [];

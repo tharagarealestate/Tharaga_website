@@ -45,6 +45,14 @@ exports.handler = async (event) => {
         const max = Math.round(b * 1.2)
         q = q.gte('price_inr', min).lte('price_inr', max)
       }
+      // Bedrooms minimum
+      if (body.bedrooms_min && Number(body.bedrooms_min) > 0) {
+        q = q.gte('bedrooms', Number(body.bedrooms_min))
+      }
+      // Minimum sqft if present
+      if (body.sqft_min && Number(body.sqft_min) > 0) {
+        q = q.gte('sqft', Number(body.sqft_min))
+      }
 
       const res = await q
       if (res.error) {
@@ -71,6 +79,12 @@ exports.handler = async (event) => {
           qs.set('price_inr', `gte.${min}`) // Note: REST needs two filters; using and=true
           qs.append('price_inr', `lte.${max}`)
           qs.set('and', 'true')
+        }
+        if (body.bedrooms_min && Number(body.bedrooms_min) > 0) {
+          qs.set('bedrooms', `gte.${Number(body.bedrooms_min)}`)
+        }
+        if (body.sqft_min && Number(body.sqft_min) > 0) {
+          qs.set('sqft', `gte.${Number(body.sqft_min)}`)
         }
         const restUrl = `${url}/rest/v1/properties?${qs.toString()}`
         const r = await fetch(restUrl, { headers: { apikey: anon, Authorization: `Bearer ${anon}`, Accept: 'application/json' } })

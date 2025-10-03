@@ -31,35 +31,7 @@
     nav a:hover { text-decoration: underline; }
     footer { margin-top: 2rem; font-size: 0.9rem; color: #666; }
 
-    .cta {
-      margin-top: 2rem;
-      background: #111;
-      color: #fff;
-      padding: 16px 20px;
-      border-radius: 12px;
-      width: min(680px, 92vw);
-      box-shadow: 0 10px 24px rgba(0,0,0,0.12);
-      text-align: left;
-    }
-    .cta h2 { margin: 0 0 8px; font-size: 1.25rem; }
-    .cta p { margin: 0 0 12px; color: #ddd; }
-    .cta .row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
-    .cta input { flex: 1; min-width: 180px; padding: 10px 12px; border-radius: 10px; border: 1px solid #333; background: #1a1a1a; color: #fff; }
-    .cta button { padding: 10px 16px; border-radius: 10px; border: 0; background: #c0002a; color: #fff; font-weight: 600; cursor: pointer; }
-    .cta button:hover { filter: brightness(1.04); }
-
-    .modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.55); display: none; align-items: center; justify-content: center; padding: 20px; }
-    .modal { width: min(520px, 96vw); background: #111; color: #fff; border-radius: 14px; padding: 18px; box-shadow: 0 20px 40px rgba(0,0,0,0.25); }
-    .modal h3 { margin: 0 0 10px; font-size: 1.1rem; }
-    .modal .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-    .modal label { font-size: 0.9rem; color: #ddd; }
-    .modal input, .modal textarea { width: 100%; padding: 10px 12px; border-radius: 10px; border: 1px solid #2a2a2a; background: #1a1a1a; color: #fff; }
-    .modal textarea { min-height: 90px; resize: vertical; }
-    .modal .actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 12px; }
-    .modal .btn { padding: 10px 14px; border-radius: 10px; border: 0; cursor: pointer; }
-    .btn-secondary { background: #2a2a2a; color: #fff; }
-    .btn-primary { background: #c0002a; color: #fff; font-weight: 600; }
-    .note { font-size: 0.85rem; color: #bbb; margin-top: 10px; }
+    /* CTA container styles removed; replaced with direct link below */
   </style>
   
 </head>
@@ -84,14 +56,8 @@
     <a href="/app/">AI Recommendations (Next.js)</a>
   </nav>
 
-  <section class="cta" id="buyer-cta">
-    <h2>Get 3 verified matches</h2>
-    <p>Share your WhatsApp or phone. Our team sends hand‑picked options fast.</p>
-    <div class="row">
-      <input id="cta-phone" type="tel" placeholder="WhatsApp / phone" inputmode="tel" />
-      <button id="open-microform" type="button">Continue</button>
-    </div>
-    <div class="note">Low effort, high signal: no spam, only verified listings.</div>
+  <section id="cta-link" style="margin-top:2rem;">
+    <a href="https://auth.tharaga.co.in/cta-embed" target="_blank" rel="noopener" style="font-weight:600;color:#0055ff;text-decoration:none;">https://auth.tharaga.co.in/cta-embed</a>
   </section>
   <footer>© <span id="year"></span> Tharaga</footer>
   <script>
@@ -101,69 +67,6 @@
   <script>
     document.getElementById("year").textContent = new Date().getFullYear();
   </script>
-  <script>
-    const backdrop = document.createElement('div');
-    backdrop.className = 'modal-backdrop';
-    backdrop.innerHTML = `
-      <div class=\"modal\" role=\"dialog\" aria-modal=\"true\">\n        <h3>Tell us what you need</h3>\n        <div class=\"grid\">\n          <div>\n            <label>Name</label>\n            <input id=\"lead-name\" type=\"text\" placeholder=\"Your name\" />\n          </div>\n          <div>\n            <label>WhatsApp / phone</label>\n            <input id=\"lead-phone\" type=\"tel\" placeholder=\"Required\" inputmode=\"tel\" />\n          </div>\n          <div>\n            <label>Email (optional)</label>\n            <input id=\"lead-email\" type=\"email\" placeholder=\"you@example.com\" />\n          </div>\n          <div>\n            <label>City / Budget (optional)</label>\n            <input id=\"lead-ctx\" type=\"text\" placeholder=\"e.g., Chennai · 70L\" />\n          </div>\n          <div style=\"grid-column: 1 / -1;\">\n            <label>Anything specific?</label>\n            <textarea id=\"lead-message\" placeholder=\"Locality, BHK, timeline…\"></textarea>\n          </div>\n        </div>\n        <div class=\"actions\">\n          <button class=\"btn btn-secondary\" id=\"lead-cancel\" type=\"button\">Cancel</button>\n          <button class=\"btn btn-primary\" id=\"lead-submit\" type=\"button\">Request matches</button>\n        </div>\n        <div class=\"note\" id=\"lead-note\"></div>\n      </div>`;
-    document.body.appendChild(backdrop);
-
-    const openBtn = document.getElementById('open-microform');
-    const phoneInline = document.getElementById('cta-phone');
-    openBtn?.addEventListener('click', () => {
-      const phoneVal = (phoneInline?.value || '').trim();
-      const phoneInput = backdrop.querySelector('#lead-phone');
-      if (phoneVal && phoneInput) phoneInput.value = phoneVal;
-      backdrop.style.display = 'flex';
-    });
-    document.getElementById('lead-cancel')?.addEventListener('click', () => {
-      backdrop.style.display = 'none';
-      document.getElementById('lead-note').textContent = '';
-    });
-
-    async function submitLead() {
-      const name = (document.getElementById('lead-name').value || '').trim();
-      const phone = (document.getElementById('lead-phone').value || '').trim();
-      const email = (document.getElementById('lead-email').value || '').trim();
-      const ctx = (document.getElementById('lead-ctx').value || '').trim();
-      const message = (document.getElementById('lead-message').value || '').trim();
-      const note = document.getElementById('lead-note');
-      note.textContent = '';
-      if (!phone && !email) {
-        note.textContent = 'Provide WhatsApp/phone or email.';
-        return;
-      }
-      const btn = document.getElementById('lead-submit');
-      btn.disabled = true;
-      btn.textContent = 'Sending…';
-      try {
-        const payload = { property_id: null, name, phone, email, message: [ctx, message].filter(Boolean).join(' • ') };
-        const res = await fetch('/api/leads', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-        const data = await res.json();
-        if (data && data.ok) {
-          note.textContent = 'Thanks! We will WhatsApp you verified matches soon.';
-          setTimeout(() => { backdrop.style.display = 'none'; }, 900);
-        } else {
-          note.textContent = 'Could not submit right now. Please try again.';
-        }
-      } catch (e) {
-        note.textContent = 'Network issue. Please try again.';
-      } finally {
-        btn.disabled = false;
-        btn.textContent = 'Request matches';
-      }
-    }
-    document.getElementById('lead-submit')?.addEventListener('click', submitLead);
-  </script>
-  <script>
-    try {
-      const params = new URLSearchParams(location.search);
-      if (params.get('embed') === 'cta') {
-        document.querySelectorAll('h1, nav, p, footer').forEach(el => el.style.display = 'none');
-        const cta = document.getElementById('buyer-cta');
-        if (cta) { cta.style.marginTop = '0'; }
-      }
-    } catch (e) {}
-  </script>
+  <!-- Removed inline CTA modal and embed handling; using direct link instead -->
 </body>
 </html>

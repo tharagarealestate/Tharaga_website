@@ -99,6 +99,7 @@
     .rec-actions a:hover { background: rgba(255,255,255,0.06); }
     .rec-skel { height: 120px; border-radius: 12px; border:1px solid rgba(255,255,255,0.08); background: linear-gradient(90deg, rgba(255,255,255,0.04), rgba(255,255,255,0.07), rgba(255,255,255,0.04)); background-size: 300% 100%; animation: shimmer 1.2s infinite; }
     @keyframes shimmer { 0% { background-position: 0 0; } 100% { background-position: -300% 0; } }
+    .rec-card.selected { border-color: var(--ring); box-shadow: 0 0 0 2px var(--ring) inset; }
   </style>
   <script src="/js/analytics.js"></script>
 </head>
@@ -153,6 +154,7 @@
       <div class="note" id="lead-note" aria-live="polite"></div>
       <!-- Honeypot moved out of grid to avoid layout edge-cases -->
       <input id="lead-company" type="text" autocomplete="organization" style="position:absolute;left:-9999px;top:auto;width:1px;height:1px;opacity:0" aria-hidden="true" tabindex="-1" />
+      <input id="lead-prop" type="text" style="position:absolute;left:-9999px;top:auto;width:1px;height:1px;opacity:0" aria-hidden="true" tabindex="-1" />
 
       <div class="recs" id="lead-recs" aria-live="polite"></div>
     </div>
@@ -245,7 +247,8 @@
 
       const btn = document.getElementById('lead-submit');
       btn.disabled = true; btn.textContent = 'Sending…';
-      const payload = { property_id: null, name, phone: normalizePhone(phone), email, message: [ctx || buildCtxFromQuery(), message].filter(Boolean).join(' • '), _hp: (document.getElementById('lead-company')||{}).value||'' };
+      const selectedPid = (document.getElementById('lead-prop')||{}).value||'';
+      const payload = { property_id: selectedPid || null, name, phone: normalizePhone(phone), email, message: [ctx || buildCtxFromQuery(), message].filter(Boolean).join(' • '), _hp: (document.getElementById('lead-company')||{}).value||'' };
       try {
         const res = await fetch('/api/leads', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
         const data = await res.json();
@@ -306,14 +309,29 @@
       for (const c of cities) { if (s.includes(c)) return c.replace('bangalore','bengaluru'); }
       return '';
     }
+    function parseBudgetToInr(raw){
+      const s = (raw||'').toString().trim().toLowerCase();
+      if (!s) return 0;
+      const numMatch = s.match(/([0-9]+(?:\.[0-9]+)?)/);
+      const x = numMatch ? parseFloat(numMatch[1]) : 0;
+      if (!x) return 0;
+      if (/cr|crore/.test(s)) return Math.round(x * 10000000);
+      if (/l|lac|lakh|lacs/.test(s)) return Math.round(x * 100000);
+      if (/k/.test(s)) return Math.round(x * 1000);
+      return Math.round(x);
+    }
     function deriveFilters(){
       const p = new URLSearchParams(location.search);
       let city = (p.get('city')||'').trim();
+      let budgetInr = 0;
       if (!city) {
         const ctx = (document.getElementById('lead-ctx')?.value||'');
         city = parseCityFromCtx(ctx);
+        const bMatch = (ctx||'').match(/([0-9]+(?:\.[0-9]+)?\s*(?:l|lac|lakh|lacs|cr|crore|k)?)/i);
+        if (bMatch) budgetInr = parseBudgetToInr(bMatch[0]);
       }
-      return { city };
+      const qBudget = p.get('budget'); if (qBudget && !budgetInr) budgetInr = parseBudgetToInr(qBudget);
+      return { city, budget_inr: budgetInr };
     }
     function recCardHtml(item){
       const specs = [];
@@ -322,7 +340,7 @@
       if (item?.specs?.location) specs.push(item.specs.location);
       const specsStr = specs.join(' • ');
       return `
-        <div class="rec-card">
+        <div class="rec-card" data-select-pid="${item.property_id||''}">
           <div class="rec-img"><img alt="" src="${item.image_url}" loading="lazy" /></div>
           <div class="rec-body">
             <div class="rec-title">${item.title||'Property'}</div>
@@ -345,6 +363,16 @@
         box.innerHTML = '<h4>Curated picks for you</h4><div class="rec-row">' + items.map(recCardHtml).join('') + '</div>';
       } catch { /* ignore */ }
     }
+    document.getElementById('lead-recs')?.addEventListener('click', (ev) => {
+      const el = ev.target.closest('[data-select-pid]');
+      if (!el) return;
+      const pid = el.getAttribute('data-select-pid');
+      if (!pid) return;
+      const hid = document.getElementById('lead-prop'); if (hid) hid.value = pid;
+      document.querySelectorAll('.rec-card').forEach(c => c.classList.remove('selected'));
+      el.closest('.rec-card')?.classList.add('selected');
+      const note = document.getElementById('lead-note'); if (note) { note.textContent = 'Selected a property preference.'; note.className = 'note'; }
+    });
   </script>
 </body>
 </html>

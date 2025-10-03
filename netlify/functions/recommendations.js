@@ -38,6 +38,13 @@ exports.handler = async (event) => {
 
       if (body.city) q = q.eq('city', body.city)
       if (body.locality) q = q.eq('locality', body.locality)
+      // Budget band filter if provided (~20% tolerance)
+      if (body.budget_inr && Number(body.budget_inr) > 0) {
+        const b = Number(body.budget_inr)
+        const min = Math.round(b * 0.8)
+        const max = Math.round(b * 1.2)
+        q = q.gte('price_inr', min).lte('price_inr', max)
+      }
 
       const res = await q
       if (res.error) {
@@ -57,6 +64,14 @@ exports.handler = async (event) => {
         const qs = new URLSearchParams();
         qs.set('select', 'id,title,city,locality,images,bedrooms,bathrooms,price_inr,sqft,listed_at')
         if (body.city) qs.set('city', `eq.${body.city}`)
+        if (body.budget_inr && Number(body.budget_inr) > 0) {
+          const b = Number(body.budget_inr)
+          const min = Math.round(b * 0.8)
+          const max = Math.round(b * 1.2)
+          qs.set('price_inr', `gte.${min}`) // Note: REST needs two filters; using and=true
+          qs.append('price_inr', `lte.${max}`)
+          qs.set('and', 'true')
+        }
         const restUrl = `${url}/rest/v1/properties?${qs.toString()}`
         const r = await fetch(restUrl, { headers: { apikey: anon, Authorization: `Bearer ${anon}`, Accept: 'application/json' } })
         if (r.ok) data = await r.json(); else console.warn('[recs] REST anon fallback failed:', r.status)

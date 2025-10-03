@@ -22,7 +22,15 @@ exports.handler = async (event) => {
     const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE)
     const source = (event.headers['origin'] || event.headers['referer'] || '').slice(0, 200)
     const { error } = await supabase.from('leads').insert([{ property_id: property_id || null, name, email, phone, message, source }])
-    if (error) return { statusCode: 200, headers: corsJson(), body: JSON.stringify({ error: error.message }) }
+    if (error) {
+      // Gracefully degrade if the table is temporarily unavailable (eg. schema cache issue)
+      const softErrors = /schema cache|does not exist|relation .* does not exist|table .* not found/i
+      if (softErrors.test(error.message || '')) {
+        try { await notifySlack({ name, email, phone, message: `(SOFT) ${message}`, source }) } catch(_) {}
+        return { statusCode: 200, headers: corsJson(), body: JSON.stringify({ ok: true, soft: true }) }
+      }
+      return { statusCode: 200, headers: corsJson(), body: JSON.stringify({ error: error.message }) }
+    }
     try { await notifySlack({ name, email, phone, message, source }) } catch(_) {}
     return { statusCode: 200, headers: corsJson(), body: JSON.stringify({ ok: true }) }
   } catch (e) {

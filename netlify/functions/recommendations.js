@@ -38,6 +38,21 @@ exports.handler = async (event) => {
 
       if (body.city) q = q.eq('city', body.city)
       if (body.locality) q = q.eq('locality', body.locality)
+      // Budget band filter if provided (~20% tolerance)
+      if (body.budget_inr && Number(body.budget_inr) > 0) {
+        const b = Number(body.budget_inr)
+        const min = Math.round(b * 0.8)
+        const max = Math.round(b * 1.2)
+        q = q.gte('price_inr', min).lte('price_inr', max)
+      }
+      // Bedrooms minimum
+      if (body.bedrooms_min && Number(body.bedrooms_min) > 0) {
+        q = q.gte('bedrooms', Number(body.bedrooms_min))
+      }
+      // Minimum sqft if present
+      if (body.sqft_min && Number(body.sqft_min) > 0) {
+        q = q.gte('sqft', Number(body.sqft_min))
+      }
 
       const res = await q
       if (res.error) {
@@ -57,6 +72,20 @@ exports.handler = async (event) => {
         const qs = new URLSearchParams();
         qs.set('select', 'id,title,city,locality,images,bedrooms,bathrooms,price_inr,sqft,listed_at')
         if (body.city) qs.set('city', `eq.${body.city}`)
+        if (body.budget_inr && Number(body.budget_inr) > 0) {
+          const b = Number(body.budget_inr)
+          const min = Math.round(b * 0.8)
+          const max = Math.round(b * 1.2)
+          qs.set('price_inr', `gte.${min}`) // Note: REST needs two filters; using and=true
+          qs.append('price_inr', `lte.${max}`)
+          qs.set('and', 'true')
+        }
+        if (body.bedrooms_min && Number(body.bedrooms_min) > 0) {
+          qs.set('bedrooms', `gte.${Number(body.bedrooms_min)}`)
+        }
+        if (body.sqft_min && Number(body.sqft_min) > 0) {
+          qs.set('sqft', `gte.${Number(body.sqft_min)}`)
+        }
         const restUrl = `${url}/rest/v1/properties?${qs.toString()}`
         const r = await fetch(restUrl, { headers: { apikey: anon, Authorization: `Bearer ${anon}`, Accept: 'application/json' } })
         if (r.ok) data = await r.json(); else console.warn('[recs] REST anon fallback failed:', r.status)

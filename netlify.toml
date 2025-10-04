@@ -105,6 +105,12 @@
   status = 200
   force = true
 
+[[redirects]]
+  from = "/api/push/send"
+  to = "/.netlify/functions/push-send"
+  status = 200
+  force = true
+
 # Direct CTA embed path for Durable embeds
 [[redirects]]
   from = "/cta-embed"

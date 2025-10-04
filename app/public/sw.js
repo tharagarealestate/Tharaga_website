@@ -27,13 +27,24 @@ self.addEventListener('fetch', (event) => {
       fetch(request).catch(() => caches.match(request))
     );
   } else {
-    event.respondWith(
-      caches.match(request).then((cached) => cached || fetch(request).then((resp) => {
-        const respClone = resp.clone();
-        caches.open('thg-v1').then((cache) => cache.put(request, respClone));
-        return resp;
-      }))
-    );
+    event.respondWith((async () => {
+      const cached = await caches.match(request)
+      if (cached) return cached
+      try {
+        const resp = await fetch(request)
+        const clone = resp.clone()
+        const cache = await caches.open('thg-v1')
+        cache.put(request, clone)
+        return resp
+      } catch (e) {
+        // Navigation fallback
+        if (request.mode === 'navigate') {
+          const off = await caches.match('/offline.html')
+          if (off) return off
+        }
+        throw e
+      }
+    })())
   }
 });
 

@@ -37,6 +37,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <a href="/saved" className="hover:underline">Saved</a>
             <a href="/tools/roi" className="hover:underline">ROI</a>
             <a href="/tools/environment" className="hover:underline">Env</a>
+            <a href="/filters/radial" className="hover:underline">Filters</a>
           </nav>
         </header>
         {children}

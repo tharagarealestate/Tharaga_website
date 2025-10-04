@@ -24,7 +24,10 @@
       <h1>Listing Analytics</h1>
       <p class="sub muted" style="margin:0">Understand views, CTR, and lead quality at a glance.</p>
     </div>
-    <a href="/" style="color:#111;text-decoration:none">← Back</a>
+    <div style="display:flex;align-items:center;gap:10px">
+      <button id="startFree" class="btn" style="background:#facc15;color:#111;border:1px solid #facc15;border-radius:10px;padding:10px 12px;font-weight:700;cursor:pointer">Start free</button>
+      <a href="/" style="color:#111;text-decoration:none">← Back</a>
+    </div>
   </header>
 
   <section class="grid">
@@ -48,6 +51,19 @@
 
   <script>
     (function(){
+      function openLogin(next){
+        try { if (window.parent && window.parent.authGate && typeof window.parent.authGate.openLoginModal === 'function'){ window.parent.authGate.openLoginModal({ next: next || (location.pathname + location.search) }); return; } } catch(_){ }
+        try { window.parent && window.parent.postMessage({ type:'open_login_modal', next: next || (location.pathname + location.search) }, '*'); } catch(_){ }
+        try { if (typeof window.__thgOpenAuthModal === 'function') window.__thgOpenAuthModal({ next: next || (location.pathname + location.search) }); } catch(_){ }
+      }
+      try { document.getElementById('startFree').addEventListener('click', function(){ openLogin(); }); } catch(_){ }
+
+      function notifyHeight(){
+        try { const h = document.documentElement.scrollHeight; window.parent && window.parent.postMessage({ type:'thg-embed-height', id:'listing-analytics', height:h }, '*'); } catch(_){ }
+      }
+      try { new ResizeObserver(notifyHeight).observe(document.body); } catch(_){ }
+      setInterval(notifyHeight, 1000);
+      notifyHeight();
       const kpi = (id, val) => document.getElementById(id).textContent = val;
       const ctx = document.getElementById('chart').getContext('2d');
       const W = 600, H = 160; const pad = 10;

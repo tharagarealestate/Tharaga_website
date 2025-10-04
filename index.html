@@ -55,6 +55,19 @@
   <footer>© <span id="year"></span> Tharaga</footer>
   <script>
   // Auth header is loaded via external script for reuse across pages
+  // Listen for child iframes asking to open Durable auth
+  try {
+    window.addEventListener('message', function(ev){
+      var data = ev && ev.data;
+      if (!data || typeof data !== 'object') return;
+      if (data.type === 'open_login_modal'){
+        try { if (typeof window.__thgOpenAuthModal === 'function') window.__thgOpenAuthModal({ next: data.next || (location.pathname + location.search) }); } catch(_){ }
+      }
+      if (data.type === 'thg-embed-height' && data.id && data.height){
+        // if this page embeds iframes later, we could size them here
+      }
+    });
+  } catch(_){}
   </script>
   
   <script>

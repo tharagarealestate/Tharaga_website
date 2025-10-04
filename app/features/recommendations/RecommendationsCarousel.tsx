@@ -5,6 +5,7 @@ import Image from 'next/image'
 import { clsx } from 'clsx'
 import type { RecommendationItem } from '@/types/recommendations'
 import { Tooltip } from '@/components/ui/Tooltip'
+import { isSaved, saveItem, removeItem } from '@/lib/saved'
 import { LeadModal } from '@/components/lead/LeadModal'
 import { fetchRecommendationsClient, readCookie } from '@/lib/api-client'
 
@@ -76,9 +77,42 @@ export function RecommendationsCarousel({ items = [], isLoading = false, error =
 
 function PropertyCard({ item, onLead }: { item: RecommendationItem; onLead: (propertyId: string) => void }) {
   const [loaded, setLoaded] = React.useState(false)
+  const [saved, setSaved] = React.useState<boolean>(() => isSaved(item.property_id))
   const blurDataURL = 'data:image/gif;base64,R0lGODlhAQABAAAAACw=' // tiny 1x1
+  const cardRef = React.useRef<HTMLDivElement>(null)
+  const dragState = React.useRef<{ x0: number; dragging: boolean }>({ x0: 0, dragging: false })
+
+  function toggleSave(){
+    if (saved) {
+      removeItem(item.property_id)
+      setSaved(false)
+    } else {
+      saveItem({ property_id: item.property_id, title: item.title, image_url: item.image_url, specs: item.specs })
+      setSaved(true)
+    }
+    try { if (navigator.vibrate) navigator.vibrate(8) } catch {}
+  }
   return (
-    <div className="min-w-[280px] max-w-[320px] rounded-xl bg-brandWhite shadow-subtle border border-plum/10 overflow-hidden">
+    <div
+      ref={cardRef}
+      className="min-w-[280px] max-w-[320px] rounded-xl bg-brandWhite shadow-subtle border border-plum/10 overflow-hidden will-change-transform touch-pan-y"
+      onPointerDown={(e)=>{ dragState.current = { x0: e.clientX, dragging: true } }}
+      onPointerMove={(e)=>{
+        if (!dragState.current.dragging || !cardRef.current) return
+        const dx = e.clientX - dragState.current.x0
+        cardRef.current.style.transform = `translateX(${Math.max(-60, Math.min(60, dx))}px)`
+        cardRef.current.style.opacity = String(1 - Math.min(0.5, Math.abs(dx)/200))
+      }}
+      onPointerUp={(e)=>{
+        if (!cardRef.current) return
+        const dx = e.clientX - dragState.current.x0
+        dragState.current.dragging = false
+        cardRef.current.style.transform = ''
+        cardRef.current.style.opacity = ''
+        if (dx > 60) toggleSave()
+      }}
+      onPointerCancel={()=>{ if(cardRef.current){ cardRef.current.style.transform=''; cardRef.current.style.opacity='' } dragState.current.dragging=false }}
+    >
       <div className="relative h-40 w-full bg-plum/10">
         <Image
           src={item.image_url}
@@ -102,13 +136,21 @@ function PropertyCard({ item, onLead }: { item: RecommendationItem; onLead: (pro
           </Tooltip>
         </div>
         <Specs specs={item.specs} />
-        <div className="mt-2 flex gap-2">
+        <div className="mt-2 flex gap-2 items-center">
           <button className="rounded-lg border px-3 py-1 text-sm" onClick={() => onLead(item.property_id)}>
             Request details
           </button>
           <a href={`/property-listing/`} className="rounded-lg border px-3 py-1 text-sm">
             See similar
           </a>
+          <button
+            className={clsx('ml-auto rounded-full border px-2 py-1 text-xs transition-colors', saved ? 'bg-gold/10 border-gold text-gold' : 'border-plum/20 text-plum/70 hover:bg-plum/5')}
+            aria-pressed={saved}
+            onClick={toggleSave}
+            title={saved ? 'Unsave' : 'Save for offline'}
+          >
+            {saved ? 'Saved' : 'Save'}
+          </button>
         </div>
       </div>
     </div>

@@ -45,6 +45,23 @@ export function HomeCta() {
     }
   }
 
+  React.useEffect(()=>{
+    // Offer install banner and push subscribe
+    let deferred: any = null
+    function onBeforeInstall(e: any){ e.preventDefault(); deferred = e }
+    window.addEventListener('beforeinstallprompt', onBeforeInstall)
+    // Attempt push registration (no-op if unsupported)
+    ;(async function(){
+      try{
+        if (!('serviceWorker' in navigator) || !('PushManager' in window)) return
+        const reg = await navigator.serviceWorker.ready
+        const sub = await reg.pushManager.getSubscription() || await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: undefined })
+        await fetch('/api/push/subscribe', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ endpoint: sub.endpoint, keys: sub.toJSON().keys }) })
+      } catch(_){ }
+    })()
+    return ()=> window.removeEventListener('beforeinstallprompt', onBeforeInstall)
+  },[])
+
   return (
     <section className="mx-auto w-full max-w-2xl rounded-2xl text-white p-5 shadow-xl border border-white/10"
       style={{

@@ -11,6 +11,14 @@ export default function sitemap(): MetadataRoute.Sitemap {
     '/rating/',
     '/registration/',
     '/builders/add-property',
+    '/tours',
+    '/tours/ar-staging',
+    '/tours/hotspots',
+    '/saved',
+    '/tools/roi',
+    '/tools/environment',
+    '/filters/radial',
+    '/dashboard/map',
   ]
   const now = new Date()
   return urls.map(u => ({ url: base + u, lastModified: now, changeFrequency: 'daily', priority: u === '' ? 1 : 0.6 }))

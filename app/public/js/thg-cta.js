@@ -36,7 +36,7 @@
       const src = `/cta-embed.html?${qs}`;
 
       const iframe = document.createElement('iframe');
-      iframe.src = src; iframe.loading = 'lazy'; iframe.style.width = '100%'; iframe.style.border = '0'; iframe.style.height = '360px'; iframe.style.display = 'block'; iframe.setAttribute('title','Tharaga CTA');
+      iframe.src = src; iframe.loading = 'lazy'; iframe.style.width = '100%'; iframe.style.border = '0'; iframe.style.height = '300px'; iframe.style.display = 'block'; iframe.setAttribute('title','Tharaga CTA');
       const heightAttr = this.getAttribute('height');
       if (heightAttr) iframe.style.height = /px|vh|%/.test(heightAttr) ? heightAttr : `${parseInt(heightAttr,10)||360}px`;
 

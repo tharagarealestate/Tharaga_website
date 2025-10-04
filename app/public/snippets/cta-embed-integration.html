@@ -7,7 +7,7 @@
   <style>
     body{font-family:Inter,ui-sans-serif,system-ui;margin:0;padding:20px;background:#f6f4f2;color:#1a1a1a}
     code,pre{background:#111;color:#f6f4f2;padding:10px;border-radius:8px;display:block;overflow:auto}
-    iframe{width:100%;height:420px;border:0;border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,.12)}
+    iframe{width:100%;height:300px;border:0;border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,.12)}
     .card{max-width:900px;margin:0 auto}
   </style>
 </head>
@@ -17,7 +17,7 @@
     <p>This example shows how to embed the CTA and listen for events. Allowed parent origins include <code>tharaga.co.in</code> and <code>auth.tharaga.co.in</code>.</p>
 
     <h3>Embed</h3>
-    <iframe id="ctaFrame" src="/cta-embed.html?embed=cta&open=1&city=Chennai"></iframe>
+    <iframe id="ctaFrame" src="/cta-embed.html?embed=cta&open=1&city=Chennai&theme=friendly_host&blur=14"></iframe>
 
     <h3>Listen for events</h3>
     <pre><code>window.addEventListener('message', (ev) => {

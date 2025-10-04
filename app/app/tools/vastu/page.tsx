@@ -17,6 +17,22 @@ export default function VastuPage() {
   const [masterBedDir, setMasterBedDir] = React.useState('South-West')
   const [toiletDir, setToiletDir] = React.useState('North-West')
   const [sunlight, setSunlight] = React.useState('Good')
+  const [facing, setFacing] = React.useState<string>('Unknown')
+
+  React.useEffect(()=>{
+    if (typeof window === 'undefined' || !('DeviceOrientationEvent' in window)) return
+    const handler = (e: any) => {
+      const alpha = e.alpha
+      if (typeof alpha !== 'number') return
+      // Map degrees to cardinal
+      const deg = (alpha + 360) % 360
+      const dirs = ['North','North-East','East','South-East','South','South-West','West','North-West']
+      const idx = Math.round(deg / 45) % 8
+      setFacing(dirs[idx])
+    }
+    window.addEventListener('deviceorientation', handler, true)
+    return ()=> window.removeEventListener('deviceorientation', handler, true)
+  }, [])
 
   const recommendations: string[] = []
   let score = 100
@@ -63,6 +79,7 @@ export default function VastuPage() {
         <div className="rounded-lg bg-plum/5 border border-plum/10 p-4">
           <div className="text-sm text-plum/70">Compliance score</div>
           <div className="text-xl font-bold">{score}/100 · {level}</div>
+          <div className="text-xs text-plum/60">Detected facing: {facing}</div>
         </div>
         {!!recommendations.length && (
           <div className="rounded-lg border border-plum/10 p-3">

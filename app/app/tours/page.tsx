@@ -10,17 +10,32 @@ function IframeTour({ src }: { src: string }) {
   )
 }
 
+function sanitizeTour(url: string): string | null {
+  try {
+    const u = new URL(url)
+    const allowed = [
+      'my.matterport.com',
+      'kuula.co',
+      'kuula.co',
+      'momento360.com',
+    ]
+    if (!allowed.includes(u.hostname)) return null
+    return u.toString()
+  } catch { return null }
+}
+
 export default function ToursPage(){
-  const [url, setUrl] = React.useState('https://my.matterport.com/show/?m=xxxxxxxxxxx')
+  const [raw, setRaw] = React.useState('https://my.matterport.com/show/?m=xxxxxxxxxxx')
+  const safe = sanitizeTour(raw)
   return (
     <main className="mx-auto max-w-4xl px-6 py-8">
       <h1 className="text-2xl font-bold text-plum mb-4">AR/VR property tours</h1>
       <div className="rounded-xl border border-plum/10 bg-brandWhite p-4 space-y-4">
         <div>
           <label className="block text-sm mb-1">360/3D tour URL (Matterport, Kuula, or compatible)</label>
-          <input type="url" value={url} onChange={(e)=>setUrl(e.target.value)} className="w-full rounded-lg border px-3 py-2"/>
+          <input type="url" value={raw} onChange={(e)=>setRaw(e.target.value)} className="w-full rounded-lg border px-3 py-2"/>
         </div>
-        <IframeTour src={url} />
+        {safe ? <IframeTour src={safe} /> : <div className="text-sm text-red-700 bg-red-50 border border-red-200 rounded-lg p-3">Unsupported provider URL.</div>}
         <p className="text-xs text-plum/60">Paste a share link. Many providers support WebXR or device motion for immersive view.</p>
       </div>
     </main>

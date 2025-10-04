@@ -149,6 +149,19 @@
   status = 200
   force = true
 
+## Razorpay endpoints
+[[redirects]]
+  from = "/api/rzp/create-subscription"
+  to = "/.netlify/functions/razorpayCreateSubscription"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/api/rzp/webhook"
+  to = "/.netlify/functions/razorpayWebhook"
+  status = 200
+  force = true
+
 ## Proxy API to Cloud Run to avoid browser CORS and keep origin stable
 [[redirects]]
   from = "/api/*"
@@ -168,8 +181,8 @@
     X-Content-Type-Options = "nosniff"
     Referrer-Policy = "no-referrer"
     Permissions-Policy = "geolocation=(), microphone()"
-    # CSP broadened: Firebase OTP, Supabase, analytics, Stripe
-    Content-Security-Policy = "default-src 'self'; img-src 'self' https: data:; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://www.gstatic.com https://www.google.com https://www.googletagmanager.com https://js.stripe.com; style-src 'self' 'unsafe-inline'; media-src 'self' https: data: blob:; connect-src 'self' https://api.tharaga.co.in https://wedevtjjmdvngyshqdro.supabase.co https://www.googleapis.com https://securetoken.googleapis.com https://identitytoolkit.googleapis.com https://api.stripe.com; frame-src 'self' https://www.google.com https://www.gstatic.com https://js.stripe.com; frame-ancestors 'self' https://tharaga.co.in https://www.tharaga.co.in https://auth.tharaga.co.in; base-uri 'self'"
+    # CSP broadened: Firebase, Supabase, analytics, Stripe, Razorpay
+    Content-Security-Policy = "default-src 'self'; img-src 'self' https: data:; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://www.gstatic.com https://www.google.com https://www.googletagmanager.com https://js.stripe.com https://checkout.razorpay.com; style-src 'self' 'unsafe-inline'; media-src 'self' https: data: blob:; connect-src 'self' https://api.tharaga.co.in https://wedevtjjmdvngyshqdro.supabase.co https://www.googleapis.com https://securetoken.googleapis.com https://identitytoolkit.googleapis.com https://api.stripe.com https://api.razorpay.com; frame-src 'self' https://www.google.com https://www.gstatic.com https://js.stripe.com https://api.razorpay.com https://checkout.razorpay.com; frame-ancestors 'self' https://tharaga.co.in https://www.tharaga.co.in https://auth.tharaga.co.in; base-uri 'self'"
 
 ## Rely on /api proxy; no public API base URL exposed
 

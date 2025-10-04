@@ -44,24 +44,35 @@
   toggle?.addEventListener('change', applyBillingMode);
   $$('#leads,#qual,#close,#rev,#plan').forEach(el=> el.addEventListener('input', computeROI));
 
-  // Checkout wiring
+  // Checkout wiring (Razorpay)
   function postJSON(url, body){
     return fetch(url, { method:'POST', headers:{ 'content-type':'application/json' }, body: JSON.stringify(body) })
   }
   function go(u){ location.assign(u) }
-  function toBool(v){ return v === true || v === 'true' || v === '1' }
 
-  function startCheckout(plan){
+  async function startCheckout(plan){
     const annual = !!(toggle && toggle.checked)
     const email = (window.__thgUserEmail) || null
-    postJSON('/api/checkout', {
-      plan, annual, email,
-      success_url: location.origin + '/pricing/?success=1',
-      cancel_url: location.origin + '/pricing/?canceled=1',
-      metadata: { source: 'pricing_page' }
-    })
-    .then(r=>r.json()).then(j=>{ if (j.url) go(j.url); else alert('Unable to start checkout') })
-    .catch(()=> alert('Unable to start checkout'))
+    try {
+      const res = await postJSON('/api/rzp/create-subscription', { plan, annual, email, notes: { source: 'pricing_page' } })
+      const j = await res.json()
+      if (!j || !j.id) { alert('Unable to start checkout'); return }
+      const options = {
+        key: (window.RAZORPAY_KEY_ID || undefined),
+        subscription_id: j.id,
+        name: 'Tharaga',
+        description: plan.charAt(0).toUpperCase()+plan.slice(1) + (annual ? ' • Annual' : ' • Monthly'),
+        prefill: { email: email || '' },
+        notes: { plan, annual: String(annual) },
+        theme: { color: '#6e0d25' },
+        handler: function () { go('/pricing/?success=1') },
+        modal: { ondismiss: function(){ go('/pricing/?canceled=1') } }
+      }
+      const rzp = new window.Razorpay(options)
+      rzp.open()
+    } catch(_) {
+      alert('Unable to start checkout')
+    }
   }
   document.getElementById('growthCta')?.addEventListener('click', (e)=>{ e.preventDefault(); startCheckout('growth') })
   document.getElementById('scaleCta')?.addEventListener('click', (e)=>{ e.preventDefault(); startCheckout('scale') })
@@ -77,9 +88,9 @@
       document.querySelector('main.container')?.prepend(box)
       document.getElementById('openPortal')?.addEventListener('click', async () => {
         try {
-          const email = window.__thgUserEmail || null
-          const res = await postJSON('/api/billing-portal', { customer_id: window.__thgStripeCustomerId || '', return_url: location.origin + '/pricing/' })
-          const j = await res.json(); if (j.url) go(j.url); else alert('Unable to open portal')
+          // Razorpay offers a hosted subscription management link via APIs in some plans.
+          // For now, guide via email to support or expose an internal page.
+          location.href = 'mailto:support@tharaga.co.in?subject=Billing%20assistance'
         } catch(_) { alert('Unable to open portal') }
       })
     }

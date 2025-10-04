@@ -29,3 +29,9 @@ alter table public.org_subscriptions enable row level security;
 create policy "own sub read" on public.org_subscriptions for select using (
   auth.email() = email or auth.uid() = user_id
 );
+
+-- Extend schema for provider + subscription id (Razorpay)
+do $$ begin
+  alter table public.org_subscriptions add column if not exists provider text default 'stripe';
+  alter table public.org_subscriptions add column if not exists subscription_id text;
+exception when others then null; end $$;

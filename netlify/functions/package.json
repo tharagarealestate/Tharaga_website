@@ -5,6 +5,7 @@
   "license": "UNLICENSED",
   "dependencies": {
     "@supabase/supabase-js": "2.45.4",
-    "stripe": "^14.0.0"
+    "stripe": "^14.0.0",
+    "razorpay": "^2.9.4"
   }
 }

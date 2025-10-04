@@ -45,3 +45,38 @@ def test_requires_user_or_session():
     assert res.status_code == 400
     assert "Provide either user_id or session_id" in res.text
 
+
+def test_rera_verify_basic():
+    payload = {"rera_id": "TN-1234-XYZ", "state": "TN", "project_name": "Demo Homes"}
+    res = client.post("/api/verify/rera", json=payload)
+    assert res.status_code == 200
+    data = res.json()
+    assert isinstance(data.get("verified"), bool)
+    assert 0.0 <= data.get("confidence", 0) <= 1.0
+
+
+def test_title_verify_hash():
+    payload = {"property_id": "P1", "document_hash": "a"*64, "network": "polygon"}
+    res = client.post("/api/verify/title", json=payload)
+    assert res.status_code == 200
+    data = res.json()
+    assert "transaction_hash" in data
+    assert isinstance(data.get("verified"), bool)
+
+
+def test_fraud_score_bounds():
+    payload = {"price_inr": 1000000, "sqft": 1000, "has_rera_id": False, "has_title_docs": False, "seller_type": "broker", "listed_days_ago": 200}
+    res = client.post("/api/fraud/score", json=payload)
+    assert res.status_code == 200
+    data = res.json()
+    assert 0 <= data.get("risk_score", 0) <= 100
+    assert data.get("risk_level") in {"low", "medium", "high"}
+
+
+def test_predictive_analytics_shape():
+    res = client.post("/api/analytics/predict", json={"city": "Bengaluru", "locality": "Indiranagar"})
+    assert res.status_code == 200
+    data = res.json()
+    assert "price_appreciation_1y_pct" in data
+    assert "expected_rent_yield_pct" in data
+

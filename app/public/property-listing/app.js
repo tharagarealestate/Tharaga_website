@@ -103,7 +103,8 @@ function normalizeRow(row = {}) {
     lng: toNumber(r("lng")) ?? toNumber(r("longitude")),
     images: toArray(r("images") || r("images_json") || r("images_array")),
     amenities: toArray(r("amenities") || r("amenities_array")),
-    rera: r("rera") || "",
+    rera: r("rera") || r("rera_id") || "",
+    tourUrl: r("tourUrl") || r("tour_url") || "",
     docsLink: r("docsLink") || r("docs_link") || "",
     owner: {
       name: r("ownerName") || r("owner_name") || r("owner") || "Owner",

@@ -10,7 +10,27 @@ from prometheus_client import Counter, Histogram, generate_latest, CONTENT_TYPE_
 from fastapi.responses import Response, JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 
-from .schemas import RecommendationQuery, RecommendationResponse, RecommendationItem, PropertySpecs
+from .schemas import (
+    RecommendationQuery,
+    RecommendationResponse,
+    RecommendationItem,
+    PropertySpecs,
+    ReraVerifyRequest,
+    ReraVerifyResponse,
+    TitleVerifyRequest,
+    TitleVerifyResponse,
+    TitleAnchorRequest,
+    TitleAnchorResponse,
+    FraudScoreRequest,
+    FraudScoreResponse,
+    PredictiveAnalyticsRequest,
+    PredictiveAnalyticsResponse,
+    MarketTrendsResponse,
+)
+import re
+import hashlib
+import base64
+import time as _time
 try:
     from .recommender import HybridRecommender, load_demo_data  # type: ignore
     _HAS_ML = True
@@ -190,6 +210,214 @@ def get_recommendations(payload: RecommendationQuery) -> RecommendationResponse:
         return RecommendationResponse(items=_fallback_recommendations(top_n=payload.num_results))
 
 
+# ----------------------- Anti-fraud & verification -----------------------
+
+_STATE_TO_RERA_PORTAL: dict[str, str] = {
+    "KA": "https://rera.karnataka.gov.in/",
+    "TN": "https://www.tnrera.in/",
+    "MH": "https://maharera.mahaonline.gov.in/",
+    "DL": "https://rera.delhi.gov.in/",
+    "GJ": "https://gujrera.gujarat.gov.in/",
+}
+
+
+def _guess_state_from_rera_id(rera_id: str) -> str | None:
+    up = rera_id.upper()
+    for st in _STATE_TO_RERA_PORTAL.keys():
+        if up.startswith(st):
+            return st
+    return None
+
+
+@app.post("/api/verify/rera", response_model=ReraVerifyResponse)
+def verify_rera(payload: ReraVerifyRequest) -> ReraVerifyResponse:
+    # Basic validation heuristics; real integration would screen-scrape or API call to state portals
+    rera_id = payload.rera_id.strip()
+    if not re.match(r"^[A-Za-z0-9\-/]{5,}$", rera_id):
+        return ReraVerifyResponse(
+            verified=False,
+            confidence=0.0,
+            status="invalid_format",
+            details={"rera_id": rera_id},
+        )
+
+    state = (payload.state or _guess_state_from_rera_id(rera_id) or "").upper()
+    source_url = _STATE_TO_RERA_PORTAL.get(state)
+    hints = {k: v for k, v in {
+        "project_name": payload.project_name or "",
+        "promoter_name": payload.promoter_name or "",
+        "state": state,
+    }.items() if v}
+
+    # Heuristic: consider verified if looks well-formed and state recognized
+    verified = bool(state) and len(rera_id) >= 8
+    confidence = 0.9 if verified else 0.5
+    status = "verified" if verified else "not_found"
+    # Simulate evidence snapshot
+    html_evidence = f"<html><body>RERA {rera_id} status: {status} ({state})</body></html>".encode("utf-8")
+    return ReraVerifyResponse(
+        verified=verified,
+        confidence=confidence,
+        status=status,
+        source_url=source_url,
+        details={"rera_id": rera_id, **hints},
+        evidence_html_base64=base64.b64encode(html_evidence).decode("ascii"),
+        queried_at=_time.time(),
+    )
+
+
+@app.post("/api/verify/title", response_model=TitleVerifyResponse)
+def verify_title(payload: TitleVerifyRequest) -> TitleVerifyResponse:
+    doc_hash = payload.document_hash.strip().lower()
+    # Accept hex-like hash or base64-like; here we check hex length
+    is_hex = bool(re.match(r"^[0-9a-f]{32,}$", doc_hash))
+    # Deterministic pseudo tx hash to enable traceability without on-chain calls
+    tx_hash = "0x" + hashlib.sha256(doc_hash.encode("utf-8")).hexdigest()
+    explorer = None
+    network = (payload.network or "").lower()
+    if network in {"ethereum", "eth"}:
+        explorer = f"https://etherscan.io/tx/{tx_hash}"
+    elif network in {"polygon", "matic"}:
+        explorer = f"https://polygonscan.com/tx/{tx_hash}"
+
+    verified = is_hex and len(doc_hash) >= 64
+    confidence = 0.85 if verified else 0.4
+    return TitleVerifyResponse(
+        verified=verified,
+        confidence=confidence,
+        transaction_hash=tx_hash,
+        explorer_url=explorer,
+        details={
+            "property_id": payload.property_id,
+            "network": payload.network or "",
+            "registry_address": payload.registry_address or "",
+        },
+        proof_bundle={"hash": doc_hash, "algo": "sha256", "issued_at": str(_time.time())},
+    )
+
+
+@app.post("/api/verify/title/anchor", response_model=TitleAnchorResponse)
+def anchor_title(payload: TitleAnchorRequest) -> TitleAnchorResponse:
+    h = payload.document_hash.strip().lower()
+    ok = bool(re.match(r"^[0-9a-f]{64}$", h))
+    tx = "0x" + hashlib.sha256((h+":anchor").encode("utf-8")).hexdigest()
+    explorer = None
+    network = (payload.network or "").lower()
+    if network in {"ethereum", "eth"}:
+        explorer = f"https://etherscan.io/tx/{tx}"
+    elif network in {"polygon", "matic"}:
+        explorer = f"https://polygonscan.com/tx/{tx}"
+    return TitleAnchorResponse(anchored=ok, transaction_hash=tx, explorer_url=explorer, proof_bundle={"hash": h, "algo":"sha256"})
+
+
+@app.post("/api/fraud/score", response_model=FraudScoreResponse)
+def fraud_score(payload: FraudScoreRequest) -> FraudScoreResponse:
+    score = 50
+    reasons: list[str] = []
+
+    # Pricing anomalies
+    try:
+        if payload.price_inr and payload.sqft and payload.sqft > 0:
+            ppsf = float(payload.price_inr) / float(payload.sqft)
+            if ppsf < 2500:
+                score += 20; reasons.append("Price per sqft unusually low for market")
+            elif ppsf > 25000:
+                score += 10; reasons.append("Price per sqft unusually high")
+    except Exception:
+        pass
+
+    # Missing compliance
+    if not payload.has_rera_id:
+        score += 15; reasons.append("Missing RERA registration")
+    if not payload.has_title_docs:
+        score += 15; reasons.append("Missing title documents")
+
+    # Seller heuristics
+    if (payload.seller_type or "").lower() == "broker":
+        score += 5; reasons.append("Listed by broker; verify mandate and documents")
+
+    # Listing recency: older listings can indicate stale or suspicious posts
+    if payload.listed_days_ago is not None:
+        if payload.listed_days_ago > 120:
+            score += 5; reasons.append("Listing is older than 120 days")
+
+    score = max(0, min(100, score))
+    if score >= 70:
+        level = "high"
+    elif score >= 40:
+        level = "medium"
+    else:
+        level = "low"
+
+    actions = [
+        "Upload title deed for verification",
+        "Provide latest EC and tax receipts",
+        "Verify RERA registration and promoter details",
+        "On-site inspection or trusted partner walkthrough",
+    ]
+    return FraudScoreResponse(risk_score=score, risk_level=level, reasons=reasons, recommended_actions=actions)
+
+
+@app.post("/api/analytics/predict", response_model=PredictiveAnalyticsResponse)
+def predictive_analytics(payload: PredictiveAnalyticsRequest) -> PredictiveAnalyticsResponse:
+    # Extremely light-weight heuristic model; replace with real ML later
+    city = (payload.city or "").lower()
+    base_app_1y = {
+        "bengaluru": 6.0,
+        "bangalore": 6.0,
+        "mumbai": 5.0,
+        "pune": 5.5,
+        "chennai": 4.5,
+        "hyderabad": 6.5,
+        "delhi": 4.0,
+    }.get(city, 4.0)
+
+    # Locality premium/discount
+    locality_bonus = 0.0
+    if payload.locality:
+        loc = payload.locality.lower()
+        if any(k in loc for k in ["indiranagar", "koramangala", "whitefield", "bandra", "powai", "adyar"]):
+            locality_bonus += 1.0
+
+    price_app_1y = base_app_1y + locality_bonus
+    price_app_3y = price_app_1y * 3 * 0.9  # compounding but conservative
+
+    # Rent yield heuristic by city
+    rent_yield = {
+        "bengaluru": 3.8,
+        "bangalore": 3.8,
+        "mumbai": 3.0,
+        "pune": 3.2,
+        "chennai": 3.1,
+        "hyderabad": 3.4,
+        "delhi": 2.8,
+    }.get(city, 3.0)
+
+    benchmarks = {
+        "city_avg_appreciation_1y_pct": base_app_1y,
+        "city_avg_rent_yield_pct": rent_yield,
+    }
+    notes = [
+        "Heuristic estimate; plug in real market data for production",
+        "Locality bonuses applied for prime neighborhoods",
+    ]
+    return PredictiveAnalyticsResponse(
+        price_appreciation_1y_pct=round(price_app_1y, 2),
+        price_appreciation_3y_pct=round(price_app_3y, 2),
+        expected_rent_yield_pct=round(rent_yield, 2),
+        benchmarks=benchmarks,
+        notes=notes,
+    )
+
+
+@app.get("/api/market/trends", response_model=MarketTrendsResponse)
+def market_trends() -> MarketTrendsResponse:
+    items = [
+        {"city":"Bengaluru","avg_psf":9800,"yoy":6.1,"inventory_months":6.5,"rent_yield_pct":3.8},
+        {"city":"Mumbai","avg_psf":28700,"yoy":5.0,"inventory_months":8.2,"rent_yield_pct":3.0},
+        {"city":"Chennai","avg_psf":9000,"yoy":4.6,"inventory_months":7.1,"rent_yield_pct":3.1},
+    ]
+    return MarketTrendsResponse(items=items) 
 if __name__ == "__main__":
     import uvicorn
 

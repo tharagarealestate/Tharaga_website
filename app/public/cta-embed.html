@@ -23,7 +23,7 @@
 
     .cta {
       position: relative;
-      background: radial-gradient(1200px 200px at 20% -50%, rgba(110,13,37,0.45), transparent),
+      background: radial-gradient(1200px 200px at 20% -50%, color-mix(in srgb, var(--brand) 45%, transparent), transparent),
                   linear-gradient(180deg, var(--surface-2), var(--surface));
       color: var(--text);
       padding: 18px 22px;
@@ -41,11 +41,11 @@
     }
     .cta h2 { margin: 0 0 6px; font-size: 1.25rem; letter-spacing: 0.2px; }
     .cta p { margin: 0 0 12px; color: #e7e2e5; font-size: .95rem; }
-    .row { display: grid; grid-template-columns: 1fr auto; gap: 12px; align-items: center; }
+    .row { display: grid; grid-template-columns: minmax(180px,1fr) auto; gap: 12px; align-items: center; }
     .row > * { min-width: 0; }
     .field-inline { position: relative; min-width: 0; }
     .field-inline input {
-      width: 100%; min-width: 200px; padding: 12px 14px; border-radius: 12px;
+      width: 100%; min-width: 0; padding: 12px 14px; border-radius: 12px;
       border: 1px solid rgba(255,255,255,0.08);
       background: rgba(255,255,255,0.06);
       color: var(--text);
@@ -53,11 +53,17 @@
     }
     .field-inline input::placeholder { color: rgba(255,255,255,0.6); }
     .primary-btn {
-      padding: 12px 18px; border-radius: 12px; border: 0; background: var(--brand); color: #fff; font-weight: 700; cursor: pointer;
+      padding: 12px 18px; border-radius: 12px; border: 0; background: var(--brand); color: #fff; font-weight: 700; cursor: pointer; white-space: nowrap;
       box-shadow: 0 6px 18px rgba(110,13,37,0.35);
     }
     .primary-btn:hover { background: var(--brand-600); }
     .note { font-size: 0.82rem; color: #e7e2e5; margin-top: 10px; opacity: .85; }
+
+    /* On narrow containers stack input and button to avoid overlap */
+    @media (max-width: 520px) {
+      .row { grid-template-columns: 1fr; }
+      .primary-btn { width: 100%; }
+    }
 
     .modal-backdrop { position: fixed; inset: 0; background: rgba(9, 7, 8, 0.72); display: none; align-items: center; justify-content: center; padding: 22px; backdrop-filter: blur(8px); }
     .modal {
@@ -118,8 +124,8 @@
   <div class="bg-img" id="bg-img" aria-hidden="true" style="display:none"></div>
   <div class="bg-tint" aria-hidden="true"></div>
   <section class="cta" id="buyer-cta">
-    <h2>Get 3 verified matches</h2>
-    <p>Share your WhatsApp or phone. Our team sends hand‑picked options fast.</p>
+    <h2 id="cta-title">Get 3 verified matches</h2>
+    <p id="cta-sub">Share your WhatsApp or phone. Our team sends hand‑picked options fast.</p>
     <div class="row">
       <div class="field-inline">
         <label for="cta-phone" class="visually-hidden">WhatsApp or phone</label>
@@ -228,6 +234,25 @@
       } catch(_){}
     }
 
+    // Auto-size to container so parent (e.g., Durable) shows only CTA without scrollbars
+    (function autoSize(){
+      function send(){
+        try {
+          const cta = document.getElementById('buyer-cta');
+          if (!cta) return;
+          const rect = cta.getBoundingClientRect();
+          const height = Math.ceil(rect.height + 40); // cushion for shadow
+          postToParent({ type: 'tharaga_iframe_height', height });
+        } catch(_){ }
+      }
+      const obsTarget = document.getElementById('buyer-cta') || document.body;
+      const ro = new ResizeObserver(()=>send());
+      ro.observe(obsTarget);
+      window.addEventListener('load', send);
+      window.addEventListener('resize', send);
+      setTimeout(send, 80);
+    })();
+
     function buildCtxFromQuery(){
       const p = new URLSearchParams(location.search);
       const parts = [];
@@ -261,8 +286,22 @@
       const btn = document.getElementById('lead-submit');
       btn.disabled = true; btn.textContent = 'Sending…';
       const selectedPid = (document.getElementById('lead-prop')||{}).value||'';
-      const payload = { property_id: selectedPid || null, name, phone: normalizePhone(phone), email, message: [ctx || buildCtxFromQuery(), message].filter(Boolean).join(' • '), _hp: (document.getElementById('lead-company')||{}).value||'' };
+      // Build UTM/meta string to enrich CRM without schema changes
+      function buildUtm(){
+        try {
+          const p = window.CTA_PARAMS instanceof URLSearchParams ? window.CTA_PARAMS : new URLSearchParams(location.search);
+          const parts = [];
+          const keys = ['utm_source','utm_medium','utm_campaign','utm_content','utm_term','gclid','fbclid','ref'];
+          keys.forEach(k=>{ const v=p.get(k); if(v) parts.push(`${k}=${v}`); });
+          const ref = (document.referrer||'').slice(0,160);
+          if (ref) parts.push(`referrer=${ref}`);
+          return parts.length ? `utm(${parts.join('&')})` : '';
+        } catch(_) { return ''; }
+      }
+      const richMessage = [ctx || buildCtxFromQuery(), message, buildUtm()].filter(Boolean).join(' • ');
+      const payload = { property_id: selectedPid || null, name, phone: normalizePhone(phone), email, message: richMessage, _hp: (document.getElementById('lead-company')||{}).value||'' };
       try {
+        try { window.thgTrack && window.thgTrack('cta_submit', { location: 'cta-embed' }); } catch(_){ }
         const res = await fetch('/api/leads', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
         const data = await res.json();
         if (data && data.ok) {
@@ -271,6 +310,22 @@
           postToParent({ type: 'tharaga_lead_ok', payload });
           // Keep the modal for a moment to let users view picks
           loadRecommendations();
+          // Optional auto-open WhatsApp after success
+          try {
+            const autoWa = (window.CTA_PARAMS && (window.CTA_PARAMS.get('wa_autoplay') === '1' || window.CTA_PARAMS.get('wa') === '1'));
+            const waTo = window.CTA_PARAMS && (window.CTA_PARAMS.get('wa_to') || window.CTA_PARAMS.get('whatsapp_to'));
+            if (autoWa && waTo) {
+              const target = normalizePhone(waTo);
+              const textParts = [
+                name ? `Hi, I'm ${name}.` : 'Hi, I just requested matches.',
+                (ctx || buildCtxFromQuery()) ? `Context: ${(ctx || buildCtxFromQuery())}.` : '',
+                phone ? `Phone: ${normalizePhone(phone)}.` : ''
+              ].filter(Boolean);
+              const text = encodeURIComponent(textParts.join(' '));
+              const link = `https://wa.me/${target}?text=${text}`;
+              window.open(link, '_blank', 'noopener');
+            }
+          } catch(_){}
           setTimeout(() => { closeModal(); }, 1400);
         } else {
           const friendly = (data && typeof data.error === 'string' && /schema cache|relation|table/i.test(data.error))
@@ -288,24 +343,83 @@
     }
     document.getElementById('lead-submit')?.addEventListener('click', submitLead);
     modal.addEventListener('keydown', (e)=>{ if (e.key === 'Enter' && (e.target.tagName === 'INPUT')) { e.preventDefault(); submitLead(); }});
+    // Notify parent on open/close for analytics hooks
+    openBtn?.addEventListener('click', ()=>{ try { postToParent({ type: 'tharaga_cta_open' }); } catch(_){} });
+    cancelBtn?.addEventListener('click', ()=>{ try { postToParent({ type: 'tharaga_cta_close' }); } catch(_){} });
   </script>
   <script>
-    // Prefill from query; support durable embed minimal layout
+    // Prefill from query; support durable embed minimal layout + background psychology themes
     try {
       const params = new URLSearchParams(location.search);
+      window.CTA_PARAMS = params;
       const inlinePhone = params.get('phone') || params.get('whatsapp') || '';
       if (inlinePhone) { const el = document.getElementById('cta-phone'); if (el) el.value = inlinePhone; }
 
+      // Curated default backgrounds (human-psychology informed)
+      // Principles: warm ambient interiors and soft bokeh drive trust and comfort; city skylines
+      // signal aspiration; subtle greenery reduces stress. We keep them blurred behind the CTA.
+      const PSY_BG_CATALOG = {
+        warm_home: 'https://images.unsplash.com/photo-1493666438817-866a91353ca9?q=80&w=1600&auto=format&fit=crop',
+        modern_living: 'https://images.unsplash.com/photo-1505691723518-36a5ac3bcb48?q=80&w=1600&auto=format&fit=crop',
+        skyline_twilight: 'https://images.unsplash.com/photo-1499343245400-cddc78a01317?q=80&w=1600&auto=format&fit=crop',
+        greenery_soft: 'https://images.unsplash.com/photo-1469474968028-56623f02e42e?q=80&w=1600&auto=format&fit=crop',
+        luxury_detail: 'https://images.unsplash.com/photo-1523217582562-09d0def993a6?q=80&w=1600&auto=format&fit=crop'
+      };
+
       // Background image support for embeds (e.g., Durable sections)
-      const bgUrl = params.get('bg') || params.get('image') || '';
-      const bgBlur = parseInt(params.get('blur') || params.get('bg_blur') || '', 10);
+      const theme = (params.get('theme') || '').toLowerCase();
+      const bgUrl = params.get('bg') || params.get('image') || (
+        theme && PSY_BG_CATALOG[theme] ? PSY_BG_CATALOG[theme] : PSY_BG_CATALOG.warm_home
+      );
+      const bgBlur = parseInt(params.get('blur') || params.get('bg_blur') || '14', 10);
       const bgEl = document.getElementById('bg-img');
       if (bgUrl && bgEl) {
         bgEl.style.backgroundImage = `url('${bgUrl}')`;
-        if (!isNaN(bgBlur) && bgBlur >= 0 && bgBlur <= 40) {
-          bgEl.style.filter = `blur(${bgBlur}px) saturate(1.05)`;
-        }
+        const blurPx = (!isNaN(bgBlur) && bgBlur >= 0 && bgBlur <= 40) ? bgBlur : 14;
+        bgEl.style.filter = `blur(${blurPx}px) saturate(1.05)`;
         bgEl.style.display = 'block';
+      }
+
+      // Accent color control (optionally by theme or &accent=#hex)
+      const ACCENTS = {
+        warm_home: '#6e0d25',
+        modern_living: '#284d6f',
+        skyline_twilight: '#5b3cc4',
+        greenery_soft: '#2a7a4b',
+        luxury_detail: '#8a1637'
+      };
+      const accentParam = params.get('accent');
+      const accent = (accentParam && /^#?[0-9a-f]{6}$/i.test(accentParam))
+        ? (accentParam.startsWith('#') ? accentParam : `#${accentParam}`)
+        : (ACCENTS[theme] || ACCENTS.warm_home);
+      try {
+        const d = document.documentElement.style;
+        d.setProperty('--brand', accent);
+        function darken(hex, f){ const h = hex.replace('#',''); const r=parseInt(h.slice(0,2),16), g=parseInt(h.slice(2,4),16), b=parseInt(h.slice(4,6),16); const apply=(v)=>Math.max(0,Math.min(255,Math.round(v*(1-f)))); return `#${apply(r).toString(16).padStart(2,'0')}${apply(g).toString(16).padStart(2,'0')}${apply(b).toString(16).padStart(2,'0')}`; }
+        d.setProperty('--brand-600', darken(accent, 0.12));
+        const m = accent.match(/[0-9a-f]{6}/i);
+        if (m) {
+          const R=parseInt(m[0].slice(0,2),16), G=parseInt(m[0].slice(2,4),16), B=parseInt(m[0].slice(4,6),16);
+          d.setProperty('--ring', `rgba(${R},${G},${B},0.35)`);
+        }
+      } catch(_){ }
+
+      // Copy personalization with city
+      const city = (params.get('city')||'').trim();
+      if (city) {
+        const title = document.getElementById('cta-title');
+        if (title) title.textContent = `Get 3 verified matches in ${city}`;
+      }
+
+      // Lightweight A/B copy variants (&variant=speed|trust or &ab=a|b)
+      const variant = (params.get('variant') || params.get('ab') || '').toLowerCase();
+      const sub = document.getElementById('cta-sub');
+      if (sub) {
+        if (variant === 'speed' || variant === 'b') {
+          sub.textContent = 'Instant hand‑picked options on WhatsApp. No spam.';
+        } else if (variant === 'trust') {
+          sub.textContent = 'Only verified listings. Human‑curated, zero spam.';
+        }
       }
 
       const map = [ ['lead-name', 'name'], ['lead-phone', 'phone'], ['lead-email', 'email'], ['lead-ctx','ctx'], ['lead-message','message'] ];
@@ -320,6 +434,8 @@
       if (params.get('open') === '1') openModal();
       // Pre-load recommendations once when opened
       openBtn?.addEventListener('click', () => { setTimeout(loadRecommendations, 50); });
+      // Enter key on inline phone opens the micro form for speed
+      document.getElementById('cta-phone')?.addEventListener('keydown', (e)=>{ if (e.key === 'Enter') { e.preventDefault(); openModal(); }});
       // Re-load on ctx input changes (debounced)
       const ctxEl = document.getElementById('lead-ctx');
       let t = null; ctxEl?.addEventListener('input', () => { clearTimeout(t); t = setTimeout(loadRecommendations, 350); });

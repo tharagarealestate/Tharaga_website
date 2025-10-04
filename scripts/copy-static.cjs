@@ -92,7 +92,7 @@ async function main() {
   }
 
   // Also copy shared static assets used by microsites
-  const sharedAssets = ['js'];
+  const sharedAssets = ['js', 'css'];
 
   console.log('[copy-static] Next public dir:', nextPublic);
   console.log('[copy-static] Copying microsites:', candidates);
@@ -112,7 +112,18 @@ async function main() {
     }
   }
 
-  // Do not copy root index.html to avoid clobbering Next's root route
+  // Copy root index.html as the public homepage so Netlify serves it
+  try {
+    const rootIndex = path.join(repoRoot, 'index.html');
+    if (await pathExists(rootIndex)) {
+      const destIndex = path.join(nextPublic, 'index.html');
+      await copyFile(rootIndex, destIndex);
+      console.log('[copy-static] Copied root index.html -> app/public/index.html');
+    }
+  } catch (e) {
+    console.warn('[copy-static] Could not copy root index.html:', e?.message || e);
+  }
+
   console.log('[copy-static] Done.');
 }
 

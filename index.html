@@ -3,117 +3,204 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Tharaga — Home</title>
+  <title>Tharaga — Verified homes. Human UX. AI inside.</title>
+  <meta name="description" content="Broker‑free, verified properties with AI‑matched discovery, cultural tools for India & NRI, and builder‑grade storytelling."/>
   <script type="module" src="/js/fragment-handle.js"></script>
   <script src="/js/auth-modal-stub.js" defer></script>
   <script src="/js/analytics.js" defer></script>
+  <script src="/js/home.js" defer></script>
   <link rel="stylesheet" href="/css/brand.css" />
   <style>
-    :root { --brand:#6e0d25; --brand-600:#8a1637; --surface:#0f0d0e; --surface-2:#151316; --text:#fff; --muted:#c6c3c6; --ring:rgba(212,175,55,.35); --ok:#39b54a; }
-    body { font-family: Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial; margin:0; padding:0; background:#fafafa; color:#222; display:flex; align-items:center; justify-content:center; min-height:100vh; text-align:center; flex-direction:column; }
-    h1 { font-size: 2rem; margin-bottom: 1rem; }
-    p  { max-width: 600px; margin-bottom: 2rem; }
-    nav a { margin:0 1rem; text-decoration:none; font-weight:500; color:#0055ff; }
-    nav a:hover { text-decoration: underline; }
-    footer { margin-top: 2rem; font-size: 0.9rem; color: #666; }
-
-    /* Removed CTA container and modal styles; using a simple link */
-    .visually-hidden{ position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); border:0 }
+    :root { --brand:#6e0d25; --brand-600:#8a1637; --ink:#1b1b1b; --cream:#f7efe7; --muted:#6b7280; --gold:#d4af37; --ring:rgba(212,175,55,.35); }
+    body { font-family: Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial; margin:0; padding:0; background:var(--cream); color:var(--ink); }
+    a { color:#0b63ff; text-decoration:none }
+    a:hover { text-decoration:underline }
+    header.nav { position:sticky; top:0; z-index:20; backdrop-filter:saturate(1.2) blur(10px); background:rgba(255,255,255,.75); border-bottom:1px solid #eee }
+    header.nav .inner { max-width:1100px; margin:0 auto; padding:10px 16px; display:flex; align-items:center; justify-content:space-between; gap:10px }
+    .brand { font-weight:900; letter-spacing:.3px; color:var(--brand) }
+    .pill { display:inline-flex; align-items:center; gap:8px; padding:6px 10px; border-radius:999px; background:#fff; border:1px solid #eee; font-size:12px }
+    .hero { position:relative; padding:56px 16px 28px; background: radial-gradient(900px 300px at 10% -10%, rgba(110,13,37,.10), transparent), linear-gradient(180deg, rgba(255,255,255,.9), rgba(255,255,255,.4)); }
+    .hero .inner { max-width:1100px; margin:0 auto; display:grid; grid-template-columns: 1.1fr .9fr; gap:28px; align-items:center }
+    .h1 { font-weight:900; font-size:38px; line-height:1.1; margin:0 0 12px }
+    .sub { color:var(--muted); font-size:16px; margin:0 0 18px }
+    .search-card { background:#fff; border:1px solid #f0d9d9; border-radius:16px; box-shadow:0 12px 36px rgba(110,13,37,.12); padding:14px }
+    .search-grid { display:grid; grid-template-columns:1.2fr .8fr .8fr auto; gap:10px }
+    .chip-row { display:flex; gap:8px; flex-wrap:wrap }
+    .chip { padding:8px 10px; border-radius:999px; border:1px solid #e5e7eb; background:#fff; cursor:pointer; font-weight:600; font-size:13px }
+    .chip[aria-pressed="true"] { background:var(--brand); color:#fff; border-color:var(--brand) }
+    .btn { display:inline-flex; align-items:center; justify-content:center; gap:8px; padding:10px 14px; border-radius:12px; border:1px solid var(--brand); background:var(--brand); color:#fff; font-weight:800 }
+    .btn.secondary { background:#fff; color:var(--brand) }
+    .features { max-width:1100px; margin:26px auto; padding:0 16px; }
+    .feature-grid { display:grid; grid-template-columns: repeat(3, 1fr); gap:14px }
+    .card { background:#fff; border:1px solid #f0d9d9; border-radius:16px; box-shadow:0 12px 36px rgba(110,13,37,.1); padding:16px }
+    .how { background:linear-gradient(180deg, rgba(110,13,37,.04), rgba(110,13,37,.02)); border-top:1px solid #f2e6e6; border-bottom:1px solid #f2e6e6; }
+    .how .inner { max-width:1100px; margin:0 auto; padding:24px 16px; display:grid; grid-template-columns: repeat(3, 1fr); gap:14px }
+    .kpi-row { display:flex; gap:14px; flex-wrap:wrap; align-items:center }
+    .kpi { font-weight:900; font-size:24px }
+    .footer { max-width:1100px; margin:0 auto; padding:28px 16px; color:#666; font-size:14px }
+    @media (max-width: 880px) {
+      .hero .inner { grid-template-columns: 1fr; }
+      .search-grid { grid-template-columns: 1fr; }
+      .feature-grid { grid-template-columns: 1fr; }
+      .how .inner { grid-template-columns: 1fr; }
+    }
   </style>
   
 </head>
 <body>
-  <h1>Welcome to Tharaga</h1>
-  <p>
-    This is the unified website. Use the links below or Durable can embed
-    each section directly using its own route.
-  </p>
-  <nav>
-    <a href="/about/">About</a>
-    <a href="/buyer-form/">Buyer Form</a>
-    <a href="/property-listing/">Properties</a>
-    <a href="/rating/">Rating</a>
-    <a href="/reel-grid/">Reels</a>
-    <a href="/registration/">Registration</a>
-    <a href="/search-filter-home/">Search Filter</a>
-    <a href="/Reset_password/">Reset password</a>
-    <a href="/verified-listings-pipeline/">Verified Listings Pipeline</a>
-    <a href="/builder-deals/">Direct-to-Builder Deals</a>
-    <a href="/ai-marketing-suite/">AI Marketing Suite</a>
-    <a href="/buyer-qualification/">Buyer Qualification</a>
-    <a href="/listing-analytics/">Listing Analytics</a>
-    <a href="/compliance-trust/">Compliance & Trust</a>
-    <a href="auth-landing/">auth landing</a>
-    <a href="auth-email-landing/">auth email landing</a>
-    <a href="snippets/">login/signup</a>
-    <a href="/app/">AI Recommendations (Next.js)</a>
-    <a href="/app/saved">Saved</a>
-    <a href="/app/tours">Tours</a>
-    <a href="/app/tours/ar-staging">AR Staging</a>
-    <a href="/app/tools/roi">ROI</a>
-    <a href="/app/tools/environment">Env</a>
-    <a href="/app/dashboard/map">Map</a>
-    <a href="/app/filters/radial">Filters</a>
-  </nav>
+  <header class="nav">
+    <div class="inner">
+      <div class="row"><a class="brand" href="/">THARAGA</a><span class="pill" id="home_pill_trust">Verified • Broker‑free</span></div>
+      <nav class="row" aria-label="Primary">
+        <a href="#buyers">Buy</a>
+        <a href="#builders">Build</a>
+        <a href="#how">How it works</a>
+        <a href="/about/">About</a>
+        <button class="btn secondary" type="button" id="openAuthBtn">Sign in</button>
+      </nav>
+    </div>
+  </header>
 
-  <!-- Feature entry points for Durable embeds -->
-  <section style="margin-top:2rem; text-align:left; max-width: 820px;">
-    <h2 style="font-size:1.25rem; margin:0 0 .5rem;">Core Anti-Fraud Features</h2>
-    <ul>
-      <li><a href="/app/tools/verification" target="_blank" rel="noopener">RERA integration and verification system</a></li>
-      <li><a href="/app/tools/verification" target="_blank" rel="noopener">Blockchain title verification</a></li>
-      <li><a href="/app/tools/cost-calculator" target="_blank" rel="noopener">Cost calculator and transparency tools</a></li>
-      <li><a href="/app/tools/verification" target="_blank" rel="noopener">Fraud detection algorithms</a></li>
-    </ul>
+  <section class="hero">
+    <div class="inner">
+      <div>
+        <h1 class="h1" id="hero_title">Verified homes. Smart matches. Zero noise.</h1>
+        <p class="sub" id="hero_sub">We use AI to score listings, remove spam, and guide decisions with culture‑aware tools for India and NRIs.</p>
+        <div class="kpi-row" style="margin:12px 0 16px">
+          <div class="pill"><span class="kpi" id="kpi_time">28h</span> saved per buyer</div>
+          <div class="pill"><span class="kpi" id="kpi_pps">₹1,200</span> avg price/sqft gain</div>
+          <div class="pill">RERA & document hygiene checks</div>
+        </div>
 
-    <h2 style="font-size:1.25rem; margin:1rem 0 .5rem;">NRI & Cultural Features</h2>
-    <ul>
-      <li><a href="/app/tools/currency-risk" target="_blank" rel="noopener">Currency risk calculator</a></li>
-      <li><a href="/app/tools/remote-management" target="_blank" rel="noopener">Remote property management</a></li>
-      <li><a href="/app/tools/vastu" target="_blank" rel="noopener">Vastu compliance checker</a></li>
-      <li><a href="/app/tools/voice-tamil" target="_blank" rel="noopener">Tamil voice search implementation</a></li>
-    </ul>
+        <div class="search-card" role="search" aria-label="Quick search">
+          <div class="search-grid">
+            <div>
+              <label class="sub" for="q">City or locality</label>
+              <input id="q" class="input" placeholder="e.g., Velachery, Chennai" list="cities" />
+              <datalist id="cities">
+                <option>Chennai</option><option>Coimbatore</option><option>Madurai</option><option>Trichy</option><option>Salem</option>
+              </datalist>
+            </div>
+            <div>
+              <label class="sub" for="minPrice">Budget min (₹)</label>
+              <input id="minPrice" class="input" type="number" min="0" step="50000" placeholder="20,00,000" />
+            </div>
+            <div>
+              <label class="sub" for="maxPrice">Budget max (₹)</label>
+              <input id="maxPrice" class="input" type="number" min="0" step="50000" placeholder="80,00,000" />
+            </div>
+            <div style="display:flex;align-items:flex-end;gap:8px">
+              <button id="browseBtn" class="btn" type="button">Browse matches</button>
+              <button id="resumeBtn" class="btn secondary" type="button" hidden>Resume</button>
+            </div>
+          </div>
+          <div class="chip-row" style="margin-top:10px" aria-label="BHK quick select">
+            <button class="chip" data-bhk="1" aria-pressed="false">1 BHK</button>
+            <button class="chip" data-bhk="2" aria-pressed="true">2 BHK</button>
+            <button class="chip" data-bhk="3" aria-pressed="false">3 BHK</button>
+            <button class="chip" data-type="Villa" aria-pressed="false">Villa</button>
+            <button class="chip" data-type="Plot" aria-pressed="false">Plot</button>
+            <button class="chip" data-metro="1" aria-pressed="false">Near Metro</button>
+          </div>
+        </div>
 
-    <h2 style="font-size:1.25rem; margin:1rem 0 .5rem;">Advanced AI Features</h2>
-    <ul>
-      <li><a href="/app/" target="_blank" rel="noopener">Recommendation engine</a></li>
-      <li><a href="/app/tours" target="_blank" rel="noopener">AR/VR property tours</a></li>
-      <li><a href="/app/tours/ar-staging" target="_blank" rel="noopener">AR furniture staging</a></li>
-      <li><a href="/app/tours/hotspots" target="_blank" rel="noopener">360 hotspots</a></li>
-      <li><a href="/app/dashboard/market" target="_blank" rel="noopener">Market intelligence dashboard</a></li>
-      <li><a href="/app/tools/verification" target="_blank" rel="noopener">Predictive analytics</a></li>
-      <li><a href="/app/tools/roi" target="_blank" rel="noopener">Investment ROI calculator</a></li>
-      <li><a href="/app/tools/environment" target="_blank" rel="noopener">Environment intelligence (AQI, flood, climate)</a></li>
-      <li><a href="/app/dashboard/map" target="_blank" rel="noopener">Property map</a></li>
-      <li><a href="/app/filters/radial" target="_blank" rel="noopener">Radial filters (prototype)</a></li>
-      <li><a href="/app/saved" target="_blank" rel="noopener">Saved properties (offline)</a></li>
-    </ul>
+        <div class="row" style="gap:14px;margin-top:14px">
+          <a class="btn" href="/property-listing/">Explore verified listings</a>
+          <a class="btn secondary" href="/search-filter-home/">Advanced search</a>
+        </div>
+      </div>
+      <div>
+        <div class="card">
+          <div style="font-weight:800;margin-bottom:6px">For Builders</div>
+          <div class="sub" style="margin-bottom:10px">Cinematic storytelling, WhatsApp‑first automation, and AI lead scoring. Buyers see clarity; you see conversions.</div>
+          <div class="row" style="gap:10px">
+            <a class="btn" href="/builder-deals/">List a project</a>
+            <a class="btn secondary" href="/ai-marketing-suite/">AI marketing suite</a>
+          </div>
+        </div>
+        <div class="card" style="margin-top:12px">
+          <div style="font-weight:800;margin-bottom:6px">Talk to us</div>
+          <div class="sub" style="margin-bottom:10px">Prefer WhatsApp? We’ll send a curated shortlist with explainers.</div>
+          <a class="btn" href="/cta-embed.html?embed=cta&open=1">Open instant assistant</a>
+        </div>
+      </div>
+    </div>
   </section>
 
-  <section id="cta-link" style="margin-top:2rem;">
-    <a href="https://auth.tharaga.co.in/cta-embed" target="_blank" rel="noopener" style="font-weight:700;color:#0055ff;text-decoration:none;">https://auth.tharaga.co.in/cta-embed</a>
+  <section class="features" id="buyers">
+    <div class="row" style="justify-content:space-between;align-items:flex-end;margin-bottom:10px">
+      <div>
+        <div class="h1" style="font-size:22px">Designed around how people decide</div>
+        <div class="sub">Trust first, then exploration, then commitment. We reduce cognitive load at each step.</div>
+      </div>
+      <a href="/property-listing/" class="btn secondary">See properties</a>
+    </div>
+    <div class="feature-grid">
+      <div class="card">
+        <div class="pill">Step 1 • Trust anchors</div>
+        <h3 class="h1" style="font-size:18px;margin-top:6px">Verified builders, legal hygiene, RERA</h3>
+        <p class="sub">Bad data kills attention. We surface verification early and repeat it in context.</p>
+      </div>
+      <div class="card">
+        <div class="pill">Step 2 • Low‑effort discovery</div>
+        <h3 class="h1" style="font-size:18px;margin-top:6px">Explainable AI matches</h3>
+        <p class="sub">Every score shows why: recency, price/ft², amenities, metro distance.</p>
+      </div>
+      <div class="card">
+        <div class="pill">Step 3 • Micro‑commitments</div>
+        <h3 class="h1" style="font-size:18px;margin-top:6px">One‑tap interest with WhatsApp follow‑ups</h3>
+        <p class="sub">Frictionless intent capture with instant human‑ready summaries for builders.</p>
+      </div>
+    </div>
   </section>
-  <footer>© <span id="year"></span> Tharaga</footer>
+
+  <section class="how" id="how">
+    <div class="inner">
+      <div class="card">
+        <div class="h1" style="font-size:18px">1. Tell us what matters</div>
+        <p class="sub">City, budget, 2‑3 must‑haves. We store this locally to personalize the site.</p>
+      </div>
+      <div class="card">
+        <div class="h1" style="font-size:18px">2. We score options</div>
+        <p class="sub">Value per sq ft, recency, commute, amenities, and risk signals.</p>
+      </div>
+      <div class="card">
+        <div class="h1" style="font-size:18px">3. You decide faster</div>
+        <p class="sub">Request details, schedule tours, or share with family—without spam.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="features" id="builders">
+    <div class="row" style="justify-content:space-between;align-items:flex-end;margin-bottom:10px">
+      <div>
+        <div class="h1" style="font-size:22px">For builders who hate noise</div>
+        <div class="sub">Lead scoring, campaign insights, and buyer context so your team focuses only on real demand.</div>
+      </div>
+      <a href="/builder-deals/" class="btn">Start listing</a>
+    </div>
+    <div class="feature-grid">
+      <div class="card"><h3 class="h1" style="font-size:18px">Cinematic storytelling</h3><p class="sub">Reels, hotspots, 360 tours—buyers feel the project before they visit.</p></div>
+      <div class="card"><h3 class="h1" style="font-size:18px">WhatsApp‑first CRM</h3><p class="sub">Auto‑summaries and nudges; no heavy dashboards required.</p></div>
+      <div class="card"><h3 class="h1" style="font-size:18px">Smart scoring</h3><p class="sub">Predict intent using activity and context—not just forms.</p></div>
+    </div>
+  </section>
+
+  <section class="features" aria-labelledby="ctaTitle">
+    <div class="card" style="display:flex;align-items:center;justify-content:space-between;gap:14px">
+      <div>
+        <div id="ctaTitle" class="h1" style="font-size:22px">Prefer a human‑like assistant?</div>
+        <div class="sub">Open our embedded CTA to start a guided conversation.</div>
+      </div>
+      <a class="btn" href="/cta-embed.html?embed=cta&open=1">Open assistant</a>
+    </div>
+  </section>
+
+  <div class="footer">© <span id="year"></span> Tharaga • <a href="/about/">About</a> • <a href="/compliance-trust/">Trust</a> • <a href="/auth-email-landing/">Email confirmation</a></div>
+
   <script>
-  // Auth header is loaded via external script for reuse across pages
-  // Listen for child iframes asking to open Durable auth
-  try {
-    window.addEventListener('message', function(ev){
-      var data = ev && ev.data;
-      if (!data || typeof data !== 'object') return;
-      if (data.type === 'open_login_modal'){
-        try { if (typeof window.__thgOpenAuthModal === 'function') window.__thgOpenAuthModal({ next: data.next || (location.pathname + location.search) }); } catch(_){ }
-      }
-      if (data.type === 'thg-embed-height' && data.id && data.height){
-        // if this page embeds iframes later, we could size them here
-      }
-    });
-  } catch(_){}
+    document.getElementById('year').textContent = new Date().getFullYear();
+    document.getElementById('openAuthBtn')?.addEventListener('click', function(){ try { window.__thgOpenAuthModal && window.__thgOpenAuthModal(); } catch(_){} });
   </script>
-  
-  <script>
-    document.getElementById("year").textContent = new Date().getFullYear();
-  </script>
-  <!-- Removed inline CTA modal and embed handling; using direct link instead -->
 </body>
 </html>

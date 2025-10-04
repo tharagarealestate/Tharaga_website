@@ -41,11 +41,11 @@
     }
     .cta h2 { margin: 0 0 6px; font-size: 1.25rem; letter-spacing: 0.2px; }
     .cta p { margin: 0 0 12px; color: #e7e2e5; font-size: .95rem; }
-    .row { display: grid; grid-template-columns: 1fr auto; gap: 12px; align-items: center; }
+    .row { display: grid; grid-template-columns: minmax(180px,1fr) auto; gap: 12px; align-items: center; }
     .row > * { min-width: 0; }
     .field-inline { position: relative; min-width: 0; }
     .field-inline input {
-      width: 100%; min-width: 200px; padding: 12px 14px; border-radius: 12px;
+      width: 100%; min-width: 0; padding: 12px 14px; border-radius: 12px;
       border: 1px solid rgba(255,255,255,0.08);
       background: rgba(255,255,255,0.06);
       color: var(--text);
@@ -53,11 +53,17 @@
     }
     .field-inline input::placeholder { color: rgba(255,255,255,0.6); }
     .primary-btn {
-      padding: 12px 18px; border-radius: 12px; border: 0; background: var(--brand); color: #fff; font-weight: 700; cursor: pointer;
+      padding: 12px 18px; border-radius: 12px; border: 0; background: var(--brand); color: #fff; font-weight: 700; cursor: pointer; white-space: nowrap;
       box-shadow: 0 6px 18px rgba(110,13,37,0.35);
     }
     .primary-btn:hover { background: var(--brand-600); }
     .note { font-size: 0.82rem; color: #e7e2e5; margin-top: 10px; opacity: .85; }
+
+    /* On narrow containers stack input and button to avoid overlap */
+    @media (max-width: 520px) {
+      .row { grid-template-columns: 1fr; }
+      .primary-btn { width: 100%; }
+    }
 
     .modal-backdrop { position: fixed; inset: 0; background: rgba(9, 7, 8, 0.72); display: none; align-items: center; justify-content: center; padding: 22px; backdrop-filter: blur(8px); }
     .modal {
@@ -228,6 +234,25 @@
       } catch(_){}
     }
 
+    // Auto-size to container so parent (e.g., Durable) shows only CTA without scrollbars
+    (function autoSize(){
+      function send(){
+        try {
+          const cta = document.getElementById('buyer-cta');
+          if (!cta) return;
+          const rect = cta.getBoundingClientRect();
+          const height = Math.ceil(rect.height + 40); // cushion for shadow
+          postToParent({ type: 'tharaga_iframe_height', height });
+        } catch(_){ }
+      }
+      const obsTarget = document.getElementById('buyer-cta') || document.body;
+      const ro = new ResizeObserver(()=>send());
+      ro.observe(obsTarget);
+      window.addEventListener('load', send);
+      window.addEventListener('resize', send);
+      setTimeout(send, 80);
+    })();
+
     function buildCtxFromQuery(){
       const p = new URLSearchParams(location.search);
       const parts = [];
@@ -290,21 +315,34 @@
     modal.addEventListener('keydown', (e)=>{ if (e.key === 'Enter' && (e.target.tagName === 'INPUT')) { e.preventDefault(); submitLead(); }});
   </script>
   <script>
-    // Prefill from query; support durable embed minimal layout
+    // Prefill from query; support durable embed minimal layout + background psychology themes
     try {
       const params = new URLSearchParams(location.search);
       const inlinePhone = params.get('phone') || params.get('whatsapp') || '';
       if (inlinePhone) { const el = document.getElementById('cta-phone'); if (el) el.value = inlinePhone; }
 
+      // Curated default backgrounds (human-psychology informed)
+      // Principles: warm ambient interiors and soft bokeh drive trust and comfort; city skylines
+      // signal aspiration; subtle greenery reduces stress. We keep them blurred behind the CTA.
+      const PSY_BG_CATALOG = {
+        warm_home: 'https://images.unsplash.com/photo-1493666438817-866a91353ca9?q=80&w=1600&auto=format&fit=crop',
+        modern_living: 'https://images.unsplash.com/photo-1505691723518-36a5ac3bcb48?q=80&w=1600&auto=format&fit=crop',
+        skyline_twilight: 'https://images.unsplash.com/photo-1499343245400-cddc78a01317?q=80&w=1600&auto=format&fit=crop',
+        greenery_soft: 'https://images.unsplash.com/photo-1469474968028-56623f02e42e?q=80&w=1600&auto=format&fit=crop',
+        luxury_detail: 'https://images.unsplash.com/photo-1523217582562-09d0def993a6?q=80&w=1600&auto=format&fit=crop'
+      };
+
       // Background image support for embeds (e.g., Durable sections)
-      const bgUrl = params.get('bg') || params.get('image') || '';
-      const bgBlur = parseInt(params.get('blur') || params.get('bg_blur') || '', 10);
+      const theme = (params.get('theme') || '').toLowerCase();
+      const bgUrl = params.get('bg') || params.get('image') || (
+        theme && PSY_BG_CATALOG[theme] ? PSY_BG_CATALOG[theme] : PSY_BG_CATALOG.warm_home
+      );
+      const bgBlur = parseInt(params.get('blur') || params.get('bg_blur') || '14', 10);
       const bgEl = document.getElementById('bg-img');
       if (bgUrl && bgEl) {
         bgEl.style.backgroundImage = `url('${bgUrl}')`;
-        if (!isNaN(bgBlur) && bgBlur >= 0 && bgBlur <= 40) {
-          bgEl.style.filter = `blur(${bgBlur}px) saturate(1.05)`;
-        }
+        const blurPx = (!isNaN(bgBlur) && bgBlur >= 0 && bgBlur <= 40) ? bgBlur : 14;
+        bgEl.style.filter = `blur(${blurPx}px) saturate(1.05)`;
         bgEl.style.display = 'block';
       }
 

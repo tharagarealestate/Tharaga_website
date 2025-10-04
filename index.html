@@ -37,6 +37,12 @@
     <a href="/registration/">Registration</a>
     <a href="/search-filter-home/">Search Filter</a>
     <a href="/Reset_password/">Reset password</a>
+    <a href="/verified-listings-pipeline/">Verified Listings Pipeline</a>
+    <a href="/builder-deals/">Direct-to-Builder Deals</a>
+    <a href="/ai-marketing-suite/">AI Marketing Suite</a>
+    <a href="/buyer-qualification/">Buyer Qualification</a>
+    <a href="/listing-analytics/">Listing Analytics</a>
+    <a href="/compliance-trust/">Compliance & Trust</a>
     <a href="auth-landing/">auth landing</a>
     <a href="auth-email-landing/">auth email landing</a>
     <a href="snippets/">login/signup</a>
@@ -76,6 +82,19 @@
   <footer>© <span id="year"></span> Tharaga</footer>
   <script>
   // Auth header is loaded via external script for reuse across pages
+  // Listen for child iframes asking to open Durable auth
+  try {
+    window.addEventListener('message', function(ev){
+      var data = ev && ev.data;
+      if (!data || typeof data !== 'object') return;
+      if (data.type === 'open_login_modal'){
+        try { if (typeof window.__thgOpenAuthModal === 'function') window.__thgOpenAuthModal({ next: data.next || (location.pathname + location.search) }); } catch(_){ }
+      }
+      if (data.type === 'thg-embed-height' && data.id && data.height){
+        // if this page embeds iframes later, we could size them here
+      }
+    });
+  } catch(_){}
   </script>
   
   <script>

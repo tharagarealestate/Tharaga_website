@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Pricing • Tharaga</title>
+  <meta name="description" content="Simple, transparent pricing for builders. Start free. Upgrade when ROI is clear." />
+  <link rel="stylesheet" href="/css/brand.css" />
+  <script src="/js/pricing.js" defer></script>
+  <style>
+    .hero{padding:36px 16px;background:linear-gradient(135deg, rgba(110,13,37,.06), rgba(110,13,37,.02));border-bottom:1px solid #f2e6e6}
+    .grid{display:grid;gap:14px}
+    .plans{grid-template-columns:repeat(3,1fr)}
+    .switch{display:inline-flex;align-items:center;gap:10px}
+    .price{font-size:34px;font-weight:900}
+    .strike{color:#9ca3af;text-decoration:line-through;margin-left:8px;font-size:14px}
+    .roi-card{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    .features-list{display:grid;gap:6px}
+    .ok{color:var(--ok);font-weight:700}
+    @media (max-width:900px){.plans{grid-template-columns:1fr}.roi-card{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header class="row" style="justify-content:space-between;margin:8px 0 10px">
+      <a href="/" class="brand">THARAGA</a>
+      <nav class="row" style="gap:10px">
+        <a href="/property-listing/">Browse</a>
+        <a href="/builder-deals/">List</a>
+        <a href="/pricing/" aria-current="page">Pricing</a>
+      </nav>
+    </header>
+  </div>
+
+  <section class="hero">
+    <div class="container">
+      <h1 class="h1">Pricing that respects ROI</h1>
+      <p class="sub">Start free. Pay when the value is obvious. Annual saves 20%.</p>
+      <div class="row" style="gap:12px;margin-top:6px">
+        <label class="switch"><input id="toggleAnnual" type="checkbox" /> <span>Bill annually and save</span></label>
+        <span class="pill">No setup fees</span>
+        <span class="pill">Cancel anytime</span>
+        <span class="pill">GST invoices</span>
+      </div>
+    </div>
+  </section>
+
+  <main class="container">
+    <div class="grid plans">
+      <article class="card" aria-labelledby="starterTitle">
+        <div class="pill">Best for pilots</div>
+        <h2 id="starterTitle" class="h1" style="font-size:20px">Starter</h2>
+        <div class="sub">Try listing with basic automation</div>
+        <div class="row" style="align-items:flex-end;gap:6px">
+          <div class="price" data-price-monthly="0" data-price-annual="0">₹0</div>
+          <div class="sub">/month</div>
+        </div>
+        <div class="features-list" style="margin:10px 0 12px">
+          <div>• 1 project, unlimited edits</div>
+          <div>• Cinematic reels & hotspots</div>
+          <div>• WhatsApp lead capture</div>
+          <div>• Email support</div>
+        </div>
+        <a class="btn" href="/builder-deals/">Start free</a>
+      </article>
+
+      <article class="card" aria-labelledby="growthTitle" style="border:2px solid var(--brand)">
+        <div class="pill">Most popular</div>
+        <h2 id="growthTitle" class="h1" style="font-size:20px">Growth</h2>
+        <div class="sub">Serious demand generation</div>
+        <div class="row" style="align-items:flex-end;gap:6px">
+          <div class="price" id="growthPrice" data-price-monthly="7999" data-price-annual="6399">₹7,999</div>
+          <div class="sub">/month</div>
+          <div class="strike" id="growthStrike"></div>
+        </div>
+        <div class="features-list" style="margin:10px 0 12px">
+          <div class="ok">• Up to 5 projects</div>
+          <div>• AI lead scoring & summaries</div>
+          <div>• Campaign insights dashboard</div>
+          <div>• Priority WhatsApp support</div>
+        </div>
+        <a class="btn" href="#checkout" id="growthCta">Talk to sales</a>
+      </article>
+
+      <article class="card" aria-labelledby="scaleTitle">
+        <div class="pill">For teams</div>
+        <h2 id="scaleTitle" class="h1" style="font-size:20px">Scale</h2>
+        <div class="sub">Multi‑city, multi‑team workflows</div>
+        <div class="row" style="align-items:flex-end;gap:6px">
+          <div class="price" id="scalePrice" data-price-monthly="14999" data-price-annual="11999">₹14,999</div>
+          <div class="sub">/month</div>
+          <div class="strike" id="scaleStrike"></div>
+        </div>
+        <div class="features-list" style="margin:10px 0 12px">
+          <div class="ok">• Unlimited projects</div>
+          <div>• Roles & approvals</div>
+          <div>• Advanced analytics</div>
+          <div>• Dedicated manager</div>
+        </div>
+        <a class="btn" href="#contact" id="scaleCta">Contact us</a>
+      </article>
+    </div>
+
+    <section class="card" style="margin-top:14px">
+      <h3 class="h1" style="font-size:18px">ROI calculator</h3>
+      <div class="sub">Estimate payback based on expected monthly leads and conversion rates.</div>
+      <div class="roi-card" style="margin-top:10px">
+        <div>
+          <label>Leads per month <input id="leads" type="number" class="input" placeholder="80" /></label>
+          <label>Qualified % <input id="qual" type="number" class="input" placeholder="35" /></label>
+          <label>Close % <input id="close" type="number" class="input" placeholder="5" /></label>
+          <label>Avg revenue / sale (₹) <input id="rev" type="number" class="input" placeholder="250000" /></label>
+          <label>Plan <select id="plan" class="input"><option value="0">Starter</option><option value="7999">Growth</option><option value="14999">Scale</option></select></label>
+        </div>
+        <div>
+          <div class="card">
+            <div class="kpi">Payback: <span id="payback">—</span></div>
+            <div class="sub">We assume 1 month commitment. Annual discounts applied when toggle is on.</div>
+          </div>
+          <div class="card" style="margin-top:10px">
+            <div class="kpi">Est. net monthly ROI: <span id="roi">—</span></div>
+            <div class="sub">(Revenue from closes × margin) – plan price</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="card" style="margin-top:14px">
+      <h3 class="h1" style="font-size:18px">FAQ</h3>
+      <details><summary>Is there a free plan?</summary><p>Yes. Starter lets you list 1 project with reels, hotspots, and WhatsApp leads at ₹0. Upgrade anytime.</p></details>
+      <details><summary>How do I pay?</summary><p>We support GST invoices and online payments. For now the Growth/Scale CTAs connect you to sales for onboarding while we finalize in‑app checkout.</p></details>
+      <details><summary>Can I cancel anytime?</summary><p>Yes. Plans are month‑to‑month. Annual billing gets 20% off.</p></details>
+      <details><summary>Do you offer pilots or trials?</summary><p>Starter is effectively a pilot. If you need more during evaluation, write to support and we’ll enable a timed Growth trial.</p></details>
+    </section>
+  </main>
+
+  <footer class="container" style="margin:18px 0"><a href="/">← Back to home</a></footer>
+</body>
+</html>

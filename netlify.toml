@@ -37,6 +37,11 @@
   to = "/snippets/"
   status = 301
 
+[[redirects]]
+  from = "/pricing"
+  to = "/pricing/"
+  status = 301
+
 # Listings API
 [[redirects]]
   from = "/api/properties-list"

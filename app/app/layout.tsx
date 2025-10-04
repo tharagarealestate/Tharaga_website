@@ -32,8 +32,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <a href="/tools/vastu" className="hover:underline">Vastu</a>
             <a href="/tools/voice-tamil" className="hover:underline">தமிழ் Voice</a>
             <a href="/tours" className="hover:underline">Tours</a>
+            <a href="/dashboard/map" className="hover:underline">Map</a>
             <a href="/dashboard/market" className="hover:underline">Market</a>
             <a href="/saved" className="hover:underline">Saved</a>
+            <a href="/tools/roi" className="hover:underline">ROI</a>
+            <a href="/tools/environment" className="hover:underline">Env</a>
           </nav>
         </header>
         {children}

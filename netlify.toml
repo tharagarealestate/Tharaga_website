@@ -92,6 +92,19 @@
   status = 200
   force = true
 
+# Push notifications
+[[redirects]]
+  from = "/api/push/subscribe"
+  to = "/.netlify/functions/push-subscribe"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/api/env-intel"
+  to = "/.netlify/functions/env-intel"
+  status = 200
+  force = true
+
 # Direct CTA embed path for Durable embeds
 [[redirects]]
   from = "/cta-embed"

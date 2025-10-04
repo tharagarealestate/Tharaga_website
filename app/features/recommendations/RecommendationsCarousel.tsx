@@ -90,6 +90,7 @@ function PropertyCard({ item, onLead }: { item: RecommendationItem; onLead: (pro
       saveItem({ property_id: item.property_id, title: item.title, image_url: item.image_url, specs: item.specs })
       setSaved(true)
     }
+    try { if (navigator.vibrate) navigator.vibrate(8) } catch {}
   }
   return (
     <div

@@ -26,7 +26,7 @@ export default async function Home({ searchParams }: { searchParams?: Record<str
         <div className="px-4 py-6"><HomeCta /></div>
       ) : (
         <>
-      <section className="brand-gradient text-white relative overflow-hidden">
+      <section className="brand-gradient text-white relative overflow-hidden glass-card">
         {/* AI themed background overlay */}
         <div className="absolute inset-0 pointer-events-none">
           <img
@@ -45,7 +45,7 @@ export default async function Home({ searchParams }: { searchParams?: Record<str
           </div>
         </div>
       </section>
-      <section className="relative mx-auto max-w-6xl px-6 py-6">
+      <section className="relative mx-auto max-w-6xl px-6 py-6 glass-card">
         <div className="mb-3 text-center">
           <h2 className="text-lg md:text-xl font-bold text-plum">Recommended for you</h2>
         </div>

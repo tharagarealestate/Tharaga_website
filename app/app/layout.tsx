@@ -9,7 +9,20 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
+      <head>
+        <link rel="manifest" href="/manifest.webmanifest" />
+        <meta name="theme-color" content="#6e0d25" />
+      </head>
       <body className="font-inter bg-brandWhite text-plum">
+        <script dangerouslySetInnerHTML={{ __html: `
+          (function(){
+            if ('serviceWorker' in navigator) {
+              window.addEventListener('load', function(){
+                navigator.serviceWorker.register('/sw.js').catch(function(){});
+              });
+            }
+          })();
+        `}} />
         <header className="border-b border-plum/10 bg-white/80 backdrop-blur supports-[backdrop-filter]:bg-white/60">
           <nav className="mx-auto max-w-6xl px-6 py-3 flex gap-4 text-sm">
             <a href="/" className="font-bold">Tharaga</a>
@@ -20,6 +33,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <a href="/tools/voice-tamil" className="hover:underline">தமிழ் Voice</a>
             <a href="/tours" className="hover:underline">Tours</a>
             <a href="/dashboard/market" className="hover:underline">Market</a>
+            <a href="/saved" className="hover:underline">Saved</a>
           </nav>
         </header>
         {children}

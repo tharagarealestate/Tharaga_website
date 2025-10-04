@@ -8,7 +8,8 @@ self.addEventListener('install', (event) => {
       '/rating/',
       '/registration/',
       '/css/brand.css',
-      '/manifest.webmanifest'
+      '/manifest.webmanifest',
+      '/offline.html'
     ]))
   );
 });

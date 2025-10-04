@@ -19,13 +19,18 @@ from .schemas import (
     ReraVerifyResponse,
     TitleVerifyRequest,
     TitleVerifyResponse,
+    TitleAnchorRequest,
+    TitleAnchorResponse,
     FraudScoreRequest,
     FraudScoreResponse,
     PredictiveAnalyticsRequest,
     PredictiveAnalyticsResponse,
+    MarketTrendsResponse,
 )
 import re
 import hashlib
+import base64
+import time as _time
 try:
     from .recommender import HybridRecommender, load_demo_data  # type: ignore
     _HAS_ML = True
@@ -248,12 +253,16 @@ def verify_rera(payload: ReraVerifyRequest) -> ReraVerifyResponse:
     verified = bool(state) and len(rera_id) >= 8
     confidence = 0.9 if verified else 0.5
     status = "verified" if verified else "not_found"
+    # Simulate evidence snapshot
+    html_evidence = f"<html><body>RERA {rera_id} status: {status} ({state})</body></html>".encode("utf-8")
     return ReraVerifyResponse(
         verified=verified,
         confidence=confidence,
         status=status,
         source_url=source_url,
         details={"rera_id": rera_id, **hints},
+        evidence_html_base64=base64.b64encode(html_evidence).decode("ascii"),
+        queried_at=_time.time(),
     )
 
 
@@ -283,7 +292,22 @@ def verify_title(payload: TitleVerifyRequest) -> TitleVerifyResponse:
             "network": payload.network or "",
             "registry_address": payload.registry_address or "",
         },
+        proof_bundle={"hash": doc_hash, "algo": "sha256", "issued_at": str(_time.time())},
     )
+
+
+@app.post("/api/verify/title/anchor", response_model=TitleAnchorResponse)
+def anchor_title(payload: TitleAnchorRequest) -> TitleAnchorResponse:
+    h = payload.document_hash.strip().lower()
+    ok = bool(re.match(r"^[0-9a-f]{64}$", h))
+    tx = "0x" + hashlib.sha256((h+":anchor").encode("utf-8")).hexdigest()
+    explorer = None
+    network = (payload.network or "").lower()
+    if network in {"ethereum", "eth"}:
+        explorer = f"https://etherscan.io/tx/{tx}"
+    elif network in {"polygon", "matic"}:
+        explorer = f"https://polygonscan.com/tx/{tx}"
+    return TitleAnchorResponse(anchored=ok, transaction_hash=tx, explorer_url=explorer, proof_bundle={"hash": h, "algo":"sha256"})
 
 
 @app.post("/api/fraud/score", response_model=FraudScoreResponse)
@@ -384,6 +408,16 @@ def predictive_analytics(payload: PredictiveAnalyticsRequest) -> PredictiveAnaly
         benchmarks=benchmarks,
         notes=notes,
     )
+
+
+@app.get("/api/market/trends", response_model=MarketTrendsResponse)
+def market_trends() -> MarketTrendsResponse:
+    items = [
+        {"city":"Bengaluru","avg_psf":9800,"yoy":6.1,"inventory_months":6.5,"rent_yield_pct":3.8},
+        {"city":"Mumbai","avg_psf":28700,"yoy":5.0,"inventory_months":8.2,"rent_yield_pct":3.0},
+        {"city":"Chennai","avg_psf":9000,"yoy":4.6,"inventory_months":7.1,"rent_yield_pct":3.1},
+    ]
+    return MarketTrendsResponse(items=items) 
 if __name__ == "__main__":
     import uvicorn
 

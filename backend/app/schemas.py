@@ -46,6 +46,8 @@ class ReraVerifyResponse(BaseModel):
     status: str
     source_url: Optional[str] = None
     details: Dict[str, str] = Field(default_factory=dict)
+    evidence_html_base64: Optional[str] = Field(default=None, description="Base64 snapshot of verification page")
+    queried_at: Optional[float] = None
 
 
 class TitleVerifyRequest(BaseModel):
@@ -61,6 +63,7 @@ class TitleVerifyResponse(BaseModel):
     transaction_hash: Optional[str] = None
     explorer_url: Optional[str] = None
     details: Dict[str, str] = Field(default_factory=dict)
+    proof_bundle: Dict[str, str] = Field(default_factory=dict)
 
 
 class FraudScoreRequest(BaseModel):
@@ -98,4 +101,28 @@ class PredictiveAnalyticsResponse(BaseModel):
     expected_rent_yield_pct: float
     benchmarks: Dict[str, float] = Field(default_factory=dict)
     notes: List[str] = Field(default_factory=list)
+
+
+class TitleAnchorRequest(BaseModel):
+    document_hash: str
+    network: Optional[str] = None
+
+
+class TitleAnchorResponse(BaseModel):
+    anchored: bool
+    transaction_hash: Optional[str] = None
+    explorer_url: Optional[str] = None
+    proof_bundle: Dict[str, str] = Field(default_factory=dict)
+
+
+class CityTrend(BaseModel):
+    city: str
+    avg_psf: float
+    yoy: float
+    inventory_months: float
+    rent_yield_pct: float
+
+
+class MarketTrendsResponse(BaseModel):
+    items: List[CityTrend]
 

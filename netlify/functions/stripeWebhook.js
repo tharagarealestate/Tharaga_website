@@ -61,9 +61,23 @@ function deriveTierFromPrice(obj){
 
 async function upsertEntitlement(payload){
   try {
-    // Placeholder: integrate Supabase row upsert when table available.
-    // Example: supabase.from('org_subscriptions').upsert({...})
-    console.log('[entitlement]', payload)
+    const { createClient } = require('@supabase/supabase-js')
+    const url = process.env.SUPABASE_URL
+    const key = process.env.SUPABASE_SERVICE_ROLE
+    if (!url || !key) { console.warn('[entitlement] missing supabase env'); return }
+    const sb = createClient(url, key)
+
+    const email = payload.email || null
+    const tier = payload.tier || 'growth'
+    const status = payload.status || 'active'
+    const stripe_customer_id = payload.customer_id || null
+    const stripe_price_id = payload.price_id || null
+
+    await sb.from('org_subscriptions').upsert({
+      email, tier, status, stripe_customer_id, stripe_price_id
+    }, { onConflict: 'email' })
+
+    console.log('[entitlement] upserted', email, tier, status)
   } catch (e) {
     console.error('[entitlement] failed', e)
   }

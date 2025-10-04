@@ -3,10 +3,13 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "test:e2e": "playwright test"
+    "serve": "npx http-server -p 43217 -a 127.0.0.1 -c-1 .",
+    "test:e2e": "PLAYWRIGHT_BASE_URL=http://localhost:43217 start-server-and-test serve http://localhost:43217 'playwright test'"
   },
   "devDependencies": {
     "@playwright/test": "^1.55.0",
-    "sirv-cli": "^2.0.2"
+    "sirv-cli": "^2.0.2",
+    "start-server-and-test": "^2.0.3",
+    "http-server": "^14.1.1"
   }
 }

@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Compliance & Trust</title>
+  <style>
+    :root { --text:#0b0b0b; --muted:#666; --ok:#16a34a; }
+    body { font-family: Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial; margin:0; padding:24px; background:#fff; color:var(--text); }
+    header { display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; }
+    .grid { display:grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap:12px; }
+    .card { background:#fff; border:1px solid #e5e7eb; border-radius:12px; padding:16px; box-shadow:0 2px 6px rgba(0,0,0,.04); }
+    pre { background:#0b0b0b; color:#fff; padding:12px; border-radius:12px; overflow:auto; }
+    .pill { display:inline-block; padding:2px 8px; border-radius:9999px; background:#f3f4f6; font-size:12px; }
+  </style>
+</head>
+<body>
+  <header>
+    <div>
+      <h1>Compliance & Trust</h1>
+      <p class="sub" style="color:#666;margin:0">Policies, controls, and audit readiness buyers and builders can rely on.</p>
+    </div>
+    <a href="/" style="color:#111;text-decoration:none">← Back</a>
+  </header>
+
+  <section class="grid">
+    <div class="card">
+      <h2 style="margin:0 0 8px">Security Controls</h2>
+      <ul>
+        <li>Role-based access control (RLS, least-privilege)</li>
+        <li>Signed URLs for documents; PII redaction</li>
+        <li>Tamper-evident verification logs</li>
+        <li>Backups and disaster recovery testing</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h2 style="margin:0 0 8px">Policies</h2>
+      <ul>
+        <li>Privacy Policy</li>
+        <li>Terms of Service</li>
+        <li>Incident Response & Disclosure</li>
+        <li>Data Retention & Deletion</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="card" style="margin-top:12px">
+    <h2 style="margin:0 0 8px">Sample Trust JSON</h2>
+    <pre id="json">{
+  "dataClassification": ["public", "internal", "confidential"],
+  "piiProtection": { "status": "enabled", "mechanisms": ["regex redaction", "field-level encryption"] },
+  "audits": [{ "type": "internal", "quarter": "Q3", "result": "passed" }]
+}</pre>
+  </section>
+
+  <section class="card" style="margin-top:12px">
+    <h2 style="margin:0 0 8px">Status</h2>
+    <div class="pill">All systems operational</div>
+  </section>
+</body>
+</html>

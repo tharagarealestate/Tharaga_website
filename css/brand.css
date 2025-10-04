@@ -1,0 +1,40 @@
+:root{
+  --brand:#6e0d25;           /* Tharaga burgundy */
+  --brand-600:#8a1637;
+  --brand-2:#b14c6e;         /* gradient mate */
+  --ink:#1b1b1b;
+  --cream:#f7efe7;
+  --muted:#6b7280;
+  --ring: rgba(212,175,55,.3); /* subtle gold */
+  --ok:#22c55e; --warn:#f59e0b; --bad:#ef4444;
+}
+
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;background:var(--cream);color:var(--ink);font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
+
+.container{max-width:1100px;margin:0 auto;padding:24px}
+.h1{font-weight:800;font-size:28px;line-height:1.2;margin:0 0 6px;letter-spacing:.01em}
+.sub{color:var(--muted)}
+
+.card{background:#fff;border:1px solid #f0d9d9;border-radius:16px;box-shadow:0 8px 28px rgba(110,13,37,.08);padding:16px}
+.card:hover{box-shadow:0 16px 36px rgba(110,13,37,.14)}
+
+.grid{display:grid;gap:14px}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:10px 14px;border-radius:12px;border:1px solid var(--brand);background:var(--brand);color:#fff;font-weight:700;cursor:pointer;transition:transform .15s ease, box-shadow .15s ease}
+.btn:hover{transform:translateY(-1px);box-shadow:0 6px 14px rgba(110,13,37,.18)}
+.btn.secondary{background:#fff;color:var(--brand)}
+.btn.ghost{background:transparent;color:var(--brand);border-color:transparent}
+.btn:disabled{opacity:.6;cursor:not-allowed}
+
+.input,select,textarea{padding:10px 12px;border-radius:10px;border:1px solid #e5e7eb;background:#fff;outline:none;width:100%;font-size:14px;transition:all .15s ease}
+.input:hover,select:hover,textarea:hover{border-color:var(--brand);background:#fffafa;box-shadow:0 2px 6px rgba(110,13,37,.06)}
+.input:focus,select:focus,textarea:focus{box-shadow:0 0 0 3px var(--ring);border-color:var(--brand)}
+
+.kpi{font-size:28px;font-weight:900}
+.pill{display:inline-block;padding:4px 10px;border-radius:9999px;background:#fff;border:1px solid #eee;font-size:12px}
+.badge{display:inline-flex;align-items:center;gap:8px;padding:8px 12px;border-radius:9999px;border:1px solid #e5e7eb}
+.badge.ok{border-color:var(--ok);color:var(--ok);font-weight:700}
+
+@media (max-width:720px){ .container{padding:16px} }

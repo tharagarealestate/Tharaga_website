@@ -98,6 +98,15 @@ async function init(){
     if (mapWrap) mapWrap.style.display = 'none';
   }
 
+  // 3D / 360 Tour
+  const tourWrap = qs('#tourWrap');
+  const tourUrl = p.tourUrl || p.tour_url || '';
+  if (tourWrap && tourUrl) {
+    tourWrap.innerHTML = `<div style="position:relative;padding-top:56.25%;border-radius:12px;overflow:hidden;border:1px solid var(--border)">
+      <iframe src="${tourUrl}" allow="xr-spatial-tracking; gyroscope; accelerometer; vr; fullscreen" allowfullscreen style="position:absolute;inset:0;width:100%;height:100%;border:0"></iframe>
+    </div>`;
+  }
+
   // Owner
   const wa = (p.owner&&p.owner.whatsapp) || p.ownerWhatsapp || '';
   qs('#ownerName').textContent = (p.owner&&p.owner.name) || p.ownerName || 'Owner';

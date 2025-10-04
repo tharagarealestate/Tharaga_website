@@ -59,6 +59,24 @@ export default async function Home({ searchParams }: { searchParams?: Record<str
         </div>
         <RecommendationsCarousel items={items} isLoading={false} error={error} />
       </section>
+
+      {/* Finance and risk tools teaser */}
+      <section className="mx-auto max-w-6xl px-6 pb-10">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <a href="/tools/cost-calculator" className="rounded-xl border border-plum/10 bg-brandWhite p-4 hover:shadow-subtle transition-shadow">
+            <div className="font-semibold">Cost calculator</div>
+            <p className="text-sm text-plum/70">Stamp duty, registration, GST, fees — all-in cost.</p>
+          </a>
+          <a href="/tools/currency-risk" className="rounded-xl border border-plum/10 bg-brandWhite p-4 hover:shadow-subtle transition-shadow">
+            <div className="font-semibold">Currency risk (NRI)</div>
+            <p className="text-sm text-plum/70">Stress-test INR vs USD/AED/GBP over holding period.</p>
+          </a>
+          <a href="/tools/vastu" className="rounded-xl border border-plum/10 bg-brandWhite p-4 hover:shadow-subtle transition-shadow">
+            <div className="font-semibold">Vastu checker</div>
+            <p className="text-sm text-plum/70">Validate entrance, kitchen, bedrooms, and sunlight flow.</p>
+          </a>
+        </div>
+      </section>
         </>
       )}
     </main>

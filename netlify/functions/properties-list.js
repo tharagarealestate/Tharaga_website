@@ -15,7 +15,7 @@ exports.handler = async () => {
     const supabase = createClient(url, key)
     let { data, error } = await supabase
       .from('properties')
-      .select('id,title,description,city,locality,property_type,bedrooms,bathrooms,price_inr,sqft,images,listed_at,furnished,facing,category,project,builder')
+      .select('id,title,description,city,locality,property_type,bedrooms,bathrooms,price_inr,sqft,images,listed_at,furnished,facing,category,project,builder,is_verified,listing_status,tour_url,rera_id')
       .eq('is_verified', true)
       .or('listing_status.eq.active,listing_status.is.null')
       .order('listed_at', { ascending: false })
@@ -24,7 +24,7 @@ exports.handler = async () => {
       console.error('[properties-list] Primary query failed:', error?.message || error)
       const fb = await supabase
         .from('properties')
-        .select('id,title,description,city,locality,property_type,bedrooms,bathrooms,price_inr,sqft,images,listed_at,furnished,facing,category,project,builder')
+        .select('id,title,description,city,locality,property_type,bedrooms,bathrooms,price_inr,sqft,images,listed_at,furnished,facing,category,project,builder,is_verified,listing_status,tour_url,rera_id')
         .order('listed_at', { ascending: false })
         .limit(200)
       data = fb.data || []
@@ -35,7 +35,7 @@ exports.handler = async () => {
       title: p.title,
       project: p.project || '',
       builder: p.builder || '',
-      listingStatus: 'Verified',
+      listingStatus: p.is_verified ? 'Verified' : (p.listing_status || ''),
       category: p.category || '',
       type: p.property_type || '',
       bhk: p.bedrooms || null,
@@ -54,7 +54,8 @@ exports.handler = async () => {
       lng: null,
       images: Array.isArray(p.images) ? p.images : (typeof p.images === 'string' ? (safeParseArray(p.images)) : []),
       amenities: [],
-      rera: '',
+      rera: p.rera_id || '',
+      tourUrl: p.tour_url || '',
       docsLink: '',
       owner: { name: 'Owner', phone: '', whatsapp: '' },
       postedAt: p.listed_at || null,

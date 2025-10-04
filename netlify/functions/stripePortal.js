@@ -10,11 +10,16 @@ exports.handler = async (event) => {
     if (!stripeSecret) return json({ error: 'Stripe env missing' }, 500)
 
     const stripe = Stripe(stripeSecret)
-    const { customer_id, return_url } = JSON.parse(event.body || '{}')
-    if (!customer_id) return json({ error: 'customer_id required' }, 400)
+    const { customer_id, email, return_url } = JSON.parse(event.body || '{}')
+    let customerId = customer_id
+    if (!customerId && email) {
+      const list = await stripe.customers.list({ email, limit: 1 })
+      customerId = list?.data?.[0]?.id || null
+    }
+    if (!customerId) return json({ error: 'customer not found' }, 400)
 
     const session = await stripe.billingPortal.sessions.create({
-      customer: customer_id,
+      customer: customerId,
       return_url: return_url || process.env.PORTAL_RETURN_URL || 'https://auth.tharaga.co.in/pricing/'
     })
     return json({ url: session.url })

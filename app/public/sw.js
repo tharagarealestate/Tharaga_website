@@ -35,3 +35,17 @@ self.addEventListener('fetch', (event) => {
     );
   }
 });
+
+// Listen for messages to cache additional URLs (e.g., saved images)
+self.addEventListener('message', (event) => {
+  try{
+    const data = event.data || {}
+    if (data.type === 'cacheUrls' && Array.isArray(data.urls)) {
+      event.waitUntil(
+        caches.open('thg-v1').then((cache) => Promise.all(
+          data.urls.map((u) => fetch(u, { mode: 'no-cors' }).then((res) => cache.put(u, res)).catch(()=>null))
+        ))
+      )
+    }
+  } catch(_){}
+})

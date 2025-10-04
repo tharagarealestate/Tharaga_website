@@ -1,6 +1,6 @@
 (function(){
   class ThgCta extends HTMLElement {
-    static get observedAttributes(){ return ['city','budget','open','phone','bg','image','blur','theme','height']; }
+    static get observedAttributes(){ return ['city','budget','open','phone','bg','image','blur','theme','accent','variant','wa','wa_autoplay','wa_to','whatsapp_to','height']; }
     connectedCallback(){ this.render(); }
     attributeChangedCallback(){ this.render(); }
     render(){
@@ -12,6 +12,11 @@
       const image = this.getAttribute('image') || '';
       const blur = this.getAttribute('blur') || this.getAttribute('bg_blur') || '';
       const theme = this.getAttribute('theme') || '';
+      const accent = this.getAttribute('accent') || '';
+      const variant = this.getAttribute('variant') || '';
+      const wa = this.getAttribute('wa') || '';
+      const waAutoplay = this.getAttribute('wa_autoplay') || '';
+      const waTo = this.getAttribute('wa_to') || this.getAttribute('whatsapp_to') || '';
       const qs = [
         'embed=cta',
         city ? `city=${encodeURIComponent(city)}` : '',
@@ -21,7 +26,12 @@
         bg ? `bg=${encodeURIComponent(bg)}` : '',
         image ? `image=${encodeURIComponent(image)}` : '',
         blur ? `blur=${encodeURIComponent(blur)}` : '',
-        theme ? `theme=${encodeURIComponent(theme)}` : ''
+        theme ? `theme=${encodeURIComponent(theme)}` : '',
+        accent ? `accent=${encodeURIComponent(accent)}` : '',
+        variant ? `variant=${encodeURIComponent(variant)}` : '',
+        wa ? `wa=${encodeURIComponent(wa)}` : '',
+        waAutoplay ? `wa_autoplay=${encodeURIComponent(waAutoplay)}` : '',
+        waTo ? `wa_to=${encodeURIComponent(waTo)}` : ''
       ].filter(Boolean).join('&');
       const src = `/cta-embed.html?${qs}`;
 

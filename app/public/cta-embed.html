@@ -23,7 +23,7 @@
 
     .cta {
       position: relative;
-      background: radial-gradient(1200px 200px at 20% -50%, rgba(110,13,37,0.45), transparent),
+      background: radial-gradient(1200px 200px at 20% -50%, color-mix(in srgb, var(--brand) 45%, transparent), transparent),
                   linear-gradient(180deg, var(--surface-2), var(--surface));
       color: var(--text);
       padding: 18px 22px;
@@ -124,8 +124,8 @@
   <div class="bg-img" id="bg-img" aria-hidden="true" style="display:none"></div>
   <div class="bg-tint" aria-hidden="true"></div>
   <section class="cta" id="buyer-cta">
-    <h2>Get 3 verified matches</h2>
-    <p>Share your WhatsApp or phone. Our team sends hand‑picked options fast.</p>
+    <h2 id="cta-title">Get 3 verified matches</h2>
+    <p id="cta-sub">Share your WhatsApp or phone. Our team sends hand‑picked options fast.</p>
     <div class="row">
       <div class="field-inline">
         <label for="cta-phone" class="visually-hidden">WhatsApp or phone</label>
@@ -286,8 +286,22 @@
       const btn = document.getElementById('lead-submit');
       btn.disabled = true; btn.textContent = 'Sending…';
       const selectedPid = (document.getElementById('lead-prop')||{}).value||'';
-      const payload = { property_id: selectedPid || null, name, phone: normalizePhone(phone), email, message: [ctx || buildCtxFromQuery(), message].filter(Boolean).join(' • '), _hp: (document.getElementById('lead-company')||{}).value||'' };
+      // Build UTM/meta string to enrich CRM without schema changes
+      function buildUtm(){
+        try {
+          const p = window.CTA_PARAMS instanceof URLSearchParams ? window.CTA_PARAMS : new URLSearchParams(location.search);
+          const parts = [];
+          const keys = ['utm_source','utm_medium','utm_campaign','utm_content','utm_term','gclid','fbclid','ref'];
+          keys.forEach(k=>{ const v=p.get(k); if(v) parts.push(`${k}=${v}`); });
+          const ref = (document.referrer||'').slice(0,160);
+          if (ref) parts.push(`referrer=${ref}`);
+          return parts.length ? `utm(${parts.join('&')})` : '';
+        } catch(_) { return ''; }
+      }
+      const richMessage = [ctx || buildCtxFromQuery(), message, buildUtm()].filter(Boolean).join(' • ');
+      const payload = { property_id: selectedPid || null, name, phone: normalizePhone(phone), email, message: richMessage, _hp: (document.getElementById('lead-company')||{}).value||'' };
       try {
+        try { window.thgTrack && window.thgTrack('cta_submit', { location: 'cta-embed' }); } catch(_){ }
         const res = await fetch('/api/leads', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
         const data = await res.json();
         if (data && data.ok) {
@@ -296,6 +310,22 @@
           postToParent({ type: 'tharaga_lead_ok', payload });
           // Keep the modal for a moment to let users view picks
           loadRecommendations();
+          // Optional auto-open WhatsApp after success
+          try {
+            const autoWa = (window.CTA_PARAMS && (window.CTA_PARAMS.get('wa_autoplay') === '1' || window.CTA_PARAMS.get('wa') === '1'));
+            const waTo = window.CTA_PARAMS && (window.CTA_PARAMS.get('wa_to') || window.CTA_PARAMS.get('whatsapp_to'));
+            if (autoWa && waTo) {
+              const target = normalizePhone(waTo);
+              const textParts = [
+                name ? `Hi, I'm ${name}.` : 'Hi, I just requested matches.',
+                (ctx || buildCtxFromQuery()) ? `Context: ${(ctx || buildCtxFromQuery())}.` : '',
+                phone ? `Phone: ${normalizePhone(phone)}.` : ''
+              ].filter(Boolean);
+              const text = encodeURIComponent(textParts.join(' '));
+              const link = `https://wa.me/${target}?text=${text}`;
+              window.open(link, '_blank', 'noopener');
+            }
+          } catch(_){}
           setTimeout(() => { closeModal(); }, 1400);
         } else {
           const friendly = (data && typeof data.error === 'string' && /schema cache|relation|table/i.test(data.error))
@@ -313,11 +343,15 @@
     }
     document.getElementById('lead-submit')?.addEventListener('click', submitLead);
     modal.addEventListener('keydown', (e)=>{ if (e.key === 'Enter' && (e.target.tagName === 'INPUT')) { e.preventDefault(); submitLead(); }});
+    // Notify parent on open/close for analytics hooks
+    openBtn?.addEventListener('click', ()=>{ try { postToParent({ type: 'tharaga_cta_open' }); } catch(_){} });
+    cancelBtn?.addEventListener('click', ()=>{ try { postToParent({ type: 'tharaga_cta_close' }); } catch(_){} });
   </script>
   <script>
     // Prefill from query; support durable embed minimal layout + background psychology themes
     try {
       const params = new URLSearchParams(location.search);
+      window.CTA_PARAMS = params;
       const inlinePhone = params.get('phone') || params.get('whatsapp') || '';
       if (inlinePhone) { const el = document.getElementById('cta-phone'); if (el) el.value = inlinePhone; }
 
@@ -346,6 +380,48 @@
         bgEl.style.display = 'block';
       }
 
+      // Accent color control (optionally by theme or &accent=#hex)
+      const ACCENTS = {
+        warm_home: '#6e0d25',
+        modern_living: '#284d6f',
+        skyline_twilight: '#5b3cc4',
+        greenery_soft: '#2a7a4b',
+        luxury_detail: '#8a1637'
+      };
+      const accentParam = params.get('accent');
+      const accent = (accentParam && /^#?[0-9a-f]{6}$/i.test(accentParam))
+        ? (accentParam.startsWith('#') ? accentParam : `#${accentParam}`)
+        : (ACCENTS[theme] || ACCENTS.warm_home);
+      try {
+        const d = document.documentElement.style;
+        d.setProperty('--brand', accent);
+        function darken(hex, f){ const h = hex.replace('#',''); const r=parseInt(h.slice(0,2),16), g=parseInt(h.slice(2,4),16), b=parseInt(h.slice(4,6),16); const apply=(v)=>Math.max(0,Math.min(255,Math.round(v*(1-f)))); return `#${apply(r).toString(16).padStart(2,'0')}${apply(g).toString(16).padStart(2,'0')}${apply(b).toString(16).padStart(2,'0')}`; }
+        d.setProperty('--brand-600', darken(accent, 0.12));
+        const m = accent.match(/[0-9a-f]{6}/i);
+        if (m) {
+          const R=parseInt(m[0].slice(0,2),16), G=parseInt(m[0].slice(2,4),16), B=parseInt(m[0].slice(4,6),16);
+          d.setProperty('--ring', `rgba(${R},${G},${B},0.35)`);
+        }
+      } catch(_){ }
+
+      // Copy personalization with city
+      const city = (params.get('city')||'').trim();
+      if (city) {
+        const title = document.getElementById('cta-title');
+        if (title) title.textContent = `Get 3 verified matches in ${city}`;
+      }
+
+      // Lightweight A/B copy variants (&variant=speed|trust or &ab=a|b)
+      const variant = (params.get('variant') || params.get('ab') || '').toLowerCase();
+      const sub = document.getElementById('cta-sub');
+      if (sub) {
+        if (variant === 'speed' || variant === 'b') {
+          sub.textContent = 'Instant hand‑picked options on WhatsApp. No spam.';
+        } else if (variant === 'trust') {
+          sub.textContent = 'Only verified listings. Human‑curated, zero spam.';
+        }
+      }
+
       const map = [ ['lead-name', 'name'], ['lead-phone', 'phone'], ['lead-email', 'email'], ['lead-ctx','ctx'], ['lead-message','message'] ];
       map.forEach(([id, key]) => { const v = params.get(key); if (v) { const el = document.getElementById(id); if (el) el.value = v; }});
 
@@ -358,6 +434,8 @@
       if (params.get('open') === '1') openModal();
       // Pre-load recommendations once when opened
       openBtn?.addEventListener('click', () => { setTimeout(loadRecommendations, 50); });
+      // Enter key on inline phone opens the micro form for speed
+      document.getElementById('cta-phone')?.addEventListener('keydown', (e)=>{ if (e.key === 'Enter') { e.preventDefault(); openModal(); }});
       // Re-load on ctx input changes (debounced)
       const ctxEl = document.getElementById('lead-ctx');
       let t = null; ctxEl?.addEventListener('input', () => { clearTimeout(t); t = setTimeout(loadRecommendations, 350); });

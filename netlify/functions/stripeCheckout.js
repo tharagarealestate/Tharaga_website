@@ -7,21 +7,28 @@ exports.handler = async (event) => {
     if (event.httpMethod !== 'POST') return json({ error: 'Method not allowed' }, 405)
 
     const stripeSecret = process.env.STRIPE_SECRET_KEY
-    const priceGrowth = process.env.STRIPE_PRICE_GROWTH
-    const priceScale  = process.env.STRIPE_PRICE_SCALE
-    if (!stripeSecret || !priceGrowth || !priceScale) return json({ error: 'Stripe env missing' }, 500)
+    const priceGrowthMonthly = process.env.STRIPE_PRICE_GROWTH
+    const priceScaleMonthly  = process.env.STRIPE_PRICE_SCALE
+    const priceGrowthAnnual = process.env.STRIPE_PRICE_GROWTH_ANNUAL
+    const priceScaleAnnual  = process.env.STRIPE_PRICE_SCALE_ANNUAL
+    if (!stripeSecret || !priceGrowthMonthly || !priceScaleMonthly) return json({ error: 'Stripe env missing' }, 500)
 
     const stripe = Stripe(stripeSecret)
     const body = JSON.parse(event.body || '{}')
 
     const { plan = 'growth', email = null, annual = false, success_url, cancel_url, metadata = {} } = body
 
-    const priceId = plan === 'scale' ? priceScale : priceGrowth
+    const priceId = (function(){
+      if (plan === 'scale') {
+        return annual ? (priceScaleAnnual || priceScaleMonthly) : priceScaleMonthly
+      }
+      return annual ? (priceGrowthAnnual || priceGrowthMonthly) : priceGrowthMonthly
+    })()
 
     const session = await stripe.checkout.sessions.create({
       mode: 'subscription',
       payment_method_types: ['card', 'upi'],
-      line_items: [{ price: priceId, quantity: 1, ...(annual ? { price_data: undefined } : {}) }],
+      line_items: [{ price: priceId, quantity: 1 }],
       customer_email: email || undefined,
       allow_promotion_codes: true,
       success_url: (success_url || process.env.CHECKOUT_SUCCESS_URL || 'https://auth.tharaga.co.in/pricing/?success=1') + '&session_id={CHECKOUT_SESSION_ID}',

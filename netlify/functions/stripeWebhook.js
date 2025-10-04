@@ -17,13 +17,27 @@ exports.handler = async (event) => {
   try {
     switch (evt.type) {
       case 'checkout.session.completed': {
-        // TODO: map to Supabase user/org by email or metadata
+        const session = evt.data.object
+        await upsertEntitlement({
+          email: session.customer_details?.email,
+          customer_id: session.customer,
+          price_id: session?.line_items?.data?.[0]?.price?.id || null,
+          status: 'active',
+          tier: deriveTierFromPrice(session)
+        })
         break
       }
-      case 'customer.subscription.updated':
       case 'customer.subscription.created':
+      case 'customer.subscription.updated':
       case 'customer.subscription.deleted': {
-        // TODO: update entitlements in Supabase (tier/active_until)
+        const sub = evt.data.object
+        await upsertEntitlement({
+          email: sub?.metadata?.email || null,
+          customer_id: sub.customer,
+          price_id: sub.items?.data?.[0]?.price?.id || null,
+          status: sub.status,
+          tier: deriveTierFromPrice(sub)
+        })
         break
       }
       default:
@@ -34,4 +48,23 @@ exports.handler = async (event) => {
   }
 
   return { statusCode: 200, body: JSON.stringify({ received: true }) }
+}
+
+function deriveTierFromPrice(obj){
+  try {
+    const id = obj?.items?.data?.[0]?.price?.id || obj?.line_items?.data?.[0]?.price?.id || ''
+    if (!id) return 'growth'
+    if (/scale/i.test(id)) return 'scale'
+    return 'growth'
+  } catch { return 'growth' }
+}
+
+async function upsertEntitlement(payload){
+  try {
+    // Placeholder: integrate Supabase row upsert when table available.
+    // Example: supabase.from('org_subscriptions').upsert({...})
+    console.log('[entitlement]', payload)
+  } catch (e) {
+    console.error('[entitlement] failed', e)
+  }
 }

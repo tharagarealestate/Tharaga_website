@@ -66,6 +66,25 @@
   document.getElementById('growthCta')?.addEventListener('click', (e)=>{ e.preventDefault(); startCheckout('growth') })
   document.getElementById('scaleCta')?.addEventListener('click', (e)=>{ e.preventDefault(); startCheckout('scale') })
 
+  // Surface manage billing CTA when success
+  try {
+    const params = new URLSearchParams(location.search)
+    if (params.get('success') === '1') {
+      const box = document.createElement('div')
+      box.className = 'card'
+      box.style.marginTop = '12px'
+      box.innerHTML = '<div class="kpi">Payment received</div><div class="sub">We’ve emailed your receipt. You can manage your subscription from the Billing Portal.</div><div style="margin-top:10px"><button class="btn" id="openPortal">Open Billing Portal</button></div>'
+      document.querySelector('main.container')?.prepend(box)
+      document.getElementById('openPortal')?.addEventListener('click', async () => {
+        try {
+          const email = window.__thgUserEmail || null
+          const res = await postJSON('/api/billing-portal', { customer_id: window.__thgStripeCustomerId || '', return_url: location.origin + '/pricing/' })
+          const j = await res.json(); if (j.url) go(j.url); else alert('Unable to open portal')
+        } catch(_) { alert('Unable to open portal') }
+      })
+    }
+  } catch(_){ }
+
   // init defaults
   applyBillingMode();
   computeROI();

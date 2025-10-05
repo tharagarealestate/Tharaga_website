@@ -20,8 +20,8 @@ const config: Config = {
         cream: '#f7efe7',
       },
       fontFamily: {
-        inter: ['Inter', 'ui-sans-serif', 'system-ui'],
-        poppins: ['Poppins', 'ui-sans-serif', 'system-ui'],
+        ui: ['Manrope', 'Inter', 'ui-sans-serif', 'system-ui'],
+        display: ['Plus Jakarta Sans', 'Manrope', 'Inter', 'ui-sans-serif', 'system-ui'],
       },
       boxShadow: {
         subtle: '0 2px 16px rgba(0, 31, 77, 0.08)',

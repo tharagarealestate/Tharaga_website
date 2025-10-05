@@ -11,24 +11,25 @@
   <script src="/js/home.js" defer></script>
   <link rel="stylesheet" href="/css/brand.css" />
   <style>
-    :root { --brand:#6e0d25; --brand-600:#8a1637; --ink:#1b1b1b; --cream:#f7efe7; --muted:#6b7280; --gold:#d4af37; --ring:rgba(212,175,55,.35); }
-    body { font-family: Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial; margin:0; padding:0; background:var(--cream); color:var(--ink); }
+    :root { --brand:#6e0d25; --brand-600:#8a1637; --ink:#0f172a; --cream:#f7efe7; --muted:#4b5563; --gold:#d4af37; --ring:rgba(212,175,55,.30); --font-ui:'Manrope',Inter,system-ui,-apple-system,'Segoe UI',Roboto,Helvetica,Arial; --font-display:'Plus Jakarta Sans','Manrope',Inter,system-ui,-apple-system,'Segoe UI',Roboto,Helvetica,Arial; }
+    body { font-family: var(--font-ui); margin:0; padding:0; background:var(--cream); color:var(--ink); }
     a { color:#0b63ff; text-decoration:none }
     a:hover { text-decoration:underline }
     header.nav { position:sticky; top:0; z-index:20; backdrop-filter:saturate(1.2) blur(10px); background:rgba(255,255,255,.75); border-bottom:1px solid #eee }
     header.nav .inner { max-width:1100px; margin:0 auto; padding:10px 16px; display:flex; align-items:center; justify-content:space-between; gap:10px }
-    .brand { font-weight:900; letter-spacing:.3px; color:var(--brand) }
+    .brand { font-family: var(--font-display); font-weight:800; letter-spacing:.2px; color:var(--brand) }
     .pill { display:inline-flex; align-items:center; gap:8px; padding:6px 10px; border-radius:999px; background:#fff; border:1px solid #eee; font-size:12px }
-    .hero { position:relative; padding:56px 16px 28px; background: radial-gradient(900px 300px at 10% -10%, rgba(110,13,37,.10), transparent), linear-gradient(180deg, rgba(255,255,255,.9), rgba(255,255,255,.4)); }
+    .hero { position:relative; padding:56px 16px 28px; background: radial-gradient(900px 300px at 10% -10%, rgba(110,13,37,.06), transparent), linear-gradient(180deg, rgba(255,255,255,.85), rgba(255,255,255,.4)); }
     .hero .inner { max-width:1100px; margin:0 auto; display:grid; grid-template-columns: 1.1fr .9fr; gap:28px; align-items:center }
-    .h1 { font-weight:900; font-size:38px; line-height:1.1; margin:0 0 12px }
-    .sub { color:var(--muted); font-size:16px; margin:0 0 18px }
-    .search-card { background:#fff; border:1px solid #f0d9d9; border-radius:16px; box-shadow:0 12px 36px rgba(110,13,37,.12); padding:14px }
+    .h1 { font-family: var(--font-display); font-weight:700; font-size:36px; line-height:1.12; margin:0 0 12px; letter-spacing:.01em }
+    .sub { color:var(--muted); font-size:16px; margin:0 0 18px; letter-spacing:.01em }
+    .search-card { background:rgba(255,255,255,.72); border:1px solid rgba(110,13,37,.10); border-radius:16px; box-shadow:0 12px 36px rgba(110,13,37,.12); backdrop-filter: blur(12px) saturate(1.05); padding:14px }
     .search-grid { display:grid; grid-template-columns:1.2fr .8fr .8fr auto; gap:10px }
     .chip-row { display:flex; gap:8px; flex-wrap:wrap }
     .chip { padding:8px 10px; border-radius:999px; border:1px solid #e5e7eb; background:#fff; cursor:pointer; font-weight:600; font-size:13px }
     .chip[aria-pressed="true"] { background:var(--brand); color:#fff; border-color:var(--brand) }
-    .btn { display:inline-flex; align-items:center; justify-content:center; gap:8px; padding:10px 14px; border-radius:12px; border:1px solid var(--brand); background:var(--brand); color:#fff; font-weight:800 }
+    .btn { display:inline-flex; align-items:center; justify-content:center; gap:8px; padding:10px 14px; border-radius:12px; border:1px solid var(--brand); background:var(--brand); color:#fff; font-weight:650; transition: background .15s ease, box-shadow .15s ease, transform .15s ease }
+    .btn:hover{ background: var(--brand-600); transform: translateY(-1px); box-shadow: 0 8px 18px rgba(110,13,37,.22) }
     .btn.secondary { background:#fff; color:var(--brand) }
     .features { max-width:1100px; margin:26px auto; padding:0 16px; }
     .feature-grid { display:grid; grid-template-columns: repeat(3, 1fr); gap:14px }
@@ -36,7 +37,7 @@
     .how { background:linear-gradient(180deg, rgba(110,13,37,.04), rgba(110,13,37,.02)); border-top:1px solid #f2e6e6; border-bottom:1px solid #f2e6e6; }
     .how .inner { max-width:1100px; margin:0 auto; padding:24px 16px; display:grid; grid-template-columns: repeat(3, 1fr); gap:14px }
     .kpi-row { display:flex; gap:14px; flex-wrap:wrap; align-items:center }
-    .kpi { font-weight:900; font-size:24px }
+    .kpi { font-family: var(--font-display); font-weight:700; font-size:22px }
     .footer { max-width:1100px; margin:0 auto; padding:28px 16px; color:#666; font-size:14px }
     @media (max-width: 880px) {
       .hero .inner { grid-template-columns: 1fr; }
@@ -65,8 +66,8 @@
   <section class="hero">
     <div class="inner">
       <div>
-        <h1 class="h1" id="hero_title">Verified homes. Smart matches. Zero noise.</h1>
-        <p class="sub" id="hero_sub">We use AI to score listings, remove spam, and guide decisions with culture‑aware tools for India and NRIs.</p>
+        <h1 class="h1" id="hero_title">Classy homes. Clear choices. Calm experience.</h1>
+        <p class="sub" id="hero_sub">Verified listings with explainable AI. Culture‑aware tools like Vastu, climate, and voice—so families decide with confidence.</p>
         <div class="kpi-row" style="margin:12px 0 16px">
           <div class="pill"><span class="kpi" id="kpi_time">28h</span> saved per buyer</div>
           <div class="pill"><span class="kpi" id="kpi_pps">₹1,200</span> avg price/sqft gain</div>
@@ -111,8 +112,8 @@
         </div>
       </div>
       <div>
-        <div class="card">
-          <div style="font-weight:800;margin-bottom:6px">For Builders</div>
+        <div class="card glass-edge">
+          <div class="h1" style="font-size:20px">For builders who value clarity</div>
           <div class="sub" style="margin-bottom:10px">Cinematic storytelling, WhatsApp‑first automation, and AI lead scoring. Buyers see clarity; you see conversions.</div>
           <div class="row" style="gap:10px;flex-wrap:wrap">
             <a class="btn" href="/pricing/">See pricing</a>
@@ -120,10 +121,10 @@
             <a class="btn secondary" href="/ai-marketing-suite/">AI marketing suite</a>
           </div>
         </div>
-        <div class="card" style="margin-top:12px">
-          <div style="font-weight:800;margin-bottom:6px">Talk to us</div>
-          <div class="sub" style="margin-bottom:10px">Prefer WhatsApp? We’ll send a curated shortlist with explainers.</div>
-          <a class="btn" href="/cta-embed.html?embed=cta&open=1">Open instant assistant</a>
+        <div class="card glass-edge" style="margin-top:12px">
+          <div class="h1" style="font-size:20px">Prefer WhatsApp‑first help?</div>
+          <div class="sub" style="margin-bottom:10px">Open our assistant without leaving this page.</div>
+          <button class="btn" type="button" id="openAssistant">Open instant assistant</button>
         </div>
       </div>
     </div>
@@ -189,12 +190,12 @@
   </section>
 
   <section class="features" aria-labelledby="ctaTitle">
-    <div class="card" style="display:flex;align-items:center;justify-content:space-between;gap:14px">
+    <div class="card glass-edge" style="display:flex;align-items:center;justify-content:space-between;gap:14px">
       <div>
-        <div id="ctaTitle" class="h1" style="font-size:22px">Prefer a human‑like assistant?</div>
-        <div class="sub">Open our embedded CTA to start a guided conversation.</div>
+        <div id="ctaTitle" class="h1" style="font-size:22px">Talk to a calm assistant</div>
+        <div class="sub">Ask in your language. Get curated picks on WhatsApp.</div>
       </div>
-      <a class="btn" href="/cta-embed.html?embed=cta&open=1">Open assistant</a>
+      <button class="btn" type="button" id="openAssistant2">Open assistant</button>
     </div>
   </section>
 
@@ -203,6 +204,25 @@
   <script>
     document.getElementById('year').textContent = new Date().getFullYear();
     document.getElementById('openAuthBtn')?.addEventListener('click', function(){ try { window.__thgOpenAuthModal && window.__thgOpenAuthModal(); } catch(_){} });
+    function openAssistant(){
+      try {
+        const modal = document.createElement('div');
+        modal.style.cssText = 'position:fixed;inset:0;background:rgba(9,7,8,.72);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;padding:22px;z-index:80';
+        const box = document.createElement('div');
+        box.style.cssText = 'width:min(760px,96vw);border-radius:16px;overflow:hidden;border:1px solid rgba(255,255,255,.12);box-shadow:0 24px 50px rgba(0,0,0,.35)';
+        const iframe = document.createElement('iframe');
+        const qs = new URLSearchParams({ embed: 'cta', open: '1', theme: 'friendly_host', blur: '14' }).toString();
+        iframe.src = '/cta-embed.html?' + qs;
+        iframe.title = 'Tharaga assistant';
+        iframe.style.cssText = 'display:block;width:100%;height:520px;border:0;background:transparent';
+        box.appendChild(iframe);
+        modal.appendChild(box);
+        modal.addEventListener('click', (e)=>{ if (e.target === modal) document.body.removeChild(modal); });
+        document.body.appendChild(modal);
+      } catch(_){ location.href = '/cta-embed.html?embed=cta&open=1'; }
+    }
+    document.getElementById('openAssistant')?.addEventListener('click', openAssistant);
+    document.getElementById('openAssistant2')?.addEventListener('click', openAssistant);
   </script>
 </body>
 </html>

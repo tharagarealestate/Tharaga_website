@@ -17,8 +17,8 @@
     const hero = $('#hero_title');
     const sub = $('#hero_sub');
     const trust = $('#home_pill_trust');
-    if (hero) hero.textContent = `Verified homes in ${city}${budget}. Smart matches. Zero noise.`;
-    if (sub && profile.metro) sub.textContent = 'Near‑metro picks, price/ft² value, and clean documents. Culture‑aware tools for India & NRIs.';
+    if (hero) hero.textContent = `Classy homes in ${city}${budget}. Clear choices. Calm experience.`;
+    if (sub && profile.metro) sub.textContent = 'Near‑metro picks, price/ft² value, climate & vastu insights. Culture‑aware tools for India & NRIs.';
     if (trust && profile.metro) trust.textContent = 'Verified • Near‑Metro Focus';
   } catch(_){ }
 
@@ -66,4 +66,14 @@
 
   // Auth open from header
   $('#openAuthBtn')?.addEventListener('click', () => { try { window.__thgOpenAuthModal && window.__thgOpenAuthModal(); } catch(_){} });
+
+  // Hook buttons that should open the assistant inline if present on the page
+  ['openAssistant','openAssistant2'].forEach(id=>{
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.addEventListener('click', ()=>{
+      try { typeof window.openAssistant === 'function' ? window.openAssistant() : (document.getElementById(id).dataset.fallback='1'); }
+      catch(_) { location.href = '/cta-embed.html?embed=cta&open=1'; }
+    });
+  });
 })();

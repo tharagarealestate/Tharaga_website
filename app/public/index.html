@@ -5,35 +5,20 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Tharaga — Verified homes. Human UX. AI inside.</title>
   <meta name="description" content="Broker‑free, verified properties with AI‑matched discovery, cultural tools for India & NRI, and builder‑grade storytelling.">
+  <link rel="stylesheet" href="/css/brand.css" />
   <script type="module" src="/js/fragment-handle.js"></script>
   <script src="/js/auth-modal-stub.js" defer></script>
   <script src="/js/home.js" defer></script>
   <style>
-    body {
-      font-family: system-ui, sans-serif;
-      margin: 0;
-      padding: 0;
-      background: #fafafa;
-      color: #222;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      min-height: 100vh;
-      text-align: center;
-      flex-direction: column;
-    }
-    h1 { font-size: 2rem; margin-bottom: 1rem; }
-    p  { max-width: 600px; margin-bottom: 2rem; }
-    nav a {
-      margin: 0 1rem;
-      text-decoration: none;
-      font-weight: 500;
-      color: #0055ff;
-    }
-    nav a:hover { text-decoration: underline; }
-    footer { margin-top: 2rem; font-size: 0.9rem; color: #666; }
-
-    /* CTA container styles removed; replaced with direct link below */
+    :root{--brand:#6e0d25;--brand-600:#8a1637;--ink:#0f172a;--cream:#f7efe7;--muted:#4b5563;--ring:rgba(212,175,55,.30);--font-ui:'Manrope',Inter,system-ui,-apple-system,'Segoe UI',Roboto,Helvetica,Arial;--font-display:'Plus Jakarta Sans','Manrope',Inter,system-ui,-apple-system,'Segoe UI',Roboto,Helvetica,Arial}
+    body { font-family: var(--font-ui); margin: 0; padding: 0; background: var(--cream); color: var(--ink); }
+    header.nav .inner { max-width:1100px; margin:0 auto; padding:10px 16px; display:flex; align-items:center; justify-content:space-between; gap:10px }
+    .brand { font-family: var(--font-display); font-weight:800; letter-spacing:.2px; color:var(--brand) }
+    .h1 { font-family: var(--font-display); font-weight:700; letter-spacing:.01em }
+    .sub { color: var(--muted) }
+    .btn { display:inline-flex; align-items:center; justify-content:center; gap:8px; padding:10px 14px; border-radius:12px; border:1px solid var(--brand); background: var(--brand); color:#fff; font-weight:650 }
+    .btn:hover{ background: var(--brand-600) }
+    .card { background: rgba(255,255,255,.72); border:1px solid rgba(110,13,37,.10); border-radius:16px; padding:16px; box-shadow:0 10px 28px rgba(110,13,37,.10); backdrop-filter: blur(12px) }
   </style>
   
 </head>
@@ -55,8 +40,8 @@
   <section class="hero">
     <div class="inner">
       <div>
-        <h1 class="h1" id="hero_title">Verified homes. Smart matches. Zero noise.</h1>
-        <p class="sub" id="hero_sub">We use AI to score listings, remove spam, and guide decisions with culture‑aware tools for India and NRIs.</p>
+        <h1 class="h1" id="hero_title">Classy homes. Clear choices. Calm experience.</h1>
+        <p class="sub" id="hero_sub">Verified listings with explainable AI. Culture‑aware tools like Vastu, climate, and voice—so families decide with confidence.</p>
         <div class="kpi-row" style="margin:12px 0 16px">
           <div class="pill"><span class="kpi" id="kpi_time">28h</span> saved per buyer</div>
           <div class="pill"><span class="kpi" id="kpi_pps">₹1,200</span> avg price/sqft gain</div>
@@ -111,9 +96,9 @@
           </div>
         </div>
         <div class="card" style="margin-top:12px">
-          <div style="font-weight:800;margin-bottom:6px">Talk to us</div>
-          <div class="sub" style="margin-bottom:10px">Prefer WhatsApp? We’ll send a curated shortlist with explainers.</div>
-          <a class="btn" href="/cta-embed.html?embed=cta&open=1">Open instant assistant</a>
+          <div class="h1" style="font-size:20px">Prefer WhatsApp‑first help?</div>
+          <div class="sub" style="margin-bottom:10px">Open our assistant without leaving this page.</div>
+          <button class="btn" type="button" id="openAssistant">Open instant assistant</button>
         </div>
       </div>
     </div>
@@ -181,10 +166,10 @@
   <section class="features" aria-labelledby="ctaTitle">
     <div class="card" style="display:flex;align-items:center;justify-content:space-between;gap:14px">
       <div>
-        <div id="ctaTitle" class="h1" style="font-size:22px">Prefer a human‑like assistant?</div>
-        <div class="sub">Open our embedded CTA to start a guided conversation.</div>
+        <div id="ctaTitle" class="h1" style="font-size:22px">Talk to a calm assistant</div>
+        <div class="sub">Ask in your language. Get curated picks on WhatsApp.</div>
       </div>
-      <a class="btn" href="/cta-embed.html?embed=cta&open=1">Open assistant</a>
+      <button class="btn" type="button" id="openAssistant2">Open assistant</button>
     </div>
   </section>
 
@@ -193,6 +178,25 @@
   <script>
     document.getElementById('year').textContent = new Date().getFullYear();
     document.getElementById('openAuthBtn')?.addEventListener('click', function(){ try { window.__thgOpenAuthModal && window.__thgOpenAuthModal(); } catch(_){} });
+    function openAssistant(){
+      try {
+        const modal = document.createElement('div');
+        modal.style.cssText = 'position:fixed;inset:0;background:rgba(9,7,8,.72);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;padding:22px;z-index:80';
+        const box = document.createElement('div');
+        box.style.cssText = 'width:min(760px,96vw);border-radius:16px;overflow:hidden;border:1px solid rgba(255,255,255,.12);box-shadow:0 24px 50px rgba(0,0,0,.35)';
+        const iframe = document.createElement('iframe');
+        const qs = new URLSearchParams({ embed: 'cta', open: '1', theme: 'friendly_host', blur: '14' }).toString();
+        iframe.src = '/cta-embed.html?' + qs;
+        iframe.title = 'Tharaga assistant';
+        iframe.style.cssText = 'display:block;width:100%;height:520px;border:0;background:transparent';
+        box.appendChild(iframe);
+        modal.appendChild(box);
+        modal.addEventListener('click', (e)=>{ if (e.target === modal) document.body.removeChild(modal); });
+        document.body.appendChild(modal);
+      } catch(_){ location.href = '/cta-embed.html?embed=cta&open=1'; }
+    }
+    document.getElementById('openAssistant')?.addEventListener('click', openAssistant);
+    document.getElementById('openAssistant2')?.addEventListener('click', openAssistant);
   </script>
 </body>
 </html>

@@ -403,6 +403,8 @@ function apply(){
   if (res) {
     res.setAttribute('aria-live','polite');
     res.setAttribute('role','region');
+    // Masonry feed mode for inspiration browsing
+    res.classList.add('masonry');
     res.innerHTML = slice.map(({p,s})=> App.cardHTML(p, s)).join('') || `<div class="empty">No properties found</div>`;
     // Inject explain bars
     try {
@@ -459,6 +461,31 @@ function apply(){
     });
   } catch(_) {}
 }
+
+// === Scroll squeeze interaction ===
+const squeeze = (()=>{
+  let ticking = false;
+  function onScroll(){
+    if (ticking) return; ticking = true; requestAnimationFrame(()=>{ ticking = false; apply(); });
+  }
+  function apply(){
+    const y = window.scrollY || 0;
+    const imgs = document.querySelectorAll('.squeeze-img');
+    imgs.forEach(img=>{
+      const r = img.getBoundingClientRect();
+      const vh = Math.max(1, window.innerHeight || 1);
+      // Distance from center of viewport (-1 at top, +1 at bottom)
+      const centerDelta = ((r.top + r.height/2) - vh/2) / (vh/2);
+      // Map to scale 0.96..1.04 (subtle squeeze)
+      const scaleY = 1 - centerDelta * 0.04; // compress when near center while scrolling
+      const scaleX = 1 + centerDelta * 0.02;
+      img.style.transform = `scale(${scaleX.toFixed(3)}, ${scaleY.toFixed(3)})`;
+    });
+  }
+  window.addEventListener('scroll', onScroll, { passive:true });
+  window.addEventListener('resize', onScroll, { passive:true });
+  return { apply };
+})();
 
 function goto(n){ PAGE = n; apply(); }
 window.goto = goto;

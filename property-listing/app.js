@@ -312,17 +312,17 @@ function cardHTML(p, s) {
   const pps = p.pricePerSqftINR ? `₹${p.pricePerSqftINR.toLocaleString('en-IN')}/sqft` : '';
   return `<article class="card" style="display:flex;flex-direction:column" data-prop-id="${escapeHtml(p.id)}">
     <div class="card-img">
-      <img class="blur-up" loading="lazy" src="${escapeHtml(img)}" alt="${escapeHtml(p.title)}" onload="this.classList.remove('blur-up')" onerror="this.onerror=null;this.src='./noimg.svg'">
+      <img class="blur-up squeeze-img" loading="lazy" src="${escapeHtml(img)}" alt="${escapeHtml(p.title)}" onload="this.classList.remove('blur-up')" onerror="this.onerror=null;this.src='./noimg.svg'">
       <div class="badge ribbon">${p.listingStatus || "Verified"}</div>
       <div class="tag score">Match ${Math.round((s/30)*100)}%</div>
     </div>
     <div style="padding:14px;display:flex;gap:12px;flex-direction:column">
       <div>
-        <div style="font-weight:700;font-size:18px">${escapeHtml(p.title)}</div>
-        <div style="color:var(--muted);font-size:13px">${escapeHtml((p.locality||'') + (p.city ? ', ' + p.city : ''))}</div>
+        <div class="loc-loud">${escapeHtml((p.locality||'') + (p.city ? ', ' + p.city : ''))}</div>
+        <div style="color:var(--muted);font-size:13px">${escapeHtml(p.title)}</div>
       </div>
       <div class="row" style="justify-content:space-between">
-        <div style="font-weight:800">${escapeHtml(price)}</div>
+        <div class="price-loud">${escapeHtml(price)}</div>
         <div style="color:var(--muted);font-size:12px">${escapeHtml(pps)}</div>
       </div>
       <div class="row" style="gap:8px;flex-wrap:wrap">${tags}</div>

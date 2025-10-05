@@ -82,10 +82,11 @@ img{max-width:100%;display:block}
   overflow:hidden;
   border:1px solid #f0d9d9;
   box-shadow:0 8px 28px rgba(110,13,37,.08);
-  transition:transform .2s ease,box-shadow .2s ease
+  transition:transform .2s ease,box-shadow .2s ease;
+  transform: translateY(var(--yoff, 0));
 }
 .card:hover{
-  transform:translateY(-2px);
+  transform: translateY(calc(var(--yoff, 0) - 2px));
   box-shadow:0 16px 36px rgba(110,13,37,.16)
 }
 
@@ -97,6 +98,13 @@ img{max-width:100%;display:block}
 
 .grid{display:grid;gap:16px}
 .row{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+
+/* Masonry inspiration feed layout */
+#results.masonry{ column-width:320px; column-gap:16px; }
+#results.masonry .card{ display:inline-block; width:100%; margin:0 0 16px; break-inside:avoid; }
+#results .card:nth-child(3n){ --yoff: 4px; }
+#results .card:nth-child(5n){ --yoff: -6px; }
+#results .card:nth-child(7n){ --yoff: 10px; }
 
 .btn{
   display:inline-flex;
@@ -194,6 +202,8 @@ img{max-width:100%;display:block}
   object-fit:cover;
   aspect-ratio: 3 / 2;
 }
+/* Scroll squeeze target */
+.squeeze-img{ will-change: transform; transform-origin: 50% 50%; }
 
 /* Blur-up lazy image */
 .blur-up{ filter:blur(12px); transform:scale(1.02); }
@@ -229,6 +239,15 @@ img{max-width:100%;display:block}
   border-radius:999px;
   background:#fff;
   border:1px solid #eee
+}
+
+/* Loud, punk-style emphasis for key details */
+.price-loud{ font-weight:800; font-size:24px; letter-spacing:.01em; }
+.loc-loud{ font-weight:700; font-size:16px; color:var(--ink); }
+
+/* Bigger, in-your-face pills on desktop */
+@media (min-width:880px){
+  .filter-pill{ font-size:18px; padding:14px 0; letter-spacing:.02em; }
 }
 
 /* === NEW FILTER BOX STYLES === */

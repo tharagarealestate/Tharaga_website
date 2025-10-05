@@ -403,6 +403,7 @@ function apply(){
   if (res) {
     res.setAttribute('aria-live','polite');
     res.setAttribute('role','region');
+    res.classList.add('masonry');
     res.innerHTML = slice.map(({p,s})=> App.cardHTML(p, s)).join('') || `<div class="empty">No properties found</div>`;
     // Inject explain bars
     try {
@@ -459,6 +460,26 @@ function apply(){
     });
   } catch(_) {}
 }
+
+// === Scroll squeeze interaction ===
+const squeeze = (function(){
+  let ticking = false;
+  function onScroll(){ if (ticking) return; ticking = true; requestAnimationFrame(()=>{ ticking=false; apply(); }); }
+  function apply(){
+    const imgs = document.querySelectorAll('.squeeze-img');
+    const vh = Math.max(1, window.innerHeight || 1);
+    imgs.forEach(img=>{
+      const r = img.getBoundingClientRect();
+      const centerDelta = ((r.top + r.height/2) - vh/2) / (vh/2);
+      const scaleY = 1 - centerDelta * 0.04;
+      const scaleX = 1 + centerDelta * 0.02;
+      img.style.transform = `scale(${scaleX.toFixed(3)}, ${scaleY.toFixed(3)})`;
+    });
+  }
+  window.addEventListener('scroll', onScroll, { passive:true });
+  window.addEventListener('resize', onScroll, { passive:true });
+  return { apply };
+})();
 
 function goto(n){ PAGE = n; apply(); }
 window.goto = goto;

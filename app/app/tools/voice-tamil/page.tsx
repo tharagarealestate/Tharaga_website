@@ -31,20 +31,20 @@ export default function TamilVoiceSearchPage(){
 
   return (
     <main className="mx-auto max-w-3xl px-6 py-8">
-      <h1 className="text-2xl font-bold text-plum mb-4">Tamil voice search</h1>
-      <div className="rounded-xl border border-plum/10 bg-brandWhite p-4 space-y-4">
-        {!supported && <div className="text-sm text-plum/70">Voice recognition is not supported in this browser.</div>}
+      <h1 className="text-2xl font-bold text-fg mb-4">Tamil voice search</h1>
+      <div className="rounded-xl border border-border bg-canvas p-4 space-y-4">
+        {!supported && <div className="text-sm text-fgMuted">Voice recognition is not supported in this browser.</div>}
         <div className="flex gap-3 items-center">
           <button onClick={start} disabled={!supported || listening} className="rounded-lg border px-3 py-2 disabled:opacity-50">
             {listening ? 'Listening…' : 'Start Tamil voice input'}
           </button>
           <a className="rounded-lg border px-3 py-2" href={searchUrl}>Search listings</a>
         </div>
-        <div className="rounded-lg border border-plum/10 p-3 bg-white">
-          <div className="text-xs text-plum/60 mb-1">Recognized text</div>
+        <div className="rounded-lg border border-border p-3 bg-canvas">
+          <div className="text-xs text-fgMuted mb-1">Recognized text</div>
           <div className="font-mono text-sm break-words">{text || '—'}</div>
         </div>
-        <p className="text-xs text-plum/60">We set recognition language to ta-IN. You can refine the query after transcription.</p>
+        <p className="text-xs text-fgMuted">We set recognition language to ta-IN. You can refine the query after transcription.</p>
       </div>
     </main>
   )

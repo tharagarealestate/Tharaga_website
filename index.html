@@ -9,6 +9,7 @@
   <script src="/js/auth-modal-stub.js" defer></script>
   <script src="/js/analytics.js" defer></script>
   <script src="/js/home.js" defer></script>
+  <script src="/js/globe-lite.js" defer></script>
   <link rel="stylesheet" href="/css/brand.css" />
   <style>
     :root { --brand:#6e0d25; --brand-600:#8a1637; --ink:#0f172a; --cream:#f7efe7; --muted:#4b5563; --gold:#d4af37; --ring:rgba(212,175,55,.30); --font-ui:'Manrope',Inter,system-ui,-apple-system,'Segoe UI',Roboto,Helvetica,Arial; --font-display:'Plus Jakarta Sans','Manrope',Inter,system-ui,-apple-system,'Segoe UI',Roboto,Helvetica,Arial; }
@@ -66,7 +67,7 @@
   <section class="hero">
     <div class="inner">
       <div>
-        <h1 class="h1" id="hero_title">Classy homes. Clear choices. Calm experience.</h1>
+        <h1 class="h1 text-gradient" id="hero_title">Classy homes. Clear choices. Calm experience.</h1>
         <p class="sub" id="hero_sub">Verified listings with explainable AI. Culture‑aware tools like Vastu, climate, and voice—so families decide with confidence.</p>
         <div class="kpi-row" style="margin:12px 0 16px">
           <div class="pill"><span class="kpi" id="kpi_time">28h</span> saved per buyer</div>
@@ -112,7 +113,7 @@
         </div>
       </div>
       <div>
-        <div class="card glass-edge">
+        <div class="card glass-edge" style="position:relative;overflow:hidden">
           <div class="h1" style="font-size:20px">For builders who value clarity</div>
           <div class="sub" style="margin-bottom:10px">Cinematic storytelling, WhatsApp‑first automation, and AI lead scoring. Buyers see clarity; you see conversions.</div>
           <div class="row" style="gap:10px;flex-wrap:wrap">
@@ -120,6 +121,7 @@
             <a class="btn secondary" href="/builder-deals/">List a project</a>
             <a class="btn secondary" href="/ai-marketing-suite/">AI marketing suite</a>
           </div>
+          <canvas id="globeCanvas" style="position:absolute;right:-8px;bottom:-8px;opacity:.45;pointer-events:none;max-width:48%"></canvas>
         </div>
         <div class="card glass-edge" style="margin-top:12px">
           <div class="h1" style="font-size:20px">Prefer WhatsApp‑first help?</div>

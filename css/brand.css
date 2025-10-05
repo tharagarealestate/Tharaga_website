@@ -45,4 +45,7 @@ html,body{margin:0;padding:0;background:var(--cream);color:var(--ink);font-famil
 .glass{background:linear-gradient(180deg, rgba(255,255,255,.55), rgba(255,255,255,.2));backdrop-filter:blur(16px);border:1px solid rgba(255,255,255,.28)}
 .glass-edge{box-shadow:0 0 0 1px rgba(212,175,55,.25) inset}
 
+/* Gradient text helper */
+.text-gradient{background:linear-gradient(90deg, var(--brand) 0%, #d4af37 50%, #5b2848 100%);-webkit-background-clip:text;background-clip:text;color:transparent}
+
 @media (max-width:720px){ .container{padding:16px} }

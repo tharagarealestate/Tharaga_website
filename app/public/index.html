@@ -9,6 +9,7 @@
   <script type="module" src="/js/fragment-handle.js"></script>
   <script src="/js/auth-modal-stub.js" defer></script>
   <script src="/js/home.js" defer></script>
+  <script src="/js/globe-lite.js" defer></script>
   <style>
     :root{--brand:#6e0d25;--brand-600:#8a1637;--ink:#0f172a;--cream:#f7efe7;--muted:#4b5563;--ring:rgba(212,175,55,.30);--font-ui:'Manrope',Inter,system-ui,-apple-system,'Segoe UI',Roboto,Helvetica,Arial;--font-display:'Plus Jakarta Sans','Manrope',Inter,system-ui,-apple-system,'Segoe UI',Roboto,Helvetica,Arial}
     body { font-family: var(--font-ui); margin: 0; padding: 0; background: var(--cream); color: var(--ink); }
@@ -19,6 +20,7 @@
     .btn { display:inline-flex; align-items:center; justify-content:center; gap:8px; padding:10px 14px; border-radius:12px; border:1px solid var(--brand); background: var(--brand); color:#fff; font-weight:650 }
     .btn:hover{ background: var(--brand-600) }
     .card { background: rgba(255,255,255,.72); border:1px solid rgba(110,13,37,.10); border-radius:16px; padding:16px; box-shadow:0 10px 28px rgba(110,13,37,.10); backdrop-filter: blur(12px) }
+    .text-gradient{background:linear-gradient(90deg, var(--brand) 0%, #d4af37 50%, #5b2848 100%);-webkit-background-clip:text;background-clip:text;color:transparent}
   </style>
   
 </head>
@@ -40,7 +42,7 @@
   <section class="hero">
     <div class="inner">
       <div>
-        <h1 class="h1" id="hero_title">Classy homes. Clear choices. Calm experience.</h1>
+        <h1 class="h1 text-gradient" id="hero_title">Classy homes. Clear choices. Calm experience.</h1>
         <p class="sub" id="hero_sub">Verified listings with explainable AI. Culture‑aware tools like Vastu, climate, and voice—so families decide with confidence.</p>
         <div class="kpi-row" style="margin:12px 0 16px">
           <div class="pill"><span class="kpi" id="kpi_time">28h</span> saved per buyer</div>

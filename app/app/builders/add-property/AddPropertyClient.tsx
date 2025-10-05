@@ -19,6 +19,8 @@ export default function AddPropertyPage() {
   const [step, setStep] = useState(1)
   const [busy, setBusy] = useState(false)
   const [msg, setMsg] = useState<string | null>(null)
+  const [tier, setTier] = useState<'starter'|'growth'|'scale'>('starter')
+  const [limit, setLimit] = useState<number>(1)
   const [form, setForm] = useState({
     title: '', description: '', city: '', locality: '', property_type: 'Apartment',
     bedrooms: '', bathrooms: '', price_inr: '', sqft: '', images: [] as string[]
@@ -34,6 +36,19 @@ export default function AddPropertyPage() {
     alert('Check your email for a login link, then return to this page.')
     throw new Error('Pending login')
   }
+
+  // Load entitlement to gate project count (simple example: Starter=1, Growth=5, Scale=Infinity)
+  async function loadEntitlement(){
+    try {
+      const { data: { session } } = await getSupabase().auth.getSession()
+      if (!session?.user?.email) return
+      const { data } = await getSupabase().from('org_subscriptions').select('tier,status').eq('email', session.user.email).maybeSingle()
+      const t = (data?.tier as any) || 'starter'
+      setTier(t)
+      setLimit(t === 'scale' ? Number.POSITIVE_INFINITY : (t === 'growth' ? 5 : 1))
+    } catch(_) { /* ignore */ }
+  }
+  loadEntitlement()
 
   async function onUploadImages(e: React.ChangeEvent<HTMLInputElement>) {
     const files = e.target.files
@@ -72,6 +87,14 @@ export default function AddPropertyPage() {
         bathrooms: Number(form.bathrooms)||null, price_inr: Number(form.price_inr)||0, sqft: Number(form.sqft)||null,
         images: form.images, builder_id, listing_status: 'active'
       }
+      // Enforce simple cap: count current active listings by builder
+      if (Number.isFinite(limit)) {
+        const { count } = await getSupabase().from('properties').select('id', { count: 'exact', head: true }).eq('builder_id', builder_id).eq('listing_status','active')
+        if ((count||0) >= limit) {
+          setMsg(`Your plan (${tier}) allows ${limit} active project${limit===1?'':'s'}. Upgrade on Pricing.`)
+          return
+        }
+      }
       const { error } = await getSupabase().from('properties').insert([payload])
       if (error) throw error
       setMsg('Submitted! Pending verification.')
@@ -86,7 +109,8 @@ export default function AddPropertyPage() {
   return (
     <main className="mx-auto max-w-3xl px-6 py-8">
       <h1 className="text-2xl font-bold text-plum mb-2">List your property</h1>
-      <p className="text-plum/70 mb-6">Simple onboarding for builders. Logged in users can save drafts and submit for verification.</p>
+      <p className="text-plum/70 mb-2">Simple onboarding for builders. Logged in users can save drafts and submit for verification.</p>
+      <div className="mb-6 text-sm text-plum/70">Your plan: <b className="text-plum">{tier}</b>. Active project limit: {Number.isFinite(limit) ? limit : 'Unlimited'} • <a className="underline" href="/pricing/">See pricing</a></div>
 
       {msg && <div className="mb-4 rounded-lg border border-plum/10 bg-white p-3 text-sm text-plum/80">{msg}</div>}
 

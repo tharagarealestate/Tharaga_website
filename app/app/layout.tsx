@@ -28,6 +28,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <a href="/" className="font-bold">Tharaga</a>
             <a href="/property-listing/" className="hover:underline">Browse</a>
             <a href="/tools/cost-calculator" className="hover:underline">Cost</a>
+            <a href="/pricing/" className="hover:underline">Pricing</a>
             <a href="/tools/currency-risk" className="hover:underline">FX Risk</a>
             <a href="/tools/vastu" className="hover:underline">Vastu</a>
             <a href="/tools/voice-tamil" className="hover:underline">தமிழ் Voice</a>

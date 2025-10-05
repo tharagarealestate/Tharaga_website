@@ -3,9 +3,11 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Tharaga — Home</title>
+  <title>Tharaga — Verified homes. Human UX. AI inside.</title>
+  <meta name="description" content="Broker‑free, verified properties with AI‑matched discovery, cultural tools for India & NRI, and builder‑grade storytelling.">
   <script type="module" src="/js/fragment-handle.js"></script>
   <script src="/js/auth-modal-stub.js" defer></script>
+  <script src="/js/home.js" defer></script>
   <style>
     body {
       font-family: system-ui, sans-serif;
@@ -36,37 +38,161 @@
   
 </head>
 <body>
-  <h1>Welcome to Tharaga</h1>
-  <p>
-    This is the unified website. Use the links below or Durable can embed
-    each section directly using its own route.
-  </p>
-  <nav>
-    <a href="/about/">About</a>
-    <a href="/buyer-form/">Buyer Form</a>
-    <a href="/property-listing/">Properties</a>
-    <a href="/rating/">Rating</a>
-    <a href="/reel-grid/">Reels</a>
-    <a href="/registration/">Registration</a>
-    <a href="/search-filter-home/">Search Filter</a>
-    <a href="/Reset_password/">Reset password</a>
-    <a href="/auth-landing/">auth landing</a>
-    <a href="/auth-email-landing/">auth email landing</a>
-    <a href="/snippets/">login/signup</a>
-    <a href="/app/">AI Recommendations (Next.js)</a>
-  </nav>
+  <header class="nav">
+    <div class="inner">
+      <div class="row"><a class="brand" href="/">THARAGA</a><span class="pill" id="home_pill_trust">Verified • Broker‑free</span></div>
+      <nav class="row" aria-label="Primary">
+        <a href="#buyers">Buy</a>
+        <a href="#builders">Build</a>
+        <a href="#how">How it works</a>
+        <a href="/pricing/">Pricing</a>
+        <a href="/about/">About</a>
+        <button class="btn secondary" type="button" id="openAuthBtn">Sign in</button>
+      </nav>
+    </div>
+  </header>
 
-  <section id="cta-link" style="margin-top:2rem;">
-    <a href="https://auth.tharaga.co.in/cta-embed" target="_blank" rel="noopener" style="font-weight:600;color:#0055ff;text-decoration:none;">https://auth.tharaga.co.in/cta-embed</a>
+  <section class="hero">
+    <div class="inner">
+      <div>
+        <h1 class="h1" id="hero_title">Verified homes. Smart matches. Zero noise.</h1>
+        <p class="sub" id="hero_sub">We use AI to score listings, remove spam, and guide decisions with culture‑aware tools for India and NRIs.</p>
+        <div class="kpi-row" style="margin:12px 0 16px">
+          <div class="pill"><span class="kpi" id="kpi_time">28h</span> saved per buyer</div>
+          <div class="pill"><span class="kpi" id="kpi_pps">₹1,200</span> avg price/sqft gain</div>
+          <div class="pill">RERA & document hygiene checks</div>
+        </div>
+
+        <div class="search-card" role="search" aria-label="Quick search">
+          <div class="search-grid">
+            <div>
+              <label class="sub" for="q">City or locality</label>
+              <input id="q" class="input" placeholder="e.g., Velachery, Chennai" list="cities" />
+              <datalist id="cities">
+                <option>Chennai</option><option>Coimbatore</option><option>Madurai</option><option>Trichy</option><option>Salem</option>
+              </datalist>
+            </div>
+            <div>
+              <label class="sub" for="minPrice">Budget min (₹)</label>
+              <input id="minPrice" class="input" type="number" min="0" step="50000" placeholder="20,00,000" />
+            </div>
+            <div>
+              <label class="sub" for="maxPrice">Budget max (₹)</label>
+              <input id="maxPrice" class="input" type="number" min="0" step="50000" placeholder="80,00,000" />
+            </div>
+            <div style="display:flex;align-items:flex-end;gap:8px">
+              <button id="browseBtn" class="btn" type="button">Browse matches</button>
+              <button id="resumeBtn" class="btn secondary" type="button" hidden>Resume</button>
+            </div>
+          </div>
+          <div class="chip-row" style="margin-top:10px" aria-label="BHK quick select">
+            <button class="chip" data-bhk="1" aria-pressed="false">1 BHK</button>
+            <button class="chip" data-bhk="2" aria-pressed="true">2 BHK</button>
+            <button class="chip" data-bhk="3" aria-pressed="false">3 BHK</button>
+            <button class="chip" data-type="Villa" aria-pressed="false">Villa</button>
+            <button class="chip" data-type="Plot" aria-pressed="false">Plot</button>
+            <button class="chip" data-metro="1" aria-pressed="false">Near Metro</button>
+          </div>
+        </div>
+
+        <div class="row" style="gap:14px;margin-top:14px">
+          <a class="btn" href="/property-listing/">Explore verified listings</a>
+          <a class="btn secondary" href="/search-filter-home/">Advanced search</a>
+        </div>
+      </div>
+      <div>
+        <div class="card">
+          <div style="font-weight:800;margin-bottom:6px">For Builders</div>
+          <div class="sub" style="margin-bottom:10px">Cinematic storytelling, WhatsApp‑first automation, and AI lead scoring. Buyers see clarity; you see conversions.</div>
+          <div class="row" style="gap:10px;flex-wrap:wrap">
+            <a class="btn" href="/pricing/">See pricing</a>
+            <a class="btn secondary" href="/builder-deals/">List a project</a>
+            <a class="btn secondary" href="/ai-marketing-suite/">AI marketing suite</a>
+          </div>
+        </div>
+        <div class="card" style="margin-top:12px">
+          <div style="font-weight:800;margin-bottom:6px">Talk to us</div>
+          <div class="sub" style="margin-bottom:10px">Prefer WhatsApp? We’ll send a curated shortlist with explainers.</div>
+          <a class="btn" href="/cta-embed.html?embed=cta&open=1">Open instant assistant</a>
+        </div>
+      </div>
+    </div>
   </section>
-  <footer>© <span id="year"></span> Tharaga</footer>
+
+  <section class="features" id="buyers">
+    <div class="row" style="justify-content:space-between;align-items:flex-end;margin-bottom:10px">
+      <div>
+        <div class="h1" style="font-size:22px">Designed around how people decide</div>
+        <div class="sub">Trust first, then exploration, then commitment. We reduce cognitive load at each step.</div>
+      </div>
+      <a href="/property-listing/" class="btn secondary">See properties</a>
+    </div>
+    <div class="feature-grid">
+      <div class="card">
+        <div class="pill">Step 1 • Trust anchors</div>
+        <h3 class="h1" style="font-size:18px;margin-top:6px">Verified builders, legal hygiene, RERA</h3>
+        <p class="sub">Bad data kills attention. We surface verification early and repeat it in context.</p>
+      </div>
+      <div class="card">
+        <div class="pill">Step 2 • Low‑effort discovery</div>
+        <h3 class="h1" style="font-size:18px;margin-top:6px">Explainable AI matches</h3>
+        <p class="sub">Every score shows why: recency, price/ft², amenities, metro distance.</p>
+      </div>
+      <div class="card">
+        <div class="pill">Step 3 • Micro‑commitments</div>
+        <h3 class="h1" style="font-size:18px;margin-top:6px">One‑tap interest with WhatsApp follow‑ups</h3>
+        <p class="sub">Frictionless intent capture with instant human‑ready summaries for builders.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="how" id="how">
+    <div class="inner">
+      <div class="card">
+        <div class="h1" style="font-size:18px">1. Tell us what matters</div>
+        <p class="sub">City, budget, 2‑3 must‑haves. We store this locally to personalize the site.</p>
+      </div>
+      <div class="card">
+        <div class="h1" style="font-size:18px">2. We score options</div>
+        <p class="sub">Value per sq ft, recency, commute, amenities, and risk signals.</p>
+      </div>
+      <div class="card">
+        <div class="h1" style="font-size:18px">3. You decide faster</div>
+        <p class="sub">Request details, schedule tours, or share with family—without spam.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="features" id="builders">
+    <div class="row" style="justify-content:space-between;align-items:flex-end;margin-bottom:10px">
+      <div>
+        <div class="h1" style="font-size:22px">For builders who hate noise</div>
+        <div class="sub">Lead scoring, campaign insights, and buyer context so your team focuses only on real demand.</div>
+      </div>
+      <a href="/builder-deals/" class="btn">Start listing</a>
+    </div>
+    <div class="feature-grid">
+      <div class="card"><h3 class="h1" style="font-size:18px">Cinematic storytelling</h3><p class="sub">Reels, hotspots, 360 tours—buyers feel the project before they visit.</p></div>
+      <div class="card"><h3 class="h1" style="font-size:18px">WhatsApp‑first CRM</h3><p class="sub">Auto‑summaries and nudges; no heavy dashboards required.</p></div>
+      <div class="card"><h3 class="h1" style="font-size:18px">Smart scoring</h3><p class="sub">Predict intent using activity and context—not just forms.</p></div>
+    </div>
+  </section>
+
+  <section class="features" aria-labelledby="ctaTitle">
+    <div class="card" style="display:flex;align-items:center;justify-content:space-between;gap:14px">
+      <div>
+        <div id="ctaTitle" class="h1" style="font-size:22px">Prefer a human‑like assistant?</div>
+        <div class="sub">Open our embedded CTA to start a guided conversation.</div>
+      </div>
+      <a class="btn" href="/cta-embed.html?embed=cta&open=1">Open assistant</a>
+    </div>
+  </section>
+
+  <div class="footer">© <span id="year"></span> Tharaga • <a href="/about/">About</a> • <a href="/compliance-trust/">Trust</a> • <a href="/auth-email-landing/">Email confirmation</a></div>
+
   <script>
-  // Auth header is loaded via external script for reuse across pages
+    document.getElementById('year').textContent = new Date().getFullYear();
+    document.getElementById('openAuthBtn')?.addEventListener('click', function(){ try { window.__thgOpenAuthModal && window.__thgOpenAuthModal(); } catch(_){} });
   </script>
-  
-  <script>
-    document.getElementById("year").textContent = new Date().getFullYear();
-  </script>
-  <!-- Removed inline CTA modal and embed handling; using direct link instead -->
 </body>
 </html>

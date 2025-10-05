@@ -11,9 +11,20 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en">
       <head>
         <link rel="manifest" href="/manifest.webmanifest" />
-        <meta name="theme-color" content="#6e0d25" />
+        <meta name="theme-color" content="#ffffff" />
+        <script dangerouslySetInnerHTML={{ __html: `
+          (function(){
+            try {
+              var stored = localStorage.getItem('thg.theme');
+              var mode = stored || (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+              document.documentElement.setAttribute('data-color-mode', mode);
+              var meta = document.querySelector('meta[name=\"theme-color\"]');
+              if (meta) meta.setAttribute('content', mode === 'dark' ? '#0d1117' : '#ffffff');
+            } catch(_){}
+          })();
+        `}} />
       </head>
-      <body className="font-inter bg-brandWhite text-plum">
+      <body className="font-ui bg-canvas text-fg">
         <script dangerouslySetInnerHTML={{ __html: `
           (function(){
             if ('serviceWorker' in navigator) {
@@ -23,22 +34,26 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             }
           })();
         `}} />
-        <header className="border-b border-plum/10 bg-white/80 backdrop-blur supports-[backdrop-filter]:bg-white/60">
-          <nav className="mx-auto max-w-6xl px-6 py-3 flex gap-4 text-sm">
-            <a href="/" className="font-bold">Tharaga</a>
-            <a href="/property-listing/" className="hover:underline">Browse</a>
-            <a href="/tools/cost-calculator" className="hover:underline">Cost</a>
-            <a href="/pricing/" className="hover:underline">Pricing</a>
-            <a href="/tools/currency-risk" className="hover:underline">FX Risk</a>
-            <a href="/tools/vastu" className="hover:underline">Vastu</a>
-            <a href="/tools/voice-tamil" className="hover:underline">தமிழ் Voice</a>
-            <a href="/tours" className="hover:underline">Tours</a>
-            <a href="/dashboard/map" className="hover:underline">Map</a>
-            <a href="/dashboard/market" className="hover:underline">Market</a>
-            <a href="/saved" className="hover:underline">Saved</a>
-            <a href="/tools/roi" className="hover:underline">ROI</a>
-            <a href="/tools/environment" className="hover:underline">Env</a>
-            <a href="/filters/radial" className="hover:underline">Filters</a>
+        <header className="sticky top-0 z-50 bg-canvas/95 backdrop-blur supports-[backdrop-filter]:bg-canvas/80 border-b border-border">
+          <nav className="mx-auto max-w-6xl px-4 sm:px-6 py-3 flex items-center gap-4 text-sm text-fg-muted">
+            <a href="/" className="font-bold text-fg hover:text-accent">Tharaga</a>
+            <a href="/property-listing/" className="hover:text-accent">Browse</a>
+            <a href="/tools/cost-calculator" className="hover:text-accent">Cost</a>
+            <a href="/pricing/" className="hover:text-accent">Pricing</a>
+            <a href="/tools/currency-risk" className="hover:text-accent">FX Risk</a>
+            <a href="/tools/vastu" className="hover:text-accent">Vastu</a>
+            <a href="/tools/voice-tamil" className="hover:text-accent">தமிழ் Voice</a>
+            <a href="/tours" className="hover:text-accent">Tours</a>
+            <a href="/dashboard/map" className="hover:text-accent">Map</a>
+            <a href="/dashboard/market" className="hover:text-accent">Market</a>
+            <a href="/saved" className="hover:text-accent">Saved</a>
+            <a href="/tools/roi" className="hover:text-accent">ROI</a>
+            <a href="/tools/environment" className="hover:text-accent">Env</a>
+            <a href="/filters/radial" className="hover:text-accent">Filters</a>
+            <span className="grow" />
+            <button id="themeToggleBtn" className="rounded-md border border-border px-2 py-1 text-xs text-fg hover:text-accent">
+              Toggle theme
+            </button>
           </nav>
         </header>
         {children}
@@ -54,6 +69,19 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 new PerformanceObserver((list) => { for (const entry of list.getEntries()) report('CLS', entry.value) }).observe({ type: 'layout-shift', buffered: true });
               }
             }catch(_){ }
+            var btn = document.getElementById('themeToggleBtn');
+            if (btn) {
+              btn.addEventListener('click', function(){
+                try {
+                  var current = document.documentElement.getAttribute('data-color-mode') || 'light';
+                  var next = current === 'dark' ? 'light' : 'dark';
+                  document.documentElement.setAttribute('data-color-mode', next);
+                  localStorage.setItem('thg.theme', next);
+                  var meta = document.querySelector('meta[name=\"theme-color\"]');
+                  if (meta) meta.setAttribute('content', next === 'dark' ? '#0d1117' : '#ffffff');
+                } catch(_){}
+              });
+            }
           })();
         `}} />
       </body>

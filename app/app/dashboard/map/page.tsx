@@ -58,9 +58,9 @@ export default function MapPage(){
 
   return (
     <main className="mx-auto max-w-6xl px-6 py-8">
-      <h1 className="text-2xl font-bold text-plum mb-4">Property map</h1>
-      <div ref={mapRef} className="w-full rounded-xl border border-plum/10 overflow-hidden" style={{ height: 480 }} />
-      <p className="text-xs text-plum/60 mt-2">Approximate city markers. Replace with precise coordinates when available.</p>
+      <h1 className="text-2xl font-bold text-fg mb-4">Property map</h1>
+      <div ref={mapRef} className="w-full rounded-xl border border-border overflow-hidden" style={{ height: 480 }} />
+      <p className="text-xs text-fgMuted mt-2">Approximate city markers. Replace with precise coordinates when available.</p>
     </main>
   )
 }

@@ -1,5 +1,6 @@
 "use client"
 import { useState } from 'react'
+import { Button, Input, Select, TextArea, Card, Badge } from '@/components/ui'
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 
 let supabaseClient: SupabaseClient | null = null
@@ -108,63 +109,63 @@ export default function AddPropertyPage() {
 
   return (
     <main className="mx-auto max-w-3xl px-6 py-8">
-      <h1 className="text-2xl font-bold text-plum mb-2">List your property</h1>
-      <p className="text-plum/70 mb-2">Simple onboarding for builders. Logged in users can save drafts and submit for verification.</p>
-      <div className="mb-6 text-sm text-plum/70">Your plan: <b className="text-plum">{tier}</b>. Active project limit: {Number.isFinite(limit) ? limit : 'Unlimited'} • <a className="underline" href="/pricing/">See pricing</a></div>
+      <h1 className="text-2xl font-bold text-fg mb-2">List your property</h1>
+      <p className="text-fgMuted mb-2">Simple onboarding for builders. Logged in users can save drafts and submit for verification.</p>
+      <div className="mb-6 text-sm text-fgMuted">Your plan: <b className="text-fg">{tier}</b>. Active project limit: {Number.isFinite(limit) ? limit : 'Unlimited'} • <a className="underline" href="/pricing/">See pricing</a></div>
 
-      {msg && <div className="mb-4 rounded-lg border border-plum/10 bg-white p-3 text-sm text-plum/80">{msg}</div>}
+      {msg && <Card className="mb-4 text-sm"><div>{msg}</div></Card>}
 
       {step === 1 && (
         <form onSubmit={(e)=>{ e.preventDefault(); setStep(2) }} className="space-y-4">
           <div>
             <label className="block text-sm font-medium">Title</label>
-            <input required className="w-full rounded-lg border px-3 py-2" value={form.title} onChange={e=>setForm({...form, title:e.target.value})} />
+            <Input required value={form.title} onChange={e=>setForm({...form, title:e.target.value})} />
           </div>
           <div>
             <label className="block text-sm font-medium">Description</label>
-            <textarea required className="w-full rounded-lg border px-3 py-2" rows={4} value={form.description} onChange={e=>setForm({...form, description:e.target.value})} />
+            <TextArea required rows={4} value={form.description} onChange={e=>setForm({...form, description:e.target.value})} />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-sm font-medium">City</label>
-              <input required className="w-full rounded-lg border px-3 py-2" value={form.city} onChange={e=>setForm({...form, city:e.target.value})} />
+              <Input required value={form.city} onChange={e=>setForm({...form, city:e.target.value})} />
             </div>
             <div>
               <label className="block text-sm font-medium">Locality</label>
-              <input className="w-full rounded-lg border px-3 py-2" value={form.locality} onChange={e=>setForm({...form, locality:e.target.value})} />
+              <Input value={form.locality} onChange={e=>setForm({...form, locality:e.target.value})} />
             </div>
           </div>
           <div className="grid grid-cols-3 gap-3">
             <div>
               <label className="block text-sm font-medium">Type</label>
-              <select className="w-full rounded-lg border px-3 py-2" value={form.property_type} onChange={e=>setForm({...form, property_type:e.target.value})}>
+              <Select value={form.property_type} onChange={e=>setForm({...form, property_type:e.target.value})}>
                 <option>Apartment</option>
                 <option>Villa</option>
                 <option>Plot</option>
                 <option>Commercial</option>
-              </select>
+              </Select>
             </div>
             <div>
               <label className="block text-sm font-medium">Bedrooms</label>
-              <input className="w-full rounded-lg border px-3 py-2" value={form.bedrooms} onChange={e=>setForm({...form, bedrooms:e.target.value})} />
+              <Input value={form.bedrooms} onChange={e=>setForm({...form, bedrooms:e.target.value})} />
             </div>
             <div>
               <label className="block text-sm font-medium">Bathrooms</label>
-              <input className="w-full rounded-lg border px-3 py-2" value={form.bathrooms} onChange={e=>setForm({...form, bathrooms:e.target.value})} />
+              <Input value={form.bathrooms} onChange={e=>setForm({...form, bathrooms:e.target.value})} />
             </div>
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-sm font-medium">Price (₹)</label>
-              <input required className="w-full rounded-lg border px-3 py-2" value={form.price_inr} onChange={e=>setForm({...form, price_inr:e.target.value})} />
+              <Input required value={form.price_inr} onChange={e=>setForm({...form, price_inr:e.target.value})} />
             </div>
             <div>
               <label className="block text-sm font-medium">Area (sqft)</label>
-              <input className="w-full rounded-lg border px-3 py-2" value={form.sqft} onChange={e=>setForm({...form, sqft:e.target.value})} />
+              <Input value={form.sqft} onChange={e=>setForm({...form, sqft:e.target.value})} />
             </div>
           </div>
           <div className="flex justify-end">
-            <button className="rounded-lg bg-plum text-white px-4 py-2">Next</button>
+            <Button>Next</Button>
           </div>
         </form>
       )}
@@ -183,17 +184,17 @@ export default function AddPropertyPage() {
             )}
           </div>
           <div className="flex items-center justify-between">
-            <button type="button" className="rounded-lg border px-4 py-2" onClick={()=>setStep(1)}>Back</button>
-            <button disabled={busy} className="rounded-lg bg-gold text-plum px-4 py-2 border border-transparent hover:brightness-105">Submit</button>
+            <Button type="button" variant="secondary" onClick={()=>setStep(1)}>Back</Button>
+            <Button disabled={busy}>Submit</Button>
           </div>
         </form>
       )}
 
       {step === 3 && (
-        <div className="rounded-lg border border-plum/10 bg-white p-4">
-          <div className="font-semibold text-plum">Thanks! Your property is submitted.</div>
-          <div className="text-plum/70 text-sm">We’ll verify details and make it visible to buyers shortly.</div>
-        </div>
+        <Card>
+          <div className="font-semibold text-fg">Thanks! Your property is submitted.</div>
+          <div className="text-fgMuted text-sm">We’ll verify details and make it visible to buyers shortly.</div>
+        </Card>
       )}
     </main>
   )

@@ -95,7 +95,7 @@ function PropertyCard({ item, onLead }: { item: RecommendationItem; onLead: (pro
   return (
     <div
       ref={cardRef}
-      className="min-w-[280px] max-w-[320px] rounded-xl bg-brandWhite shadow-subtle border border-plum/10 overflow-hidden will-change-transform touch-pan-y"
+      className="min-w-[280px] max-w-[320px] rounded-xl bg-canvas shadow-card border border-border overflow-hidden will-change-transform touch-pan-y"
       onPointerDown={(e)=>{ dragState.current = { x0: e.clientX, dragging: true } }}
       onPointerMove={(e)=>{
         if (!dragState.current.dragging || !cardRef.current) return
@@ -113,7 +113,7 @@ function PropertyCard({ item, onLead }: { item: RecommendationItem; onLead: (pro
       }}
       onPointerCancel={()=>{ if(cardRef.current){ cardRef.current.style.transform=''; cardRef.current.style.opacity='' } dragState.current.dragging=false }}
     >
-      <div className="relative h-40 w-full bg-plum/10">
+      <div className="relative h-40 w-full bg-accent/5">
         <Image
           src={item.image_url}
           alt={item.title}
@@ -130,21 +130,21 @@ function PropertyCard({ item, onLead }: { item: RecommendationItem; onLead: (pro
         <div className="flex items-start justify-between gap-2">
           <h3 className="font-medium leading-snug line-clamp-2">{item.title}</h3>
           <Tooltip content={<WhyContent reasons={item.reasons} />}>
-            <button className="shrink-0 rounded-full border border-gold/60 text-gold px-2 py-1 text-xs hover:bg-gold/10 transition-colors" aria-label="Why recommended?">
+            <button className="shrink-0 rounded-full border border-border text-fg px-2 py-1 text-xs hover:bg-canvasSubtle transition-colors" aria-label="Why recommended?">
               Why?
             </button>
           </Tooltip>
         </div>
         <Specs specs={item.specs} />
         <div className="mt-2 flex gap-2 items-center">
-          <button className="rounded-lg border px-3 py-1 text-sm" onClick={() => onLead(item.property_id)}>
+          <button className="rounded-lg border border-border px-3 py-1 text-sm" onClick={() => onLead(item.property_id)}>
             Request details
           </button>
-          <a href={`/property-listing/`} className="rounded-lg border px-3 py-1 text-sm">
+          <a href={`/property-listing/`} className="rounded-lg border border-border px-3 py-1 text-sm">
             See similar
           </a>
           <button
-            className={clsx('ml-auto rounded-full border px-2 py-1 text-xs transition-colors', saved ? 'bg-gold/10 border-gold text-gold' : 'border-plum/20 text-plum/70 hover:bg-plum/5')}
+            className={clsx('ml-auto rounded-full border px-2 py-1 text-xs transition-colors', saved ? 'bg-accent/10 border-accent text-accent' : 'border-border text-fgMuted hover:bg-canvasSubtle')}
             aria-pressed={saved}
             onClick={toggleSave}
             title={saved ? 'Unsave' : 'Save for offline'}
@@ -163,7 +163,7 @@ function Specs({ specs }: { specs: RecommendationItem['specs'] }) {
   if (specs.bathrooms) parts.push(`${specs.bathrooms} Bath`)
   if (specs.area_sqft) parts.push(`${Math.round(specs.area_sqft)} sqft`)
   if (specs.location) parts.push(specs.location)
-  return <p className="text-sm text-plum/70">{parts.join(' • ')}</p>
+  return <p className="text-sm text-fgMuted">{parts.join(' • ')}</p>
 }
 
 function WhyContent({ reasons }: { reasons: string[] }) {
@@ -180,7 +180,7 @@ function WhyContent({ reasons }: { reasons: string[] }) {
 function NavButton({ direction }: { direction: 'prev' | 'next' }) {
   return (
     <button
-      className="rounded-full border border-plum/20 text-plum/80 hover:text-plum hover:bg-plum/5 px-3 py-1 text-sm"
+      className="rounded-full border border-border text-fgMuted hover:text-fg hover:bg-canvasSubtle px-3 py-1 text-sm"
       data-dir={direction}
       aria-label={direction === 'prev' ? 'Previous' : 'Next'}
       onClick={(e) => {
@@ -223,11 +223,11 @@ function ScrollableRow({ children }: { children: React.ReactNode }) {
 
 function CardSkeleton() {
   return (
-    <div className="min-w-[280px] max-w-[320px] rounded-xl bg-brandWhite shadow-subtle border border-plum/10 overflow-hidden animate-pulse">
-      <div className="h-40 w-full bg-plum/10" />
+    <div className="min-w-[280px] max-w-[320px] rounded-xl bg-canvas shadow-card border border-border overflow-hidden animate-pulse">
+      <div className="h-40 w-full bg-accent/10" />
       <div className="p-3 space-y-2">
-        <div className="h-4 w-3/4 bg-plum/10 rounded" />
-        <div className="h-3 w-2/3 bg-plum/10 rounded" />
+        <div className="h-4 w-3/4 bg-accent/10 rounded" />
+        <div className="h-3 w-2/3 bg-accent/10 rounded" />
       </div>
     </div>
   )
@@ -235,8 +235,8 @@ function CardSkeleton() {
 
 function EmptyState() {
   return (
-    <div className="min-w-[280px] rounded-xl border border-plum/10 bg-brandWhite p-6 text-center">
-      <p className="text-plum/70">No recommendations yet. Explore properties to get tailored picks.</p>
+    <div className="min-w-[280px] rounded-xl border border-border bg-canvas p-6 text-center">
+      <p className="text-fgMuted">No recommendations yet. Explore properties to get tailored picks.</p>
     </div>
   )
 }

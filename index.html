@@ -8,18 +8,25 @@
   <script type="module" src="/js/fragment-handle.js"></script>
   <script src="/js/analytics.js" defer></script>
   <script src="/js/home.js" defer></script>
-  <script src="/js/globe-lite.js" defer></script>
+  <!-- Removed globe script; no globe on hero -->
   <link rel="stylesheet" href="/css/brand.css" />
   <style>
     :root { --brand:#6e0d25; --brand-600:#8a1637; --ink:#0f172a; --cream:#f7efe7; --muted:#4b5563; --gold:#d4af37; --ring:rgba(212,175,55,.30); --font-ui:'Manrope',Inter,system-ui,-apple-system,'Segoe UI',Roboto,Helvetica,Arial; --font-display:'Plus Jakarta Sans','Manrope',Inter,system-ui,-apple-system,'Segoe UI',Roboto,Helvetica,Arial; }
-    body { font-family: var(--font-ui); margin:0; padding:0; background:var(--cream); color:var(--ink); }
+    /* Metallic-glass canvas: calm, premium, high-clarity neutrals */
+    body { font-family: var(--font-ui); margin:0; padding:0; background:
+      radial-gradient(1200px 520px at 12% -10%, rgba(255,255,255,.78), rgba(255,255,255,0) 55%),
+      radial-gradient(900px 360px at 95% 0%, rgba(212,175,55,.08), rgba(212,175,55,0) 60%),
+      linear-gradient(180deg, #f3f5f8 0%, #edf1f6 36%, #e9edf2 100%);
+      color:var(--ink); }
     a { color:#0b63ff; text-decoration:none }
     a:hover { text-decoration:underline }
     header.nav { position:sticky; top:0; z-index:20; backdrop-filter:saturate(1.2) blur(10px); background:rgba(255,255,255,.75); border-bottom:1px solid #eee }
     header.nav .inner { max-width:1100px; margin:0 auto; padding:10px 16px; display:flex; align-items:center; justify-content:space-between; gap:10px }
     .brand { font-family: var(--font-display); font-weight:800; letter-spacing:.2px; color:var(--brand) }
     .pill { display:inline-flex; align-items:center; gap:8px; padding:6px 10px; border-radius:999px; background:#fff; border:1px solid #eee; font-size:12px }
-    .hero { position:relative; padding:56px 16px 28px; background: radial-gradient(900px 300px at 10% -10%, rgba(110,13,37,.06), transparent), linear-gradient(180deg, rgba(255,255,255,.85), rgba(255,255,255,.4)); }
+    .hero { position:relative; padding:56px 16px 28px; background:
+      radial-gradient(900px 300px at 10% -10%, rgba(110,13,37,.06), transparent),
+      linear-gradient(180deg, rgba(255,255,255,.78), rgba(255,255,255,.38)); }
     .hero .inner { max-width:1100px; margin:0 auto; display:grid; grid-template-columns: 1.1fr .9fr; gap:28px; align-items:center }
     .h1 { font-family: var(--font-display); font-weight:700; font-size:36px; line-height:1.12; margin:0 0 12px; letter-spacing:.01em }
     .sub { color:var(--muted); font-size:16px; margin:0 0 18px; letter-spacing:.01em }
@@ -692,7 +699,7 @@
             <a class="btn secondary" href="/builder-deals/">List a project</a>
             <a class="btn secondary" href="/ai-marketing-suite/">AI marketing suite</a>
           </div>
-          <canvas id="globeCanvas" style="position:absolute;right:-8px;bottom:-8px;opacity:.45;pointer-events:none;max-width:48%"></canvas>
+          <!-- Globe removed by request -->
         </div>
         <div class="card glass-edge" style="margin-top:12px">
           <div class="h1" style="font-size:20px">Prefer WhatsApp‑first help?</div>

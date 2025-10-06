@@ -7,7 +7,6 @@
   <meta name="description" content="Broker‑free, verified properties with AI‑matched discovery, cultural tools for India & NRI, and builder‑grade storytelling.">
   <link rel="stylesheet" href="/css/brand.css" />
   <script type="module" src="/js/fragment-handle.js"></script>
-  <script src="/js/auth-modal-stub.js" defer></script>
   <script src="/js/home.js" defer></script>
   <script src="/js/globe-lite.js" defer></script>
   <style>
@@ -22,6 +21,50 @@
     .card { background: rgba(255,255,255,.72); border:1px solid rgba(110,13,37,.10); border-radius:16px; padding:16px; box-shadow:0 10px 28px rgba(110,13,37,.10); backdrop-filter: blur(12px) }
     .text-gradient{background:linear-gradient(90deg, var(--brand) 0%, #d4af37 50%, #5b2848 100%);-webkit-background-clip:text;background-clip:text;color:transparent}
   </style>
+
+  <!-- Durable Head Code (from snippets/index.html) -->
+  <script>window.AUTH_OPEN_ON_LOAD = false;</script>
+  <script>
+    (function(){
+      try { var h=(location.hash||'').trim(); if (/^#https?:\/+/.test(h)) { history.replaceState(null,'',location.href.replace(location.hash,'')); } } catch(_){}
+    })();
+  </script>
+  <script>window.AUTH_HIDE_HEADER = false;</script>
+  <script>
+    window.AUTH_NAV = { profile: '/profile', dashboard: '/dashboard' };
+    window.DURABLE_AUTH_URL = 'https://auth.tharaga.co.in/login_signup_glassdrop/';
+  </script>
+  <script src="https://auth.tharaga.co.in/login_signup_glassdrop/auth-gate.js" defer></script>
+  <!-- Inline durable auth UI -->
+  <script>
+  (function(){
+    if (window.__thgAuthInstalledV1) return; window.__thgAuthInstalledV1 = true;
+    const AUTH_NAV = Object.assign({ profile:'/profile', dashboard:'/dashboard', settings:null }, window.AUTH_NAV||{});
+    const Z_BASE = 2147483000;
+    function ready(fn){ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',fn,{once:true});} else { fn(); } }
+    function headerRoot(){ return document.querySelector('header, [role="banner"], [data-section="header"], .site-header, .Header, nav') || null; }
+    function createEl(t,c,a){ const el=document.createElement(t); if(c) el.className=c; if(a) for (var k in a) el.setAttribute(k,a[k]); return el; }
+    function ensureWrap(){ let hdr=headerRoot(); let wrap=document.querySelector('.thg-auth-wrap'); if(!wrap){ wrap=createEl('div','thg-auth-wrap'); let parent=hdr||document.body; if(hdr){ const cs=getComputedStyle(hdr); if(cs.position==='static'){ hdr.style.position='relative'; } parent.appendChild(wrap);} else { wrap.classList.add('is-fixed'); parent.appendChild(wrap);} } return wrap; }
+    function injectStyles(){ if(document.getElementById('thg-auth-styles')) return; const css=`
+.thg-auth-wrap{ position:absolute; top:14px; right:16px; display:flex; align-items:center; z-index:${Z_BASE}; }
+@media (min-width:1024px){ .thg-auth-wrap{ top:16px; right:24px; } }
+.thg-auth-wrap.is-fixed{ position:fixed; top:14px; right:16px; }
+.thg-auth-btn{ appearance:none;background:transparent;color:#fff;border:1px solid rgba(255,255,255,.9); border-radius:9999px;padding:8px 14px;font-weight:600;cursor:pointer;line-height:1;white-space:nowrap;display:inline-flex;align-items:center;gap:8px; transition:background .15s ease, border-color .15s ease, box-shadow .15s ease; }
+.thg-auth-btn:hover{background:rgba(255,255,255,.08)}
+.thg-auth-btn .thg-initial{ width:22px;height:22px;border-radius:9999px;background:#fff;color:#111;display:none;align-items:center;justify-content:center;font-weight:700;font-size:11px; }
+.thg-auth-btn.is-auth .thg-initial{ display:inline-flex; }
+.thg-auth-btn.is-auth::after{ content:""; display:inline-block; width:0; height:0; border-left:5px solid transparent; border-right:5px solid transparent; border-top:6px solid rgba(255,255,255,.9); transition:transform .15s ease; }
+.thg-auth-menu{ position:absolute;top:calc(100% + 10px);right:0;min-width:280px;background:#0b0b0b;color:#fff; border:1px solid rgba(255,255,255,.15);border-radius:12px;padding:8px;box-shadow:0 12px 30px rgba(0,0,0,.45); visibility:hidden; opacity:0; transform:translateY(-6px) scale(.98); transform-origin:top right; pointer-events:none; transition:opacity .16s ease, transform .16s ease, visibility 0s linear .16s; z-index:${Z_BASE+1}; }
+.thg-auth-menu[aria-hidden="false"]{ visibility:visible; opacity:1; transform:translateY(0) scale(1); pointer-events:auto; }
+.thg-initial-lg{ width:28px;height:28px;border-radius:9999px;background:#fff;color:#111;display:inline-flex;align-items:center;justify-content:center;font-weight:700;font-size:12px; }
+`; const style=document.createElement('style'); style.id='thg-auth-styles'; style.textContent=css; document.head.appendChild(style);} 
+    function render(ui){ const label=ui.btn.querySelector('.thg-label'); const avatar=ui.btn.querySelector('.thg-initial'); if (window.__authGateLoggedIn){ ui.btn.classList.add('is-auth'); label.textContent='My Account'; avatar.textContent='U'; ui.btn.prepend(avatar); } else { ui.btn.classList.remove('is-auth'); label.textContent='Login / Signup'; avatar.textContent='U'; ui.btn.prepend(avatar);} }
+    function openAuth(ui){ try { if (window.authGate && typeof window.authGate.openLoginModal==='function') window.authGate.openLoginModal({ next: location.pathname + location.search }); } catch(_){} }
+    function bind(ui){ ui.btn.addEventListener('click', function(e){ e.preventDefault(); openAuth(ui); }); }
+    function createUI(){ const wrap=ensureWrap(); let btn=wrap.querySelector('.thg-auth-btn'); if(!btn){ btn=createEl('button','thg-auth-btn',{type:'button','aria-haspopup':'menu','aria-expanded':'false','aria-label':'Open account menu'}); const avatar=createEl('span','thg-initial'); const label=document.createElement('span'); label.className='thg-label'; btn.appendChild(avatar); btn.appendChild(label); wrap.appendChild(btn);} let menu=wrap.querySelector('.thg-auth-menu'); if(!menu){ menu=createEl('div','thg-auth-menu',{id:'thg-auth-menu',role:'menu','aria-hidden':'true'}); menu.innerHTML='<div class="thg-auth-item is-header" aria-disabled="true"><span class="thg-initial-lg">U</span><span class="thg-name-wrap"><span class="thg-name">User</span><span class="thg-email">email@example.com</span></span></div>'; wrap.appendChild(menu);} return {wrap,btn,menu}; }
+    ready(function(){ injectStyles(); const ui=createUI(); bind(ui); render(ui); });
+  })();
+  </script>
   
 </head>
 <body>
@@ -34,7 +77,6 @@
         <a href="#how">How it works</a>
         <a href="/pricing/">Pricing</a>
         <a href="/about/">About</a>
-        <button class="btn secondary" type="button" id="openAuthBtn">Sign in</button>
       </nav>
     </div>
   </header>

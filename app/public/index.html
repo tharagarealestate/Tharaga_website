@@ -17,7 +17,7 @@
       radial-gradient(900px 360px at 95% 0%, rgba(212,175,55,.08), rgba(212,175,55,0) 60%),
       linear-gradient(180deg, #f3f5f8 0%, #edf1f6 36%, #e9edf2 100%);
       color: var(--ink); }
-    header.nav .inner { max-width:1100px; margin:0 auto; padding:10px 16px; display:flex; align-items:center; justify-content:space-between; gap:10px }
+    header.nav .inner { max-width:1100px; margin:0 auto; padding:10px 16px; display:flex; align-items:center; justify-content:space-between; gap:10px; position:relative; padding-right:180px }
     .brand { font-family: var(--font-display); font-weight:800; letter-spacing:.2px; color:var(--brand) }
     .h1 { font-family: var(--font-display); font-weight:700; letter-spacing:.01em }
     .sub { color: var(--muted) }
@@ -26,7 +26,7 @@
     .card { background: rgba(255,255,255,.72); border:1px solid rgba(110,13,37,.10); border-radius:16px; padding:16px; box-shadow:0 10px 28px rgba(110,13,37,.10); backdrop-filter: blur(12px) }
     .text-gradient{background:linear-gradient(90deg, var(--brand) 0%, #d4af37 50%, #5b2848 100%);-webkit-background-clip:text;background-clip:text;color:transparent}
     /* Header nav additions and alignment */
-    header.nav nav.row { gap:12px; align-items:center }
+    header.nav nav.row { gap:12px; align-items:center; flex-wrap:nowrap }
     .menu-group{ display:inline-flex; align-items:center; gap:12px }
     .divider{ width:1px; height:16px; background:#e5e7eb; border-radius:1px; display:inline-block }
     details.dropdown{ position:relative }
@@ -34,7 +34,7 @@
     details.dropdown > summary::-webkit-details-marker{ display:none }
     details.dropdown > summary::after{ content:""; width:0; height:0; border-left:5px solid transparent; border-right:5px solid transparent; border-top:6px solid currentColor; opacity:.8; transition:transform .15s ease }
     details.dropdown[open] > summary::after{ transform:rotate(180deg) }
-    details.dropdown .menu{ position:absolute; top:calc(100% + 8px); right:0; min-width:230px; background:#fff; border:1px solid #e5e7eb; border-radius:12px; padding:8px; box-shadow:0 12px 30px rgba(0,0,0,.1) }
+    details.dropdown .menu{ position:absolute; top:calc(100% + 8px); right:0; min-width:230px; background:#fff; border:1px solid #e5e7eb; border-radius:12px; padding:8px; box-shadow:0 12px 30px rgba(0,0,0,.1); z-index:60 }
     details.dropdown .menu a{ display:block; padding:8px 10px; border-radius:8px; color:inherit; text-decoration:none }
     details.dropdown .menu a:hover{ background:#f9fafb }
     /* Make Login/Signup button black and add separator before it */
@@ -45,6 +45,7 @@
     header.nav .thg-auth-btn.is-auth::after{ border-top-color:#fff !important }
     @media (max-width: 880px) {
       /* Mobile header behavior */
+      header.nav .inner { padding-right:120px }
       header.nav nav.row { overflow-x:auto; white-space:nowrap; -webkit-overflow-scrolling:touch; gap:10px }
       header.nav nav.row a, header.nav nav.row summary { padding:6px 0 }
       .divider{ height:14px }
@@ -107,19 +108,16 @@
     <div class="inner">
       <div class="row"><a class="brand" href="/">THARAGA</a><span class="pill" id="home_pill_trust">Verified • Broker‑free</span></div>
       <nav class="row" aria-label="Primary">
-        <a href="#buyers">Buy</a>
-        <a href="#builders">Build</a>
-        <a href="#how">How it works</a>
         <span class="menu-group">
           <details class="dropdown">
             <summary>Features</summary>
             <div class="menu" role="menu">
-              <a href="/app/tools/vastu/">Vastu</a>
-              <a href="/app/tools/environment/">Climate & environment</a>
-              <a href="/app/tools/voice-tamil/">Voice (Tamil)</a>
-              <a href="/app/tools/verification/">Verification</a>
-              <a href="/app/tools/roi/">ROI</a>
-              <a href="/app/tools/currency-risk/">Currency risk</a>
+              <a href="/tools/vastu/">Vastu</a>
+              <a href="/tools/environment/">Climate & environment</a>
+              <a href="/tools/voice-tamil/">Voice (Tamil)</a>
+              <a href="/tools/verification/">Verification</a>
+              <a href="/tools/roi/">ROI</a>
+              <a href="/tools/currency-risk/">Currency risk</a>
             </div>
           </details>
           <span class="divider" aria-hidden="true"></span>

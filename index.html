@@ -22,12 +22,12 @@
     a:hover { text-decoration:underline }
     header.nav { position:sticky; top:0; z-index:20; backdrop-filter:saturate(1.2) blur(10px); background:rgba(255,255,255,.75); border-bottom:1px solid #eee }
     header.nav .inner { max-width:1100px; margin:0 auto; padding:10px 16px; display:flex; align-items:center; justify-content:space-between; gap:10px }
-    .brand { font-family: var(--font-display); font-weight:800; letter-spacing:.2px; color:var(--brand) }
+    .brand { font-family: var(--font-display); font-weight:800; letter-spacing:.2px; color:var(--brand); font-size:24px }
     .pill { display:inline-flex; align-items:center; gap:8px; padding:6px 10px; border-radius:999px; background:#fff; border:1px solid #eee; font-size:12px }
     .hero { position:relative; padding:56px 16px 28px; background:
       radial-gradient(900px 300px at 10% -10%, rgba(110,13,37,.06), transparent),
       linear-gradient(180deg, rgba(255,255,255,.78), rgba(255,255,255,.38)); }
-    .hero .inner { max-width:1100px; margin:0 auto; display:grid; grid-template-columns: 1.1fr .9fr; gap:28px; align-items:center }
+    .hero .inner { max-width:1100px; margin:0 auto; display:grid; grid-template-columns: 1fr; gap:28px; align-items:center; justify-items:center; text-align:center }
     .h1 { font-family: var(--font-display); font-weight:700; font-size:36px; line-height:1.12; margin:0 0 12px; letter-spacing:.01em }
     .sub { color:var(--muted); font-size:16px; margin:0 0 18px; letter-spacing:.01em }
     .search-card { background:rgba(255,255,255,.72); border:1px solid rgba(110,13,37,.10); border-radius:16px; box-shadow:0 12px 36px rgba(110,13,37,.12); backdrop-filter: blur(12px) saturate(1.05); padding:14px }
@@ -631,7 +631,7 @@
 <body>
   <header class="nav">
     <div class="inner">
-      <div class="row"><a class="brand" href="/">THARAGA</a><span class="pill" id="home_pill_trust">Verified • Broker‑free</span></div>
+      <div class="row"><a class="brand" href="/" style="font-size:26px">THARAGA</a><span class="pill" id="home_pill_trust">Verified • Broker‑free</span></div>
       <nav class="row" aria-label="Primary">
         <a href="#buyers">Buy</a>
         <a href="#builders">Build</a>
@@ -690,52 +690,11 @@
           <a class="btn secondary" href="/search-filter-home/">Advanced search</a>
         </div>
       </div>
-      <div>
-        <div class="card glass-edge" style="position:relative;overflow:hidden">
-          <div class="h1" style="font-size:20px">For builders who value clarity</div>
-          <div class="sub" style="margin-bottom:10px">Cinematic storytelling, WhatsApp‑first automation, and AI lead scoring. Buyers see clarity; you see conversions.</div>
-          <div class="row" style="gap:10px;flex-wrap:wrap">
-            <a class="btn" href="/pricing/">See pricing</a>
-            <a class="btn secondary" href="/builder-deals/">List a project</a>
-            <a class="btn secondary" href="/ai-marketing-suite/">AI marketing suite</a>
-          </div>
-          <!-- Globe removed by request -->
-        </div>
-        <div class="card glass-edge" style="margin-top:12px">
-          <div class="h1" style="font-size:20px">Prefer WhatsApp‑first help?</div>
-          <div class="sub" style="margin-bottom:10px">Open our assistant without leaving this page.</div>
-          <button class="btn" type="button" id="openAssistant">Open instant assistant</button>
-        </div>
-      </div>
+      
     </div>
   </section>
 
-  <section class="features" id="buyers">
-    <div class="row" style="justify-content:space-between;align-items:flex-end;margin-bottom:10px">
-      <div>
-        <div class="h1" style="font-size:22px">Designed around how people decide</div>
-        <div class="sub">Trust first, then exploration, then commitment. We reduce cognitive load at each step.</div>
-      </div>
-      <a href="/property-listing/" class="btn secondary">See properties</a>
-    </div>
-    <div class="feature-grid">
-      <div class="card">
-        <div class="pill">Step 1 • Trust anchors</div>
-        <h3 class="h1" style="font-size:18px;margin-top:6px">Verified builders, legal hygiene, RERA</h3>
-        <p class="sub">Bad data kills attention. We surface verification early and repeat it in context.</p>
-      </div>
-      <div class="card">
-        <div class="pill">Step 2 • Low‑effort discovery</div>
-        <h3 class="h1" style="font-size:18px;margin-top:6px">Explainable AI matches</h3>
-        <p class="sub">Every score shows why: recency, price/ft², amenities, metro distance.</p>
-      </div>
-      <div class="card">
-        <div class="pill">Step 3 • Micro‑commitments</div>
-        <h3 class="h1" style="font-size:18px;margin-top:6px">One‑tap interest with WhatsApp follow‑ups</h3>
-        <p class="sub">Frictionless intent capture with instant human‑ready summaries for builders.</p>
-      </div>
-    </div>
-  </section>
+  
 
   <section class="how" id="how">
     <div class="inner">

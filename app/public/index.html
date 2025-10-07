@@ -63,6 +63,11 @@
     /* Transparent AI art helper classes if used */
     .ai-hero-figure{ margin:0; width:100%; display:grid; place-items:center; justify-self:center }
     .ai-hero-art{ width:min(520px,95%); height:auto; opacity:.96; filter:drop-shadow(0 18px 40px rgba(110,13,37,.22)); display:block; margin:0 auto; transform:scaleX(-1); }
+    /* Hero background image with light glass grey overlay */
+    .hero{ position:relative; padding:56px 16px 28px; background:
+      linear-gradient(180deg, rgba(255,255,255,.82), rgba(255,255,255,.48)),
+      url('/images/hero-bg.jpg') center/cover no-repeat; }
+    .hero::before{ content:""; position:absolute; inset:0; background:linear-gradient(180deg, rgba(255,255,255,.55), rgba(255,255,255,.20)); pointer-events:none }
   </style>
 
   <!-- Durable Head Code (from snippets/index.html) -->

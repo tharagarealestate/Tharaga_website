@@ -69,6 +69,16 @@
       .search-grid { grid-template-columns: 1fr; }
       .feature-grid { grid-template-columns: 1fr; }
       .how .inner { grid-template-columns: 1fr; }
+      /* Mobile header behavior */
+      header.nav nav.row { overflow-x:auto; white-space:nowrap; -webkit-overflow-scrolling:touch; gap:10px }
+      header.nav nav.row a, header.nav nav.row summary { padding:6px 0 }
+      .divider{ height:14px }
+      /* Full-width dropdown sheet for Features */
+      details.dropdown .menu{ position:fixed; left:12px; right:12px; top:56px; min-width:0; border-radius:12px; }
+      details.dropdown .menu a{ padding:12px }
+      /* Keep login button aligned with a small divider */
+      header.nav .thg-auth-wrap{ gap:10px }
+      header.nav .thg-auth-wrap::before{ height:14px }
     }
   </style>
 

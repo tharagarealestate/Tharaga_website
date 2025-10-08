@@ -48,12 +48,17 @@
     header.nav .thg-auth-btn{ background:rgba(255,255,255,.12) !important; color:#fff !important; border-color:rgba(255,255,255,.85) !important }
     header.nav .thg-auth-btn:hover{ background:rgba(255,255,255,.2) !important }
     header.nav .thg-auth-btn.is-auth::after{ border-top-color:#fff !important }
+    /* Hidden by default; shown only on mobile */
+    .about-mobile-link{ display:none }
     @media (max-width: 880px) {
       /* Mobile header behavior */
       header.nav .inner { padding-right:120px }
       header.nav nav.row { overflow-x:auto; white-space:nowrap; -webkit-overflow-scrolling:touch; gap:10px }
       header.nav nav.row a, header.nav nav.row summary { padding:6px 0 }
       .divider{ height:14px }
+      /* Show About near Login on mobile; hide About in nav */
+      .about-mobile-link{ display:inline-flex; position:absolute; top:10px; right:120px; color:#fff; font-weight:700 }
+      header.nav nav.row a[href="/about/"]{ display:none }
       /* Full-width dropdown sheet for Features */
       details.dropdown .menu{ position:fixed; left:12px; right:12px; top:56px; min-width:0; border-radius:12px; }
       details.dropdown .menu a{ padding:12px }
@@ -138,6 +143,7 @@
         </span>
         <a href="/about/">About</a>
       </nav>
+      <a class="about-mobile-link" href="/about/">About</a>
     </div>
   </header>
 

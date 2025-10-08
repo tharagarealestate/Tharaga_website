@@ -65,6 +65,8 @@
     header.nav .thg-auth-btn:hover{ background:rgba(255,255,255,.2) !important }
     header.nav .thg-auth-btn.is-auth::after{ border-top-color:#fff !important }
     header.nav .divider{ background:rgba(255,255,255,.18) }
+    /* Hidden by default; shown only on mobile */
+    .about-mobile-link{ display:none }
     .features { max-width:1100px; margin:26px auto; padding:0 16px; color:#111 }
     .feature-grid { display:grid; grid-template-columns: repeat(3, 1fr); gap:14px }
     .card { background:#fff; border:1px solid #f0d9d9; border-radius:16px; box-shadow:0 12px 36px rgba(110,13,37,.1); padding:16px }
@@ -85,6 +87,9 @@
       header.nav nav.row { overflow-x:auto; white-space:nowrap; -webkit-overflow-scrolling:touch; gap:10px }
       header.nav nav.row a, header.nav nav.row summary { padding:6px 0 }
       .divider{ height:14px }
+      /* Show About near Login on mobile; hide About in nav */
+      .about-mobile-link{ display:inline-flex; position:absolute; top:10px; right:120px; color:#fff; font-weight:700 }
+      header.nav nav.row a[href="/about/"]{ display:none }
       /* Mobile header: two-row layout like Zillow/NoBroker */
       header.nav{ display:block }
       header.nav .thg-auth-wrap{ position:absolute; top:10px; right:12px; padding:0 }
@@ -704,6 +709,7 @@
         </span>
         <a href="/about/">About</a>
       </nav>
+      <a class="about-mobile-link" href="/about/">About</a>
     </div>
   </header>
 

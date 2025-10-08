@@ -110,6 +110,11 @@
       .sub { font-size:15px }
     }
 
+    /* Desktop: vertically center the right-side auth/menu group within header */
+    @media (min-width: 881px) {
+      header.nav .thg-auth-wrap:not(.is-fixed){ top:50%; transform: translateY(-50%); }
+    }
+
     /* Always suppress legacy About link; using new right-aligned group */
     .about-mobile-link{ display:none !important }
 

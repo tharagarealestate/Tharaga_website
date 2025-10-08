@@ -6,7 +6,7 @@
   <title>Tharaga — Verified homes. Human UX. AI inside.</title>
   <meta name="description" content="Broker‑free, verified properties with AI‑matched discovery, cultural tools for India & NRI, and builder‑grade storytelling.">
   <link rel="stylesheet" href="/css/brand.css" />
-  <link rel="preload" as="image" href="/images/hero-bg.jpg" imagesrcset="/images/hero-bg.jpg 1x" imagesizes="100vw" />
+  
   <script type="module" src="/js/fragment-handle.js"></script>
   <script src="/js/home.js" defer></script>
   <!-- Removed globe script; no globe on hero -->
@@ -64,11 +64,9 @@
     /* Transparent AI art helper classes if used */
     .ai-hero-figure{ margin:0; width:100%; display:grid; place-items:center; justify-self:center }
     .ai-hero-art{ width:min(520px,95%); height:auto; opacity:.96; filter:drop-shadow(0 18px 40px rgba(110,13,37,.22)); display:block; margin:0 auto; transform:scaleX(-1); }
-    /* Hero background image with light glass grey overlay */
-    .hero{ position:relative; padding:56px 16px 28px; background:
-      linear-gradient(180deg, rgba(255,255,255,.82), rgba(255,255,255,.48)),
-      url('/images/hero-bg.jpg') center/cover no-repeat; }
-    .hero::before{ content:""; position:absolute; inset:0; background:linear-gradient(180deg, rgba(255,255,255,.55), rgba(255,255,255,.20)); pointer-events:none }
+    /* Hero with crisp white background, no cloudy image/overlay */
+    .hero{ position:relative; padding:56px 16px 28px; background:linear-gradient(180deg, #ffffff, rgba(255,255,255,.94)); }
+    .hero::before{ content:none }
     /* Ensure darker, high-contrast text inside hero (matches pills and CTAs) */
     .hero, .hero .h1, .hero .sub{ color:#111 !important }
   </style>

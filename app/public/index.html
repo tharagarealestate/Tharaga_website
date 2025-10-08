@@ -69,6 +69,8 @@
       linear-gradient(180deg, rgba(255,255,255,.82), rgba(255,255,255,.48)),
       url('/images/hero-bg.jpg') center/cover no-repeat; }
     .hero::before{ content:""; position:absolute; inset:0; background:linear-gradient(180deg, rgba(255,255,255,.55), rgba(255,255,255,.20)); pointer-events:none }
+    /* Ensure darker, high-contrast text inside hero (matches pills and CTAs) */
+    .hero, .hero .h1, .hero .sub{ color:#111 !important }
   </style>
 
   <!-- Durable Head Code (from snippets/index.html) -->

@@ -35,7 +35,7 @@
     .hero::before{ content:""; position:absolute; inset:0; background:linear-gradient(180deg, rgba(255,255,255,.55), rgba(255,255,255,.20)); pointer-events:none }
     .hero .inner { max-width:1100px; margin:0 auto; display:grid; grid-template-columns: 1fr; gap:28px; align-items:center; justify-items:center; text-align:center }
     .h1 { font-family: var(--font-display); font-weight:700; font-size:36px; line-height:1.12; margin:0 0 12px; letter-spacing:.01em; color:#111 }
-    .sub { color:#111; opacity:.78; font-size:16px; margin:0 0 18px; letter-spacing:.01em }
+    .sub { color:#111; opacity:1; font-size:16px; margin:0 0 18px; letter-spacing:.01em }
     .search-card { background:rgba(255,255,255,.72); border:1px solid rgba(110,13,37,.10); border-radius:16px; box-shadow:0 12px 36px rgba(110,13,37,.12); backdrop-filter: blur(12px) saturate(1.05); padding:14px }
     .search-grid { display:grid; grid-template-columns:1.2fr .8fr .8fr auto; gap:10px }
     .chip-row { display:flex; gap:8px; flex-wrap:wrap }
@@ -79,12 +79,17 @@
       .feature-grid { grid-template-columns: 1fr; }
       .how .inner { grid-template-columns: 1fr; }
       /* Mobile header behavior */
-      header.nav .inner { padding-right:100px; flex-wrap:wrap; gap:8px }
+      header.nav .inner { padding-right:120px; flex-wrap:wrap; gap:8px }
       .brand { font-size:22px }
       header.nav .inner .row { flex:1 1 100%; justify-content:space-between }
       header.nav nav.row { overflow-x:auto; white-space:nowrap; -webkit-overflow-scrolling:touch; gap:10px }
       header.nav nav.row a, header.nav nav.row summary { padding:6px 0 }
       .divider{ height:14px }
+      /* Mobile header: two-row layout like Zillow/NoBroker */
+      header.nav{ display:block }
+      header.nav .thg-auth-wrap{ position:absolute; top:10px; right:12px; padding:0 }
+      /* Hide trust pill to avoid crowding on small screens */
+      #home_pill_trust{ display:none }
       /* Full-width dropdown sheet for Features */
       details.dropdown .menu{ position:fixed; left:12px; right:12px; top:56px; min-width:0; border-radius:12px; }
       details.dropdown .menu a{ padding:12px }

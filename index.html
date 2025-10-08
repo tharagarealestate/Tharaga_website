@@ -34,8 +34,8 @@
     /* Soft glass edge on top of image */
     .hero::before{ content:""; position:absolute; inset:0; background:linear-gradient(180deg, rgba(255,255,255,.55), rgba(255,255,255,.20)); pointer-events:none }
     .hero .inner { max-width:1100px; margin:0 auto; display:grid; grid-template-columns: 1fr; gap:28px; align-items:center; justify-items:center; text-align:center }
-    .h1 { font-family: var(--font-display); font-weight:700; font-size:36px; line-height:1.12; margin:0 0 12px; letter-spacing:.01em }
-    .sub { color:var(--muted); font-size:16px; margin:0 0 18px; letter-spacing:.01em }
+    .h1 { font-family: var(--font-display); font-weight:700; font-size:36px; line-height:1.12; margin:0 0 12px; letter-spacing:.01em; color:#111 }
+    .sub { color:#111; opacity:.78; font-size:16px; margin:0 0 18px; letter-spacing:.01em }
     .search-card { background:rgba(255,255,255,.72); border:1px solid rgba(110,13,37,.10); border-radius:16px; box-shadow:0 12px 36px rgba(110,13,37,.12); backdrop-filter: blur(12px) saturate(1.05); padding:14px }
     .search-grid { display:grid; grid-template-columns:1.2fr .8fr .8fr auto; gap:10px }
     .chip-row { display:flex; gap:8px; flex-wrap:wrap }
@@ -65,7 +65,7 @@
     header.nav .thg-auth-btn:hover{ background:rgba(255,255,255,.2) !important }
     header.nav .thg-auth-btn.is-auth::after{ border-top-color:#fff !important }
     header.nav .divider{ background:rgba(255,255,255,.18) }
-    .features { max-width:1100px; margin:26px auto; padding:0 16px; }
+    .features { max-width:1100px; margin:26px auto; padding:0 16px; color:#111 }
     .feature-grid { display:grid; grid-template-columns: repeat(3, 1fr); gap:14px }
     .card { background:#fff; border:1px solid #f0d9d9; border-radius:16px; box-shadow:0 12px 36px rgba(110,13,37,.1); padding:16px }
     .how { background:linear-gradient(180deg, rgba(110,13,37,.04), rgba(110,13,37,.02)); border-top:1px solid #f2e6e6; border-bottom:1px solid #f2e6e6; }
@@ -79,7 +79,9 @@
       .feature-grid { grid-template-columns: 1fr; }
       .how .inner { grid-template-columns: 1fr; }
       /* Mobile header behavior */
-      header.nav .inner { padding-right:120px }
+      header.nav .inner { padding-right:100px; flex-wrap:wrap; gap:8px }
+      .brand { font-size:22px }
+      header.nav .inner .row { flex:1 1 100%; justify-content:space-between }
       header.nav nav.row { overflow-x:auto; white-space:nowrap; -webkit-overflow-scrolling:touch; gap:10px }
       header.nav nav.row a, header.nav nav.row summary { padding:6px 0 }
       .divider{ height:14px }
@@ -89,6 +91,9 @@
       /* Keep login button aligned with a small divider */
       header.nav .thg-auth-wrap{ gap:10px }
       header.nav .thg-auth-wrap::before{ height:14px }
+      /* Mobile typography refinements */
+      .h1 { font-size:28px; line-height:1.16 }
+      .sub { font-size:15px }
     }
 
     /* Force plain black headings if any gradient elsewhere */
@@ -697,10 +702,10 @@
     </div>
   </header>
 
-  <section class="hero">
+  <section class="hero" style="color:#111">
     <div class="inner">
       <div>
-        <h1 class="h1 text-gradient" id="hero_title">Classy homes. Clear choices. Calm experience.</h1>
+        <h1 class="h1" id="hero_title">Classy homes. Clear choices. Calm experience.</h1>
         <p class="sub" id="hero_sub">Verified listings with explainable AI. Culture‑aware tools like Vastu, climate, and voice—so families decide with confidence.</p>
         <div class="kpi-row" style="margin:12px 0 16px">
           <div class="pill"><span class="kpi" id="kpi_time">28h</span> saved per buyer</div>

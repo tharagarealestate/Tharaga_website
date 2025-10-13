@@ -17,7 +17,7 @@
     const hero = $('#hero_title');
     const sub = $('#hero_sub');
     const trust = $('#home_pill_trust');
-    if (hero) hero.textContent = `Classy homes in ${city}${budget}. Clear choices. Calm experience.`;
+    if (hero) hero.textContent = `Find Your Dream Home in ${city}${budget}—Zero Brokers, Zero Commissions`;
     if (sub && profile.metro) sub.textContent = 'Near‑metro picks, price/ft² value, climate & vastu insights. Culture‑aware tools for India & NRIs.';
     if (trust && profile.metro) trust.textContent = 'Verified • Near‑Metro Focus';
   } catch(_){ }

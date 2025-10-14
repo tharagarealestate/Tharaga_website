@@ -12,6 +12,7 @@ Quick start (Docker)
 2. Run: `docker compose up --build -d`
 3. Run DB bootstrap once: `docker compose exec saas node dist/scripts/sync.js`
 4. App: http://localhost:3000  API: http://localhost:4000
+5. Configure Razorpay webhook to `http://localhost:4000/api/billing/webhook` (use a tunnel like `cloudflared`/`ngrok`) and use the same `RAZORPAY_WEBHOOK_SECRET` as in `.env`.
 
 Local dev (without Docker)
 - Start Postgres `postgres://postgres:postgres@localhost:5432/tharaga`
@@ -24,6 +25,8 @@ Key API endpoints
 - POST `/api/leads` → soft‑gated by monthly leads; optional `voice_transcript` for AI intent
 - POST `/api/billing/subscribe` → creates Razorpay subscription; returns `short_url`
 - POST `/api/billing/webhook` → updates tier/grace on payments
+- POST `/api/calendar/ics` → returns downloadable ICS for visit scheduling
+- GET `/api/microsite/:id` → microsite payload for rendering 3D/EMI-capable pages client-side
 
 Feature gates & tiers
 - `app/components/ui/FeatureGate.tsx` provides `<EntitlementsProvider/>` and `<FeatureGate feature="..."/>`
@@ -36,6 +39,7 @@ Notes
 - Free trial: 14 days of Growth (set on signup via your auth flow; you can update `orgs.trial_ends_at`).
 - Downgrade protection: webhook sets `grace_until` to 30 days on failure.
 - Annual discount: handled by using yearly plan IDs in Razorpay.
+- Google/Outlook sync: start with ICS downloads; when OAuth credentials are ready, add providers to push events directly.
 
 Replace homepage section
 - `index.html` now features “SaaS for Real‑Estate Builders” section and CTAs to `/app/saas`.

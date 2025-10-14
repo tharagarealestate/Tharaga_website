@@ -7,6 +7,7 @@ export default function SaaSHome(){
         <a className="underline" href="/app/saas/pricing">See pricing</a>
         <a className="underline" href="/app/builders/add-property">Add a property</a>
         <a className="underline" href="/app/saas/dashboard">Open dashboard</a>
+        <a className="underline" href="/app/saas/workflows">Workflow editor</a>
       </div>
     </main>
   )

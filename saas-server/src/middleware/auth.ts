@@ -17,10 +17,14 @@ export function authOptional(req: Request, _res: Response, next: NextFunction) {
       // ignore invalid tokens; treated as anonymous
     }
   }
-  // Dev/demo support via header
+  // Dev/demo support via header or cookie
   if (!req.user && typeof req.headers['x-demo-user'] === 'string') {
     const email = String(req.headers['x-demo-user'])
     req.user = { id: email, email }
+  }
+  if (!req.user && typeof req.headers['x-demo-org'] === 'string') {
+    const org = String(req.headers['x-demo-org'])
+    req.user = { id: org, email: 'demo@tharaga.co.in', orgId: org }
   }
   next()
 }

@@ -18,6 +18,18 @@ export const config = {
     },
     webhookSecret: process.env.RAZORPAY_WEBHOOK_SECRET || ''
   },
+  smtp: {
+    host: process.env.SMTP_HOST || '',
+    port: Number(process.env.SMTP_PORT || 587),
+    user: process.env.SMTP_USER || '',
+    pass: process.env.SMTP_PASS || '',
+    from: process.env.SMTP_FROM || 'no-reply@tharaga.co.in'
+  },
+  twilio: {
+    sid: process.env.TWILIO_SID || '',
+    authToken: process.env.TWILIO_AUTH_TOKEN || '',
+    from: process.env.TWILIO_FROM || ''
+  },
   jwt: {
     supabaseJwtSecret: process.env.SUPABASE_JWT_SECRET || ''
   },

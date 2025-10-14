@@ -40,7 +40,7 @@ coverage/
 # ==========================================
 .env
 .env.*
-!.env.example   # allow an example file if you want
+!.env.example
 
 # ==========================================
 # Lock files (optional, you can remove if needed)

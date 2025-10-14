@@ -6,6 +6,8 @@ export const metadata: Metadata = {
   description: 'AI-powered real estate assistant',
 }
 
+import { EntitlementsProvider } from '@/components/ui/FeatureGate'
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
@@ -56,7 +58,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             </button>
           </nav>
         </header>
-        {children}
+        <EntitlementsProvider>
+          {children}
+        </EntitlementsProvider>
         {/* Web Vitals reporting */}
         <script dangerouslySetInnerHTML={{ __html: `
           (function(){

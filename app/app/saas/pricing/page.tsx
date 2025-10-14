@@ -1,3 +1,4 @@
+"use client"
 import { FeatureGate, useEntitlements } from '@/components/ui/FeatureGate'
 import { PayButton } from '@/components/ui/PayButton'
 

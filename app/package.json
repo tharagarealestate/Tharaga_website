@@ -6,7 +6,7 @@
     "dev": "next dev -p 3000",
     "prebuild": "node ../scripts/ensure-next-public-env.mjs",
     "build": "next build",
-    "start": "next start -p 3000",
+    "start": "NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-http://localhost:4000} next start -p 3000",
     "lint": "next lint"
   },
   "dependencies": {

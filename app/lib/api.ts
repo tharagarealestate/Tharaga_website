@@ -2,14 +2,15 @@ import type { RecommendationResponse } from '@/types/recommendations'
 
 // On server (SSR), call Netlify Function directly.
 // On client, use /api proxy unless NEXT_PUBLIC_API_URL is set.
-export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || ''
+// Prefer explicit API base URL for Docker or local dev
+export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'
 
 export async function fetchRecommendations(params: { user_id?: string; session_id?: string; num_results?: number }): Promise<RecommendationResponse> {
   const { user_id, session_id, num_results = 10 } = params
   const isServer = typeof window === 'undefined'
   const endpoint = isServer
-    ? '/.netlify/functions/recommendations'
-    : `${API_BASE_URL || ''}/api/recommendations`
+    ? `${API_BASE_URL}/api/recommendations`
+    : `${API_BASE_URL}/api/recommendations`
   const res = await fetch(endpoint, {
     method: 'POST',
     headers: {
@@ -29,9 +30,7 @@ type PostJSON = <T>(path: string, body: any) => Promise<T>
 const isServer = typeof window === 'undefined'
 
 const postJSON: PostJSON = async (path, body) => {
-  const endpoint = isServer
-    ? `/.netlify/functions${path}`
-    : `${API_BASE_URL || ''}${path}`
+  const endpoint = `${API_BASE_URL}${path}`
   const res = await fetch(endpoint, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },

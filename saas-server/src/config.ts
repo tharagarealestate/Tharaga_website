@@ -11,10 +11,11 @@ export const config = {
     keyId: process.env.RAZORPAY_KEY_ID || '',
     keySecret: process.env.RAZORPAY_KEY_SECRET || '',
     plan: {
-      growthMonthly: process.env.RAZORPAY_PLAN_GROWTH_MONTHLY || '',
-      proMonthly: process.env.RAZORPAY_PLAN_PRO_MONTHLY || '',
-      growthYearly: process.env.RAZORPAY_PLAN_GROWTH_YEARLY || '',
-      proYearly: process.env.RAZORPAY_PLAN_PRO_YEARLY || ''
+      // Map Netlify env names (RZP_*) to internal plan keys
+      growthMonthly: process.env.RZP_PLAN_GROWTH || '',
+      proMonthly: process.env.RZP_PLAN_SCALE || '',
+      growthYearly: process.env.RZP_PLAN_GROWTH_ANNUAL || '',
+      proYearly: process.env.RZP_PLAN_SCALE_ANNUAL || ''
     },
     webhookSecret: process.env.RAZORPAY_WEBHOOK_SECRET || ''
   },

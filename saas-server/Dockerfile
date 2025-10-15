@@ -1,26 +1,11 @@
-# Build stage
-FROM node:20-alpine AS build
-WORKDIR /app
-COPY package.json package-lock.json* pnpm-lock.yaml* yarn.lock* ./
-RUN npm ci || npm install
-COPY tsconfig.json ./
-COPY src ./src
-RUN npm run build
-
-# Runtime stage
 FROM node:20-alpine
 WORKDIR /app
 ENV NODE_ENV=production PORT=4000
 
-# Copy runtime artifacts
-COPY --from=build /app/package.json ./
-COPY --from=build /app/node_modules ./node_modules
-COPY --from=build /app/dist ./dist
+COPY package.json package-lock.json* ./
+RUN npm ci --omit=dev
 
-# Ensure config module resolution
-RUN mkdir -p dist/config \
- && mv dist/config.js dist/config/index.js \
- && printf '{ "type": "module" }' > dist/config/package.json
+COPY dist ./dist
 
 EXPOSE 4000
 # Run DB sync once on container start, then launch server

@@ -11,8 +11,16 @@ RUN npm run build
 FROM node:20-alpine
 WORKDIR /app
 ENV NODE_ENV=production PORT=4000
+
+# Copy runtime artifacts
 COPY --from=build /app/package.json ./
 COPY --from=build /app/node_modules ./node_modules
 COPY --from=build /app/dist ./dist
+
+# Ensure config module resolution
+RUN mkdir -p dist/config \
+ && mv dist/config.js dist/config/index.js \
+ && printf '{ "type": "module" }' > dist/config/package.json
+
 EXPOSE 4000
 CMD ["node", "dist/server.js"]

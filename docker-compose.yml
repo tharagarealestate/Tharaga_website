@@ -12,7 +12,7 @@ services:
   saas:
     build: ./saas-server
     env_file:
-      - .env
+      - .env.example
     environment:
       NODE_ENV: development
       DATABASE_URL: postgres://postgres:postgres@db:5432/tharaga

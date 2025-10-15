@@ -35,6 +35,9 @@ async function main(){
     updated_at timestamp with time zone default now()
   );
 
+  -- Ensure extras column exists for flexible optional fields
+  alter table properties add column if not exists extras jsonb not null default '{}'::jsonb;
+
   create table if not exists leads (
     id uuid primary key default uuid_generate_v4(),
     org_id uuid not null references orgs(id) on delete cascade,

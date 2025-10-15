@@ -23,4 +23,5 @@ RUN mkdir -p dist/config \
  && printf '{ "type": "module" }' > dist/config/package.json
 
 EXPOSE 4000
-CMD ["node", "dist/server.js"]
+# Run DB sync once on container start, then launch server
+CMD ["sh", "-lc", "node dist/scripts/sync.js && node dist/server.js"]

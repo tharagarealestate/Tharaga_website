@@ -10,6 +10,9 @@ export function trackUsage(kind: 'lead' | 'listing', options?: { softLimit?: boo
       const now = new Date()
       const period = new Date(now.getFullYear(), now.getMonth(), 1)
 
+      // Ensure org exists (avoid FK errors on usage_counters)
+      await query('insert into orgs(id, name, tier) values ($1, $2, $3) on conflict (id) do nothing', [orgId, req.user?.email || 'Demo Org', 'free'])
+
       await query('insert into usage_counters(org_id, period_month) values ($1, $2) on conflict (org_id, period_month) do nothing', [orgId, period])
       const col = kind === 'lead' ? 'leads_count' : 'listings_count'
 

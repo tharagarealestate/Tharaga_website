@@ -1,12 +1,24 @@
+# Build stage
+FROM node:20-alpine AS build
+WORKDIR /app
+COPY package.json package-lock.json* ./
+RUN npm ci || npm install
+COPY tsconfig.json ./
+COPY src ./src
+RUN npm run build
+
+# Runtime stage
 FROM node:20-alpine
 WORKDIR /app
 ENV NODE_ENV=production PORT=4000
 
-COPY package.json package-lock.json* ./
-RUN npm ci --omit=dev
+# Copy package artifacts and install production deps
+COPY --from=build /app/package.json ./
+# Replace `npm ci` with `npm install`
+RUN npm install --omit=dev
 
-COPY dist ./dist
+# Copy built code
+COPY --from=build /app/dist ./dist
 
 EXPOSE 4000
-# Run DB sync once on container start, then launch server
-CMD ["sh", "-lc", "node dist/scripts/sync.js && node dist/server.js"]
+CMD ["node", "dist/server.js"]

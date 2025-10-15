@@ -16,10 +16,14 @@ const nextConfig = {
   async rewrites() {
     // Ensure /api in Next dev maps to real backend if proxy not present
     const apiBase = process.env.NEXT_PUBLIC_API_URL
+    const rules = []
     if (apiBase) {
-      return [{ source: '/api/:path*', destination: `${apiBase}/api/:path*` }]
+      rules.push({ source: '/api/:path*', destination: `${apiBase}/api/:path*` })
     }
-    return []
+    // Support legacy deep links under /app/* by rewriting to the new structure
+    // Example: /app/saas/pricing -> /saas/pricing
+    rules.push({ source: '/app/:path*', destination: '/:path*' })
+    return rules
   },
   images: {
     remotePatterns: [

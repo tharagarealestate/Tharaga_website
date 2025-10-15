@@ -8,11 +8,13 @@ Stack
 - Docker: `docker-compose.yml` for db + server + app
 
 Quick start (Docker)
-1. Copy `saas-server/.env.example` to `.env` and fill Razorpay/OpenAI keys.
+1. Copy root `.env.example` to `.env` and fill keys (OpenAI, Razorpay, SMTP/Twilio optional):
+   - `cp .env.example .env`
 2. Run: `docker compose up --build -d`
-3. Run DB bootstrap once: `docker compose exec saas node dist/scripts/sync.js`
-4. App: http://localhost:3000  API: http://localhost:4000
-5. Configure Razorpay webhook to `http://localhost:4000/api/billing/webhook` (use a tunnel like `cloudflared`/`ngrok`) and use the same `RAZORPAY_WEBHOOK_SECRET` as in `.env`.
+3. Confirm services are up: `docker compose ps` should list `db`, `saas`, and `app`.
+4. Run DB bootstrap once: `docker compose exec saas node dist/scripts/sync.js`
+5. App: http://localhost:3000  API: http://localhost:4000
+6. Configure Razorpay webhook to `http://localhost:4000/api/billing/webhook` (use a tunnel like `cloudflared`/`ngrok`) and use the same `RAZORPAY_WEBHOOK_SECRET` as in `.env`.
 
 Local dev (without Docker)
 - Start Postgres `postgres://postgres:postgres@localhost:5432/tharaga`

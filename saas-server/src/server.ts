@@ -35,6 +35,12 @@ app.use('/api', analytics)
 app.use('/api', reminders)
 app.use('/api', ai)
 
+if (!config.openaiApiKey) {
+  logger.warn({ envVar: 'OPENAI_API_KEY' }, 'AI features disabled: missing key')
+} else {
+  logger.info('AI features enabled')
+}
+
 app.use((err: any, _req: any, res: any, _next: any) => {
   logger.error(err)
   res.status(500).json({ error: 'server_error' })

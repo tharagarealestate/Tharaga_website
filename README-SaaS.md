@@ -10,6 +10,7 @@ Stack
 Quick start (Docker)
 1. Copy root `.env.example` to `.env` and fill keys (OpenAI, Razorpay, SMTP/Twilio optional):
    - `cp .env.example .env`
+   - Set `OPENAI_API_KEY=sk-...` (keep this only in local `.env` or provider env; do not commit)
 2. Run: `docker compose up --build -d`
 3. Confirm services are up: `docker compose ps` should list `db`, `saas`, and `app`.
 4. Run DB bootstrap once: `docker compose exec saas node dist/scripts/sync.js`
@@ -42,6 +43,18 @@ Notes
 - Downgrade protection: webhook sets `grace_until` to 30 days on failure.
 - Annual discount: handled by using yearly plan IDs in Razorpay.
 - Google/Outlook sync: start with ICS downloads; when OAuth credentials are ready, add providers to push events directly.
+
+AI configuration
+- Server reads `OPENAI_API_KEY` from environment (`saas-server/src/config.ts`).
+- Health/status: `GET /api/ai/status` returns `{ aiEnabled: boolean, provider: 'openai' }` without exposing secrets.
+- Docker Compose: put `OPENAI_API_KEY` in root `.env`; `docker-compose.yml` passes it to `saas`.
+- Netlify/Cloud: set `OPENAI_API_KEY` in the platform’s environment variables; never commit keys.
+
+Prevent committing secrets
+- Local guard: enable git hooks and use the provided pre-commit scanner.
+  - `git config core.hooksPath .githooks`
+  - Ensure executable: `chmod +x .githooks/pre-commit scripts/precommit-secret-scan.sh`
+- The hook blocks `sk-...` tokens and values assigned to `OPENAI_API_KEY`.
 
 Replace homepage section
 - `index.html` now features “SaaS for Real‑Estate Builders” section and CTAs to `/app/saas`.

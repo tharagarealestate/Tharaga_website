@@ -1,7 +1,12 @@
 import { Router } from 'express'
 import { generateSeoSummary, analyzeVoiceIntent } from '../services/openai'
+import { config } from '../config'
 
 export const ai = Router()
+
+ai.get('/ai/status', (_req, res) => {
+  res.json({ aiEnabled: Boolean(config.openaiApiKey), provider: 'openai' })
+})
 
 ai.post('/ai/summary', async (req, res, next) => {
   try {

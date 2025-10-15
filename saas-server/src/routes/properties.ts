@@ -16,7 +16,8 @@ const bodySchema = z.object({
   bathrooms: z.number().int().optional(),
   price_inr: z.number().optional(),
   sqft: z.number().int().optional(),
-  images: z.array(z.string().url()).optional()
+  images: z.array(z.string().url()).optional(),
+  extras: z.record(z.any()).optional()
 })
 
 properties.post('/properties', trackUsage('listing'), async (req, res, next) => {
@@ -26,13 +27,13 @@ properties.post('/properties', trackUsage('listing'), async (req, res, next) => 
     if (!parse.success) {
       return res.status(400).json({ error: 'invalid_request', details: parse.error.issues })
     }
-    const { title, description, city, locality, property_type, bedrooms, bathrooms, price_inr, sqft, images } = parse.data
+    const { title, description, city, locality, property_type, bedrooms, bathrooms, price_inr, sqft, images, extras } = parse.data
 
     const seo_summary = await generateSeoSummary({ title, city, description })
 
     const { rows } = await query(
-      'insert into properties(org_id, title, description, city, locality, property_type, bedrooms, bathrooms, price_inr, sqft, images, listing_status, seo_summary) values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11::jsonb,$12,$13) returning id',
-      [orgId, title, description, city, locality, property_type, bedrooms, bathrooms, price_inr, sqft, JSON.stringify(images || []), 'active', seo_summary]
+      'insert into properties(org_id, title, description, city, locality, property_type, bedrooms, bathrooms, price_inr, sqft, images, listing_status, seo_summary, extras) values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11::jsonb,$12,$13,$14::jsonb) returning id',
+      [orgId, title, description, city, locality, property_type, bedrooms, bathrooms, price_inr, sqft, JSON.stringify(images || []), 'active', seo_summary, JSON.stringify(extras || {})]
     )
 
     res.json({ id: rows[0].id, seo_summary })

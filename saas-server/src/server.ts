@@ -40,4 +40,9 @@ app.use((err: any, _req: any, res: any, _next: any) => {
   res.status(500).json({ error: 'server_error' })
 })
 
+// In development, ensure DB schema exists before accepting traffic
+if (config.nodeEnv !== 'production') {
+  import('./scripts/sync').catch(err => logger.warn({ err }, 'db sync skipped'))
+}
+
 app.listen(config.port, () => logger.info({ port: config.port }, 'saas-server started'))

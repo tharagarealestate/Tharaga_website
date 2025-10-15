@@ -6,13 +6,20 @@ import { query } from '../db'
 
 export const billing = Router()
 
-const rz = new Razorpay({ key_id: config.razorpay.keyId, key_secret: config.razorpay.keySecret })
+function getRazorpay(): Razorpay | null {
+  const keyId = config.razorpay.keyId
+  const keySecret = config.razorpay.keySecret
+  if (!keyId || !keySecret) return null
+  return new Razorpay({ key_id: keyId, key_secret: keySecret })
+}
 
 billing.post('/billing/subscribe', async (req, res, next) => {
   try {
     const orgId = req.user?.orgId || req.user?.id || 'demo'
     const { tier, cycle } = req.body as { tier: 'growth'|'pro'; cycle?: 'monthly'|'yearly' }
     if (!['growth','pro'].includes(tier)) return res.status(400).json({ error:'invalid_tier' })
+    const rz = getRazorpay()
+    if (!rz) return res.status(503).json({ error: 'billing_disabled', message: 'Razorpay not configured' })
     const planId = tier === 'growth'
       ? (cycle === 'yearly' ? config.razorpay.plan.growthYearly : config.razorpay.plan.growthMonthly)
       : (cycle === 'yearly' ? config.razorpay.plan.proYearly : config.razorpay.plan.proMonthly)

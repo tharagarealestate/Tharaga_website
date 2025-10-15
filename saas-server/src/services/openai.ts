@@ -12,11 +12,28 @@ async function getOpenAI() {
 
 export async function generateSeoSummary(input: { title: string; city?: string; description: string }): Promise<string> {
   const client = await getOpenAI()
-  if (!client) return `${input.title} — ${input.city || ''}`.trim()
+  const basicFallback = `${input.title} — ${input.city || ''}`.trim()
+  if (!client) return basicFallback
+
   const sys = 'You are a real-estate marketing copywriter for India. Produce a crisp, SEO-friendly 2 sentence summary with emojis avoided.'
   const user = `Title: ${input.title}\nCity: ${input.city || ''}\nDescription: ${input.description}`
-  const resp = await client.chat.completions.create({ model: 'gpt-4o-mini', messages: [{ role:'system', content: sys }, { role:'user', content: user }], temperature: 0.4 })
-  return resp.choices[0]?.message?.content?.trim() || input.description.slice(0, 160)
+
+  try {
+    const resp = await client.chat.completions.create({
+      model: 'gpt-4o-mini',
+      messages: [
+        { role: 'system', content: sys },
+        { role: 'user', content: user }
+      ],
+      temperature: 0.4
+    })
+    return resp.choices[0]?.message?.content?.trim() || input.description.slice(0, 160)
+  } catch (_err) {
+    // Resilient fallback to avoid bubbling 500s on property creation
+    const desc = (input.description || '').trim()
+    if (desc) return `${input.title} — ${desc.slice(0, 120)}`
+    return basicFallback
+  }
 }
 
 export async function analyzeVoiceIntent(transcript: string): Promise<{ intent: 'high'|'medium'|'low'; score: number; summary: string }>{

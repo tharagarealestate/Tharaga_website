@@ -6,16 +6,18 @@ import { generateSeoSummary } from '../services/openai'
 
 export const properties = Router()
 
+// Accept numeric fields provided as strings from clients
+const num = (int = false) => (int ? z.coerce.number().int() : z.coerce.number())
 const bodySchema = z.object({
   title: z.string().min(1),
   description: z.string().min(1),
   city: z.string().optional(),
   locality: z.string().optional(),
   property_type: z.string().optional(),
-  bedrooms: z.number().int().optional(),
-  bathrooms: z.number().int().optional(),
-  price_inr: z.number().optional(),
-  sqft: z.number().int().optional(),
+  bedrooms: num(true).optional(),
+  bathrooms: num(true).optional(),
+  price_inr: num(false).optional(),
+  sqft: num(true).optional(),
   images: z.array(z.string().url()).optional(),
   extras: z.record(z.any()).optional()
 })

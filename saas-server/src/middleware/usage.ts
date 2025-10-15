@@ -1,5 +1,6 @@
 import type { Request, Response, NextFunction } from 'express'
 import { query } from '../db'
+import { logger } from '../logger'
 import { TIERS } from '../pricing'
 
 // Ensure monthly usage row exists; increment counters; enforce gates
@@ -40,7 +41,14 @@ export function trackUsage(kind: 'lead' | 'listing', options?: { softLimit?: boo
 
       await query(`update usage_counters set ${col} = ${col} + 1, updated_at = now() where org_id=$1 and period_month=$2`, [orgId, period])
       next()
-    } catch (e) {
+    } catch (e: any) {
+      // If tables are missing in a fresh dev DB, don't block the request.
+      // Postgres undefined_table error code: 42P01
+      const msg = (e && (e.message || e.toString())) as string
+      if (e?.code === '42P01' || /relation .* does not exist/i.test(msg)) {
+        logger.warn({ err: e }, 'usage tracking skipped: tables missing')
+        return next()
+      }
       next(e)
     }
   }

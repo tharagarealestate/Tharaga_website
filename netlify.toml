@@ -12,6 +12,18 @@
 
 
 
+## Legacy path aliases — migrate from /app/* to new flat routes
+## This ensures old deep-links like /app/saas correctly resolve to /saas
+[[redirects]]
+  from = "/app"
+  to = "/"
+  status = 301
+
+[[redirects]]
+  from = "/app/*"
+  to = "/:splat"
+  status = 301
+
 [[redirects]]
   from = "/auth-email-landing"
   to = "/auth-email-landing/"

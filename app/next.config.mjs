@@ -20,8 +20,10 @@ const nextConfig = {
     if (apiBase) {
       rules.push({ source: '/api/:path*', destination: `${apiBase}/api/:path*` })
     }
-    // Support legacy deep links under /app/* by rewriting to the new structure
+    // Support legacy deep links under /app/* by rewriting to the new structure.
     // Example: /app/saas/pricing -> /saas/pricing
+    // Also map bare /app to root, which avoids a 404 when users visit /app directly.
+    rules.push({ source: '/app', destination: '/' })
     rules.push({ source: '/app/:path*', destination: '/:path*' })
     return rules
   },

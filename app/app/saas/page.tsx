@@ -1,3 +1,7 @@
+import dynamic from 'next/dynamic'
+
+const HowItWorks = dynamic(() => import('../../components/HowItWorks'), { ssr: true })
+
 export default function SaaSHome(){
   return (
     <main className="mx-auto max-w-5xl px-6 py-8">
@@ -9,6 +13,9 @@ export default function SaaSHome(){
         <a className="underline" href="/saas/dashboard">Open dashboard</a>
         <a className="underline" href="/saas/workflows">Workflow editor</a>
       </div>
+      <div className="mt-8" />
+      {/* New How It Works section using SVG React illustrations */}
+      <HowItWorks />
     </main>
   )
 }

@@ -67,7 +67,7 @@ export const HowItWorksAnimatedSection: React.FC = () => {
       if (isCancelled) return
       setScene((prev) => ((prev % 3) + 1) as Scene)
     }
-    const id = setInterval(next, 3500)
+    const id = setInterval(next, 4200)
     return () => {
       isCancelled = true
       clearInterval(id)
@@ -178,10 +178,10 @@ export const HowItWorksAnimatedSection: React.FC = () => {
                   exit={{ opacity: 0 }}
                   transition={{ duration: 0.4 }}
                 >
-                  <motion.div className="absolute left-[12%] top-[18%] w-32 sm:w-36" initial={{ x: -40, opacity: 0 }} animate={{ x: 0, opacity: 1 }} transition={{ type: 'spring', stiffness: 120, damping: 12 }}>
+                  <motion.div className="absolute left-[12%] top-[18%] w-32 sm:w-36" initial={{ x: -36, opacity: 0 }} animate={{ x: 0, opacity: 1 }} transition={{ type: 'spring', stiffness: 130, damping: 13 }}>
                     <Crane />
                   </motion.div>
-                  <motion.div className="absolute right-[12%] top-[26%] w-40 sm:w-48" initial={{ y: -16, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ duration: 0.6 }}>
+                  <motion.div className="absolute right-[12%] top-[26%] w-40 sm:w-48" initial={{ y: -16, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ duration: 0.7 }}>
                     <UploadFolder />
                   </motion.div>
                   {/* Clipboard ticks */}
@@ -196,10 +196,10 @@ export const HowItWorksAnimatedSection: React.FC = () => {
 
               {scene === 2 && (
                 <motion.div key="scene-2" className="absolute inset-0" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.4 }}>
-                  <motion.div className="absolute left-1/2 top-[24%] -translate-x-1/2 w-40 sm:w-48" initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}>
+                  <motion.div className="absolute left-1/2 top-[24%] -translate-x-1/2 w-40 sm:w-48" initial={{ scale: 0.92, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ duration: 0.5 }}>
                     <AIBrain />
                   </motion.div>
-                  <motion.div className="absolute left-1/2 top-[62%] -translate-x-1/2 w-[260px] sm:w-[300px]" initial={{ y: 12, opacity: 0 }} animate={{ y: 0, opacity: 1 }}>
+                  <motion.div className="absolute left-1/2 top-[62%] -translate-x-1/2 w-[260px] sm:w-[300px]" initial={{ y: 12, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ duration: 0.55 }}>
                     <BuyersGroup />
                   </motion.div>
                 </motion.div>
@@ -207,7 +207,7 @@ export const HowItWorksAnimatedSection: React.FC = () => {
 
               {scene === 3 && (
                 <motion.div key="scene-3" className="absolute inset-0" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.4 }}>
-                  <motion.div className="absolute left-1/2 top-[28%] -translate-x-1/2 w-64 sm:w-72" initial={{ y: 12 }} animate={{ y: 0 }}>
+                  <motion.div className="absolute left-1/2 top-[28%] -translate-x-1/2 w-64 sm:w-72" initial={{ y: 12 }} animate={{ y: 0 }} transition={{ duration: 0.55 }}>
                     <HandshakeAndDashboard />
                   </motion.div>
                 </motion.div>

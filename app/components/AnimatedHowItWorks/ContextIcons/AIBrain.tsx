@@ -10,9 +10,9 @@ export const AIBrain: React.FC<{ color?: string; className?: string }> = ({ colo
         <path d="M90 150h120" />
       </g>
       <motion.g
-        initial={{ opacity: 0.4, scale: 0.9 }}
-        animate={{ opacity: [0.4, 1, 0.4], scale: [0.95, 1.05, 0.95] }}
-        transition={{ duration: 1.2, repeat: Infinity, ease: 'easeInOut' }}
+        initial={{ opacity: 0.4, scale: 0.95 }}
+        animate={{ opacity: [0.5, 1, 0.5], scale: [0.96, 1.06, 0.96] }}
+        transition={{ duration: 1.4, repeat: Infinity, ease: 'easeInOut' }}
       >
         <circle cx="150" cy="150" r="24" stroke={color} strokeWidth="4" fill="none" />
         <circle cx="150" cy="150" r="8" fill={color} />

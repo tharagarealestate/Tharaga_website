@@ -8,10 +8,10 @@ export const UploadFolder: React.FC<{ color?: string; className?: string }> = ({
         <rect x="70" y="120" width="160" height="100" rx="14" />
         <path d="M70 140h160" />
       </g>
-      <motion.g initial={{ y: 18, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ duration: 0.6 }}>
+      <motion.g initial={{ y: 18, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ duration: 0.7, ease: 'easeOut' }}>
         <rect x="120" y="110" width="60" height="40" rx="6" fill={color} opacity="0.15" />
         <g stroke={color} strokeWidth="4" fill="none" strokeLinecap="round">
-          <path d="M150 112v28" />
+          <motion.path d="M150 112v28" initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ duration: 0.6 }} />
           <path d="M140 122h20" />
         </g>
       </motion.g>

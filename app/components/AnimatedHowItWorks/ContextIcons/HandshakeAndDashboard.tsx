@@ -17,7 +17,7 @@ export const HandshakeAndDashboard: React.FC<{ color?: string; className?: strin
         fill="none"
         initial={{ pathLength: 0 }}
         animate={{ pathLength: 1 }}
-        transition={{ duration: 0.9, ease: 'easeInOut' }}
+        transition={{ duration: 1.2, ease: 'easeInOut' }}
       />
       {/* Handshake */}
       <motion.g initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ delay: 0.35 }}>
@@ -26,7 +26,7 @@ export const HandshakeAndDashboard: React.FC<{ color?: string; className?: strin
           <path d="M100 200 l40 0" />
           <path d="M170 200 l40 0" />
         </g>
-        <motion.circle cx="150" cy="200" r="10" fill={color} animate={{ scale: [1, 1.1, 1] }} transition={{ repeat: Infinity, duration: 1.2 }} />
+        <motion.circle cx="150" cy="200" r="10" fill={color} animate={{ scale: [1, 1.12, 1] }} transition={{ repeat: Infinity, duration: 1.4 }} />
       </motion.g>
       {/* Phone with WhatsApp badge */}
       <motion.g initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.5 }}>

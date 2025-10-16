@@ -1,6 +1,10 @@
 import dynamic from 'next/dynamic'
 
-const HowItWorks = dynamic(() => import('../../components/HowItWorks'), { ssr: true })
+// Client animated section; disable SSR since it uses browser-only APIs/animations
+const HowItWorksAnimatedSection = dynamic(
+  () => import('../../components/AnimatedHowItWorks/HowItWorksAnimatedSection'),
+  { ssr: false }
+)
 
 export default function SaaSHome(){
   return (
@@ -14,8 +18,8 @@ export default function SaaSHome(){
         <a className="underline" href="/saas/workflows">Workflow editor</a>
       </div>
       <div className="mt-8" />
-      {/* New How It Works section using SVG React illustrations */}
-      <HowItWorks />
+      {/* Animated How It Works section (builder onboarding) */}
+      <HowItWorksAnimatedSection />
     </main>
   )
 }

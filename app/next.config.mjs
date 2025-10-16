@@ -25,6 +25,8 @@ const nextConfig = {
     // Also map bare /app to root, which avoids a 404 when users visit /app directly.
     rules.push({ source: '/app', destination: '/' })
     rules.push({ source: '/app/:path*', destination: '/:path*' })
+    // Back-compat: legacy underscore embed path -> new embed path
+    rules.push({ source: '/_embed/:path*', destination: '/embed/:path*' })
     return rules
   },
   images: {

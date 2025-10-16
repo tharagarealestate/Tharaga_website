@@ -22,7 +22,8 @@
     a { color:#0b63ff; text-decoration:none }
     a:hover { text-decoration:underline }
     header.nav { position:sticky; top:0; z-index:20; color:#fff; backdrop-filter: blur(12px) saturate(1.25); background: linear-gradient(180deg, rgba(110,13,37,.82), rgba(110,13,37,.66)); border-bottom:1px solid rgba(255,255,255,.12) }
-    header.nav .inner { max-width:1100px; margin:0 auto; padding:10px 16px; display:flex; align-items:center; justify-content:space-between; gap:10px; position:relative; padding-right:180px }
+    /* Reserve space on the right for About | Login group */
+    header.nav .inner { max-width:1100px; margin:0 auto; padding:10px 16px; display:flex; align-items:center; justify-content:space-between; gap:10px; position:relative; padding-right: clamp(220px, 22vw, 300px) }
     .brand { font-family: var(--font-display); font-weight:800; letter-spacing:.2px; font-size:24px }
     header.nav .brand{ color:#fff }
     header.nav a, header.nav summary{ color:#fff }
@@ -80,6 +81,13 @@
     .kpi-row { display:flex; gap:14px; flex-wrap:wrap; align-items:center }
     .kpi { font-family: var(--font-display); font-weight:700; font-size:22px }
     .footer { max-width:1100px; margin:0 auto; padding:28px 16px; color:#666; font-size:14px }
+    /* Earlier tablet breakpoint tweaks to prevent nav/right overlap */
+    @media (max-width: 1080px) {
+      /* Hide trust pill a bit earlier to free space */
+      #home_pill_trust{ display:none }
+      /* Slightly more reserve for wider Login/Signup label variants */
+      header.nav .inner{ padding-right:260px }
+    }
     @media (max-width: 880px) {
       .hero .inner { grid-template-columns: 1fr; text-align:center; }
       .search-grid { grid-template-columns: 1fr; }

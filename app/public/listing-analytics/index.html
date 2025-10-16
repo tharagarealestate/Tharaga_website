@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Listing Analytics</title>
+  <link rel="stylesheet" href="/css/brand.css" />
+  <style>
+    body{ padding:24px }
+    header{ display:flex; align-items:center; justify-content:space-between; margin-bottom:16px }
+    .grid{ display:grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap:12px }
+    canvas{ width:100%; height:160px; background:#0b0b0b; border-radius:10px }
+    .muted{ color:var(--muted) }
+    table{ width:100%; border-collapse:collapse }
+    th,td{ text-align:left; padding:8px 10px; border-bottom:1px solid #eee }
+  </style>
+</head>
+<body>
+  <header>
+    <div>
+      <h1 class="h1">Listing Analytics</h1>
+      <p class="sub muted" style="margin:0">Understand views, CTR, and lead quality at a glance.</p>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px">
+      <button id="startFree" class="btn" style="background:#facc15;color:#111;border:1px solid #facc15;border-radius:10px;padding:10px 12px;font-weight:700;cursor:pointer">Start free</button>
+      <a href="/" style="color:#111;text-decoration:none">← Back</a>
+    </div>
+  </header>
+
+  <section class="grid">
+    <div class="card"><div class="muted">Views</div><div id="kpiViews" class="kpi">—</div></div>
+    <div class="card"><div class="muted">CTR</div><div id="kpiCtr" class="kpi">—</div></div>
+    <div class="card"><div class="muted">Qualified Leads</div><div id="kpiLeads" class="kpi">—</div></div>
+  </section>
+
+  <section class="card" style="margin-top:12px">
+    <h2 style="margin:0 0 8px">Trends</h2>
+    <canvas id="chart" aria-label="Views over time"></canvas>
+  </section>
+
+  <section class="card" style="margin-top:12px">
+    <h2 style="margin:0 0 8px">Top Listings</h2>
+    <table>
+      <thead><tr><th>Listing</th><th>Views</th><th>CTR</th><th>Leads</th><th>Status</th></tr></thead>
+      <tbody id="top"></tbody>
+    </table>
+  </section>
+
+  <script>
+    (function(){
+      function openLogin(next){
+        try { if (window.parent && window.parent.authGate && typeof window.parent.authGate.openLoginModal === 'function'){ window.parent.authGate.openLoginModal({ next: next || (location.pathname + location.search) }); return; } } catch(_){ }
+        try { window.parent && window.parent.postMessage({ type:'open_login_modal', next: next || (location.pathname + location.search) }, '*'); } catch(_){ }
+        try { if (typeof window.__thgOpenAuthModal === 'function') window.__thgOpenAuthModal({ next: next || (location.pathname + location.search) }); } catch(_){ }
+      }
+      try { document.getElementById('startFree').addEventListener('click', function(){ openLogin(); }); } catch(_){ }
+
+      function notifyHeight(){
+        try { const h = document.documentElement.scrollHeight; window.parent && window.parent.postMessage({ type:'thg-embed-height', id:'listing-analytics', height:h }, '*'); } catch(_){ }
+      }
+      try { new ResizeObserver(notifyHeight).observe(document.body); } catch(_){ }
+      setInterval(notifyHeight, 1000);
+      notifyHeight();
+      const kpi = (id, val) => document.getElementById(id).textContent = val;
+      const ctx = document.getElementById('chart').getContext('2d');
+      const W = 600, H = 160; const pad = 10;
+      ctx.canvas.width = W; ctx.canvas.height = H;
+
+      function drawSeries(series){
+        ctx.clearRect(0,0,W,H);
+        const max = Math.max(...series);
+        const step = (W - pad*2) / (series.length - 1);
+        ctx.strokeStyle = '#22c55e'; ctx.lineWidth = 2; ctx.beginPath();
+        series.forEach((v,i)=>{
+          const x = pad + step*i;
+          const y = H - pad - (v/max)*(H-pad*2);
+          if (i === 0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+        });
+        ctx.stroke();
+      }
+
+      const sample = [120, 160, 150, 210, 260, 240, 310, 420, 380, 500, 560, 640];
+      drawSeries(sample);
+
+      kpi('kpiViews', '12,540');
+      kpi('kpiCtr', '3.9%');
+      kpi('kpiLeads', '238');
+
+      const rows = [
+        { name:'Sunrise Enclave — 2BHK', views: 2540, ctr:'4.2%', leads:52, status:'Verified' },
+        { name:'Lake View — 3BHK', views: 1980, ctr:'3.1%', leads:33, status:'Verified' },
+        { name:'Green Meadows — Plot', views: 1540, ctr:'2.7%', leads:28, status:'Pending' },
+      ];
+      const top = document.getElementById('top');
+      top.innerHTML = rows.map(r => '<tr><td>'+r.name+'</td><td>'+r.views+'</td><td>'+r.ctr+'</td><td>'+r.leads+'</td><td><span class="pill">'+r.status+'</span></td></tr>').join('');
+    })();
+  </script>
+</body>
+</html>

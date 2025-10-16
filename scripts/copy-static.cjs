@@ -61,18 +61,15 @@ async function main() {
     'public',
   ]);
 
-  const mustIncludeDirs = new Set([
+  // Only copy a minimal allowlist of microsites required in production.
+  // This drastically reduces the published asset size in Netlify.
+  const allowedDirs = new Set([
     'auth-email-landing',
     'login_signup_glassdrop',
     'Reset_password',
     'property-listing',
     'snippets',
-    'registration',
-    'rating',
-    'reel-grid',
-    'search-filter-home',
-    'about',
-    'buyer-form',
+    'pricing',
   ]);
 
   await ensureDir(nextPublic);
@@ -85,14 +82,12 @@ async function main() {
     const name = entry.name;
     if (exclude.has(name)) continue;
     const dirPath = path.join(srcRoot, name);
-    const hasIndex = await pathExists(path.join(dirPath, 'index.html'));
-    if (hasIndex || mustIncludeDirs.has(name)) {
-      candidates.push(name);
-    }
+    if (allowedDirs.has(name)) candidates.push(name);
   }
 
-  // Also copy shared static assets used by microsites
-  const sharedAssets = ['js', 'css'];
+  // Do NOT copy large shared asset folders wholesale. Keep only what is
+  // explicitly checked into app/public to minimize bundle size.
+  const sharedAssets = [];
 
   console.log('[copy-static] Next public dir:', nextPublic);
   console.log('[copy-static] Copying microsites:', candidates);
@@ -103,14 +98,7 @@ async function main() {
     await copyDir(src, dest);
   }
 
-  for (const asset of sharedAssets) {
-    const src = path.join(srcRoot, asset);
-    if (await pathExists(src)) {
-      const dest = path.join(nextPublic, asset);
-      console.log('[copy-static] Copying asset:', asset);
-      await copyDir(src, dest);
-    }
-  }
+  // Intentionally left empty (sharedAssets = [])
 
   // Copy root index.html as the public homepage so Netlify serves it
   try {

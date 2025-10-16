@@ -18,11 +18,13 @@
   from = "/app"
   to = "/"
   status = 301
+  force = true
 
 [[redirects]]
   from = "/app/*"
   to = "/:splat"
   status = 301
+  force = true
 
 [[redirects]]
   from = "/auth-email-landing"

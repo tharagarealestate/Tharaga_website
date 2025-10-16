@@ -1,6 +1,8 @@
+const CACHE_NAME = 'thg-v2';
+
 self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches.open('thg-v1').then((cache) => cache.addAll([
+    caches.open(CACHE_NAME).then((cache) => cache.addAll([
       '/',
       '/property-listing/',
       '/search-filter-home/',
@@ -16,7 +18,7 @@ self.addEventListener('install', (event) => {
 
 self.addEventListener('activate', (event) => {
   event.waitUntil(
-    caches.keys().then((keys) => Promise.all(keys.map((k) => k !== 'thg-v1' ? caches.delete(k) : Promise.resolve())))
+    caches.keys().then((keys) => Promise.all(keys.map((k) => k !== CACHE_NAME ? caches.delete(k) : Promise.resolve())))
   );
 });
 
@@ -27,6 +29,22 @@ self.addEventListener('fetch', (event) => {
     event.respondWith(
       fetch(request).catch(() => caches.match(request))
     );
+  } else if (request.mode === 'navigate') {
+    // Always try network first for navigation requests (HTML pages) to avoid stale content
+    event.respondWith((async () => {
+      try {
+        const resp = await fetch(request);
+        const cache = await caches.open(CACHE_NAME);
+        cache.put(request, resp.clone());
+        return resp;
+      } catch (e) {
+        const cached = await caches.match(request);
+        if (cached) return cached;
+        const off = await caches.match('/offline.html');
+        if (off) return off;
+        throw e;
+      }
+    })());
   } else {
     event.respondWith((async () => {
       const cached = await caches.match(request)
@@ -34,15 +52,12 @@ self.addEventListener('fetch', (event) => {
       try {
         const resp = await fetch(request)
         const clone = resp.clone()
-        const cache = await caches.open('thg-v1')
+        const cache = await caches.open(CACHE_NAME)
         cache.put(request, clone)
         return resp
       } catch (e) {
         // Navigation fallback
-        if (request.mode === 'navigate') {
-          const off = await caches.match('/offline.html')
-          if (off) return off
-        }
+        // Non-navigation: just rethrow
         throw e
       }
     })())

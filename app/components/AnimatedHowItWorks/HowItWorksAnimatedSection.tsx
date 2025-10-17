@@ -52,15 +52,33 @@ function useIntersectionStep(ref: React.RefObject<HTMLElement>, enabled: boolean
   return enabled ? inView : true
 }
 
-export const HowItWorksAnimatedSection: React.FC = () => {
+export interface HowItWorksAnimatedSectionProps {
+  /**
+   * Compact layout trims paddings and hides the text column on mobile
+   * to avoid vertical scrolling in tight embeds.
+   */
+  compact?: boolean
+}
+
+export const HowItWorksAnimatedSection: React.FC<HowItWorksAnimatedSectionProps> = ({ compact = false }) => {
   const [scene, setScene] = useState<Scene>(1)
   const rootRef = useRef<HTMLDivElement>(null)
   const inView = useIntersectionStep(rootRef as any, true)
   const reduceMotion = typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches
 
+  // Track page/tab visibility so we can pause auto-advance + audio when hidden
+  const [isPageVisible, setIsPageVisible] = useState<boolean>(true)
+  useEffect(() => {
+    if (typeof document === 'undefined') return
+    const update = () => setIsPageVisible(!document.hidden)
+    update()
+    document.addEventListener('visibilitychange', update)
+    return () => document.removeEventListener('visibilitychange', update)
+  }, [])
+
   // Auto‑advance when section scrolled into view
   useEffect(() => {
-    if (!inView || reduceMotion) return
+    if (!inView || reduceMotion || !isPageVisible) return
     let isCancelled = false
     const next = () => {
       if (isCancelled) return
@@ -71,11 +89,12 @@ export const HowItWorksAnimatedSection: React.FC = () => {
       isCancelled = true
       clearInterval(id)
     }
-  }, [inView, reduceMotion])
+  }, [inView, reduceMotion, isPageVisible])
 
   // Subtle auditory tick for step transitions (default on; no visible controls)
   const playTick = React.useCallback(() => {
     if (typeof window === 'undefined') return
+    try { if (typeof document !== 'undefined' && document.hidden) return } catch(_) {}
     try {
       const AudioCtx = (window as any).AudioContext || (window as any).webkitAudioContext
       if (!AudioCtx) return
@@ -129,10 +148,11 @@ export const HowItWorksAnimatedSection: React.FC = () => {
       ref={rootRef}
       aria-label="How it works process: steps 1 to 3"
       id="how-it-works-animated"
-      className="w-full"
+      className="w-full overflow-x-hidden"
       style={{ background: bgColor }}
     >
-      <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+      <div className={`mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8 ${compact ? 'py-3 sm:py-6' : 'py-6 sm:py-8'} overflow-x-hidden`}
+      >
         <div className="grid grid-cols-1 lg:grid-cols-2 items-center gap-6 lg:gap-8">
           {/* Text column */}
           <motion.div
@@ -140,7 +160,7 @@ export const HowItWorksAnimatedSection: React.FC = () => {
             initial={{ opacity: 0, y: 6 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3 }}
-            className="order-2 lg:order-1"
+            className={`order-2 lg:order-1 ${compact ? 'hidden sm:block' : ''}`}
             aria-live="polite"
           >
             <h2 className="text-xl sm:text-2xl lg:text-3xl font-extrabold text-gray-900 mb-2">How it works</h2>
@@ -157,9 +177,9 @@ export const HowItWorksAnimatedSection: React.FC = () => {
 
           {/* Futuristic scene canvas */}
           <div
-            className="order-1 lg:order-2 relative w-full overflow-hidden rounded-2xl border border-gray-200 bg-white"
-            style={{ minHeight: 360 }}
+            className={`order-1 lg:order-2 relative w-full overflow-hidden rounded-2xl border border-gray-200 bg-white lg:-ml-4 xl:-ml-6`}
           >
+            <div className="min-h-[320px] sm:min-h-[360px]" />
             {/* Gradient + grid background */}
             <div className="pointer-events-none absolute inset-0" style={{
               background: `radial-gradient(800px 320px at 85% -10%, rgba(16,185,129,.12), rgba(16,185,129,0) 70%),

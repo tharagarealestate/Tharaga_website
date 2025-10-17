@@ -12,7 +12,7 @@ import { HandshakeAndDashboard } from './ContextIcons/HandshakeAndDashboard'
 export type Scene = 1 | 2 | 3
 
 const bgColor = '#F9FAFB'
-const SCENE_MS = 2400
+const SCENE_MS = 1800
 const SCENE_S = SCENE_MS / 1000
 
 const stepMeta = {
@@ -166,6 +166,27 @@ export const HowItWorksAnimatedSection: React.FC = () => {
                           radial-gradient(600px 300px at 10% 110%, rgba(59,130,246,.12), rgba(59,130,246,0) 70%),
                           linear-gradient(180deg, #ffffff, #fafafa)`
             }} />
+            {/* Parallax drift layers */}
+            <motion.div
+              className="pointer-events-none absolute inset-0"
+              style={{
+                background: `radial-gradient(420px 220px at 22% 32%, rgba(59,130,246,.06), transparent 70%),
+                            radial-gradient(520px 240px at 78% 68%, rgba(16,185,129,.06), transparent 70%)`,
+                willChange: 'transform'
+              }}
+              animate={{ x: [ -24, 24 ] }}
+              transition={{ duration: 14, ease: 'easeInOut', repeat: Infinity, repeatType: 'reverse' }}
+            />
+            <motion.div
+              className="pointer-events-none absolute inset-0"
+              style={{
+                background: `radial-gradient(380px 200px at 70% 26%, rgba(99,102,241,.05), transparent 72%),
+                            radial-gradient(460px 220px at 30% 80%, rgba(20,184,166,.05), transparent 72%)`,
+                willChange: 'transform'
+              }}
+              animate={{ x: [ 18, -18 ] }}
+              transition={{ duration: 18, ease: 'easeInOut', repeat: Infinity, repeatType: 'reverse' }}
+            />
             <div className="pointer-events-none absolute inset-0 opacity-[0.06] [background:radial-gradient(circle_at_1px_1px,#111_1px,transparent_1px)] [background-size:18px_18px]" />
             {/* Scanning sweep */}
             <motion.div
@@ -252,6 +273,25 @@ export const HowItWorksAnimatedSection: React.FC = () => {
                   </motion.div>
                 </motion.div>
               )}
+            </AnimatePresence>
+
+            {/* Global dissolve/blur wipe across scene boundaries */}
+            <AnimatePresence>
+              <motion.div
+                key={`wipe-${scene}`}
+                className="pointer-events-none absolute inset-y-0 -left-1/5 w-2/5"
+                style={{
+                  background: 'linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(148,163,184,0.22) 40%, rgba(255,255,255,0) 100%)',
+                  filter: 'blur(10px)',
+                  opacity: 0.0,
+                  willChange: 'transform, filter, opacity',
+                  mixBlendMode: 'soft-light'
+                }}
+                initial={{ x: '-20%', opacity: 0.0, filter: 'blur(14px)' }}
+                animate={{ x: '120%', opacity: 0.65, filter: 'blur(6px)' }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.36, ease: 'easeInOut' }}
+              />
             </AnimatePresence>
           </div>
         </div>

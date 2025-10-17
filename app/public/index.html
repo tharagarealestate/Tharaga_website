@@ -22,7 +22,7 @@
     a { color:#0b63ff; text-decoration:none }
     a:hover { text-decoration:underline }
     header.nav { position:sticky; top:0; z-index:20; color:#fff; backdrop-filter: blur(12px) saturate(1.25); background: linear-gradient(180deg, rgba(110,13,37,.82), rgba(110,13,37,.66)); border-bottom:1px solid rgba(255,255,255,.12) }
-    header.nav .inner { max-width:1100px; margin:0 auto; padding:10px 16px; display:flex; align-items:center; justify-content:space-between; gap:10px; position:relative; padding-right:180px }
+    header.nav .inner { max-width:1100px; margin:0 auto; padding:10px 16px; display:flex; align-items:center; justify-content:space-between; gap:10px; position:relative; padding-right: clamp(180px, 14vw, 260px) }
     .brand { font-family: var(--font-display); font-weight:800; letter-spacing:.2px; font-size:24px }
     header.nav .brand{ color:#fff }
     header.nav a, header.nav summary{ color:#fff }
@@ -48,6 +48,8 @@
     header.nav a, header.nav summary, header.nav .brand { color:#fff }
     /* Header nav additions */
     header.nav nav.row { gap:12px; align-items:center; flex-wrap:nowrap }
+    /* Match About styling on Features/Pricing */
+    header.nav nav.row a, header.nav nav.row summary { font-weight:700 }
     .menu-group{ display:inline-flex; align-items:center; gap:12px }
     .divider{ width:1px; height:16px; background:#e5e7eb; border-radius:1px; display:inline-block }
     details.dropdown{ position:relative }
@@ -92,7 +94,9 @@
       header.nav nav.row { overflow-x:auto; white-space:nowrap; -webkit-overflow-scrolling:touch; gap:10px }
       header.nav nav.row a, header.nav nav.row summary { padding:6px 0 }
       .divider{ height:14px }
-      /* Keep header compact on mobile; About is rendered inside auth wrap */
+      /* On mobile, show About inside the main nav next to Features/Pricing */
+      header.nav .thg-auth-wrap .about-link{ display:none }
+      header.nav nav.row a[href="/about/"]{ display:inline-block }
       .about-mobile-link{ display:none }
       /* Mobile header: two-row layout like Zillow/NoBroker */
       header.nav{ display:block }

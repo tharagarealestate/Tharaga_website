@@ -8,7 +8,6 @@ import { UploadFolder } from './ContextIcons/UploadFolder'
 import { AIBrain } from './ContextIcons/AIBrain'
 import { BuyersGroup } from './ContextIcons/Buyers'
 import { HandshakeAndDashboard } from './ContextIcons/HandshakeAndDashboard'
-import ProgressBar from './ProgressBar'
 
 export type Scene = 1 | 2 | 3
 
@@ -53,15 +52,13 @@ function useIntersectionStep(ref: React.RefObject<HTMLElement>, enabled: boolean
 
 export const HowItWorksAnimatedSection: React.FC = () => {
   const [scene, setScene] = useState<Scene>(1)
-  const [paused, setPaused] = useState(false)
-  const [soundEnabled, setSoundEnabled] = useState(false)
   const rootRef = useRef<HTMLDivElement>(null)
   const inView = useIntersectionStep(rootRef as any, true)
   const reduceMotion = typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches
 
   // Auto‑advance when section scrolled into view
   useEffect(() => {
-    if (!inView || paused || reduceMotion) return
+    if (!inView || reduceMotion) return
     let isCancelled = false
     const next = () => {
       if (isCancelled) return
@@ -72,13 +69,15 @@ export const HowItWorksAnimatedSection: React.FC = () => {
       isCancelled = true
       clearInterval(id)
     }
-  }, [inView, paused, reduceMotion])
+  }, [inView, reduceMotion])
 
-  // Optional auditory tick for step transitions (accessibility-friendly, short tone)
+  // Subtle auditory tick for step transitions (default on; no visible controls)
   const playTick = React.useCallback(() => {
-    if (!soundEnabled || typeof window === 'undefined') return
+    if (typeof window === 'undefined') return
     try {
-      const ctx = new (window.AudioContext || (window as any).webkitAudioContext)()
+      const AudioCtx = (window as any).AudioContext || (window as any).webkitAudioContext
+      if (!AudioCtx) return
+      const ctx = new AudioCtx()
       const osc = ctx.createOscillator()
       const gain = ctx.createGain()
       osc.type = 'sine'
@@ -87,9 +86,9 @@ export const HowItWorksAnimatedSection: React.FC = () => {
       osc.connect(gain)
       gain.connect(ctx.destination)
       osc.start()
-      setTimeout(() => { osc.stop(); ctx.close().catch(() => {}) }, 120)
+      setTimeout(() => { try { osc.stop() } catch(_){} try { ctx.close() } catch(_){} }, 120)
     } catch {}
-  }, [soundEnabled])
+  }, [])
 
   // Fire tick when scene changes
   useEffect(() => {
@@ -111,25 +110,17 @@ export const HowItWorksAnimatedSection: React.FC = () => {
     return { x: 90, scale: 1 }
   }, [scene])
 
-  // Simple swipe gesture support
-  const startXRef = useRef<number | null>(null)
-  const onPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
-    startXRef.current = e.clientX
-  }
-  const onPointerUp = (e: React.PointerEvent<HTMLDivElement>) => {
-    if (startXRef.current == null) return
-    const dx = e.clientX - startXRef.current
-    if (Math.abs(dx) > 40) {
-      setScene((s) => (dx > 0 ? (s > 1 ? ((s - 1) as Scene) : 3) : ((s % 3) + 1) as Scene))
+  // Attempt to unlock audio on any user gesture without exposing controls
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const handler = () => { try { playTick() } catch(_){} }
+    window.addEventListener('pointerdown', handler, { once: true })
+    window.addEventListener('keydown', handler, { once: true })
+    return () => {
+      window.removeEventListener('pointerdown', handler as any)
+      window.removeEventListener('keydown', handler as any)
     }
-    startXRef.current = null
-  }
-
-  const onKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
-    if (e.key === 'ArrowRight') setScene((s) => ((s % 3) + 1) as Scene)
-    if (e.key === 'ArrowLeft') setScene((s) => (s > 1 ? ((s - 1) as Scene) : 3))
-    if (e.key === ' ') setPaused((p) => !p)
-  }
+  }, [playTick])
 
   return (
     <section
@@ -138,26 +129,51 @@ export const HowItWorksAnimatedSection: React.FC = () => {
       id="how-it-works-animated"
       className="w-full"
       style={{ background: bgColor }}
-      tabIndex={0}
-      onKeyDown={onKeyDown}
     >
-      <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8 py-12 sm:py-16">
-        <div className="flex flex-col items-center gap-6">
-          <h2 className="text-xl sm:text-2xl lg:text-3xl font-extrabold text-gray-900">How it works</h2>
-
-          {/* Scene Canvas */}
-          <div
-            className="relative w-full overflow-hidden rounded-2xl border border-gray-200 bg-white"
-            style={{ minHeight: 360 }}
-            onMouseEnter={() => setPaused(true)}
-            onMouseLeave={() => setPaused(false)}
-            onPointerDown={onPointerDown}
-            onPointerUp={onPointerUp}
+      <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 items-center gap-6 lg:gap-8">
+          {/* Text column */}
+          <motion.div
+            key={`text-${scene}`}
+            initial={{ opacity: 0, y: 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3 }}
+            className="order-2 lg:order-1"
+            aria-live="polite"
           >
-            {/* Large background grid */}
-            <div className="pointer-events-none absolute inset-0 opacity-[0.04] [background:radial-gradient(circle_at_1px_1px,#111_1px,transparent_1px)] [background-size:20px_20px]" />
+            <h2 className="text-xl sm:text-2xl lg:text-3xl font-extrabold text-gray-900 mb-2">How it works</h2>
+            <h3 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900">{meta.label}</h3>
+            <ul className="mt-2 space-y-1 text-sm sm:text-base text-gray-600">
+              {meta.bullets.map((b, i) => (
+                <li key={i} className="flex items-center gap-2">
+                  <span className="inline-block h-1.5 w-1.5 rounded-full" style={{ background: meta.accent }} />
+                  {b}
+                </li>
+              ))}
+            </ul>
+          </motion.div>
 
-            {/* Builder Avatar – anchored centerish */}
+          {/* Futuristic scene canvas */}
+          <div
+            className="order-1 lg:order-2 relative w-full overflow-hidden rounded-2xl border border-gray-200 bg-white"
+            style={{ minHeight: 360 }}
+          >
+            {/* Gradient + grid background */}
+            <div className="pointer-events-none absolute inset-0" style={{
+              background: `radial-gradient(800px 320px at 85% -10%, rgba(16,185,129,.12), rgba(16,185,129,0) 70%),
+                          radial-gradient(600px 300px at 10% 110%, rgba(59,130,246,.12), rgba(59,130,246,0) 70%),
+                          linear-gradient(180deg, #ffffff, #fafafa)`
+            }} />
+            <div className="pointer-events-none absolute inset-0 opacity-[0.06] [background:radial-gradient(circle_at_1px_1px,#111_1px,transparent_1px)] [background-size:18px_18px]" />
+            {/* Scanning sweep */}
+            <motion.div
+              className="pointer-events-none absolute inset-x-0 top-0 h-16"
+              style={{ background: 'linear-gradient(180deg, rgba(16,185,129,0.0), rgba(16,185,129,0.14), rgba(16,185,129,0.0))' }}
+              animate={{ y: [ -64, 320 ] }}
+              transition={{ duration: 2.8, ease: 'easeInOut', repeat: Infinity }}
+            />
+
+            {/* Builder Avatar – center anchor with gentle drift */}
             <motion.div
               className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
               initial="initial"
@@ -167,7 +183,18 @@ export const HowItWorksAnimatedSection: React.FC = () => {
               <BuilderAvatar expression={expression} className="h-[180px] w-[180px] sm:h-[220px] sm:w-[220px]" />
             </motion.div>
 
-            {/* Scenes */}
+            {/* Floating cursor indicator */}
+            <motion.div
+              className="absolute h-4 w-4 rounded-full"
+              style={{ background: '#fff', boxShadow: '0 0 18px rgba(59,130,246,.55)', border: '2px solid rgba(59,130,246,.85)' }}
+              animate={{
+                left: scene === 1 ? '22%': scene === 2 ? '52%' : '68%',
+                top: scene === 1 ? '28%' : scene === 2 ? '62%' : '36%'
+              }}
+              transition={{ duration: 0.6, ease: 'easeInOut' }}
+            />
+
+            {/* Scenes with richer overlays */}
             <AnimatePresence mode="wait">
               {scene === 1 && (
                 <motion.div
@@ -178,17 +205,16 @@ export const HowItWorksAnimatedSection: React.FC = () => {
                   exit={{ opacity: 0 }}
                   transition={{ duration: 0.4 }}
                 >
-                  <motion.div className="absolute left-[12%] top-[18%] w-32 sm:w-36" initial={{ x: -36, opacity: 0 }} animate={{ x: 0, opacity: 1 }} transition={{ type: 'spring', stiffness: 130, damping: 13 }}>
+                  <motion.div className="absolute left-[10%] top-[16%] w-32 sm:w-36" initial={{ x: -36, opacity: 0 }} animate={{ x: 0, opacity: 1 }} transition={{ type: 'spring', stiffness: 130, damping: 13 }}>
                     <Crane />
                   </motion.div>
-                  <motion.div className="absolute right-[12%] top-[26%] w-40 sm:w-48" initial={{ y: -16, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ duration: 0.7 }}>
+                  <motion.div className="absolute right-[10%] top-[22%] w-40 sm:w-48" initial={{ y: -16, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ duration: 0.7 }}>
                     <UploadFolder />
                   </motion.div>
-                  {/* Clipboard ticks */}
-                  <motion.div className="absolute left-1/2 top-[70%] -translate-x-1/2" initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.4 }}>
+                  <motion.div className="absolute left-1/2 top-[74%] -translate-x-1/2" initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.35 }}>
                     <div className="flex items-center gap-2 text-sm">
                       <span className="h-2 w-2 rounded-full" style={{ background: stepMeta[1].accent }} />
-                      <span className="text-gray-700">Checklist prepared</span>
+                      <span className="text-gray-700">Assets uploaded • Story ready</span>
                     </div>
                   </motion.div>
                 </motion.div>
@@ -202,6 +228,12 @@ export const HowItWorksAnimatedSection: React.FC = () => {
                   <motion.div className="absolute left-1/2 top-[62%] -translate-x-1/2 w-[260px] sm:w-[300px]" initial={{ y: 12, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ duration: 0.55 }}>
                     <BuyersGroup />
                   </motion.div>
+                  <motion.div className="absolute left-[14%] bottom-[14%]" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
+                    <span className="inline-flex items-center gap-2 rounded-full border border-gray-200 bg-white/90 px-3 py-1 text-xs font-semibold text-gray-800 shadow-sm">
+                      <span className="inline-block h-2 w-2 rounded-full" style={{ background: stepMeta[2].accent }} />
+                      Qualified badges
+                    </span>
+                  </motion.div>
                 </motion.div>
               )}
 
@@ -210,61 +242,16 @@ export const HowItWorksAnimatedSection: React.FC = () => {
                   <motion.div className="absolute left-1/2 top-[28%] -translate-x-1/2 w-64 sm:w-72" initial={{ y: 12 }} animate={{ y: 0 }} transition={{ duration: 0.55 }}>
                     <HandshakeAndDashboard />
                   </motion.div>
+                  <motion.div className="absolute right-[12%] bottom-[14%]" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.35 }}>
+                    <span className="inline-flex items-center gap-2 rounded-full border border-gray-200 bg-white/90 px-3 py-1 text-xs font-semibold text-gray-800 shadow-sm">
+                      <span className="inline-block h-2 w-2 rounded-full" style={{ background: stepMeta[3].accent }} />
+                      Live dashboard
+                    </span>
+                  </motion.div>
                 </motion.div>
               )}
             </AnimatePresence>
           </div>
-
-          {/* Labels and bullets */}
-          <motion.div key={scene} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35 }} className="w-full text-center" aria-live="polite">
-            <h3 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900">{meta.label}</h3>
-            <ul className="mt-2 flex flex-col items-center gap-1 text-sm sm:text-base text-gray-600">
-              {meta.bullets.map((b, i) => (
-                <li key={i} className="flex items-center gap-2">
-                  <span className="inline-block h-1.5 w-1.5 rounded-full" style={{ background: meta.accent }} />
-                  {b}
-                </li>
-              ))}
-            </ul>
-          </motion.div>
-
-          {/* Controls */}
-          <div className="flex w-full items-center justify-between gap-3">
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                className="rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm hover:bg-gray-50"
-                onClick={() => setScene((s) => (s > 1 ? ((s - 1) as Scene) : 3))}
-                aria-label="Previous step"
-              >
-                Prev
-              </button>
-              <button
-                type="button"
-                className="rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm hover:bg-gray-50"
-                onClick={() => setScene((s) => ((s % 3) + 1) as Scene)}
-                aria-label="Next step"
-              >
-                Next
-              </button>
-              <button
-                type="button"
-                className="rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm hover:bg-gray-50"
-                onClick={() => setScene(1)}
-                aria-label="Replay animation"
-              >
-                Replay
-              </button>
-            </div>
-            <div className="flex items-center gap-3">
-              <label className="text-sm text-gray-600" htmlFor="pause-toggle">Pause</label>
-              <input id="pause-toggle" type="checkbox" checked={paused} onChange={(e) => setPaused(e.target.checked)} className="h-4 w-4" />
-              <label className="text-sm text-gray-600" htmlFor="sound-toggle">Sound</label>
-              <input id="sound-toggle" type="checkbox" checked={soundEnabled} onChange={(e) => setSoundEnabled(e.target.checked)} className="h-4 w-4" />
-            </div>
-          </div>
-
-          <ProgressBar step={scene} total={3} onStepChange={(s) => setScene(s as Scene)} />
         </div>
       </div>
     </section>

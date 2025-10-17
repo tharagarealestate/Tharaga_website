@@ -183,6 +183,30 @@ export const HowItWorksAnimatedSection: React.FC<HowItWorksAnimatedSectionProps>
           >
             {/* Mobile-only section title pinned to top center */}
             <h2 className="sm:hidden absolute top-2 left-1/2 -translate-x-1/2 text-base font-extrabold text-gray-900 z-20">How it works</h2>
+            {/* Mobile-only dynamic copy that mirrors desktop text column */}
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={`mobile-copy-${scene}`}
+                className="sm:hidden absolute top-8 left-3 right-3 z-20"
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -6 }}
+                transition={{ duration: 0.25 }}
+                aria-live="polite"
+              >
+                <div className="rounded-xl border border-gray-200 bg-white/90 backdrop-blur-[2px] shadow-sm px-3 py-2">
+                  <h3 className="text-sm font-bold text-gray-900">{meta.label}</h3>
+                  <ul className="mt-1 space-y-1 text-xs text-gray-600">
+                    {meta.bullets.map((b, i) => (
+                      <li key={i} className="flex items-center gap-2">
+                        <span className="inline-block h-1.5 w-1.5 rounded-full" style={{ background: meta.accent }} />
+                        {b}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </motion.div>
+            </AnimatePresence>
             <div className="min-h-[260px] sm:min-h-[360px]" />
             {/* Gradient + grid background */}
             <div className="pointer-events-none absolute inset-0" style={{
@@ -319,6 +343,10 @@ export const HowItWorksAnimatedSection: React.FC<HowItWorksAnimatedSectionProps>
             </AnimatePresence>
           </div>
         </div>
+      </div>
+      {/* Foundation bar below the scene for visual balance (thin, responsive width) */}
+      <div className="mx-auto mt-3 flex justify-center" aria-hidden="true">
+        <div className="h-2 sm:h-2 md:h-2 w-[84%] sm:w-[78%] md:w-[72%] lg:w-[66%] rounded-2xl bg-[#0b0b0b]" />
       </div>
     </section>
   )

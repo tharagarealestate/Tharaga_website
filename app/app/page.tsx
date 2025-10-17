@@ -10,7 +10,7 @@ export default function Home() {
         <p className="text-gray-600 mt-2">AI‑powered assistant for builders and buyers.</p>
       </section>
       {/* Place the animated section on homepage */}
-      <HowItWorksAnimatedSection />
+      <HowItWorksAnimatedSection compact />
     </main>
   )
 }

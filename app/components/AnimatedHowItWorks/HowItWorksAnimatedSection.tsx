@@ -153,7 +153,9 @@ export const HowItWorksAnimatedSection: React.FC<HowItWorksAnimatedSectionProps>
     >
       <div className={`mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8 ${compact ? 'py-3 sm:py-6' : 'py-6 sm:py-8'} overflow-x-hidden`}
       >
-        <div className="grid grid-cols-1 lg:grid-cols-2 items-center gap-6 lg:gap-8">
+        <div
+          className="grid grid-cols-1 items-center gap-6 lg:gap-8 lg:[grid-template-columns:minmax(0,0.9fr)_minmax(0,1.1fr)] xl:[grid-template-columns:minmax(0,0.85fr)_minmax(0,1.15fr)]"
+        >
           {/* Text column */}
           <motion.div
             key={`text-${scene}`}
@@ -177,7 +179,7 @@ export const HowItWorksAnimatedSection: React.FC<HowItWorksAnimatedSectionProps>
 
           {/* Futuristic scene canvas */}
           <div
-            className={`order-1 lg:order-2 relative w-full overflow-hidden rounded-2xl border border-gray-200 bg-white lg:-ml-4 xl:-ml-6`}
+            className={`order-1 lg:order-2 relative w-full overflow-hidden rounded-2xl border border-gray-200 bg-white lg:[width:calc(100%+2rem)] xl:[width:calc(100%+3rem)] 2xl:[width:calc(100%+4rem)] lg:ml-[-2rem] xl:ml-[-3rem] 2xl:ml-[-4rem]`}
           >
             <div className="min-h-[320px] sm:min-h-[360px]" />
             {/* Gradient + grid background */}

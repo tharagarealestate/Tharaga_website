@@ -95,28 +95,25 @@
       .search-grid { grid-template-columns: 1fr; }
       .feature-grid { grid-template-columns: 1fr; }
       .how .inner { grid-template-columns: 1fr; }
-      /* Mobile header behavior */
-      header.nav .inner { padding-right:120px; flex-wrap:wrap; gap:8px }
+      /* Mobile header: keep single-row like desktop, just tighter */
+      header.nav .inner { padding-right:120px; flex-wrap:nowrap; gap:8px }
       .brand { font-size:22px }
-      header.nav .inner .row { flex:1 1 100%; justify-content:space-between }
-      header.nav nav.row { overflow-x:auto; white-space:nowrap; -webkit-overflow-scrolling:touch; gap:10px }
-      header.nav nav.row a, header.nav nav.row summary { padding:6px 0 }
+      header.nav .inner .row { flex:0 0 auto; justify-content:flex-start }
+      header.nav nav.row { white-space:nowrap; gap:10px }
+      header.nav nav.row a, header.nav nav.row summary { padding:4px 0; font-size:13px }
       .divider{ height:14px }
-      /* On mobile, show About inside the main nav next to Features/Pricing */
-      header.nav .thg-auth-wrap .about-link{ display:none }
-      header.nav nav.row a[href="/about/"]{ display:inline-block }
+      /* Keep About next to Login on the right; hide legacy About in main nav */
+      header.nav .thg-auth-wrap .about-link{ display:inline-block }
+      header.nav nav.row a[href="/about/"]{ display:none }
       .about-mobile-link{ display:none }
-      /* Mobile header: two-row layout like Zillow/NoBroker */
-      header.nav{ display:block }
-      header.nav .thg-auth-wrap{ position:absolute; top:10px; right:12px; padding:0 }
+      /* Right-side auth group position */
+      header.nav .thg-auth-wrap{ position:absolute; top:10px; right:12px; padding:0; gap:10px }
+      header.nav .thg-auth-wrap::before{ height:14px }
       /* Hide trust pill to avoid crowding on small screens */
       #home_pill_trust{ display:none }
-      /* Full-width dropdown sheet for Features */
-      details.dropdown .menu{ position:fixed; left:12px; right:12px; top:56px; min-width:0; border-radius:12px; }
-      details.dropdown .menu a{ padding:12px }
-      /* Keep login button aligned with a small divider */
-      header.nav .thg-auth-wrap{ gap:10px }
-      header.nav .thg-auth-wrap::before{ height:14px }
+      /* Use the same dropdown style as desktop */
+      details.dropdown .menu{ position:absolute; left:auto; right:0; top:calc(100% + 8px); min-width:230px; border-radius:12px; }
+      details.dropdown .menu a{ padding:8px 10px }
       /* Mobile typography refinements */
       .h1 { font-size:28px; line-height:1.16 }
       .sub { font-size:15px }

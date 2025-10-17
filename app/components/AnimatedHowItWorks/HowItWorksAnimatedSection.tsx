@@ -165,7 +165,7 @@ export const HowItWorksAnimatedSection: React.FC<HowItWorksAnimatedSectionProps>
             className={`order-2 lg:order-1 ${compact ? 'hidden sm:block' : ''}`}
             aria-live="polite"
           >
-            <h2 className="text-xl sm:text-2xl lg:text-3xl font-extrabold text-gray-900 mb-2">How it works</h2>
+            <h2 className="hidden sm:block text-2xl lg:text-3xl font-extrabold text-gray-900 mb-2">How it works</h2>
             <h3 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900">{meta.label}</h3>
             <ul className="mt-2 space-y-1 text-sm sm:text-base text-gray-600">
               {meta.bullets.map((b, i) => (
@@ -181,7 +181,9 @@ export const HowItWorksAnimatedSection: React.FC<HowItWorksAnimatedSectionProps>
           <div
             className={`order-1 lg:order-2 relative w-full overflow-hidden rounded-2xl border border-gray-200 bg-white lg:[width:calc(100%+2rem)] xl:[width:calc(100%+3rem)] 2xl:[width:calc(100%+4rem)] lg:ml-[-2rem] xl:ml-[-3rem] 2xl:ml-[-4rem]`}
           >
-            <div className="min-h-[320px] sm:min-h-[360px]" />
+            {/* Mobile-only section title pinned to top center */}
+            <h2 className="sm:hidden absolute top-2 left-1/2 -translate-x-1/2 text-base font-extrabold text-gray-900 z-20">How it works</h2>
+            <div className="min-h-[260px] sm:min-h-[360px]" />
             {/* Gradient + grid background */}
             <div className="pointer-events-none absolute inset-0" style={{
               background: `radial-gradient(800px 320px at 85% -10%, rgba(16,185,129,.12), rgba(16,185,129,0) 70%),
@@ -225,7 +227,7 @@ export const HowItWorksAnimatedSection: React.FC<HowItWorksAnimatedSectionProps>
               animate={{ ...containerVariants.animate, ...avatarPosition }}
               transition={{ duration: 0.4, ease: 'easeInOut' }}
             >
-              <BuilderAvatar expression={expression} className="h-[180px] w-[180px] sm:h-[220px] sm:w-[220px]" />
+              <BuilderAvatar expression={expression} className="h-[160px] w-[160px] sm:h-[220px] sm:w-[220px]" />
             </motion.div>
 
             {/* Floating cursor indicator */}

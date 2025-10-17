@@ -94,7 +94,9 @@
       header.nav nav.row { overflow-x:auto; white-space:nowrap; -webkit-overflow-scrolling:touch; gap:10px }
       header.nav nav.row a, header.nav nav.row summary { padding:6px 0 }
       .divider{ height:14px }
-      /* Keep header compact on mobile; About is rendered inside auth wrap */
+      /* On mobile, show About inside the main nav next to Features/Pricing */
+      header.nav .thg-auth-wrap .about-link{ display:none }
+      header.nav nav.row a[href="/about/"]{ display:inline-block }
       .about-mobile-link{ display:none }
       /* Mobile header: two-row layout like Zillow/NoBroker */
       header.nav{ display:block }

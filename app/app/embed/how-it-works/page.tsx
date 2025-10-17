@@ -1,6 +1,10 @@
 import dynamic from 'next/dynamic'
 
-const HowItWorksAnimatedSection = dynamic(() => import('../../../components/AnimatedHowItWorks/HowItWorksAnimatedSection'), { ssr: false })
+// Client animated section for embeddable usage
+const HowItWorksAnimatedSection = dynamic(
+  () => import('../../../components/AnimatedHowItWorks/HowItWorksAnimatedSection'),
+  { ssr: false }
+)
 
 export default function HowItWorksEmbed(){
   return (

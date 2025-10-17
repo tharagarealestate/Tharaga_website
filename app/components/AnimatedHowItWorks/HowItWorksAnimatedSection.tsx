@@ -344,10 +344,6 @@ export const HowItWorksAnimatedSection: React.FC<HowItWorksAnimatedSectionProps>
           </div>
         </div>
       </div>
-      {/* Foundation bar below the scene for visual balance (thin, responsive width) */}
-      <div className="mx-auto mt-3 flex justify-center" aria-hidden="true">
-        <div className="h-2 sm:h-2 md:h-2 w-[84%] sm:w-[78%] md:w-[72%] lg:w-[66%] rounded-2xl bg-[#0b0b0b]" />
-      </div>
     </section>
   )
 }

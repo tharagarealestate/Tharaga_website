@@ -12,6 +12,8 @@ import { HandshakeAndDashboard } from './ContextIcons/HandshakeAndDashboard'
 export type Scene = 1 | 2 | 3
 
 const bgColor = '#F9FAFB'
+const SCENE_MS = 2400
+const SCENE_S = SCENE_MS / 1000
 
 const stepMeta = {
   1: {
@@ -64,7 +66,7 @@ export const HowItWorksAnimatedSection: React.FC = () => {
       if (isCancelled) return
       setScene((prev) => ((prev % 3) + 1) as Scene)
     }
-    const id = setInterval(next, 4200)
+    const id = setInterval(next, SCENE_MS)
     return () => {
       isCancelled = true
       clearInterval(id)
@@ -170,7 +172,7 @@ export const HowItWorksAnimatedSection: React.FC = () => {
               className="pointer-events-none absolute inset-x-0 top-0 h-16"
               style={{ background: 'linear-gradient(180deg, rgba(16,185,129,0.0), rgba(16,185,129,0.14), rgba(16,185,129,0.0))' }}
               animate={{ y: [ -64, 320 ] }}
-              transition={{ duration: 2.8, ease: 'easeInOut', repeat: Infinity }}
+              transition={{ duration: SCENE_S, ease: 'easeInOut', repeat: Infinity }}
             />
 
             {/* Builder Avatar – center anchor with gentle drift */}
@@ -178,7 +180,7 @@ export const HowItWorksAnimatedSection: React.FC = () => {
               className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
               initial="initial"
               animate={{ ...containerVariants.animate, ...avatarPosition }}
-              transition={{ duration: 0.5, ease: 'easeInOut' }}
+              transition={{ duration: 0.4, ease: 'easeInOut' }}
             >
               <BuilderAvatar expression={expression} className="h-[180px] w-[180px] sm:h-[220px] sm:w-[220px]" />
             </motion.div>
@@ -195,7 +197,7 @@ export const HowItWorksAnimatedSection: React.FC = () => {
             />
 
             {/* Scenes with richer overlays */}
-            <AnimatePresence mode="wait">
+            <AnimatePresence>
               {scene === 1 && (
                 <motion.div
                   key="scene-1"
@@ -203,15 +205,15 @@ export const HowItWorksAnimatedSection: React.FC = () => {
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
-                  transition={{ duration: 0.4 }}
+                  transition={{ duration: 0.28 }}
                 >
-                  <motion.div className="absolute left-[10%] top-[16%] w-32 sm:w-36" initial={{ x: -36, opacity: 0 }} animate={{ x: 0, opacity: 1 }} transition={{ type: 'spring', stiffness: 130, damping: 13 }}>
+                  <motion.div className="absolute left-[10%] top-[16%] w-32 sm:w-36" initial={{ x: -24, opacity: 0 }} animate={{ x: 0, opacity: 1 }} transition={{ type: 'spring', stiffness: 140, damping: 12 }}>
                     <Crane />
                   </motion.div>
-                  <motion.div className="absolute right-[10%] top-[22%] w-40 sm:w-48" initial={{ y: -16, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ duration: 0.7 }}>
+                  <motion.div className="absolute right-[10%] top-[22%] w-40 sm:w-48" initial={{ y: -10, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ duration: 0.32 }}>
                     <UploadFolder />
                   </motion.div>
-                  <motion.div className="absolute left-1/2 top-[74%] -translate-x-1/2" initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.35 }}>
+                  <motion.div className="absolute left-1/2 top-[74%] -translate-x-1/2" initial={{ opacity: 0, scale: 0.96 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.18, duration: 0.22 }}>
                     <div className="flex items-center gap-2 text-sm">
                       <span className="h-2 w-2 rounded-full" style={{ background: stepMeta[1].accent }} />
                       <span className="text-gray-700">Assets uploaded • Story ready</span>
@@ -221,14 +223,14 @@ export const HowItWorksAnimatedSection: React.FC = () => {
               )}
 
               {scene === 2 && (
-                <motion.div key="scene-2" className="absolute inset-0" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.4 }}>
-                  <motion.div className="absolute left-1/2 top-[24%] -translate-x-1/2 w-40 sm:w-48" initial={{ scale: 0.92, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ duration: 0.5 }}>
+                <motion.div key="scene-2" className="absolute inset-0" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.28 }}>
+                  <motion.div className="absolute left-1/2 top-[24%] -translate-x-1/2 w-40 sm:w-48" initial={{ scale: 0.96, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ duration: 0.32 }}>
                     <AIBrain />
                   </motion.div>
-                  <motion.div className="absolute left-1/2 top-[62%] -translate-x-1/2 w-[260px] sm:w-[300px]" initial={{ y: 12, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ duration: 0.55 }}>
+                  <motion.div className="absolute left-1/2 top-[62%] -translate-x-1/2 w-[260px] sm:w-[300px]" initial={{ y: 10, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ duration: 0.32 }}>
                     <BuyersGroup />
                   </motion.div>
-                  <motion.div className="absolute left-[14%] bottom-[14%]" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
+                  <motion.div className="absolute left-[14%] bottom-[14%]" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2, duration: 0.2 }}>
                     <span className="inline-flex items-center gap-2 rounded-full border border-gray-200 bg-white/90 px-3 py-1 text-xs font-semibold text-gray-800 shadow-sm">
                       <span className="inline-block h-2 w-2 rounded-full" style={{ background: stepMeta[2].accent }} />
                       Qualified badges
@@ -238,11 +240,11 @@ export const HowItWorksAnimatedSection: React.FC = () => {
               )}
 
               {scene === 3 && (
-                <motion.div key="scene-3" className="absolute inset-0" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.4 }}>
-                  <motion.div className="absolute left-1/2 top-[28%] -translate-x-1/2 w-64 sm:w-72" initial={{ y: 12 }} animate={{ y: 0 }} transition={{ duration: 0.55 }}>
+                <motion.div key="scene-3" className="absolute inset-0" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.28 }}>
+                  <motion.div className="absolute left-1/2 top-[28%] -translate-x-1/2 w-64 sm:w-72" initial={{ y: 10 }} animate={{ y: 0 }} transition={{ duration: 0.32 }}>
                     <HandshakeAndDashboard />
                   </motion.div>
-                  <motion.div className="absolute right-[12%] bottom-[14%]" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.35 }}>
+                  <motion.div className="absolute right-[12%] bottom-[14%]" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2, duration: 0.2 }}>
                     <span className="inline-flex items-center gap-2 rounded-full border border-gray-200 bg-white/90 px-3 py-1 text-xs font-semibold text-gray-800 shadow-sm">
                       <span className="inline-block h-2 w-2 rounded-full" style={{ background: stepMeta[3].accent }} />
                       Live dashboard

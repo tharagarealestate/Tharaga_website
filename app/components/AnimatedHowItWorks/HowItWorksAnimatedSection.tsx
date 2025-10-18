@@ -184,8 +184,8 @@ export const HowItWorksAnimatedSection: React.FC<HowItWorksAnimatedSectionProps>
           >
             {/* Mobile-only section title pinned to top center */}
             <h2 className="absolute top-2 left-1/2 -translate-x-1/2 text-base sm:text-2xl lg:text-3xl font-extrabold text-gray-900 z-20 text-center">How it works</h2>
-            {/* Transitioning text moved below the animation on mobile; overlay removed */}
-            <div className="min-h-[260px] sm:min-h-[360px]" />
+            {/* Reserve space for animation canvas */}
+            <div className="min-h-[230px] sm:min-h-[360px]" />
             {/* Gradient + grid background */}
             <div className="pointer-events-none absolute inset-0" style={{
               background: `radial-gradient(800px 320px at 85% -10%, rgba(16,185,129,.12), rgba(16,185,129,0) 70%),
@@ -319,6 +319,21 @@ export const HowItWorksAnimatedSection: React.FC<HowItWorksAnimatedSectionProps>
                 transition={{ duration: 0.36, ease: 'easeInOut' }}
               />
             </AnimatePresence>
+
+            {/* Mobile-only transitioning text placed BELOW the animation canvas when text column is hidden */}
+            {compact && (
+              <div className="sm:hidden px-4 pb-4 pt-1 text-center">
+                <h3 className="text-base font-bold text-gray-900">{meta.label}</h3>
+                <ul className="mt-2 space-y-1 text-sm text-gray-600">
+                  {meta.bullets.map((b, i) => (
+                    <li key={i} className="flex items-center gap-2 justify-center">
+                      <span className="inline-block h-1.5 w-1.5 rounded-full" style={{ background: meta.accent }} />
+                      {b}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
           </div>
         </div>
       </div>

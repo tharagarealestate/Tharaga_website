@@ -154,7 +154,7 @@ export const HowItWorksAnimatedSection: React.FC<HowItWorksAnimatedSectionProps>
       <div className={`mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8 ${compact ? 'py-3 sm:py-6' : 'pt-6 pb-4 sm:py-8'} overflow-x-hidden`}
       >
         <div
-          className="grid grid-cols-1 items-center gap-6 lg:gap-8 lg:[grid-template-columns:minmax(0,0.9fr)_minmax(0,1.1fr)] xl:[grid-template-columns:minmax(0,0.85fr)_minmax(0,1.15fr)]"
+          className="grid grid-cols-1 items-center gap-4 lg:gap-8 lg:[grid-template-columns:minmax(0,0.9fr)_minmax(0,1.1fr)] xl:[grid-template-columns:minmax(0,0.85fr)_minmax(0,1.15fr)]"
         >
           {/* Text column */}
           <motion.div
@@ -320,31 +320,33 @@ export const HowItWorksAnimatedSection: React.FC<HowItWorksAnimatedSectionProps>
               />
             </AnimatePresence>
 
-            {/* Mobile-only transitioning text positioned in normal flow BELOW the canvas */}
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={`mobile-copy-${scene}`}
-                className="sm:hidden relative z-20 mx-3 -mt-1 mb-3"
-                initial={{ opacity: 0, y: 6 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -6 }}
-                transition={{ duration: 0.25 }}
-                aria-live="polite"
-              >
-                <div className="rounded-xl border border-gray-200 bg-white/95 backdrop-blur-[2px] shadow-sm px-3 py-2">
-                  <h3 className="text-[15px] font-bold text-gray-900">{meta.label}</h3>
-                  <ul className="mt-1 space-y-1 text-[13px] leading-5 text-gray-600">
-                    {meta.bullets.map((b, i) => (
-                      <li key={i} className="flex items-center gap-2">
-                        <span className="inline-block h-1.5 w-1.5 rounded-full" style={{ background: meta.accent }} />
-                        {b}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              </motion.div>
-            </AnimatePresence>
           </div>
+          </div>
+
+          {/* Mobile-only transitioning text as a separate block BELOW the animation */}
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={`mobile-copy-${scene}`}
+              className="sm:hidden order-2 relative z-10 mx-3 mt-0"
+              initial={{ opacity: 0, y: 6 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -6 }}
+              transition={{ duration: 0.25 }}
+              aria-live="polite"
+            >
+              <div className="mx-auto max-w-md rounded-xl border border-gray-200 bg-white/95 backdrop-blur-[2px] shadow-sm px-3 py-2">
+                <h3 className="text-[15px] font-bold text-gray-900">{meta.label}</h3>
+                <ul className="mt-1 space-y-1 text-[13px] leading-5 text-gray-600">
+                  {meta.bullets.map((b, i) => (
+                    <li key={i} className="flex items-center gap-2">
+                      <span className="inline-block h-1.5 w-1.5 rounded-full" style={{ background: meta.accent }} />
+                      {b}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </motion.div>
+          </AnimatePresence>
         </div>
       </div>
     </section>

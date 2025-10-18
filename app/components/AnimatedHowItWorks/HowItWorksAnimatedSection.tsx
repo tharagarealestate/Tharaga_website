@@ -348,7 +348,6 @@ export const HowItWorksAnimatedSection: React.FC<HowItWorksAnimatedSectionProps>
             </motion.div>
           </AnimatePresence>
         </div>
-      </div>
     </section>
   )
 }

@@ -33,9 +33,9 @@ html,body{margin:0;padding:0;background:var(--canvas);color:var(--fg);font-famil
 .input:focus,select:focus,textarea:focus{box-shadow:0 0 0 3px var(--accent-muted);border-color:var(--accent)}
 
 .kpi{font-size:24px;font-weight:700;font-family:var(--font-display)}
-.pill{display:inline-block;padding:6px 10px;border-radius:9999px;background:var(--canvas-subtle);border:1px solid var(--border);font-size:12px}
-.badge{display:inline-flex;align-items:center;gap:8px;padding:8px 12px;border-radius:9999px;border:1px solid var(--border)}
-.badge.ok{border-color:var(--ok);color:var(--ok);font-weight:700}
+.pill{display:inline-block;padding:6px 10px;border-radius:9999px;background:var(--canvas-subtle);border:0;font-size:12px}
+.badge{display:inline-flex;align-items:center;gap:8px;padding:8px 12px;border-radius:9999px;border:0}
+.badge.ok{color:var(--ok);font-weight:700}
 
 /* Glass helpers */
 .glass{background:linear-gradient(180deg, rgba(255,255,255,.55), rgba(255,255,255,.2));backdrop-filter:blur(16px);border:1px solid var(--border-muted)}

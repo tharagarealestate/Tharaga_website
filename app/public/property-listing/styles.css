@@ -154,7 +154,7 @@ img{max-width:100%;display:block}
 .tag{
   padding:6px 10px;
   border-radius:999px;
-  border:1px solid #eee;
+  border:0;
   background:#fafafa;
   font-size:12px
 }
@@ -238,7 +238,7 @@ img{max-width:100%;display:block}
   padding:6px 10px;
   border-radius:999px;
   background:#fff;
-  border:1px solid #eee
+  border:0
 }
 
 /* Loud, punk-style emphasis for key details */
@@ -371,14 +371,14 @@ select[multiple] {
 /* Removable chips */
 .chip-rem{
   display:inline-flex; align-items:center; gap:6px;
-  padding:6px 10px; border-radius:999px; border:1px solid #eee;
+  padding:6px 10px; border-radius:999px; border:0;
   background:#fff; cursor:pointer; font-size:12px;
   transition:background .15s ease, box-shadow .15s ease;
 }
 .chip-rem:hover{ background:#fff7f8; box-shadow:0 2px 8px rgba(110,13,37,.08); }
 
 /* Toolbar chips */
-.chip{ display:inline-flex; align-items:center; gap:6px; padding:6px 10px; border-radius:999px; border:1px solid #eee; background:#fff; cursor:pointer; font-size:12px; transition:background .15s ease, box-shadow .15s ease; }
+.chip{ display:inline-flex; align-items:center; gap:6px; padding:6px 10px; border-radius:999px; border:0; background:#fff; cursor:pointer; font-size:12px; transition:background .15s ease, box-shadow .15s ease; }
 .chip:hover{ background:#fff7f8; box-shadow:0 2px 8px rgba(110,13,37,.08); }
 
 /* === Price slider styling === */
@@ -548,7 +548,7 @@ select[multiple] {
 .explain-row { display:flex; align-items:center; gap:12px; margin-bottom:8px; }
 .explain-row .bar { flex:1; height:10px; background:#f1e3e3; border-radius:6px; overflow:hidden; }
 .explain-row .bar > div { height:100%; background: linear-gradient(90deg,var(--brand),var(--brand-2)); transition: width .25s ease; }
-.chip { display:inline-block; padding:6px 10px; border-radius:999px; background:#fff; border:1px solid #eee; margin-right:6px; font-size:12px; }
+.chip { display:inline-block; padding:6px 10px; border-radius:999px; background:#fff; border:0; margin-right:6px; font-size:12px; }
 
 /* Remove mobile-bottom-sheet behavior entirely to avoid overlay issues */
 @media (max-width: 720px){

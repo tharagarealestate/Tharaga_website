@@ -320,20 +320,20 @@ export const HowItWorksAnimatedSection: React.FC<HowItWorksAnimatedSectionProps>
               />
             </AnimatePresence>
 
-            {/* Mobile-only transitioning text placed BELOW the animation canvas when text column is hidden */}
+            {/* Mobile-only transitioning text positioned in normal flow BELOW the canvas */}
             <AnimatePresence mode="wait">
               <motion.div
                 key={`mobile-copy-${scene}`}
-                className="sm:hidden absolute top-8 left-3 right-3 z-20"
+                className="sm:hidden relative z-20 mx-3 -mt-1 mb-3"
                 initial={{ opacity: 0, y: 6 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -6 }}
                 transition={{ duration: 0.25 }}
                 aria-live="polite"
               >
-                <div className="rounded-xl border border-gray-200 bg-white/90 backdrop-blur-[2px] shadow-sm px-3 py-2">
-                  <h3 className="text-sm font-bold text-gray-900">{meta.label}</h3>
-                  <ul className="mt-1 space-y-1 text-xs text-gray-600">
+                <div className="rounded-xl border border-gray-200 bg-white/95 backdrop-blur-[2px] shadow-sm px-3 py-2">
+                  <h3 className="text-[15px] font-bold text-gray-900">{meta.label}</h3>
+                  <ul className="mt-1 space-y-1 text-[13px] leading-5 text-gray-600">
                     {meta.bullets.map((b, i) => (
                       <li key={i} className="flex items-center gap-2">
                         <span className="inline-block h-1.5 w-1.5 rounded-full" style={{ background: meta.accent }} />

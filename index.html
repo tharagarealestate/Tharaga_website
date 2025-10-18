@@ -85,6 +85,11 @@
     .kpi-row { display:flex; gap:14px; flex-wrap:wrap; align-items:center }
     .kpi { font-family: var(--font-display); font-weight:700; font-size:22px }
     .footer { max-width:1100px; margin:0 auto; padding:28px 16px; color:#666; font-size:14px }
+    /* Tighter mobile layout for How It Works embed */
+    @media (max-width: 600px) {
+      /* Reduce iframe height so the animation + text fit without large gaps */
+      #how-works-animated iframe { height: 360px !important; }
+    }
     /* Earlier tablet breakpoint tweaks to prevent nav/right overlap */
     @media (max-width: 1080px) {
       /* Hide trust pill a bit earlier to free space */

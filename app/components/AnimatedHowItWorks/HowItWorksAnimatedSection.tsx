@@ -321,19 +321,29 @@ export const HowItWorksAnimatedSection: React.FC<HowItWorksAnimatedSectionProps>
             </AnimatePresence>
 
             {/* Mobile-only transitioning text placed BELOW the animation canvas when text column is hidden */}
-            {compact && (
-              <div className="sm:hidden px-4 pb-4 pt-1 text-center">
-                <h3 className="text-base font-bold text-gray-900">{meta.label}</h3>
-                <ul className="mt-2 space-y-1 text-sm text-gray-600">
-                  {meta.bullets.map((b, i) => (
-                    <li key={i} className="flex items-center gap-2 justify-center">
-                      <span className="inline-block h-1.5 w-1.5 rounded-full" style={{ background: meta.accent }} />
-                      {b}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={`mobile-copy-${scene}`}
+                className="sm:hidden absolute top-8 left-3 right-3 z-20"
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -6 }}
+                transition={{ duration: 0.25 }}
+                aria-live="polite"
+              >
+                <div className="rounded-xl border border-gray-200 bg-white/90 backdrop-blur-[2px] shadow-sm px-3 py-2">
+                  <h3 className="text-sm font-bold text-gray-900">{meta.label}</h3>
+                  <ul className="mt-1 space-y-1 text-xs text-gray-600">
+                    {meta.bullets.map((b, i) => (
+                      <li key={i} className="flex items-center gap-2">
+                        <span className="inline-block h-1.5 w-1.5 rounded-full" style={{ background: meta.accent }} />
+                        {b}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </motion.div>
+            </AnimatePresence>
           </div>
         </div>
       </div>

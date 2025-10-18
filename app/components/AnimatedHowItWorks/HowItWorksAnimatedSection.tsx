@@ -165,7 +165,8 @@ export const HowItWorksAnimatedSection: React.FC<HowItWorksAnimatedSectionProps>
             className={`order-2 lg:order-1 ${compact ? 'hidden sm:block' : ''}`}
             aria-live="polite"
           >
-            <h2 className="hidden sm:block text-2xl lg:text-3xl font-extrabold text-gray-900 mb-2">How it works</h2>
+            {/* Heading moved into the canvas (top centered) for all sizes */}
+            <h2 className="hidden">How it works</h2>
             <h3 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900">{meta.label}</h3>
             <ul className="mt-2 space-y-1 text-sm sm:text-base text-gray-600">
               {meta.bullets.map((b, i) => (
@@ -179,10 +180,10 @@ export const HowItWorksAnimatedSection: React.FC<HowItWorksAnimatedSectionProps>
 
           {/* Futuristic scene canvas */}
           <div
-            className={`order-1 lg:order-2 relative w-full overflow-hidden rounded-2xl border border-gray-200 bg-white lg:[width:calc(100%+2rem)] xl:[width:calc(100%+3rem)] 2xl:[width:calc(100%+4rem)] lg:ml-[-2rem] xl:ml-[-3rem] 2xl:ml-[-4rem]`}
+            className={`order-1 lg:order-2 relative w-full overflow-hidden rounded-2xl border border-b-0 border-gray-200 bg-white lg:[width:calc(100%+2rem)] xl:[width:calc(100%+3rem)] 2xl:[width:calc(100%+4rem)] lg:ml-[-2rem] xl:ml-[-3rem] 2xl:ml-[-4rem]`}
           >
             {/* Mobile-only section title pinned to top center */}
-            <h2 className="sm:hidden absolute top-2 left-1/2 -translate-x-1/2 text-base font-extrabold text-gray-900 z-20">How it works</h2>
+            <h2 className="absolute top-2 left-1/2 -translate-x-1/2 text-base sm:text-2xl lg:text-3xl font-extrabold text-gray-900 z-20 text-center">How it works</h2>
             {/* Mobile-only dynamic copy that mirrors desktop text column */}
             <AnimatePresence mode="wait">
               <motion.div

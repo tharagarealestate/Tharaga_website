@@ -151,7 +151,7 @@ export const HowItWorksAnimatedSection: React.FC<HowItWorksAnimatedSectionProps>
       className="w-full overflow-x-hidden"
       style={{ background: bgColor }}
     >
-      <div className={`mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8 ${compact ? 'py-3 sm:py-6' : 'py-6 sm:py-8'} overflow-x-hidden`}
+      <div className={`mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8 ${compact ? 'py-3 sm:py-6' : 'pt-6 pb-4 sm:py-8'} overflow-x-hidden`}
       >
         <div
           className="grid grid-cols-1 items-center gap-6 lg:gap-8 lg:[grid-template-columns:minmax(0,0.9fr)_minmax(0,1.1fr)] xl:[grid-template-columns:minmax(0,0.85fr)_minmax(0,1.15fr)]"
@@ -162,7 +162,7 @@ export const HowItWorksAnimatedSection: React.FC<HowItWorksAnimatedSectionProps>
             initial={{ opacity: 0, y: 6 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3 }}
-            className={`order-2 lg:order-1 ${compact ? 'hidden sm:block' : ''}`}
+            className={`order-2 lg:order-1 ${compact ? 'hidden sm:block' : ''} text-center sm:text-left max-w-md mx-auto sm:mx-0`}
             aria-live="polite"
           >
             {/* Heading moved into the canvas (top centered) for all sizes */}
@@ -170,7 +170,7 @@ export const HowItWorksAnimatedSection: React.FC<HowItWorksAnimatedSectionProps>
             <h3 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900">{meta.label}</h3>
             <ul className="mt-2 space-y-1 text-sm sm:text-base text-gray-600">
               {meta.bullets.map((b, i) => (
-                <li key={i} className="flex items-center gap-2">
+                <li key={i} className="flex items-center gap-2 justify-center sm:justify-start">
                   <span className="inline-block h-1.5 w-1.5 rounded-full" style={{ background: meta.accent }} />
                   {b}
                 </li>
@@ -184,30 +184,7 @@ export const HowItWorksAnimatedSection: React.FC<HowItWorksAnimatedSectionProps>
           >
             {/* Mobile-only section title pinned to top center */}
             <h2 className="absolute top-2 left-1/2 -translate-x-1/2 text-base sm:text-2xl lg:text-3xl font-extrabold text-gray-900 z-20 text-center">How it works</h2>
-            {/* Mobile-only dynamic copy that mirrors desktop text column */}
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={`mobile-copy-${scene}`}
-                className="sm:hidden absolute top-8 left-3 right-3 z-20"
-                initial={{ opacity: 0, y: 6 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -6 }}
-                transition={{ duration: 0.25 }}
-                aria-live="polite"
-              >
-                <div className="rounded-xl border border-gray-200 bg-white/90 backdrop-blur-[2px] shadow-sm px-3 py-2">
-                  <h3 className="text-sm font-bold text-gray-900">{meta.label}</h3>
-                  <ul className="mt-1 space-y-1 text-xs text-gray-600">
-                    {meta.bullets.map((b, i) => (
-                      <li key={i} className="flex items-center gap-2">
-                        <span className="inline-block h-1.5 w-1.5 rounded-full" style={{ background: meta.accent }} />
-                        {b}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              </motion.div>
-            </AnimatePresence>
+            {/* Transitioning text moved below the animation on mobile; overlay removed */}
             <div className="min-h-[260px] sm:min-h-[360px]" />
             {/* Gradient + grid background */}
             <div className="pointer-events-none absolute inset-0" style={{

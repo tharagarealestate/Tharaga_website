@@ -180,7 +180,7 @@ export const HowItWorksAnimatedSection: React.FC<HowItWorksAnimatedSectionProps>
 
           {/* Futuristic scene canvas */}
           <div
-            className={`order-1 lg:order-2 relative w-full overflow-hidden rounded-2xl border border-b-0 border-gray-200 bg-white lg:[width:calc(100%+2rem)] xl:[width:calc(100%+3rem)] 2xl:[width:calc(100%+4rem)] lg:ml-[-2rem] xl:ml-[-3rem] 2xl:ml-[-4rem]`}
+            className={`order-1 lg:order-2 relative w-full overflow-hidden rounded-2xl bg-white lg:[width:calc(100%+2rem)] xl:[width:calc(100%+3rem)] 2xl:[width:calc(100%+4rem)] lg:ml-[-2rem] xl:ml-[-3rem] 2xl:ml-[-4rem]`}
           >
             {/* Mobile-only section title pinned to top center */}
             <h2 className="absolute top-2 left-1/2 -translate-x-1/2 text-base sm:text-2xl lg:text-3xl font-extrabold text-gray-900 z-20 text-center">How it works</h2>

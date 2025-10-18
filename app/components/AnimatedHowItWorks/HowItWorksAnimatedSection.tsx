@@ -179,25 +179,25 @@ export const HowItWorksAnimatedSection: React.FC<HowItWorksAnimatedSectionProps>
           </motion.div>
 
           {/* Futuristic scene canvas */}
-          {/*<div
-            className={`order-1 lg:order-2 relative w-full overflow-hidden rounded-2xl bg-white border-0 lg:[width:calc(100%+2rem)] xl:[width:calc(100%+3rem)] 2xl:[width:calc(100%+4rem)] lg:ml-[-2rem] xl:ml-[-3rem] 2xl:ml-[-4rem] scale-[0.88] sm:scale-100 origin-center`}
-          >*/}
+          <div
+            className={`order-1 lg:order-2 relative w-full overflow-hidden rounded-2xl bg-white lg:[width:calc(100%+2rem)] xl:[width:calc(100%+3rem)] 2xl:[width:calc(100%+4rem)] lg:ml-[-2rem] xl:ml-[-3rem] 2xl:ml-[-4rem]`}
+          >
             {/* Mobile-only section title pinned to top center */}
             <h2 className="absolute top-2 left-1/2 -translate-x-1/2 text-base sm:text-2xl lg:text-3xl font-extrabold text-gray-900 z-20 text-center">How it works</h2>
             {/* Mobile-only dynamic copy that mirrors desktop text column */}
             <AnimatePresence mode="wait">
               <motion.div
                 key={`mobile-copy-${scene}`}
-                className="sm:hidden absolute bottom-3 left-1/2 -translate-x-1/2 z-20 w-[92%] text-center"
+                className="sm:hidden absolute top-8 left-3 right-3 z-20"
                 initial={{ opacity: 0, y: 6 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -6 }}
                 transition={{ duration: 0.25 }}
                 aria-live="polite"
               >
-                <div className="mx-auto max-w-xs rounded-xl bg-white/95 backdrop-blur-[2px] shadow-sm px-3 py-2 border-0">
+                <div className="rounded-xl border border-gray-200 bg-white/90 backdrop-blur-[2px] shadow-sm px-3 py-2">
                   <h3 className="text-sm font-bold text-gray-900">{meta.label}</h3>
-                  <ul className="mt-1 space-y-1 text-xs text-gray-600 text-left mx-auto inline-block">
+                  <ul className="mt-1 space-y-1 text-xs text-gray-600">
                     {meta.bullets.map((b, i) => (
                       <li key={i} className="flex items-center gap-2">
                         <span className="inline-block h-1.5 w-1.5 rounded-full" style={{ background: meta.accent }} />
@@ -208,7 +208,7 @@ export const HowItWorksAnimatedSection: React.FC<HowItWorksAnimatedSectionProps>
                 </div>
               </motion.div>
             </AnimatePresence>
-            <div className="min-h-[280px] sm:min-h-[360px]" />
+            <div className="min-h-[260px] sm:min-h-[360px]" />
             {/* Gradient + grid background */}
             <div className="pointer-events-none absolute inset-0" style={{
               background: `radial-gradient(800px 320px at 85% -10%, rgba(16,185,129,.12), rgba(16,185,129,0) 70%),

@@ -68,10 +68,13 @@
     header.nav .thg-auth-btn.is-auth::after{ border-top-color:#fff !important }
     header.nav .divider{ background:rgba(255,255,255,.18) }
     /* Right-group About | Login */
-    header.nav .thg-auth-wrap .about-link{ color:#fff; font-weight:700; text-decoration:none }
+    /* Hide injected About on desktop; we render About in main nav */
+    header.nav .thg-auth-wrap .about-link{ display:none; color:#fff; font-weight:700; text-decoration:none }
+    /* Avoid double line near Login (we already add ::before separator) */
+    header.nav .thg-auth-wrap > .divider{ display:none }
     header.nav .thg-auth-wrap .about-link:hover{ text-decoration:underline }
-    /* Hide About from main nav across breakpoints; we render it near Login */
-    header.nav nav.row a[href="/about/"]{ display:none }
+    /* Show top-level About in main nav on desktop */
+    header.nav nav.row a[href="/about/"]{ display:inline-block }
     /* Hidden by default; shown only on mobile */
     .about-mobile-link{ display:none }
     .features { max-width:1100px; margin:26px auto; padding:0 16px; color:#111 }
@@ -99,9 +102,11 @@
       header.nav nav.row { white-space:nowrap; gap:10px }
       header.nav nav.row a, header.nav nav.row summary { padding:4px 0; font-size:13px }
       .divider{ height:14px }
-      /* Keep About next to Login on the right; hide legacy About in main nav */
-      header.nav .thg-auth-wrap .about-link{ display:inline-block }
+      /* Move About into Features menu on mobile; hide right-group About */
+      header.nav .thg-auth-wrap .about-link{ display:none }
       header.nav nav.row a[href="/about/"]{ display:none }
+      /* Hide nav-level divider before About on mobile */
+      header.nav nav.row > .divider{ display:none }
       .about-mobile-link{ display:none }
       /* Right-side auth group position */
       header.nav .thg-auth-wrap{ position:absolute; top:10px; right:12px; padding:0; gap:10px }
@@ -735,6 +740,7 @@
           <span class="divider" aria-hidden="true"></span>
           <a href="/pricing/">Pricing</a>
         </span>
+        <span class="divider" aria-hidden="true"></span>
         <a href="/about/">About</a>
       </nav>
       <a class="about-mobile-link" href="/about/">About</a>

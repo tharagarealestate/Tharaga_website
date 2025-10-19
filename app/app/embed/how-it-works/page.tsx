@@ -8,7 +8,7 @@ const HowItWorksAnimatedSection = dynamic(
 
 export default function HowItWorksEmbed(){
   return (
-    <main className="mx-auto max-w-5xl px-3 py-3">
+    <main className="mx-auto max-w-5xl px-3 py-2 sm:py-3">
       <HowItWorksAnimatedSection compact />
     </main>
   )

@@ -184,8 +184,9 @@ export const HowItWorksAnimatedSection: React.FC<HowItWorksAnimatedSectionProps>
           >
             {/* Mobile-only section title pinned to top center */}
             <h2 className="absolute top-2 left-1/2 -translate-x-1/2 text-base sm:text-2xl lg:text-3xl font-extrabold text-gray-900 z-20 text-center">How it works</h2>
-            {/* Reserve space for animation canvas – keep generous height (mobile-first) */}
-            <div className="min-h-[360px] sm:min-h-[480px]" />
+            {/* Reserve space for animation canvas – trimmed for mobile to avoid extra whitespace.
+               Use a responsive clamp so the container fits just above the transitioning text. */}
+            <div className="min-h-[clamp(240px,58vw,320px)] sm:min-h-[440px]" />
             {/* Gradient + grid background */}
             <div className="pointer-events-none absolute inset-0" style={{
               background: `radial-gradient(800px 320px at 85% -10%, rgba(16,185,129,.12), rgba(16,185,129,0) 70%),

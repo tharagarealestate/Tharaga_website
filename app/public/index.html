@@ -22,7 +22,7 @@
     a { color:#0b63ff; text-decoration:none }
     a:hover { text-decoration:underline }
     header.nav { position:sticky; top:0; z-index:20; color:#fff; backdrop-filter: blur(12px) saturate(1.25); background: linear-gradient(180deg, rgba(110,13,37,.82), rgba(110,13,37,.66)); border-bottom:1px solid rgba(255,255,255,.12) }
-    header.nav .inner { max-width:1100px; margin:0 auto; padding:10px 16px; display:flex; align-items:center; justify-content:space-between; gap:10px; position:relative; padding-right: clamp(180px, 14vw, 260px) }
+    header.nav .inner { max-width:1100px; margin:0 auto; padding:10px 16px; display:flex; align-items:center; justify-content:space-between; gap:10px; position:relative; padding-right: clamp(130px, 10vw, 200px) }
     .brand { font-family: var(--font-display); font-weight:800; letter-spacing:.2px; font-size:24px }
     header.nav .brand{ color:#fff }
     header.nav a, header.nav summary{ color:#fff }
@@ -47,7 +47,7 @@
     /* Ensure white text on dark surfaces */
     header.nav a, header.nav summary, header.nav .brand { color:#fff }
     /* Header nav additions */
-    header.nav nav.row { gap:12px; align-items:center; flex-wrap:nowrap }
+    header.nav nav.row { gap:12px; align-items:center; flex-wrap:nowrap; margin-left:auto }
     /* Match About styling on Features/Pricing */
     header.nav nav.row a, header.nav nav.row summary { font-weight:700 }
     .menu-group{ display:inline-flex; align-items:center; gap:12px }
@@ -802,12 +802,13 @@
       src="/embed/how-it-works"
       title="How it works animation"
       loading="lazy"
-      style="display:block;width:100%;max-width:1100px;height:480px;border:0;border-radius:16px;overflow:hidden;background:#fff;box-shadow:0 12px 36px rgba(110,13,37,.10);margin:0 auto;"
+      style="display:block;width:100%;max-width:1100px;height:560px;border:0;border-radius:16px;overflow:hidden;background:#fff;box-shadow:0 12px 36px rgba(110,13,37,.10);margin:0 auto;"
       allow="fullscreen"
     ></iframe>
     <style>
       @media (max-width: 600px) {
-        #how-works-animated iframe { height: 420px !important; }
+        /* Provide a reasonable starting height; JS will resize exactly */
+        #how-works-animated iframe { height: 420px; }
       }
     </style>
   </section>
@@ -817,6 +818,34 @@
   <script>
     document.getElementById('year').textContent = new Date().getFullYear();
     document.getElementById('openAuthBtn')?.addEventListener('click', function(){ try { window.__thgOpenAuthModal && window.__thgOpenAuthModal(); } catch(_){} });
+    // Auto-size the embedded How It Works iframe to fit its content
+    (function(){
+      function resizeEmbed(){
+        try{
+          var iframe = document.querySelector('#how-works-animated iframe');
+          if (!iframe) return;
+          var doc = iframe.contentDocument || (iframe.contentWindow && iframe.contentWindow.document);
+          if (!doc) return;
+          var h = Math.max(
+            doc.documentElement.scrollHeight || 0,
+            doc.body.scrollHeight || 0,
+            doc.documentElement.offsetHeight || 0,
+            doc.body.offsetHeight || 0
+          );
+          if (h && h !== parseInt(iframe.style.height, 10)){
+            iframe.style.height = (h + 2) + 'px';
+          }
+        }catch(_){ }
+      }
+      window.addEventListener('load', function(){
+        var iframe = document.querySelector('#how-works-animated iframe');
+        if (!iframe) return;
+        iframe.addEventListener('load', resizeEmbed);
+        setTimeout(resizeEmbed, 100);
+        setTimeout(resizeEmbed, 400);
+        setTimeout(resizeEmbed, 1200);
+      });
+    })();
     function openAssistant(){
       try {
         const modal = document.createElement('div');

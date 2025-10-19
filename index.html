@@ -88,11 +88,7 @@
     .kpi-row { display:flex; gap:14px; flex-wrap:wrap; align-items:center }
     .kpi { font-family: var(--font-display); font-weight:700; font-size:22px }
     .footer { max-width:1100px; margin:0 auto; padding:28px 16px; color:#666; font-size:14px }
-    /* Tighter mobile layout for How It Works embed */
-    @media (max-width: 600px) {
-      /* Reduce iframe height so the animation + text fit without large gaps */
-      #how-works-animated iframe { height: 360px !important; }
-    }
+    
     /* Earlier tablet breakpoint tweaks to prevent nav/right overlap */
     @media (max-width: 1080px) {
       /* Hide trust pill a bit earlier to free space */
@@ -833,12 +829,7 @@
       style="display:block;width:100%;max-width:1100px;height:560px;border:0;border-radius:16px;overflow:hidden;background:#fff;box-shadow:0 12px 36px rgba(110,13,37,.10);margin:0 auto;"
       allow="fullscreen"
     ></iframe>
-    <style>
-      @media (max-width: 600px) {
-        /* Provide a reasonable starting height; JS will resize exactly */
-        #how-works-animated iframe { height: 420px; }
-      }
-    </style>
+    <!-- Removed mobile fixed height override; height is auto-resized via JS -->
   </section>
 
   <div class="footer">© <span id="year"></span> Tharaga • <a href="/about/">About</a> • <a href="/compliance-trust/">Trust</a> • <a href="/auth-email-landing/">Email confirmation</a></div>
@@ -846,9 +837,10 @@
   <script>
     document.getElementById('year').textContent = new Date().getFullYear();
     document.getElementById('openAuthBtn')?.addEventListener('click', function(){ try { window.__thgOpenAuthModal && window.__thgOpenAuthModal(); } catch(_){} });
-    // Auto-size the embedded How It Works iframe to fit its content
+    // Auto-size the embedded How It Works iframe to fit its content (mobile-first and reactive)
     (function(){
-      function resizeEmbed(){
+      var pending = null;
+      function measureAndApply(){
         try{
           var iframe = document.querySelector('#how-works-animated iframe');
           if (!iframe) return;
@@ -860,20 +852,61 @@
             doc.documentElement.offsetHeight || 0,
             doc.body.offsetHeight || 0
           );
-          if (h && h !== parseInt(iframe.style.height, 10)){
-            iframe.style.height = (h + 2) + 'px';
+          if (h){
+            var next = (h + 2) + 'px';
+            if (iframe.style.height !== next){
+              iframe.style.height = next;
+            }
           }
-        }catch(_){ }
+        } catch(_){ }
       }
-      window.addEventListener('load', function(){
+      function resizeEmbedDebounced(){
+        if (pending) cancelAnimationFrame(pending);
+        pending = requestAnimationFrame(measureAndApply);
+      }
+      function attachObservers(){
+        try{
+          var iframe = document.querySelector('#how-works-animated iframe');
+          if (!iframe) return;
+          var win = iframe.contentWindow;
+          var doc = iframe.contentDocument || (win && win.document);
+          if (!doc) return;
+          try {
+            var mo = new (win.MutationObserver || window.MutationObserver)(function(){ resizeEmbedDebounced(); });
+            mo.observe(doc.documentElement, { childList: true, subtree: true, attributes: true, characterData: true });
+            iframe.__howMo = mo;
+          } catch(_) {}
+          try {
+            var RO = win.ResizeObserver || window.ResizeObserver;
+            if (RO){
+              var ro = new RO(function(){ resizeEmbedDebounced(); });
+              ro.observe(doc.documentElement);
+              if (doc.body) ro.observe(doc.body);
+              iframe.__howRo = ro;
+            }
+          } catch(_) {}
+          setTimeout(measureAndApply, 0);
+          setTimeout(measureAndApply, 200);
+          setTimeout(measureAndApply, 800);
+          setTimeout(measureAndApply, 1600);
+        } catch(_){ }
+      }
+      function init(){
         var iframe = document.querySelector('#how-works-animated iframe');
         if (!iframe) return;
-        iframe.addEventListener('load', resizeEmbed);
-        // Also try a couple of times after load in case late content renders
-        setTimeout(resizeEmbed, 100);
-        setTimeout(resizeEmbed, 400);
-        setTimeout(resizeEmbed, 1200);
-      });
+        iframe.addEventListener('load', function(){ attachObservers(); resizeEmbedDebounced(); });
+        window.addEventListener('resize', resizeEmbedDebounced);
+        window.addEventListener('orientationchange', function(){
+          setTimeout(resizeEmbedDebounced, 0);
+          setTimeout(resizeEmbedDebounced, 250);
+          setTimeout(resizeEmbedDebounced, 800);
+        });
+        setTimeout(resizeEmbedDebounced, 100);
+        setTimeout(resizeEmbedDebounced, 400);
+        setTimeout(resizeEmbedDebounced, 1200);
+      }
+      if (document.readyState === 'complete' || document.readyState === 'interactive') init();
+      else window.addEventListener('DOMContentLoaded', init, { once: true });
     })();
     function openAssistant(){
       try {

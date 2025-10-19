@@ -53,13 +53,22 @@
     .menu-group{ display:inline-flex; align-items:center; gap:12px }
     .divider{ width:1px; height:16px; background:#e5e7eb; border-radius:1px; display:inline-block }
     details.dropdown{ position:relative }
-    details.dropdown > summary{ list-style:none; cursor:pointer; display:inline-flex; align-items:center; gap:6px }
+    /* Make Features look consistent with Login / Signup */
+    details.dropdown > summary{ list-style:none; cursor:pointer; display:inline-flex; align-items:center; gap:6px; padding:6px 10px; border-radius:999px; font-size:16px; }
     details.dropdown > summary::-webkit-details-marker{ display:none }
-    details.dropdown > summary::after{ content:""; width:0; height:0; border-left:5px solid transparent; border-right:5px solid transparent; border-top:6px solid currentColor; opacity:.8; transition:transform .15s ease }
+    details.dropdown > summary::after{ content:""; width:0; height:0; border-left:5px solid transparent; border-right:5px solid transparent; border-top:6px solid currentColor; opacity:.8; transition:transform .18s ease }
     details.dropdown[open] > summary::after{ transform:rotate(180deg) }
-    details.dropdown .menu{ position:absolute; top:calc(100% + 8px); right:0; min-width:230px; background:#fff; color:#111; border:1px solid #e5e7eb; border-radius:12px; padding:8px; box-shadow:0 12px 30px rgba(0,0,0,.1); z-index:60 }
-    details.dropdown .menu a{ display:block; padding:8px 10px; border-radius:8px; color:inherit; text-decoration:none }
-    details.dropdown .menu a:hover{ background:#f9fafb }
+    /* Dropdown: colorful, centered, with smooth open/close */
+    details.dropdown .menu{ position:absolute; top:calc(100% + 8px); right:0; min-width:240px; background:linear-gradient(180deg,#ffffff, #fffafc); color:#111; border:1px solid rgba(110,13,37,.14); border-radius:12px; padding:12px 8px 8px; box-shadow:0 18px 40px rgba(110,13,37,.16); z-index:60; opacity:0; transform:translateY(-6px) scale(.98); visibility:hidden; pointer-events:none; transition:opacity .18s ease, transform .18s ease, visibility 0s linear .18s }
+    details.dropdown .menu::before{ content:""; position:absolute; top:0; left:0; right:0; height:3px; border-radius:12px 12px 0 0; background:linear-gradient(90deg, var(--gold), var(--brand)); }
+    details.dropdown[open] .menu{ opacity:1; transform:translateY(0) scale(1); visibility:visible; pointer-events:auto; transition:opacity .18s ease, transform .18s ease, visibility 0s linear 0s }
+    details.dropdown .menu a{ display:block; padding:10px 12px; border-radius:10px; color:inherit; text-decoration:none; text-align:center; transition: background .15s ease, transform .06s ease, color .15s ease, box-shadow .12s ease }
+    details.dropdown .menu a + a{ border-top:1px solid #f0f2f4 }
+    details.dropdown .menu a:hover{ background:linear-gradient(90deg, rgba(110,13,37,.12), rgba(110,13,37,.06)); color:var(--brand); box-shadow: inset 0 0 0 1px rgba(110,13,37,.18) }
+    details.dropdown .menu a:focus-visible{ outline:0; box-shadow:0 0 0 2px var(--ring), inset 0 0 0 1px rgba(110,13,37,.24) }
+    details.dropdown .menu a:active{ transform:translateY(1px); background:linear-gradient(180deg, rgba(110,13,37,.20), rgba(110,13,37,.10)) }
+    /* Horizontal divider inside dropdown (for mobile About/Pricing) */
+    details.dropdown .menu .divider{ display:block; width:auto; height:1px; background:rgba(110,13,37,.14); margin:6px 6px; border-radius:1px }
     /* Make header readable on dark plum */
     header.nav .thg-auth-wrap{ display:flex; align-items:center; gap:12px }
     header.nav .thg-auth-wrap::before{ content:""; display:inline-block; width:1px; height:16px; background:rgba(255,255,255,.22); border-radius:1px }
@@ -98,10 +107,21 @@
       header.nav .inner .row { flex:0 0 auto; justify-content:flex-start }
       header.nav nav.row { white-space:nowrap; gap:10px }
       header.nav nav.row a, header.nav nav.row summary { padding:4px 0; font-size:13px }
+      /* Make Features font-size match Login/Signup on mobile */
+      details.dropdown > summary{ font-size:16px; padding:6px 10px }
       .divider{ height:14px }
       /* Move About into Features menu on mobile; hide right-group About */
       header.nav .thg-auth-wrap .about-link{ display:none }
       header.nav nav.row a[href="/about/"]{ display:none }
+      /* Hide nav-level divider before About on mobile */
+      header.nav nav.row > .divider{ display:none }
+      .about-mobile-link{ display:none }
+      /* Hide top-level Pricing in main nav on mobile */
+      header.nav nav.row .menu-group > a[href="/pricing/"]{ display:none }
+      /* Hide the internal divider in nav when Pricing is hidden */
+      header.nav nav.row .menu-group > .divider{ display:none }
+      /* Show mobile-only items inside Features dropdown */
+      details.dropdown .menu .show-mobile-only{ display:block }
       /* Hide nav-level divider before About on mobile */
       header.nav nav.row > .divider{ display:none }
       .about-mobile-link{ display:none }
@@ -732,6 +752,10 @@
               <a href="/tools/verification/">Verification</a>
               <a href="/tools/roi/">ROI</a>
               <a href="/tools/currency-risk/">Currency risk</a>
+              <!-- Mobile-only injected: Pricing + About (hidden on desktop) -->
+              <span class="divider show-mobile-only" aria-hidden="true"></span>
+              <a class="show-mobile-only" href="/pricing/">Pricing</a>
+              <a class="show-mobile-only" href="/about/">About</a>
             </div>
           </details>
           <span class="divider" aria-hidden="true"></span>

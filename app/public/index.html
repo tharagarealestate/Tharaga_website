@@ -95,8 +95,9 @@
       .search-grid { grid-template-columns: 1fr; }
       .feature-grid { grid-template-columns: 1fr; }
       .how .inner { grid-template-columns: 1fr; }
-      /* Mobile header: keep single-row like desktop, just tighter */
-      header.nav .inner { padding-right:120px; flex-wrap:nowrap; gap:8px }
+      /* Mobile header: keep single-row like desktop, just tighter
+         Reserve more right-side space so "Features | Login / Signup" never overlaps */
+      header.nav .inner { padding-right:160px; flex-wrap:nowrap; gap:8px }
       .brand { font-size:22px }
       header.nav .inner .row { flex:0 0 auto; justify-content:flex-start }
       header.nav nav.row { white-space:nowrap; gap:10px }

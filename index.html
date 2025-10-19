@@ -97,7 +97,7 @@
     @media (max-width: 1080px) {
       /* Hide trust pill a bit earlier to free space */
       #home_pill_trust{ display:none }
-      /* Slightly more reserve for wider Login/Signup label variants */
+      /* Reserve extra space for auth button to avoid collisions */
       header.nav .inner{ padding-right:200px }
     }
     @media (max-width: 880px) {
@@ -105,8 +105,9 @@
       .search-grid { grid-template-columns: 1fr; }
       .feature-grid { grid-template-columns: 1fr; }
       .how .inner { grid-template-columns: 1fr; }
-      /* Mobile header: keep single-row like desktop, just tighter */
-      header.nav .inner { padding-right:120px; flex-wrap:nowrap; gap:8px }
+      /* Mobile header: keep single-row like desktop, just tighter
+         Reserve more right-side space so "Features | Login / Signup" never overlaps */
+      header.nav .inner { padding-right:160px; flex-wrap:nowrap; gap:8px }
       .brand { font-size:22px }
       header.nav .inner .row { flex:0 0 auto; justify-content:flex-start }
       header.nav nav.row { white-space:nowrap; gap:10px }

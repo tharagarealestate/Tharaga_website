@@ -851,6 +851,7 @@
     // Auto-size the embedded How It Works iframe to fit its content (mobile-first and reactive)
     (function(){
       var pending = null;
+      var lastPostHeight = null;
       function measureAndApply(){
         try{
           var iframe = document.querySelector('#how-works-animated iframe');
@@ -911,6 +912,26 @@
           setTimeout(resizeEmbedDebounced, 0);
           setTimeout(resizeEmbedDebounced, 250);
           setTimeout(resizeEmbedDebounced, 800);
+        });
+        // Also support postMessage from the embed for exact height
+        window.addEventListener('message', function(e){
+          try{
+            var data = e.data || {};
+            if (!data || (data.type !== 'thg-how-height' && data.type !== 'thg-how-height:soft')) return;
+            var iframe = document.querySelector('#how-works-animated iframe');
+            if (!iframe) return;
+            var h = data.height;
+            if (typeof h === 'number' && h > 0) {
+              var next = (h + 2) + 'px';
+              if (next !== iframe.style.height) {
+                iframe.style.height = next;
+                lastPostHeight = next;
+              }
+            } else if (data.type === 'thg-how-height:soft') {
+              // when only a nudge is sent, re-measure synchronously
+              resizeEmbedDebounced();
+            }
+          } catch(_){ }
         });
         setTimeout(resizeEmbedDebounced, 100);
         setTimeout(resizeEmbedDebounced, 400);

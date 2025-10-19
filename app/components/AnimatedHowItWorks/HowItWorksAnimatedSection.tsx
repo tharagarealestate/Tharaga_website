@@ -143,6 +143,84 @@ export const HowItWorksAnimatedSection: React.FC<HowItWorksAnimatedSectionProps>
     }
   }, [playTick])
 
+  // Post our content height to any embedding parent window so iframes
+  // can shrink-wrap to the exact section height (removes unwanted
+  // whitespace below the transitioning text on mobile).
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const isEmbedded = window.parent && window.parent !== window
+    if (!isEmbedded) return
+
+    let raf: number | null = null
+
+    const measure = () => {
+      try {
+        const doc = document
+        const h = Math.max(
+          doc.documentElement.scrollHeight || 0,
+          doc.body.scrollHeight || 0,
+          doc.documentElement.offsetHeight || 0,
+          doc.body.offsetHeight || 0,
+          doc.documentElement.clientHeight || 0
+        )
+        window.parent.postMessage({ type: 'thg-how-height', height: h }, '*')
+      } catch {}
+    }
+
+    const schedule = () => {
+      if (raf) cancelAnimationFrame(raf)
+      raf = requestAnimationFrame(measure)
+    }
+
+    // Observe DOM/layout changes
+    try {
+      const ro = new (window as any).ResizeObserver(() => schedule())
+      ro.observe(document.documentElement)
+      if (document.body) ro.observe(document.body)
+      // Also observe the section specifically
+      if (rootRef.current) ro.observe(rootRef.current)
+      ;(rootRef as any).__ro = ro
+    } catch {}
+
+    try {
+      const mo = new MutationObserver(() => schedule())
+      mo.observe(document.documentElement, { childList: true, subtree: true, attributes: true, characterData: true })
+      ;(rootRef as any).__mo = mo
+    } catch {}
+
+    const onResize = () => schedule()
+    const onOrientation = () => {
+      schedule()
+      setTimeout(schedule, 250)
+      setTimeout(schedule, 800)
+    }
+    window.addEventListener('resize', onResize)
+    window.addEventListener('orientationchange', onOrientation)
+
+    // Initial + a few delayed measurements to capture async paints
+    schedule()
+    setTimeout(schedule, 0)
+    setTimeout(schedule, 200)
+    setTimeout(schedule, 800)
+
+    return () => {
+      try { (rootRef as any).__ro && (rootRef as any).__ro.disconnect() } catch {}
+      try { (rootRef as any).__mo && (rootRef as any).__mo.disconnect() } catch {}
+      if (raf) cancelAnimationFrame(raf)
+      window.removeEventListener('resize', onResize)
+      window.removeEventListener('orientationchange', onOrientation)
+    }
+  }, [])
+
+  // Also nudge parent to resize when scene changes (text copy changes)
+  useEffect(() => {
+    try {
+      if (typeof window !== 'undefined' && window.parent && window.parent !== window) {
+        window.parent.postMessage({ type: 'thg-how-height:soft' }, '*')
+      }
+    } catch {}
+  }, [scene])
+
   return (
     <section
       ref={rootRef}
@@ -151,7 +229,7 @@ export const HowItWorksAnimatedSection: React.FC<HowItWorksAnimatedSectionProps>
       className="w-full overflow-x-hidden"
       style={{ background: bgColor }}
     >
-      <div className={`mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8 ${compact ? 'py-3 sm:py-6' : 'pt-6 pb-4 sm:py-8'} overflow-x-hidden`}
+      <div className={`mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8 ${compact ? 'py-2 sm:py-5' : 'pt-6 pb-4 sm:py-8'} overflow-x-hidden`}
       >
         <div
           className="grid grid-cols-1 items-center gap-4 lg:gap-8 lg:[grid-template-columns:minmax(0,0.9fr)_minmax(0,1.1fr)] xl:[grid-template-columns:minmax(0,0.85fr)_minmax(0,1.15fr)]"
@@ -184,9 +262,8 @@ export const HowItWorksAnimatedSection: React.FC<HowItWorksAnimatedSectionProps>
           >
             {/* Mobile-only section title pinned to top center */}
             <h2 className="absolute top-2 left-1/2 -translate-x-1/2 text-base sm:text-2xl lg:text-3xl font-extrabold text-gray-900 z-20 text-center">How it works</h2>
-            {/* Reserve space for animation canvas – trimmed for mobile to avoid extra whitespace.
-               Use a responsive clamp so the container fits just above the transitioning text. */}
-            <div className="min-h-[clamp(240px,58vw,320px)] sm:min-h-[440px]" />
+            {/* Reserve space for animation canvas – mobile height slightly reduced to avoid leftover whitespace */}
+            <div className="min-h-[clamp(220px,54vw,300px)] sm:min-h-[440px]" />
             {/* Gradient + grid background */}
             <div className="pointer-events-none absolute inset-0" style={{
               background: `radial-gradient(800px 320px at 85% -10%, rgba(16,185,129,.12), rgba(16,185,129,0) 70%),
@@ -328,7 +405,7 @@ export const HowItWorksAnimatedSection: React.FC<HowItWorksAnimatedSectionProps>
           <AnimatePresence mode="wait">
             <motion.div
               key={`mobile-copy-${scene}`}
-              className="sm:hidden order-2 relative z-10 mx-3 mt-3"
+              className="sm:hidden order-2 relative z-10 mx-3 mt-3 mb-2"
               initial={{ opacity: 0, y: 6 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -6 }}

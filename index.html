@@ -90,6 +90,8 @@
     /* Mobile-only items inside Features dropdown are hidden by default */
     details.dropdown .menu .show-mobile-only{ display:none }
     .features { max-width:1100px; margin:26px auto; padding:0 16px; color:#111 }
+    /* Default iframe height tuned for content; JS will refine precisely */
+    #how-works-animated iframe{ height: clamp(320px, 58vw, 560px); }
     .feature-grid { display:grid; grid-template-columns: repeat(3, 1fr); gap:14px }
     .card { background:#fff; border:1px solid #f0d9d9; border-radius:16px; box-shadow:0 12px 36px rgba(110,13,37,.1); padding:16px }
     .how { background:linear-gradient(180deg, rgba(110,13,37,.04), rgba(110,13,37,.02)); border-top:1px solid #f2e6e6; border-bottom:1px solid #f2e6e6; }
@@ -837,7 +839,7 @@
       src="/embed/how-it-works"
       title="How it works animation"
       loading="lazy"
-      style="display:block;width:100%;max-width:1100px;height:560px;border:0;border-radius:16px;overflow:hidden;background:#fff;box-shadow:0 12px 36px rgba(110,13,37,.10);margin:0 auto;"
+      style="display:block;width:100%;max-width:1100px;border:0;border-radius:16px;overflow:hidden;background:#fff;box-shadow:0 12px 36px rgba(110,13,37,.10);margin:0 auto;"
       allow="fullscreen"
     ></iframe>
     <!-- Removed mobile fixed height override; height is auto-resized via JS -->
@@ -858,12 +860,25 @@
           if (!iframe) return;
           var doc = iframe.contentDocument || (iframe.contentWindow && iframe.contentWindow.document);
           if (!doc) return;
-          var h = Math.max(
-            doc.documentElement.scrollHeight || 0,
-            doc.body.scrollHeight || 0,
-            doc.documentElement.offsetHeight || 0,
-            doc.body.offsetHeight || 0
-          );
+          var h = 0;
+          try {
+            var root = doc.getElementById('how-it-works-animated');
+            if (root) {
+              var rect = root.getBoundingClientRect();
+              var cs = (doc.defaultView || window).getComputedStyle(root);
+              var mt = parseFloat(cs.marginTop || '0') || 0;
+              var mb = parseFloat(cs.marginBottom || '0') || 0;
+              h = Math.ceil(rect.height + mt + mb);
+            }
+          } catch(_){ }
+          if (!h){
+            h = Math.max(
+              doc.documentElement.scrollHeight || 0,
+              doc.body.scrollHeight || 0,
+              doc.documentElement.offsetHeight || 0,
+              doc.body.offsetHeight || 0
+            );
+          }
           if (h){
             var next = (h + 2) + 'px';
             if (iframe.style.height !== next){

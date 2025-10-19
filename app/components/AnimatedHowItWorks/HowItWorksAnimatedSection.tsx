@@ -144,7 +144,7 @@ export const HowItWorksAnimatedSection: React.FC<HowItWorksAnimatedSectionProps>
   }, [playTick])
 
   // Post our content height to any embedding parent window so iframes
-  // can shrink-wrap to the exact section height (removes unwanted
+  // can shrink‑wrap to the exact section height (removes unwanted
   // whitespace below the transitioning text on mobile).
   useEffect(() => {
     if (typeof window === 'undefined') return
@@ -155,14 +155,28 @@ export const HowItWorksAnimatedSection: React.FC<HowItWorksAnimatedSectionProps>
 
     const measure = () => {
       try {
-        const doc = document
-        const h = Math.max(
-          doc.documentElement.scrollHeight || 0,
-          doc.body.scrollHeight || 0,
-          doc.documentElement.offsetHeight || 0,
-          doc.body.offsetHeight || 0,
-          doc.documentElement.clientHeight || 0
-        )
+        // Measure ONLY the section root height so the iframe
+        // matches visible content and never grows with viewport
+        // changes (iOS URL bar collapse, etc.).
+        const root = rootRef.current
+        let h = 0
+        if (root) {
+          const rect = root.getBoundingClientRect()
+          // Include vertical margins to be precise
+          const cs = window.getComputedStyle(root)
+          const mt = parseFloat(cs.marginTop || '0') || 0
+          const mb = parseFloat(cs.marginBottom || '0') || 0
+          h = Math.ceil(rect.height + mt + mb)
+        } else {
+          // Fallback to document scrollHeight (no clientHeight!)
+          const doc = document
+          h = Math.max(
+            doc.documentElement.scrollHeight || 0,
+            doc.body.scrollHeight || 0,
+            doc.documentElement.offsetHeight || 0,
+            doc.body.offsetHeight || 0
+          )
+        }
         window.parent.postMessage({ type: 'thg-how-height', height: h }, '*')
       } catch {}
     }

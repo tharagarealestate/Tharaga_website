@@ -82,18 +82,27 @@
     .kpi-row { display:flex; gap:14px; flex-wrap:wrap; align-items:center }
     .kpi { font-family: var(--font-display); font-weight:700; font-size:22px }
     .footer { max-width:1100px; margin:0 auto; padding:28px 16px; color:#666; font-size:14px }
-    /* Tighter mobile layout for How It Works embed */
+    /* Mobile-only: header alignment + how-it-works auto sizing */
     @media (max-width: 600px) {
-      /* Reduce iframe height so the animation + text fit without large gaps */
-      #how-works-animated iframe { height: 360px !important; }
+      /* Header: show Features | Login/Signup horizontally, centered vertically */
+      header.nav .inner { padding-right: 16px; gap:12px; justify-content:flex-start }
+      header.nav nav.row { margin-left:0; gap:12px }
+      header.nav nav.row .menu-group { gap:12px }
+      header.nav nav.row summary, header.nav nav.row a { font-size:1rem !important; line-height:1.2 }
+      .thg-auth-btn { font-size:1rem !important; padding:10px 14px !important }
+      .thg-auth-wrap { position:static !important; inset:auto !important; display:inline-flex; align-items:center; gap:12px }
+      .thg-auth-wrap::before { content:""; display:inline-block; width:1px; height:16px; background:rgba(255,255,255,.22); margin:0 8px; border-radius:1px }
+      /* Only one separator visible between Features and Login/Signup */
+      header.nav nav.row .menu-group > .divider { display:none }
+      header.nav .thg-auth-wrap .divider { display:none }
     }
     @media (max-width: 880px) {
       .hero .inner { grid-template-columns: 1fr; text-align:center; }
       .search-grid { grid-template-columns: 1fr; }
       .feature-grid { grid-template-columns: 1fr; }
       .how .inner { grid-template-columns: 1fr; }
-      /* Mobile header: keep single-row like desktop, just tighter */
-      header.nav .inner { padding-right:120px; flex-wrap:nowrap; gap:8px }
+      /* Mobile header adjustments */
+      header.nav .inner { flex-wrap:nowrap; gap:12px }
       .brand { font-size:22px }
       header.nav .inner .row { flex:0 0 auto; justify-content:flex-start }
       header.nav nav.row { white-space:nowrap; gap:10px }
@@ -103,9 +112,9 @@
       header.nav .thg-auth-wrap .about-link{ display:inline-block }
       header.nav nav.row a[href="/about/"]{ display:none }
       .about-mobile-link{ display:none }
-      /* Right-side auth group position */
-      header.nav .thg-auth-wrap{ position:absolute; top:10px; right:12px; padding:0; gap:10px }
-      header.nav .thg-auth-wrap::before{ height:14px }
+      /* Place auth group inline on mobile */
+      header.nav .thg-auth-wrap{ position:static; padding:0; gap:12px }
+      header.nav .thg-auth-wrap::before{ display:none }
       /* Hide trust pill to avoid crowding on small screens */
       #home_pill_trust{ display:none }
       /* Use the same dropdown style as desktop */
@@ -257,6 +266,11 @@
         wrap = document.createElement('div');
         wrap.className = 'thg-auth-wrap';
         let parent = hdr || document.body;
+        // Prefer inserting inside header's inner container when present
+        try {
+          var inner = hdr && hdr.querySelector('.inner');
+          if (inner) parent = inner;
+        } catch(_){}
         if (hdr) { const cs = getComputedStyle(hdr); if (cs.position === 'static') { hdr.style.position = 'relative'; } parent.appendChild(wrap); }
         else { wrap.classList.add('is-fixed'); parent.appendChild(wrap); }
       }
@@ -799,17 +813,33 @@
   <!-- Animated How It Works (embedded Next.js route) -->
   <section class="features" id="how-works-animated" style="margin-top:14px">
     <iframe
+      id="howItWorksFrame"
       src="/embed/how-it-works"
       title="How it works animation"
       loading="lazy"
-      style="display:block;width:100%;max-width:1100px;height:480px;border:0;border-radius:16px;overflow:hidden;background:#fff;box-shadow:0 12px 36px rgba(110,13,37,.10);margin:0 auto;"
+      style="display:block;width:100%;max-width:1100px;height:480px;border:0;border-radius:16px;overflow:visible;background:#fff;box-shadow:0 12px 36px rgba(110,13,37,.10);margin:0 auto;"
       allow="fullscreen"
     ></iframe>
-    <style>
-      @media (max-width: 600px) {
-        #how-works-animated iframe { height: 420px !important; }
-      }
-    </style>
+    <script>
+      (function(){
+        function applyHeight(h){
+          try{
+            var iframe = document.getElementById('howItWorksFrame');
+            if (!iframe) return;
+            var minH = (window.innerWidth <= 600) ? 360 : 480;
+            iframe.style.height = Math.max(minH, Math.min(h || 0, 1200)) + 'px';
+          }catch(_){ }
+        }
+        window.addEventListener('message', function(ev){
+          try{
+            var d = ev && ev.data; if (!d || typeof d !== 'object') return;
+            if (d.type === 'HOW_IT_WORKS_RESIZE' && typeof d.height === 'number') applyHeight(d.height + 16);
+          }catch(_){ }
+        });
+        var id = setInterval(function(){ applyHeight(); }, 2000);
+        window.addEventListener('beforeunload', function(){ clearInterval(id) });
+      })();
+    </script>
   </section>
 
   <div class="footer">© <span id="year"></span> Tharaga • <a href="/about/">About</a> • <a href="/compliance-trust/">Trust</a> • <a href="/auth-email-landing/">Email confirmation</a></div>

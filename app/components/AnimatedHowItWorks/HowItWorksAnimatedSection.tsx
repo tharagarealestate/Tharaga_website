@@ -151,7 +151,7 @@ export const HowItWorksAnimatedSection: React.FC<HowItWorksAnimatedSectionProps>
       className="w-full overflow-x-hidden"
       style={{ background: bgColor }}
     >
-      <div className={`mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8 ${compact ? 'py-3 sm:py-6' : 'pt-6 pb-4 sm:py-8'} overflow-x-hidden`}
+      <div className={`mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8 ${compact ? 'py-3 sm:py-6' : 'pt-6 pb-4 sm:py-8'} overflow-visible`}
       >
         <div
           className="grid grid-cols-1 items-center gap-4 lg:gap-8 lg:[grid-template-columns:minmax(0,0.9fr)_minmax(0,1.1fr)] xl:[grid-template-columns:minmax(0,0.85fr)_minmax(0,1.15fr)]"
@@ -180,12 +180,12 @@ export const HowItWorksAnimatedSection: React.FC<HowItWorksAnimatedSectionProps>
 
           {/* Futuristic scene canvas */}
           <div
-            className={`order-1 lg:order-2 relative w-full overflow-hidden rounded-2xl bg-white lg:[width:calc(100%+2rem)] xl:[width:calc(100%+3rem)] 2xl:[width:calc(100%+4rem)] lg:ml-[-2rem] xl:ml-[-3rem] 2xl:ml-[-4rem]`}
+            className={`order-1 lg:order-2 relative w-full overflow-visible rounded-2xl bg-white lg:[width:calc(100%+2rem)] xl:[width:calc(100%+3rem)] 2xl:[width:calc(100%+4rem)] lg:ml-[-2rem] xl:ml-[-3rem] 2xl:ml-[-4rem]`}
           >
             {/* Mobile-only section title pinned to top center */}
             <h2 className="absolute top-2 left-1/2 -translate-x-1/2 text-base sm:text-2xl lg:text-3xl font-extrabold text-gray-900 z-20 text-center">How it works</h2>
-            {/* Reserve space for animation canvas – keep generous height (mobile-first) */}
-            <div className="min-h-[360px] sm:min-h-[480px]" />
+            {/* Natural height on mobile to avoid internal scrolling */}
+            <div className="min-h-[320px] sm:min-h-[480px]" />
             {/* Gradient + grid background */}
             <div className="pointer-events-none absolute inset-0" style={{
               background: `radial-gradient(800px 320px at 85% -10%, rgba(16,185,129,.12), rgba(16,185,129,0) 70%),

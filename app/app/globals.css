@@ -105,6 +105,11 @@ html, body {
 }
 
 /* UTILITY CLASSES */
+/* Custom slow pulse animation for floating background shapes */
+@keyframes pulse-slow {
+  0%, 100% { transform: scale(1); opacity: 0.6; }
+  50% { transform: scale(1.06); opacity: 1; }
+}
 @layer utilities {
   .text-gradient-gold {
     @apply bg-gradient-to-r from-gold-600 via-gold-500 to-gold-400 bg-clip-text text-transparent;
@@ -120,5 +125,12 @@ html, body {
 
   .btn-primary {
     @apply bg-primary-600 text-white font-semibold px-6 py-3 rounded-lg shadow-lg hover:bg-primary-700 hover:shadow-xl hover:-translate-y-0.5 transition-all duration-200;
+  }
+  .animate-pulse-slow {
+    animation: pulse-slow 6s ease-in-out infinite;
+  }
+  .animate-pulse-slow-delay {
+    animation: pulse-slow 6s ease-in-out infinite;
+    animation-delay: 1s;
   }
 }

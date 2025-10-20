@@ -100,17 +100,9 @@ async function main() {
 
   // Intentionally left empty (sharedAssets = [])
 
-  // Copy root index.html as the public homepage so Netlify serves it
-  try {
-    const rootIndex = path.join(repoRoot, 'index.html');
-    if (await pathExists(rootIndex)) {
-      const destIndex = path.join(nextPublic, 'index.html');
-      await copyFile(rootIndex, destIndex);
-      console.log('[copy-static] Copied root index.html -> app/public/index.html');
-    }
-  } catch (e) {
-    console.warn('[copy-static] Could not copy root index.html:', e?.message || e);
-  }
+  // Do NOT copy a root index.html; Next.js app route `/` is canonical.
+  // Leaving any static index would shadow the Next.js homepage and
+  // break the premium hero section rendering.
 
   console.log('[copy-static] Done.');
 }

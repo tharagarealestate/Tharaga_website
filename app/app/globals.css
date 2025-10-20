@@ -120,7 +120,7 @@ html, body {
   }
 
   .btn-gold {
-    @apply bg-gradient-to-r from-gold-600 to-gold-500 text-primary-950 font-semibold px-6 py-3 rounded-lg shadow-gold hover:shadow-gold/50 hover:-translate-y-0.5 transition-all duration-200;
+    @apply bg-gradient-to-r from-gold-600 to-gold-500 text-primary-950 font-semibold px-6 py-3 rounded-lg shadow-gold hover:shadow-gold hover:-translate-y-0.5 transition-all duration-200;
   }
 
   .btn-primary {

@@ -1150,5 +1150,29 @@
     document.getElementById('openAssistant')?.addEventListener('click', openAssistant);
     document.getElementById('openAssistant2')?.addEventListener('click', openAssistant);
   </script>
+  <script>
+    // Reveal-on-scroll for Value Proposition and similar sections
+    document.addEventListener('DOMContentLoaded', function(){
+      try {
+        var elements = Array.prototype.slice.call(document.querySelectorAll('.fade-up'));
+        if (!elements.length) return;
+        if (!('IntersectionObserver' in window)) {
+          elements.forEach(function(el){ el.classList.add('in-view'); });
+          return;
+        }
+        var io = new IntersectionObserver(function(entries){
+          entries.forEach(function(entry){
+            if (entry.isIntersecting) {
+              entry.target.classList.add('in-view');
+              io.unobserve(entry.target);
+            }
+          });
+        }, { threshold: 0.15, rootMargin: '0px 0px -10% 0px' });
+        elements.forEach(function(el){ io.observe(el); });
+      } catch(_){ }
+      // Initialize Lucide icons once DOM and script are ready
+      try { window.lucide && window.lucide.createIcons(); } catch(_){ }
+    });
+  </script>
 </body>
 </html>

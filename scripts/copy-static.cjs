@@ -100,7 +100,7 @@ async function main() {
 
   // Intentionally left empty (sharedAssets = [])
 
-  // Copy root index.html as the public homepage so Netlify serves it
+  // Copy root index.html as the public homepage so Netlify can serve static `/`
   try {
     const rootIndex = path.join(repoRoot, 'index.html');
     if (await pathExists(rootIndex)) {

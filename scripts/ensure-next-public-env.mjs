@@ -10,6 +10,7 @@ function main() {
   const appDir = path.resolve(process.cwd())
   // Always write to current working directory (the Next.js app root)
   const envFile = path.join(appDir, '.env.production')
+  // Note: static home (app/public/index.html) may be intentionally present.
 
   const currentNextPublicUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
   const currentNextPublicAnon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY

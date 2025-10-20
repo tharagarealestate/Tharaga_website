@@ -10,6 +10,7 @@
   <script src="/js/home.js" defer></script>
   <!-- Removed globe script; no globe on hero -->
   <link rel="stylesheet" href="/css/brand.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&display=swap" rel="stylesheet" />
   
   <style>
     :root { --brand:#6e0d25; --brand-600:#8a1637; --ink:#111111; --cream:#f7efe7; --muted:#4b5563; --gold:#d4af37; --ring:rgba(212,175,55,.30); --font-ui:'Manrope',Inter,system-ui,-apple-system,'Segoe UI',Roboto,Helvetica,Arial; --font-display:'Plus Jakarta Sans','Manrope',Inter,system-ui,-apple-system,'Segoe UI',Roboto,Helvetica,Arial; }
@@ -160,6 +161,58 @@
     /* Transparent AI art next to hero */
     .ai-hero-figure{ margin:0; width:100%; display:grid; place-items:center; justify-self:center }
     .ai-hero-art{ width:min(520px,95%); height:auto; opacity:.96; filter:drop-shadow(0 18px 40px rgba(110,13,37,.22)); display:block; margin:0 auto; transform:scaleX(-1); }
+    
+    /* Premium hero (static implementation of Next.js design) */
+    .hero-premium{ min-height:100vh; padding-top:72px; padding-bottom:72px; color:#fff; background:linear-gradient(135deg, #071328 0%, #0F2D52 55%, #1A4173 100%); overflow:hidden }
+    .hero-premium .inner{ max-width:1200px; margin:0 auto; padding:0 16px; display:grid; grid-template-columns:1fr; gap:32px; align-items:center }
+    @media (min-width: 1024px){ .hero-premium .inner{ grid-template-columns:1.05fr .95fr; gap:48px } }
+    .hero-premium .eyebrow{ display:inline-flex; align-items:center; gap:10px; padding:8px 12px; border-radius:9999px; background:rgba(212,175,55,.16); border:1px solid rgba(212,175,55,.28) }
+    .hero-premium .dot{ width:8px; height:8px; border-radius:9999px; background:#d4af37; animation:pulse 1.8s ease-in-out infinite }
+    .hero-premium .headline{ font-family:'Playfair Display', Georgia, serif; font-weight:900; letter-spacing:.2px; line-height:1.06; font-size:44px; margin:14px 0 10px }
+    @media (min-width:640px){ .hero-premium .headline{ font-size:56px } }
+    @media (min-width:1024px){ .hero-premium .headline{ font-size:72px } }
+    .text-gradient-gold{ background:linear-gradient(90deg,#C99A1E,#D4AF37,#E5C86D); -webkit-background-clip:text; background-clip:text; color:transparent }
+    .hero-premium .subhead{ color:#e5e7eb; font-size:18px; line-height:1.6; max-width:640px; margin:0 0 18px }
+    .hero-premium .subhead strong{ color:#f5d779 }
+    .trust-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin:18px 0 22px; max-width:640px }
+    .trust-card{ text-align:center; background:rgba(255,255,255,.10); border:1px solid rgba(255,255,255,.16); border-radius:14px; padding:14px; backdrop-filter:blur(10px) }
+    .trust-card .k{ font-size:26px; font-weight:800; color:#f1cc4c; margin-bottom:4px }
+    .trust-card .t{ font-size:12px; color:#d1d5db }
+    .cta-row{ display:flex; flex-wrap:wrap; gap:12px }
+    .btn-gold{ appearance:none; border:0; background:linear-gradient(90deg,#c69a17,#d4af37); color:#0f172a; font-weight:800; padding:12px 16px; border-radius:12px; box-shadow:0 10px 30px rgba(212,175,55,.22); display:inline-flex; align-items:center; gap:10px; text-decoration:none }
+    .btn-gold:hover{ filter:brightness(1.02); transform:translateY(-1px) }
+    .btn-glass{ background:rgba(255,255,255,.12); border:1px solid rgba(255,255,255,.22); color:#fff; font-weight:700; padding:12px 16px; border-radius:12px; display:inline-flex; align-items:center; gap:10px; text-decoration:none }
+    .btn-glass:hover{ background:rgba(255,255,255,.18) }
+    .proof{ display:flex; align-items:center; gap:14px; margin-top:16px }
+    .avatars{ display:flex }
+    .avatars img{ width:40px; height:40px; border-radius:9999px; border:2px solid #071328; margin-left:-10px; background:#ddd }
+    .avatars img:first-child{ margin-left:0 }
+    .stars{ display:flex; gap:4px; margin-bottom:2px }
+    .star{ width:16px; height:16px; color:#d4af37 }
+
+    .visual{ position:relative; width:100%; display:none }
+    @media (min-width:1024px){ .visual{ display:block } }
+    .card-3d{ position:relative; background:rgba(255,255,255,.85); border:1px solid rgba(212,175,55,.15); border-radius:18px; padding:16px; box-shadow:0 18px 40px rgba(7,19,40,.25); transform:rotate(3deg); transition:transform .45s ease }
+    .card-3d:hover{ transform:rotate(0deg) }
+    .badge{ display:inline-flex; align-items:center; gap:6px; padding:4px 8px; border-radius:9999px; background:#d1fae5; color:#065f46; font-size:12px; font-weight:700 }
+    .ai-badge{ position:absolute; top:-10px; right:-10px; background:rgba(255,255,255,.9); border:1px solid rgba(17,24,39,.08); border-radius:14px; padding:12px; box-shadow:0 16px 36px rgba(0,0,0,.22) }
+    .roi-badge{ position:absolute; bottom:-10px; left:-10px; background:rgba(255,255,255,.9); border:1px solid rgba(17,24,39,.08); border-radius:14px; padding:12px; box-shadow:0 16px 36px rgba(0,0,0,.22) }
+
+    /* Background shapes */
+    .shape{ position:absolute; border-radius:9999px; filter:blur(60px); opacity:.24; pointer-events:none }
+    .shape.gold{ width:280px; height:280px; left:6%; top:10%; background:#d4af37; animation:floatY 6s ease-in-out infinite }
+    .shape.blue{ width:360px; height:360px; right:6%; bottom:10%; background:#2563EB; animation:floatY2 7s ease-in-out infinite }
+
+    /* Scroll indicator */
+    .scroll-indicator{ position:absolute; bottom:18px; left:50%; transform:translateX(-50%); animation:bounce 1.6s ease-in-out infinite; opacity:.8 }
+
+    /* Animations */
+    @keyframes pulse{ 0%,100%{ transform:scale(1); opacity:.8 } 50%{ transform:scale(1.18); opacity:1 } }
+    @keyframes floatY{ 0%,100%{ transform:translateY(0) } 50%{ transform:translateY(12px) } }
+    @keyframes floatY2{ 0%,100%{ transform:translateY(0) } 50%{ transform:translateY(-14px) } }
+    @keyframes slideInLeft{ from{ opacity:0; transform:translateX(-36px) } to{ opacity:1; transform:translateX(0) } }
+    @keyframes scaleIn{ from{ opacity:0; transform:scale(.92) } to{ opacity:1; transform:scale(1) } }
+    @keyframes bounce{ 0%,100%{ transform:translate(-50%,0) } 50%{ transform:translate(-50%,-8px) } }
   </style>
 
   <!-- Durable Head Code (from snippets/index.html) -->
@@ -778,55 +831,73 @@
     </div>
   </header>
 
-  <section class="hero" style="color:#111">
+  <section class="hero-premium">
+    <div class="shape gold"></div>
+    <div class="shape blue"></div>
     <div class="inner">
-      <div>
-        <h1 class="h1" id="hero_title">Find Your Dream Home—Zero Brokers, Zero Commissions</h1>
-        <p class="sub" id="hero_sub">AI-driven verified listings with transparent insights and family-friendly tools for confident decisions.</p>
-        <div class="kpi-row" style="margin:12px 0 16px">
-          <div class="pill"><span class="kpi" id="kpi_time">28h</span> saved per buyer</div>
-          <div class="pill"><span class="kpi" id="kpi_pps">₹1,200</span> avg price/sqft gain</div>
-          <div class="pill">RERA & document hygiene checks</div>
+      <div style="animation:slideInLeft .8s ease-out both">
+        <div class="eyebrow"><span class="dot"></span><span>Tamil Nadu's Most Intelligent Real Estate Platform</span></div>
+        <h1 class="headline">Build Wealth,<br><span class="text-gradient-gold">Not Just Homes</span></h1>
+        <p class="subhead">AI‑verified properties. Zero broker fees. <strong>₹1,200/sqft saved</strong> on average. Make the smartest investment of your life.</p>
+
+        <div class="trust-grid">
+          <div class="trust-card"><div class="k">28h</div><div class="t">Time Saved</div></div>
+          <div class="trust-card"><div class="k" style="color:#34d399">100%</div><div class="t">RERA Verified</div></div>
+          <div class="trust-card"><div class="k">₹120Cr+</div><div class="t">Deals Closed</div></div>
         </div>
 
-        <div class="search-card" role="search" aria-label="Quick search">
-          <div class="search-grid">
-            <div>
-              <label class="sub" for="q">City or locality</label>
-              <input id="q" class="input" placeholder="e.g., Velachery, Chennai" list="cities" />
-              <datalist id="cities">
-                <option>Chennai</option><option>Coimbatore</option><option>Madurai</option><option>Trichy</option><option>Salem</option>
-              </datalist>
-            </div>
-            <div>
-              <label class="sub" for="minPrice">Budget min (₹)</label>
-              <input id="minPrice" class="input" type="number" min="0" step="50000" placeholder="20,00,000" />
-            </div>
-            <div>
-              <label class="sub" for="maxPrice">Budget max (₹)</label>
-              <input id="maxPrice" class="input" type="number" min="0" step="50000" placeholder="80,00,000" />
-            </div>
-            <div style="display:flex;align-items:flex-end;gap:8px">
-              <button id="browseBtn" class="btn" type="button">Browse matches</button>
-              <button id="resumeBtn" class="btn secondary" type="button" hidden>Resume</button>
-            </div>
-          </div>
-          <div class="chip-row" style="margin-top:10px" aria-label="BHK quick select">
-            <button class="chip" data-bhk="1" aria-pressed="false">1 BHK</button>
-            <button class="chip" data-bhk="2" aria-pressed="true">2 BHK</button>
-            <button class="chip" data-bhk="3" aria-pressed="false">3 BHK</button>
-            <button class="chip" data-type="Villa" aria-pressed="false">Villa</button>
-            <button class="chip" data-type="Plot" aria-pressed="false">Plot</button>
-            <button class="chip" data-metro="1" aria-pressed="false">Near Metro</button>
-          </div>
+        <div class="cta-row">
+          <a class="btn-gold" href="/property-listing/">Explore Properties
+            <svg class="star" width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M13.09 8.26L12 2 10.91 8.26 5 9.27l4.55 3.97-1.36 6L12 16.77l3.81 2.47-1.36-6L19 9.27l-5.91-1.01z" fill="currentColor"/></svg>
+          </a>
+          <a class="btn-glass" href="#how-works-animated">See How It Works</a>
         </div>
 
-        <div class="row" style="gap:14px;margin-top:14px">
-          <a class="btn" href="/property-listing/">Explore verified listings</a>
-          <a class="btn secondary" href="/search-filter-home/">Advanced search</a>
+        <div class="proof">
+          <div class="avatars">
+            <img src="https://i.pravatar.cc/80?img=35" alt="" loading="lazy">
+            <img src="https://i.pravatar.cc/80?img=36" alt="" loading="lazy">
+            <img src="https://i.pravatar.cc/80?img=37" alt="" loading="lazy">
+            <img src="https://i.pravatar.cc/80?img=38" alt="" loading="lazy">
+          </div>
+          <div>
+            <div class="stars">
+              <svg class="star" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21 12 17.27z" fill="currentColor"/></svg>
+              <svg class="star" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21 12 17.27z" fill="currentColor"/></svg>
+              <svg class="star" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21 12 17.27z" fill="currentColor"/></svg>
+              <svg class="star" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21 12 17.27z" fill="currentColor"/></svg>
+              <svg class="star" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21 12 17.27z" fill="currentColor"/></svg>
+            </div>
+            <div style="color:#e5e7eb;font-size:14px"><strong style="color:#fff">500+ builders</strong> trust Tharaga</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="visual" style="animation:scaleIn 1s .2s ease-out both">
+        <div class="card-3d">
+          <img src="/images/hero-bg.jpg" alt="Luxury Property" style="width:100%;height:260px;object-fit:cover;border-radius:12px;margin-bottom:10px" loading="lazy"/>
+          <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:8px">
+            <div>
+              <div style="font-weight:800;color:#111">Prestige Lakeside</div>
+              <div style="font-size:13px;color:#4b5563">Whitefield, Bangalore</div>
+            </div>
+            <div class="badge"><span>✓</span><span>Verified</span></div>
+          </div>
+          <div style="font-size:22px;font-weight:800;color:#b8860b;margin-bottom:8px">₹2.4 Cr</div>
+          <div style="display:flex;gap:8px;color:#374151;font-size:13px"><span>3 BHK</span><span>•</span><span>1,850 sqft</span><span>•</span><span>Ready to Move</span></div>
+        </div>
+        <div class="ai-badge">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><span style="color:#b8860b">✦</span><span style="font-weight:800;color:#111">AI Match</span></div>
+          <div style="font-size:26px;font-weight:900;color:#b8860b">92%</div>
+        </div>
+        <div class="roi-badge">
+          <div style="font-size:12px;color:#6b7280;margin-bottom:4px">ROI Potential</div>
+          <div style="font-size:20px;font-weight:900;color:#059669">+24%</div>
+          <div style="font-size:12px;color:#6b7280">in 3 years</div>
         </div>
       </div>
     </div>
+    <div class="scroll-indicator">⌄</div>
   </section>
 
   

@@ -8,6 +8,7 @@
   <script type="module" src="/js/fragment-handle.js"></script>
   <script src="/js/analytics.js" defer></script>
   <script src="/js/home.js" defer></script>
+  <script src="https://unpkg.com/lucide@latest" defer></script>
   <!-- Removed globe script; no globe on hero -->
   <link rel="stylesheet" href="/css/brand.css" />
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&display=swap" rel="stylesheet" />
@@ -213,6 +214,34 @@
     @keyframes slideInLeft{ from{ opacity:0; transform:translateX(-36px) } to{ opacity:1; transform:translateX(0) } }
     @keyframes scaleIn{ from{ opacity:0; transform:scale(.92) } to{ opacity:1; transform:scale(1) } }
     @keyframes bounce{ 0%,100%{ transform:translate(-50%,0) } 50%{ transform:translate(-50%,-8px) } }
+    
+    /* Value Proposition Section */
+    .value-prop{ position:relative; padding:96px 0; background:linear-gradient(180deg,#f9fafb 0%, #ffffff 100%); overflow:hidden }
+    .value-prop .deco{ position:absolute; border-radius:9999px; filter:blur(72px); opacity:.6; pointer-events:none }
+    .value-prop .deco.gold{ top:-80px; left:-80px; width:260px; height:260px; background:rgba(212,175,55,.10) }
+    .value-prop .deco.primary{ bottom:-100px; right:-100px; width:380px; height:380px; background:rgba(37,99,235,.10) }
+    .value-prop .inner{ position:relative; max-width:1100px; margin:0 auto; padding:0 16px; z-index:1 }
+    .value-prop .header{ text-align:center; max-width:760px; margin:0 auto 28px }
+    .value-prop .eyebrow-gold{ display:inline-block; padding:8px 12px; border-radius:9999px; background:#fef3c7; color:#92400e; font-weight:800; font-size:12px; margin-bottom:16px }
+    .value-prop .headline{ font-family: var(--font-display); font-weight:800; font-size:36px; line-height:1.12; color:#111; margin:0 0 12px }
+    .value-prop .sub{ color:#4b5563; font-size:18px; line-height:1.7; margin:0 auto; max-width:680px }
+    .vp-grid{ display:grid; grid-template-columns:1fr; gap:16px }
+    @media (min-width:768px){ .vp-grid{ grid-template-columns:repeat(2,1fr); gap:18px } }
+    @media (min-width:1024px){ .vp-grid{ grid-template-columns:repeat(3,1fr); gap:20px } }
+    .glass-card{ background:rgba(255,255,255,.72); border:1px solid rgba(17,24,39,.08); border-radius:16px; padding:24px; box-shadow:0 12px 36px rgba(17,24,39,.08); backdrop-filter:blur(10px) saturate(1.02); transition: box-shadow .2s ease, transform .2s ease, border-color .2s ease }
+    .vp-card{ height:100%; border-left:4px solid transparent; transition: border-color .2s ease }
+    .vp-card:hover{ border-left-color: var(--gold) }
+    .vp-card:hover .glass-card{ box-shadow:0 20px 50px rgba(17,24,39,.16); transform:translateY(-2px) }
+    .icon-circle{ width:56px; height:56px; border-radius:14px; display:flex; align-items:center; justify-content:center; background:linear-gradient(135deg,#c69a17,#d4af37); color:#fff; margin-bottom:16px; transition: transform .2s ease }
+    .icon-circle svg{ width:28px; height:28px }
+    .vp-card:hover .icon-circle{ transform:scale(1.06) }
+    .vp-title{ font-weight:800; font-size:20px; margin:0 0 10px; color:#111; transition: color .2s ease }
+    .vp-card:hover .vp-title{ color:#1d4ed8 }
+    .vp-desc{ color:#4b5563; line-height:1.7; margin:0 0 14px }
+    .vp-stat{ display:flex; align-items:center; gap:8px; color:#065f46; font-weight:800 }
+    .vp-stat svg{ width:20px; height:20px }
+    .fade-up{ opacity:0; transform:translateY(30px); transition: opacity .5s ease, transform .5s ease; transition-delay: var(--delay, 0s) }
+    .fade-up.in-view{ opacity:1; transform:translateY(0) }
   </style>
 
   <!-- Durable Head Code (from snippets/index.html) -->
@@ -898,6 +927,81 @@
       </div>
     </div>
     <div class="scroll-indicator">⌄</div>
+  </section>
+
+  <!-- VALUE PROPOSITION SECTION -->
+  <section class="value-prop" id="value-proposition">
+    <div class="deco gold" aria-hidden="true"></div>
+    <div class="deco primary" aria-hidden="true"></div>
+    <div class="inner">
+      <div class="header fade-up" style="--delay:.0s">
+        <span class="eyebrow-gold">The Tharaga Difference</span>
+        <h2 class="headline">Not Your Average <span class="text-gradient-gold">Real Estate Platform</span></h2>
+        <p class="sub">We're building India's first AI-powered wealth intelligence platform for real estate. Every feature is designed to make you richer, smarter, faster.</p>
+      </div>
+
+      <div class="vp-grid">
+        <!-- 1. AI-Powered Intelligence -->
+        <article class="vp-card fade-up" style="--delay:.05s">
+          <div class="glass-card">
+            <div class="icon-circle"><i data-lucide="brain"></i></div>
+            <h3 class="vp-title">AI-Powered Intelligence</h3>
+            <p class="vp-desc">Our proprietary AI analyzes 500+ data points per property—from market trends to flood risk—giving you insights no broker ever could.</p>
+            <div class="vp-stat"><i data-lucide="trending-up"></i><span>92% prediction accuracy</span></div>
+          </div>
+        </article>
+
+        <!-- 2. Blockchain-Verified Titles -->
+        <article class="vp-card fade-up" style="--delay:.10s">
+          <div class="glass-card">
+            <div class="icon-circle"><i data-lucide="shield"></i></div>
+            <h3 class="vp-title">Blockchain-Verified Titles</h3>
+            <p class="vp-desc">Every property undergoes cryptographic title verification. Say goodbye to property fraud and legal nightmares.</p>
+            <div class="vp-stat"><i data-lucide="trending-up"></i><span>100% fraud-free guarantee</span></div>
+          </div>
+        </article>
+
+        <!-- 3. Zero Broker Commission -->
+        <article class="vp-card fade-up" style="--delay:.15s">
+          <div class="glass-card">
+            <div class="icon-circle"><i data-lucide="zap"></i></div>
+            <h3 class="vp-title">Zero Broker Commission</h3>
+            <p class="vp-desc">Connect directly with verified builders. Save ₹3-5 lakhs on brokerage. That's a vacation in Europe, on us.</p>
+            <div class="vp-stat"><i data-lucide="trending-up"></i><span>₹1,200/sqft avg. savings</span></div>
+          </div>
+        </article>
+
+        <!-- 4. ROI Prediction Engine -->
+        <article class="vp-card fade-up" style="--delay:.20s">
+          <div class="glass-card">
+            <div class="icon-circle"><i data-lucide="line-chart"></i></div>
+            <h3 class="vp-title">ROI Prediction Engine</h3>
+            <p class="vp-desc">Know your property's future value before you buy. Our ML models forecast appreciation with 85% accuracy.</p>
+            <div class="vp-stat"><i data-lucide="trending-up"></i><span>+24% avg. 3-year ROI</span></div>
+          </div>
+        </article>
+
+        <!-- 5. Family Decision Tools -->
+        <article class="vp-card fade-up" style="--delay:.25s">
+          <div class="glass-card">
+            <div class="icon-circle"><i data-lucide="users"></i></div>
+            <h3 class="vp-title">Family Decision Tools</h3>
+            <p class="vp-desc">Compare properties, calculate EMIs, assess risks—all in one dashboard. Make decisions together, confidently.</p>
+            <div class="vp-stat"><i data-lucide="trending-up"></i><span>28 hours saved per buyer</span></div>
+          </div>
+        </article>
+
+        <!-- 6. Tamil Voice Search -->
+        <article class="vp-card fade-up" style="--delay:.30s">
+          <div class="glass-card">
+            <div class="icon-circle"><i data-lucide="globe"></i></div>
+            <h3 class="vp-title">Tamil Voice Search</h3>
+            <p class="vp-desc">Search properties in your language, your way. Our voice AI understands context, not just keywords.</p>
+            <div class="vp-stat"><i data-lucide="trending-up"></i><span>5+ regional languages</span></div>
+          </div>
+        </article>
+      </div>
+    </div>
   </section>
 
   

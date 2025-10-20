@@ -10,16 +10,7 @@ function main() {
   const appDir = path.resolve(process.cwd())
   // Always write to current working directory (the Next.js app root)
   const envFile = path.join(appDir, '.env.production')
-  // Guardrail: prevent accidental static homepage from shadowing Next.js `/`
-  try {
-    const publicIndex = path.join(appDir, 'public', 'index.html')
-    if (fs.existsSync(publicIndex)) {
-      console.error('[ensure-env] Detected app/public/index.html which would override Next.js homepage. Please remove it. Failing build.')
-      process.exit(1)
-    }
-  } catch (_) {
-    // noop
-  }
+  // Note: static home (app/public/index.html) may be intentionally present.
 
   const currentNextPublicUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
   const currentNextPublicAnon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY

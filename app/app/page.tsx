@@ -230,7 +230,7 @@ export default function Home() {
               transition={{ delay: 0.2 }}
               className="text-xl text-gray-300 mb-12 max-w-2xl mx-auto"
             >
-              Join 500+ builders who've closed ₹120Cr+ in deals. Get your first 10 qualified leads absolutely free.
+              Get your first 10 qualified leads absolutely free.
             </motion.p>
 
             {/* CTA Buttons */}

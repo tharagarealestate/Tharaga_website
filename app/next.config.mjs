@@ -27,6 +27,9 @@ const nextConfig = {
     rules.push({ source: '/app/:path*', destination: '/:path*' })
     // Back-compat: legacy underscore embed path -> new embed path
     rules.push({ source: '/_embed/:path*', destination: '/embed/:path*' })
+    // Map legacy static paths if present in public
+    rules.push({ source: '/property-listing', destination: '/property-listing/index.html' })
+    rules.push({ source: '/search-filter-home', destination: '/search-filter-home/index.html' })
     return rules
   },
   images: {

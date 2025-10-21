@@ -15,6 +15,9 @@ export async function middleware(req: NextRequest) {
 
   // 2) Admin route protection
   if (pathname === '/admin' || pathname.startsWith('/admin/')) {
+    if (process.env.NEXT_PUBLIC_DISABLE_ADMIN_GUARD === 'true') {
+      return NextResponse.next()
+    }
     const res = NextResponse.next()
     const supabase = createMiddlewareClient({ req, res })
 

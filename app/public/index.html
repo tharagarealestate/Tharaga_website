@@ -571,7 +571,20 @@
     function closeConfirm(ui){ ui.confirmEl.setAttribute('aria-hidden','true'); }
 
     function bindUI(ui){
-      ui.btn.addEventListener('click', function(e){ e.preventDefault(); if (state.user && state.user.email){ toggleMenu(ui); } else { openAuthModal(ui, { next: location.pathname + location.search }); } });
+      ui.btn.addEventListener('click', function(e){
+        e.preventDefault();
+        if (state.user && state.user.email){
+          toggleMenu(ui);
+        } else {
+          try {
+            if (window.authGate && typeof window.authGate.openLoginModal === 'function'){
+              window.authGate.openLoginModal({ next: location.pathname + location.search });
+              return;
+            }
+          } catch(_){}
+          openAuthModal(ui, { next: location.pathname + location.search });
+        }
+      });
       ui.btn.addEventListener('keydown', function(e){ if ((e.key === 'ArrowDown' || e.key === 'Enter') && state.user && state.user.email){ e.preventDefault(); openMenu(ui); } });
       ui.menu.addEventListener('click', function(e){ const item = e.target.closest('.thg-auth-item[role="menuitem"]'); if (!item) return; const act = item.getAttribute('data-action'); if (act === 'profile'){ closeMenu(ui); location.href = AUTH_NAV.profile; return; } if (act === 'dashboard'){ closeMenu(ui); location.href = AUTH_NAV.dashboard; return; } if (act === 'settings' && AUTH_NAV.settings){ closeMenu(ui); location.href = AUTH_NAV.settings; return; } if (act === 'logout'){ closeMenu(ui); openConfirm(ui); } });
       ui.menu.addEventListener('keydown', function(e){ if (e.key === 'Escape'){ e.preventDefault(); closeMenu(ui); ui.btn.focus(); return; } if (['ArrowDown','ArrowUp','Home','End'].indexOf(e.key) === -1) return; e.preventDefault(); const items = Array.prototype.slice.call(ui.menu.querySelectorAll('.thg-auth-item[role="menuitem"]')); const idx = items.indexOf(document.activeElement); if (!items.length) return; if (e.key === 'Home'){ items[0].focus(); return; } if (e.key === 'End'){ items[items.length - 1].focus(); return; } const next = e.key === 'ArrowDown' ? (idx + 1 + items.length) % items.length : (idx - 1 + items.length) % items.length; items[next].focus(); });
@@ -588,7 +601,48 @@
       forgotBtn.addEventListener('click', function(){ showPanel(ui.overlay, 'reset', 'Reset password'); const el = ui.overlay.querySelector('#thg-rp-email'); const source = ui.overlay.querySelector('#thg-si-email'); if (source && el && source.value) el.value = source.value; if (el) el.focus(); });
       ui.overlay.querySelector('#thg-signin-btn').addEventListener('click', async function(){ if (!state.supabaseReady){ setModalLoading(ui.overlay, true); try{ await initSupabase(ui); } catch(_){} if (!state.supabaseReady){ setModalLoading(ui.overlay, false); showError(ui.overlay, 'Authentication is initializing. Please try again.'); return; } } const email = ui.overlay.querySelector('#thg-si-email').value.trim(); const password = ui.overlay.querySelector('#thg-si-password').value; if (!validateEmail(email)) { showError(ui.overlay, 'Enter a valid email.'); return; } if (!password || password.length < 6) { showError(ui.overlay, 'Enter your password.'); return; } clearError(ui.overlay); setModalLoading(ui.overlay, true); try{ const { error } = await window.supabase.auth.signInWithPassword({ email, password }); if (error) { showError(ui.overlay, error.message || 'Failed to sign in.'); } } catch(ex){ showError(ui.overlay, 'Network error. Please try again.'); } finally { setModalLoading(ui.overlay, false); } });
       ui.overlay.querySelector('#thg-signup-btn').addEventListener('click', async function(){ if (!state.supabaseReady){ setModalLoading(ui.overlay, true); try{ await initSupabase(ui); } catch(_){} if (!state.supabaseReady){ setModalLoading(ui.overlay, false); showError(ui.overlay, 'Authentication is initializing. Please try again.'); return; } } const name = ui.overlay.querySelector('#thg-su-name').value.trim(); const email = ui.overlay.querySelector('#thg-su-email').value.trim(); const password = ui.overlay.querySelector('#thg-su-password').value; if (!validateEmail(email)) { showError(ui.overlay, 'Enter a valid email.'); return; } if (!password || password.length < 8) { showError(ui.overlay, 'Password must be at least 8 characters.'); return; } clearError(ui.overlay); setModalLoading(ui.overlay, true); try{ const { error } = await window.supabase.auth.signUp({ email, password, options: { data: name ? { full_name: name } : {} } }); if (error) { showError(ui.overlay, error.message || 'Failed to create account.'); } else { showError(ui.overlay, 'Check your email to verify your account.'); } } catch(ex){ showError(ui.overlay, 'Network error. Please try again.'); } finally { setModalLoading(ui.overlay, false); } });
-      ui.overlay.querySelectorAll('.thg-oauth-btn').forEach(function(btn){ btn.addEventListener('click', async function(){ if (!state.supabaseReady){ setModalLoading(ui.overlay, true); try{ await initSupabase(ui); } catch(_){} if (!state.supabaseReady){ setModalLoading(ui.overlay, false); showError(ui.overlay, 'Authentication is initializing. Please try again.'); return; } } const provider = btn.getAttribute('data-provider'); clearError(ui.overlay); setModalLoading(ui.overlay, true); try{ const redirectTo = location.origin + location.pathname + location.search; const { data, error } = await window.supabase.auth.signInWithOAuth({ provider, options: { redirectTo, skipBrowserRedirect: true, queryParams: { prompt: 'select_account' } } }); if (error) { const msg = /provider is not enabled/i.test(error.message||'') ? 'Google sign-in is not available yet.' : (error.message || 'Could not start sign in.'); showError(ui.overlay, msg); setModalLoading(ui.overlay, false); return; } if (data && data.url){ location.href = data.url; } else { setModalLoading(ui.overlay, false); showError(ui.overlay, 'Could not start ' + provider + ' sign in.'); } } catch(ex){ showError(ui.overlay, 'Failed to start ' + provider + ' sign in.'); setModalLoading(ui.overlay, false); } }); });
+      ui.overlay.querySelectorAll('.thg-oauth-btn').forEach(function(btn){
+        btn.addEventListener('click', async function(){
+          const provider = btn.getAttribute('data-provider');
+          try {
+            if (provider === 'google' && window.authGate && typeof window.authGate.openLoginModal === 'function'){
+              closeAuthModal(ui);
+              window.authGate.openLoginModal({ next: location.pathname + location.search });
+              return;
+            }
+          } catch(_){}
+          if (!state.supabaseReady){
+            setModalLoading(ui.overlay, true);
+            try{ await initSupabase(ui); } catch(_){}
+            if (!state.supabaseReady){
+              setModalLoading(ui.overlay, false);
+              showError(ui.overlay, 'Authentication is initializing. Please try again.');
+              return;
+            }
+          }
+          clearError(ui.overlay);
+          setModalLoading(ui.overlay, true);
+          try{
+            const redirectTo = location.origin + location.pathname + location.search;
+            const { data, error } = await window.supabase.auth.signInWithOAuth({ provider, options: { redirectTo, skipBrowserRedirect: true, queryParams: { prompt: 'select_account' } } });
+            if (error) {
+              const msg = /provider is not enabled/i.test(error.message||'') ? 'Google sign-in is not available yet.' : (error.message || 'Could not start sign in.');
+              showError(ui.overlay, msg);
+              setModalLoading(ui.overlay, false);
+              return;
+            }
+            if (data && data.url){
+              location.href = data.url;
+            } else {
+              setModalLoading(ui.overlay, false);
+              showError(ui.overlay, 'Could not start ' + provider + ' sign in.');
+            }
+          } catch(ex){
+            showError(ui.overlay, 'Failed to start ' + provider + ' sign in.');
+            setModalLoading(ui.overlay, false);
+          }
+        });
+      });
       ui.overlay.querySelector('#thg-reset-btn').addEventListener('click', async function(){ if (!state.supabaseReady){ setModalLoading(ui.overlay, true); try{ await initSupabase(ui); } catch(_){} if (!state.supabaseReady){ setModalLoading(ui.overlay, false); showError(ui.overlay, 'Authentication is initializing. Please try again.'); return; } } const email = ui.overlay.querySelector('#thg-rp-email').value.trim(); if (!validateEmail(email)) { showError(ui.overlay, 'Enter a valid email.'); return; } clearError(ui.overlay); setModalLoading(ui.overlay, true); try{ const redirectTo = location.origin + location.pathname + location.search; const { error } = await window.supabase.auth.resetPasswordForEmail(email, { redirectTo }); if (error) { showError(ui.overlay, error.message || 'Failed to send reset link.'); } else { showError(ui.overlay, 'Reset link sent. Check your email.'); } } catch(ex){ showError(ui.overlay, 'Network error. Please try again.'); } finally { setModalLoading(ui.overlay, false); } });
       ui.overlay.querySelector('#thg-update-btn').addEventListener('click', async function(){ if (!state.supabaseReady){ setModalLoading(ui.overlay, true); try{ await initSupabase(ui); } catch(_){} if (!state.supabaseReady){ setModalLoading(ui.overlay, false); showError(ui.overlay, 'Authentication is initializing. Please try again.'); return; } } const password = ui.overlay.querySelector('#thg-up-password').value; if (!password || password.length < 8) { showError(ui.overlay, 'Password must be at least 8 characters.'); return; } clearError(ui.overlay); setModalLoading(ui.overlay, true); try{ const { error } = await window.supabase.auth.updateUser({ password }); if (error) { showError(ui.overlay, error.message || 'Failed to update password.'); } else { showPanel(ui.overlay, 'signin', 'Sign in'); showError(ui.overlay, 'Password updated. Please sign in.'); } } catch(ex){ showError(ui.overlay, 'Network error. Please try again.'); } finally { setModalLoading(ui.overlay, false); } });
       ui.confirmEl.querySelector('.thg-confirm-cancel').addEventListener('click', function(){ closeConfirm(ui); });

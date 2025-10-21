@@ -7,6 +7,7 @@ export const metadata: Metadata = {
 }
 
 import { EntitlementsProvider } from '@/components/ui/FeatureGate'
+import { HeaderAuth } from '@/components/ui'
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -54,6 +55,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <a href="/tools/environment" className="hover:text-accent">Env</a>
             <a href="/filters/radial" className="hover:text-accent">Filters</a>
             <span className="grow" />
+            <HeaderAuth />
             <button id="themeToggleBtn" className="rounded-md border border-border px-2 py-1 text-xs text-fg hover:text-accent">
               Toggle theme
             </button>

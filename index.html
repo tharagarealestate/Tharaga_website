@@ -225,6 +225,20 @@
     .value-prop .eyebrow-gold{ display:inline-block; padding:8px 12px; border-radius:9999px; background:#fef3c7; color:#92400e; font-weight:800; font-size:12px; margin-bottom:16px }
     .value-prop .headline{ font-family: var(--font-display); font-weight:800; font-size:36px; line-height:1.12; color:#111; margin:0 0 12px }
     .value-prop .sub{ color:#4b5563; font-size:18px; line-height:1.7; margin:0 auto; max-width:680px }
+    
+    /* Trial CTA Section (moved from Next.js) */
+    .trial-cta{ position:relative; padding:72px 0; color:#fff; background:linear-gradient(135deg, #071328 0%, #0F2D52 55%, #1A4173 100%); overflow:hidden }
+    .trial-cta .inner{ max-width:1100px; margin:0 auto; padding:0 16px; text-align:center }
+    .trial-cta .badge{ display:inline-flex; align-items:center; gap:10px; padding:8px 12px; border-radius:9999px; background:rgba(16,185,129,.18); border:1px solid rgba(16,185,129,.35); margin-bottom:16px }
+    .trial-cta .headline{ font-family:'Playfair Display', Georgia, serif; font-weight:900; letter-spacing:.2px; line-height:1.06; font-size:44px; margin:14px 0 10px }
+    @media (min-width:640px){ .trial-cta .headline{ font-size:56px } }
+    @media (min-width:1024px){ .trial-cta .headline{ font-size:64px } }
+    .trial-cta .subhead{ color:#e5e7eb; font-size:18px; line-height:1.6; max-width:640px; margin:0 auto 18px }
+    .trial-cta .shapes .shape{ position:absolute; border-radius:9999px; filter:blur(60px); opacity:.25; pointer-events:none }
+    .trial-cta .shapes .gold{ top:-40px; right:-40px; width:380px; height:380px; background:#d4af37 }
+    .trial-cta .shapes .blue{ bottom:-60px; left:-60px; width:420px; height:420px; background:#2563EB }
+    .trial-cta .cta-row{ display:flex; flex-wrap:wrap; gap:12px; justify-content:center; margin:16px 0 10px }
+    .trial-cta .trust{ display:flex; flex-wrap:wrap; gap:16px; justify-content:center; color:#d1d5db; margin-top:6px }
     .vp-grid{ display:grid; grid-template-columns:1fr; gap:16px }
     @media (min-width:768px){ .vp-grid{ grid-template-columns:repeat(2,1fr); gap:18px } }
     @media (min-width:1024px){ .vp-grid{ grid-template-columns:repeat(3,1fr); gap:20px } }
@@ -927,6 +941,27 @@
       </div>
     </div>
     <div class="scroll-indicator">⌄</div>
+  </section>
+
+  <!-- Trial CTA (migrated from cursor/design-trial-call-to-action-section-76dc) -->
+  <section class="trial-cta" id="trial-cta">
+    <div class="shapes" aria-hidden="true">
+      <div class="shape gold"></div>
+      <div class="shape blue"></div>
+    </div>
+    <div class="inner">
+      <div class="badge"><i data-lucide="check-circle"></i><span>No Credit Card Required • 14-Day Free Trial</span></div>
+      <h2 class="headline">Ready to Build <span class="text-gradient-gold">Real Wealth</span>?</h2>
+      <p class="subhead">Get your first 10 qualified leads absolutely free.</p>
+      <div class="cta-row">
+        <a id="openAssistant2" class="btn-gold" href="#trial-cta">Start Free Trial</a>
+        <a class="btn-glass" href="#how-works-animated">Watch Demo</a>
+      </div>
+      <div class="trust">
+        <span><i data-lucide="shield"></i> RERA Verified</span>
+        <span><i data-lucide="lock"></i> Bank-Grade Security</span>
+      </div>
+    </div>
   </section>
 
   <!-- VALUE PROPOSITION SECTION -->

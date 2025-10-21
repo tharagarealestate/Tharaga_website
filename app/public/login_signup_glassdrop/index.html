@@ -734,7 +734,18 @@ window.addEventListener('beforeunload', () => subscription?.unsubscribe());
         setMsg('Redirecting to ' + provider + '…', true);
         const next = getNextFromQuery();
         const redirectTo = `${location.origin}${location.pathname}?post_auth=1&parent_origin=${encodeURIComponent(PARENT_ORIGIN)}${next ? `&next=${encodeURIComponent(next)}` : ''}`;
-        await supabase.auth.signInWithOAuth({ provider, options: { redirectTo, queryParams: { prompt: 'select_account' } } });
+        // IMPORTANT: When running inside the embedded iframe, Google blocks being loaded in a frame.
+        // Use skipBrowserRedirect to get the provider URL and then navigate the TOP window.
+        const { data, error } = await supabase.auth.signInWithOAuth({
+          provider,
+          options: { redirectTo, skipBrowserRedirect: true, queryParams: { prompt: 'select_account' } }
+        });
+        if (error || !data || !data.url) {
+          setMsg('Could not start ' + provider + ' sign in.');
+          return;
+        }
+        try { window.top.location.href = data.url; }
+        catch (_) { location.href = data.url; }
       } catch (e) {
         setMsg('Could not start ' + provider + ' sign in.');
       }

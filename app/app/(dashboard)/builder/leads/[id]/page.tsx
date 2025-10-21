@@ -1,7 +1,7 @@
 "use client"
 
 import { useQuery } from '@tanstack/react-query'
-import { notFound, useParams } from 'next/navigation'
+import { useParams } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowLeft, Mail, Phone } from 'lucide-react'
 
@@ -17,8 +17,6 @@ export default function LeadDetailsPage(){
   const id = params.id
   const { data: lead, isLoading, isError } = useQuery({ queryKey: ['lead', id], queryFn: () => fetchLead(id), enabled: !!id })
 
-  if (isError) notFound()
-
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-3">
@@ -28,6 +26,7 @@ export default function LeadDetailsPage(){
       </div>
 
       {isLoading && <div className="text-sm text-gray-600">Loading…</div>}
+      {isError && <div className="text-sm text-red-600">Lead not found.</div>}
       {lead && (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 space-y-4">

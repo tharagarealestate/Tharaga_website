@@ -21,7 +21,8 @@ export function Slider({ value, onValueChange, min = 0, max = 100, step = 1, cla
     if (Array.isArray(value)) {
       setInternal([value[0], value[1]])
     }
-  }, [Array.isArray(value) ? value[0] : undefined, Array.isArray(value) ? value[1] : undefined])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [value])
 
   const onChangeMin = (e: React.ChangeEvent<HTMLInputElement>) => {
     const next: [number, number] = [Number(e.target.value), internal[1]]

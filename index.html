@@ -495,16 +495,6 @@
 
     function createUI(){
       const wrap = ensureContainer();
-      // Ensure About | divider appears before the Login/Signup button
-      let about = wrap.querySelector('a.about-link');
-      if (!about){
-        about = createEl('a', 'about-link', { href:'/about/', 'aria-label':'About Tharaga' });
-        about.textContent = 'About';
-        // Insert About at the start of the group
-        wrap.appendChild(about);
-        const sep = createEl('span','divider',{'aria-hidden':'true'});
-        wrap.appendChild(sep);
-      }
       let btn = wrap.querySelector('.thg-auth-btn');
       if (!btn){
         btn = createEl('button', 'thg-auth-btn', { type:'button', 'aria-haspopup':'menu', 'aria-expanded':'false', 'aria-label':'Open account menu' });

@@ -48,6 +48,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <a href="/tours" className="hover:text-accent">Tours</a>
             <a href="/dashboard/map" className="hover:text-accent">Map</a>
             <a href="/dashboard/market" className="hover:text-accent">Market</a>
+            <a href="/builder" className="hover:text-accent">Builder</a>
             <a href="/saved" className="hover:text-accent">Saved</a>
             <a href="/tools/roi" className="hover:text-accent">ROI</a>
             <a href="/tools/environment" className="hover:text-accent">Env</a>

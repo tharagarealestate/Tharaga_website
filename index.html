@@ -242,6 +242,18 @@
     .vp-stat svg{ width:20px; height:20px }
     .fade-up{ opacity:0; transform:translateY(30px); transition: opacity .5s ease, transform .5s ease; transition-delay: var(--delay, 0s) }
     .fade-up.in-view{ opacity:1; transform:translateY(0) }
+    /* Trial CTA Section */
+    .trial-cta{ position:relative; padding:72px 16px; color:#fff; background:linear-gradient(135deg, #071328 0%, #0F2D52 55%, #1A4173 100%); overflow:hidden }
+    .trial-cta .inner{ max-width:1100px; margin:0 auto; text-align:center }
+    .trial-cta .badge{ display:inline-flex; align-items:center; gap:10px; padding:8px 12px; border-radius:9999px; background:rgba(16,185,129,.18); border:1px solid rgba(16,185,129,.30); color:#a7f3d0; font-weight:800; margin-bottom:12px }
+    .trial-cta .headline{ font-family:'Playfair Display', Georgia, serif; font-weight:900; letter-spacing:.2px; line-height:1.08; font-size:40px; margin:14px 0 8px }
+    @media (min-width:640px){ .trial-cta .headline{ font-size:56px } }
+    .trial-cta .sub{ color:#d1d5db; font-size:18px; line-height:1.6; max-width:720px; margin:0 auto 18px }
+    .trial-cta .cta-row{ display:flex; flex-wrap:wrap; gap:12px; justify-content:center; margin:0 0 16px }
+    .trial-cta .trust{ display:flex; align-items:center; justify-content:center; gap:12px; color:#9ca3af }
+    .trial-cta .shape{ position:absolute; border-radius:9999px; filter:blur(60px); opacity:.22; pointer-events:none }
+    .trial-cta .shape.tl{ top:-60px; right:-80px; width:360px; height:360px; background:#d4af37 }
+    .trial-cta .shape.br{ bottom:-80px; left:-80px; width:420px; height:420px; background:#2563EB }
   </style>
 
   <!-- Durable Head Code (from snippets/index.html) -->
@@ -927,6 +939,22 @@
       </div>
     </div>
     <div class="scroll-indicator">⌄</div>
+  </section>
+
+  <!-- Trial CTA Section (moved from Next.js page) -->
+  <section class="trial-cta" id="trial-cta">
+    <div class="shape tl" aria-hidden="true"></div>
+    <div class="shape br" aria-hidden="true"></div>
+    <div class="inner">
+      <div class="badge"><span aria-hidden="true">✓</span><span>No Credit Card Required • 14‑Day Free Trial</span></div>
+      <h2 class="headline">Ready to Build <span class="text-gradient-gold">Real Wealth</span>?</h2>
+      <p class="sub">Get your first 10 qualified leads absolutely free.</p>
+      <div class="cta-row">
+        <a class="btn-gold" href="/trial-signup">Start Free Trial</a>
+        <a class="btn-glass" href="/demo">Watch Demo</a>
+      </div>
+      <div class="trust"><span>✓ RERA Verified</span><span aria-hidden="true">•</span><span>🔒 Bank‑grade security</span></div>
+    </div>
   </section>
 
   <!-- VALUE PROPOSITION SECTION -->

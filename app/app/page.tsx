@@ -2,7 +2,7 @@
 import dynamic from 'next/dynamic'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
-import { ArrowRight, Star, Shield, Sparkles, ChevronDown } from 'lucide-react'
+import { ArrowRight, Star, Shield, Sparkles, ChevronDown, CheckCircle, Lock } from 'lucide-react'
 
 const HowItWorksAnimatedSection = dynamic(
   () => import('../components/AnimatedHowItWorks/HowItWorksAnimatedSection'),
@@ -183,6 +183,94 @@ export default function Home() {
         {/* Scroll Indicator */}
         <div className="absolute bottom-8 left-1/2 -translate-x-1/2 animate-bounce">
           <ChevronDown className="w-6 h-6 text-white/70" />
+        </div>
+      </section>
+
+      {/* TRIAL CTA SECTION */}
+      <section className="py-24 relative overflow-hidden">
+        {/* Gradient Background */}
+        <div className="absolute inset-0 bg-gradient-to-br from-primary-950 via-primary-900 to-primary-800" />
+
+        {/* Decorative Shapes */}
+        <div className="absolute top-0 right-0 w-96 h-96 bg-gold-500/10 rounded-full blur-3xl" />
+        <div className="absolute bottom-0 left-0 w-96 h-96 bg-primary-600/10 rounded-full blur-3xl" />
+
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+          <div className="max-w-4xl mx-auto text-center">
+            {/* Badge */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              viewport={{ once: true }}
+              className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-500/20 backdrop-blur-sm border border-emerald-500/30 rounded-full mb-6"
+            >
+              <CheckCircle className="w-5 h-5 text-emerald-400" />
+              <span className="text-emerald-300 text-sm font-medium">
+                No Credit Card Required • 14-Day Free Trial
+              </span>
+            </motion.div>
+
+            {/* Headline */}
+            <motion.h2
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.1 }}
+              className="font-display text-4xl sm:text-5xl lg:text-6xl font-bold text-white mb-6"
+            >
+              Ready to Build
+              <span className="text-gradient-gold"> Real Wealth</span>?
+            </motion.h2>
+
+            {/* Subheadline */}
+            <motion.p
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.2 }}
+              className="text-xl text-gray-300 mb-12 max-w-2xl mx-auto"
+            >
+              Get your first 10 qualified leads absolutely free.
+            </motion.p>
+
+            {/* CTA Buttons */}
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.3 }}
+              className="flex flex-col sm:flex-row gap-4 justify-center mb-12"
+            >
+              <Link href="/trial-signup" className="btn-gold text-lg px-8 py-4 group">
+                Start Free Trial
+                <ArrowRight className="inline-block ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
+              </Link>
+              <Link
+                href="/demo"
+                className="px-8 py-4 bg-white/10 backdrop-blur-sm border border-white/20 text-white font-semibold rounded-lg hover:bg-white/20 transition-all duration-200 text-lg"
+              >
+                Watch Demo
+              </Link>
+            </motion.div>
+
+            {/* Trust Indicators */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              whileInView={{ opacity: 1 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.4 }}
+              className="flex flex-wrap justify-center items-center gap-8 text-gray-400"
+            >
+              <div className="flex items-center gap-2">
+                <Shield className="w-5 h-5 text-emerald-400" />
+                <span>RERA Verified</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Lock className="w-5 h-5 text-gold-400" />
+                <span>Bank-Grade Security</span>
+              </div>
+            </motion.div>
+          </div>
         </div>
       </section>
 

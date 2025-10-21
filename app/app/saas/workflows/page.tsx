@@ -34,7 +34,7 @@ export default function Workflows(){
           </Step>
           <Step title="Condition">
             <select className="border rounded p-2 w-full">
-              <option>Intent score > 0.7</option>
+              <option>Intent score &gt; 0.7</option>
               <option>Lead source is microsite</option>
               <option>Visited unit page</option>
             </select>

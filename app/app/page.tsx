@@ -2,7 +2,7 @@
 import dynamic from 'next/dynamic'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
-import { ArrowRight, Star, Shield, Sparkles, ChevronDown, CheckCircle, Lock, Users, TrendingUp } from 'lucide-react'
+import { ArrowRight, Star, Shield, Sparkles, ChevronDown, CheckCircle, Lock } from 'lucide-react'
 
 const HowItWorksAnimatedSection = dynamic(
   () => import('../components/AnimatedHowItWorks/HowItWorksAnimatedSection'),
@@ -268,14 +268,6 @@ export default function Home() {
               <div className="flex items-center gap-2">
                 <Lock className="w-5 h-5 text-gold-400" />
                 <span>Bank-Grade Security</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Users className="w-5 h-5 text-primary-400" />
-                <span>500+ Active Builders</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <TrendingUp className="w-5 h-5 text-emerald-400" />
-                <span>₹120Cr+ Deals Closed</span>
               </div>
             </motion.div>
           </div>

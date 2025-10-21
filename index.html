@@ -495,16 +495,6 @@
 
     function createUI(){
       const wrap = ensureContainer();
-      // Ensure About | divider appears before the Login/Signup button
-      let about = wrap.querySelector('a.about-link');
-      if (!about){
-        about = createEl('a', 'about-link', { href:'/about/', 'aria-label':'About Tharaga' });
-        about.textContent = 'About';
-        // Insert About at the start of the group
-        wrap.appendChild(about);
-        const sep = createEl('span','divider',{'aria-hidden':'true'});
-        wrap.appendChild(sep);
-      }
       let btn = wrap.querySelector('.thg-auth-btn');
       if (!btn){
         btn = createEl('button', 'thg-auth-btn', { type:'button', 'aria-haspopup':'menu', 'aria-expanded':'false', 'aria-label':'Open account menu' });
@@ -643,7 +633,21 @@
     function clearError(uiOverlay){ const el = uiOverlay.querySelector('.thg-error'); if (!el) return; el.textContent = ''; el.style.display = 'none'; }
     function setModalLoading(uiOverlay, loading){ const bar = uiOverlay.querySelector('.thg-loading-bar'); if (!bar) return; if (loading){ bar.style.width = '75%'; } else { bar.style.width = '0'; } }
     function showPanel(uiOverlay, id, title){ ['signin','signup','reset','update'].forEach(function(key){ const panel = uiOverlay.querySelector('#thg-panel-'+key); if (panel) panel.hidden = (key !== id); }); const tEl = uiOverlay.querySelector('#thg-auth-title'); if (tEl) tEl.textContent = title; clearError(uiOverlay); }
-    function openAuthModal(ui, opts){ state.nextUrl = opts?.next || null; ui.overlay.setAttribute('aria-hidden','false'); showPanel(ui.overlay, 'signin', 'Sign in'); setTimeout(function(){ const el = ui.overlay.querySelector('#thg-si-email'); if (el) el.focus(); }, 0); try { if (!state.supabaseReady) { initSupabase(ui); } } catch(_){} }
+    function openAuthModal(ui, opts){
+      // Delegate to auth-gate modal; do not use inline fallback
+      try {
+        state.nextUrl = opts?.next || null;
+        if (window.authGate && typeof window.authGate.openLoginModal === 'function'){
+          window.authGate.openLoginModal({ next: state.nextUrl || (location.pathname + location.search) });
+          return;
+        }
+      } catch(_){ }
+      // As a last resort, navigate to the standalone login page
+      try {
+        var next = state.nextUrl || (location.pathname + location.search);
+        location.href = '/login_signup_glassdrop/?embed=1&next=' + encodeURIComponent(next);
+      } catch(_){ }
+    }
     function closeAuthModal(ui){ ui.overlay.setAttribute('aria-hidden','true'); }
     function openConfirm(ui){ ui.confirmEl.setAttribute('aria-hidden','false'); }
     // Broadcast current auth state (email only) to child iframes, sibling tabs, and embedded forms
@@ -679,15 +683,14 @@
         if (state.user && state.user.email){
           toggleMenu(ui);
         } else {
-          // Prefer embedded auth-gate modal for reliability (Google OAuth, cross-tab sync)
+          // Always use auth-gate modal; no inline fallback
           try {
             if (window.authGate && typeof window.authGate.openLoginModal === 'function'){
               window.authGate.openLoginModal({ next: location.pathname + location.search });
-              return;
+            } else {
+              location.href = '/login_signup_glassdrop/?embed=1&next=' + encodeURIComponent(location.pathname + location.search);
             }
-          } catch(_){}
-          // Fallback to inline modal if auth-gate isn't ready yet
-          openAuthModal(ui, { next: location.pathname + location.search });
+          } catch(_){ }
         }
       });
       ui.btn.addEventListener('keydown', function(e){ if ((e.key === 'ArrowDown' || e.key === 'Enter') && state.user && state.user.email){ e.preventDefault(); openMenu(ui); } });

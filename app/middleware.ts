@@ -1,8 +1,16 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
+import createMiddleware from 'next-intl/middleware'
+import { defaultLocale, locales } from './i18n/config'
 import { createMiddlewareClient } from '@supabase/auth-helpers-nextjs'
 
 // Normalize legacy routes and protect /admin with role-based access
+const handleI18nRouting = createMiddleware({
+  locales: Array.from(locales),
+  defaultLocale,
+  localePrefix: 'always',
+})
+
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl
 
@@ -42,9 +50,19 @@ export async function middleware(req: NextRequest) {
     return res
   }
 
-  return NextResponse.next()
+  // 3) next-intl locale routing
+  return handleI18nRouting(req)
 }
 
 export const config = {
-  matcher: ['/app', '/app/:path*', '/admin', '/admin/:path*'],
+  matcher: [
+    // Preserve existing guards
+    '/app',
+    '/app/:path*',
+    '/admin',
+    '/admin/:path*',
+    // Localized routes
+    '/',
+    '/(en|ta|hi)/:path*',
+  ],
 }

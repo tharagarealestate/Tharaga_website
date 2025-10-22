@@ -1,0 +1,29 @@
+{
+  "common": {
+    "appName": "Tharaga",
+    "search": "Search",
+    "save": "Save",
+    "cancel": "Cancel",
+    "submit": "Submit"
+  },
+  "homepage": {
+    "hero": {
+      "title": "Build Wealth, Not Just Homes",
+      "subtitle": "AI-driven verified listings with transparent insights",
+      "cta": "Explore Properties",
+      "stats": {
+        "timeSaved": "28h saved per buyer",
+        "priceGain": "₹1,200 avg price/sqft gain",
+        "reraChecks": "RERA & document hygiene checks"
+      }
+    }
+  },
+  "dashboard": {
+    "leads": {
+      "title": "Leads",
+      "scoreLabel": "Score",
+      "statusNew": "New",
+      "statusContacted": "Contacted"
+    }
+  }
+}

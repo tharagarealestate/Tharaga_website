@@ -54,7 +54,7 @@ export function RecommendationsCarousel({ items = [], isLoading = false, error =
   }
 
   return (
-    <div className="space-y-3">
+    <div id="ai-recommendations" className="space-y-3">
       <div className="hidden md:flex items-center justify-end gap-2">
         <NavButton direction="prev" />
         <NavButton direction="next" />
@@ -137,7 +137,7 @@ function PropertyCard({ item, onLead }: { item: RecommendationItem; onLead: (pro
         </div>
         <Specs specs={item.specs} />
         <div className="mt-2 flex gap-2 items-center">
-          <button className="rounded-lg border border-border px-3 py-1 text-sm" onClick={() => onLead(item.property_id)}>
+          <button id="schedule-visit" className="rounded-lg border border-border px-3 py-1 text-sm" onClick={() => { try { window.dispatchEvent(new CustomEvent('thg:buyer:schedule-visit')); } catch {} onLead(item.property_id) }}>
             Request details
           </button>
           <a href={`/property-listing/`} className="rounded-lg border border-border px-3 py-1 text-sm">
@@ -146,6 +146,7 @@ function PropertyCard({ item, onLead }: { item: RecommendationItem; onLead: (pro
           <button
             className={clsx('ml-auto rounded-full border px-2 py-1 text-xs transition-colors', saved ? 'bg-accent/10 border-accent text-accent' : 'border-border text-fgMuted hover:bg-canvasSubtle')}
             aria-pressed={saved}
+            id="save-button"
             onClick={toggleSave}
             title={saved ? 'Unsave' : 'Save for offline'}
           >

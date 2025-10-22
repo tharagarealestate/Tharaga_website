@@ -82,7 +82,7 @@ export function Header() {
 
         <Popover open={notificationsOpen} onOpenChange={setNotificationsOpen}>
           <PopoverTrigger asChild>
-            <button className="relative p-2 hover:bg-gray-100 rounded-lg transition-colors">
+            <button id="notifications-bell" className="relative p-2 hover:bg-gray-100 rounded-lg transition-colors">
               <Bell className="w-5 h-5 text-gray-700" />
               {unreadCount > 0 && (
                 <span className="absolute -top-1 -right-1 w-5 h-5 bg-gold-500 text-white text-xs font-bold rounded-full flex items-center justify-center">
@@ -110,6 +110,9 @@ export function Header() {
             </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-56">
+            <DropdownMenuItem onSelect={() => { try { window.dispatchEvent(new CustomEvent('thg:showOnboarding')); } catch(_){} }}>
+              Show me around
+            </DropdownMenuItem>
             <DropdownMenuItem asChild>
               <Link href="/builder/settings/profile">
                 <User className="w-4 h-4 mr-2" />

@@ -17,7 +17,7 @@ export default function RadialFilters(){
       <div className="rounded-xl border border-plum/10 bg-brandWhite p-6 flex items-center justify-center">
         <div className="relative" style={{ width: 320, height: 320 }}>
           <div className="absolute inset-0 rounded-full glass flex items-center justify-center">
-            <button className="rounded-full bg-gold text-plum px-4 py-2" onClick={apply}>Apply</button>
+            <button id="filter-button" className="rounded-full bg-gold text-plum px-4 py-2" onClick={apply}>Apply</button>
           </div>
           <Knob label="City" value={city} onChange={setCity} x={160} y={0} opts={["Bengaluru","Mumbai","Chennai","Pune"]} />
           <Knob label="Budget" value={budget} onChange={setBudget} x={0} y={80} opts={["₹50L–₹75L","₹75L–₹1Cr","₹1Cr–₹1.5Cr","₹1.5Cr–₹2Cr"]} />

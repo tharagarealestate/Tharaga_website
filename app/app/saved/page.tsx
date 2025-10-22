@@ -14,7 +14,13 @@ export default function SavedPage(){
     <main className="mx-auto max-w-5xl px-6 py-8">
       <h1 className="text-2xl font-bold text-plum mb-4">Saved properties</h1>
       {rows.length === 0 ? (
-        <div className="rounded-xl border border-plum/10 bg-brandWhite p-4">Nothing saved yet. Tap “Save” on recommendations or listings.</div>
+        <div className="rounded-xl border border-plum/10 bg-brandWhite p-6 text-center">
+          <div className="text-lg font-medium text-plum mb-1">No favorites yet</div>
+          <div className="text-sm text-plum/70">Tap "Save" on recommendations or listings to add them here.</div>
+          <div className="mt-3">
+            <a id="save-button" href="/property-listing/" className="inline-block rounded-lg border px-3 py-1.5">Browse properties</a>
+          </div>
+        </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {rows.map(r => (

@@ -287,15 +287,16 @@
     // window.AUTH_OPEN_ON_LOAD = true; // or use ?auth_open=1
   </script>
 
-  <!-- 2) Load auth-gate (handles iframe auth modal + cross-tab sync) -->
-  <script src="https://auth.tharaga.co.in/login_signup_glassdrop/auth-gate.js" defer></script>
+  <!-- Durable Auth include (single snippet) -->
+  <script src="/js/thg-auth-head.js" defer></script>
 
   <!-- 4) Inline durable auth header UI (safe to paste into Durable Head Code) -->
   <script>
   // Durable top-right authentication header and modal (Supabase-based)
   // Works standalone when pasted into Durable Head Code
   (function(){
-    if (window.__thgAuthInstalledV1) return; window.__thgAuthInstalledV1 = true;
+    // Disabled: external single-include snippet /js/thg-auth-head.js is the source of truth
+    return;
 
     const AUTH_NAV = Object.assign({ profile: '/profile', dashboard: '/dashboard', settings: null }, window.AUTH_NAV || {});
     const Z_BASE = 2147483000;

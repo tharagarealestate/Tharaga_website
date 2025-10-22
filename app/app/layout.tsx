@@ -25,6 +25,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             } catch(_){}
           })();
         `}} />
+        {/* Durable auth header config + loader */}
+        <script dangerouslySetInnerHTML={{ __html: `
+          try{ window.AUTH_HIDE_HEADER = false; window.AUTH_OPEN_ON_LOAD = false; }catch(_){}
+          try{ window.AUTH_NAV = Object.assign({ profile: '/profile', dashboard: '/dashboard' }, window.AUTH_NAV || {}); }catch(_){}
+        `}} />
+        <script src="/js/durable-auth-head.js" defer></script>
       </head>
       <body className="font-ui bg-canvas text-fg">
         <script dangerouslySetInnerHTML={{ __html: `
@@ -36,8 +42,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             }
           })();
         `}} />
-        <header className="sticky top-0 z-50 bg-canvas/95 backdrop-blur supports-[backdrop-filter]:bg-canvas/80 border-b border-border">
-          <nav className="mx-auto max-w-6xl px-4 sm:px-6 py-3 flex items-center gap-4 text-sm text-fg-muted">
+        <header id="durable-head" className="sticky top-0 z-50 bg-canvas/95 backdrop-blur supports-[backdrop-filter]:bg-canvas/80 border-b border-border">
+          <nav className="mx-auto max-w-6xl px-4 sm:px-6 py-3 pr-40 flex items-center gap-4 text-sm text-fg-muted">
             <a href="/" className="font-bold text-fg hover:text-accent">Tharaga</a>
             <a href="/property-listing/" className="hover:text-accent">Browse</a>
             <a href="/tools/cost-calculator" className="hover:text-accent">Cost</a>
@@ -53,10 +59,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <a href="/tools/roi" className="hover:text-accent">ROI</a>
             <a href="/tools/environment" className="hover:text-accent">Env</a>
             <a href="/filters/radial" className="hover:text-accent">Filters</a>
-            <span className="grow" />
             <button id="themeToggleBtn" className="rounded-md border border-border px-2 py-1 text-xs text-fg hover:text-accent">
               Toggle theme
             </button>
+            <span className="grow" />
           </nav>
         </header>
         <EntitlementsProvider>

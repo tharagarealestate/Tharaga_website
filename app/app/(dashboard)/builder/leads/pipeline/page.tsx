@@ -36,7 +36,7 @@ export default function LeadsPipelinePage(){
         <h1 className="text-3xl font-bold text-gray-900">Leads Pipeline</h1>
         <p className="text-gray-600 mt-1">Drag and drop coming soon</p>
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
+      <div id="pipeline-board" className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
         {COLUMNS.map(col => (
           <div key={col.key} className="bg-white rounded-xl border border-gray-200 p-3">
             <div className="font-semibold text-gray-800 mb-2">{col.title} <span className="text-xs text-gray-500">({grouped[col.key]?.length||0})</span></div>

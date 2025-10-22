@@ -55,7 +55,13 @@ export function LeadsTable({ leads = [] as Lead[] }) {
           ))}
           {data.length === 0 && (
             <tr>
-              <td className="px-3 py-6 text-center text-gray-500" colSpan={columns.length}>No leads found</td>
+              <td className="px-3 py-6 text-center text-gray-500" colSpan={columns.length}>
+                <div className="space-y-2">
+                  <div className="text-gray-700 font-medium">No leads yet</div>
+                  <div className="text-sm text-gray-500">List your first property to start receiving inquiries.</div>
+                  <a id="add-property-button" href="/builders/add-property" className="inline-block mt-2 px-3 py-1.5 rounded-lg border border-gray-300 hover:bg-gray-50 text-sm">Add Property</a>
+                </div>
+              </td>
             </tr>
           )}
         </tbody>

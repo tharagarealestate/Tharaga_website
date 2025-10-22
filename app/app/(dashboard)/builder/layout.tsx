@@ -2,6 +2,9 @@ import type { ReactNode } from 'react'
 import { Sidebar } from './_components/Sidebar'
 import { Header } from './_components/Header'
 import { ReactQueryProvider } from '@/components/providers/ReactQueryProvider'
+import dynamic from 'next/dynamic'
+
+const BuilderOnboarding = dynamic(() => import('@/components/BuilderOnboarding').then(m => m.BuilderOnboarding), { ssr: false })
 
 export default function BuilderDashboardLayout({ children }: { children: ReactNode }) {
   return (
@@ -19,6 +22,8 @@ export default function BuilderDashboardLayout({ children }: { children: ReactNo
 
           {/* Page Content */}
           <main className="flex-1 overflow-y-auto p-6 lg:p-8">
+            {/* Onboarding driver - client-only */}
+            <BuilderOnboarding />
             {children}
           </main>
         </div>

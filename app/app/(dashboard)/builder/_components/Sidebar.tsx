@@ -81,7 +81,7 @@ export function Sidebar() {
 
       {/* Trial Banner */}
       {subscription?.tier === 'trial' && (
-        <div className="mx-4 mt-4 p-4 bg-gold-500/20 backdrop-blur-sm border border-gold-500/30 rounded-lg">
+        <div id="trial-progress" className="mx-4 mt-4 p-4 bg-gold-500/20 backdrop-blur-sm border border-gold-500/30 rounded-lg">
           <div className="flex items-center gap-2 mb-2">
             <Clock className="w-4 h-4 text-gold-400" />
             <span className="text-sm font-semibold text-gold-300">Trial Active</span>
@@ -116,6 +116,7 @@ export function Sidebar() {
           return (
             <div key={item.href}>
               <Link
+                id={item.href === '/builder/leads' ? 'sidebar-leads' : undefined}
                 href={isLocked ? '#' : item.href}
                 className={cn(
                   'flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 group relative border-l-4',

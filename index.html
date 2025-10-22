@@ -287,15 +287,16 @@
     // window.AUTH_OPEN_ON_LOAD = true; // or use ?auth_open=1
   </script>
 
-  <!-- 2) Load auth-gate (handles iframe auth modal + cross-tab sync) -->
-  <script src="https://auth.tharaga.co.in/login_signup_glassdrop/auth-gate.js" defer></script>
+  <!-- Durable Auth include (single snippet) -->
+  <script src="/js/thg-auth-head.js" defer></script>
 
   <!-- 4) Inline durable auth header UI (safe to paste into Durable Head Code) -->
   <script>
   // Durable top-right authentication header and modal (Supabase-based)
   // Works standalone when pasted into Durable Head Code
   (function(){
-    if (window.__thgAuthInstalledV1) return; window.__thgAuthInstalledV1 = true;
+    // Disabled: external single-include snippet /js/thg-auth-head.js is the source of truth
+    return;
 
     const AUTH_NAV = Object.assign({ profile: '/profile', dashboard: '/dashboard', settings: null }, window.AUTH_NAV || {});
     const Z_BASE = 2147483000;
@@ -634,19 +635,11 @@
     function setModalLoading(uiOverlay, loading){ const bar = uiOverlay.querySelector('.thg-loading-bar'); if (!bar) return; if (loading){ bar.style.width = '75%'; } else { bar.style.width = '0'; } }
     function showPanel(uiOverlay, id, title){ ['signin','signup','reset','update'].forEach(function(key){ const panel = uiOverlay.querySelector('#thg-panel-'+key); if (panel) panel.hidden = (key !== id); }); const tEl = uiOverlay.querySelector('#thg-auth-title'); if (tEl) tEl.textContent = title; clearError(uiOverlay); }
     function openAuthModal(ui, opts){
-      // Delegate to auth-gate modal; do not use inline fallback
-      try {
-        state.nextUrl = opts?.next || null;
-        if (window.authGate && typeof window.authGate.openLoginModal === 'function'){
-          window.authGate.openLoginModal({ next: state.nextUrl || (location.pathname + location.search) });
-          return;
-        }
-      } catch(_){ }
-      // As a last resort, navigate to the standalone login page
-      try {
-        var next = state.nextUrl || (location.pathname + location.search);
-        location.href = '/login_signup_glassdrop/?embed=1&next=' + encodeURIComponent(next);
-      } catch(_){ }
+      // Inline modal (matches snippets/index.html design)
+      state.nextUrl = opts?.next || null;
+      ui.overlay.setAttribute('aria-hidden','false');
+      showPanel(ui.overlay, 'signin', 'Sign in');
+      setTimeout(function(){ const el = ui.overlay.querySelector('#thg-si-email'); if (el) el.focus(); }, 0);
     }
     function closeAuthModal(ui){ ui.overlay.setAttribute('aria-hidden','true'); }
     function openConfirm(ui){ ui.confirmEl.setAttribute('aria-hidden','false'); }
@@ -683,14 +676,14 @@
         if (state.user && state.user.email){
           toggleMenu(ui);
         } else {
-          // Always use auth-gate modal; no inline fallback
+          // Prefer auth-gate iframe if available, otherwise use inline modal UI
           try {
             if (window.authGate && typeof window.authGate.openLoginModal === 'function'){
               window.authGate.openLoginModal({ next: location.pathname + location.search });
-            } else {
-              location.href = '/login_signup_glassdrop/?embed=1&next=' + encodeURIComponent(location.pathname + location.search);
+              return;
             }
           } catch(_){ }
+          openAuthModal(ui, { next: location.pathname + location.search });
         }
       });
       ui.btn.addEventListener('keydown', function(e){ if ((e.key === 'ArrowDown' || e.key === 'Enter') && state.user && state.user.email){ e.preventDefault(); openMenu(ui); } });

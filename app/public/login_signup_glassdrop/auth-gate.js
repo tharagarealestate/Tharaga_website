@@ -11,7 +11,7 @@
 
   /** CONFIG — update LOGIN_IFRAME_URL to your actual login/embed page */
   // make explicit to avoid directory/index surprises:
-  const LOGIN_IFRAME_URL = "https://auth.tharaga.co.in/login_signup_glassdrop/";
+  const LOGIN_IFRAME_URL = "/login_signup_glassdrop/";
   // Inline login via srcdoc is disabled; iframe loads password form page
   const USE_INLINE_LOGIN = false;
   const AUTO_RESUME_PENDING = false;

@@ -280,13 +280,13 @@
     // Optional routes:
     // window.AUTH_NAV = { profile: '/account', dashboard: '/app' };
     // window.AUTH_NAV.settings = '/settings';
-    window.DURABLE_AUTH_URL = 'https://auth.tharaga.co.in/login_signup_glassdrop/';
+    window.DURABLE_AUTH_URL = '/login_signup_glassdrop/';
     // Optional: auto-open the auth modal on page load
     // window.AUTH_OPEN_ON_LOAD = true; // or use ?auth_open=1
   </script>
 
   <!-- 2) Load auth-gate (handles iframe auth modal + cross-tab sync) -->
-  <script src="https://auth.tharaga.co.in/login_signup_glassdrop/auth-gate.js" defer></script>
+  <script src="/login_signup_glassdrop/auth-gate.js" defer></script>
 
   <!-- 4) Inline durable auth header UI (safe to paste into Durable Head Code) -->
   <script>
@@ -672,10 +672,9 @@
     function closeConfirm(ui){ ui.confirmEl.setAttribute('aria-hidden','true'); }
 
     function openHostedAuth(provider){
-      // Hard fallback: navigate to hosted login with auto Google start
+      // Hard fallback: navigate to local login page with auto Google start
       try {
-        var base = (window.DURABLE_AUTH_URL || 'https://auth.tharaga.co.in/login_signup_glassdrop/');
-        // Ensure trailing slash once
+        var base = (window.DURABLE_AUTH_URL || '/login_signup_glassdrop/');
         if (!/\/$/.test(base)) base += '/';
         var next = location.pathname + location.search;
         var url = base + '?return_to_parent=1&auto=1&provider=' + encodeURIComponent(provider || 'google')
@@ -683,7 +682,7 @@
           + '&next=' + encodeURIComponent(next);
         location.href = url;
       } catch(_) {
-        location.href = 'https://auth.tharaga.co.in/login_signup_glassdrop/?auto=1&provider=' + encodeURIComponent(provider || 'google');
+        location.href = '/login_signup_glassdrop/?auto=1&provider=' + encodeURIComponent(provider || 'google');
       }
     }
 
@@ -790,7 +789,7 @@
 
       // Allow child iframes (e.g., Netlify buyer-form) to request opening the global login
       // Secure origin-validated postMessage listener (also supports legacy types)
-      const ALLOWED_IFRAME_ORIGINS = ['https://auth.tharaga.co.in', location.origin];
+      const ALLOWED_IFRAME_ORIGINS = [location.origin];
 
       function openDurableHeaderBehavior(meta){
         try {

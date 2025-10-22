@@ -42,28 +42,34 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             }
           })();
         `}} />
-        <header id="durable-head" className="sticky top-0 z-50 bg-canvas/95 backdrop-blur supports-[backdrop-filter]:bg-canvas/80 border-b border-border">
-          <nav className="mx-auto max-w-6xl px-4 sm:px-6 py-3 pr-40 flex items-center gap-4 text-sm text-fg-muted">
-            <a href="/" className="font-bold text-fg hover:text-accent">Tharaga</a>
-            <a href="/property-listing/" className="hover:text-accent">Browse</a>
-            <a href="/tools/cost-calculator" className="hover:text-accent">Cost</a>
-            <a href="/pricing/" className="hover:text-accent">Pricing</a>
-            <a href="/tools/currency-risk" className="hover:text-accent">FX Risk</a>
-            <a href="/tools/vastu" className="hover:text-accent">Vastu</a>
-            <a href="/tools/voice-tamil" className="hover:text-accent">தமிழ் Voice</a>
-            <a href="/tours" className="hover:text-accent">Tours</a>
-            <a href="/dashboard/map" className="hover:text-accent">Map</a>
-            <a href="/dashboard/market" className="hover:text-accent">Market</a>
-            <a href="/builder" className="hover:text-accent">Builder</a>
-            <a href="/saved" className="hover:text-accent">Saved</a>
-            <a href="/tools/roi" className="hover:text-accent">ROI</a>
-            <a href="/tools/environment" className="hover:text-accent">Env</a>
-            <a href="/filters/radial" className="hover:text-accent">Filters</a>
-            <button id="themeToggleBtn" className="rounded-md border border-border px-2 py-1 text-xs text-fg hover:text-accent">
-              Toggle theme
-            </button>
-            <span className="grow" />
-          </nav>
+        <header id="durable-head" className="nav">
+          <div className="inner">
+            <div className="row"><a className="brand" href="/" style={{ fontSize: 26 }}>THARAGA</a><span className="pill" id="home_pill_trust">Verified • Broker‑free</span></div>
+            <nav className="row" aria-label="Primary">
+              <span className="menu-group">
+                <details className="dropdown">
+                  <summary>Features</summary>
+                  <div className="menu" role="menu">
+                    <a href="/tools/vastu/">Vastu</a>
+                    <a href="/tools/environment/">Climate & environment</a>
+                    <a href="/tools/voice-tamil/">Voice (Tamil)</a>
+                    <a href="/tools/verification/">Verification</a>
+                    <a href="/tools/roi/">ROI</a>
+                    <a href="/tools/currency-risk/">Currency risk</a>
+                    <span className="divider show-mobile-only" aria-hidden="true"></span>
+                    <a className="show-mobile-only" href="/pricing/">Pricing</a>
+                    <a className="show-mobile-only" href="/about/">About</a>
+                  </div>
+                </details>
+                <span className="divider" aria-hidden="true"></span>
+                <a href="/builder">Builder</a>
+                <a href="/pricing/">Pricing</a>
+              </span>
+              <span className="divider" aria-hidden="true"></span>
+              <a href="/about/">About</a>
+            </nav>
+            <a className="about-mobile-link" href="/about/">About</a>
+          </div>
         </header>
         <EntitlementsProvider>
           {children}

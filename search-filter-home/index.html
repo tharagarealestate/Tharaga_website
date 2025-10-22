@@ -5,9 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <script type="module" src="/js/fragment-handle.js"></script>
   <!-- Durable Auth: modal + gating (shared across pages) -->
-  <script src="https://auth.tharaga.co.in/login_signup_glassdrop/auth-gate.js" defer></script>
+  <script src="/login_signup_glassdrop/auth-gate.js" defer></script>
   <script>
-    window.DURABLE_AUTH_URL = 'https://auth.tharaga.co.in/login_signup_glassdrop/';
+    window.DURABLE_AUTH_URL = '/login_signup_glassdrop/';
     window.AUTH_NAV = { profile: '/profile', dashboard: '/dashboard' };
   </script>
   <!-- use ONE include, absolute path, and defer it so DOM is present -->

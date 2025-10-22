@@ -8,7 +8,7 @@
   <script type="module" src="/js/fragment-handle.js"></script>
   <!-- Auth header/modal: use the durable snippet so CTA can open the global login container -->
   <!-- Ensure auth-gate is available so fallbacks can open the login modal if header is missing -->
-  <script src="https://auth.tharaga.co.in/login_signup_glassdrop/auth-gate.js" defer></script>
+  <script src="/login_signup_glassdrop/auth-gate.js" defer></script>
   
   <!-- Inline auth removed; using durable-auth-head.html -->
   <!-- <script>
@@ -318,7 +318,7 @@
   </script> -->
   <!-- Unified auth overlay include (overrides any legacy handlers) -->
   <script>
-    window.DURABLE_AUTH_URL = 'https://auth.tharaga.co.in/login_signup_glassdrop/';
+    window.DURABLE_AUTH_URL = '/login_signup_glassdrop/';
     window.AUTH_NAV = { profile: '/profile', dashboard: '/dashboard' };
   </script>
   

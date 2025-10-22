@@ -671,6 +671,22 @@
     }
     function closeConfirm(ui){ ui.confirmEl.setAttribute('aria-hidden','true'); }
 
+    function openHostedAuth(provider){
+      // Hard fallback: navigate to hosted login with auto Google start
+      try {
+        var base = (window.DURABLE_AUTH_URL || 'https://auth.tharaga.co.in/login_signup_glassdrop/');
+        // Ensure trailing slash once
+        if (!/\/$/.test(base)) base += '/';
+        var next = location.pathname + location.search;
+        var url = base + '?return_to_parent=1&auto=1&provider=' + encodeURIComponent(provider || 'google')
+          + '&parent_origin=' + encodeURIComponent(location.origin)
+          + '&next=' + encodeURIComponent(next);
+        location.href = url;
+      } catch(_) {
+        location.href = 'https://auth.tharaga.co.in/login_signup_glassdrop/?auto=1&provider=' + encodeURIComponent(provider || 'google');
+      }
+    }
+
     async function ensureSupabaseReady(){
       // Lazily initialize Supabase if not already ready
       if (state.supabaseReady && window.supabase && window.supabase.auth) return true;
@@ -704,7 +720,8 @@
       ui.overlay.querySelector('#thg-signin-btn').addEventListener('click', async function(){ if (!state.supabaseReady){ showError(ui.overlay, 'Authentication is not initialized.'); return; } const email = ui.overlay.querySelector('#thg-si-email').value.trim(); const password = ui.overlay.querySelector('#thg-si-password').value; if (!validateEmail(email)) { showError(ui.overlay, 'Enter a valid email.'); return; } if (!password || password.length < 6) { showError(ui.overlay, 'Enter your password.'); return; } clearError(ui.overlay); setModalLoading(ui.overlay, true); try{ const { error } = await window.supabase.auth.signInWithPassword({ email, password }); if (error) { showError(ui.overlay, error.message || 'Failed to sign in.'); } } catch(ex){ showError(ui.overlay, 'Network error. Please try again.'); } finally { setModalLoading(ui.overlay, false); } });
       ui.overlay.querySelector('#thg-signup-btn').addEventListener('click', async function(){ if (!state.supabaseReady){ showError(ui.overlay, 'Authentication is not initialized.'); return; } const name = ui.overlay.querySelector('#thg-su-name').value.trim(); const email = ui.overlay.querySelector('#thg-su-email').value.trim(); const password = ui.overlay.querySelector('#thg-su-password').value; if (!validateEmail(email)) { showError(ui.overlay, 'Enter a valid email.'); return; } if (!password || password.length < 8) { showError(ui.overlay, 'Password must be at least 8 characters.'); return; } clearError(ui.overlay); setModalLoading(ui.overlay, true); try{ const { error } = await window.supabase.auth.signUp({ email, password, options: { data: name ? { full_name: name } : {} } }); if (error) { showError(ui.overlay, error.message || 'Failed to create account.'); } else { showError(ui.overlay, 'Check your email to verify your account.'); } } catch(ex){ showError(ui.overlay, 'Network error. Please try again.'); } finally { setModalLoading(ui.overlay, false); } });
       ui.overlay.querySelectorAll('.thg-oauth-btn').forEach(function(btn){ btn.addEventListener('click', async function(){ const provider = btn.getAttribute('data-provider'); clearError(ui.overlay); setModalLoading(ui.overlay, true); try{ if (!(await ensureSupabaseReady())){ // graceful fallback to hosted auth if local init fails
-            try { window.authGate && window.authGate.openLoginModal({ next: location.pathname + location.search }); } catch(_) {}
+            var opened = false; try { if (window.authGate && typeof window.authGate.openLoginModal === 'function'){ window.authGate.openLoginModal({ next: location.pathname + location.search }); opened = true; } } catch(_) {}
+            if (!opened){ openHostedAuth(provider); return; }
             showError(ui.overlay, 'Authentication is not initialized. Opening secure login…'); setModalLoading(ui.overlay, false); return; }
           const redirectTo = location.origin + location.pathname + location.search; const { data, error } = await window.supabase.auth.signInWithOAuth({ provider, options: { redirectTo, skipBrowserRedirect: true, queryParams: { prompt: 'select_account' } } }); if (error) { const msg = /provider is not enabled/i.test(error.message||'') ? 'Google sign-in is not available yet.' : (error.message || 'Could not start sign in.'); showError(ui.overlay, msg); setModalLoading(ui.overlay, false); return; } if (data && data.url){ location.href = data.url; } else { setModalLoading(ui.overlay, false); showError(ui.overlay, 'Could not start ' + provider + ' sign in.'); } } catch(ex){ showError(ui.overlay, 'Failed to start ' + provider + ' sign in.'); setModalLoading(ui.overlay, false); } }); });
       ui.overlay.querySelector('#thg-reset-btn').addEventListener('click', async function(){ if (!state.supabaseReady){ showError(ui.overlay, 'Authentication is not initialized.'); return; } const email = ui.overlay.querySelector('#thg-rp-email').value.trim(); if (!validateEmail(email)) { showError(ui.overlay, 'Enter a valid email.'); return; } clearError(ui.overlay); setModalLoading(ui.overlay, true); try{ const redirectTo = location.origin + location.pathname + location.search; const { error } = await window.supabase.auth.resetPasswordForEmail(email, { redirectTo }); if (error) { showError(ui.overlay, error.message || 'Failed to send reset link.'); } else { showError(ui.overlay, 'Reset link sent. Check your email.'); } } catch(ex){ showError(ui.overlay, 'Network error. Please try again.'); } finally { setModalLoading(ui.overlay, false); } });

@@ -733,7 +733,10 @@ window.addEventListener('beforeunload', () => subscription?.unsubscribe());
       try {
         setMsg('Redirecting to ' + provider + '…', true);
         const next = getNextFromQuery();
-        const redirectTo = `${location.origin}${location.pathname}?post_auth=1&parent_origin=${encodeURIComponent(PARENT_ORIGIN)}${next ? `&next=${encodeURIComponent(next)}` : ''}`;
+        const RETURN_TO_PARENT = (__qs.get('return_to_parent') === '1');
+        const redirectTo = RETURN_TO_PARENT
+          ? `${PARENT_ORIGIN}/?${next ? `next=${encodeURIComponent(next)}&` : ''}post_auth=1`
+          : `${location.origin}${location.pathname}?post_auth=1&parent_origin=${encodeURIComponent(PARENT_ORIGIN)}${next ? `&next=${encodeURIComponent(next)}` : ''}`;
         await supabase.auth.signInWithOAuth({ provider, options: { redirectTo, queryParams: { prompt: 'select_account' } } });
       } catch (e) {
         setMsg('Could not start ' + provider + ' sign in.');
@@ -836,6 +839,17 @@ window.addEventListener('beforeunload', () => subscription?.unsubscribe());
       });
       // GitHub removed
     })();
+
+    // Auto-start OAuth if requested via query params (used by hosted fallback)
+    try {
+      const auto = __qs.get('auto');
+      const provider = (__qs.get('provider')||'').toLowerCase() || 'google';
+      if (auto && (provider === 'google')) {
+        setMsg('Redirecting to Google…', true);
+        // Give the module a tick to ensure supabase is ready
+        setTimeout(()=>{ startOAuth('google'); }, 0);
+      }
+    } catch(_) {}
 
 
     signOutBtn?.addEventListener('click', async () => {

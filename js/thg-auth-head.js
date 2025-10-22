@@ -6,8 +6,8 @@
   try{ if (window.__thgDurableHeadIncluded) return; window.__thgDurableHeadIncluded = true; } catch(_) {}
 
   // Defaults (can be overridden by host before this script)
-  try { if (typeof window.AUTH_OPEN_ON_LOAD === 'undefined') window.AUTH_OPEN_ON_LOAD = false; } catch(_){}}
-  try { if (typeof window.AUTH_HIDE_HEADER === 'undefined') window.AUTH_HIDE_HEADER = false; } catch(_){}}
+  try { if (typeof window.AUTH_OPEN_ON_LOAD === 'undefined') window.AUTH_OPEN_ON_LOAD = false; } catch(_){}
+  try { if (typeof window.AUTH_HIDE_HEADER === 'undefined') window.AUTH_HIDE_HEADER = false; } catch(_){}
   try {
     window.AUTH_NAV = Object.assign({ profile: '/profile', dashboard: '/dashboard' }, window.AUTH_NAV || {});
     if (!window.DURABLE_AUTH_URL) window.DURABLE_AUTH_URL = 'https://auth.tharaga.co.in/login_signup_glassdrop/';

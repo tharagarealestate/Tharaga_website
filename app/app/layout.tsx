@@ -1,4 +1,5 @@
 import './globals.css'
+import 'driver.js/dist/driver.css'
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
@@ -7,6 +8,9 @@ export const metadata: Metadata = {
 }
 
 import { EntitlementsProvider } from '@/components/ui/FeatureGate'
+import dynamic from 'next/dynamic'
+
+const BuyerOnboarding = dynamic(() => import('@/components/BuyerOnboarding').then(m => m.BuyerOnboarding), { ssr: false })
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -39,6 +43,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <header className="sticky top-0 z-50 bg-canvas/95 backdrop-blur supports-[backdrop-filter]:bg-canvas/80 border-b border-border">
           <nav className="mx-auto max-w-6xl px-4 sm:px-6 py-3 flex items-center gap-4 text-sm text-fg-muted">
             <a href="/" className="font-bold text-fg hover:text-accent">Tharaga</a>
+            <div className="hidden md:block">
+              <input id="search-bar" type="search" placeholder="Search properties…" className="rounded-md border border-border px-3 py-1 text-sm bg-canvas text-fg placeholder:text-fg-muted/60" />
+            </div>
             <a href="/property-listing/" className="hover:text-accent">Browse</a>
             <a href="/tools/cost-calculator" className="hover:text-accent">Cost</a>
             <a href="/pricing/" className="hover:text-accent">Pricing</a>
@@ -60,6 +67,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           </nav>
         </header>
         <EntitlementsProvider>
+          <BuyerOnboarding />
           {children}
         </EntitlementsProvider>
         {/* Web Vitals reporting */}

@@ -56,6 +56,9 @@ export function saveItem(item: Omit<SavedItem,'saved_at'>) {
       navigator.serviceWorker.controller.postMessage({ type: 'cacheUrls', urls: [item.image_url, '/property-listing/'] })
     }
   } catch {}
+  try {
+    window.dispatchEvent(new CustomEvent('thg:buyer:saved'))
+  } catch {}
 }
 
 export function removeItem(propertyId: string) {

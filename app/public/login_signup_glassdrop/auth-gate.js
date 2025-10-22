@@ -9,8 +9,8 @@
   const SUPABASE_URL = 'https://wedevtjjmdvngyshqdro.supabase.co';
   const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndlZGV2dGpqbWR2bmd5c2hxZHJvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU0NzYwMzgsImV4cCI6MjA3MTA1MjAzOH0.Ex2c_sx358dFdygUGMVBohyTVto6fdEQ5nydDRh9m6M";
 
-  /** CONFIG — update LOGIN_IFRAME_URL to your actual login/embed page */
-  // make explicit to avoid directory/index surprises:
+  /** CONFIG — login iframe should always use same-origin path */
+  // Use a relative URL so it works on any host (prod, preview, localhost)
   const LOGIN_IFRAME_URL = "/login_signup_glassdrop/";
   // Inline login via srcdoc is disabled; iframe loads password form page
   const USE_INLINE_LOGIN = false;

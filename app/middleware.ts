@@ -80,6 +80,8 @@ export async function middleware(req: NextRequest) {
 
 export const config = {
   matcher: [
+    // Root homepage should pass through middleware so we can rewrite to /index.html
+    '/',
     // Preserve existing guards
     '/app',
     '/app/:path*',

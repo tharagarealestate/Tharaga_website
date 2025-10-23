@@ -5,10 +5,15 @@ import { defaultLocale, locales } from './i18n/config'
 import { createMiddlewareClient } from '@supabase/auth-helpers-nextjs'
 
 // Normalize legacy routes and protect /admin with role-based access
+// IMPORTANT: Do NOT localize the root "/". We serve a static homepage at
+// app/public/index.html on Netlify. If we prefix the root, Netlify tries to
+// render a localized Next.js page and the homepage collapses. We therefore
+// scope next-intl to explicit locale-prefixed routes only (e.g. /en, /ta, /hi).
 const handleI18nRouting = createMiddleware({
   locales: Array.from(locales),
   defaultLocale,
-  localePrefix: 'always',
+  // Use 'as-needed' to avoid forcing locale on the root path
+  localePrefix: 'as-needed',
 })
 
 export async function middleware(req: NextRequest) {
@@ -50,8 +55,14 @@ export async function middleware(req: NextRequest) {
     return res
   }
 
-  // 3) next-intl locale routing
-  return handleI18nRouting(req)
+  // 3) next-intl locale routing (only for explicit locale paths)
+  const first = pathname.split('/')[1]
+  if (Array.from(locales).includes(first as any)) {
+    return handleI18nRouting(req)
+  }
+
+  // For all other paths (including "/"), proceed without i18n handling
+  return NextResponse.next()
 }
 
 export const config = {
@@ -61,8 +72,7 @@ export const config = {
     '/app/:path*',
     '/admin',
     '/admin/:path*',
-    // Localized routes
-    '/',
+    // Localized routes — handle only explicit locale prefixes
     '/(en|ta|hi)/:path*',
   ],
 }

@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+export const runtime = 'edge'
 import { Sidebar } from './_components/Sidebar'
 import { Header } from './_components/Header'
 import { ReactQueryProvider } from '@/components/providers/ReactQueryProvider'

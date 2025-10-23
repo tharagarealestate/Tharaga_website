@@ -1,4 +1,5 @@
 import {NextIntlClientProvider} from 'next-intl'
+export const runtime = 'edge'
 import type {ReactNode} from 'react'
 
 export default async function LocaleLayout({

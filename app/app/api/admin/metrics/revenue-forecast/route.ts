@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+export const runtime = 'edge'
 export const dynamic = 'force-dynamic'
 import { getSupabase } from '@/lib/supabase'
 

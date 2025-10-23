@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+export const runtime = 'edge'
 
 export async function GET(_req: NextRequest) {
   // Dev stub: grant basic entitlements so UI doesn't 404

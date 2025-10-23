@@ -19,9 +19,6 @@ const nextConfig = {
     // Ensure /api in Next dev maps to real backend if proxy not present
     const apiBase = process.env.NEXT_PUBLIC_API_URL
     const rules = []
-    // Unify homepage across Render and Netlify by serving the
-    // static Netlify homepage from /index.html while keeping URL as '/'
-    rules.push({ source: '/', destination: '/index.html' })
     if (apiBase) {
       rules.push({ source: '/api/:path*', destination: `${apiBase}/api/:path*` })
     }

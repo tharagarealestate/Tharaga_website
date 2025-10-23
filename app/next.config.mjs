@@ -1,3 +1,5 @@
+import createNextIntlPlugin from 'next-intl/plugin'
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
@@ -43,4 +45,8 @@ const nextConfig = {
   },
 };
 
-export default nextConfig;
+// Enable next-intl for the App Router. This wires up the
+// i18n/request.ts configuration used at runtime.
+const withNextIntl = createNextIntlPlugin()
+
+export default withNextIntl(nextConfig);

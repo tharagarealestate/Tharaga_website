@@ -19,6 +19,13 @@ const handleI18nRouting = createMiddleware({
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl
 
+  // 0) Serve static homepage for root path using public/index.html
+  // This keeps Render/Vercel/Node deployments consistent with Netlify, where
+  // the static marketing homepage lives in app/public/index.html.
+  if (pathname === '/') {
+    return NextResponse.rewrite(new URL('/index.html', req.url))
+  }
+
   // 1) Normalize legacy /app/* -> /*
   if (pathname === '/app' || pathname.startsWith('/app/')) {
     const dest = new URL(req.url)

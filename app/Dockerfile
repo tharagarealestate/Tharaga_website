@@ -17,8 +17,24 @@ ENV SUPABASE_URL="$SUPABASE_URL" \
     SUPABASE_ANON_KEY="$SUPABASE_ANON_KEY" \
     NEXT_PUBLIC_SUPABASE_URL="$NEXT_PUBLIC_SUPABASE_URL" \
     NEXT_PUBLIC_SUPABASE_ANON_KEY="$NEXT_PUBLIC_SUPABASE_ANON_KEY"
-# If Render Secret File .env.production exists, copy it where Next can read it
-RUN if [ -f /etc/secrets/.env.production ]; then cp /etc/secrets/.env.production ./.env.production; fi
+# Ensure a .env.production file exists in the builder image
+# Prefer copying from common Secret File mount locations on Render/containers; fall back to an empty file
+RUN set -e; \
+    for P in \
+      "/etc/secrets/.env.production" \
+      "/opt/render/.env.production" \
+      "/run/secrets/.env.production" \
+    ; do \
+      if [ -f "$P" ]; then \
+        echo "[env] Using secret file at $P"; \
+        cp "$P" ./.env.production; \
+        break; \
+      fi; \
+    done; \
+    if [ ! -f ./.env.production ]; then \
+      echo "[env] No secret .env.production found; creating empty placeholder"; \
+      : > ./.env.production; \
+    fi
 RUN npm run build
 
 FROM node:20-alpine AS runner

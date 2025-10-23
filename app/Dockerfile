@@ -17,6 +17,8 @@ ENV SUPABASE_URL="$SUPABASE_URL" \
     SUPABASE_ANON_KEY="$SUPABASE_ANON_KEY" \
     NEXT_PUBLIC_SUPABASE_URL="$NEXT_PUBLIC_SUPABASE_URL" \
     NEXT_PUBLIC_SUPABASE_ANON_KEY="$NEXT_PUBLIC_SUPABASE_ANON_KEY"
+# If Render Secret File .env.production exists, copy it where Next can read it
+RUN if [ -f /etc/secrets/.env.production ]; then cp /etc/secrets/.env.production ./.env.production; fi
 RUN npm run build
 
 FROM node:20-alpine AS runner
@@ -26,5 +28,7 @@ COPY --from=builder /app/package.json ./
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/.next ./.next
 COPY --from=builder /app/public ./public
+# Carry .env.production into the runtime image (used by next start)
+COPY --from=builder /app/.env.production ./.env.production
 EXPOSE 3000
 CMD ["npm","run","start"]

@@ -62,13 +62,19 @@ export async function middleware(req: NextRequest) {
     return res
   }
 
-  // 3) next-intl locale routing (only for explicit locale paths)
+  // 3) Homepage for explicit locale root -> serve static marketing homepage
+  // e.g. /en, /ta, /hi should show same homepage as /
+  if (/^\/(en|ta|hi)\/?$/.test(pathname)) {
+    return NextResponse.rewrite(new URL('/index.html', req.url))
+  }
+
+  // 4) next-intl locale routing (only for explicit locale-prefixed paths)
   const first = pathname.split('/')[1]
   if (Array.from(locales).includes(first as any)) {
     return handleI18nRouting(req)
   }
 
-  // For all other paths (including "/"), proceed without i18n handling
+  // For all other paths, proceed without i18n handling
   return NextResponse.next()
 }
 
@@ -79,7 +85,7 @@ export const config = {
     '/app/:path*',
     '/admin',
     '/admin/:path*',
-    // Localized routes — handle only explicit locale prefixes
+    // Localized routes — handle only explicit locale prefixes (non-root)
     '/(en|ta|hi)/:path*',
   ],
 }

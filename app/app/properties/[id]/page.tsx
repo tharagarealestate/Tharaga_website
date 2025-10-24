@@ -7,6 +7,7 @@ import { Gallery } from '@/components/property/Gallery'
 import { EMICalculator as EMICalcClient } from '@/components/property/EMICalculator'
 import { ExpandableText } from '@/components/property/ExpandableText'
 import { CompareChart } from '@/components/property/CompareChart'
+import { InteractiveMap } from '@/components/property/InteractiveMap'
 import { ContactForm as ContactFormClient } from '@/components/property/ContactForm'
 
 export const revalidate = 300 // ISR: 5 minutes
@@ -171,16 +172,10 @@ function FloorPlan({ images }: { images: string[] }){
 }
 
 function LocationInsights({ p }: { p: any }){
-  const q = encodeURIComponent(p.address || `${p.locality||''} ${p.city||''}`)
   return (
     <div className="mt-8">
       <h2 className="text-2xl font-semibold mb-3">Location Insights</h2>
-      <iframe
-        className="w-full h-96 rounded"
-        loading="lazy"
-        referrerPolicy="no-referrer-when-downgrade"
-        src={`https://www.google.com/maps/embed/v1/place?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY || ''}&q=${q}`}
-        />
+      <InteractiveMap lat={p.lat} lng={p.lng} workplace={null} />
       <div className="mt-3 grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
         <div className="rounded border p-3">Connectivity: 8/10</div>
         <div className="rounded border p-3">Social Infrastructure: 9/10</div>

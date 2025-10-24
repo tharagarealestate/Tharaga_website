@@ -8,8 +8,10 @@
   <script type="module" src="/js/fragment-handle.js"></script>
   <script src="/js/analytics.js" defer></script>
   <script src="/js/home.js" defer></script>
+  <script src="https://unpkg.com/lucide@latest" defer></script>
   <!-- Removed globe script; no globe on hero -->
   <link rel="stylesheet" href="/css/brand.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&display=swap" rel="stylesheet" />
   
   <style>
     :root { --brand:#6e0d25; --brand-600:#8a1637; --ink:#111111; --cream:#f7efe7; --muted:#4b5563; --gold:#d4af37; --ring:rgba(212,175,55,.30); --font-ui:'Manrope',Inter,system-ui,-apple-system,'Segoe UI',Roboto,Helvetica,Arial; --font-display:'Plus Jakarta Sans','Manrope',Inter,system-ui,-apple-system,'Segoe UI',Roboto,Helvetica,Arial; }
@@ -22,6 +24,7 @@
     a { color:#0b63ff; text-decoration:none }
     a:hover { text-decoration:underline }
     header.nav { position:sticky; top:0; z-index:20; color:#fff; backdrop-filter: blur(12px) saturate(1.25); background: linear-gradient(180deg, rgba(110,13,37,.82), rgba(110,13,37,.66)); border-bottom:1px solid rgba(255,255,255,.12) }
+    /* Reserve space on the right for About | Login group */
     header.nav .inner { max-width:1100px; margin:0 auto; padding:10px 16px; display:flex; align-items:center; justify-content:space-between; gap:10px; position:relative; padding-right: clamp(130px, 10vw, 200px) }
     .brand { font-family: var(--font-display); font-weight:800; letter-spacing:.2px; font-size:24px }
     header.nav .brand{ color:#fff }
@@ -67,7 +70,7 @@
     details.dropdown .menu a:hover{ background:linear-gradient(90deg, rgba(110,13,37,.12), rgba(110,13,37,.06)); color:var(--brand); box-shadow: inset 0 0 0 1px rgba(110,13,37,.18) }
     details.dropdown .menu a:focus-visible{ outline:0; box-shadow:0 0 0 2px var(--ring), inset 0 0 0 1px rgba(110,13,37,.24) }
     details.dropdown .menu a:active{ transform:translateY(1px); background:linear-gradient(180deg, rgba(110,13,37,.20), rgba(110,13,37,.10)) }
-    /* Horizontal divider inside dropdown (for mobile About/Pricing) */
+    /* Horizontal divider inside dropdown (used before mobile Pricing) */
     details.dropdown .menu .divider{ display:block; width:auto; height:1px; background:rgba(110,13,37,.14); margin:6px 6px; border-radius:1px }
     /* Make header readable on dark plum */
     header.nav .thg-auth-wrap{ display:flex; align-items:center; gap:12px }
@@ -83,9 +86,11 @@
     header.nav .thg-auth-wrap > .divider{ display:none }
     header.nav .thg-auth-wrap .about-link:hover{ text-decoration:underline }
     /* Show top-level About in main nav on desktop */
-    header.nav nav.row a[href="/about/"]{ display:inline-block }
+    header.nav nav.row > a[href="/about/"]{ display:inline-block }
     /* Hidden by default; shown only on mobile */
     .about-mobile-link{ display:none }
+    /* Mobile-only items inside Features dropdown are hidden by default */
+    details.dropdown .menu .show-mobile-only{ display:none }
     .features { max-width:1100px; margin:26px auto; padding:0 16px; color:#111 }
     /* Default iframe height tuned for content; JS will refine precisely */
     #how-works-animated iframe{ height: clamp(320px, 58vw, 560px); }
@@ -97,6 +102,13 @@
     .kpi { font-family: var(--font-display); font-weight:700; font-size:22px }
     .footer { max-width:1100px; margin:0 auto; padding:28px 16px; color:#666; font-size:14px }
     
+    /* Earlier tablet breakpoint tweaks to prevent nav/right overlap */
+    @media (max-width: 1080px) {
+      /* Hide trust pill a bit earlier to free space */
+      #home_pill_trust{ display:none }
+      /* Reserve extra space for auth button to avoid collisions */
+      header.nav .inner{ padding-right:200px }
+    }
     @media (max-width: 880px) {
       .hero .inner { grid-template-columns: 1fr; text-align:center; }
       .search-grid { grid-template-columns: 1fr; }
@@ -114,7 +126,7 @@
       .divider{ height:14px }
       /* Move About into Features menu on mobile; hide right-group About */
       header.nav .thg-auth-wrap .about-link{ display:none }
-      header.nav nav.row a[href="/about/"]{ display:none }
+      header.nav nav.row > a[href="/about/"]{ display:none }
       /* Hide nav-level divider before About on mobile */
       header.nav nav.row > .divider{ display:none }
       .about-mobile-link{ display:none }
@@ -124,9 +136,6 @@
       header.nav nav.row .menu-group > .divider{ display:none }
       /* Show mobile-only items inside Features dropdown */
       details.dropdown .menu .show-mobile-only{ display:block }
-      /* Hide nav-level divider before About on mobile */
-      header.nav nav.row > .divider{ display:none }
-      .about-mobile-link{ display:none }
       /* Right-side auth group position */
       header.nav .thg-auth-wrap{ position:absolute; top:10px; right:12px; padding:0; gap:10px }
       header.nav .thg-auth-wrap::before{ height:14px }
@@ -153,6 +162,100 @@
     /* Transparent AI art next to hero */
     .ai-hero-figure{ margin:0; width:100%; display:grid; place-items:center; justify-self:center }
     .ai-hero-art{ width:min(520px,95%); height:auto; opacity:.96; filter:drop-shadow(0 18px 40px rgba(110,13,37,.22)); display:block; margin:0 auto; transform:scaleX(-1); }
+    
+    /* Premium hero (static implementation of Next.js design) */
+    .hero-premium{ min-height:100vh; padding-top:72px; padding-bottom:72px; color:#fff; background:linear-gradient(135deg, #071328 0%, #0F2D52 55%, #1A4173 100%); overflow:hidden }
+    .hero-premium .inner{ max-width:1200px; margin:0 auto; padding:0 16px; display:grid; grid-template-columns:1fr; gap:32px; align-items:center }
+    @media (min-width: 1024px){ .hero-premium .inner{ grid-template-columns:1.05fr .95fr; gap:48px } }
+    .hero-premium .eyebrow{ display:inline-flex; align-items:center; gap:10px; padding:8px 12px; border-radius:9999px; background:rgba(212,175,55,.16); border:1px solid rgba(212,175,55,.28) }
+    .hero-premium .dot{ width:8px; height:8px; border-radius:9999px; background:#d4af37; animation:pulse 1.8s ease-in-out infinite }
+    .hero-premium .headline{ font-family:'Playfair Display', Georgia, serif; font-weight:900; letter-spacing:.2px; line-height:1.06; font-size:44px; margin:14px 0 10px }
+    @media (min-width:640px){ .hero-premium .headline{ font-size:56px } }
+    @media (min-width:1024px){ .hero-premium .headline{ font-size:72px } }
+    .text-gradient-gold{ background:linear-gradient(90deg,#C99A1E,#D4AF37,#E5C86D); -webkit-background-clip:text; background-clip:text; color:transparent }
+    .hero-premium .subhead{ color:#e5e7eb; font-size:18px; line-height:1.6; max-width:640px; margin:0 0 18px }
+    .hero-premium .subhead strong{ color:#f5d779 }
+    .trust-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin:18px 0 22px; max-width:640px }
+    .trust-card{ text-align:center; background:rgba(255,255,255,.10); border:1px solid rgba(255,255,255,.16); border-radius:14px; padding:14px; backdrop-filter:blur(10px) }
+    .trust-card .k{ font-size:26px; font-weight:800; color:#f1cc4c; margin-bottom:4px }
+    .trust-card .t{ font-size:12px; color:#d1d5db }
+    .cta-row{ display:flex; flex-wrap:wrap; gap:12px }
+    .btn-gold{ appearance:none; border:0; background:linear-gradient(90deg,#c69a17,#d4af37); color:#0f172a; font-weight:800; padding:12px 16px; border-radius:12px; box-shadow:0 10px 30px rgba(212,175,55,.22); display:inline-flex; align-items:center; gap:10px; text-decoration:none }
+    .btn-gold:hover{ filter:brightness(1.02); transform:translateY(-1px) }
+    .btn-glass{ background:rgba(255,255,255,.12); border:1px solid rgba(255,255,255,.22); color:#fff; font-weight:700; padding:12px 16px; border-radius:12px; display:inline-flex; align-items:center; gap:10px; text-decoration:none }
+    .btn-glass:hover{ background:rgba(255,255,255,.18) }
+    .proof{ display:flex; align-items:center; gap:14px; margin-top:16px }
+    .avatars{ display:flex }
+    .avatars img{ width:40px; height:40px; border-radius:9999px; border:2px solid #071328; margin-left:-10px; background:#ddd }
+    .avatars img:first-child{ margin-left:0 }
+    .stars{ display:flex; gap:4px; margin-bottom:2px }
+    .star{ width:16px; height:16px; color:#d4af37 }
+
+    .visual{ position:relative; width:100%; display:none }
+    @media (min-width:1024px){ .visual{ display:block } }
+    .card-3d{ position:relative; background:rgba(255,255,255,.85); border:1px solid rgba(212,175,55,.15); border-radius:18px; padding:16px; box-shadow:0 18px 40px rgba(7,19,40,.25); transform:rotate(3deg); transition:transform .45s ease }
+    .card-3d:hover{ transform:rotate(0deg) }
+    .badge{ display:inline-flex; align-items:center; gap:6px; padding:4px 8px; border-radius:9999px; background:#d1fae5; color:#065f46; font-size:12px; font-weight:700 }
+    .ai-badge{ position:absolute; top:-10px; right:-10px; background:rgba(255,255,255,.9); border:1px solid rgba(17,24,39,.08); border-radius:14px; padding:12px; box-shadow:0 16px 36px rgba(0,0,0,.22) }
+    .roi-badge{ position:absolute; bottom:-10px; left:-10px; background:rgba(255,255,255,.9); border:1px solid rgba(17,24,39,.08); border-radius:14px; padding:12px; box-shadow:0 16px 36px rgba(0,0,0,.22) }
+
+    /* Background shapes */
+    .shape{ position:absolute; border-radius:9999px; filter:blur(60px); opacity:.24; pointer-events:none }
+    .shape.gold{ width:280px; height:280px; left:6%; top:10%; background:#d4af37; animation:floatY 6s ease-in-out infinite }
+    .shape.blue{ width:360px; height:360px; right:6%; bottom:10%; background:#2563EB; animation:floatY2 7s ease-in-out infinite }
+
+    /* Scroll indicator */
+    .scroll-indicator{ position:absolute; bottom:18px; left:50%; transform:translateX(-50%); animation:bounce 1.6s ease-in-out infinite; opacity:.8 }
+
+    /* Animations */
+    @keyframes pulse{ 0%,100%{ transform:scale(1); opacity:.8 } 50%{ transform:scale(1.18); opacity:1 } }
+    @keyframes floatY{ 0%,100%{ transform:translateY(0) } 50%{ transform:translateY(12px) } }
+    @keyframes floatY2{ 0%,100%{ transform:translateY(0) } 50%{ transform:translateY(-14px) } }
+    @keyframes slideInLeft{ from{ opacity:0; transform:translateX(-36px) } to{ opacity:1; transform:translateX(0) } }
+    @keyframes scaleIn{ from{ opacity:0; transform:scale(.92) } to{ opacity:1; transform:scale(1) } }
+    @keyframes bounce{ 0%,100%{ transform:translate(-50%,0) } 50%{ transform:translate(-50%,-8px) } }
+    
+    /* Value Proposition Section */
+    .value-prop{ position:relative; padding:96px 0; background:linear-gradient(180deg,#f9fafb 0%, #ffffff 100%); overflow:hidden }
+    .value-prop .deco{ position:absolute; border-radius:9999px; filter:blur(72px); opacity:.6; pointer-events:none }
+    .value-prop .deco.gold{ top:-80px; left:-80px; width:260px; height:260px; background:rgba(212,175,55,.10) }
+    .value-prop .deco.primary{ bottom:-100px; right:-100px; width:380px; height:380px; background:rgba(37,99,235,.10) }
+    .value-prop .inner{ position:relative; max-width:1100px; margin:0 auto; padding:0 16px; z-index:1 }
+    .value-prop .header{ text-align:center; max-width:760px; margin:0 auto 28px }
+    .value-prop .eyebrow-gold{ display:inline-block; padding:8px 12px; border-radius:9999px; background:#fef3c7; color:#92400e; font-weight:800; font-size:12px; margin-bottom:16px }
+    .value-prop .headline{ font-family: var(--font-display); font-weight:800; font-size:36px; line-height:1.12; color:#111; margin:0 0 12px }
+    .value-prop .sub{ color:#4b5563; font-size:18px; line-height:1.7; margin:0 auto; max-width:680px }
+    
+    /* Trial CTA Section (moved from Next.js) */
+    .trial-cta{ position:relative; padding:72px 0; color:#fff; background:linear-gradient(135deg, #071328 0%, #0F2D52 55%, #1A4173 100%); overflow:hidden }
+    .trial-cta .inner{ max-width:1100px; margin:0 auto; padding:0 16px; text-align:center }
+    .trial-cta .badge{ display:inline-flex; align-items:center; gap:10px; padding:8px 12px; border-radius:9999px; background:rgba(16,185,129,.18); border:1px solid rgba(16,185,129,.35); margin-bottom:16px }
+    .trial-cta .headline{ font-family:'Playfair Display', Georgia, serif; font-weight:900; letter-spacing:.2px; line-height:1.06; font-size:44px; margin:14px 0 10px }
+    @media (min-width:640px){ .trial-cta .headline{ font-size:56px } }
+    @media (min-width:1024px){ .trial-cta .headline{ font-size:64px } }
+    .trial-cta .subhead{ color:#e5e7eb; font-size:18px; line-height:1.6; max-width:640px; margin:0 auto 18px }
+    .trial-cta .shapes .shape{ position:absolute; border-radius:9999px; filter:blur(60px); opacity:.25; pointer-events:none }
+    .trial-cta .shapes .gold{ top:-40px; right:-40px; width:380px; height:380px; background:#d4af37 }
+    .trial-cta .shapes .blue{ bottom:-60px; left:-60px; width:420px; height:420px; background:#2563EB }
+    .trial-cta .cta-row{ display:flex; flex-wrap:wrap; gap:12px; justify-content:center; margin:16px 0 10px }
+    .trial-cta .trust{ display:flex; flex-wrap:wrap; gap:16px; justify-content:center; color:#d1d5db; margin-top:6px }
+    .vp-grid{ display:grid; grid-template-columns:1fr; gap:16px }
+    @media (min-width:768px){ .vp-grid{ grid-template-columns:repeat(2,1fr); gap:18px } }
+    @media (min-width:1024px){ .vp-grid{ grid-template-columns:repeat(3,1fr); gap:20px } }
+    .glass-card{ background:rgba(255,255,255,.72); border:1px solid rgba(17,24,39,.08); border-radius:16px; padding:24px; box-shadow:0 12px 36px rgba(17,24,39,.08); backdrop-filter:blur(10px) saturate(1.02); transition: box-shadow .2s ease, transform .2s ease, border-color .2s ease }
+    .vp-card{ height:100%; border-left:4px solid transparent; transition: border-color .2s ease }
+    .vp-card:hover{ border-left-color: var(--gold) }
+    .vp-card:hover .glass-card{ box-shadow:0 20px 50px rgba(17,24,39,.16); transform:translateY(-2px) }
+    .icon-circle{ width:56px; height:56px; border-radius:14px; display:flex; align-items:center; justify-content:center; background:linear-gradient(135deg,#c69a17,#d4af37); color:#fff; margin-bottom:16px; transition: transform .2s ease }
+    .icon-circle svg{ width:28px; height:28px }
+    .vp-card:hover .icon-circle{ transform:scale(1.06) }
+    .vp-title{ font-weight:800; font-size:20px; margin:0 0 10px; color:#111; transition: color .2s ease }
+    .vp-card:hover .vp-title{ color:#1d4ed8 }
+    .vp-desc{ color:#4b5563; line-height:1.7; margin:0 0 14px }
+    .vp-stat{ display:flex; align-items:center; gap:8px; color:#065f46; font-weight:800 }
+    .vp-stat svg{ width:20px; height:20px }
+    .fade-up{ opacity:0; transform:translateY(30px); transition: opacity .5s ease, transform .5s ease; transition-delay: var(--delay, 0s) }
+    .fade-up.in-view{ opacity:1; transform:translateY(0) }
   </style>
 
   <!-- Durable Head Code (from snippets/index.html) -->
@@ -569,6 +672,7 @@
     function closeConfirm(ui){ ui.confirmEl.setAttribute('aria-hidden','true'); }
 
     function openHostedAuth(provider){
+      // Hard fallback: navigate to local login page with auto Google start
       try {
         var base = (window.DURABLE_AUTH_URL || '/login_signup_glassdrop/');
         if (!/\/$/.test(base)) base += '/';
@@ -582,17 +686,15 @@
       }
     }
 
+    // Ensure a Supabase client is available before starting OAuth
     async function ensureSupabaseReady(){
-      if (state.supabaseReady && window.supabase && window.supabase.auth) return true;
       try {
-        if (!window.supabase || !window.supabase.auth){
-          const mod = await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm');
-          const client = mod.createClient('https://wedevtjjmdvngyshqdro.supabase.co','eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndlZGV2dGpqbWR2bmd5c2hxZHJvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU0NzYwMzgsImV4cCI6MjA3MTA1MjAzOH0.Ex2c_sx358dFdygUGMVBohyTVto6fdEQ5nydDRh9m6M');
-          window.supabase = client;
-        }
-        state.supabaseReady = !!(window.supabase && window.supabase.auth);
-      } catch(_) { state.supabaseReady = false; }
-      return state.supabaseReady;
+        if (window.supabase && window.supabase.auth) return true;
+        const mod = await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm');
+        const client = mod.createClient('https://wedevtjjmdvngyshqdro.supabase.co','eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndlZGV2dGpqbWR2bmd5c2hxZHJvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU0NzYwMzgsImV4cCI6MjA3MTA1MjAzOH0.Ex2c_sx358dFdygUGMVBohyTVto6fdEQ5nydDRh9m6M');
+        window.supabase = client;
+        return !!(window.supabase && window.supabase.auth);
+      } catch(_){ return false; }
     }
 
     function bindUI(ui){
@@ -613,7 +715,7 @@
       forgotBtn.addEventListener('click', function(){ showPanel(ui.overlay, 'reset', 'Reset password'); const el = ui.overlay.querySelector('#thg-rp-email'); const source = ui.overlay.querySelector('#thg-si-email'); if (source && el && source.value) el.value = source.value; if (el) el.focus(); });
       ui.overlay.querySelector('#thg-signin-btn').addEventListener('click', async function(){ if (!state.supabaseReady){ showError(ui.overlay, 'Authentication is not initialized.'); return; } const email = ui.overlay.querySelector('#thg-si-email').value.trim(); const password = ui.overlay.querySelector('#thg-si-password').value; if (!validateEmail(email)) { showError(ui.overlay, 'Enter a valid email.'); return; } if (!password || password.length < 6) { showError(ui.overlay, 'Enter your password.'); return; } clearError(ui.overlay); setModalLoading(ui.overlay, true); try{ const { error } = await window.supabase.auth.signInWithPassword({ email, password }); if (error) { showError(ui.overlay, error.message || 'Failed to sign in.'); } } catch(ex){ showError(ui.overlay, 'Network error. Please try again.'); } finally { setModalLoading(ui.overlay, false); } });
       ui.overlay.querySelector('#thg-signup-btn').addEventListener('click', async function(){ if (!state.supabaseReady){ showError(ui.overlay, 'Authentication is not initialized.'); return; } const name = ui.overlay.querySelector('#thg-su-name').value.trim(); const email = ui.overlay.querySelector('#thg-su-email').value.trim(); const password = ui.overlay.querySelector('#thg-su-password').value; if (!validateEmail(email)) { showError(ui.overlay, 'Enter a valid email.'); return; } if (!password || password.length < 8) { showError(ui.overlay, 'Password must be at least 8 characters.'); return; } clearError(ui.overlay); setModalLoading(ui.overlay, true); try{ const { error } = await window.supabase.auth.signUp({ email, password, options: { data: name ? { full_name: name } : {} } }); if (error) { showError(ui.overlay, error.message || 'Failed to create account.'); } else { showError(ui.overlay, 'Check your email to verify your account.'); } } catch(ex){ showError(ui.overlay, 'Network error. Please try again.'); } finally { setModalLoading(ui.overlay, false); } });
-      ui.overlay.querySelectorAll('.thg-oauth-btn').forEach(function(btn){ btn.addEventListener('click', async function(){ const provider = btn.getAttribute('data-provider'); clearError(ui.overlay); setModalLoading(ui.overlay, true); try{ if (!(await ensureSupabaseReady())){ var opened = false; try { if (window.authGate && typeof window.authGate.openLoginModal === 'function'){ window.authGate.openLoginModal({ next: location.pathname + location.search }); opened = true; } } catch(_) {} if (!opened){ openHostedAuth(provider); return; } showError(ui.overlay, 'Authentication is not initialized. Opening secure login…'); setModalLoading(ui.overlay, false); return; } const redirectTo = location.origin + location.pathname + location.search; const { data, error } = await window.supabase.auth.signInWithOAuth({ provider, options: { redirectTo, skipBrowserRedirect: true, queryParams: { prompt: 'select_account' } } }); if (error) { const msg = /provider is not enabled/i.test(error.message||'') ? 'Google sign-in is not available yet.' : (error.message || 'Could not start sign in.'); showError(ui.overlay, msg); setModalLoading(ui.overlay, false); return; } if (data && data.url){ location.href = data.url; } else { setModalLoading(ui.overlay, false); showError(ui.overlay, 'Could not start ' + provider + ' sign in.'); } } catch(ex){ showError(ui.overlay, 'Failed to start ' + provider + ' sign in.'); setModalLoading(ui.overlay, false); } }); });
+      ui.overlay.querySelectorAll('.thg-oauth-btn').forEach(function(btn){ btn.addEventListener('click', async function(){ const provider = btn.getAttribute('data-provider'); clearError(ui.overlay); setModalLoading(ui.overlay, true); try{ if (!(await ensureSupabaseReady())) { openHostedAuth(provider); return; } const redirectTo = location.origin + location.pathname + location.search; const { data, error } = await window.supabase.auth.signInWithOAuth({ provider, options: { redirectTo, skipBrowserRedirect: true, queryParams: { prompt: 'select_account' } } }); if (error) { const msg = /provider is not enabled/i.test(error.message||'') ? 'Google sign-in is not available yet.' : (error.message || 'Could not start sign in.'); showError(ui.overlay, msg); setModalLoading(ui.overlay, false); return; } if (data && data.url){ location.href = data.url; } else { setModalLoading(ui.overlay, false); showError(ui.overlay, 'Could not start ' + provider + ' sign in.'); } } catch(ex){ openHostedAuth(provider); } }); });
       ui.overlay.querySelector('#thg-reset-btn').addEventListener('click', async function(){ if (!state.supabaseReady){ showError(ui.overlay, 'Authentication is not initialized.'); return; } const email = ui.overlay.querySelector('#thg-rp-email').value.trim(); if (!validateEmail(email)) { showError(ui.overlay, 'Enter a valid email.'); return; } clearError(ui.overlay); setModalLoading(ui.overlay, true); try{ const redirectTo = location.origin + location.pathname + location.search; const { error } = await window.supabase.auth.resetPasswordForEmail(email, { redirectTo }); if (error) { showError(ui.overlay, error.message || 'Failed to send reset link.'); } else { showError(ui.overlay, 'Reset link sent. Check your email.'); } } catch(ex){ showError(ui.overlay, 'Network error. Please try again.'); } finally { setModalLoading(ui.overlay, false); } });
       ui.overlay.querySelector('#thg-update-btn').addEventListener('click', async function(){ if (!state.supabaseReady){ showError(ui.overlay, 'Authentication is not initialized.'); return; } const password = ui.overlay.querySelector('#thg-up-password').value; if (!password || password.length < 8) { showError(ui.overlay, 'Password must be at least 8 characters.'); return; } clearError(ui.overlay); setModalLoading(ui.overlay, true); try{ const { error } = await window.supabase.auth.updateUser({ password }); if (error) { showError(ui.overlay, error.message || 'Failed to update password.'); } else { showPanel(ui.overlay, 'signin', 'Sign in'); showError(ui.overlay, 'Password updated. Please sign in.'); } } catch(ex){ showError(ui.overlay, 'Network error. Please try again.'); } finally { setModalLoading(ui.overlay, false); } });
       ui.confirmEl.querySelector('.thg-confirm-cancel').addEventListener('click', function(){ closeConfirm(ui); });
@@ -739,8 +841,10 @@
             return;
           }
 
+          // Update header immediately when child reports auth success
           if (data.type === 'THARAGA_AUTH_SUCCESS' && data.user && data.user.email){
             try { state.user = { email: data.user.email, user_metadata: {} }; render(ui); } catch(_) {}
+            // try to sync full session when/if client becomes available
             try { ensureSupabaseReady().then(async function(ok){ if (ok){ try { const s = await window.supabase.auth.getSession(); if (s && s.data && s.data.session && s.data.session.user){ state.user = s.data.session.user; render(ui); } } catch(_){} } }); } catch(_){}
             return;
           }
@@ -801,56 +905,171 @@
         <a href="/about/">About</a>
       </nav>
       <a class="about-mobile-link" href="/about/">About</a>
+      <!-- Right-side auth group is injected by auth script; ensure Features sits near it by letting nav push left via margin-left:auto -->
     </div>
   </header>
 
-  <section class="hero" style="color:#111">
+  <section class="hero-premium">
+    <div class="shape gold"></div>
+    <div class="shape blue"></div>
     <div class="inner">
-      <div>
-        <h1 class="h1" id="hero_title">Find Your Dream Home—Zero Brokers, Zero Commissions</h1>
-        <p class="sub" id="hero_sub">AI-driven verified listings with transparent insights and family-friendly tools for confident decisions.</p>
-        <div class="kpi-row" style="margin:12px 0 16px">
-          <div class="pill"><span class="kpi" id="kpi_time">28h</span> saved per buyer</div>
-          <div class="pill"><span class="kpi" id="kpi_pps">₹1,200</span> avg price/sqft gain</div>
-          <div class="pill">RERA & document hygiene checks</div>
+      <div style="animation:slideInLeft .8s ease-out both">
+        <div class="eyebrow"><span class="dot"></span><span>Tamil Nadu's Most Intelligent Real Estate Platform</span></div>
+        <h1 class="headline">Build Wealth,<br><span class="text-gradient-gold">Not Just Homes</span></h1>
+        <p class="subhead">AI‑verified properties. Zero broker fees. <strong>₹1,200/sqft saved</strong> on average. Make the smartest investment of your life.</p>
+
+        <div class="trust-grid">
+          <div class="trust-card"><div class="k">28h</div><div class="t">Time Saved</div></div>
+          <div class="trust-card"><div class="k" style="color:#34d399">100%</div><div class="t">RERA Verified</div></div>
+          <div class="trust-card"><div class="k">₹120Cr+</div><div class="t">Deals Closed</div></div>
         </div>
 
-        <div class="search-card" role="search" aria-label="Quick search">
-          <div class="search-grid">
-            <div>
-              <label class="sub" for="q">City or locality</label>
-              <input id="q" class="input" placeholder="e.g., Velachery, Chennai" list="cities" />
-              <datalist id="cities">
-                <option>Chennai</option><option>Coimbatore</option><option>Madurai</option><option>Trichy</option><option>Salem</option>
-              </datalist>
-            </div>
-            <div>
-              <label class="sub" for="minPrice">Budget min (₹)</label>
-              <input id="minPrice" class="input" type="number" min="0" step="50000" placeholder="20,00,000" />
-            </div>
-            <div>
-              <label class="sub" for="maxPrice">Budget max (₹)</label>
-              <input id="maxPrice" class="input" type="number" min="0" step="50000" placeholder="80,00,000" />
-            </div>
-            <div style="display:flex;align-items:flex-end;gap:8px">
-              <button id="browseBtn" class="btn" type="button">Browse matches</button>
-              <button id="resumeBtn" class="btn secondary" type="button" hidden>Resume</button>
-            </div>
-          </div>
-          <div class="chip-row" style="margin-top:10px" aria-label="BHK quick select">
-            <button class="chip" data-bhk="1" aria-pressed="false">1 BHK</button>
-            <button class="chip" data-bhk="2" aria-pressed="true">2 BHK</button>
-            <button class="chip" data-bhk="3" aria-pressed="false">3 BHK</button>
-            <button class="chip" data-type="Villa" aria-pressed="false">Villa</button>
-            <button class="chip" data-type="Plot" aria-pressed="false">Plot</button>
-            <button class="chip" data-metro="1" aria-pressed="false">Near Metro</button>
-          </div>
+        <div class="cta-row">
+          <a class="btn-gold" href="/property-listing/">Explore Properties
+            <svg class="star" width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M13.09 8.26L12 2 10.91 8.26 5 9.27l4.55 3.97-1.36 6L12 16.77l3.81 2.47-1.36-6L19 9.27l-5.91-1.01z" fill="currentColor"/></svg>
+          </a>
+          <a class="btn-glass" href="#how-works-animated">See How It Works</a>
         </div>
 
-        <div class="row" style="gap:14px;margin-top:14px">
-          <a class="btn" href="/property-listing/">Explore verified listings</a>
-          <a class="btn secondary" href="/search-filter-home/">Advanced search</a>
+        <div class="proof">
+          <div class="avatars">
+            <img src="https://i.pravatar.cc/80?img=35" alt="" loading="lazy">
+            <img src="https://i.pravatar.cc/80?img=36" alt="" loading="lazy">
+            <img src="https://i.pravatar.cc/80?img=37" alt="" loading="lazy">
+            <img src="https://i.pravatar.cc/80?img=38" alt="" loading="lazy">
+          </div>
+          <div>
+            <div class="stars">
+              <svg class="star" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21 12 17.27z" fill="currentColor"/></svg>
+              <svg class="star" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21 12 17.27z" fill="currentColor"/></svg>
+              <svg class="star" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21 12 17.27z" fill="currentColor"/></svg>
+              <svg class="star" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21 12 17.27z" fill="currentColor"/></svg>
+              <svg class="star" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21 12 17.27z" fill="currentColor"/></svg>
+            </div>
+            <div style="color:#e5e7eb;font-size:14px"><strong style="color:#fff">500+ builders</strong> trust Tharaga</div>
+          </div>
         </div>
+      </div>
+
+      <div class="visual" style="animation:scaleIn 1s .2s ease-out both">
+        <div class="card-3d">
+          <img src="/images/hero-bg.jpg" alt="Luxury Property" style="width:100%;height:260px;object-fit:cover;border-radius:12px;margin-bottom:10px" loading="lazy"/>
+          <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:8px">
+            <div>
+              <div style="font-weight:800;color:#111">Prestige Lakeside</div>
+              <div style="font-size:13px;color:#4b5563">Whitefield, Bangalore</div>
+            </div>
+            <div class="badge"><span>✓</span><span>Verified</span></div>
+          </div>
+          <div style="font-size:22px;font-weight:800;color:#b8860b;margin-bottom:8px">₹2.4 Cr</div>
+          <div style="display:flex;gap:8px;color:#374151;font-size:13px"><span>3 BHK</span><span>•</span><span>1,850 sqft</span><span>•</span><span>Ready to Move</span></div>
+        </div>
+        <div class="ai-badge">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><span style="color:#b8860b">✦</span><span style="font-weight:800;color:#111">AI Match</span></div>
+          <div style="font-size:26px;font-weight:900;color:#b8860b">92%</div>
+        </div>
+        <div class="roi-badge">
+          <div style="font-size:12px;color:#6b7280;margin-bottom:4px">ROI Potential</div>
+          <div style="font-size:20px;font-weight:900;color:#059669">+24%</div>
+          <div style="font-size:12px;color:#6b7280">in 3 years</div>
+        </div>
+      </div>
+    </div>
+    <div class="scroll-indicator">⌄</div>
+  </section>
+
+  <!-- Trial CTA (migrated from cursor/design-trial-call-to-action-section-76dc) -->
+  <section class="trial-cta" id="trial-cta">
+    <div class="shapes" aria-hidden="true">
+      <div class="shape gold"></div>
+      <div class="shape blue"></div>
+    </div>
+    <div class="inner">
+      <div class="badge"><i data-lucide="check-circle"></i><span>No Credit Card Required • 14-Day Free Trial</span></div>
+      <h2 class="headline">Ready to Build <span class="text-gradient-gold">Real Wealth</span>?</h2>
+      <p class="subhead">Get your first 10 qualified leads absolutely free.</p>
+      <div class="cta-row">
+        <a id="openAssistant2" class="btn-gold" href="#trial-cta">Start Free Trial</a>
+        <a class="btn-glass" href="#how-works-animated">Watch Demo</a>
+      </div>
+      <div class="trust">
+        <span><i data-lucide="shield"></i> RERA Verified</span>
+        <span><i data-lucide="lock"></i> Bank-Grade Security</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- VALUE PROPOSITION SECTION -->
+  <section class="value-prop" id="value-proposition">
+    <div class="deco gold" aria-hidden="true"></div>
+    <div class="deco primary" aria-hidden="true"></div>
+    <div class="inner">
+      <div class="header fade-up" style="--delay:.0s">
+        <span class="eyebrow-gold">The Tharaga Difference</span>
+        <h2 class="headline">Not Your Average <span class="text-gradient-gold">Real Estate Platform</span></h2>
+        <p class="sub">We're building India's first AI-powered wealth intelligence platform for real estate. Every feature is designed to make you richer, smarter, faster.</p>
+      </div>
+
+      <div class="vp-grid">
+        <!-- 1. AI-Powered Intelligence -->
+        <article class="vp-card fade-up" style="--delay:.05s">
+          <div class="glass-card">
+            <div class="icon-circle"><i data-lucide="brain"></i></div>
+            <h3 class="vp-title">AI-Powered Intelligence</h3>
+            <p class="vp-desc">Our proprietary AI analyzes 500+ data points per property—from market trends to flood risk—giving you insights no broker ever could.</p>
+            <div class="vp-stat"><i data-lucide="trending-up"></i><span>92% prediction accuracy</span></div>
+          </div>
+        </article>
+
+        <!-- 2. Blockchain-Verified Titles -->
+        <article class="vp-card fade-up" style="--delay:.10s">
+          <div class="glass-card">
+            <div class="icon-circle"><i data-lucide="shield"></i></div>
+            <h3 class="vp-title">Blockchain-Verified Titles</h3>
+            <p class="vp-desc">Every property undergoes cryptographic title verification. Say goodbye to property fraud and legal nightmares.</p>
+            <div class="vp-stat"><i data-lucide="trending-up"></i><span>100% fraud-free guarantee</span></div>
+          </div>
+        </article>
+
+        <!-- 3. Zero Broker Commission -->
+        <article class="vp-card fade-up" style="--delay:.15s">
+          <div class="glass-card">
+            <div class="icon-circle"><i data-lucide="zap"></i></div>
+            <h3 class="vp-title">Zero Broker Commission</h3>
+            <p class="vp-desc">Connect directly with verified builders. Save ₹3-5 lakhs on brokerage. That's a vacation in Europe, on us.</p>
+            <div class="vp-stat"><i data-lucide="trending-up"></i><span>₹1,200/sqft avg. savings</span></div>
+          </div>
+        </article>
+
+        <!-- 4. ROI Prediction Engine -->
+        <article class="vp-card fade-up" style="--delay:.20s">
+          <div class="glass-card">
+            <div class="icon-circle"><i data-lucide="line-chart"></i></div>
+            <h3 class="vp-title">ROI Prediction Engine</h3>
+            <p class="vp-desc">Know your property's future value before you buy. Our ML models forecast appreciation with 85% accuracy.</p>
+            <div class="vp-stat"><i data-lucide="trending-up"></i><span>+24% avg. 3-year ROI</span></div>
+          </div>
+        </article>
+
+        <!-- 5. Family Decision Tools -->
+        <article class="vp-card fade-up" style="--delay:.25s">
+          <div class="glass-card">
+            <div class="icon-circle"><i data-lucide="users"></i></div>
+            <h3 class="vp-title">Family Decision Tools</h3>
+            <p class="vp-desc">Compare properties, calculate EMIs, assess risks—all in one dashboard. Make decisions together, confidently.</p>
+            <div class="vp-stat"><i data-lucide="trending-up"></i><span>28 hours saved per buyer</span></div>
+          </div>
+        </article>
+
+        <!-- 6. Tamil Voice Search -->
+        <article class="vp-card fade-up" style="--delay:.30s">
+          <div class="glass-card">
+            <div class="icon-circle"><i data-lucide="globe"></i></div>
+            <h3 class="vp-title">Tamil Voice Search</h3>
+            <p class="vp-desc">Search properties in your language, your way. Our voice AI understands context, not just keywords.</p>
+            <div class="vp-stat"><i data-lucide="trending-up"></i><span>5+ regional languages</span></div>
+          </div>
+        </article>
       </div>
     </div>
   </section>
@@ -954,6 +1173,7 @@
           setTimeout(resizeEmbedDebounced, 250);
           setTimeout(resizeEmbedDebounced, 800);
         });
+        // Also support postMessage from the embed for exact height
         window.addEventListener('message', function(e){
           try{
             var data = e.data || {};
@@ -963,8 +1183,12 @@
             var h = data.height;
             if (typeof h === 'number' && h > 0) {
               var next = (h + 2) + 'px';
-              if (next !== iframe.style.height) iframe.style.height = next;
+              if (next !== iframe.style.height) {
+                iframe.style.height = next;
+                lastPostHeight = next;
+              }
             } else if (data.type === 'thg-how-height:soft') {
+              // when only a nudge is sent, re-measure synchronously
               resizeEmbedDebounced();
             }
           } catch(_){ }
@@ -995,6 +1219,30 @@
     }
     document.getElementById('openAssistant')?.addEventListener('click', openAssistant);
     document.getElementById('openAssistant2')?.addEventListener('click', openAssistant);
+  </script>
+  <script>
+    // Reveal-on-scroll for Value Proposition and similar sections
+    document.addEventListener('DOMContentLoaded', function(){
+      try {
+        var elements = Array.prototype.slice.call(document.querySelectorAll('.fade-up'));
+        if (!elements.length) return;
+        if (!('IntersectionObserver' in window)) {
+          elements.forEach(function(el){ el.classList.add('in-view'); });
+          return;
+        }
+        var io = new IntersectionObserver(function(entries){
+          entries.forEach(function(entry){
+            if (entry.isIntersecting) {
+              entry.target.classList.add('in-view');
+              io.unobserve(entry.target);
+            }
+          });
+        }, { threshold: 0.15, rootMargin: '0px 0px -10% 0px' });
+        elements.forEach(function(el){ io.observe(el); });
+      } catch(_){ }
+      // Initialize Lucide icons once DOM and script are ready
+      try { window.lucide && window.lucide.createIcons(); } catch(_){ }
+    });
   </script>
 </body>
 </html>

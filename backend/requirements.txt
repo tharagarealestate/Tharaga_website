@@ -1,9 +1,10 @@
 fastapi==0.111.0
 uvicorn[standard]==0.30.0
-scikit-learn==1.4.2
+# Pin scientific stack to versions that build reliably on slim images
 numpy==1.26.4
 pandas==2.2.2
 scipy==1.12.0
+scikit-learn==1.4.2
 pydantic==2.7.1
 pydantic-settings==2.3.0
 python-dotenv==1.0.1

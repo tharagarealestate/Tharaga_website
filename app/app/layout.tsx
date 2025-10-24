@@ -19,6 +19,46 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <meta name="theme-color" content="#ffffff" />
         <script dangerouslySetInnerHTML={{ __html: `
           (function(){
+            function safeQueue(){
+              try { return JSON.parse(localStorage.getItem('__thg_events')||'[]'); } catch(_) { return []; }
+            }
+            function saveQueue(q){ try { localStorage.setItem('__thg_events', JSON.stringify(q.slice(-200))); } catch(_){}}
+            function emit(event, props){
+              try{
+                var payload = { event: event, ts: Date.now(), props: props||{} };
+                if (Array.isArray(window.dataLayer)) { window.dataLayer.push({ event: event, ...(payload.props||{}) }); }
+                if (typeof window.gtag === 'function') { try { window.gtag('event', event, payload.props||{}); } catch(_){ } }
+                var q = safeQueue(); q.push(payload); saveQueue(q);
+              } catch(_){ }
+            }
+            try { if (!window.thgTrack) window.thgTrack = emit } catch(_){ }
+
+            // Periodically flush events to backend for AI learning
+            async function flush(){
+              try{
+                var q = safeQueue(); if (!q.length) return;
+                var userId = localStorage.getItem('thg_user_id') || ('U_'+Math.random().toString(36).slice(2)+'_'+Date.now());
+                localStorage.setItem('thg_user_id', userId);
+                var sessionId = sessionStorage.getItem('thg_session_id') || ('S_'+Math.random().toString(36).slice(2)+'_'+Date.now());
+                sessionStorage.setItem('thg_session_id', sessionId);
+                var events = q.map(function(e){ return {
+                  user_id: userId,
+                  session_id: sessionId,
+                  property_id: String(e.props && e.props.property_id || ''),
+                  event: String(e.event||'custom'),
+                  value: Number(e.props && e.props.value || 1),
+                  ts: Number(e.ts||Date.now()),
+                }}).filter(function(ev){ return !!ev.property_id && !!ev.event; });
+                if (!events.length) { return; }
+                var res = await fetch('/api/interactions', { method:'POST', headers: { 'Content-Type':'application/json' }, body: JSON.stringify({ events }) });
+                if (res.ok) saveQueue([]);
+              }catch(_){ }
+            }
+            setInterval(flush, 15000);
+          })();
+        `}} />
+        <script dangerouslySetInnerHTML={{ __html: `
+          (function(){
             try {
               var stored = localStorage.getItem('thg.theme');
               var mode = stored || (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');

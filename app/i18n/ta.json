@@ -29,6 +29,7 @@
   },
   "nav": {
     "brand": "தரகா",
+    "features": "அம்சங்கள்",
     "browse": "உலாவுக",
     "cost": "செலவு",
     "pricing": "விலை",
@@ -43,7 +44,9 @@
     "roi": "மீளீடு",
     "env": "சூழல்",
     "filters": "வடிப்பான்கள்",
-    "toggleTheme": "தீம் மாற்று"
+    "toggleTheme": "தீம் மாற்று",
+    "about": "எங்களை பற்றி",
+    "verification": "சரிபார்ப்பு"
   },
   "tools": {
     "fx": {

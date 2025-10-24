@@ -42,6 +42,7 @@
   },
   "nav": {
     "brand": "Tharaga",
+    "features": "Features",
     "browse": "Browse",
     "cost": "Cost",
     "pricing": "Pricing",
@@ -56,7 +57,9 @@
     "roi": "ROI",
     "env": "Env",
     "filters": "Filters",
-    "toggleTheme": "Toggle theme"
+    "toggleTheme": "Toggle theme",
+    "about": "About",
+    "verification": "Verification"
   },
   "tools": {
     "fx": {

@@ -29,6 +29,7 @@
   },
   "nav": {
     "brand": "थरगा",
+    "features": "फीचर्स",
     "browse": "ब्राउज़ करें",
     "cost": "लागत",
     "pricing": "मूल्य",
@@ -43,7 +44,9 @@
     "roi": "आरओआई",
     "env": "पर्यावरण",
     "filters": "फ़िल्टर",
-    "toggleTheme": "थीम बदलें"
+    "toggleTheme": "थीम बदलें",
+    "about": "हमारे बारे में",
+    "verification": "वेरिफिकेशन"
   },
   "tools": {
     "fx": {

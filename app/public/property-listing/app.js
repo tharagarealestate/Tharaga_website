@@ -328,7 +328,7 @@ function cardHTML(p, s) {
       <div class="row" style="gap:8px;flex-wrap:wrap">${tags}</div>
       <div class="explain-inline" aria-hidden="true"></div>
       <div style="display:flex;gap:8px;margin-top:10px">
-        <a class="btn" href="./details.html?id=${encodeURIComponent(p.id)}">View details</a>
+        <a class="btn" href="/properties/${encodeURIComponent(p.id)}">View details</a>
         <button class="btn" data-lead-id="${encodeURIComponent(p.id)}">Request details</button>
       </div>
     </div>

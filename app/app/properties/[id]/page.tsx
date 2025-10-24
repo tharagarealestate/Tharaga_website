@@ -3,11 +3,13 @@ import { Metadata, ResolvingMetadata } from 'next'
 import { notFound } from 'next/navigation'
 import { Suspense } from 'react'
 import { MapPin, Bed, Maximize, Car, Building2, Compass, Calendar, Star, ShieldCheck } from 'lucide-react'
-import { Gallery } from '@/components/property/Gallery'
-import { EMICalculator as EMICalcClient } from '@/components/property/EMICalculator'
-import { ExpandableText } from '@/components/property/ExpandableText'
-import { CompareChart } from '@/components/property/CompareChart'
-import { InteractiveMap } from '@/components/property/InteractiveMap'
+import dynamic from 'next/dynamic'
+const Gallery = dynamic(() => import('@/components/property/Gallery').then(m => m.Gallery), { ssr: false })
+const EMICalcClient = dynamic(() => import('@/components/property/EMICalculator').then(m => m.EMICalculator), { ssr: false })
+const ExpandableText = dynamic(() => import('@/components/property/ExpandableText').then(m => m.ExpandableText), { ssr: false })
+const CompareChart = dynamic(() => import('@/components/property/CompareChart').then(m => m.CompareChart), { ssr: false })
+const InteractiveMap = dynamic(() => import('@/components/property/InteractiveMap').then(m => m.InteractiveMap), { ssr: false })
+const MatchScore = dynamic(() => import('@/components/property/MatchScore').then(m => m.MatchScore), { ssr: false })
 import { ContactForm as ContactFormClient } from '@/components/property/ContactForm'
 
 export const revalidate = 300 // ISR: 5 minutes
@@ -75,6 +77,9 @@ export default async function PropertyPage({ params }: { params: { id: string } 
         </div>
         <div className="lg:col-span-3">
           <StickySidebar p={p} />
+          <div className="mt-4">
+            <MatchScore propertyId={p.id} />
+          </div>
         </div>
       </div>
       <MobileBar p={p} />
@@ -137,13 +142,18 @@ function Highlight({ children }: { children: React.ReactNode }){
 
 function Amenities({ items }: { items: string[] }){
   if (!items?.length) return null
+  const premium = new Set(['swimming pool','pool','gym','clubhouse','garden'])
   return (
     <div className="mt-8">
       <h2 className="text-2xl font-semibold mb-3">Amenities</h2>
       <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-2">
-        {items.map((a, i)=> (
-          <div key={i} className="rounded border px-3 py-2 text-sm text-gray-700">{a}</div>
-        ))}
+        {items.map((a, i)=> {
+          const label = String(a || '')
+          const isPremium = premium.has(label.toLowerCase())
+          return (
+            <div key={i} className={isPremium ? 'rounded border px-3 py-2 text-sm text-yellow-700 border-yellow-300 bg-yellow-50' : 'rounded border px-3 py-2 text-sm text-gray-700'}>{label}</div>
+          )
+        })}
       </div>
     </div>
   )

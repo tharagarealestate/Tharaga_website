@@ -9,6 +9,7 @@ export const metadata: Metadata = {
 
 import { EntitlementsProvider } from '@/components/ui/FeatureGate'
 import LanguageSelector from '@/components/LanguageSelector'
+import { HeaderAuth } from '@/components/ui'
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -57,6 +58,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <a href="/filters/radial" className="hover:text-accent">Filters</a>
             <span className="grow" />
             <LanguageSelector className="rounded-md border border-border px-2 py-1 text-xs bg-canvas" />
+            <HeaderAuth />
             <button id="themeToggleBtn" className="rounded-md border border-border px-2 py-1 text-xs text-fg hover:text-accent">
               Toggle theme
             </button>

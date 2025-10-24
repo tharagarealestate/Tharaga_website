@@ -19,6 +19,23 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <meta name="theme-color" content="#ffffff" />
         <script dangerouslySetInnerHTML={{ __html: `
           (function(){
+            function safeQueue(){
+              try { return JSON.parse(localStorage.getItem('__thg_events')||'[]'); } catch(_) { return []; }
+            }
+            function saveQueue(q){ try { localStorage.setItem('__thg_events', JSON.stringify(q.slice(-200))); } catch(_){}}
+            function emit(event, props){
+              try{
+                var payload = { event: event, ts: Date.now(), props: props||{} };
+                if (Array.isArray(window.dataLayer)) { window.dataLayer.push({ event: event, ...(payload.props||{}) }); }
+                if (typeof window.gtag === 'function') { try { window.gtag('event', event, payload.props||{}); } catch(_){ } }
+                var q = safeQueue(); q.push(payload); saveQueue(q);
+              } catch(_){ }
+            }
+            try { if (!window.thgTrack) window.thgTrack = emit } catch(_){ }
+          })();
+        `}} />
+        <script dangerouslySetInnerHTML={{ __html: `
+          (function(){
             try {
               var stored = localStorage.getItem('thg.theme');
               var mode = stored || (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');

@@ -8,7 +8,8 @@ export const metadata: Metadata = {
 }
 
 import { EntitlementsProvider } from '@/components/ui/FeatureGate'
-import LanguageSelector from '@/components/LanguageSelector'
+import { AppI18nProvider } from '@/components/providers/AppI18nProvider'
+import SiteHeader from '@/components/SiteHeader'
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -38,33 +39,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             }
           })();
         `}} />
-        <header className="sticky top-0 z-50 bg-canvas/95 backdrop-blur supports-[backdrop-filter]:bg-canvas/80 border-b border-border">
-          <nav className="mx-auto max-w-6xl px-4 sm:px-6 py-3 flex items-center gap-4 text-sm text-fg-muted">
-            <a href="/" className="font-bold text-fg hover:text-accent">Tharaga</a>
-            <a href="/property-listing/" className="hover:text-accent">Browse</a>
-            <a href="/tools/cost-calculator" className="hover:text-accent">Cost</a>
-            <a href="/pricing/" className="hover:text-accent">Pricing</a>
-            <a href="/tools/currency-risk" className="hover:text-accent">FX Risk</a>
-            <a href="/tools/vastu" className="hover:text-accent">Vastu</a>
-            <a href="/tools/voice-tamil" className="hover:text-accent">தமிழ் Voice</a>
-            <a href="/tours" className="hover:text-accent">Tours</a>
-            <a href="/dashboard/map" className="hover:text-accent">Map</a>
-            <a href="/dashboard/market" className="hover:text-accent">Market</a>
-            <a href="/builder" className="hover:text-accent">Builder</a>
-            <a href="/saved" className="hover:text-accent">Saved</a>
-            <a href="/tools/roi" className="hover:text-accent">ROI</a>
-            <a href="/tools/environment" className="hover:text-accent">Env</a>
-            <a href="/filters/radial" className="hover:text-accent">Filters</a>
-            <span className="grow" />
-            <LanguageSelector className="rounded-md border border-border px-2 py-1 text-xs bg-canvas" />
-            <button id="themeToggleBtn" className="rounded-md border border-border px-2 py-1 text-xs text-fg hover:text-accent">
-              Toggle theme
-            </button>
-          </nav>
-        </header>
-        <EntitlementsProvider>
-          {children}
-        </EntitlementsProvider>
+        <AppI18nProvider>
+          <SiteHeader />
+          <EntitlementsProvider>
+            {children}
+          </EntitlementsProvider>
+        </AppI18nProvider>
         {/* Web Vitals reporting */}
         <script dangerouslySetInnerHTML={{ __html: `
           (function(){

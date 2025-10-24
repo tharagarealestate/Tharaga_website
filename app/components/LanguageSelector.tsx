@@ -1,18 +1,20 @@
 "use client"
-import {usePathname, useRouter} from 'next/navigation'
+import { useEffect, useState } from 'react'
+import type { Locale } from '@/components/providers/AppI18nProvider'
+import { useAppI18n } from '@/components/providers/AppI18nProvider'
 
 export default function LanguageSelector({ className }: { className?: string }) {
-  const router = useRouter()
-  const pathname = usePathname()
-  const currentSegment = pathname.split('/')[1]
-  const current = ['en', 'ta', 'hi'].includes(currentSegment) ? currentSegment : 'en'
+  const { locale, setLocale } = useAppI18n()
+  const [value, setValue] = useState<Locale>(locale)
+
+  useEffect(() => { setValue(locale) }, [locale])
 
   return (
     <select
       aria-label="Select language"
       className={className}
-      value={current}
-      onChange={(e) => router.push(`/${e.target.value}`)}
+      value={value}
+      onChange={(e) => setLocale(e.target.value as Locale)}
     >
       <option value="en">English</option>
       <option value="ta">தமிழ்</option>

@@ -1,7 +1,6 @@
 import type { ReactNode } from 'react'
 export const runtime = 'edge'
 import { Sidebar } from './_components/Sidebar'
-import { Header } from './_components/Header'
 import { ReactQueryProvider } from '@/components/providers/ReactQueryProvider'
 
 export default function BuilderDashboardLayout({ children }: { children: ReactNode }) {
@@ -13,11 +12,8 @@ export default function BuilderDashboardLayout({ children }: { children: ReactNo
           <Sidebar />
         </div>
 
-        {/* Main Content Area */}
+        {/* Main Content Area (global homepage header is already provided by RootLayout) */}
         <div className="flex-1 flex flex-col min-w-0">
-          {/* Header */}
-          <Header />
-
           {/* Page Content */}
           <main className="flex-1 overflow-y-auto p-6 lg:p-8">
             {children}

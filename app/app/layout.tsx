@@ -32,6 +32,29 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               } catch(_){ }
             }
             try { if (!window.thgTrack) window.thgTrack = emit } catch(_){ }
+
+            // Periodically flush events to backend for AI learning
+            async function flush(){
+              try{
+                var q = safeQueue(); if (!q.length) return;
+                var userId = localStorage.getItem('thg_user_id') || ('U_'+Math.random().toString(36).slice(2)+'_'+Date.now());
+                localStorage.setItem('thg_user_id', userId);
+                var sessionId = sessionStorage.getItem('thg_session_id') || ('S_'+Math.random().toString(36).slice(2)+'_'+Date.now());
+                sessionStorage.setItem('thg_session_id', sessionId);
+                var events = q.map(function(e){ return {
+                  user_id: userId,
+                  session_id: sessionId,
+                  property_id: String(e.props && e.props.property_id || ''),
+                  event: String(e.event||'custom'),
+                  value: Number(e.props && e.props.value || 1),
+                  ts: Number(e.ts||Date.now()),
+                }}).filter(function(ev){ return !!ev.property_id && !!ev.event; });
+                if (!events.length) { return; }
+                var res = await fetch('/api/interactions', { method:'POST', headers: { 'Content-Type':'application/json' }, body: JSON.stringify({ events }) });
+                if (res.ok) saveQueue([]);
+              }catch(_){ }
+            }
+            setInterval(flush, 15000);
           })();
         `}} />
         <script dangerouslySetInnerHTML={{ __html: `

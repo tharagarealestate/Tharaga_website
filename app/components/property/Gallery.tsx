@@ -7,9 +7,10 @@ export type GalleryProps = {
   images: string[]
   tourUrl?: string
   brochureUrl?: string
+  propertyId?: string
 }
 
-export function Gallery({ images, tourUrl, brochureUrl }: GalleryProps) {
+export function Gallery({ images, tourUrl, brochureUrl, propertyId }: GalleryProps) {
   const [index, setIndex] = React.useState(0)
   const [lightbox, setLightbox] = React.useState(false)
   const [zoomed, setZoomed] = React.useState(false)
@@ -56,7 +57,7 @@ export function Gallery({ images, tourUrl, brochureUrl }: GalleryProps) {
   }
 
   function track(event: string, props?: Record<string, any>){
-    try { ;(window as any).thgTrack && (window as any).thgTrack(event, props||{}) } catch {}
+    try { ;(window as any).thgTrack && (window as any).thgTrack(event, { property_id: propertyId || '', ...(props||{}) }) } catch {}
   }
 
   return (

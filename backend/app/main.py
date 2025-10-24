@@ -26,6 +26,8 @@ from .schemas import (
     PredictiveAnalyticsRequest,
     PredictiveAnalyticsResponse,
     MarketTrendsResponse,
+    BatchInteractionRequest,
+    BatchInteractionResponse,
 )
 import re
 import hashlib
@@ -208,6 +210,46 @@ def get_recommendations(payload: RecommendationQuery) -> RecommendationResponse:
     except Exception as exc:  # pragma: no cover - safeguard for production
         logger.exception("Failed to compute recommendations; serving fallback")
         return RecommendationResponse(items=_fallback_recommendations(top_n=payload.num_results))
+
+
+@app.post("/api/interactions", response_model=BatchInteractionResponse)
+def ingest_interactions(payload: BatchInteractionRequest) -> BatchInteractionResponse:
+    """Collect user interactions for learning.
+
+    Production would persist to DB or queue; here we upsert into the in-memory
+    interactions dataframe and warm-retrain the recommender.
+    """
+    global _interactions_df, _recommender
+    accepted = 0
+    try:
+        import pandas as pd
+        rows = []
+        for ev in payload.events:
+            if not ev.user_id or not ev.property_id or not ev.event:
+                continue
+            rows.append({
+                "user_id": ev.user_id,
+                "property_id": ev.property_id,
+                "event": ev.event,
+                "value": float(ev.value or 1.0),
+            })
+        if not rows:
+            return BatchInteractionResponse(ok=True, accepted=0)
+        df_new = pd.DataFrame(rows)
+        _interactions_df = pd.concat([_interactions_df, df_new], ignore_index=True)
+        accepted = len(rows)
+        # Warm retrain (cheap SVD + TF-IDF; acceptable for small data)
+        try:
+            if HybridRecommender is not None:
+                rec = HybridRecommender(properties_df=_properties_df, interactions_df=_interactions_df)
+                rec.fit()
+                _recommender = rec
+        except Exception:
+            logger.exception("Warm retrain failed; keeping previous model")
+        return BatchInteractionResponse(ok=True, accepted=accepted)
+    except Exception:
+        logger.exception("Failed to ingest interactions")
+        return BatchInteractionResponse(ok=False, accepted=accepted)
 
 
 # ----------------------- Anti-fraud & verification -----------------------

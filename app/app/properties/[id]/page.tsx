@@ -60,7 +60,7 @@ export default async function PropertyPage({ params }: { params: { id: string } 
   return (
     <div className="min-h-screen">
       <section className="w-full">
-        <Gallery images={p.images} tourUrl={p.tourUrl} brochureUrl={p.brochureUrl} />
+        <Gallery images={p.images} tourUrl={p.tourUrl} brochureUrl={p.brochureUrl} propertyId={p.id} />
       </section>
       <div className="mx-auto max-w-7xl px-4 py-6 grid grid-cols-1 lg:grid-cols-10 gap-6">
         <div className="lg:col-span-7">
@@ -404,6 +404,8 @@ function EngagementTracker({ propertyId }: { propertyId: string }){
     <script dangerouslySetInnerHTML={{ __html: `
       (function(){
         try{
+          // Immediate view event
+          try { window.thgTrack && window.thgTrack('view', { property_id: '${propertyId}', value: 1 }); } catch(_){ }
           var start = Date.now();
           var firedScroll50 = false; var firedScroll90 = false;
           function tick(){

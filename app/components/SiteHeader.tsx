@@ -57,7 +57,30 @@ export default function SiteHeader() {
               </div>
             </details>
             <span className="hidden md:inline-block w-px h-4 bg-white/30" aria-hidden="true" />
-            <a href="/builder" className="hover:underline">Builder</a>
+            {/* Portal dropdown (Builder + Buyer Dashboard) */}
+            <details className="relative group">
+              <summary
+                className="list-none cursor-pointer inline-flex items-center gap-1 px-2 py-1 rounded-full hover:bg-white/10"
+                aria-haspopup="menu"
+              >
+                <span>Portal</span>
+                <span
+                  className="w-0 h-0 border-l-[5px] border-l-transparent border-r-[5px] border-r-transparent border-t-[6px] border-t-white/90 transition-transform group-open:-rotate-180"
+                  aria-hidden="true"
+                />
+              </summary>
+              <div
+                role="menu"
+                aria-label="Portal menu"
+                className="absolute right-0 mt-2 min-w-[220px] bg-white/98 text-black rounded-xl border border-white/20 shadow-xl p-2 z-50 opacity-0 -translate-y-1 scale-95 invisible transition group-open:opacity-100 group-open:translate-y-0 group-open:scale-100 group-open:visible"
+              >
+                <div className="h-[3px] rounded-t-xl bg-gradient-to-r from-gold-500 to-rose-700" aria-hidden="true" />
+                <a role="menuitem" tabIndex={0} className="block px-3 py-2 rounded-lg hover:bg-black/5 focus:outline-none focus:ring-2 focus:ring-rose-600/40" href="/builder">Builder Dashboard</a>
+                <div className="my-1 h-px bg-black/10" aria-hidden="true" />
+                <a role="menuitem" tabIndex={0} className="block px-3 py-2 rounded-lg hover:bg-black/5 focus:outline-none focus:ring-2 focus:ring-rose-600/40" href="/my-dashboard">Buyer Dashboard</a>
+              </div>
+            </details>
+            <span className="hidden md:inline-block w-px h-4 bg-white/30" aria-hidden="true" />
             <a href="/pricing/" className="hover:underline">Pricing</a>
             <span className="hidden md:inline-block w-px h-4 bg-white/30" aria-hidden="true" />
             <a href="/about/" className="hover:underline">About</a>

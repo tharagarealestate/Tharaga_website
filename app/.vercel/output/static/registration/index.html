@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>India Property Registration Fee Calculator</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      max-width: 500px;
+      margin: 40px auto;
+      padding: 20px;
+      background: #f9f9f9;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      border-radius: 10px;
+    }
+    h2 {
+      text-align: center;
+      color: #333;
+    }
+    label, input, select, button {
+      display: block;
+      width: 100%;
+      margin: 12px 0;
+      font-size: 16px;
+    }
+    input, select {
+      padding: 8px;
+    }
+    button {
+      padding: 10px;
+      background: #0078d4;
+      color: #fff;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    .result {
+      margin-top: 20px;
+      padding: 15px;
+      background: #fff;
+      border-left: 5px solid #0078d4;
+      font-size: 16px;
+    }
+  </style>
+</head>
+<body>
+
+  <h2>India Property Registration Fee Calculator</h2>
+
+  <label for="price">Enter Property Price (₹):</label>
+  <input type="number" id="price" placeholder="E.g., 3200000">
+
+  <label for="state">Select Your State/UT:</label>
+  <select id="state">
+    <option value="tn">Tamil Nadu (7% + 1%)</option>
+    <option value="ka">Karnataka (5.6% + 1%)</option>
+    <option value="mh">Maharashtra (5% + 1%)</option>
+    <option value="dl">Delhi (6% + 1%)</option>
+    <option value="gj">Gujarat (4.9% + 1%)</option>
+    <option value="wb">West Bengal (5% + 1%)</option>
+    <option value="ap">Andhra Pradesh (5% + 1%)</option>
+    <option value="ts">Telangana (4% + 0.5%)</option>
+    <option value="up">Uttar Pradesh (7% + 1%)</option>
+    <option value="rj">Rajasthan (6% + 1%)</option>
+    <option value="pb">Punjab (5% + 1%)</option>
+    <option value="hr">Haryana (5% + 1%)</option>
+    <option value="kerala">Kerala (8% + 2%)</option>
+    <option value="tn">Tamil Nadu (7% + 1%)</option>
+    <option value="jk">Jammu & Kashmir (5% + 1%)</option>
+    <option value="ch">Chandigarh (3% + 1%)</option>
+    <option value="mp">Madhya Pradesh (7.5% + 1%)</option>
+    <option value="od">Odisha (5% + 2%)</option>
+    <option value="br">Bihar (6% + 1%)</option>
+    <option value="as">Assam (5% + 2%)</option>
+    <option value="goa">Goa (2.9% + 1%)</option>
+    <option value="jh">Jharkhand (4% + 1%)</option>
+    <option value="hp">Himachal Pradesh (5% + 1%)</option>
+    <option value="uk">Uttarakhand (5% + 1%)</option>
+    <option value="tripura">Tripura (5% + 1%)</option>
+    <option value="mizoram">Mizoram (5% + 1%)</option>
+    <option value="manipur">Manipur (5% + 1%)</option>
+    <option value="meghalaya">Meghalaya (5% + 1%)</option>
+    <option value="sikkim">Sikkim (4% + 1%)</option>
+    <option value="nagaland">Nagaland (5% + 1%)</option>
+    <option value="ar">Arunachal Pradesh (4% + 1%)</option>
+    <option value="ladakh">Ladakh (4% + 1%)</option>
+    <option value="dn">Dadra & Nagar Haveli (3% + 1%)</option>
+    <option value="dd">Daman & Diu (3% + 1%)</option>
+    <option value="puducherry">Puducherry (4% + 1%)</option>
+    <option value="andaman">Andaman & Nicobar (2% + 1%)</option>
+    <option value="lakshadweep">Lakshadweep (1% + 1%)</option>
+  </select>
+
+  <button onclick="calculate()">Calculate Charges</button>
+
+  <div class="result" id="result"></div>
+
+  <script>
+    function calculate() {
+      const price = parseFloat(document.getElementById("price").value);
+      const state = document.getElementById("state").value;
+      const result = document.getElementById("result");
+
+      if (!price || price <= 0) {
+        result.innerHTML = "Please enter a valid property price.";
+        return;
+      }
+
+      // Define stamp duty and reg fee per state (approximate, can update anytime)
+      const charges = {
+        tn: [0.07, 0.01],
+        ka: [0.056, 0.01],
+        mh: [0.05, 0.01],
+        dl: [0.06, 0.01],
+        gj: [0.049, 0.01],
+        wb: [0.05, 0.01],
+        ap: [0.05, 0.01],
+        ts: [0.04, 0.005],
+        up: [0.07, 0.01],
+        rj: [0.06, 0.01],
+        pb: [0.05, 0.01],
+        hr: [0.05, 0.01],
+        kerala: [0.08, 0.02],
+        jk: [0.05, 0.01],
+        ch: [0.03, 0.01],
+        mp: [0.075, 0.01],
+        od: [0.05, 0.02],
+        br: [0.06, 0.01],
+        as: [0.05, 0.02],
+        goa: [0.029, 0.01],
+        jh: [0.04, 0.01],
+        hp: [0.05, 0.01],
+        uk: [0.05, 0.01],
+        tripura: [0.05, 0.01],
+        mizoram: [0.05, 0.01],
+        manipur: [0.05, 0.01],
+        meghalaya: [0.05, 0.01],
+        sikkim: [0.04, 0.01],
+        nagaland: [0.05, 0.01],
+        ar: [0.04, 0.01],
+        ladakh: [0.04, 0.01],
+        dn: [0.03, 0.01],
+        dd: [0.03, 0.01],
+        puducherry: [0.04, 0.01],
+        andaman: [0.02, 0.01],
+        lakshadweep: [0.01, 0.01],
+      };
+
+      const [stampRate, regRate] = charges[state];
+      const stampDuty = price * stampRate;
+      const regFee = price * regRate;
+      const total = stampDuty + regFee;
+
+      result.innerHTML = `
+        <strong>Stamp Duty:</strong> ₹${stampDuty.toLocaleString()}<br>
+        <strong>Registration Fee:</strong> ₹${regFee.toLocaleString()}<br><br>
+        <strong>Total Registration Charges:</strong> ₹${total.toLocaleString()}
+      `;
+    }
+  </script>
+  
+
+</body>
+</html>

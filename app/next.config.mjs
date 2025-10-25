@@ -1,3 +1,5 @@
+import createNextIntlPlugin from 'next-intl/plugin'
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
@@ -27,6 +29,9 @@ const nextConfig = {
     rules.push({ source: '/app/:path*', destination: '/:path*' })
     // Back-compat: legacy underscore embed path -> new embed path
     rules.push({ source: '/_embed/:path*', destination: '/embed/:path*' })
+    // Map legacy static paths if present in public
+    rules.push({ source: '/property-listing', destination: '/property-listing/index.html' })
+    rules.push({ source: '/search-filter-home', destination: '/search-filter-home/index.html' })
     return rules
   },
   images: {
@@ -40,4 +45,8 @@ const nextConfig = {
   },
 };
 
-export default nextConfig;
+// Enable next-intl for the App Router. This wires up the
+// i18n/request.ts configuration used at runtime.
+const withNextIntl = createNextIntlPlugin()
+
+export default withNextIntl(nextConfig);

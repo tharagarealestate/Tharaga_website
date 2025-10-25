@@ -1,5 +1,6 @@
 import './globals.css'
 import type { Metadata } from 'next'
+export const runtime = 'edge'
 
 export const metadata: Metadata = {
   title: 'Tharaga — Premium Real Estate',
@@ -7,6 +8,8 @@ export const metadata: Metadata = {
 }
 
 import { EntitlementsProvider } from '@/components/ui/FeatureGate'
+import { AppI18nProvider } from '@/components/providers/AppI18nProvider'
+import SiteHeader from '@/components/SiteHeader'
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -14,6 +17,46 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <head>
         <link rel="manifest" href="/manifest.webmanifest" />
         <meta name="theme-color" content="#ffffff" />
+        <script dangerouslySetInnerHTML={{ __html: `
+          (function(){
+            function safeQueue(){
+              try { return JSON.parse(localStorage.getItem('__thg_events')||'[]'); } catch(_) { return []; }
+            }
+            function saveQueue(q){ try { localStorage.setItem('__thg_events', JSON.stringify(q.slice(-200))); } catch(_){}}
+            function emit(event, props){
+              try{
+                var payload = { event: event, ts: Date.now(), props: props||{} };
+                if (Array.isArray(window.dataLayer)) { window.dataLayer.push({ event: event, ...(payload.props||{}) }); }
+                if (typeof window.gtag === 'function') { try { window.gtag('event', event, payload.props||{}); } catch(_){ } }
+                var q = safeQueue(); q.push(payload); saveQueue(q);
+              } catch(_){ }
+            }
+            try { if (!window.thgTrack) window.thgTrack = emit } catch(_){ }
+
+            // Periodically flush events to backend for AI learning
+            async function flush(){
+              try{
+                var q = safeQueue(); if (!q.length) return;
+                var userId = localStorage.getItem('thg_user_id') || ('U_'+Math.random().toString(36).slice(2)+'_'+Date.now());
+                localStorage.setItem('thg_user_id', userId);
+                var sessionId = sessionStorage.getItem('thg_session_id') || ('S_'+Math.random().toString(36).slice(2)+'_'+Date.now());
+                sessionStorage.setItem('thg_session_id', sessionId);
+                var events = q.map(function(e){ return {
+                  user_id: userId,
+                  session_id: sessionId,
+                  property_id: String(e.props && e.props.property_id || ''),
+                  event: String(e.event||'custom'),
+                  value: Number(e.props && e.props.value || 1),
+                  ts: Number(e.ts||Date.now()),
+                }}).filter(function(ev){ return !!ev.property_id && !!ev.event; });
+                if (!events.length) { return; }
+                var res = await fetch('/api/interactions', { method:'POST', headers: { 'Content-Type':'application/json' }, body: JSON.stringify({ events }) });
+                if (res.ok) saveQueue([]);
+              }catch(_){ }
+            }
+            setInterval(flush, 15000);
+          })();
+        `}} />
         <script dangerouslySetInnerHTML={{ __html: `
           (function(){
             try {
@@ -36,31 +79,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             }
           })();
         `}} />
-        <header className="sticky top-0 z-50 bg-canvas/95 backdrop-blur supports-[backdrop-filter]:bg-canvas/80 border-b border-border">
-          <nav className="mx-auto max-w-6xl px-4 sm:px-6 py-3 flex items-center gap-4 text-sm text-fg-muted">
-            <a href="/" className="font-bold text-fg hover:text-accent">Tharaga</a>
-            <a href="/property-listing/" className="hover:text-accent">Browse</a>
-            <a href="/tools/cost-calculator" className="hover:text-accent">Cost</a>
-            <a href="/pricing/" className="hover:text-accent">Pricing</a>
-            <a href="/tools/currency-risk" className="hover:text-accent">FX Risk</a>
-            <a href="/tools/vastu" className="hover:text-accent">Vastu</a>
-            <a href="/tools/voice-tamil" className="hover:text-accent">தமிழ் Voice</a>
-            <a href="/tours" className="hover:text-accent">Tours</a>
-            <a href="/dashboard/map" className="hover:text-accent">Map</a>
-            <a href="/dashboard/market" className="hover:text-accent">Market</a>
-            <a href="/saved" className="hover:text-accent">Saved</a>
-            <a href="/tools/roi" className="hover:text-accent">ROI</a>
-            <a href="/tools/environment" className="hover:text-accent">Env</a>
-            <a href="/filters/radial" className="hover:text-accent">Filters</a>
-            <span className="grow" />
-            <button id="themeToggleBtn" className="rounded-md border border-border px-2 py-1 text-xs text-fg hover:text-accent">
-              Toggle theme
-            </button>
-          </nav>
-        </header>
-        <EntitlementsProvider>
-          {children}
-        </EntitlementsProvider>
+        <AppI18nProvider>
+          <SiteHeader />
+          <EntitlementsProvider>
+            {children}
+          </EntitlementsProvider>
+        </AppI18nProvider>
         {/* Web Vitals reporting */}
         <script dangerouslySetInnerHTML={{ __html: `
           (function(){

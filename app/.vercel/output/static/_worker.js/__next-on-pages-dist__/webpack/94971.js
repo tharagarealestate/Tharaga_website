@@ -1,0 +1,1 @@
+var r={},c=(_,d,n)=>(r.__chunk_94971=(u,t,e)=>{"use strict";e.r(t),e.d(t,{$$typeof:()=>o,__esModule:()=>s,default:()=>l});var p=e(56087);let a=(0,p.D)(String.raw`/workspace/app/app/page.tsx`),{__esModule:s,$$typeof:o}=a;a.default;let l=(0,p.D)(String.raw`/workspace/app/app/page.tsx#default`)},r);export{c as __getNamedExports};

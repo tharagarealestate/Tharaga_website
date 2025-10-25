@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Buyer Qualification & Lead Router</title>
+  <link rel="stylesheet" href="/css/brand.css" />
+  <style>
+    body{ padding:24px }
+    header{ display:flex; align-items:center; justify-content:space-between; margin-bottom:16px }
+    .grid{ display:grid; grid-template-columns: 320px 1fr; gap:16px }
+    .field{ display:flex; flex-direction:column; gap:6px; margin-bottom:10px }
+    table{ width:100%; border-collapse:collapse }
+    th,td{ text-align:left; padding:8px 10px; border-bottom:1px solid #eee }
+    .score{ font-weight:800 }
+    .score.ok{ color:#16a34a }
+    .score.warn{ color:#f59e0b }
+    .score.bad{ color:#dc2626 }
+    .rule{ display:flex; gap:6px; align-items:center; margin-bottom:8px }
+  </style>
+</head>
+<body>
+  <header>
+    <div>
+      <h1 class="h1">Buyer Qualification & Lead Router</h1>
+      <p class="sub" style="color:#666;margin:0">Score buyers and route them to the right project, team, or builder.</p>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px">
+      <button id="startFree" class="btn" style="background:#facc15;color:#111;border-color:#facc15">Start free</button>
+      <a href="/" style="color:#111;text-decoration:none">← Back</a>
+    </div>
+  </header>
+
+  <div class="grid">
+    <aside class="card">
+      <h2 style="margin:0 0 8px">Qualification form</h2>
+      <div class="field"><label>Budget (₹Lakh)</label><input id="budget" class="input" type="number" value="85" /></div>
+      <div class="field"><label>City</label>
+        <select id="city">
+          <option>Chennai</option>
+          <option>Coimbatore</option>
+          <option>Madurai</option>
+        </select>
+      </div>
+      <div class="field"><label>BHK</label>
+        <select id="bhk"><option>1</option><option selected>2</option><option>3</option></select>
+      </div>
+      <div class="field"><label>Near Metro?</label>
+        <select id="metro"><option>No</option><option selected>Yes</option></select>
+      </div>
+      <div class="field"><label>Phone</label><input id="phone" class="input" placeholder="10-digit" /></div>
+      <button id="scoreBtn" class="btn">Score lead</button>
+    </aside>
+
+    <main class="card">
+      <h2 style="margin:0 0 8px">Leads</h2>
+      <table>
+        <thead><tr><th>Name</th><th>Score</th><th>Project</th><th>Owner</th><th>Status</th></tr></thead>
+        <tbody id="leads"></tbody>
+      </table>
+
+      <h3 style="margin:14px 0 8px">Routing Rules</h3>
+      <div class="rule"><label><input type="checkbox" id="rMetro" checked> Prefer metro-connected projects</label></div>
+      <div class="rule"><label><input type="checkbox" id="rBudget" checked> Match budget within ±10%</label></div>
+      <div class="rule"><label><input type="checkbox" id="rCity" checked> Match city exactly</label></div>
+    </main>
+  </div>
+
+  <script>
+    (function(){
+      function openLogin(next){
+        try { if (window.parent && window.parent.authGate && typeof window.parent.authGate.openLoginModal === 'function'){ window.parent.authGate.openLoginModal({ next: next || (location.pathname + location.search) }); return; } } catch(_){ }
+        try { window.parent && window.parent.postMessage({ type:'open_login_modal', next: next || (location.pathname + location.search) }, '*'); } catch(_){ }
+        try { if (typeof window.__thgOpenAuthModal === 'function') window.__thgOpenAuthModal({ next: next || (location.pathname + location.search) }); } catch(_){ }
+      }
+      try { document.getElementById('startFree').addEventListener('click', function(){ openLogin(); }); } catch(_){ }
+
+      function notifyHeight(){
+        try { const h = document.documentElement.scrollHeight; window.parent && window.parent.postMessage({ type:'thg-embed-height', id:'buyer-qualification', height:h }, '*'); } catch(_){ }
+      }
+      try { new ResizeObserver(notifyHeight).observe(document.body); } catch(_){ }
+      setInterval(notifyHeight, 1000);
+      notifyHeight();
+      const rupees = (lakh)=> '₹' + (lakh*100000).toLocaleString('en-IN');
+      const leadsEl = document.getElementById('leads');
+      const scoreBtn = document.getElementById('scoreBtn');
+
+      const projects = [
+        { name:'Green Meadows', city:'Chennai', min:70, max:95, owner:'Builder A', metro:true },
+        { name:'Lake View', city:'Chennai', min:90, max:140, owner:'Builder B', metro:false },
+        { name:'Hill Crest', city:'Coimbatore', min:50, max:80, owner:'Builder C', metro:false },
+      ];
+
+      function score({ budget, city, bhk, metro }){
+        let s = 50;
+        if (metro) s += 10;
+        if (bhk === 2) s += 10; if (bhk === 3) s += 6;
+        s += Math.max(0, 20 - Math.abs(budget - 90));
+        return Math.max(0, Math.min(100, Math.round(s)));
+      }
+
+      function pickProject(lead){
+        const preferMetro = document.getElementById('rMetro').checked;
+        const matchBudget = document.getElementById('rBudget').checked;
+        const matchCity = document.getElementById('rCity').checked;
+        const within = (p)=> !matchBudget || (lead.budget >= p.min*0.9 && lead.budget <= p.max*1.1);
+        const cityOk = (p)=> !matchCity || p.city === lead.city;
+        const metroOk = (p)=> !preferMetro || p.metro === true;
+        const pick = projects.find(p => within(p) && cityOk(p) && (!preferMetro || p.metro));
+        return pick || projects.find(p => cityOk(p)) || projects[0];
+      }
+
+      function addLead(){
+        const budget = Number(document.getElementById('budget').value || 0);
+        const city = document.getElementById('city').value;
+        const bhk = Number(document.getElementById('bhk').value || 1);
+        const metro = document.getElementById('metro').value === 'Yes';
+        const s = score({ budget, city, bhk, metro });
+        const proj = pickProject({ budget, city, bhk, metro });
+        const tr = document.createElement('tr');
+        const cls = s >= 75 ? 'ok' : (s >= 55 ? 'warn' : 'bad');
+        tr.innerHTML = '<td>New Lead</td><td class="score ' + cls + '">' + s + '</td><td>' + proj.name + '</td><td>' + proj.owner + '</td><td><span class="pill">New</span></td>';
+        leadsEl.prepend(tr);
+      }
+
+      scoreBtn.addEventListener('click', addLead);
+    })();
+  </script>
+</body>
+</html>

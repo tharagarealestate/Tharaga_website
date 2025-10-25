@@ -5,11 +5,12 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { Home, Search, Heart, CalendarDays, User2 } from 'lucide-react'
 import { listSaved } from '@/lib/saved'
+import { getSupabase } from '@/lib/supabase'
 
 export default function MobileBottomNav() {
   const pathname = usePathname()
   const savedCount = useSavedCount()
-  const visitsCount = 0 // Could be wired similarly to TopNav useVisitsCount for parity
+  const visitsCount = useVisitsCount()
 
   const tabs = [
     { href: '/my-dashboard', label: 'Home', icon: Home },
@@ -62,6 +63,45 @@ function useSavedCount() {
       window.removeEventListener('focus', refresh)
       window.clearInterval(id)
     }
+  }, [])
+  return count
+}
+
+function useVisitsCount() {
+  const [count, setCount] = React.useState<number>(0)
+  React.useEffect(() => {
+    let cancelled = false
+    async function load() {
+      try {
+        const supabase = getSupabase()
+        const { data: { user } } = await supabase.auth.getUser()
+        if (!user) { if (!cancelled) setCount(0); return }
+        const nowISO = new Date().toISOString()
+        let c = 0
+        try {
+          const { count: c1, error: e1 } = await supabase
+            .from('visits')
+            .select('*', { count: 'exact', head: true })
+            .eq('user_id', user.id)
+            .gt('start_time', nowISO)
+          if (!e1 && typeof c1 === 'number') c = c1
+        } catch {}
+        if (c === 0) {
+          try {
+            const { count: c2, error: e2 } = await supabase
+              .from('site_visits')
+              .select('*', { count: 'exact', head: true })
+              .eq('user_id', user.id)
+              .gt('visit_date', nowISO)
+            if (!e2 && typeof c2 === 'number') c = c2
+          } catch {}
+        }
+        if (!cancelled) setCount(c)
+      } catch { if (!cancelled) setCount(0) }
+    }
+    load()
+    const id = window.setInterval(load, 30000)
+    return () => { cancelled = true; window.clearInterval(id) }
   }, [])
   return count
 }

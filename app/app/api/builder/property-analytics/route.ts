@@ -74,18 +74,20 @@ export async function GET(req: NextRequest) {
             conversion_change = pct(conversion_rate, p_conv_rate)
           }
         }
-        // Build a 7x24 heatmap based on last 7 entries (or fewer)
-        const last7 = rows.slice(-7)
-        const weights = [0.05,0.03,0.02,0.02,0.02,0.03,0.04,0.05,0.06,0.07,0.08,0.08,0.09,0.09,0.09,0.08,0.07,0.06,0.05,0.04,0.03,0.03,0.03,0.03]
-        const heatmap: Array<{ day: number; hour: number; value: number }> = []
-        last7.forEach((r: any, i: number) => {
-          const date = new Date(r.date)
-          const day = isNaN(date.getDay()) ? i : date.getDay()
-          const dayViews = Number(r.views || r.total_views || 0)
-          weights.forEach((w, hour) => {
-            heatmap.push({ day, hour, value: Math.round(dayViews * w) })
-          })
-        })
+        // Build 7x24 heatmap from real hourly buckets if available
+        let heatmap: Array<{ day: number; hour: number; value: number }> = []
+        try {
+          const { data: hv } = await supabase
+            .from('property_interactions_hourly')
+            .select('day_of_week, hour, engagement, hour_ts')
+            .eq('property_id', propertyId)
+            .gte('hour_ts', from ? new Date(from).toISOString() : new Date(Date.now() - 30*24*60*60*1000).toISOString())
+          heatmap = (hv || []).map((r: any) => ({
+            day: Number(r.day_of_week),
+            hour: Number(r.hour),
+            value: Number(r.engagement || 0),
+          }))
+        } catch {}
 
         analytics = {
           total_views,
@@ -167,16 +169,20 @@ export async function GET(req: NextRequest) {
       const c_inquiries = Math.round(c_views * 0.02)
       const pct = (c: number, p: number) => (p ? Number((((c - p) / p) * 100).toFixed(2)) : null)
 
-      const weights = [0.05,0.03,0.02,0.02,0.02,0.03,0.04,0.05,0.06,0.07,0.08,0.08,0.09,0.09,0.09,0.08,0.07,0.06,0.05,0.04,0.03,0.03,0.03,0.03]
-      const recent7 = views_trend.slice(-7)
-      const heatmap: Array<{ day: number; hour: number; value: number }> = []
-      recent7.forEach((pt, i) => {
-        const date = new Date(pt.date)
-        const day = isNaN(date.getDay()) ? i : date.getDay()
-        weights.forEach((w, hour) => {
-          heatmap.push({ day, hour, value: Math.round(pt.views * w) })
-        })
-      })
+      // Build heatmap from real hourly buckets if available; else empty
+      let heatmap: Array<{ day: number; hour: number; value: number }> = []
+      try {
+        const { data: hv } = await supabase
+          .from('property_interactions_hourly')
+          .select('day_of_week, hour, engagement, hour_ts')
+          .eq('property_id', propertyId)
+          .gte('hour_ts', from ? new Date(from).toISOString() : new Date(Date.now() - 30*24*60*60*1000).toISOString())
+        heatmap = (hv || []).map((r: any) => ({
+          day: Number(r.day_of_week),
+          hour: Number(r.hour),
+          value: Number(r.engagement || 0),
+        }))
+      } catch {}
 
       analytics = {
         total_views,

@@ -7,21 +7,12 @@ import { DndContext, DragOverlay, closestCorners, useDroppable } from '@dnd-kit/
 import { SortableContext, verticalListSortingStrategy, useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { formatDistanceToNow } from 'date-fns'
-import { Inbox, Phone, Calendar as CalendarIcon, MessageSquare, CheckCircle, SlidersHorizontal, LayoutGrid } from 'lucide-react'
-import { getScoreColor } from '../_components/LeadCard'
+import { Inbox, Phone, Calendar as CalendarIcon, MessageSquare, CheckCircle, SlidersHorizontal } from 'lucide-react'
+import { LeadCard, getScoreColor } from '..//_components/LeadCard'
+import type { Lead as LeadType } from '../_components/LeadCard'
+import { LeadsTable } from '../_components/LeadsTable'
 
-type Lead = {
-  id: string
-  created_at: string
-  name: string
-  email: string
-  phone: string
-  status: string
-  score: number
-  source: string
-  budget?: number
-  property?: { title?: string; location?: string }
-}
+type Lead = LeadType
 
 async function fetchLeads() {
   const res = await fetch(`/api/builder/leads`, { next: { revalidate: 0 } as any })
@@ -48,11 +39,22 @@ const PIPELINE_STAGES = [
   { id: 'closed_won', label: 'Closed', color: 'bg-emerald-500', icon: CheckCircle },
 ]
 
+function ViewToggle({ view, onChange }: { view: 'board' | 'grid' | 'table'; onChange: (v: 'board' | 'grid' | 'table') => void }){
+  return (
+    <div className="inline-flex rounded-lg border border-gray-300 bg-white overflow-hidden">
+      <button onClick={() => onChange('board')} className={`px-3 py-2 text-sm ${view==='board' ? 'bg-gray-100 font-semibold' : ''}`}>Board</button>
+      <button onClick={() => onChange('grid')} className={`px-3 py-2 text-sm ${view==='grid' ? 'bg-gray-100 font-semibold' : ''}`}>Grid</button>
+      <button onClick={() => onChange('table')} className={`px-3 py-2 text-sm ${view==='table' ? 'bg-gray-100 font-semibold' : ''}`}>Table</button>
+    </div>
+  )
+}
+
 export default function PipelinePage() {
   const [activeId, setActiveId] = useState<string | null>(null)
+  const [view, setView] = useState<'board' | 'grid' | 'table'>('board')
   const queryClient = useQueryClient()
 
-  const { data: leads = [], isLoading } = useQuery({
+  const { data: leads = [], isLoading } = useQuery<Lead[]>({
     queryKey: ['pipeline-leads'],
     queryFn: fetchLeads,
   })
@@ -139,10 +141,7 @@ export default function PipelinePage() {
               <SlidersHorizontal className="w-5 h-5 inline mr-2" />
               Filters
             </button>
-            <Link href="/builder/leads" className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
-              <LayoutGrid className="w-5 h-5 inline mr-2" />
-              Grid View
-            </Link>
+            <ViewToggle view={view} onChange={setView} />
           </div>
         </div>
 
@@ -170,12 +169,22 @@ export default function PipelinePage() {
           </div>
         </div>
 
-        {/* Kanban Board */}
-        <div className="flex gap-4 overflow-x-auto pb-4 snap-x snap-mandatory">
-          {PIPELINE_STAGES.map(stage => (
-            <PipelineColumn key={stage.id} stage={stage} leads={leadsByStage[stage.id] || []} />
-          ))}
-        </div>
+        {/* Content */}
+        {view === 'board' ? (
+          <div className="flex gap-4 overflow-x-auto pb-4 snap-x snap-mandatory">
+            {PIPELINE_STAGES.map(stage => (
+              <PipelineColumn key={stage.id} stage={stage} leads={leadsByStage[stage.id] || []} />
+            ))}
+          </div>
+        ) : view === 'grid' ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {(leads as Lead[]).map((lead) => (
+              <LeadCard key={lead.id} lead={lead as any} />
+            ))}
+          </div>
+        ) : (
+          <LeadsTable leads={leads as any} />
+        )}
       </div>
 
       <DragOverlay>{activeId ? <LeadCardDragging lead={(leads as Lead[]).find(l => l.id === activeId)!} /> : null}</DragOverlay>

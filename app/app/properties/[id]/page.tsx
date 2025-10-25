@@ -11,14 +11,240 @@ const CompareChart = dynamic(() => import('@/components/property/CompareChart').
 const InteractiveMap = dynamic(() => import('@/components/property/InteractiveMap').then(m => m.InteractiveMap), { ssr: false })
 const MatchScore = dynamic(() => import('@/components/property/MatchScore').then(m => m.MatchScore), { ssr: false })
 import { ContactForm as ContactFormClient } from '@/components/property/ContactForm'
+import { getSupabase } from '@/lib/supabase'
 
 export const revalidate = 300 // ISR: 5 minutes
 
 async function fetchProperty(id: string) {
-  const base = process.env.NEXT_PUBLIC_API_URL || ''
-  const res = await fetch(`${base}/api/properties/${id}`, { next: { revalidate: 300 } })
-  if (!res.ok) return null
-  return (await res.json()) as any
+  // Prefer direct Supabase (server), fall back to public API list if env is missing.
+  try {
+    const supabase = getSupabase()
+    const { data: propData, error: propErr } = await supabase
+      .from('properties')
+      .select('*')
+      .eq('id', id)
+      .limit(1)
+      .maybeSingle()
+    if (!propErr && propData) {
+      const property = mapProperty(propData)
+      const [builder, similar, reviews] = await Promise.all([
+        fetchBuilder(supabase, property),
+        fetchSimilar(supabase, property),
+        fetchReviews(supabase, property.id),
+      ])
+      return { property, builder, similar, reviews }
+    }
+  } catch {}
+
+  // Fallback: use Netlify function list and pick by id (reduced data)
+  try {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || ''}/api/properties-list`, { cache: 'no-store' as any })
+    const items = await res.json()
+    const p = Array.isArray(items) ? items.find((x: any) => String(x.id) === String(id)) : null
+    if (!p) return null
+    const property = {
+      id: p.id,
+      title: p.title,
+      description: p.summary || '',
+      project: p.project || '',
+      builderName: p.builder || '',
+      bedrooms: p.bhk ?? null,
+      bathrooms: p.bathrooms ?? null,
+      parking: null,
+      floor: null,
+      totalFloors: null,
+      facing: p.facing || '',
+      furnished: p.furnished || '',
+      propertyType: p.type || '',
+      priceINR: p.priceINR ?? null,
+      priceDisplay: p.priceDisplay || '',
+      sqft: p.carpetAreaSqft ?? null,
+      pricePerSqftINR: p.pricePerSqftINR ?? null,
+      city: p.city || '',
+      locality: p.locality || '',
+      address: '',
+      lat: null,
+      lng: null,
+      reraId: p.rera || '',
+      tourUrl: p.tourUrl || '',
+      brochureUrl: '',
+      images: Array.isArray(p.images) ? p.images : [],
+      floorPlans: [],
+      amenities: [],
+      listedAt: p.postedAt || null,
+      isVerified: p.listingStatus === 'Verified',
+      listingStatus: p.listingStatus || '',
+    }
+    return { property, builder: null, similar: [], reviews: [] }
+  } catch {
+    return null
+  }
+}
+
+function toNumber(n: any): number | null {
+  const x = Number(n)
+  return Number.isFinite(x) ? x : null
+}
+
+function pricePerSqft(price: number | null, sqft: number | null): number | null {
+  if (!price || !sqft || sqft <= 0) return null
+  return Math.round(price / sqft)
+}
+
+function safeParseArray(s: string): string[] {
+  try { const j = JSON.parse(s); return Array.isArray(j) ? (j as string[]) : [] } catch { return [] }
+}
+
+function mapProperty(row: any) {
+  const images: string[] = Array.isArray(row.images)
+    ? row.images
+    : typeof row.images === 'string'
+      ? safeParseArray(row.images)
+      : []
+
+  const floorPlans: string[] = Array.isArray(row.floor_plan_images)
+    ? row.floor_plan_images
+    : typeof row.floor_plan_images === 'string'
+      ? safeParseArray(row.floor_plan_images)
+      : []
+
+  const amenities: string[] = Array.isArray(row.amenities)
+    ? row.amenities
+    : typeof row.amenities === 'string'
+      ? safeParseArray(row.amenities)
+      : []
+
+  const priceINR = toNumber(row.price_inr)
+  const sqft = toNumber(row.sqft)
+
+  return {
+    id: row.id as string,
+    title: (row.title as string) || '',
+    description: (row.description as string) || '',
+    project: (row.project as string) || '',
+    builderName: (row.builder as string) || '',
+    bedrooms: toNumber(row.bedrooms),
+    bathrooms: toNumber(row.bathrooms),
+    parking: toNumber(row.parking),
+    floor: toNumber(row.floor),
+    totalFloors: toNumber(row.total_floors),
+    facing: (row.facing as string) || '',
+    furnished: (row.furnished as string) || '',
+    propertyType: (row.property_type as string) || '',
+    priceINR,
+    priceDisplay: priceINR ? `₹${Math.round(priceINR).toLocaleString('en-IN')}` : 'Price on request',
+    sqft,
+    pricePerSqftINR: pricePerSqft(priceINR, sqft),
+    city: (row.city as string) || '',
+    locality: (row.locality as string) || '',
+    address: (row.address as string) || '',
+    lat: typeof row.lat === 'number' ? (row.lat as number) : null,
+    lng: typeof row.lng === 'number' ? (row.lng as number) : null,
+    reraId: (row.rera_id as string) || '',
+    tourUrl: (row.tour_url as string) || '',
+    brochureUrl: (row.brochure_url as string) || '',
+    images,
+    floorPlans,
+    amenities,
+    listedAt: row.listed_at || null,
+    isVerified: !!row.is_verified,
+    listingStatus: row.listing_status || '',
+  }
+}
+
+async function fetchBuilder(supabase: ReturnType<typeof getSupabase>, property: ReturnType<typeof mapProperty>) {
+  try {
+    const builderName = property.builderName?.trim()
+    if (!builderName) return null
+    const { data, error } = await supabase
+      .from('builders')
+      .select('id,name,logo_url,founded,total_projects,reputation_score,reviews_count')
+      .ilike('name', builderName)
+      .limit(1)
+      .maybeSingle()
+    if (error || !data) return null
+    return {
+      id: data.id as string,
+      name: (data.name as string) || builderName,
+      logoUrl: (data.logo_url as string) || '',
+      founded: data.founded || null,
+      totalProjects: toNumber(data.total_projects),
+      reputationScore: typeof data.reputation_score === 'number' ? (data.reputation_score as number) : null,
+      reviewsCount: toNumber(data.reviews_count),
+    }
+  } catch {
+    return null
+  }
+}
+
+async function fetchSimilar(supabase: ReturnType<typeof getSupabase>, property: ReturnType<typeof mapProperty>) {
+  try {
+    const min = property.priceINR ? Math.floor(property.priceINR * 0.85) : null
+    const max = property.priceINR ? Math.ceil(property.priceINR * 1.15) : null
+    let query = supabase
+      .from('properties')
+      .select('id,title,price_inr,sqft,bedrooms,images,locality,city')
+      .neq('id', property.id)
+      .limit(12)
+    if (property.city) query = query.eq('city', property.city)
+    if (property.locality) query = query.eq('locality', property.locality)
+    if (property.bedrooms != null) query = query.eq('bedrooms', property.bedrooms)
+    if (min != null && max != null) query = query.gte('price_inr', min).lte('price_inr', max)
+    const { data, error } = await query
+    if (error || !data) return []
+    return data.slice(0, 6).map((p: any) => {
+      const imgs: string[] = Array.isArray(p.images)
+        ? p.images
+        : typeof p.images === 'string'
+          ? safeParseArray(p.images)
+          : []
+      const price = toNumber(p.price_inr)
+      const sqft = toNumber(p.sqft)
+      return {
+        id: p.id as string,
+        title: (p.title as string) || '',
+        city: (p.city as string) || '',
+        locality: (p.locality as string) || '',
+        bedrooms: toNumber(p.bedrooms),
+        priceINR: price,
+        priceDisplay: price ? `₹${Math.round(price).toLocaleString('en-IN')}` : 'Price on request',
+        pricePerSqftINR: pricePerSqft(price, sqft),
+        sqft,
+        image: imgs[0] || '',
+      }
+    })
+  } catch {
+    return []
+  }
+}
+
+async function fetchReviews(supabase: ReturnType<typeof getSupabase>, propertyId: string) {
+  try {
+    const { data, error } = await supabase
+      .from('reviews')
+      .select('id,user_name,user_avatar,rating,category_location,category_value,category_quality,category_amenities,text,created_at,verified_buyer')
+      .eq('property_id', propertyId)
+      .order('created_at', { ascending: false })
+      .limit(20)
+    if (error || !data) return []
+    return data.map((r: any) => ({
+      id: r.id,
+      name: r.user_name || 'Buyer',
+      avatar: r.user_avatar || '',
+      rating: toNumber(r.rating) || 0,
+      categories: {
+        location: toNumber(r.category_location) || null,
+        value: toNumber(r.category_value) || null,
+        quality: toNumber(r.category_quality) || null,
+        amenities: toNumber(r.category_amenities) || null,
+      },
+      text: r.text || '',
+      date: r.created_at || null,
+      verified: !!r.verified_buyer,
+    }))
+  } catch {
+    return []
+  }
 }
 
 export async function generateMetadata(

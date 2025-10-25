@@ -240,10 +240,10 @@ function DraggableLeadCard({ lead }: { lead: Lead }) {
 
       {/* Actions */}
       <div className="flex gap-2">
-        <button className="flex-1 py-1 px-2 text-xs bg-primary-50 text-primary-700 rounded hover:bg-primary-100 transition-colors">
+        <a href={`tel:${lead.phone}`} onClick={(e) => e.stopPropagation()} className="flex-1 py-1 px-2 text-xs bg-primary-50 text-primary-700 rounded hover:bg-primary-100 transition-colors">
           <Phone className="w-3 h-3 inline mr-1" />
           Call
-        </button>
+        </a>
         <Link href={`/builder/leads/${lead.id}`} className="py-1 px-2 text-xs border border-gray-300 rounded hover:bg-gray-50 transition-colors" onClick={(e) => e.stopPropagation()}>
           Details
         </Link>

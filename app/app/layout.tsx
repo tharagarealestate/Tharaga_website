@@ -17,6 +17,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <head>
         <link rel="manifest" href="/manifest.webmanifest" />
         <meta name="theme-color" content="#ffffff" />
+        {/* Durable Auth modal support across all pages */}
+        <script dangerouslySetInnerHTML={{ __html: `window.DURABLE_AUTH_URL='/login_signup_glassdrop/';window.AUTH_HIDE_HEADER=false;` }} />
+        <script src="/login_signup_glassdrop/auth-gate.js" defer />
         <script dangerouslySetInnerHTML={{ __html: `
           (function(){
             function safeQueue(){

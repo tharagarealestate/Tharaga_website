@@ -20,6 +20,41 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         {/* Durable Auth modal support across all pages */}
         <script dangerouslySetInnerHTML={{ __html: `window.DURABLE_AUTH_URL='/login_signup_glassdrop/';window.AUTH_HIDE_HEADER=false;` }} />
         <script src="/login_signup_glassdrop/auth-gate.js" defer />
+        {/* Normalize header typography, spacing, and dividers to match homepage */}
+        <style
+          dangerouslySetInnerHTML={{ __html: `
+          /* Desktop header nav layout and emphasis */
+          [role='banner'] nav[aria-label='Primary']{ gap:12px; align-items:center; flex-wrap:nowrap }
+          [role='banner'] nav[aria-label='Primary'] a,
+          [role='banner'] nav[aria-label='Primary'] summary{ font-weight:700 }
+          /* Summary affordance to match homepage button-like appearance */
+          [role='banner'] details > summary{ list-style:none; cursor:pointer; display:inline-flex; align-items:center; gap:6px; padding:6px 10px; border-radius:999px; font-size:16px }
+          [role='banner'] details > summary::-webkit-details-marker{ display:none }
+          /* Vertical dividers (match tone and size) */
+          [role='banner'] nav[aria-label='Primary'] span[aria-hidden='true']{ width:1px; height:16px; background:rgba(255,255,255,.18) !important; display:inline-block; border-radius:1px }
+          /* Right-side auth group visuals */
+          [role='banner'] .thg-auth-wrap{ display:flex; align-items:center; gap:12px }
+          [role='banner'] .thg-auth-wrap::before{ content:""; display:inline-block; width:1px; height:16px; background:rgba(255,255,255,.22); border-radius:1px }
+          [role='banner'] .thg-auth-btn{ background:rgba(255,255,255,.12) !important; color:#fff !important; border-color:rgba(255,255,255,.85) !important }
+          [role='banner'] .thg-auth-btn:hover{ background:rgba(255,255,255,.2) !important }
+
+          /* Mobile adjustments */
+          @media (max-width:880px){
+            [role='banner'] nav[aria-label='Primary']{ white-space:nowrap; gap:10px }
+            [role='banner'] nav[aria-label='Primary'] a,
+            [role='banner'] nav[aria-label='Primary'] summary{ padding:4px 0; font-size:13px }
+            /* Keep summary slightly larger to match Login/Signup */
+            [role='banner'] details > summary{ font-size:16px; padding:6px 10px }
+            /* Hide top-level Pricing/About on mobile; provided in Features menu */
+            [role='banner'] nav[aria-label='Primary'] a[href='/pricing/'],
+            [role='banner'] nav[aria-label='Primary'] a[href='/about/']{ display:none }
+            /* Auth group anchoring and divider height on mobile */
+            [role='banner'] .thg-auth-wrap{ position:absolute; top:10px; right:12px; padding:0; gap:10px }
+            [role='banner'] .thg-auth-wrap::before{ height:14px }
+            [role='banner'] nav[aria-label='Primary'] span[aria-hidden='true']{ height:14px }
+          }
+        ` }}
+        />
         <script dangerouslySetInnerHTML={{ __html: `
           (function(){
             function safeQueue(){

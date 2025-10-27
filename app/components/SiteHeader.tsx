@@ -72,11 +72,10 @@ export default function SiteHeader() {
               <div
                 role="menu"
                 aria-label="Portal menu"
-                className="absolute right-0 mt-2 min-w-[220px] bg-white/98 text-black rounded-xl border border-white/20 shadow-xl p-2 z-50 opacity-0 -translate-y-1 scale-95 invisible transition group-open:opacity-100 group-open:translate-y-0 group-open:scale-100 group-open:visible"
+                className="absolute right-0 mt-2 min-w-[240px] bg-white/98 text-black rounded-xl border border-white/20 shadow-xl p-2 z-50 opacity-0 -translate-y-1 scale-95 invisible transition group-open:opacity-100 group-open:translate-y-0 group-open:scale-100 group-open:visible"
               >
                 <div className="h-[3px] rounded-t-xl bg-gradient-to-r from-gold-500 to-rose-700" aria-hidden="true" />
                 <a role="menuitem" tabIndex={0} className="block px-3 py-2 rounded-lg hover:bg-black/5 focus:outline-none focus:ring-2 focus:ring-rose-600/40" href="/builder">Builder Dashboard</a>
-                <div className="my-1 h-px bg-black/10" aria-hidden="true" />
                 <a role="menuitem" tabIndex={0} className="block px-3 py-2 rounded-lg hover:bg-black/5 focus:outline-none focus:ring-2 focus:ring-rose-600/40" href="/my-dashboard">Buyer Dashboard</a>
               </div>
             </details>

@@ -88,6 +88,7 @@ export default function TrialSignupPage() {
   const [otpCode, setOtpCode] = useState("");
   const [otpVerifying, setOtpVerifying] = useState(false);
   const [phoneVerified, setPhoneVerified] = useState(false);
+  const [resendIn, setResendIn] = useState<number>(0);
 
   // Exit intent modal
   const [showExitIntent, setShowExitIntent] = useState(false);
@@ -140,6 +141,13 @@ export default function TrialSignupPage() {
       setError("Enter your mobile number to receive OTP");
       return;
     }
+    // Basic phone validation
+    const phoneOk = /^\+?[0-9]{10,13}$/.test(form.phone.replace(/\s|-/g, ""));
+    if (!phoneOk) {
+      setError("Enter a valid phone number with country code");
+      return;
+    }
+    if (resendIn > 0) return;
     try {
       setOtpVerifying(true);
       // Try sending via Supabase phone OTP. Requires SMS provider configured.
@@ -154,6 +162,17 @@ export default function TrialSignupPage() {
       if (otpErr) throw otpErr;
       setOtpSent(true);
       setSuccess("OTP sent to your mobile");
+      setResendIn(30);
+      const timer = setInterval(() => {
+        setResendIn((n) => {
+          if (n <= 1) {
+            clearInterval(timer);
+            return 0;
+          }
+          return n - 1;
+        });
+        return undefined as unknown as number;
+      }, 1000);
     } catch (e: any) {
       // Optional dev fallback: allow fake OTP if env flag is set
       if (process.env.NEXT_PUBLIC_FAKE_OTP === "1") {
@@ -165,7 +184,7 @@ export default function TrialSignupPage() {
     } finally {
       setOtpVerifying(false);
     }
-  }, [form.phone, supabase.auth]);
+  }, [form.phone, supabase.auth, resendIn]);
 
   const verifyOtp = useCallback(async () => {
     setError(null);
@@ -223,15 +242,28 @@ export default function TrialSignupPage() {
             },
           },
         });
-        if (sErr) throw sErr;
+        if (sErr) {
+          const msg = String(sErr.message || '').toLowerCase();
+          if (msg.includes('registered') || msg.includes('already') || msg.includes('exists')) {
+            setError(
+              'An account with this email already exists. You can sign in or reset your password.'
+            );
+            return;
+          }
+          throw sErr;
+        }
         const userId = data.user?.id;
         if (userId) {
           // Create trial subscription row
-          await fetch("/api/trial/subscribe", {
+          const r = await fetch("/api/trial/subscribe", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ builderId: userId }),
-          }).catch(() => {});
+          }).catch(() => undefined);
+          if (r && !r.ok) {
+            // Non-blocking error; surface info but continue
+            console.warn('Trial subscription creation failed');
+          }
         }
         setSuccess("Account created. Check your email to verify.");
         // Redirect to builder trial page
@@ -419,8 +451,8 @@ export default function TrialSignupPage() {
                         />
                       </label>
                       <div className="flex gap-2">
-                        <button type="button" onClick={sendOtp} disabled={otpVerifying || !form.phone} className="btn-primary w-full">
-                          {otpSent ? "Resend OTP" : "Send OTP"}
+                        <button type="button" onClick={sendOtp} disabled={otpVerifying || !form.phone || resendIn > 0} className="btn-primary w-full">
+                          {otpSent ? (resendIn > 0 ? `Resend in ${resendIn}s` : "Resend OTP") : "Send OTP"}
                         </button>
                       </div>
                     </div>

@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
+import { cookies } from 'next/headers'
 
-export const runtime = 'edge'
+export const runtime = 'nodejs'
 
 export async function POST(req: NextRequest) {
   try {
@@ -14,8 +16,18 @@ export async function POST(req: NextRequest) {
     if (!url || !key) return NextResponse.json({ error: 'Supabase env missing' }, { status: 500 })
 
     const supabase = createClient(url, key)
+    const authed = createRouteHandlerClient({ cookies })
+    const { data: { user } } = await authed.auth.getUser()
     const source = req.headers.get('referer') || req.headers.get('origin') || ''
-    const { error } = await supabase.from('leads').insert([{ property_id: property_id || null, name, email, phone, message, source }])
+    const { error } = await supabase.from('leads').insert([{
+      property_id: property_id || null,
+      builder_id: user?.id || null,
+      name,
+      email,
+      phone,
+      message,
+      source,
+    }])
     if (error) return NextResponse.json({ error: error.message }, { status: 200 })
     return NextResponse.json({ ok: true })
   } catch (e: any) {

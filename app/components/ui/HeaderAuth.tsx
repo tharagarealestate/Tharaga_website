@@ -8,9 +8,13 @@ export function HeaderAuth(){
   function openAuth(){
     try {
       const next = location.pathname + location.search
-      const open = (window as any).THG_OPEN_AUTH as undefined | ((opts?: any) => void)
-      if (typeof open === 'function') {
-        open({ next })
+      const g = (window as any).authGate
+      if (g && typeof g.openLoginModal === 'function') {
+        g.openLoginModal({ next })
+        return
+      }
+      if (typeof (window as any).__thgOpenAuthModal === 'function') {
+        ;(window as any).__thgOpenAuthModal({ next })
         return
       }
       location.href = `/login?next=${encodeURIComponent(next)}`

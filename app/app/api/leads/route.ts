@@ -6,7 +6,7 @@ export const runtime = 'edge'
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json().catch(() => ({})) as any
-    const { property_id, name, email, phone, message } = body || {}
+    const { property_id, name, email, phone, message, builder_id } = body || {}
     if (!(name || email || phone)) return NextResponse.json({ error: 'Provide contact: phone or email' }, { status: 400 })
 
     const url = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL
@@ -15,7 +15,15 @@ export async function POST(req: NextRequest) {
 
     const supabase = createClient(url, key)
     const source = req.headers.get('referer') || req.headers.get('origin') || ''
-    const { error } = await supabase.from('leads').insert([{ property_id: property_id || null, name, email, phone, message, source }])
+    const { error } = await supabase.from('leads').insert([{
+      property_id: property_id || null,
+      builder_id: builder_id || null,
+      name,
+      email,
+      phone,
+      message,
+      source
+    }])
     if (error) return NextResponse.json({ error: error.message }, { status: 200 })
     return NextResponse.json({ ok: true })
   } catch (e: any) {

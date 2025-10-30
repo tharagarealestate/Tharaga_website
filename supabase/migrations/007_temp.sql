@@ -1,4 +1,4 @@
--- Create leads table for capturing potential customer inquiries
+﻿-- Create leads table for capturing potential customer inquiries
 -- This table stores all lead information from property inquiries
 
 CREATE TABLE IF NOT EXISTS public.leads (
@@ -170,4 +170,5 @@ BEGIN
     COMMENT ON COLUMN public.leads.status IS 'Current status of the lead in the sales pipeline';
   END IF;
 END $$;
+
 

@@ -55,95 +55,25 @@
   style.textContent = `
     /* Use fixed positioning so the overlay always covers the entire viewport
        regardless of ancestor positioning/overflow/transform contexts. */
-    #authGateModal {
-      position: fixed !important;
-      inset: 0 !important;
-      left: 0 !important;
-      width: 100vw !important;
-      height: 100vh !important;
-      display: none;
-      z-index: 999999 !important;
-      pointer-events: none;
+    #authGateModal { position: fixed; inset: 0; left: 0; width: 100vw; height: 100vh; display: none; z-index: 2147483646; }
+    #authGateModal .authgate-backdrop { display:flex; align-items:center; justify-content:center; inset:0;
+      display:flex; 
+      align-items:center; 
+      justify-content:center; 
+      position:fixed; 
+      top:0; 
+      left:0; 
+      width:100vw; 
+      height:100vh; 
+      background: rgba(10,10,10,.35);
+      backdrop-filter: blur(8px) saturate(120%);
+      -webkit-backdrop-filter: blur(8px) saturate(120%);
     }
-    #authGateModal.active {
-      display: block !important;
-      pointer-events: auto;
-    }
-    #authGateModal .authgate-backdrop {
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      position:fixed !important;
-      top:0 !important;
-      left:0 !important;
-      width:100vw !important;
-      height:100vh !important;
-      background: rgba(10,10,10,.75) !important;
-      backdrop-filter: blur(12px) saturate(120%);
-      -webkit-backdrop-filter: blur(12px) saturate(120%);
-    }
-    #authGateModal .authgate-dialog {
-      width: min(1100px, 98%);
-      height: min(850px, 92%);
-      position:relative;
-      display:flex;
-      flex-direction:column;
-      overflow:hidden;
-      background: rgba(15,15,15,0.95);
-      border-radius: 16px;
-      box-shadow: 0 25px 50px rgba(0,0,0,0.5);
-    }
-    #authGateModal .authgate-close {
-      position:absolute;
-      top:10px;
-      right:12px;
-      z-index:10;
-      border:none;
-      background: rgba(255,255,255,0.1);
-      color: white;
-      font-size:24px;
-      cursor:pointer;
-      padding:8px 12px;
-      border-radius: 8px;
-      display:block;
-      transition: all 0.2s;
-    }
-    #authGateModal .authgate-close:hover {
-      background: rgba(255,255,255,0.2);
-    }
-    #authGateModal .authgate-frame-wrap {
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      padding:28px;
-      flex:1;
-      min-height:0;
-    }
-    #authGateModal iframe#authGateIframe {
-      width:100%;
-      height:100%;
-      border:0;
-      display:block;
-      border-radius:12px;
-      background: white;
-    }
-    #authGateModal .authgate-success {
-      position:absolute;
-      left:12px;
-      right:12px;
-      top:12px;
-      display:flex;
-      align-items:center;
-      gap:8px;
-      background:#f0fdf4;
-      color:#166534;
-      border:1px solid #bbf7d0;
-      border-radius:10px;
-      padding:10px 12px;
-      box-shadow:0 6px 18px rgba(0,0,0,.08);
-      z-index:15;
-      animation: authfade .35s ease;
-    }
+    #authGateModal .authgate-dialog { width: min(1100px, 98%); height: min(850px, 92%); position:relative; display:flex; flex-direction:column; overflow:hidden; }
+    #authGateModal .authgate-close { position:absolute; top:10px; right:12px; z-index:3; border:none; font-size:20px; cursor:pointer; padding:6px; display:none; }
+    #authGateModal .authgate-frame-wrap { display:flex; align-items:center; justify-content:center; padding:28px; flex:1; min-height:0; } 
+    #authGateModal iframe#authGateIframe { width:100%; height:100%; border:0; display:block; border-radius:12px; }
+    #authGateModal .authgate-success { position:absolute; left:12px; right:12px; top:12px; display:flex; align-items:center; gap:8px; background:#f0fdf4; color:#166534; border:1px solid #bbf7d0; border-radius:10px; padding:10px 12px; box-shadow:0 6px 18px rgba(0,0,0,.08); z-index:4; animation: authfade .35s ease; }
     #authGateModal .authgate-check { font-size:18px; }
     @keyframes authfade { from { opacity:0; transform: translateY(-6px); } to { opacity:1; transform: none; } }
     @media (max-width:420px) {
@@ -283,7 +213,6 @@
     }
 
     lastFocused = document.activeElement;
-    overlay.classList.add('active');
     overlay.style.display = 'block';
     overlay.setAttribute('aria-hidden', 'false');
     document.body.style.overflow = 'hidden';
@@ -315,7 +244,6 @@
 
   function closeLoginModal() {
     try { iframe.src = 'about:blank'; } catch (e) {}
-    overlay.classList.remove('active');
     overlay.style.display = 'none';
     overlay.setAttribute('aria-hidden', 'true');
     document.body.style.overflow = '';

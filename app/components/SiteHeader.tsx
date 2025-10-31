@@ -1,9 +1,19 @@
 "use client"
 
 import { useTranslations } from 'next-intl'
+import { usePathname } from 'next/navigation'
 
 export default function SiteHeader() {
   const t = useTranslations('nav')
+  const pathname = usePathname()
+
+  // Hide SiteHeader on dashboard routes (they have their own navigation)
+  const isDashboard = pathname?.startsWith('/builder') || pathname?.startsWith('/my-dashboard')
+
+  if (isDashboard) {
+    return null
+  }
+
   return (
     <header
       role="banner"

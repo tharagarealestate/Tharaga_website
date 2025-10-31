@@ -77,3 +77,27 @@ self.addEventListener('message', (event) => {
     }
   } catch(_){}
 })
+
+// Web Push: receive and display notifications
+self.addEventListener('push', (event) => {
+  try {
+    const data = event.data ? event.data.json() : {}
+    const title = data.title || 'Notification'
+    const message = data.message || ''
+    const options = {
+      body: message,
+      icon: '/property-listing/noimg.svg',
+      badge: '/property-listing/noimg.svg',
+      data: { url: data.url || '/' }
+    }
+    event.waitUntil(self.registration.showNotification(title, options))
+  } catch (_) {}
+})
+
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close()
+  const url = event.notification && event.notification.data && event.notification.data.url ? event.notification.data.url : '/'
+  event.waitUntil(
+    clients.openWindow(url)
+  )
+})

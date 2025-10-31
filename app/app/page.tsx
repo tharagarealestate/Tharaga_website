@@ -84,10 +84,29 @@ export default function Home() {
 
               {/* CTAs */}
               <div className="flex flex-col sm:flex-row gap-4">
-                <Link href="/properties" className="btn-gold group inline-flex items-center justify-center">
+                <button
+                  onClick={() => {
+                    try {
+                      const g = (window as any).authGate
+                      if (g && typeof g.openLoginModal === 'function') {
+                        g.openLoginModal({ next: '/properties' })
+                        return
+                      }
+                      if (typeof (window as any).__thgOpenAuthModal === 'function') {
+                        ;(window as any).__thgOpenAuthModal({ next: '/properties' })
+                        return
+                      }
+                      // Fallback to direct navigation
+                      window.location.href = '/properties'
+                    } catch {
+                      window.location.href = '/properties'
+                    }
+                  }}
+                  className="btn-gold group inline-flex items-center justify-center"
+                >
                   Explore Properties
                   <ArrowRight className="inline-block ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                </Link>
+                </button>
                 <Link
                   href="/how-it-works"
                   className="px-6 py-3 bg-white/10 backdrop-blur-sm border border-white/20 text-white font-semibold rounded-lg hover:bg-white/20 transition-all duration-200 inline-flex items-center justify-center"

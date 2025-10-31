@@ -3,9 +3,10 @@
 import * as React from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { Bell, CalendarDays, Heart } from 'lucide-react'
+import { CalendarDays, Heart } from 'lucide-react'
 import { listSaved } from '@/lib/saved'
 import { getSupabase } from '@/lib/supabase'
+import NotificationPanel from '../../_components/NotificationPanel'
 
 function useSavedCount() {
   const [count, setCount] = React.useState<number>(() => (typeof window !== 'undefined' ? listSaved().length : 0))
@@ -126,9 +127,7 @@ export default function TopNav() {
             )}
             <span className="sr-only">Visits</span>
           </Link>
-          <button className="relative inline-flex items-center justify-center rounded-md border border-gray-300 bg-white px-2.5 py-2 text-gray-700 hover:bg-gray-50" aria-label="Notifications">
-            <Bell className="h-5 w-5" />
-          </button>
+          <NotificationPanel />
           <div className="relative">
             <button
               onClick={() => setMenuOpen((v) => !v)}

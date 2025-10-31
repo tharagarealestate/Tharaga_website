@@ -20,6 +20,22 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         {/* Durable Auth modal support across all pages */}
         <script dangerouslySetInnerHTML={{ __html: `window.DURABLE_AUTH_URL='/login_signup_glassdrop/';window.AUTH_HIDE_HEADER=false;` }} />
         <script src="/login_signup_glassdrop/auth-gate.js" defer />
+        {/* Global auth helper for easy access */}
+        <script dangerouslySetInnerHTML={{ __html: `
+          window.__thgOpenAuthModal = function(opts) {
+            try {
+              if (window.authGate && typeof window.authGate.openLoginModal === 'function') {
+                window.authGate.openLoginModal(opts || {});
+                return true;
+              }
+              console.warn('authGate not ready yet');
+              return false;
+            } catch(e) {
+              console.error('Failed to open auth modal:', e);
+              return false;
+            }
+          };
+        ` }} />
         {/* Normalize header typography, spacing, and dividers to match homepage */}
         <style
           dangerouslySetInnerHTML={{ __html: `

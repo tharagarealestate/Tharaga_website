@@ -11,6 +11,7 @@ import { EntitlementsProvider } from '@/components/ui/FeatureGate'
 import { AppI18nProvider } from '@/components/providers/AppI18nProvider'
 import SiteHeader from '@/components/SiteHeader'
 import MobileBottomNav from '@/components/MobileBottomNav'
+import { PrefetchRoutes } from '@/components/providers/PrefetchRoutes'
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -137,6 +138,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <AppI18nProvider>
           <SiteHeader />
           <EntitlementsProvider>
+            <PrefetchRoutes />
             {children}
           </EntitlementsProvider>
         </AppI18nProvider>

@@ -1,11 +1,12 @@
 "use client"
 
 import { useTranslations } from 'next-intl'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 
 export default function SiteHeader() {
   const t = useTranslations('nav')
   const pathname = usePathname()
+  const router = useRouter()
 
   // Hide SiteHeader on dashboard routes (they have their own navigation)
   const isDashboard = pathname?.startsWith('/builder') || pathname?.startsWith('/my-dashboard')
@@ -55,11 +56,11 @@ export default function SiteHeader() {
               </summary>
               <div className="absolute right-0 mt-2 min-w-[240px] bg-white/98 text-black rounded-xl border border-white/20 shadow-xl p-2 z-50 opacity-0 -translate-y-1 scale-95 invisible transition group-open:opacity-100 group-open:translate-y-0 group-open:scale-100 group-open:visible">
                 <div className="h-[3px] rounded-t-xl bg-gradient-to-r from-gold-500 to-rose-700" aria-hidden="true" />
-                <a className="block px-3 py-2 rounded-lg hover:bg-black/5" href="/tools/vastu/">Vastu</a>
-                <a className="block px-3 py-2 rounded-lg hover:bg-black/5" href="/tools/environment/">Climate & environment</a>
-                <a className="block px-3 py-2 rounded-lg hover:bg-black/5" href="/tools/voice-tamil/">Voice (Tamil)</a>
-                <a className="block px-3 py-2 rounded-lg hover:bg-black/5" href="/tools/verification/">Verification</a>
-                <a className="block px-3 py-2 rounded-lg hover:bg-black/5" href="/tools/roi/">ROI</a>
+                <a className="block px-3 py-2 rounded-lg hover:bg-black/5" href="/tools/vastu/" onMouseEnter={()=>router.prefetch('/tools/vastu/')}>Vastu</a>
+                <a className="block px-3 py-2 rounded-lg hover:bg-black/5" href="/tools/environment/" onMouseEnter={()=>router.prefetch('/tools/environment/')}>Climate & environment</a>
+                <a className="block px-3 py-2 rounded-lg hover:bg-black/5" href="/tools/voice-tamil/" onMouseEnter={()=>router.prefetch('/tools/voice-tamil/')}>Voice (Tamil)</a>
+                <a className="block px-3 py-2 rounded-lg hover:bg-black/5" href="/tools/verification/" onMouseEnter={()=>router.prefetch('/tools/verification/')}>Verification</a>
+                <a className="block px-3 py-2 rounded-lg hover:bg-black/5" href="/tools/roi/" onMouseEnter={()=>router.prefetch('/tools/roi/')}>ROI</a>
                 <a className="block px-3 py-2 rounded-lg hover:bg-black/5" href="/tools/currency-risk/">Currency risk</a>
                 <div className="my-1 h-px bg-black/10 md:hidden" aria-hidden="true" />
                 <a className="block px-3 py-2 rounded-lg hover:bg-black/5 md:hidden" href="/pricing/">Pricing</a>
@@ -85,14 +86,14 @@ export default function SiteHeader() {
                 className="absolute right-0 mt-2 min-w-[240px] bg-white/98 text-black rounded-xl border border-white/20 shadow-xl p-2 z-50 opacity-0 -translate-y-1 scale-95 invisible transition group-open:opacity-100 group-open:translate-y-0 group-open:scale-100 group-open:visible"
               >
                 <div className="h-[3px] rounded-t-xl bg-gradient-to-r from-gold-500 to-rose-700" aria-hidden="true" />
-                <a role="menuitem" tabIndex={0} className="block px-3 py-2 rounded-lg hover:bg-black/5 focus:outline-none focus:ring-2 focus:ring-rose-600/40" href="/builder">Builder Dashboard</a>
-                <a role="menuitem" tabIndex={0} className="block px-3 py-2 rounded-lg hover:bg-black/5 focus:outline-none focus:ring-2 focus:ring-rose-600/40" href="/my-dashboard">Buyer Dashboard</a>
+                <a role="menuitem" tabIndex={0} className="block px-3 py-2 rounded-lg hover:bg-black/5 focus:outline-none focus:ring-2 focus:ring-rose-600/40" href="/builder" onMouseEnter={()=>router.prefetch('/builder')}>Builder Dashboard</a>
+                <a role="menuitem" tabIndex={0} className="block px-3 py-2 rounded-lg hover:bg-black/5 focus:outline-none focus:ring-2 focus:ring-rose-600/40" href="/my-dashboard" onMouseEnter={()=>router.prefetch('/my-dashboard')}>Buyer Dashboard</a>
               </div>
             </details>
             <span className="hidden md:inline-block w-px h-4 bg-white/30" aria-hidden="true" />
-            <a href="/pricing/" className="hover:underline">Pricing</a>
+            <a href="/pricing/" className="hover:underline" onMouseEnter={()=>router.prefetch('/pricing/')}>Pricing</a>
             <span className="hidden md:inline-block w-px h-4 bg-white/30" aria-hidden="true" />
-            <a href="/about/" className="hover:underline">About</a>
+            <a href="/about/" className="hover:underline" onMouseEnter={()=>router.prefetch('/about/')}>About</a>
           </nav>
 
           {/* Right: Auth button (opens modal, no redirect) */}

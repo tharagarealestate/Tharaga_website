@@ -7,20 +7,6 @@ import { Button } from '@/components/ui/Button'
 import { Select } from '@/components/ui/Select'
 import { getSupabase } from '@/lib/supabase'
 import { format } from 'date-fns'
-import {
-  AreaChart,
-  Area,
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip as RTooltip,
-  ResponsiveContainer,
-  PieChart,
-  Pie,
-  Cell,
-} from 'recharts'
 
 // ---------- Types ----------
 
@@ -123,6 +109,10 @@ async function getRecentActivity() {
 export default function AdminDashboardPage() {
   const qc = useQueryClient()
   const [range, setRange] = useState<DateRange>('30d')
+  const [R, setR] = useState<any>(null)
+
+  // Lazy-load recharts only on this page
+  useEffect(() => { let mounted=true; (async()=>{ try{ const mod = await import('recharts'); if(mounted) setR(mod) }catch{} })(); return ()=>{ mounted=false } }, [])
 
   // Top row metrics
   const topQuery = useQuery({
@@ -294,62 +284,62 @@ export default function AdminDashboardPage() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card className="bg-gray-900 border-gray-800">
           <div className="mb-2 text-gray-200 font-semibold">User Growth (Last {range.toUpperCase()})</div>
-          {growthQuery.isLoading ? (
+          {growthQuery.isLoading || !R ? (
             <div className="h-64 rounded-md bg-gray-800/60 animate-pulse" />
           ) : (
             <div className="h-64">
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={growthQuery.data || []}>
-                  <CartesianGrid stroke="#222" />
-                  <XAxis dataKey="date" stroke="#aaa" tick={{ fill: '#aaa', fontSize: 12 }} />
-                  <YAxis stroke="#aaa" tick={{ fill: '#aaa', fontSize: 12 }} />
-                  <RTooltip contentStyle={{ background: '#0b0b0b', border: '1px solid #222', color: '#eee' }} />
-                  <Line dataKey="total_users" stroke="var(--primary-600)" dot={false} strokeWidth={2} name="Total Users" />
-                  <Line dataKey="active_users" stroke="var(--emerald-500)" dot={false} strokeWidth={2} name="Active Users" />
-                  <Line dataKey="new_users" stroke="var(--gold-500)" dot={false} strokeWidth={2} name="New Signups" />
-                </LineChart>
-              </ResponsiveContainer>
+              <R.ResponsiveContainer width="100%" height="100%">
+                <R.LineChart data={growthQuery.data || []}>
+                  <R.CartesianGrid stroke="#222" />
+                  <R.XAxis dataKey="date" stroke="#aaa" tick={{ fill: '#aaa', fontSize: 12 }} />
+                  <R.YAxis stroke="#aaa" tick={{ fill: '#aaa', fontSize: 12 }} />
+                  <R.Tooltip contentStyle={{ background: '#0b0b0b', border: '1px solid #222', color: '#eee' }} />
+                  <R.Line dataKey="total_users" stroke="var(--primary-600)" dot={false} strokeWidth={2} name="Total Users" />
+                  <R.Line dataKey="active_users" stroke="var(--emerald-500)" dot={false} strokeWidth={2} name="Active Users" />
+                  <R.Line dataKey="new_users" stroke="var(--gold-500)" dot={false} strokeWidth={2} name="New Signups" />
+                </R.LineChart>
+              </R.ResponsiveContainer>
             </div>
           )}
         </Card>
 
         <Card className="bg-gray-900 border-gray-800">
           <div className="mb-2 text-gray-200 font-semibold">Lead Quality Distribution</div>
-          {leadQualityQuery.isLoading ? (
+          {leadQualityQuery.isLoading || !R ? (
             <div className="h-64 rounded-md bg-gray-800/60 animate-pulse" />
           ) : (
             <div className="h-64">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie data={leadQualityQuery.data || []} dataKey="count" nameKey="category" innerRadius={48} outerRadius={80} paddingAngle={3}>
+              <R.ResponsiveContainer width="100%" height="100%">
+                <R.PieChart>
+                  <R.Pie data={leadQualityQuery.data || []} dataKey="count" nameKey="category" innerRadius={48} outerRadius={80} paddingAngle={3}>
                     {(leadQualityQuery.data || []).map((_, idx) => (
-                      <Cell key={idx} fill={pieColors[idx % pieColors.length]} />
+                      <R.Cell key={idx} fill={pieColors[idx % pieColors.length]} />
                     ))}
-                  </Pie>
-                  <RTooltip contentStyle={{ background: '#0b0b0b', border: '1px solid #222', color: '#eee' }} />
-                </PieChart>
-              </ResponsiveContainer>
+                  </R.Pie>
+                  <R.Tooltip contentStyle={{ background: '#0b0b0b', border: '1px solid #222', color: '#eee' }} />
+                </R.PieChart>
+              </R.ResponsiveContainer>
             </div>
           )}
         </Card>
 
         <Card className="bg-gray-900 border-gray-800 lg:col-span-2">
           <div className="mb-2 text-gray-200 font-semibold">Revenue Forecast (Next 3 Months)</div>
-          {forecastQuery.isLoading ? (
+          {forecastQuery.isLoading || !R ? (
             <div className="h-64 rounded-md bg-gray-800/60 animate-pulse" />
           ) : (
             <div className="h-64">
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={forecastQuery.data || []}>
-                  <CartesianGrid stroke="#222" />
-                  <XAxis dataKey="month" stroke="#aaa" tick={{ fill: '#aaa', fontSize: 12 }} />
-                  <YAxis stroke="#aaa" tick={{ fill: '#aaa', fontSize: 12 }} />
-                  <RTooltip contentStyle={{ background: '#0b0b0b', border: '1px solid #222', color: '#eee' }} />
-                  <Area type="monotone" dataKey="pessimistic" stroke="#9ca3af" fill="#1f2937" name="Pessimistic" />
-                  <Area type="monotone" dataKey="realistic" stroke="var(--emerald-500)" fill="rgba(16,185,129,0.15)" name="Realistic" />
-                  <Area type="monotone" dataKey="optimistic" stroke="var(--gold-500)" fill="rgba(234,179,8,0.15)" name="Optimistic" />
-                </AreaChart>
-              </ResponsiveContainer>
+              <R.ResponsiveContainer width="100%" height="100%">
+                <R.AreaChart data={forecastQuery.data || []}>
+                  <R.CartesianGrid stroke="#222" />
+                  <R.XAxis dataKey="month" stroke="#aaa" tick={{ fill: '#aaa', fontSize: 12 }} />
+                  <R.YAxis stroke="#aaa" tick={{ fill: '#aaa', fontSize: 12 }} />
+                  <R.Tooltip contentStyle={{ background: '#0b0b0b', border: '1px solid #222', color: '#eee' }} />
+                  <R.Area type="monotone" dataKey="pessimistic" stroke="#9ca3af" fill="#1f2937" name="Pessimistic" />
+                  <R.Area type="monotone" dataKey="realistic" stroke="var(--emerald-500)" fill="rgba(16,185,129,0.15)" name="Realistic" />
+                  <R.Area type="monotone" dataKey="optimistic" stroke="var(--gold-500)" fill="rgba(234,179,8,0.15)" name="Optimistic" />
+                </R.AreaChart>
+              </R.ResponsiveContainer>
             </div>
           )}
         </Card>
@@ -528,19 +518,22 @@ function MetricCard({
 
 function Sparkline({ data, color }: { data: Array<{ t: string; v: number }>; color: string }) {
   const formatted = useMemo(() => (data || []).map((d) => ({ t: d.t, v: d.v })), [data])
+  const [R, setR] = useState<any>(null)
+  useEffect(() => { let mounted=true; (async()=>{ try{ const mod = await import('recharts'); if(mounted) setR(mod) }catch{} })(); return ()=>{ mounted=false } }, [])
+  if (!R) return <div className="h-12" />
   return (
     <div className="h-12">
-      <ResponsiveContainer width="100%" height="100%">
-        <AreaChart data={formatted}>
+      <R.ResponsiveContainer width="100%" height="100%">
+        <R.AreaChart data={formatted}>
           <defs>
             <linearGradient id="grad" x1="0" y1="0" x2="0" y2="1">
               <stop offset="5%" stopColor={color} stopOpacity={0.6} />
               <stop offset="95%" stopColor={color} stopOpacity={0} />
             </linearGradient>
           </defs>
-          <Area type="monotone" dataKey="v" stroke={color} fill="url(#grad)" strokeWidth={2} />
-        </AreaChart>
-      </ResponsiveContainer>
+          <R.Area type="monotone" dataKey="v" stroke={color} fill="url(#grad)" strokeWidth={2} />
+        </R.AreaChart>
+      </R.ResponsiveContainer>
     </div>
   )
 }

@@ -54,5 +54,8 @@ export async function GET(req: NextRequest) {
     property: { title: row.properties?.title, location: row.properties?.location },
   }))
 
-  return NextResponse.json({ items })
+  const res = NextResponse.json({ items })
+  // Cache for 60s on the edge/CDN with stale-while-revalidate
+  res.headers.set('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=60')
+  return res
 }

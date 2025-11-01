@@ -26,7 +26,9 @@ export async function GET(req: NextRequest) {
       image: Array.isArray(p.images) ? (p.images[0] || null) : null,
     }))
 
-    return NextResponse.json({ items })
+    const res = NextResponse.json({ items })
+    res.headers.set('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=60')
+    return res
   } catch (e: any) {
     return NextResponse.json({ error: e?.message || 'Unexpected error' }, { status: 500 })
   }

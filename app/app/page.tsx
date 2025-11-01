@@ -1,6 +1,7 @@
 "use client"
 import dynamic from 'next/dynamic'
 import Link from 'next/link'
+import Image from 'next/image'
 import { motion } from 'framer-motion'
 import { ArrowRight, Star, Shield, Sparkles, ChevronDown } from 'lucide-react'
 
@@ -120,11 +121,14 @@ export default function Home() {
                 <div className="flex -space-x-3">
                   {[35, 36, 37, 38].map((i) => (
                     <div key={i} className="w-10 h-10 rounded-full border-2 border-primary-950 bg-gray-300 overflow-hidden">
-                      <img
+                      <Image
                         src={`https://i.pravatar.cc/80?img=${i}`}
                         alt=""
+                        width={40}
+                        height={40}
                         className="w-full h-full object-cover"
-                        loading="lazy"
+                        placeholder="blur"
+                        blurDataURL="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw=="
                       />
                     </div>
                   ))}
@@ -153,11 +157,15 @@ export default function Home() {
               <div className="relative">
                 {/* Main Card */}
                 <div className="glass-card p-6 rounded-2xl transform rotate-3 hover:rotate-0 transition-transform duration-500">
-                  <img
+                  <Image
                     src="/images/hero-bg.jpg"
                     alt="Luxury Property"
+                    width={1024}
+                    height={512}
                     className="w-full h-64 object-cover rounded-lg mb-4"
-                    loading="lazy"
+                    placeholder="blur"
+                    priority={false}
+                    blurDataURL="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw=="
                   />
                   <div className="flex justify-between items-start mb-3">
                     <div>

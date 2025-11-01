@@ -1,6 +1,7 @@
 "use client"
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import Image from 'next/image'
 import { getSupabase } from '@/lib/supabase'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Lock, Plus, CheckCircle2, Check, X, Star, Sparkles, Clock, Crown, Shield, ChartNoAxesColumn, Users, MailCheck, Gauge } from 'lucide-react'
@@ -450,7 +451,7 @@ function FeatureTeaserCard({ name, desc, image }: { name: string; desc: string; 
       </div>
       <div className="mt-3">
         <button onClick={() => setOpen(true)} className="w-full rounded border overflow-hidden">
-          <img src={image} alt={name} className="w-full h-28 object-cover" />
+          <Image src={image} alt={name} width={560} height={112} className="w-full h-28 object-cover" placeholder="blur" blurDataURL="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==" />
         </button>
       </div>
       <div className="mt-3">
@@ -465,7 +466,7 @@ function FeatureTeaserCard({ name, desc, image }: { name: string; desc: string; 
                 <div className="font-semibold">{name}</div>
                 <button onClick={() => setOpen(false)} className="p-2 rounded hover:bg-gray-100"><X className="w-4 h-4" /></button>
               </div>
-              <img src={image} alt={name} className="w-full rounded" />
+              <Image src={image} alt={name} width={1200} height={630} className="w-full rounded" placeholder="blur" blurDataURL="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==" />
             </motion.div>
           </motion.div>
         )}

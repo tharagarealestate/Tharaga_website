@@ -7,7 +7,9 @@ export function ReactQueryProvider({ children }: PropsWithChildren) {
   const [client] = useState(() => new QueryClient({
     defaultOptions: {
       queries: {
-        staleTime: 30_000,
+        // Cache results for fast navigations and consistent UX
+        staleTime: 5 * 60 * 1000,
+        gcTime: 10 * 60 * 1000,
         refetchOnWindowFocus: false,
         retry: 1,
       },

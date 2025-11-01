@@ -1,6 +1,7 @@
 "use client"
 export const runtime = 'edge'
 import { useEffect, useState } from 'react'
+import Image from 'next/image'
 import { FeatureGate } from '@/components/ui/FeatureGate'
 
 export default function Microsite({ params }: { params: { id: string }}){
@@ -25,7 +26,7 @@ export default function Microsite({ params }: { params: { id: string }}){
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
         <div className="md:col-span-2 space-y-3">
           {Array.isArray(data.images) && data.images.length>0 && (
-            <img src={data.images[0]} alt="" className="w-full rounded" />
+            <Image src={data.images[0]} alt="" width={1280} height={720} className="w-full rounded" placeholder="blur" blurDataURL="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==" />
           )}
           <p className="text-fgMuted text-sm">{data.seo_summary}</p>
           <FeatureGate feature="microsite3D" fallback={<div className="text-fgMuted">3D floor plan is a Growth+ feature.</div>}>

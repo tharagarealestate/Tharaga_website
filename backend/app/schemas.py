@@ -31,6 +31,23 @@ class RecommendationResponse(BaseModel):
     items: List[RecommendationItem]
 
 
+# --- Event collection for learning ---
+class InteractionEvent(BaseModel):
+    user_id: str
+    session_id: str
+    property_id: str
+    event: str  # view | favorite | contact | share | scroll_50 | scroll_90 | time_on_page_30s | time_on_page_60s
+    value: float = 1.0
+    ts: Optional[float] = None
+
+class BatchInteractionRequest(BaseModel):
+    events: List[InteractionEvent] = Field(default_factory=list)
+
+class BatchInteractionResponse(BaseModel):
+    ok: bool
+    accepted: int
+
+
 # --- Anti-fraud and verification schemas ---
 
 class ReraVerifyRequest(BaseModel):

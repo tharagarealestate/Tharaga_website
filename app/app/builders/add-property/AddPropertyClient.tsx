@@ -1,5 +1,6 @@
 "use client"
 import { useState } from 'react'
+import Image from 'next/image'
 import { Button, Input, Select, TextArea, Card, Badge } from '@/components/ui'
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 
@@ -178,7 +179,9 @@ export default function AddPropertyPage() {
             {form.images.length>0 && (
               <div className="mt-2 grid grid-cols-3 gap-2">
                 {form.images.map((u,i)=> (
-                  <img key={i} src={u} alt="" className="h-24 w-full object-cover rounded" />
+                  <div key={i} className="relative h-24 w-full">
+                    <Image src={u} alt="" fill className="object-cover rounded" sizes="(max-width: 768px) 33vw, 200px" placeholder="blur" blurDataURL="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==" />
+                  </div>
                 ))}
               </div>
             )}

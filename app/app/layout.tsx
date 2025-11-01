@@ -10,6 +10,7 @@ export const metadata: Metadata = {
 import { EntitlementsProvider } from '@/components/ui/FeatureGate'
 import { AppI18nProvider } from '@/components/providers/AppI18nProvider'
 import SiteHeader from '@/components/SiteHeader'
+import MobileBottomNav from '@/components/MobileBottomNav'
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -166,6 +167,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             }
           })();
         `}} />
+        <MobileBottomNav />
       </body>
     </html>
   )

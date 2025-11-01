@@ -44,7 +44,7 @@ export function LeadCardSkeleton() {
 export function LeadCard({ lead }: { lead: Lead }) {
   const scoreColor = getScoreColor(lead.score)
   return (
-    <div className="glass-card p-6 rounded-xl hover:shadow-xl transition-all duration-300 border-l-4 bg-white border-gray-200" style={{ borderLeftColor: scoreColor }}>
+    <div className="glass-card p-4 md:p-6 rounded-xl hover:shadow-xl transition-all duration-300 border-l-4 bg-white border-gray-200" style={{ borderLeftColor: scoreColor }}>
       <div className="flex items-start justify-between mb-4">
         <div className={`px-3 py-1 rounded-full text-sm font-bold text-white`} style={{ backgroundColor: scoreColor }}>
           {lead.score.toFixed(1)} {getScoreLabel(lead.score)}
@@ -87,16 +87,16 @@ export function LeadCard({ lead }: { lead: Lead }) {
         )}
       </div>
 
-      <div className="flex gap-2">
-        <a href={`tel:${lead.phone}`} className="flex-1 py-2 px-3 bg-primary-600 hover:bg-primary-700 text-white font-medium rounded-lg transition-colors flex items-center justify-center gap-2">
+      <div className="flex flex-col md:flex-row gap-2">
+        <a href={`tel:${lead.phone}`} className="flex-1 w-full py-2 px-3 bg-primary-600 hover:bg-primary-700 text-white font-medium rounded-lg transition-colors flex items-center justify-center gap-2">
           <Phone className="w-4 h-4" />
           Call
         </a>
-        <button className="flex-1 py-2 px-3 bg-emerald-600 hover:bg-emerald-700 text-white font-medium rounded-lg transition-colors flex items-center justify-center gap-2">
+        <button className="flex-1 w-full py-2 px-3 bg-emerald-600 hover:bg-emerald-700 text-white font-medium rounded-lg transition-colors flex items-center justify-center gap-2">
           <Calendar className="w-4 h-4" />
           Schedule
         </button>
-        <Link href={`/builder/leads/${lead.id}`} className="py-2 px-4 border border-gray-300 hover:bg-gray-50 rounded-lg transition-colors flex items-center justify-center">
+        <Link href={`/builder/leads/${lead.id}`} className="py-2 px-4 border border-gray-300 hover:bg-gray-50 rounded-lg transition-colors flex items-center justify-center w-full md:w-auto">
           <ArrowRight className="w-4 h-4 text-gray-600" />
         </Link>
       </div>

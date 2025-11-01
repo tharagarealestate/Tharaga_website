@@ -18,7 +18,7 @@ export default function Home() {
         <div className="absolute inset-0 bg-gradient-to-br from-primary-950 via-primary-900 to-primary-800" />
 
         {/* Animated Floating Shapes (Framer Motion) */}
-        <div className="absolute inset-0 opacity-20 pointer-events-none">
+        <div className="absolute inset-0 opacity-20 pointer-events-none hidden md:block">
           <motion.div
             className="absolute top-20 left-10 w-72 h-72 rounded-full blur-3xl"
             style={{ backgroundColor: 'rgb(var(--gold-500))' }}
@@ -53,7 +53,7 @@ export default function Home() {
               </div>
 
               {/* Headline */}
-              <h1 className="font-display text-5xl sm:text-6xl lg:text-7xl font-bold leading-tight mb-6">
+              <h1 className="font-display text-3xl sm:text-4xl lg:text-7xl font-bold leading-tight mb-6">
                 Build Wealth,
                 <br />
                 <span className="text-gradient-gold">Not Just Homes</span>
@@ -102,14 +102,14 @@ export default function Home() {
                       window.location.href = '/properties'
                     }
                   }}
-                  className="btn-gold group inline-flex items-center justify-center"
+                  className="btn-gold group inline-flex items-center justify-center w-full sm:w-auto"
                 >
                   Explore Properties
                   <ArrowRight className="inline-block ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
                 </button>
                 <Link
                   href="/how-it-works"
-                  className="px-6 py-3 bg-white/10 backdrop-blur-sm border border-white/20 text-white font-semibold rounded-lg hover:bg-white/20 transition-all duration-200 inline-flex items-center justify-center"
+                  className="px-6 py-3 bg-white/10 backdrop-blur-sm border border-white/20 text-white font-semibold rounded-lg hover:bg-white/20 transition-all duration-200 inline-flex items-center justify-center w-full sm:w-auto"
                 >
                   See How It Works
                 </Link>

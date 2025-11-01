@@ -375,7 +375,7 @@ export default function TrialSignupPage() {
                       exit={{ opacity: 0, x: -30 }}
                       transition={{ duration: 0.35 }}
                     >
-                      <p className="text-white/90 text-lg">“{testimonials[activeIndex].quote}”</p>
+                      <p className="text-white/90 text-xl">“{testimonials[activeIndex].quote}”</p>
                       <p className="mt-3 text-sm text-gray-300">— {testimonials[activeIndex].name}, {testimonials[activeIndex].company}</p>
                     </motion.div>
                   </AnimatePresence>

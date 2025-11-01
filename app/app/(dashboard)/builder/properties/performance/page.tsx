@@ -78,7 +78,7 @@ function MetricCard({ title, value, change, icon: Icon, color }: MetricCardProps
           </div>
         )}
       </div>
-      <div className="text-3xl font-bold text-gray-900 mb-1">{value ?? '—'}</div>
+      <div className="text-2xl md:text-3xl font-bold text-gray-900 mb-1">{value ?? '—'}</div>
       <div className="text-sm text-gray-600">{title}</div>
     </div>
   )
@@ -211,7 +211,7 @@ export default function PropertyPerformancePage() {
       </div>
 
       {/* Key Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-4 lg:gap-6">
         <MetricCard title="Total Views" value={analytics?.total_views} change={analytics?.views_change} icon={Eye} color="primary" />
         <MetricCard title="Unique Visitors" value={analytics?.unique_visitors} change={analytics?.visitors_change} icon={Users} color="purple" />
         <MetricCard title="Total Inquiries" value={analytics?.total_inquiries} change={analytics?.inquiries_change} icon={MessageSquare} color="amber" />
@@ -223,21 +223,24 @@ export default function PropertyPerformancePage() {
         {/* Views Over Time */}
         <div className="glass-card p-6 rounded-2xl bg-white border border-gray-200">
           <h3 className="text-lg font-bold text-gray-900 mb-6">Views Over Time</h3>
-          <ResponsiveContainer width="100%" height={300}>
+          <div className="h-[250px] md:h-[300px]">
+          <ResponsiveContainer width="100%" height="100%">
             <LineChart data={analytics?.views_trend || []}>
               <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
               <XAxis dataKey="date" stroke="#6B7280" fontSize={12} />
               <YAxis stroke="#6B7280" fontSize={12} />
-              <Tooltip contentStyle={{ backgroundColor: '#FFFFFF', border: '1px solid #E5E7EB', borderRadius: '8px' }} />
+              <Tooltip contentStyle={{ backgroundColor: '#FFFFFF' }} />
               <Line type="monotone" dataKey="views" stroke="#D4AF37" strokeWidth={3} dot={{ fill: '#D4AF37', r: 4 }} />
             </LineChart>
           </ResponsiveContainer>
+          </div>
         </div>
 
         {/* Inquiry Sources */}
         <div className="glass-card p-6 rounded-2xl bg-white border border-gray-200">
           <h3 className="text-lg font-bold text-gray-900 mb-6">Inquiry Sources</h3>
-          <ResponsiveContainer width="100%" height={300}>
+          <div className="h-[250px] md:h-[300px]">
+          <ResponsiveContainer width="100%" height="100%">
             <PieChart>
               <Pie data={analytics?.inquiry_sources || []} cx="50%" cy="50%" labelLine={false} label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`} outerRadius={100} fill="#8884d8" dataKey="value">
                 {(analytics?.inquiry_sources || []).map((_: any, index: number) => (
@@ -247,6 +250,7 @@ export default function PropertyPerformancePage() {
               <Tooltip />
             </PieChart>
           </ResponsiveContainer>
+          </div>
         </div>
 
         {/* Engagement Heatmap */}

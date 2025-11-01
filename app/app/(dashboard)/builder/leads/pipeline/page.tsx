@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo, useState } from 'react'
+import { useMemo, useRef, useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { DndContext, DragOverlay, closestCorners, useDroppable } from '@dnd-kit/core'
@@ -52,6 +52,8 @@ function ViewToggle({ view, onChange }: { view: 'board' | 'grid' | 'table'; onCh
 export default function PipelinePage() {
   const [activeId, setActiveId] = useState<string | null>(null)
   const [view, setView] = useState<'board' | 'grid' | 'table'>('board')
+  const [activeStageIdx, setActiveStageIdx] = useState(0)
+  const scrollRef = useRef<HTMLDivElement | null>(null)
   const queryClient = useQueryClient()
 
   const { data: leads = [], isLoading } = useQuery<Lead[]>({
@@ -171,10 +173,28 @@ export default function PipelinePage() {
 
         {/* Content */}
         {view === 'board' ? (
-          <div className="flex gap-4 overflow-x-auto pb-4 snap-x snap-mandatory">
+          <div>
+            <div
+              ref={scrollRef}
+              onScroll={() => {
+                const el = scrollRef.current
+                if (!el) return
+                const colWidth = 320 + 16 /* w-80 + gap */
+                const idx = Math.round(el.scrollLeft / colWidth)
+                setActiveStageIdx(Math.max(0, Math.min(PIPELINE_STAGES.length - 1, idx)))
+              }}
+              className="flex gap-4 overflow-x-auto pb-4 snap-x snap-mandatory"
+            >
             {PIPELINE_STAGES.map(stage => (
               <PipelineColumn key={stage.id} stage={stage} leads={leadsByStage[stage.id] || []} />
             ))}
+            </div>
+            {/* Stage indicator dots (mobile) */}
+            <div className="flex items-center justify-center gap-2 mt-2 md:hidden">
+              {PIPELINE_STAGES.map((_, i) => (
+                <span key={i} className={"h-2 w-2 rounded-full " + (i === activeStageIdx ? 'bg-gold-500' : 'bg-gray-300')} />
+              ))}
+            </div>
           </div>
         ) : view === 'grid' ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

@@ -14,7 +14,9 @@
       "Bash(npm run:*)",
       "Bash(find:*)",
       "Bash(test:*)",
-      "Bash(node scripts/copy-static.cjs:*)"
+      "Bash(node scripts/copy-static.cjs:*)",
+      "Bash(git push:*)",
+      "Bash(node ../scripts/copy-static.cjs:*)"
     ],
     "deny": [],
     "ask": []

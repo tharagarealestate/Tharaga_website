@@ -9,7 +9,6 @@ export const metadata: Metadata = {
 
 import { EntitlementsProvider } from '@/components/ui/FeatureGate'
 import { AppI18nProvider } from '@/components/providers/AppI18nProvider'
-import SiteHeader from '@/components/SiteHeader'
 import MobileBottomNav from '@/components/MobileBottomNav'
 import { PrefetchRoutes } from '@/components/providers/PrefetchRoutes'
 
@@ -38,7 +37,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             }
           };
         ` }} />
-        {/* Normalize header typography, spacing, and dividers to match homepage */}
+        {/* Static header styles from index.html */}
         <style
           dangerouslySetInnerHTML={{ __html: `
           /* Desktop header nav layout and emphasis */
@@ -50,6 +49,21 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           [role='banner'] details > summary::-webkit-details-marker{ display:none }
           /* Vertical dividers (match tone and size) */
           [role='banner'] nav[aria-label='Primary'] span[aria-hidden='true']{ width:1px; height:16px; background:rgba(255,255,255,.18) !important; display:inline-block; border-radius:1px }
+
+          /* Dropdown styling from index.html */
+          details.dropdown{ position:relative }
+          details.dropdown > summary{ list-style:none; cursor:pointer; display:inline-flex; align-items:center; gap:6px; padding:6px 10px; border-radius:999px; font-size:16px }
+          details.dropdown > summary::-webkit-details-marker{ display:none }
+          details.dropdown > summary::after{ content:""; width:0; height:0; border-left:5px solid transparent; border-right:5px solid transparent; border-top:6px solid currentColor; opacity:.8; transition:transform .18s ease }
+          details.dropdown[open] > summary::after{ transform:rotate(180deg) }
+          details.dropdown .menu{ position:absolute; top:calc(100% + 8px); right:0; min-width:240px; background:linear-gradient(180deg,#ffffff, #fffafc); color:#111; border:1px solid rgba(110,13,37,.14); border-radius:12px; padding:12px 8px 8px; box-shadow:0 18px 40px rgba(110,13,37,.16); z-index:60; opacity:0; transform:translateY(-6px) scale(.98); visibility:hidden; pointer-events:none; transition:opacity .18s ease, transform .18s ease, visibility 0s linear .18s }
+          details.dropdown .menu::before{ content:""; position:absolute; top:0; left:0; right:0; height:3px; border-radius:12px 12px 0 0; background:linear-gradient(90deg, rgb(var(--gold-500)), rgb(var(--rose-700))) }
+          details.dropdown[open] .menu{ opacity:1; transform:translateY(0) scale(1); visibility:visible; pointer-events:auto; transition:opacity .18s ease, transform .18s ease, visibility 0s linear 0s }
+          details.dropdown .menu a{ display:block; padding:10px 12px; border-radius:10px; color:inherit; text-decoration:none; text-align:center; transition: background .15s ease, transform .06s ease, color .15s ease, box-shadow .12s ease }
+          details.dropdown .menu a + a{ border-top:1px solid #f0f2f4 }
+          details.dropdown .menu a:hover{ background:linear-gradient(90deg, rgba(110,13,37,.12), rgba(110,13,37,.06)); color:rgb(var(--rose-700)); box-shadow: inset 0 0 0 1px rgba(110,13,37,.18) }
+          details.dropdown .menu a:active{ transform:translateY(1px); background:linear-gradient(180deg, rgba(110,13,37,.20), rgba(110,13,37,.10)) }
+
           /* Right-side auth container - positioned in flex layout */
           #site-header-auth-container{ display:flex; align-items:center; gap:12px }
           /* Auth button styling within header */
@@ -138,8 +152,67 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             }
           })();
         `}} />
+        {/* Static header - injected from root index.html styling */}
+        <header role="banner" className="sticky top-0 z-50 text-white border-b border-white/10" style={{
+          background: 'linear-gradient(180deg, rgba(110,13,37,.82), rgba(110,13,37,.66))',
+          backdropFilter: 'blur(12px) saturate(1.25)'
+        }}>
+          <div className="mx-auto max-w-[1100px] px-4 sm:px-6">
+            <div className="flex items-center justify-between gap-3 py-2" style={{ position: 'relative', paddingRight: 'clamp(130px, 10vw, 200px)' }}>
+              <div className="flex items-center gap-3">
+                <a href="/" className="font-extrabold tracking-wide" style={{ fontFamily: 'var(--font-display, inherit)', fontSize: '24px' }}>
+                  THARAGA
+                </a>
+                <span className="hidden md:inline-flex items-center gap-2 rounded-full bg-white text-black border border-white/80 px-2 py-1 text-[12px]">
+                  <span>Verified</span>
+                  <span aria-hidden>•</span>
+                  <span>Broker‑free</span>
+                </span>
+              </div>
+              <nav className="flex items-center gap-3 sm:gap-4 text-sm font-bold" aria-label="Primary" style={{ gap: '12px', alignItems: 'center', flexWrap: 'nowrap', marginLeft: 'auto' }}>
+                <span className="menu-group">
+                  <details className="dropdown relative group">
+                    <summary className="list-none cursor-pointer inline-flex items-center gap-1 px-2 py-1 rounded-full hover:bg-white/10" style={{ padding: '6px 10px', borderRadius: '999px', fontSize: '16px' }}>
+                      <span>Features</span>
+                      <span className="w-0 h-0 border-l-[5px] border-l-transparent border-r-[5px] border-r-transparent border-t-[6px] border-t-white/90 transition-transform group-open:-rotate-180" aria-hidden="true" />
+                    </summary>
+                    <div className="absolute right-0 mt-2 min-w-[240px] bg-white/98 text-black rounded-xl border border-white/20 shadow-xl p-2 z-50 opacity-0 -translate-y-1 scale-95 invisible transition group-open:opacity-100 group-open:translate-y-0 group-open:scale-100 group-open:visible">
+                      <div className="h-[3px] rounded-t-xl bg-gradient-to-r from-gold-500 to-rose-700" aria-hidden="true" />
+                      <a className="block px-3 py-2 rounded-lg hover:bg-black/5" href="/tools/vastu/">Vastu</a>
+                      <a className="block px-3 py-2 rounded-lg hover:bg-black/5" href="/tools/environment/">Climate & environment</a>
+                      <a className="block px-3 py-2 rounded-lg hover:bg-black/5" href="/tools/voice-tamil/">Voice (Tamil)</a>
+                      <a className="block px-3 py-2 rounded-lg hover:bg-black/5" href="/tools/verification/">Verification</a>
+                      <a className="block px-3 py-2 rounded-lg hover:bg-black/5" href="/tools/roi/">ROI</a>
+                      <a className="block px-3 py-2 rounded-lg hover:bg-black/5" href="/tools/currency-risk/">Currency risk</a>
+                      <div className="my-1 h-px bg-black/10 md:hidden" aria-hidden="true" />
+                      <a className="block px-3 py-2 rounded-lg hover:bg-black/5 md:hidden" href="/pricing/">Pricing</a>
+                      <a className="block px-3 py-2 rounded-lg hover:bg-black/5 md:hidden" href="/about/">About</a>
+                    </div>
+                  </details>
+                  <span className="hidden md:inline-block w-px h-4 bg-white/30" aria-hidden="true" style={{ width: '1px', height: '16px', background: 'rgba(255,255,255,.18)', display: 'inline-block', borderRadius: '1px' }} />
+                  <details className="dropdown relative group">
+                    <summary className="list-none cursor-pointer inline-flex items-center gap-1 px-2 py-1 rounded-full hover:bg-white/10" aria-haspopup="menu" style={{ padding: '6px 10px', borderRadius: '999px', fontSize: '16px' }}>
+                      <span>Portal</span>
+                      <span className="w-0 h-0 border-l-[5px] border-l-transparent border-r-[5px] border-r-transparent border-t-[6px] border-t-white/90 transition-transform group-open:-rotate-180" aria-hidden="true" />
+                    </summary>
+                    <div role="menu" aria-label="Portal menu" className="absolute right-0 mt-2 min-w-[240px] bg-white/98 text-black rounded-xl border border-white/20 shadow-xl p-2 z-50 opacity-0 -translate-y-1 scale-95 invisible transition group-open:opacity-100 group-open:translate-y-0 group-open:scale-100 group-open:visible">
+                      <div className="h-[3px] rounded-t-xl bg-gradient-to-r from-gold-500 to-rose-700" aria-hidden="true" />
+                      <a role="menuitem" tabIndex={0} className="block px-3 py-2 rounded-lg hover:bg-black/5 focus:outline-none focus:ring-2 focus:ring-rose-600/40" href="/builder">Builder Dashboard</a>
+                      <a role="menuitem" tabIndex={0} className="block px-3 py-2 rounded-lg hover:bg-black/5 focus:outline-none focus:ring-2 focus:ring-rose-600/40" href="/my-dashboard">Buyer Dashboard</a>
+                    </div>
+                  </details>
+                  <span className="hidden md:inline-block w-px h-4 bg-white/30" aria-hidden="true" style={{ width: '1px', height: '16px', background: 'rgba(255,255,255,.18)', display: 'inline-block', borderRadius: '1px' }} />
+                  <a href="/pricing/" className="hover:underline">Pricing</a>
+                </span>
+                <span className="hidden md:inline-block w-px h-4 bg-white/30" aria-hidden="true" style={{ width: '1px', height: '16px', background: 'rgba(255,255,255,.18)', display: 'inline-block', borderRadius: '1px' }} />
+                <a href="/about/" className="hover:underline">About</a>
+              </nav>
+              {/* Auth button container - populated by auth-gate.js */}
+              <div id="site-header-auth-container"></div>
+            </div>
+          </div>
+        </header>
         <AppI18nProvider>
-          <SiteHeader />
           <EntitlementsProvider>
             <PrefetchRoutes />
             {children}

@@ -100,17 +100,19 @@ async function main() {
 
   // Intentionally left empty (sharedAssets = [])
 
-  // Copy root index.html as the public homepage so Netlify can serve static `/`
-  try {
-    const rootIndex = path.join(repoRoot, 'index.html');
-    if (await pathExists(rootIndex)) {
-      const destIndex = path.join(nextPublic, 'index.html');
-      await copyFile(rootIndex, destIndex);
-      console.log('[copy-static] Copied root index.html -> app/public/index.html');
-    }
-  } catch (e) {
-    console.warn('[copy-static] Could not copy root index.html:', e?.message || e);
-  }
+  // DISABLED: Do NOT copy root index.html - Next.js app/page.tsx handles homepage
+  // The root index.html has a static header which conflicts with the dynamic SiteHeader component
+  // try {
+  //   const rootIndex = path.join(repoRoot, 'index.html');
+  //   if (await pathExists(rootIndex)) {
+  //     const destIndex = path.join(nextPublic, 'index.html');
+  //     await copyFile(rootIndex, destIndex);
+  //     console.log('[copy-static] Copied root index.html -> app/public/index.html');
+  //   }
+  // } catch (e) {
+  //   console.warn('[copy-static] Could not copy root index.html:', e?.message || e);
+  // }
+  console.log('[copy-static] Skipping root index.html copy - using Next.js app/page.tsx');
 
   console.log('[copy-static] Done.');
 }

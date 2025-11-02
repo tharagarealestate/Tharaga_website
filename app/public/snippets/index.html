@@ -219,11 +219,22 @@
   function createEl(tag, cls, attrs){ const el = document.createElement(tag); if (cls) el.className = cls; if (attrs) for (var k in attrs) el.setAttribute(k, attrs[k]); return el; }
   function validateEmail(val){ return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val); }
   function ensureContainer(){
-    let hdr = headerRoot();
-    let wrap = document.querySelector('.thg-auth-wrap');
+    // First, try to use the SiteHeader's dedicated container
+    let wrap = document.getElementById('site-header-auth-container');
+    if (wrap) {
+      // Convert the container to have thg-auth-wrap styles
+      if (!wrap.classList.contains('thg-auth-wrap')) {
+        wrap.className = 'thg-auth-wrap';
+      }
+      return wrap;
+    }
+
+    // Fallback: create wrapper in header or body (original behavior)
+    wrap = document.querySelector('.thg-auth-wrap');
     if (!wrap){
       wrap = document.createElement('div');
       wrap.className = 'thg-auth-wrap';
+      let hdr = headerRoot();
       let parent = hdr || document.body;
       if (hdr) { const cs = getComputedStyle(hdr); if (cs.position === 'static') { hdr.style.position = 'relative'; } parent.appendChild(wrap); }
       else { wrap.classList.add('is-fixed'); parent.appendChild(wrap); }
@@ -234,8 +245,11 @@
   function injectStyles(){
     if (document.getElementById('thg-auth-styles')) return;
   const css = `
-.thg-auth-wrap{ position:absolute; top:14px; right:16px; display:flex; align-items:center; z-index:${Z_BASE}; }
-@media (min-width:1024px){ .thg-auth-wrap{ top:16px; right:24px; } }
+/* Auth wrapper - when used in SiteHeader container, it's already positioned correctly */
+.thg-auth-wrap{ display:flex; align-items:center; position:relative; z-index:${Z_BASE}; }
+/* Fallback positioning when not in SiteHeader */
+header .thg-auth-wrap:not(#site-header-auth-container){ position:absolute; top:14px; right:16px; }
+@media (min-width:1024px){ header .thg-auth-wrap:not(#site-header-auth-container){ top:16px; right:24px; } }
 .thg-auth-wrap.is-fixed{ position:fixed; top:14px; right:16px; }
 
 /* Header button */

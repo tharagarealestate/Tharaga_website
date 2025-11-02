@@ -50,11 +50,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           [role='banner'] details > summary::-webkit-details-marker{ display:none }
           /* Vertical dividers (match tone and size) */
           [role='banner'] nav[aria-label='Primary'] span[aria-hidden='true']{ width:1px; height:16px; background:rgba(255,255,255,.18) !important; display:inline-block; border-radius:1px }
-          /* Right-side auth group visuals */
-          [role='banner'] .thg-auth-wrap{ display:flex; align-items:center; gap:12px }
-          [role='banner'] .thg-auth-wrap::before{ content:""; display:inline-block; width:1px; height:16px; background:rgba(255,255,255,.22); border-radius:1px }
-          [role='banner'] .thg-auth-btn{ background:rgba(255,255,255,.12) !important; color:#fff !important; border-color:rgba(255,255,255,.85) !important }
+          /* Right-side auth container - positioned in flex layout */
+          #site-header-auth-container{ display:flex; align-items:center; gap:12px }
+          /* Auth button styling within header */
+          [role='banner'] .thg-auth-wrap{ display:flex !important; align-items:center; gap:8px; position:relative !important }
+          [role='banner'] .thg-auth-btn{ background:rgba(255,255,255,.12) !important; color:#fff !important; border-color:rgba(255,255,255,.85) !important; font-size:14px; padding:8px 14px }
           [role='banner'] .thg-auth-btn:hover{ background:rgba(255,255,255,.2) !important }
+          /* Ensure dropdown menu appears correctly */
+          [role='banner'] .thg-auth-menu{ position:absolute !important; top:calc(100% + 10px) !important; right:0 !important }
 
           /* Mobile adjustments */
           @media (max-width:880px){
@@ -66,9 +69,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             /* Hide top-level Pricing/About on mobile; provided in Features menu */
             [role='banner'] nav[aria-label='Primary'] a[href='/pricing/'],
             [role='banner'] nav[aria-label='Primary'] a[href='/about/']{ display:none }
-            /* Auth group anchoring and divider height on mobile */
-            [role='banner'] .thg-auth-wrap{ position:absolute; top:10px; right:12px; padding:0; gap:10px }
-            [role='banner'] .thg-auth-wrap::before{ height:14px }
+            /* Auth container positioning on mobile */
+            #site-header-auth-container{ position:absolute; top:10px; right:12px; padding:0; gap:10px }
+            [role='banner'] .thg-auth-wrap{ position:relative !important; padding:0; gap:8px }
             [role='banner'] nav[aria-label='Primary'] span[aria-hidden='true']{ height:14px }
           }
         ` }}

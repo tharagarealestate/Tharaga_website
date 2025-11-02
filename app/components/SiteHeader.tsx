@@ -96,33 +96,8 @@ export default function SiteHeader() {
             <a href="/about/" className="hover:underline" onMouseEnter={()=>router.prefetch('/about/')}>About</a>
           </nav>
 
-          {/* Right: Auth button (opens modal, no redirect) */}
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              aria-haspopup="dialog"
-              onClick={() => {
-                try {
-                  const next = location.pathname + location.search
-                  const g = (window as any).authGate
-                  if (g && typeof g.openLoginModal === 'function') {
-                    g.openLoginModal({ next })
-                    return
-                  }
-                  if (typeof (window as any).__thgOpenAuthModal === 'function') {
-                    ;(window as any).__thgOpenAuthModal({ next })
-                    return
-                  }
-                  location.href = '/login_signup_glassdrop/?next=' + encodeURIComponent(next)
-                } catch {
-                  location.href = '/login_signup_glassdrop/'
-                }
-              }}
-              className="inline-flex items-center gap-2 rounded-full border border-white/90 px-3 py-2 text-sm font-semibold hover:bg-white/10"
-            >
-              Login / Signup
-            </button>
-          </div>
+          {/* Right: Auth button (dynamically populated by auth-gate.js) */}
+          <div id="site-header-auth-container"></div>
         </div>
       </div>
     </header>

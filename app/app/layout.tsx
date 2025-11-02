@@ -18,24 +18,26 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <head>
         <link rel="manifest" href="/manifest.webmanifest" />
         <meta name="theme-color" content="#ffffff" />
-        {/* Durable Auth modal support across all pages */}
-        <script dangerouslySetInnerHTML={{ __html: `window.DURABLE_AUTH_URL='/login_signup_glassdrop/';window.AUTH_HIDE_HEADER=false;` }} />
-        <script src="/login_signup_glassdrop/auth-gate.js" defer />
-        {/* Global auth helper for easy access */}
+        {/* Auth configuration */}
+        <script dangerouslySetInnerHTML={{ __html: `window.AUTH_HIDE_HEADER=false;window.AUTH_OPEN_ON_LOAD=false;` }} />
+        {/* Load snippets auth system (inline from snippets/index.html) */}
+        <script src="/snippets/" type="text/html" id="snippets-auth-src" style={{display:'none'}} />
         <script dangerouslySetInnerHTML={{ __html: `
-          window.__thgOpenAuthModal = function(opts) {
-            try {
-              if (window.authGate && typeof window.authGate.openLoginModal === 'function') {
-                window.authGate.openLoginModal(opts || {});
-                return true;
-              }
-              console.warn('authGate not ready yet');
-              return false;
-            } catch(e) {
-              console.error('Failed to open auth modal:', e);
-              return false;
-            }
-          };
+          // Extract and execute scripts from snippets/index.html
+          (function(){
+            fetch('/snippets/').then(r=>r.text()).then(html=>{
+              const parser = new DOMParser();
+              const doc = parser.parseFromString(html, 'text/html');
+              const scripts = doc.querySelectorAll('script');
+              scripts.forEach(script => {
+                if (script.textContent.includes('__thgAuthInstalledV1')) {
+                  const newScript = document.createElement('script');
+                  newScript.textContent = script.textContent;
+                  document.head.appendChild(newScript);
+                }
+              });
+            }).catch(e => console.error('Failed to load auth:', e));
+          })();
         ` }} />
         {/* Static header styles from index.html */}
         <style

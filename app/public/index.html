@@ -614,12 +614,14 @@
     function setButtonLoading(ui, isLoading){ const spinner = ui.btn.querySelector('.thg-spinner'); const label = ui.btn.querySelector('.thg-label'); if (isLoading){ ui.btn.classList.remove('is-auth'); if (label) label.textContent = 'Loading…'; if (spinner) spinner.style.display = 'inline-block'; ui.btn.setAttribute('aria-expanded','false'); } else { if (spinner) spinner.style.display = 'none'; } }
 
     function render(ui){
+      console.log('[thg-auth] render() called, state.user:', state.user?.email || 'none', 'state.loading:', state.loading);
       const label = ui.btn.querySelector('.thg-label');
       const avatar = ui.btn.querySelector('.thg-initial');
       if (state.loading){ setButtonLoading(ui, true); return; }
       setButtonLoading(ui, false);
       if (state.user && state.user.email){
         const name = getDisplayName(state.user);
+        console.log('[thg-auth] User logged in, updating button to:', name);
         ui.btn.classList.add('is-auth');
         avatar.textContent = getInitials(state.user);
         label.textContent = clamp(name, 24);
@@ -631,6 +633,7 @@
         if (nameEl) nameEl.textContent = clamp(name, 28);
         if (emailEl) emailEl.textContent = clamp(state.user.email || '', 30);
       } else {
+        console.log('[thg-auth] No user, showing Login/Signup button');
         ui.btn.classList.remove('is-auth');
         ui.btn.setAttribute('aria-expanded','false');
         label.textContent = 'Login / Signup';
@@ -721,7 +724,7 @@
       forgotBtn.addEventListener('click', function(){ showPanel(ui.overlay, 'reset', 'Reset password'); const el = ui.overlay.querySelector('#thg-rp-email'); const source = ui.overlay.querySelector('#thg-si-email'); if (source && el && source.value) el.value = source.value; if (el) el.focus(); });
       ui.overlay.querySelector('#thg-signin-btn').addEventListener('click', async function(){ if (!state.supabaseReady){ showError(ui.overlay, 'Authentication is not initialized.'); return; } const email = ui.overlay.querySelector('#thg-si-email').value.trim(); const password = ui.overlay.querySelector('#thg-si-password').value; if (!validateEmail(email)) { showError(ui.overlay, 'Enter a valid email.'); return; } if (!password || password.length < 6) { showError(ui.overlay, 'Enter your password.'); return; } clearError(ui.overlay); setModalLoading(ui.overlay, true); try{ const { error } = await window.supabase.auth.signInWithPassword({ email, password }); if (error) { showError(ui.overlay, error.message || 'Failed to sign in.'); } } catch(ex){ showError(ui.overlay, 'Network error. Please try again.'); } finally { setModalLoading(ui.overlay, false); } });
       ui.overlay.querySelector('#thg-signup-btn').addEventListener('click', async function(){ if (!state.supabaseReady){ showError(ui.overlay, 'Authentication is not initialized.'); return; } const name = ui.overlay.querySelector('#thg-su-name').value.trim(); const email = ui.overlay.querySelector('#thg-su-email').value.trim(); const password = ui.overlay.querySelector('#thg-su-password').value; if (!validateEmail(email)) { showError(ui.overlay, 'Enter a valid email.'); return; } if (!password || password.length < 8) { showError(ui.overlay, 'Password must be at least 8 characters.'); return; } clearError(ui.overlay); setModalLoading(ui.overlay, true); try{ const { error } = await window.supabase.auth.signUp({ email, password, options: { data: name ? { full_name: name } : {} } }); if (error) { showError(ui.overlay, error.message || 'Failed to create account.'); } else { showError(ui.overlay, 'Check your email to verify your account.'); } } catch(ex){ showError(ui.overlay, 'Network error. Please try again.'); } finally { setModalLoading(ui.overlay, false); } });
-      ui.overlay.querySelectorAll('.thg-oauth-btn').forEach(function(btn){ btn.addEventListener('click', async function(){ const provider = btn.getAttribute('data-provider'); clearError(ui.overlay); setModalLoading(ui.overlay, true); try{ if (!(await ensureSupabaseReady())){ showError(ui.overlay, 'Authentication is loading. Please try again in a moment.'); setModalLoading(ui.overlay, false); return; } const redirectTo = location.origin + location.pathname + location.search; const { data, error } = await window.supabase.auth.signInWithOAuth({ provider, options: { redirectTo, queryParams: { prompt: 'select_account' } } }); if (error) { const msg = /provider is not enabled/i.test(error.message||'') ? 'Google sign-in is not available yet.' : (error.message || 'Could not start sign in.'); showError(ui.overlay, msg); setModalLoading(ui.overlay, false); return; } if (data && data.url){ location.href = data.url; } else { setModalLoading(ui.overlay, false); showError(ui.overlay, 'Could not start ' + provider + ' sign in.'); } } catch(ex){ showError(ui.overlay, 'Error: ' + (ex.message || 'Could not start sign in')); setModalLoading(ui.overlay, false); } }); });
+      ui.overlay.querySelectorAll('.thg-oauth-btn').forEach(function(btn){ btn.addEventListener('click', async function(){ const provider = btn.getAttribute('data-provider'); clearError(ui.overlay); setModalLoading(ui.overlay, true); try{ await ensureSupabaseReady(); if (!window.supabase || !window.supabase.auth){ showError(ui.overlay, 'Authentication is not available. Please reload the page.'); setModalLoading(ui.overlay, false); return; } const redirectTo = location.origin + location.pathname + location.search; const { data, error } = await window.supabase.auth.signInWithOAuth({ provider, options: { redirectTo, queryParams: { prompt: 'select_account' } } }); if (error) { const msg = /provider is not enabled/i.test(error.message||'') ? 'Google sign-in is not available yet.' : (error.message || 'Could not start sign in.'); showError(ui.overlay, msg); setModalLoading(ui.overlay, false); return; } if (data && data.url){ location.href = data.url; } else { setModalLoading(ui.overlay, false); showError(ui.overlay, 'Could not start ' + provider + ' sign in.'); } } catch(ex){ showError(ui.overlay, 'Error: ' + (ex.message || 'Could not start sign in')); setModalLoading(ui.overlay, false); } }); });
       ui.overlay.querySelector('#thg-reset-btn').addEventListener('click', async function(){ if (!state.supabaseReady){ showError(ui.overlay, 'Authentication is not initialized.'); return; } const email = ui.overlay.querySelector('#thg-rp-email').value.trim(); if (!validateEmail(email)) { showError(ui.overlay, 'Enter a valid email.'); return; } clearError(ui.overlay); setModalLoading(ui.overlay, true); try{ const redirectTo = location.origin + location.pathname + location.search; const { error } = await window.supabase.auth.resetPasswordForEmail(email, { redirectTo }); if (error) { showError(ui.overlay, error.message || 'Failed to send reset link.'); } else { showError(ui.overlay, 'Reset link sent. Check your email.'); } } catch(ex){ showError(ui.overlay, 'Network error. Please try again.'); } finally { setModalLoading(ui.overlay, false); } });
       ui.overlay.querySelector('#thg-update-btn').addEventListener('click', async function(){ if (!state.supabaseReady){ showError(ui.overlay, 'Authentication is not initialized.'); return; } const password = ui.overlay.querySelector('#thg-up-password').value; if (!password || password.length < 8) { showError(ui.overlay, 'Password must be at least 8 characters.'); return; } clearError(ui.overlay); setModalLoading(ui.overlay, true); try{ const { error } = await window.supabase.auth.updateUser({ password }); if (error) { showError(ui.overlay, error.message || 'Failed to update password.'); } else { showPanel(ui.overlay, 'signin', 'Sign in'); showError(ui.overlay, 'Password updated. Please sign in.'); } } catch(ex){ showError(ui.overlay, 'Network error. Please try again.'); } finally { setModalLoading(ui.overlay, false); } });
       ui.confirmEl.querySelector('.thg-confirm-cancel').addEventListener('click', function(){ closeConfirm(ui); });
@@ -751,9 +754,44 @@
       }
       if (!window.supabase || !window.supabase.auth){ state.supabaseReady = false; state.loading = false; render( ui); console.warn('[thg-auth] window.supabase not found.'); return; }
       state.supabaseReady = true;
-      try{ const { data } = await window.supabase.auth.getSession(); state.user = data?.session?.user || null; } catch(_){ state.user = null; } finally { state.loading = false; render(ui); try { broadcastAuth(state.user); } catch(__) {} try { setBuyerEmailLockFromUser(state.user); } catch(__) {} }
+
+      // Check if this is an OAuth callback (post_auth=1 or access_token in URL)
+      const urlParams = new URLSearchParams(location.search);
+      const isOAuthCallback = urlParams.has('post_auth') || location.hash.includes('access_token');
+
       try{
-        const { data: sub } = window.supabase.auth.onAuthStateChange(function(event, session){ state.user = session?.user || null; render(ui); try { broadcastAuth(state.user); } catch(__) {} try { setBuyerEmailLockFromUser(state.user); } catch(__) {} if (event === 'PASSWORD_RECOVERY'){ const overlay = ui.overlay; overlay.setAttribute('aria-hidden','false'); showPanel(overlay, 'update', 'Set new password'); setTimeout(function(){ const el = overlay.querySelector('#thg-up-password'); if (el) el.focus(); }, 0); } if (state.user && state.user.email){ if (state.nextUrl){ const to = state.nextUrl; state.nextUrl = null; try { closeAuthModal(ui); } catch(_){} location.href = to; } else { try { closeAuthModal(ui); } catch(_){} } } else { closeMenu(ui); } });
+        const { data } = await window.supabase.auth.getSession();
+        state.user = data?.session?.user || null;
+        console.log('[thg-auth] getSession called, user:', state.user?.email || 'none', 'isOAuthCallback:', isOAuthCallback);
+
+        // If OAuth callback and user is logged in, clean up URL
+        if (isOAuthCallback && state.user) {
+          console.log('[thg-auth] OAuth callback detected, cleaning URL');
+          // Clean up URL parameters without page reload
+          const cleanUrl = location.origin + location.pathname;
+          history.replaceState(null, '', cleanUrl);
+        }
+      } catch(_){
+        state.user = null;
+      } finally {
+        state.loading = false;
+        render(ui);
+        console.log('[thg-auth] render() called after getSession');
+        try { broadcastAuth(state.user); } catch(__) {}
+        try { setBuyerEmailLockFromUser(state.user); } catch(__) {}
+      }
+
+      try{
+        const { data: sub } = window.supabase.auth.onAuthStateChange(function(event, session){
+          console.log('[thg-auth] onAuthStateChange fired, event:', event, 'user:', session?.user?.email || 'none');
+          state.user = session?.user || null;
+          render(ui);
+          console.log('[thg-auth] render() called from onAuthStateChange');
+          try { broadcastAuth(state.user); } catch(__) {}
+          try { setBuyerEmailLockFromUser(state.user); } catch(__) {}
+          if (event === 'PASSWORD_RECOVERY'){ const overlay = ui.overlay; overlay.setAttribute('aria-hidden','false'); showPanel(overlay, 'update', 'Set new password'); setTimeout(function(){ const el = overlay.querySelector('#thg-up-password'); if (el) el.focus(); }, 0); }
+          if (state.user && state.user.email){ if (state.nextUrl){ const to = state.nextUrl; state.nextUrl = null; try { closeAuthModal(ui); } catch(_){} location.href = to; } else { try { closeAuthModal(ui); } catch(_){} } } else { closeMenu(ui); }
+        });
         state.sub = sub?.subscription || sub || null;
       } catch(_){ }
     }

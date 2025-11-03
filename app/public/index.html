@@ -288,15 +288,14 @@
     // Optional routes:
     // window.AUTH_NAV = { profile: '/account', dashboard: '/app' };
     // window.AUTH_NAV.settings = '/settings';
-    window.DURABLE_AUTH_URL = '/login_signup_glassdrop/';
+    // REMOVED: window.DURABLE_AUTH_URL - using snippets inline auth instead
     // Optional: auto-open the auth modal on page load
     // window.AUTH_OPEN_ON_LOAD = true; // or use ?auth_open=1
   </script>
 
-  <!-- 2) Load auth-gate (handles iframe auth modal + cross-tab sync) -->
-  <script src="/login_signup_glassdrop/auth-gate.js" defer></script>
+  <!-- REMOVED: auth-gate.js loader - using snippets inline auth system instead -->
 
-  <!-- 4) Inline durable auth header UI (safe to paste into Durable Head Code) -->
+  <!-- Inline durable auth header UI (safe to paste into Durable Head Code) -->
   <script>
   // Durable top-right authentication header and modal (Supabase-based)
   // Works standalone when pasted into Durable Head Code

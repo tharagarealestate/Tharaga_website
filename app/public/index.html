@@ -266,8 +266,8 @@
     }
   </style>
 
-  <!-- Load Enhanced Role Manager for buyer/builder role switching -->
-  <script src="/role-manager-enhanced.js"></script>
+  <!-- Load Role Manager V2 - Optimized for speed and smooth UX -->
+  <script src="/role-manager-v2.js"></script>
 
   <!-- Durable Head Code (from snippets/index.html) -->
   <!-- 0) Auto-open on load (optional) -->
@@ -962,10 +962,11 @@
             </div>
           </details>
           <span class="divider" aria-hidden="true"></span>
-          <!-- Portal dropdown (replaces simple Builder link) -->
-          <details class="dropdown">
+          <!-- Portal dropdown (dynamic based on user role) -->
+          <details class="dropdown" id="portal-menu">
             <summary>Portal</summary>
-            <div class="menu" role="menu" aria-label="Portal menu">
+            <div class="menu" role="menu" aria-label="Portal menu" id="portal-menu-items">
+              <!-- Dynamically populated by role manager -->
               <a href="/builder">Builder Dashboard</a>
               <a href="/my-dashboard">Buyer Dashboard</a>
             </div>
@@ -1314,6 +1315,62 @@
       } catch(_){ }
       // Initialize Lucide icons once DOM and script are ready
       try { window.lucide && window.lucide.createIcons(); } catch(_){ }
+
+      // Update Portal menu based on user roles
+      function updatePortalMenu() {
+        const portalMenuItems = document.getElementById('portal-menu-items');
+        if (!portalMenuItems || !window.thgRoleManager) return;
+
+        const state = window.thgRoleManager.getState();
+        if (!state.initialized || state.roles.length === 0) {
+          // No roles yet, hide portal menu
+          const portalMenu = document.getElementById('portal-menu');
+          if (portalMenu) portalMenu.style.display = 'none';
+          return;
+        }
+
+        // Show portal menu
+        const portalMenu = document.getElementById('portal-menu');
+        if (portalMenu) portalMenu.style.display = '';
+
+        let menuHTML = '';
+
+        // Show relevant dashboard(s) based on roles
+        if (state.roles.includes('buyer')) {
+          const active = state.primaryRole === 'buyer' ? ' <span style="color:#10b981">✓</span>' : '';
+          menuHTML += `<a href="/my-dashboard">🏠 Buyer Dashboard${active}</a>`;
+        }
+
+        if (state.roles.includes('builder')) {
+          const active = state.primaryRole === 'builder' ? ' <span style="color:#10b981">✓</span>' : '';
+          const verified = state.builderVerified ? ' <span style="color:#10b981;font-size:11px">✓ Verified</span>' : '';
+          menuHTML += `<a href="/builder">🏗️ Builder Dashboard${active}${verified}</a>`;
+        }
+
+        portalMenuItems.innerHTML = menuHTML || '<a href="/my-dashboard">Buyer Dashboard</a><a href="/builder">Builder Dashboard</a>';
+      }
+
+      // Update portal menu when roles change
+      if (window.thgRoleManager) {
+        // Initial update after roles are fetched
+        const checkRoles = setInterval(() => {
+          const state = window.thgRoleManager.getState();
+          if (state.initialized) {
+            clearInterval(checkRoles);
+            updatePortalMenu();
+          }
+        }, 500);
+
+        // Update on role switch
+        window.addEventListener('storage', (e) => {
+          if (e.key === 'tharaga_active_role') {
+            updatePortalMenu();
+          }
+        });
+
+        // Expose update function globally
+        window.__updatePortalMenu = updatePortalMenu;
+      }
     });
   </script>
 </body>

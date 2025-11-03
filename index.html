@@ -266,8 +266,8 @@
     }
   </style>
 
-  <!-- Load Role Manager for buyer/builder role switching -->
-  <script src="/role-manager.js"></script>
+  <!-- Load Enhanced Role Manager for buyer/builder role switching -->
+  <script src="/role-manager-enhanced.js"></script>
 
   <!-- Durable Head Code (from snippets/index.html) -->
   <!-- 0) Auto-open on load (optional) -->
@@ -782,6 +782,12 @@
         console.log('[thg-auth] render() called after getSession');
         try { broadcastAuth(state.user); } catch(__) {}
         try { setBuyerEmailLockFromUser(state.user); } catch(__) {}
+
+        // Initialize role manager for existing logged-in users
+        if (state.user && window.thgRoleManager) {
+          console.log('[thg-auth] Initializing role manager on page load');
+          window.thgRoleManager.init(state.user, ui).catch(err => console.error('[thg-auth] Role manager init error:', err));
+        }
       }
 
       try{
@@ -793,10 +799,10 @@
           try { broadcastAuth(state.user); } catch(__) {}
           try { setBuyerEmailLockFromUser(state.user); } catch(__) {}
 
-          // Initialize role manager for new sign-ins
-          if (event === 'SIGNED_IN' && state.user && window.thgRoleManager) {
-            console.log('[thg-auth] Initializing role manager for new user');
-            window.thgRoleManager.init(state.user).catch(err => console.error('[thg-auth] Role manager init error:', err));
+          // Initialize role manager for new sign-ins and existing sessions
+          if ((event === 'SIGNED_IN' || event === 'INITIAL_SESSION') && state.user && window.thgRoleManager) {
+            console.log('[thg-auth] Initializing role manager for user');
+            window.thgRoleManager.init(state.user, ui).catch(err => console.error('[thg-auth] Role manager init error:', err));
           }
 
           if (event === 'PASSWORD_RECOVERY'){ const overlay = ui.overlay; overlay.setAttribute('aria-hidden','false'); showPanel(overlay, 'update', 'Set new password'); setTimeout(function(){ const el = overlay.querySelector('#thg-up-password'); if (el) el.focus(); }, 0); }
@@ -813,6 +819,10 @@
       injectStyles();
       const ui = createUI();
       bindUI(ui);
+
+      // Store UI globally for role manager access
+      window.__thgAuthUI = ui;
+      window.__thgAuthState = state;
       // If there is no header on the host page, we use a fixed fallback button.
       // On white/light backgrounds (like the Netlify snippet page), the default
       // white-on-dark styling can be invisible. Add a light-theme override only

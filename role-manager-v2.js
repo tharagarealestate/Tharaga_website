@@ -18,7 +18,21 @@
     initialized: false,
     initializingModal: false,  // Prevents duplicate modals
     hasShownOnboarding: false, // Show onboarding only once per session
+    user: null, // Store user info for route guard
   };
+
+  // Emit custom event when role changes (for route guard)
+  function emitRoleChangeEvent() {
+    const event = new CustomEvent('thg-role-changed', {
+      detail: {
+        roles: roleState.roles,
+        primaryRole: roleState.primaryRole,
+        builderVerified: roleState.builderVerified,
+      }
+    });
+    window.dispatchEvent(event);
+    console.log('[role-v2] Emitted role change event');
+  }
 
   // API helper with timeout and retry
   async function apiCall(endpoint, options = {}) {
@@ -167,6 +181,9 @@
 
       // Show instant feedback
       showNotification(`Switched to ${role === 'buyer' ? 'Buyer' : 'Builder'} Mode`);
+
+      // Emit role change event for route guard
+      emitRoleChangeEvent();
 
       // API call in background
       apiCall('/api/user/switch-role', {

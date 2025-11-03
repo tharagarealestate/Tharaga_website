@@ -58,13 +58,16 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- Triggers for updated_at
+-- Triggers for updated_at (drop first if they exist to avoid conflicts)
+DROP TRIGGER IF EXISTS update_user_roles_updated_at ON user_roles;
 CREATE TRIGGER update_user_roles_updated_at BEFORE UPDATE ON user_roles
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_builder_profiles_updated_at ON builder_profiles;
 CREATE TRIGGER update_builder_profiles_updated_at BEFORE UPDATE ON builder_profiles
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_buyer_profiles_updated_at ON buyer_profiles;
 CREATE TRIGGER update_buyer_profiles_updated_at BEFORE UPDATE ON buyer_profiles
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
@@ -75,41 +78,50 @@ ALTER TABLE user_roles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE builder_profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE buyer_profiles ENABLE ROW LEVEL SECURITY;
 
--- user_roles policies
+-- user_roles policies (drop first if they exist to avoid conflicts)
+DROP POLICY IF EXISTS "Users can view their own roles" ON user_roles;
 CREATE POLICY "Users can view their own roles"
   ON user_roles FOR SELECT
   USING (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can insert their own roles" ON user_roles;
 CREATE POLICY "Users can insert their own roles"
   ON user_roles FOR INSERT
   WITH CHECK (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can update their own roles" ON user_roles;
 CREATE POLICY "Users can update their own roles"
   ON user_roles FOR UPDATE
   USING (auth.uid() = user_id);
 
--- builder_profiles policies
+-- builder_profiles policies (drop first if they exist to avoid conflicts)
+DROP POLICY IF EXISTS "Users can view their own builder profile" ON builder_profiles;
 CREATE POLICY "Users can view their own builder profile"
   ON builder_profiles FOR SELECT
   USING (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can insert their own builder profile" ON builder_profiles;
 CREATE POLICY "Users can insert their own builder profile"
   ON builder_profiles FOR INSERT
   WITH CHECK (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can update their own builder profile" ON builder_profiles;
 CREATE POLICY "Users can update their own builder profile"
   ON builder_profiles FOR UPDATE
   USING (auth.uid() = user_id);
 
--- buyer_profiles policies
+-- buyer_profiles policies (drop first if they exist to avoid conflicts)
+DROP POLICY IF EXISTS "Users can view their own buyer profile" ON buyer_profiles;
 CREATE POLICY "Users can view their own buyer profile"
   ON buyer_profiles FOR SELECT
   USING (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can insert their own buyer profile" ON buyer_profiles;
 CREATE POLICY "Users can insert their own buyer profile"
   ON buyer_profiles FOR INSERT
   WITH CHECK (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can update their own buyer profile" ON buyer_profiles;
 CREATE POLICY "Users can update their own buyer profile"
   ON buyer_profiles FOR UPDATE
   USING (auth.uid() = user_id);

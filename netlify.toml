@@ -31,10 +31,7 @@
   to = "/auth-email-landing/"
   status = 301
 
-[[redirects]]
-  from = "/login_signup_glassdrop"
-  to = "/login_signup_glassdrop/"
-  status = 301
+# Removed /login_signup_glassdrop redirect - using snippets auth system instead
 
 [[redirects]]
   from = "/auth-landing"

@@ -100,19 +100,18 @@ async function main() {
 
   // Intentionally left empty (sharedAssets = [])
 
-  // DISABLED: Do not copy root index.html - it conflicts with Next.js homepage
-  // The root index.html has the old design and bad auth system
-  // We want Next.js to handle the homepage route instead
-  // try {
-  //   const rootIndex = path.join(repoRoot, 'index.html');
-  //   if (await pathExists(rootIndex)) {
-  //     const destIndex = path.join(nextPublic, 'index.html');
-  //     await copyFile(rootIndex, destIndex);
-  //     console.log('[copy-static] Copied root index.html -> app/public/index.html');
-  //   }
-  // } catch (e) {
-  //   console.warn('[copy-static] Could not copy root index.html:', e?.message || e);
-  // }
+  // Copy root index.html as the public homepage - user prefers this design
+  // Note: auth-gate.js references have been removed from index.html (using snippets auth instead)
+  try {
+    const rootIndex = path.join(repoRoot, 'index.html');
+    if (await pathExists(rootIndex)) {
+      const destIndex = path.join(nextPublic, 'index.html');
+      await copyFile(rootIndex, destIndex);
+      console.log('[copy-static] Copied root index.html -> app/public/index.html');
+    }
+  } catch (e) {
+    console.warn('[copy-static] Could not copy root index.html:', e?.message || e);
+  }
 
   console.log('[copy-static] Done.');
 }

@@ -16,7 +16,9 @@
       "Bash(test:*)",
       "Bash(node scripts/copy-static.cjs:*)",
       "Bash(git push:*)",
-      "Bash(node ../scripts/copy-static.cjs:*)"
+      "Bash(node ../scripts/copy-static.cjs:*)",
+      "Bash(supabase status:*)",
+      "Bash(start https://supabase.com/dashboard/project/wedevtjjmdvngyshqdro/sql/new)"
     ],
     "deny": [],
     "ask": []

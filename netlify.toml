@@ -160,6 +160,31 @@
   status = 200
   force = true
 
+## Admin endpoints (Phase 4)
+[[redirects]]
+  from = "/api/admin/builders"
+  to = "/.netlify/functions/admin-get-builders"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/api/admin/verify-builder"
+  to = "/.netlify/functions/admin-verify-builder"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/api/admin/stats"
+  to = "/.netlify/functions/admin-stats"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/api/send-verification-email"
+  to = "/.netlify/functions/send-verification-email"
+  status = 200
+  force = true
+
 ## Stripe endpoints
 [[redirects]]
   from = "/api/checkout"

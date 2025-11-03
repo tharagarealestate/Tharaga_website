@@ -977,6 +977,9 @@
   async function initRoleManager(user, ui) {
     if (!user) return;
 
+    // Store user for route guard
+    roleState.user = user;
+
     // Prevent duplicate initialization
     if (roleState.initialized && !window.__forceRoleInit) {
       console.log('[role-v2] Already initialized, rebuilding menu only');

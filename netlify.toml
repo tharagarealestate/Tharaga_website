@@ -141,6 +141,25 @@
   status = 200
   force = true
 
+## User role management endpoints
+[[redirects]]
+  from = "/api/user/roles"
+  to = "/.netlify/functions/user-roles"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/api/user/add-role"
+  to = "/.netlify/functions/user-add-role"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/api/user/switch-role"
+  to = "/.netlify/functions/user-switch-role"
+  status = 200
+  force = true
+
 ## Stripe endpoints
 [[redirects]]
   from = "/api/checkout"

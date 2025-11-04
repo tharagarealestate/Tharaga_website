@@ -1476,16 +1476,19 @@
 
       // Update portal menu when roles change
       if (window.thgRoleManager) {
-        // Initial update after roles are fetched
+        // Initial update after roles are fetched - wait for BOTH initialized AND user
         const checkRoles = setInterval(() => {
           const state = window.thgRoleManager.getState();
-          if (state.initialized) {
+          if (state.initialized && state.user) {
             clearInterval(checkRoles);
             updatePortalMenu();
           }
         }, 500);
 
-        // Update on role switch
+        // Listen for role change events from role manager
+        window.addEventListener('thg-role-changed', updatePortalMenu);
+
+        // Update on role switch (storage event for cross-tab communication)
         window.addEventListener('storage', (e) => {
           if (e.key === 'tharaga_active_role') {
             updatePortalMenu();
@@ -1494,6 +1497,26 @@
 
         // Expose update function globally
         window.__updatePortalMenu = updatePortalMenu;
+      } else {
+        // If role manager not loaded yet, retry
+        setTimeout(() => {
+          if (window.thgRoleManager) {
+            const checkRoles = setInterval(() => {
+              const state = window.thgRoleManager.getState();
+              if (state.initialized && state.user) {
+                clearInterval(checkRoles);
+                updatePortalMenu();
+              }
+            }, 500);
+            window.addEventListener('thg-role-changed', updatePortalMenu);
+            window.addEventListener('storage', (e) => {
+              if (e.key === 'tharaga_active_role') {
+                updatePortalMenu();
+              }
+            });
+            window.__updatePortalMenu = updatePortalMenu;
+          }
+        }, 1000);
       }
     });
   </script>

@@ -396,7 +396,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           if (window.thgRoleManager) {
             const checkRoles = setInterval(() => {
               const state = window.thgRoleManager.getState();
-              if (state.initialized) {
+              // Wait for BOTH initialized AND user to be ready
+              if (state.initialized && state.user) {
                 clearInterval(checkRoles);
                 updatePortalMenu();
               }
@@ -404,6 +405,20 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 
             // Listen for role changes
             window.addEventListener('thg-role-changed', updatePortalMenu);
+          } else {
+            // If role manager not loaded yet, retry
+            setTimeout(() => {
+              if (window.thgRoleManager) {
+                const checkRoles = setInterval(() => {
+                  const state = window.thgRoleManager.getState();
+                  if (state.initialized && state.user) {
+                    clearInterval(checkRoles);
+                    updatePortalMenu();
+                  }
+                }, 500);
+                window.addEventListener('thg-role-changed', updatePortalMenu);
+              }
+            }, 1000);
           }
 
           // Make function globally available

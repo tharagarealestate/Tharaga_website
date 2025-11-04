@@ -34,34 +34,11 @@ export async function middleware(req: NextRequest) {
   }
 
   // 2) Admin route protection
+  // SKIP /admin - it's a standalone HTML served by Netlify redirect (netlify.toml line 55-58)
+  // The admin panel has its own authentication in admin/index.html
   if (pathname === '/admin' || pathname.startsWith('/admin/')) {
-    if (process.env.NEXT_PUBLIC_DISABLE_ADMIN_GUARD === 'true') {
-      return NextResponse.next()
-    }
-    const res = NextResponse.next()
-    const supabase = createMiddlewareClient({ req, res })
-
-    const {
-      data: { user },
-    } = await supabase.auth.getUser()
-
-    if (!user) {
-      const dest = new URL('/login', req.url)
-      dest.searchParams.set('next', pathname)
-      return NextResponse.redirect(dest)
-    }
-
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', user.id)
-      .single()
-
-    if (profile?.role !== 'admin') {
-      return NextResponse.redirect(new URL('/unauthorized', req.url))
-    }
-
-    return res
+    // Let Netlify handle /admin routing - don't intercept
+    return NextResponse.next()
   }
 
   // 3) Homepage for explicit locale root -> serve static marketing homepage

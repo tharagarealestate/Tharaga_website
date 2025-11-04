@@ -11,9 +11,9 @@ export const metadata: Metadata = {
 
 export default function MyDashboardLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="min-h-screen bg-gray-200">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-gray-50 to-primary-50/30">
       <TopNav />
-      <div className="mx-auto max-w-7xl px-4 pb-20 pt-4">
+      <div className="mx-auto max-w-7xl pb-20 pt-4">
         {children}
       </div>
       <MobileBottomNav />

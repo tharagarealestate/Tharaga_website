@@ -48,10 +48,7 @@
   to = "/snippets/"
   status = 301
 
-[[redirects]]
-  from = "/pricing"
-  to = "/pricing/"
-  status = 301
+# Removed /pricing redirect - Next.js App Router handles both /pricing and /pricing/ naturally
 
 ## Admin Panel - Serve standalone HTML (must be before Next.js catch-all)
 [[redirects]]

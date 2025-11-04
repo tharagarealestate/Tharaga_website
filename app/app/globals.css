@@ -71,10 +71,21 @@
     --shadow-gold: 0 8px 32px 0 rgb(var(--gold-600) / 0.25);
     --shadow-emerald: 0 8px 24px 0 rgb(var(--emerald-600) / 0.20);
 
-    /* GLASSMORPHISM */
+    /* GLASSMORPHISM - Premium "Frosted Wealth" */
+    --glass-white: rgba(255, 255, 255, 0.7);
+    --glass-dark: rgba(10, 30, 61, 0.8);
+    --glass-blur: 24px;
     --glass-bg: rgba(255, 255, 255, 0.85);
-    --glass-blur: blur(20px);
     --glass-border: 1px solid rgb(var(--gold-500) / 0.15);
+    
+    /* PREMIUM GRADIENTS */
+    --gradient-pricing-hero: linear-gradient(135deg, #0A1E3D 0%, #1A4173 50%, #2563EB 100%);
+    --gradient-gold-shine: linear-gradient(135deg, #D4AF37 0%, #F4E5B2 50%, #D4AF37 100%);
+    --gradient-emerald: linear-gradient(135deg, #064E3B 0%, #10B981 50%, #6EE7B7 100%);
+    --gradient-card-hover: linear-gradient(180deg, rgba(212, 175, 55, 0.1) 0%, rgba(16, 185, 129, 0.1) 100%);
+    
+    /* SHIMMER ANIMATION */
+    --shimmer: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
 
     /* TYPOGRAPHY */
     --font-display: 'Playfair Display', 'Merriweather', Georgia, serif;
@@ -110,6 +121,17 @@ html, body {
   0%, 100% { transform: scale(1); opacity: 0.6; }
   50% { transform: scale(1.06); opacity: 1; }
 }
+
+/* Shimmer animation for premium effects */
+@keyframes shimmer {
+  0% { background-position: -1000px 0; }
+  100% { background-position: 1000px 0; }
+}
+
+@keyframes shimmer-slow {
+  0% { background-position: -2000px 0; }
+  100% { background-position: 2000px 0; }
+}
 @layer utilities {
   .text-gradient-gold {
     @apply bg-gradient-to-r from-gold-600 via-gold-500 to-gold-400 bg-clip-text text-transparent;
@@ -137,5 +159,35 @@ html, body {
   .animate-pulse-slow-delay {
     animation: pulse-slow 6s ease-in-out infinite;
     animation-delay: 1s;
+  }
+
+  /* Shimmer effect utilities */
+  .shimmer {
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+    background-size: 200% 100%;
+    animation: shimmer 2s infinite;
+  }
+
+  .shimmer-slow {
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    background-size: 200% 100%;
+    animation: shimmer-slow 4s infinite;
+  }
+
+  /* Enhanced glassmorphism */
+  .glass-premium {
+    background: var(--glass-white);
+    backdrop-filter: blur(var(--glass-blur));
+    -webkit-backdrop-filter: blur(var(--glass-blur));
+    border: var(--glass-border);
+    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
+  }
+
+  .glass-dark-premium {
+    background: var(--glass-dark);
+    backdrop-filter: blur(var(--glass-blur));
+    -webkit-backdrop-filter: blur(var(--glass-blur));
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
   }
 }

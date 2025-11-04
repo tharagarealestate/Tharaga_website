@@ -89,6 +89,10 @@
       roleState.loading = true;
       console.log('[role-v2] Fetching user roles...');
 
+      // Get current user from Supabase
+      const { data: { user } } = await window.supabase.auth.getUser();
+      roleState.user = user; // Store user for admin owner check
+
       const data = await apiCall('/api/user/roles');
 
       roleState.roles = data.roles || [];
@@ -102,6 +106,7 @@
       console.log('[role-v2] Roles fetched:', {
         roles: roleState.roles,
         primary: roleState.primaryRole,
+        userEmail: roleState.user?.email, // Log email for debugging
       });
 
       return roleState;

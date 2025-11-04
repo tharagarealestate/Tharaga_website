@@ -7,15 +7,15 @@
 /* Premium Design Tokens */
 @layer base {
   :root {
-    /* PRIMARY: Deep Sapphire - Trust, Intelligence, Wealth */
-    --primary-950: 7 19 40;      /* #071328 - Deepest navy */
-    --primary-900: 10 30 61;     /* #0A1E3D - Foundation */
-    --primary-800: 15 45 82;     /* #0F2D52 - Authority */
-    --primary-700: 26 65 115;    /* #1A4173 - Royal blue */
-    --primary-600: 37 99 235;    /* #2563EB - Current primary */
-    --primary-500: 59 130 246;   /* #3B82F6 - Sky blue */
-    --primary-400: 96 165 250;   /* #60A5FA - Light blue */
-    --primary-300: 147 197 253;  /* #93C5FD - Pale blue */
+    /* PRIMARY: Premium Blue - Trust, Technology, Stability */
+    --primary-950: 15 23 42;     /* #0f172a - Slate-900 (deepest) */
+    --primary-900: 30 41 59;     /* #1e293b - Slate-800 */
+    --primary-800: 30 58 138;    /* #1e3a8a - Primary-dark */
+    --primary-700: 30 64 175;    /* #1e40af - Primary (main brand) */
+    --primary-600: 37 99 235;    /* #2563eb - Blue-600 */
+    --primary-500: 59 130 246;   /* #3b82f6 - Primary-light */
+    --primary-400: 96 165 250;   /* #60a5fa - Blue-400 */
+    --primary-300: 147 197 253;  /* #93c5fd - Blue-300 */
 
     /* ACCENT: Champagne Gold - Luxury, Success */
     --gold-900: 124 92 46;       /* #7C5C2E - Antique gold */
@@ -55,8 +55,8 @@
     --danger: 220 38 38;         /* Red-600 */
     --info: 37 99 235;           /* Primary-600 */
 
-    /* GRADIENTS */
-    --gradient-hero: linear-gradient(135deg, rgb(var(--primary-950)) 0%, rgb(var(--primary-800)) 50%, rgb(var(--primary-700)) 100%);
+    /* GRADIENTS - Updated for glassy premium design */
+    --gradient-hero: linear-gradient(135deg, rgb(var(--primary-700)) 0%, rgb(var(--primary-600)) 50%, rgb(var(--primary-500)) 100%);
     --gradient-gold: linear-gradient(135deg, rgb(var(--gold-600)) 0%, rgb(var(--gold-500)) 50%, rgb(var(--gold-400)) 100%);
     --gradient-emerald: linear-gradient(135deg, rgb(var(--emerald-700)) 0%, rgb(var(--emerald-500)) 100%);
     --gradient-card: linear-gradient(180deg, rgb(var(--gray-50)) 0%, rgb(var(--gray-100)) 100%);

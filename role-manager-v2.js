@@ -109,6 +109,9 @@
         userEmail: roleState.user?.email, // Log email for debugging
       });
 
+      // Dispatch event to notify portal menu and other listeners
+      notifyRoleChange();
+
       return roleState;
     } catch (error) {
       console.error('[role-v2] Error fetching roles:', error);
@@ -162,8 +165,18 @@
       return;
     }
 
+    // Check if admin owner (bypass role check)
+    const isAdminOwner = roleState.user?.email === 'tharagarealestate@gmail.com';
+
+    // Validate role exists (unless admin owner)
+    if (!isAdminOwner && !roleState.roles.includes(role)) {
+      console.error('[role-v2] Invalid role:', role, 'User roles:', roleState.roles);
+      showNotification(`Error: You don't have the ${role} role`, 'error');
+      return;
+    }
+
     try {
-      console.log('[role-v2] Switching to role:', role);
+      console.log('[role-v2] Switching to role:', role, 'Admin owner:', isAdminOwner);
 
       // Update UI immediately (optimistic)
       const oldRole = roleState.primaryRole;

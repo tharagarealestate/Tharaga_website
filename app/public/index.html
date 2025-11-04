@@ -1432,7 +1432,9 @@
         if (!portalMenuItems || !window.thgRoleManager) return;
 
         const state = window.thgRoleManager.getState();
-        if (!state.initialized || state.roles.length === 0) {
+
+        // Wait for both initialization AND user data to be ready
+        if (!state.initialized || !state.user || state.roles.length === 0) {
           // No roles yet, hide portal menu
           const portalMenu = document.getElementById('portal-menu');
           if (portalMenu) portalMenu.style.display = 'none';
@@ -1446,7 +1448,9 @@
         let menuHTML = '';
 
         // Special handling: Show ALL dashboards for admin owner email
-        const isAdminOwner = state.user && state.user.email === 'tharagarealestate@gmail.com';
+        const isAdminOwner = state.user.email === 'tharagarealestate@gmail.com';
+
+        console.log('[Portal Menu] Updating for user:', state.user.email, 'isAdminOwner:', isAdminOwner, 'roles:', state.roles);
 
         // Show relevant dashboard(s) based on roles
         // For admin owner, always show buyer dashboard

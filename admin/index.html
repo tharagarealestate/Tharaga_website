@@ -962,28 +962,62 @@
 
     // Initialize on page load
     (async function init() {
-      // Check auth
-      const { data: { session }, error } = await supabase.auth.getSession();
+      try {
+        console.log('[Admin Panel] Initializing...');
 
-      if (!session) {
-        window.location.href = '/?redirect=admin';
-        return;
+        // Wait for Supabase to be ready
+        if (!window.supabase) {
+          console.error('[Admin Panel] Supabase not loaded');
+          alert('Error: Supabase library not loaded. Please refresh the page.');
+          return;
+        }
+
+        console.log('[Admin Panel] Checking auth session...');
+
+        // Check auth with timeout
+        const sessionPromise = supabase.auth.getSession();
+        const timeoutPromise = new Promise((_, reject) =>
+          setTimeout(() => reject(new Error('Auth timeout')), 10000)
+        );
+
+        const { data: { session }, error } = await Promise.race([sessionPromise, timeoutPromise]);
+
+        console.log('[Admin Panel] Session:', session ? 'Found' : 'None', 'Error:', error);
+
+        if (error) {
+          console.error('[Admin Panel] Auth error:', error);
+          alert('Auth error: ' + error.message);
+          return;
+        }
+
+        if (!session) {
+          console.log('[Admin Panel] No session, redirecting to login...');
+          window.location.href = '/?redirect=admin';
+          return;
+        }
+
+        currentUser = session.user;
+        console.log('[Admin Panel] Authenticated as:', currentUser.email);
+
+        // Setup logout
+        document.getElementById('logout-link').addEventListener('click', logout);
+
+        // Load data
+        console.log('[Admin Panel] Loading stats and builders...');
+        await loadStats();
+        await loadBuilders('pending');
+        await loadBuilders('verified');
+        await loadBuilders('rejected');
+        await loadBuilders('all');
+
+        // Setup search
+        document.getElementById('search-input').addEventListener('input', handleSearch);
+
+        console.log('[Admin Panel] Initialization complete');
+      } catch (error) {
+        console.error('[Admin Panel] Init error:', error);
+        alert('Failed to initialize admin panel: ' + error.message);
       }
-
-      currentUser = session.user;
-
-      // Setup logout
-      document.getElementById('logout-link').addEventListener('click', logout);
-
-      // Load data
-      await loadStats();
-      await loadBuilders('pending');
-      await loadBuilders('verified');
-      await loadBuilders('rejected');
-      await loadBuilders('all');
-
-      // Setup search
-      document.getElementById('search-input').addEventListener('input', handleSearch);
     })();
 
     // API call helper

@@ -44,6 +44,18 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         {/* Static header styles from index.html - GLASSY PREMIUM BLUE */}
         <style
           dangerouslySetInnerHTML={{ __html: `
+          /* Premium Background - Match Homepage */
+          body {
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            background:
+              radial-gradient(1200px 520px at 12% -10%, rgba(255,255,255,.78), rgba(255,255,255,0) 55%),
+              radial-gradient(900px 360px at 95% 0%, rgba(212,175,55,.08), rgba(212,175,55,0) 60%),
+              linear-gradient(180deg, #f3f5f8 0%, #edf1f6 36%, #e9edf2 100%);
+            background-attachment: fixed;
+          }
+
           /* Header base styles - Glassy Premium Blue */
           header.nav {
             position: sticky;
@@ -341,7 +353,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             if (!portalMenuItems || !window.thgRoleManager) return;
 
             const state = window.thgRoleManager.getState();
-            if (!state.initialized || state.roles.length === 0) {
+
+            // Wait for both initialization AND user data to be ready
+            if (!state.initialized || !state.user || state.roles.length === 0) {
               const portalMenu = document.getElementById('portal-menu');
               if (portalMenu) portalMenu.style.display = 'none';
               return;
@@ -353,7 +367,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             let menuHTML = '';
 
             // Special handling: Show ALL dashboards for admin owner email
-            const isAdminOwner = state.user && state.user.email === 'tharagarealestate@gmail.com';
+            const isAdminOwner = state.user.email === 'tharagarealestate@gmail.com';
+
+            console.log('[Portal Menu] Updating for user:', state.user.email, 'isAdminOwner:', isAdminOwner, 'roles:', state.roles);
 
             // For admin owner, always show buyer dashboard
             if (state.roles.includes('buyer') || isAdminOwner) {

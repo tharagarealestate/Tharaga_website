@@ -1353,6 +1353,11 @@
           menuHTML += `<a href="/builder">🏗️ Builder Dashboard${active}${verified}</a>`;
         }
 
+        // Show Admin Panel link if user has admin role
+        if (state.roles.includes('admin')) {
+          menuHTML += `<a href="/admin" style="border-top:1px solid #e5e7eb;margin-top:8px;padding-top:8px;">🛡️ Admin Panel</a>`;
+        }
+
         portalMenuItems.innerHTML = menuHTML || '<a href="/my-dashboard">Buyer Dashboard</a><a href="/builder">Builder Dashboard</a>';
       }
 

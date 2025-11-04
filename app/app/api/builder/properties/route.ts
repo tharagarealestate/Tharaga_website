@@ -11,7 +11,7 @@ export async function GET(req: NextRequest) {
     const supabase = getSupabase()
     const { data, error } = await supabase
       .from('properties')
-      .select('id,title,city,locality,price_inr,images')
+      .select('id,title,city,locality,price_inr,images,bedrooms,sqft,listed_at,listing_status')
       .eq('builder_id', builderId)
       .order('listed_at', { ascending: false })
 
@@ -24,6 +24,12 @@ export async function GET(req: NextRequest) {
       locality: p.locality,
       priceINR: typeof p.price_inr === 'number' ? p.price_inr : null,
       image: Array.isArray(p.images) ? (p.images[0] || null) : null,
+      bedrooms: typeof p.bedrooms === 'number' ? p.bedrooms : null,
+      sqft: typeof p.sqft === 'number' ? p.sqft : null,
+      listed_at: p.listed_at || null,
+      status: p.listing_status || 'active',
+      views: 0, // TODO: Fetch from analytics
+      inquiries: 0, // TODO: Fetch from leads
     }))
 
     const res = NextResponse.json({ items })

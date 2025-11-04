@@ -18,7 +18,18 @@
       "Bash(git push:*)",
       "Bash(node ../scripts/copy-static.cjs:*)",
       "Bash(supabase status:*)",
-      "Bash(start https://supabase.com/dashboard/project/wedevtjjmdvngyshqdro/sql/new)"
+      "Bash(start https://supabase.com/dashboard/project/wedevtjjmdvngyshqdro/sql/new)",
+      "Bash(mcp__supabase list-tables:*)",
+      "Bash(mcp__supabase list-functions:*)",
+      "Bash(mcp__supabase list-triggers:*)",
+      "Bash(supabase --version:*)",
+      "Bash(psql:*)",
+      "Bash(supabase db inspect:*)",
+      "Bash(supabase db dump:*)",
+      "Bash(node inspect_db.mjs:*)",
+      "Bash(curl:*)",
+      "Bash(node:*)",
+      "Bash(supabase db execute:*)"
     ],
     "deny": [],
     "ask": []

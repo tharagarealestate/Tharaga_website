@@ -116,7 +116,12 @@ html, body {
   }
 
   .glass-card {
-    @apply bg-white/85 backdrop-blur-xl border border-gold-500/15 shadow-lg;
+    @apply backdrop-blur-xl bg-white/10 border border-white/20 shadow-lg;
+  }
+  
+  /* Dark mode glass card (for dark backgrounds) */
+  .glass-card-dark {
+    @apply backdrop-blur-xl bg-white/10 border border-white/20 shadow-lg;
   }
 
   .btn-gold {

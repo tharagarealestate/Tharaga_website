@@ -20,6 +20,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <meta name="theme-color" content="#ffffff" />
         {/* Auth configuration */}
         <script dangerouslySetInnerHTML={{ __html: `window.AUTH_HIDE_HEADER=false;window.AUTH_OPEN_ON_LOAD=false;` }} />
+        {/* Load role manager system */}
+        <script src="/role-manager-v2.js" defer></script>
         {/* Load snippets auth system (inline from snippets/index.html) */}
         <script src="/snippets/" type="text/html" id="snippets-auth-src" style={{display:'none'}} />
         <script dangerouslySetInnerHTML={{ __html: `
@@ -39,15 +41,41 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             }).catch(e => console.error('Failed to load auth:', e));
           })();
         ` }} />
-        {/* Static header styles from index.html */}
+        {/* Static header styles from index.html - GLASSY PREMIUM BLUE */}
         <style
           dangerouslySetInnerHTML={{ __html: `
-          /* Header base styles */
-          header.nav { position:sticky; top:0; z-index:20; color:#fff; backdrop-filter: blur(12px) saturate(1.25); background: linear-gradient(180deg, rgba(110,13,37,.82), rgba(110,13,37,.66)); border-bottom:1px solid rgba(255,255,255,.12) }
+          /* Header base styles - Glassy Premium Blue */
+          header.nav {
+            position: sticky;
+            top: 0;
+            z-index: 20;
+            /* Glassmorphism Effect */
+            background: linear-gradient(135deg, rgba(255,255,255,0.85), rgba(248,250,252,0.90));
+            backdrop-filter: blur(20px) saturate(1.8);
+            -webkit-backdrop-filter: blur(20px) saturate(1.8);
+            /* Premium Borders */
+            border-top: 2px solid #d4af37;
+            border-bottom: 1px solid rgba(226,232,240,0.6);
+            box-shadow: 0 1px 3px rgba(15,23,42,0.03), 0 10px 40px rgba(15,23,42,0.04);
+          }
+          /* Fallback for older browsers */
+          @supports not (backdrop-filter: blur(20px)) {
+            header.nav { background: rgba(255,255,255,0.95); }
+          }
           header.nav .inner { max-width:1100px; margin:0 auto; padding:10px 16px; display:flex; align-items:center; justify-content:space-between; gap:10px; position:relative; padding-right: clamp(130px, 10vw, 200px) }
           .brand { font-family: var(--font-display); font-weight:800; letter-spacing:.2px; font-size:24px }
-          header.nav .brand{ color:#fff }
-          header.nav a, header.nav summary{ color:#fff }
+          header.nav .brand{ color:#0f172a }
+          header.nav a, header.nav summary{
+            color:#0f172a;
+            font-weight:600;
+            transition: background 0.2s ease, color 0.2s ease;
+          }
+          header.nav a:hover, header.nav summary:hover{
+            background: linear-gradient(135deg, rgba(30,64,175,0.08), rgba(59,130,246,0.06));
+            color: #1e40af;
+            border-radius: 8px;
+            text-decoration: none;
+          }
           .pill { display:inline-flex; align-items:center; gap:8px; padding:6px 10px; border-radius:999px; background:#fff; border:1px solid #eee; font-size:12px; color:#111 }
 
           /* Header nav layout */
@@ -62,24 +90,62 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           details.dropdown > summary::-webkit-details-marker{ display:none }
           details.dropdown > summary::after{ content:""; width:0; height:0; border-left:5px solid transparent; border-right:5px solid transparent; border-top:6px solid currentColor; opacity:.8; transition:transform .18s ease }
           details.dropdown[open] > summary::after{ transform:rotate(180deg) }
-          details.dropdown .menu{ position:absolute; top:calc(100% + 8px); right:0; min-width:240px; background:linear-gradient(180deg,#ffffff, #fffafc); color:#111; border:1px solid rgba(110,13,37,.14); border-radius:12px; padding:12px 8px 8px; box-shadow:0 18px 40px rgba(110,13,37,.16); z-index:60; opacity:0; transform:translateY(-6px) scale(.98); visibility:hidden; pointer-events:none; transition:opacity .18s ease, transform .18s ease, visibility 0s linear .18s }
-          details.dropdown .menu::before{ content:""; position:absolute; top:0; left:0; right:0; height:3px; border-radius:12px 12px 0 0; background:linear-gradient(90deg, var(--gold), var(--brand)); }
+          details.dropdown .menu{
+            position:absolute; top:calc(100% + 8px); right:0; min-width:240px;
+            background:linear-gradient(180deg, rgba(255,255,255,0.95), rgba(248,250,252,0.98));
+            backdrop-filter: blur(16px) saturate(1.5);
+            color:#111; border:1px solid rgba(30,64,175,.12);
+            border-radius:12px; padding:12px 8px 8px;
+            box-shadow:0 18px 40px rgba(30,64,175,.16);
+            z-index:60; opacity:0; transform:translateY(-6px) scale(.98);
+            visibility:hidden; pointer-events:none;
+            transition:opacity .18s ease, transform .18s ease, visibility 0s linear .18s;
+          }
+          details.dropdown .menu::before{
+            content:""; position:absolute; top:0; left:0; right:0; height:3px;
+            border-radius:12px 12px 0 0;
+            background:linear-gradient(90deg, #d4af37, #1e40af);
+          }
           details.dropdown[open] .menu{ opacity:1; transform:translateY(0) scale(1); visibility:visible; pointer-events:auto; transition:opacity .18s ease, transform .18s ease, visibility 0s linear 0s }
           details.dropdown .menu a{ display:block; padding:10px 12px; border-radius:10px; color:inherit; text-decoration:none; text-align:center; transition: background .15s ease, transform .06s ease, color .15s ease, box-shadow .12s ease }
           details.dropdown .menu a + a{ border-top:1px solid #f0f2f4 }
-          details.dropdown .menu a:hover{ background:linear-gradient(90deg, rgba(110,13,37,.12), rgba(110,13,37,.06)); color:var(--brand); box-shadow: inset 0 0 0 1px rgba(110,13,37,.18) }
-          details.dropdown .menu a:focus-visible{ outline:0; box-shadow:0 0 0 2px var(--ring), inset 0 0 0 1px rgba(110,13,37,.24) }
-          details.dropdown .menu a:active{ transform:translateY(1px); background:linear-gradient(180deg, rgba(110,13,37,.20), rgba(110,13,37,.10)) }
-          details.dropdown .menu .divider{ display:block; width:auto; height:1px; background:rgba(110,13,37,.14); margin:6px 6px; border-radius:1px }
+          details.dropdown .menu a:hover{
+            background:linear-gradient(90deg, rgba(30,64,175,.12), rgba(59,130,246,.06));
+            color:#1e40af;
+            box-shadow: inset 0 0 0 1px rgba(30,64,175,.18);
+          }
+          details.dropdown .menu a:focus-visible{
+            outline:0;
+            box-shadow:0 0 0 2px rgba(59,130,246,.30), inset 0 0 0 1px rgba(30,64,175,.24);
+          }
+          details.dropdown .menu a:active{
+            transform:translateY(1px);
+            background:linear-gradient(180deg, rgba(30,64,175,.20), rgba(59,130,246,.10));
+          }
+          details.dropdown .menu .divider{
+            display:block; width:auto; height:1px;
+            background:rgba(30,64,175,.14); margin:6px 6px; border-radius:1px;
+          }
           details.dropdown .menu .show-mobile-only{ display:none }
 
-          /* Auth button styling */
+          /* Auth button styling - Glassy header */
           header.nav .thg-auth-wrap{ display:flex; align-items:center; gap:12px }
-          header.nav .thg-auth-wrap::before{ content:""; display:inline-block; width:1px; height:16px; background:rgba(255,255,255,.22); border-radius:1px }
-          header.nav .thg-auth-btn{ background:rgba(255,255,255,.12) !important; color:#fff !important; border-color:rgba(255,255,255,.85) !important }
-          header.nav .thg-auth-btn:hover{ background:rgba(255,255,255,.2) !important }
-          header.nav .thg-auth-btn.is-auth::after{ border-top-color:#fff !important }
-          header.nav .divider{ background:rgba(255,255,255,.18) }
+          header.nav .thg-auth-wrap::before{
+            content:""; display:inline-block; width:1px; height:16px;
+            background:rgba(226,232,240,.6); border-radius:1px;
+          }
+          header.nav .thg-auth-btn{
+            background:rgba(30,64,175,.08) !important;
+            color:#1e40af !important;
+            border-color:rgba(30,64,175,.20) !important;
+            font-weight:600 !important;
+          }
+          header.nav .thg-auth-btn:hover{
+            background:rgba(30,64,175,.15) !important;
+            border-color:#1e40af !important;
+          }
+          header.nav .thg-auth-btn.is-auth::after{ border-top-color:#1e40af !important }
+          header.nav .divider{ background:rgba(226,232,240,.6) }
           #site-header-auth-container{ display:flex; align-items:center; gap:12px }
 
           /* Mobile adjustments */
@@ -169,12 +235,15 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             }
           })();
         `}} />
-        {/* Static header - matches index.html exactly */}
-        <header className="nav sticky top-0 text-white border-b" style={{
+        {/* Static header - Glassy Premium Blue */}
+        <header className="nav sticky top-0 border-b" style={{
           zIndex: 20,
-          backdropFilter: 'blur(12px) saturate(1.25)',
-          background: 'linear-gradient(180deg, rgba(110,13,37,.82), rgba(110,13,37,.66))',
-          borderBottomColor: 'rgba(255,255,255,.12)'
+          background: 'linear-gradient(135deg, rgba(255,255,255,0.85), rgba(248,250,252,0.90))',
+          backdropFilter: 'blur(20px) saturate(1.8)',
+          WebkitBackdropFilter: 'blur(20px) saturate(1.8)',
+          borderTop: '2px solid #d4af37',
+          borderBottomColor: 'rgba(226,232,240,0.6)',
+          boxShadow: '0 1px 3px rgba(15,23,42,0.03), 0 10px 40px rgba(15,23,42,0.04)'
         }}>
           <div className="inner" style={{
             maxWidth: '1100px',
@@ -193,7 +262,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 fontWeight: 800,
                 letterSpacing: '.2px',
                 fontSize: '24px',
-                color: '#fff'
+                color: '#0f172a'
               }}>
                 THARAGA
               </a>
@@ -238,11 +307,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                   </div>
                 </details>
                 <span className="divider" aria-hidden="true" />
-                <details className="dropdown">
+                <details className="dropdown" id="portal-menu">
                   <summary>
                     <span>Portal</span>
                   </summary>
-                  <div className="menu">
+                  <div className="menu" id="portal-menu-items">
+                    {/* Dynamic content loaded by role-manager-v2.js */}
                     <a href="/builder">Builder Dashboard</a>
                     <a href="/my-dashboard">Buyer Dashboard</a>
                   </div>
@@ -263,6 +333,66 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             {children}
           </EntitlementsProvider>
         </AppI18nProvider>
+        {/* Portal Menu Dynamic Update */}
+        <script dangerouslySetInnerHTML={{ __html: `
+          // Update Portal menu based on user roles
+          function updatePortalMenu() {
+            const portalMenuItems = document.getElementById('portal-menu-items');
+            if (!portalMenuItems || !window.thgRoleManager) return;
+
+            const state = window.thgRoleManager.getState();
+            if (!state.initialized || state.roles.length === 0) {
+              const portalMenu = document.getElementById('portal-menu');
+              if (portalMenu) portalMenu.style.display = 'none';
+              return;
+            }
+
+            const portalMenu = document.getElementById('portal-menu');
+            if (portalMenu) portalMenu.style.display = '';
+
+            let menuHTML = '';
+
+            // Special handling: Show ALL dashboards for admin owner email
+            const isAdminOwner = state.user && state.user.email === 'tharagarealestate@gmail.com';
+
+            // For admin owner, always show buyer dashboard
+            if (state.roles.includes('buyer') || isAdminOwner) {
+              const active = state.primaryRole === 'buyer' ? ' <span style="color:#10b981">✓</span>' : '';
+              menuHTML += '<a href="/my-dashboard">🏠 Buyer Dashboard' + active + '</a>';
+            }
+
+            // For admin owner, always show builder dashboard
+            if (state.roles.includes('builder') || isAdminOwner) {
+              const active = state.primaryRole === 'builder' ? ' <span style="color:#10b981">✓</span>' : '';
+              const verified = state.builderVerified ? ' <span style="color:#10b981;font-size:11px">✓ Verified</span>' : '';
+              menuHTML += '<a href="/builder">🏗️ Builder Dashboard' + active + verified + '</a>';
+            }
+
+            // Show Admin Panel link if user has admin role
+            if (state.roles.includes('admin')) {
+              menuHTML += '<a href="/admin" style="border-top:1px solid #e5e7eb;margin-top:8px;padding-top:8px;">🛡️ Admin Panel</a>';
+            }
+
+            portalMenuItems.innerHTML = menuHTML || '<a href="/my-dashboard">Buyer Dashboard</a><a href="/builder">Builder Dashboard</a>';
+          }
+
+          // Update portal menu when roles change
+          if (window.thgRoleManager) {
+            const checkRoles = setInterval(() => {
+              const state = window.thgRoleManager.getState();
+              if (state.initialized) {
+                clearInterval(checkRoles);
+                updatePortalMenu();
+              }
+            }, 500);
+
+            // Listen for role changes
+            window.addEventListener('thg-role-changed', updatePortalMenu);
+          }
+
+          // Make function globally available
+          window.__updatePortalMenu = updatePortalMenu;
+        ` }} />
         {/* Web Vitals reporting */}
         <script dangerouslySetInnerHTML={{ __html: `
           (function(){

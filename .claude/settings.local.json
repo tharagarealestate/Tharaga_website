@@ -29,7 +29,8 @@
       "Bash(node inspect_db.mjs:*)",
       "Bash(curl:*)",
       "Bash(node:*)",
-      "Bash(supabase db execute:*)"
+      "Bash(supabase db execute:*)",
+      "Bash(clip)"
     ],
     "deny": [],
     "ask": []

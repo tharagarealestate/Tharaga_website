@@ -355,7 +355,17 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             const state = window.thgRoleManager.getState();
 
             // Wait for both initialization AND user data to be ready
-            if (!state.initialized || !state.user || state.roles.length === 0) {
+            if (!state.initialized || !state.user) {
+              const portalMenu = document.getElementById('portal-menu');
+              if (portalMenu) portalMenu.style.display = 'none';
+              return;
+            }
+
+            // Special handling: Show ALL dashboards for admin owner email
+            const isAdminOwner = state.user.email === 'tharagarealestate@gmail.com';
+
+            // Hide portal menu if no roles AND not admin owner
+            if (state.roles.length === 0 && !isAdminOwner) {
               const portalMenu = document.getElementById('portal-menu');
               if (portalMenu) portalMenu.style.display = 'none';
               return;
@@ -365,9 +375,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             if (portalMenu) portalMenu.style.display = '';
 
             let menuHTML = '';
-
-            // Special handling: Show ALL dashboards for admin owner email
-            const isAdminOwner = state.user.email === 'tharagarealestate@gmail.com';
 
             console.log('[Portal Menu] Updating for user:', state.user.email, 'isAdminOwner:', isAdminOwner, 'roles:', state.roles);
 
@@ -384,8 +391,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               menuHTML += '<a href="/builder">🏗️ Builder Dashboard' + active + verified + '</a>';
             }
 
-            // Show Admin Panel link if user has admin role
-            if (state.roles.includes('admin')) {
+            // Show Admin Panel link if user has admin role OR is admin owner
+            if (state.roles.includes('admin') || isAdminOwner) {
               menuHTML += '<a href="/admin" style="border-top:1px solid #e5e7eb;margin-top:8px;padding-top:8px;">🛡️ Admin Panel</a>';
             }
 

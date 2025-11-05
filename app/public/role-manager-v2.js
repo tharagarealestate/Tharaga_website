@@ -483,9 +483,12 @@
         : roleState.roles;
 
       rolesToShow.forEach(role => {
+        // Skip 'admin' role - it's not a mode, it's a privilege shown in Portal dropdown
+        if (role === 'admin') return;
+
         const isActive = role === roleState.primaryRole;
-        const icon = role === 'buyer' ? '🏠' : role === 'builder' ? '🏗️' : '🛡️';
-        const label = role === 'buyer' ? 'Buyer Mode' : role === 'builder' ? 'Builder Mode' : 'Admin Panel';
+        const icon = role === 'buyer' ? '🏠' : '🏗️';
+        const label = role === 'buyer' ? 'Buyer Mode' : 'Builder Mode';
         const badge = role === 'builder' && roleState.builderVerified ?
           '<span class="thg-role-badge verified">✓ Verified</span>' : '';
         const activeIndicator = isActive ? '<span class="thg-role-active">✓</span>' : '';

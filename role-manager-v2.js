@@ -110,7 +110,7 @@
       });
 
       // Dispatch event to notify portal menu and other listeners
-      notifyRoleChange();
+      emitRoleChangeEvent();
 
       return roleState;
     } catch (error) {

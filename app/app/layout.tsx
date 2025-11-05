@@ -273,7 +273,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 fontFamily: 'var(--font-display)',
                 fontWeight: 800,
                 letterSpacing: '.2px',
-                fontSize: '24px',
+                fontSize: '26px',
                 color: '#0f172a'
               }}>
                 THARAGA

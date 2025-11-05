@@ -278,10 +278,9 @@ export default function Page() {
               </div>
             </div>
           </motion.div>
-        </div>
 
-            {/* Stats Cards */}
-            <motion.div
+          {/* Stats Cards */}
+          <motion.div
               initial={{ opacity: 0, x: 30 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.8, delay: 0.4 }}
@@ -311,8 +310,7 @@ export default function Page() {
                 label="Powered"
                 gradient="from-gold-500 via-emerald-500 to-primary-500"
               />
-            </motion.div>
-          </div>
+          </motion.div>
         </div>
       </div>
 

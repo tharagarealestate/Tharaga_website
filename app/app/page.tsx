@@ -49,7 +49,7 @@ export default function Home() {
               <div className="inline-flex items-center gap-2 px-4 py-2 bg-gold-500/20 backdrop-blur-sm border border-gold-500/30 rounded-full mb-6">
                 <span className="w-2 h-2 bg-gold-500 rounded-full animate-pulse" />
                 <span className="text-gold-300 text-sm font-medium tracking-wide">
-                  Tamil Nadu's Most Intelligent Real Estate Platform
+                  Tamil Nadu&apos;s Most Intelligent Real Estate Platform
                 </span>
               </div>
 

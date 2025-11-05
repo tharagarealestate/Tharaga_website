@@ -89,6 +89,10 @@
       roleState.loading = true;
       console.log('[role-v2] Fetching user roles...');
 
+      // Get current user from Supabase
+      const { data: { user } } = await window.supabase.auth.getUser();
+      roleState.user = user; // Store user for admin owner check
+
       const data = await apiCall('/api/user/roles');
 
       roleState.roles = data.roles || [];
@@ -102,7 +106,11 @@
       console.log('[role-v2] Roles fetched:', {
         roles: roleState.roles,
         primary: roleState.primaryRole,
+        userEmail: roleState.user?.email, // Log email for debugging
       });
+
+      // Dispatch event to notify portal menu and other listeners
+      notifyRoleChange();
 
       return roleState;
     } catch (error) {
@@ -157,8 +165,19 @@
       return;
     }
 
+    // Check if admin owner (bypass role check) - use multiple checks for reliability
+    const userEmail = roleState.user?.email || window.__thgAuthState?.user?.email;
+    const isAdminOwner = userEmail === 'tharagarealestate@gmail.com';
+
+    // Validate role exists (unless admin owner)
+    if (!isAdminOwner && !roleState.roles.includes(role)) {
+      console.error('[role-v2] Invalid role:', role, 'User roles:', roleState.roles, 'User email:', userEmail);
+      showNotification(`Error: You don't have the ${role} role`, 'error');
+      return;
+    }
+
     try {
-      console.log('[role-v2] Switching to role:', role);
+      console.log('[role-v2] Switching to role:', role, 'Admin owner:', isAdminOwner);
 
       // Update UI immediately (optimistic)
       const oldRole = roleState.primaryRole;

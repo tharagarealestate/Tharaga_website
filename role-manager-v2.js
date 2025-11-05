@@ -165,12 +165,13 @@
       return;
     }
 
-    // Check if admin owner (bypass role check)
-    const isAdminOwner = roleState.user?.email === 'tharagarealestate@gmail.com';
+    // Check if admin owner (bypass role check) - use multiple checks for reliability
+    const userEmail = roleState.user?.email || window.__thgAuthState?.user?.email;
+    const isAdminOwner = userEmail === 'tharagarealestate@gmail.com';
 
     // Validate role exists (unless admin owner)
     if (!isAdminOwner && !roleState.roles.includes(role)) {
-      console.error('[role-v2] Invalid role:', role, 'User roles:', roleState.roles);
+      console.error('[role-v2] Invalid role:', role, 'User roles:', roleState.roles, 'User email:', userEmail);
       showNotification(`Error: You don't have the ${role} role`, 'error');
       return;
     }

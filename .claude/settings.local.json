@@ -30,7 +30,8 @@
       "Bash(curl:*)",
       "Bash(node:*)",
       "Bash(supabase db execute:*)",
-      "Bash(clip)"
+      "Bash(clip)",
+      "Bash(npx tsc:*)"
     ],
     "deny": [],
     "ask": []

@@ -457,6 +457,10 @@
 
     console.log('[role-v2] Building menu for roles:', roleState.roles);
 
+    // Check if admin owner - show all options regardless of roles
+    const userEmail = user.email || '';
+    const isAdminOwner = userEmail === 'tharagarealestate@gmail.com';
+
     let menuHTML = `
       <div class="thg-auth-item is-header" aria-disabled="true">
         <span class="thg-initial-lg">${getInitials(user)}</span>
@@ -468,15 +472,20 @@
       <div class="thg-auth-sep"></div>
     `;
 
-    // Role switcher section
-    if (roleState.roles.length > 0) {
+    // Role switcher section - show for admin owner OR users with roles
+    if (roleState.roles.length > 0 || isAdminOwner) {
       menuHTML += '<div class="thg-role-section">';
       menuHTML += '<div class="thg-role-label">YOUR ROLES</div>';
 
-      roleState.roles.forEach(role => {
+      // If admin owner and roles array is empty, show all role options
+      const rolesToShow = isAdminOwner && roleState.roles.length === 0
+        ? ['buyer', 'builder', 'admin']
+        : roleState.roles;
+
+      rolesToShow.forEach(role => {
         const isActive = role === roleState.primaryRole;
-        const icon = role === 'buyer' ? '🏠' : '🏗️';
-        const label = role === 'buyer' ? 'Buyer Mode' : 'Builder Mode';
+        const icon = role === 'buyer' ? '🏠' : role === 'builder' ? '🏗️' : '🛡️';
+        const label = role === 'buyer' ? 'Buyer Mode' : role === 'builder' ? 'Builder Mode' : 'Admin Panel';
         const badge = role === 'builder' && roleState.builderVerified ?
           '<span class="thg-role-badge verified">✓ Verified</span>' : '';
         const activeIndicator = isActive ? '<span class="thg-role-active">✓</span>' : '';
@@ -492,8 +501,8 @@
         `;
       });
 
-      // Add role button if user only has one role
-      if (roleState.roles.length === 1) {
+      // Add role button if user only has one role (not for admin owner with empty roles)
+      if (roleState.roles.length === 1 && !isAdminOwner) {
         const otherRole = roleState.roles[0] === 'buyer' ? 'builder' : 'buyer';
         const icon = otherRole === 'buyer' ? '🏠' : '🏗️';
         const label = otherRole === 'buyer' ? 'Buyer Mode' : 'Builder Mode';  // FIXED: Changed from "Become a Builder"

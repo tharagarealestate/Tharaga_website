@@ -247,96 +247,46 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             }
           })();
         `}} />
-        {/* Static header - Glassy Premium Blue */}
-        <header className="nav sticky top-0 border-b" style={{
-          zIndex: 20,
-          background: 'linear-gradient(135deg, rgba(255,255,255,0.85), rgba(248,250,252,0.90))',
-          backdropFilter: 'blur(20px) saturate(1.8)',
-          WebkitBackdropFilter: 'blur(20px) saturate(1.8)',
-          borderTop: '2px solid #d4af37',
-          borderBottomColor: 'rgba(226,232,240,0.6)',
-          boxShadow: '0 1px 3px rgba(15,23,42,0.03), 0 10px 40px rgba(15,23,42,0.04)'
-        }}>
-          <div className="inner" style={{
-            maxWidth: '1100px',
-            margin: '0 auto',
-            padding: '10px 16px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            gap: '10px',
-            position: 'relative',
-            paddingRight: 'clamp(130px, 10vw, 200px)'
-          }}>
-            <div className="row" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-              <a href="/" className="brand" style={{
-                fontFamily: 'var(--font-display)',
-                fontWeight: 800,
-                letterSpacing: '.2px',
-                fontSize: '26px',
-                color: '#0f172a'
-              }}>
-                THARAGA
-              </a>
-              <span className="pill" id="home_pill_trust" style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '8px',
-                padding: '6px 10px',
-                borderRadius: '999px',
-                background: '#fff',
-                border: '1px solid #eee',
-                fontSize: '12px',
-                color: '#111'
-              }}>
-                <span>Verified</span>
-                <span>•</span>
-                <span>Broker‑free</span>
-              </span>
+        {/* Static header - Glassy Premium Blue - matches index.html exactly */}
+        <header className="nav">
+          <div className="inner">
+            <div className="row">
+              <a className="brand" href="/" style={{ fontSize: '26px' }}>THARAGA</a>
+              <span className="pill" id="home_pill_trust">Verified • Broker‑free</span>
             </div>
-            <nav className="row" aria-label="Primary" style={{
-              gap: '12px',
-              alignItems: 'center',
-              flexWrap: 'nowrap',
-              marginLeft: 'auto',
-              display: 'flex'
-            }}>
+            <nav className="row" aria-label="Primary">
               <span className="menu-group">
                 <details className="dropdown">
-                  <summary>
-                    <span>Features</span>
-                  </summary>
-                  <div className="menu">
+                  <summary>Features</summary>
+                  <div className="menu" role="menu">
                     <a href="/tools/vastu/">Vastu</a>
                     <a href="/tools/environment/">Climate &amp; environment</a>
                     <a href="/tools/voice-tamil/">Voice (Tamil)</a>
                     <a href="/tools/verification/">Verification</a>
                     <a href="/tools/roi/">ROI</a>
                     <a href="/tools/currency-risk/">Currency risk</a>
-                    <div className="divider show-mobile-only" aria-hidden="true" />
+                    <span className="divider show-mobile-only" aria-hidden="true"></span>
                     <a className="show-mobile-only" href="/pricing/">Pricing</a>
                     <a className="show-mobile-only" href="/about/">About</a>
                   </div>
                 </details>
-                <span className="divider" aria-hidden="true" />
+                <span className="divider" aria-hidden="true"></span>
                 <details className="dropdown" id="portal-menu">
-                  <summary>
-                    <span>Portal</span>
-                  </summary>
-                  <div className="menu" id="portal-menu-items">
+                  <summary>Portal</summary>
+                  <div className="menu" role="menu" aria-label="Portal menu" id="portal-menu-items">
                     {/* Dynamic content loaded by role-manager-v2.js */}
                     <a href="/builder">Builder Dashboard</a>
                     <a href="/my-dashboard">Buyer Dashboard</a>
                   </div>
                 </details>
-                <span className="divider" aria-hidden="true" />
+                <span className="divider" aria-hidden="true"></span>
                 <a href="/pricing/">Pricing</a>
               </span>
-              <span className="divider" aria-hidden="true" />
+              <span className="divider" aria-hidden="true"></span>
               <a href="/about/">About</a>
             </nav>
+            <a className="about-mobile-link" href="/about/">About</a>
             {/* Auth button container - populated by auth-gate.js */}
-            <div id="site-header-auth-container"></div>
           </div>
         </header>
         <AppI18nProvider>

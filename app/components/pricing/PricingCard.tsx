@@ -43,17 +43,6 @@ export default function PricingCard({
       relative group
       ${isHighlighted ? 'lg:scale-110 lg:-translate-y-4 z-10' : ''}
     `}>
-      {/* Badge */}
-      {badge && (
-        <div className='absolute -top-4 left-1/2 -translate-x-1/2 z-20'>
-          <div className='px-4 py-1.5 bg-gradient-to-r from-gold-600 to-gold-500 text-primary-950 text-sm font-bold rounded-full shadow-gold flex items-center gap-2'>
-            {isHighlighted && <Sparkles className='w-4 h-4' />}
-            {isPremium && <Crown className='w-4 h-4' />}
-            {badge}
-          </div>
-        </div>
-      )}
-      
       {/* Card Container */}
       <div className={`
         relative h-full
@@ -71,12 +60,24 @@ export default function PricingCard({
         <div className='absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-in-out pointer-events-none' />
         
         <div className='relative p-8'>
-          {/* Plan Name */}
+          {/* Plan Name with Badge */}
           <div className='mb-6'>
-            <h3 className='text-2xl font-bold text-white mb-2 flex items-center gap-2'>
-              {(plan as any).displayName}
-              {isPremium && <Crown className='w-6 h-6 text-gold-500' />}
-            </h3>
+            <div className='flex items-center gap-3 mb-2 flex-wrap'>
+              <h3 className='text-2xl font-bold text-white flex items-center gap-2'>
+                {(plan as any).displayName}
+                {isPremium && <Crown className='w-6 h-6 text-gold-500' />}
+              </h3>
+              {/* Badge - Positioned inline with plan name for perfect alignment */}
+              {badge && (
+                <div className='flex-shrink-0'>
+                  <div className='px-3 py-1 bg-gradient-to-r from-gold-600 to-gold-500 text-primary-950 text-xs font-bold rounded-full shadow-gold flex items-center gap-1.5 whitespace-nowrap'>
+                    {isHighlighted && <Sparkles className='w-3 h-3' />}
+                    {isPremium && <Crown className='w-3 h-3' />}
+                    {badge}
+                  </div>
+                </div>
+              )}
+            </div>
             <p className='text-gray-400'>{(plan as any).tagline}</p>
           </div>
           

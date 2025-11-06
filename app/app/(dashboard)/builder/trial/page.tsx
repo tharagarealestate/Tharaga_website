@@ -255,8 +255,8 @@ export default function TrialDashboardPage() {
           </motion.div>
         )}
       </AnimatePresence>
-      {/* Sticky top banner */}
-      <div className="sticky top-0 z-30 -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 py-3 bg-white/90 backdrop-blur border-b border-gold-500/20">
+      {/* Sticky top banner - positioned below static header */}
+      <div className="sticky top-[60px] z-30 -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 py-3 bg-white/90 backdrop-blur border-b border-gold-500/20">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
           <div className="flex items-center gap-3">
             <Crown className="w-5 h-5 text-gold-500" />

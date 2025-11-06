@@ -12,6 +12,7 @@ export const metadata: Metadata = {
 export default function MyDashboardLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-gray-50 to-primary-50/30">
+      {/* Static header is above from RootLayout, TopNav is below it */}
       <TopNav />
       <div className="mx-auto max-w-7xl pb-20 pt-4">
         {children}

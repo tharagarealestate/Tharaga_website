@@ -19,8 +19,8 @@ export default function BuilderSettingsPage() {
 
   return (
     <div className='min-h-screen bg-gradient-to-br from-gray-50 to-gray-100'>
-      {/* Glass Header */}
-      <div className='bg-white/70 backdrop-blur-xl border-b border-gray-200/50 sticky top-0 z-30'>
+      {/* Glass Header - positioned below static header */}
+      <div className='bg-white/70 backdrop-blur-xl border-b border-gray-200/50 sticky top-[60px] z-30'>
         <div className='max-w-7xl mx-auto px-6 py-6'>
           <h1 className='text-3xl font-bold bg-gradient-to-r from-primary-900 to-primary-700 bg-clip-text text-transparent'>
             Settings

@@ -11,7 +11,7 @@ import { EntitlementsProvider } from '@/components/ui/FeatureGate'
 import { AppI18nProvider } from '@/components/providers/AppI18nProvider'
 import MobileBottomNav from '@/components/MobileBottomNav'
 import { PrefetchRoutes } from '@/components/providers/PrefetchRoutes'
-import StaticHeader from '@/components/StaticHeader'
+import StaticHeaderHTML from '@/components/StaticHeaderHTML'
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -19,6 +19,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <head>
         <link rel="manifest" href="/manifest.webmanifest" />
         <meta name="theme-color" content="#ffffff" />
+        {/* Load fonts to match homepage */}
+        <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&display=swap" rel="stylesheet" />
+        <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&family=Manrope:wght@400;600;700;800&display=swap" rel="stylesheet" />
         {/* Auth configuration */}
         <script dangerouslySetInnerHTML={{ __html: `window.AUTH_HIDE_HEADER=false;window.AUTH_OPEN_ON_LOAD=false;` }} />
         {/* Load role manager system */}
@@ -45,6 +48,24 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         {/* Static header styles from index.html - GLASSY PREMIUM BLUE */}
         <style
           dangerouslySetInnerHTML={{ __html: `
+          :root {
+            /* Primary Colors - Premium Blue (Trust & Technology) */
+            --primary:#1e40af; --primary-light:#3b82f6; --primary-dark:#1e3a8a;
+            /* Accent - Tharaga Gold (Prestige) */
+            --gold:#d4af37; --gold-light:#f5e6c8;
+            /* Neutrals - Cool Grays */
+            --slate-50:#f8fafc; --slate-100:#f1f5f9; --slate-200:#e2e8f0; --slate-300:#cbd5e1;
+            --slate-600:#475569; --slate-700:#334155; --slate-900:#0f172a;
+            /* Semantic */
+            --success:#10b981; --warning:#f59e0b; --danger:#ef4444;
+            /* Legacy support (map to new colors) */
+            --brand:var(--primary); --brand-600:var(--primary-dark);
+            --ink:#111111; --cream:#f7efe7; --muted:#4b5563; --ring:rgba(59,130,246,.30);
+            --font-ui:'Manrope',Inter,system-ui,-apple-system,'Segoe UI',Roboto,Helvetica,Arial;
+            --font-display:'Plus Jakarta Sans','Manrope',Inter,system-ui,-apple-system,'Segoe UI',Roboto,Helvetica,Arial;
+            /* Header height for positioning dashboard elements below it */
+            --header-height: 60px;
+          }
           /* Premium Background - Match Homepage */
           body {
             margin: 0;
@@ -61,7 +82,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           header.nav {
             position: sticky;
             top: 0;
-            z-index: 20;
+            z-index: 50;
             /* Glassmorphism Effect */
             background: linear-gradient(135deg, rgba(255,255,255,0.85), rgba(248,250,252,0.90));
             backdrop-filter: blur(20px) saturate(1.8);
@@ -290,8 +311,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             }
           })();
         `}} />
-        {/* Static header - Glassy Premium Blue - matches homepage exactly */}
-        <StaticHeader />
+        {/* Static header - Pure HTML from index.html, fixed/floating across all pages */}
+        <StaticHeaderHTML />
         <AppI18nProvider>
           <EntitlementsProvider>
             <PrefetchRoutes />

@@ -65,7 +65,7 @@ export function Sidebar() {
   const items = useMemo(() => navigationItems, [])
 
   return (
-    <aside className="w-64 bg-gradient-to-b from-primary-950 to-primary-900 text-white flex flex-col shadow-2xl h-screen sticky top-0">
+    <aside className="w-64 bg-gradient-to-b from-primary-950 to-primary-900 text-white flex flex-col shadow-2xl h-[calc(100vh-60px)] sticky top-[60px]">
       {/* Logo */}
       <div className="p-6 border-b border-white/10">
         <Link href="/builder" className="flex items-center gap-3">

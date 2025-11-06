@@ -100,7 +100,7 @@ export default function TopNav() {
   }
 
   return (
-    <div className="sticky top-0 z-40 border-b border-gray-300 bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/75">
+    <div className="sticky top-[60px] z-40 border-b border-gray-300 bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/75">
       <div className="mx-auto flex items-center gap-3 px-4 py-2">
         <Link href="/" className="shrink-0 font-semibold text-gray-900">Tharaga</Link>
         <form onSubmit={handleSearchSubmit} className="flex-1 md:w-2/5">

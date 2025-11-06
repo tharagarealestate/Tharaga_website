@@ -26,10 +26,10 @@ export default function BuilderDashboardLayout({ children }: { children: ReactNo
           </div>
         )}
 
-        {/* Main Content Area (global homepage header is already provided by RootLayout) */}
+        {/* Main Content Area - Static header is above from RootLayout */}
         <div className="flex-1 flex flex-col min-w-0">
-          {/* Mobile header with hamburger */}
-          <div className="lg:hidden sticky top-0 z-40 bg-white border-b border-gray-200">
+          {/* Mobile header with hamburger - positioned below static header */}
+          <div className="lg:hidden sticky top-[60px] z-40 bg-white border-b border-gray-200">
             <div className="flex items-center justify-between px-4 py-3">
               <button aria-label="Open menu" className="p-2 rounded-md border border-gray-300" onClick={() => setOpen(true)}>
                 <Menu className="w-5 h-5" />

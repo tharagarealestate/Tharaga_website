@@ -262,19 +262,20 @@
     modal.setAttribute('aria-modal', 'true');
     modal.innerHTML = `
       <div class="thg-role-modal">
+        <button class="thg-role-close" aria-label="Close" title="Close">✕</button>
         <div class="thg-role-header">
           <h2>🎉 Welcome to Tharaga!</h2>
           <p>Let's get you started. What brings you here today?</p>
         </div>
         <div class="thg-role-body">
           <div class="thg-role-cards">
-            <button class="thg-role-card" data-role="buyer">
+            <button class="thg-role-card" data-role="buyer" type="button">
               <div class="thg-role-icon">🏠</div>
               <h3>I'm Buying</h3>
               <p>Find your dream home with verified properties</p>
               <span class="thg-role-select-btn">Select</span>
             </button>
-            <button class="thg-role-card" data-role="builder">
+            <button class="thg-role-card" data-role="builder" type="button">
               <div class="thg-role-icon">🏗️</div>
               <h3>I'm Building</h3>
               <p>List properties & manage leads professionally</p>
@@ -288,21 +289,82 @@
 
     document.body.appendChild(modal);
 
+    // Close modal function
+    const closeModal = () => {
+      roleState.hasShownOnboarding = true;
+      roleState.initializingModal = false;
+      const m = document.getElementById('thg-role-onboarding');
+      if (m) {
+        m.style.animation = 'fadeOut 0.3s ease';
+        setTimeout(() => m.remove(), 300);
+      }
+    };
+
+    // Close button handler
+    const closeBtn = modal.querySelector('.thg-role-close');
+    if (closeBtn) {
+      closeBtn.addEventListener('click', closeModal);
+    }
+
+    // Click outside to close
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) {
+        closeModal();
+      }
+    });
+
+    // ESC key to close
+    const escHandler = (e) => {
+      if (e.key === 'Escape') {
+        closeModal();
+        document.removeEventListener('keydown', escHandler);
+      }
+    };
+    document.addEventListener('keydown', escHandler);
+
     // Event listeners with instant feedback
     modal.querySelectorAll('.thg-role-card').forEach(card => {
-      card.addEventListener('click', async function() {
+      card.addEventListener('click', async function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+
         const role = this.getAttribute('data-role');
+        console.log('[role-v2] Role card clicked:', role);
 
         // Disable all cards immediately
         modal.querySelectorAll('.thg-role-card').forEach(c => {
           c.style.opacity = '0.5';
           c.style.pointerEvents = 'none';
+          c.disabled = true;
         });
 
-        if (role === 'builder') {
-          showBuilderVerificationForm();
-        } else {
-          await handleRoleSelection('buyer');
+        // Add loading state to clicked card
+        const selectBtn = this.querySelector('.thg-role-select-btn');
+        if (selectBtn) {
+          selectBtn.textContent = 'Loading...';
+        }
+
+        try {
+          if (role === 'builder') {
+            // Remove ESC handler before showing builder form
+            document.removeEventListener('keydown', escHandler);
+            showBuilderVerificationForm();
+          } else {
+            await handleRoleSelection('buyer');
+            // Remove ESC handler after successful selection
+            document.removeEventListener('keydown', escHandler);
+          }
+        } catch (error) {
+          console.error('[role-v2] Role selection failed:', error);
+          // Re-enable cards on error
+          modal.querySelectorAll('.thg-role-card').forEach(c => {
+            c.style.opacity = '1';
+            c.style.pointerEvents = 'auto';
+            c.disabled = false;
+          });
+          if (selectBtn) {
+            selectBtn.textContent = 'Select';
+          }
         }
       });
     });
@@ -750,6 +812,7 @@
       }
 
       .thg-role-modal {
+        position: relative;
         width: 90%;
         max-width: 600px;
         background: linear-gradient(180deg, #1a1a1a 0%, #0d0d0d 100%);
@@ -758,6 +821,37 @@
         box-shadow: 0 30px 60px rgba(0, 0, 0, 0.6);
         animation: slideUp 0.35s cubic-bezier(0.16, 1, 0.3, 1);
         overflow: hidden;
+      }
+
+      .thg-role-close {
+        position: absolute;
+        top: 16px;
+        right: 16px;
+        width: 36px;
+        height: 36px;
+        border: none;
+        background: rgba(255, 255, 255, 0.1);
+        color: rgba(255, 255, 255, 0.8);
+        font-size: 24px;
+        line-height: 1;
+        cursor: pointer;
+        border-radius: 8px;
+        transition: all 0.2s ease;
+        z-index: 10;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0;
+      }
+
+      .thg-role-close:hover {
+        background: rgba(255, 255, 255, 0.2);
+        color: #fff;
+        transform: scale(1.05);
+      }
+
+      .thg-role-close:active {
+        transform: scale(0.95);
       }
 
       @keyframes slideUp {

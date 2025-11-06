@@ -11,6 +11,7 @@ import { EntitlementsProvider } from '@/components/ui/FeatureGate'
 import { AppI18nProvider } from '@/components/providers/AppI18nProvider'
 import MobileBottomNav from '@/components/MobileBottomNav'
 import { PrefetchRoutes } from '@/components/providers/PrefetchRoutes'
+import StaticHeader from '@/components/StaticHeader'
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -75,6 +76,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             header.nav { background: rgba(255,255,255,0.95); }
           }
           header.nav .inner { max-width:1100px; margin:0 auto; padding:10px 16px; display:flex; align-items:center; justify-content:space-between; gap:10px; position:relative; padding-right: clamp(130px, 10vw, 200px) }
+          /* Brand row - flex container for brand + pill */
+          header.nav .inner .row { display:flex; align-items:center; gap:10px }
           .brand { font-family: var(--font-display); font-weight:800; letter-spacing:.2px; font-size:24px }
           header.nav .brand{ color:#0f172a }
           header.nav a, header.nav summary{
@@ -90,7 +93,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           }
           .pill { display:inline-flex; align-items:center; gap:8px; padding:6px 10px; border-radius:999px; background:#fff; border:1px solid #eee; font-size:12px; color:#111 }
 
-          /* Header nav layout */
+          /* Header nav layout - exact spacing match */
           header.nav nav.row { gap:12px; align-items:center; flex-wrap:nowrap; margin-left:auto }
           header.nav nav.row a, header.nav nav.row summary { font-weight:700 }
           .menu-group{ display:inline-flex; align-items:center; gap:12px }
@@ -119,18 +122,34 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             background:linear-gradient(90deg, #d4af37, #1e40af);
           }
           details.dropdown[open] .menu{ opacity:1; transform:translateY(0) scale(1); visibility:visible; pointer-events:auto; transition:opacity .18s ease, transform .18s ease, visibility 0s linear 0s }
-          details.dropdown .menu a{ display:block; padding:10px 12px; border-radius:10px; color:inherit; text-decoration:none; text-align:center; transition: background .15s ease, transform .06s ease, color .15s ease, box-shadow .12s ease }
+          /* Ensure Next.js Link components in dropdowns are styled correctly */
+          details.dropdown .menu a,
+          details.dropdown .menu a[href] {
+            display:block;
+            padding:10px 12px;
+            border-radius:10px;
+            color:inherit;
+            text-decoration:none;
+            text-align:center;
+            transition: background .15s ease, transform .06s ease, color .15s ease, box-shadow .12s ease;
+            width:100%;
+            box-sizing:border-box;
+          }
           details.dropdown .menu a + a{ border-top:1px solid #f0f2f4 }
-          details.dropdown .menu a:hover{
+          details.dropdown .menu a:hover,
+          details.dropdown .menu a[href]:hover {
             background:linear-gradient(90deg, rgba(30,64,175,.12), rgba(59,130,246,.06));
             color:#1e40af;
             box-shadow: inset 0 0 0 1px rgba(30,64,175,.18);
+            text-decoration:none;
           }
-          details.dropdown .menu a:focus-visible{
+          details.dropdown .menu a:focus-visible,
+          details.dropdown .menu a[href]:focus-visible {
             outline:0;
             box-shadow:0 0 0 2px rgba(59,130,246,.30), inset 0 0 0 1px rgba(30,64,175,.24);
           }
-          details.dropdown .menu a:active{
+          details.dropdown .menu a:active,
+          details.dropdown .menu a[href]:active {
             transform:translateY(1px);
             background:linear-gradient(180deg, rgba(30,64,175,.20), rgba(59,130,246,.10));
           }
@@ -160,29 +179,53 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           header.nav .divider{ background:rgba(226,232,240,.6) }
           #site-header-auth-container{ display:flex; align-items:center; gap:12px }
 
-          /* Mobile adjustments */
+          /* Mobile adjustments - exact match to homepage */
           @media (max-width: 1080px) {
+            /* Hide trust pill a bit earlier to free space */
             #home_pill_trust{ display:none }
+            /* Reserve extra space for auth button to avoid collisions */
             header.nav .inner{ padding-right:200px }
           }
           @media (max-width: 880px) {
+            /* Mobile header: keep single-row like desktop, just tighter
+               Reserve more right-side space so "Features | Login / Signup" never overlaps */
             header.nav .inner { padding-right:160px; flex-wrap:nowrap; gap:8px }
             .brand { font-size:22px }
             header.nav .inner .row { flex:0 0 auto; justify-content:flex-start }
             header.nav nav.row { white-space:nowrap; gap:10px }
             header.nav nav.row a, header.nav nav.row summary { padding:4px 0; font-size:13px }
+            /* Make Features font-size match Login/Signup on mobile */
             details.dropdown > summary{ font-size:16px; padding:6px 10px }
             .divider{ height:14px }
-            header.nav nav.row .menu-group > a[href='/pricing/']{ display:none }
-            header.nav nav.row .menu-group > .divider{ display:none }
+            /* Move About into Features menu on mobile; hide right-group About */
+            header.nav .thg-auth-wrap .about-link{ display:none }
             header.nav nav.row > a[href='/about/']{ display:none }
+            /* Hide nav-level divider before About on mobile */
+            header.nav nav.row > .divider{ display:none }
+            .about-mobile-link{ display:none }
+            /* Hide top-level Pricing in main nav on mobile */
+            header.nav nav.row .menu-group > a[href='/pricing/']{ display:none }
+            /* Hide the internal divider in nav when Pricing is hidden */
+            header.nav nav.row .menu-group > .divider{ display:none }
+            /* Show mobile-only items inside Features dropdown */
             details.dropdown .menu .show-mobile-only{ display:block }
+            /* Right-side auth group position */
             header.nav .thg-auth-wrap{ position:absolute; top:10px; right:12px; padding:0; gap:10px }
             header.nav .thg-auth-wrap::before{ height:14px }
+            /* Hide trust pill to avoid crowding on small screens */
             #home_pill_trust{ display:none }
+            /* Use the same dropdown style as desktop */
             details.dropdown .menu{ position:absolute; left:auto; right:0; top:calc(100% + 8px); min-width:230px; border-radius:12px; }
             details.dropdown .menu a{ padding:8px 10px }
           }
+
+          /* Desktop: vertically center the right-side auth/menu group within header */
+          @media (min-width: 881px) {
+            header.nav .thg-auth-wrap:not(.is-fixed){ top:50%; transform: translateY(-50%); }
+          }
+
+          /* Always suppress legacy About link; using new right-aligned group */
+          .about-mobile-link{ display:none !important }
         ` }}
         />
         <script dangerouslySetInnerHTML={{ __html: `
@@ -247,140 +290,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             }
           })();
         `}} />
-        {/* Static header - Glassy Premium Blue - matches index.html exactly */}
-        <header className="nav">
-          <div className="inner">
-            <div className="row">
-              <a className="brand" href="/" style={{ fontSize: '26px' }}>THARAGA</a>
-              <span className="pill" id="home_pill_trust">Verified • Broker‑free</span>
-            </div>
-            <nav className="row" aria-label="Primary">
-              <span className="menu-group">
-                <details className="dropdown">
-                  <summary>Features</summary>
-                  <div className="menu" role="menu">
-                    <a href="/tools/vastu/">Vastu</a>
-                    <a href="/tools/environment/">Climate &amp; environment</a>
-                    <a href="/tools/voice-tamil/">Voice (Tamil)</a>
-                    <a href="/tools/verification/">Verification</a>
-                    <a href="/tools/roi/">ROI</a>
-                    <a href="/tools/currency-risk/">Currency risk</a>
-                    <span className="divider show-mobile-only" aria-hidden="true"></span>
-                    <a className="show-mobile-only" href="/pricing/">Pricing</a>
-                    <a className="show-mobile-only" href="/about/">About</a>
-                  </div>
-                </details>
-                <span className="divider" aria-hidden="true"></span>
-                <details className="dropdown" id="portal-menu">
-                  <summary>Portal</summary>
-                  <div className="menu" role="menu" aria-label="Portal menu" id="portal-menu-items">
-                    {/* Dynamic content loaded by role-manager-v2.js */}
-                    <a href="/builder">Builder Dashboard</a>
-                    <a href="/my-dashboard">Buyer Dashboard</a>
-                  </div>
-                </details>
-                <span className="divider" aria-hidden="true"></span>
-                <a href="/pricing/">Pricing</a>
-              </span>
-              <span className="divider" aria-hidden="true"></span>
-              <a href="/about/">About</a>
-            </nav>
-            <a className="about-mobile-link" href="/about/">About</a>
-            {/* Auth button container - populated by auth-gate.js */}
-          </div>
-        </header>
+        {/* Static header - Glassy Premium Blue - matches homepage exactly */}
+        <StaticHeader />
         <AppI18nProvider>
           <EntitlementsProvider>
             <PrefetchRoutes />
             {children}
           </EntitlementsProvider>
         </AppI18nProvider>
-        {/* Portal Menu Dynamic Update */}
-        <script dangerouslySetInnerHTML={{ __html: `
-          // Update Portal menu based on user roles
-          function updatePortalMenu() {
-            const portalMenuItems = document.getElementById('portal-menu-items');
-            if (!portalMenuItems || !window.thgRoleManager) return;
-
-            const state = window.thgRoleManager.getState();
-
-            // Wait for both initialization AND user data to be ready
-            if (!state.initialized || !state.user) {
-              const portalMenu = document.getElementById('portal-menu');
-              if (portalMenu) portalMenu.style.display = 'none';
-              return;
-            }
-
-            // Special handling: Show ALL dashboards for admin owner email
-            const isAdminOwner = state.user.email === 'tharagarealestate@gmail.com';
-
-            // Hide portal menu if no roles AND not admin owner
-            if (state.roles.length === 0 && !isAdminOwner) {
-              const portalMenu = document.getElementById('portal-menu');
-              if (portalMenu) portalMenu.style.display = 'none';
-              return;
-            }
-
-            const portalMenu = document.getElementById('portal-menu');
-            if (portalMenu) portalMenu.style.display = '';
-
-            let menuHTML = '';
-
-            console.log('[Portal Menu] Updating for user:', state.user.email, 'isAdminOwner:', isAdminOwner, 'roles:', state.roles);
-
-            // For admin owner, always show buyer dashboard
-            if (state.roles.includes('buyer') || isAdminOwner) {
-              const active = state.primaryRole === 'buyer' ? ' <span style="color:#10b981">✓</span>' : '';
-              menuHTML += '<a href="/my-dashboard">🏠 Buyer Dashboard' + active + '</a>';
-            }
-
-            // For admin owner, always show builder dashboard
-            if (state.roles.includes('builder') || isAdminOwner) {
-              const active = state.primaryRole === 'builder' ? ' <span style="color:#10b981">✓</span>' : '';
-              const verified = state.builderVerified ? ' <span style="color:#10b981;font-size:11px">✓ Verified</span>' : '';
-              menuHTML += '<a href="/builder">🏗️ Builder Dashboard' + active + verified + '</a>';
-            }
-
-            // Show Admin Panel link if user has admin role OR is admin owner
-            if (state.roles.includes('admin') || isAdminOwner) {
-              menuHTML += '<a href="/admin" style="border-top:1px solid #e5e7eb;margin-top:8px;padding-top:8px;">🛡️ Admin Panel</a>';
-            }
-
-            portalMenuItems.innerHTML = menuHTML || '<a href="/my-dashboard">Buyer Dashboard</a><a href="/builder">Builder Dashboard</a>';
-          }
-
-          // Update portal menu when roles change
-          if (window.thgRoleManager) {
-            const checkRoles = setInterval(() => {
-              const state = window.thgRoleManager.getState();
-              // Wait for BOTH initialized AND user to be ready
-              if (state.initialized && state.user) {
-                clearInterval(checkRoles);
-                updatePortalMenu();
-              }
-            }, 500);
-
-            // Listen for role changes
-            window.addEventListener('thg-role-changed', updatePortalMenu);
-          } else {
-            // If role manager not loaded yet, retry
-            setTimeout(() => {
-              if (window.thgRoleManager) {
-                const checkRoles = setInterval(() => {
-                  const state = window.thgRoleManager.getState();
-                  if (state.initialized && state.user) {
-                    clearInterval(checkRoles);
-                    updatePortalMenu();
-                  }
-                }, 500);
-                window.addEventListener('thg-role-changed', updatePortalMenu);
-              }
-            }, 1000);
-          }
-
-          // Make function globally available
-          window.__updatePortalMenu = updatePortalMenu;
-        ` }} />
         {/* Web Vitals reporting */}
         <script dangerouslySetInnerHTML={{ __html: `
           (function(){

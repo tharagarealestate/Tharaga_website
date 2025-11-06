@@ -70,6 +70,7 @@ async function main() {
     'property-listing',
     'snippets',
     'pricing',
+    'admin', // Admin panel with updated glassy blue header
   ]);
 
   await ensureDir(nextPublic);
@@ -111,6 +112,18 @@ async function main() {
     }
   } catch (e) {
     console.warn('[copy-static] Could not copy root index.html:', e?.message || e);
+  }
+
+  // Copy role-manager-v2.js to public directory
+  try {
+    const rootRoleManager = path.join(repoRoot, 'role-manager-v2.js');
+    if (await pathExists(rootRoleManager)) {
+      const destRoleManager = path.join(nextPublic, 'role-manager-v2.js');
+      await copyFile(rootRoleManager, destRoleManager);
+      console.log('[copy-static] Copied root role-manager-v2.js -> app/public/role-manager-v2.js');
+    }
+  } catch (e) {
+    console.warn('[copy-static] Could not copy role-manager-v2.js:', e?.message || e);
   }
 
   console.log('[copy-static] Done.');

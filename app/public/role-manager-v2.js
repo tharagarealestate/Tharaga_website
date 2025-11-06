@@ -482,6 +482,9 @@
         ? ['buyer', 'builder', 'admin']
         : roleState.roles;
 
+      // Count displayable roles (buyer/builder only, exclude admin)
+      const displayableRoles = rolesToShow.filter(r => r !== 'admin');
+
       rolesToShow.forEach(role => {
         // Skip 'admin' role - it's not a mode, it's a privilege shown in Portal dropdown
         if (role === 'admin') return;
@@ -504,11 +507,13 @@
         `;
       });
 
-      // Add role button if user only has one role (not for admin owner with empty roles)
-      if (roleState.roles.length === 1 && !isAdminOwner) {
-        const otherRole = roleState.roles[0] === 'buyer' ? 'builder' : 'buyer';
+      // Add role button if user has only buyer OR only builder (not both, not admin owner)
+      // Count only displayable roles (buyer/builder), not admin
+      if (displayableRoles.length === 1 && !isAdminOwner) {
+        const currentRole = displayableRoles[0];
+        const otherRole = currentRole === 'buyer' ? 'builder' : 'buyer';
         const icon = otherRole === 'buyer' ? '🏠' : '🏗️';
-        const label = otherRole === 'buyer' ? 'Buyer Mode' : 'Builder Mode';  // FIXED: Changed from "Become a Builder"
+        const label = otherRole === 'buyer' ? 'Buyer Mode' : 'Builder Mode';
 
         menuHTML += `
           <div class="thg-auth-item thg-add-role-btn"

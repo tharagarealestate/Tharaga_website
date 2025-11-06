@@ -507,9 +507,10 @@
         `;
       });
 
-      // Add role button if user has only buyer OR only builder (not both, not admin owner)
+      // Add role button if user has only buyer OR only builder (not both)
       // Count only displayable roles (buyer/builder), not admin
-      if (displayableRoles.length === 1 && !isAdminOwner) {
+      // Show for both regular users AND admin owner
+      if (displayableRoles.length === 1) {
         const currentRole = displayableRoles[0];
         const otherRole = currentRole === 'buyer' ? 'builder' : 'buyer';
         const icon = otherRole === 'buyer' ? '🏠' : '🏗️';

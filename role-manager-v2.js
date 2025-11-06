@@ -930,7 +930,7 @@
         opacity: 1;
       }
 
-      .thg-role-icon {
+      .thg-role-card .thg-role-icon {
         font-size: 48px;
         margin-bottom: 12px;
         filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3));

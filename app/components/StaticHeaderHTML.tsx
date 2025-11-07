@@ -1,14 +1,26 @@
 /**
- * Static Header Component - Pure HTML Implementation
+ * Universal Static Header Component
  * 
- * This component uses the exact HTML structure from index.html homepage.
- * It's truly static - no React re-renders, just pure HTML/CSS/JS.
- * The header is fixed/floating and persists across all page navigations.
+ * This is the PERMANENT header for ALL pages across the entire website.
+ * It uses the exact HTML structure from index.html homepage.
+ * 
+ * USAGE:
+ * - Already included in root layout.tsx - works automatically on ALL pages
+ * - No need to import or include anything in feature files
+ * - Header is always visible, never reloads, truly static
+ * 
+ * Features:
+ * - Sticky positioning (matches homepage exactly)
+ * - Exact font sizes, gaps, and spacing
+ * - Login/Signup buttons always visible
+ * - Portal menu dynamically updates based on user roles
+ * - Works on mobile and desktop
  */
 
+import { memo } from 'react'
 import { HeaderLinkInterceptor } from './HeaderLinkInterceptor'
 
-export default function StaticHeaderHTML() {
+const StaticHeaderHTML = memo(function StaticHeaderHTML() {
   return (
     <>
       <header className="nav" id="tharaga-static-header">
@@ -159,7 +171,12 @@ export default function StaticHeaderHTML() {
       />
     </>
   )
-}
+})
+
+// Prevent re-renders - header is truly static
+StaticHeaderHTML.displayName = 'StaticHeaderHTML'
+
+export default StaticHeaderHTML
 
 
 

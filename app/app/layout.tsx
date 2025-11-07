@@ -312,24 +312,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             }
           })();
         `}} />
-        {/* Static header - Pure HTML from index.html, injected directly into DOM for true static behavior */}
-        <div id="tharaga-header-container"></div>
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-              (function() {
-                'use strict';
-                // Inject header HTML directly into DOM - truly static, never re-renders
-                const container = document.getElementById('tharaga-header-container');
-                if (container && !container.querySelector('header.nav')) {
-                  container.innerHTML = '<header class="nav" id="tharaga-static-header"><div class="inner"><div class="row"><a class="brand" href="/" style="font-size:26px">THARAGA</a><span class="pill" id="home_pill_trust">Verified • Broker‑free</span></div><nav class="row" aria-label="Primary"><span class="menu-group"><details class="dropdown"><summary>Features</summary><div class="menu" role="menu"><a href="/tools/vastu/" data-next-link>Vastu</a><a href="/tools/environment/" data-next-link>Climate &amp; environment</a><a href="/tools/voice-tamil/" data-next-link>Voice (Tamil)</a><a href="/tools/verification/" data-next-link>Verification</a><a href="/tools/roi/" data-next-link>ROI</a><a href="/tools/currency-risk/" data-next-link>Currency risk</a><span class="divider show-mobile-only" aria-hidden="true"></span><a class="show-mobile-only" href="/pricing/" data-next-link>Pricing</a><a class="show-mobile-only" href="/about/" data-next-link>About</a></div></details><span class="divider" aria-hidden="true"></span><details class="dropdown" id="portal-menu" style="display:none"><summary>Portal</summary><div class="menu" role="menu" aria-label="Portal menu" id="portal-menu-items"><a href="/builder" data-next-link>Builder Dashboard</a><a href="/my-dashboard" data-next-link>Buyer Dashboard</a></div></details><span class="divider" aria-hidden="true"></span><a href="/pricing/" data-next-link>Pricing</a></span><span class="divider" aria-hidden="true"></span><a href="/about/" data-next-link>About</a></nav><a class="about-mobile-link" href="/about/" data-next-link>About</a><div id="site-header-auth-container"></div></div></header>';
-                }
-              })();
-            `,
-          }}
-        />
-        <HeaderLinkInterceptor />
+        {/* Universal Static Header - Works on ALL pages automatically */}
+        {/* No need to import anything in feature files - header is always visible */}
         <StaticHeaderHTML />
+        <HeaderLinkInterceptor />
         <AppI18nProvider>
           <EntitlementsProvider>
             <PrefetchRoutes />

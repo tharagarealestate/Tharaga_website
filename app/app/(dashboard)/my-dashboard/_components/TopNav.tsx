@@ -142,6 +142,7 @@ export default function TopNav() {
                 <div className="px-3 py-2 text-xs text-gray-500">{userEmail ?? 'Guest'}</div>
                 <Link href="/my-dashboard" className="block px-3 py-2 text-sm hover:bg-gray-50">My dashboard</Link>
                 <Link href="/saved" className="block px-3 py-2 text-sm hover:bg-gray-50">Saved</Link>
+                <Link href="/behavior-tracking" className="block px-3 py-2 text-sm hover:bg-gray-50">Behavior Analytics</Link>
                 <button
                   onClick={async () => { try { await getSupabase().auth.signOut() } catch {}; window.location.reload() }}
                   className="block w-full px-3 py-2 text-left text-sm hover:bg-gray-50"

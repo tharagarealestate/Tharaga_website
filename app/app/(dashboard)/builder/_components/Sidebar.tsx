@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useEffect, useMemo, useState } from 'react'
 import { cn } from '@/lib/utils'
-import { LayoutDashboard, Users, Building2, DollarSign, MessageSquare, Settings, Lock, HelpCircle, Building, Clock } from 'lucide-react'
+import { LayoutDashboard, Users, Building2, DollarSign, MessageSquare, Settings, Lock, HelpCircle, Building, Clock, BarChart3 } from 'lucide-react'
 
 interface SubscriptionData {
   tier: 'trial' | 'pro' | 'enterprise' | string
@@ -39,6 +39,7 @@ const navigationItems: NavItem[] = [
     { href: '/builder/revenue/forecasting', label: 'Forecasting' },
   ]},
   { href: '/builder/communications', label: 'Communications', icon: MessageSquare, requiresPro: true },
+  { href: '/behavior-tracking', label: 'Behavior Analytics', icon: BarChart3, requiresPro: false },
   { href: '/builder/settings', label: 'Settings', icon: Settings, requiresPro: false },
 ]
 

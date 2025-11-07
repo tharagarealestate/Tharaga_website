@@ -58,31 +58,8 @@ export default function StaticHeaderHTML() {
             (function() {
               'use strict';
               
-              // Make header fixed/floating
-              const header = document.getElementById('tharaga-static-header');
-              if (header) {
-                header.style.position = 'fixed';
-                header.style.top = '0';
-                header.style.left = '0';
-                header.style.right = '0';
-                header.style.zIndex = '50';
-                header.style.width = '100%';
-                
-                // Add padding to body to account for fixed header
-                const updateBodyPadding = function() {
-                  const headerHeight = header.offsetHeight || 60;
-                  document.body.style.paddingTop = headerHeight + 'px';
-                };
-                
-                updateBodyPadding();
-                
-                // Update padding on resize
-                let resizeTimer;
-                window.addEventListener('resize', function() {
-                  clearTimeout(resizeTimer);
-                  resizeTimer = setTimeout(updateBodyPadding, 100);
-                });
-              }
+              // Header uses sticky positioning (like homepage) - no need for body padding
+              // The CSS already handles sticky positioning correctly
               
               // Portal menu update function (called by role manager)
               window.__updatePortalMenu = function() {

@@ -12,6 +12,7 @@ import { AppI18nProvider } from '@/components/providers/AppI18nProvider'
 import MobileBottomNav from '@/components/MobileBottomNav'
 import { PrefetchRoutes } from '@/components/providers/PrefetchRoutes'
 import StaticHeaderHTML from '@/components/StaticHeaderHTML'
+import { HeaderLinkInterceptor } from '@/components/HeaderLinkInterceptor'
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -78,17 +79,17 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             background-attachment: fixed;
           }
 
-          /* Header base styles - Glassy Premium Blue */
+          /* Header base styles - Glassy Premium Blue - EXACT MATCH TO HOMEPAGE */
           header.nav {
             position: sticky;
             top: 0;
-            z-index: 50;
+            z-index: 20;
             /* Glassmorphism Effect */
             background: linear-gradient(135deg, rgba(255,255,255,0.85), rgba(248,250,252,0.90));
             backdrop-filter: blur(20px) saturate(1.8);
             -webkit-backdrop-filter: blur(20px) saturate(1.8);
             /* Premium Borders */
-            border-top: 2px solid #d4af37;
+            border-top: 2px solid var(--gold);
             border-bottom: 1px solid rgba(226,232,240,0.6);
             box-shadow: 0 1px 3px rgba(15,23,42,0.03), 0 10px 40px rgba(15,23,42,0.04);
           }
@@ -97,18 +98,18 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             header.nav { background: rgba(255,255,255,0.95); }
           }
           header.nav .inner { max-width:1100px; margin:0 auto; padding:10px 16px; display:flex; align-items:center; justify-content:space-between; gap:10px; position:relative; padding-right: clamp(130px, 10vw, 200px) }
-          /* Brand row - flex container for brand + pill */
+          /* Brand row - flex container for brand + pill - EXACT GAP MATCH */
           header.nav .inner .row { display:flex; align-items:center; gap:10px }
           .brand { font-family: var(--font-display); font-weight:800; letter-spacing:.2px; font-size:24px }
-          header.nav .brand{ color:#0f172a }
+          header.nav .brand{ color:var(--slate-900); }
           header.nav a, header.nav summary{
-            color:#0f172a;
+            color:var(--slate-900);
             font-weight:600;
             transition: background 0.2s ease, color 0.2s ease;
           }
           header.nav a:hover, header.nav summary:hover{
             background: linear-gradient(135deg, rgba(30,64,175,0.08), rgba(59,130,246,0.06));
-            color: #1e40af;
+            color: var(--primary);
             border-radius: 8px;
             text-decoration: none;
           }
@@ -311,7 +312,23 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             }
           })();
         `}} />
-        {/* Static header - Pure HTML from index.html, fixed/floating across all pages */}
+        {/* Static header - Pure HTML from index.html, injected directly into DOM for true static behavior */}
+        <div id="tharaga-header-container"></div>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function() {
+                'use strict';
+                // Inject header HTML directly into DOM - truly static, never re-renders
+                const container = document.getElementById('tharaga-header-container');
+                if (container && !container.querySelector('header.nav')) {
+                  container.innerHTML = '<header class="nav" id="tharaga-static-header"><div class="inner"><div class="row"><a class="brand" href="/" style="font-size:26px">THARAGA</a><span class="pill" id="home_pill_trust">Verified • Broker‑free</span></div><nav class="row" aria-label="Primary"><span class="menu-group"><details class="dropdown"><summary>Features</summary><div class="menu" role="menu"><a href="/tools/vastu/" data-next-link>Vastu</a><a href="/tools/environment/" data-next-link>Climate &amp; environment</a><a href="/tools/voice-tamil/" data-next-link>Voice (Tamil)</a><a href="/tools/verification/" data-next-link>Verification</a><a href="/tools/roi/" data-next-link>ROI</a><a href="/tools/currency-risk/" data-next-link>Currency risk</a><span class="divider show-mobile-only" aria-hidden="true"></span><a class="show-mobile-only" href="/pricing/" data-next-link>Pricing</a><a class="show-mobile-only" href="/about/" data-next-link>About</a></div></details><span class="divider" aria-hidden="true"></span><details class="dropdown" id="portal-menu" style="display:none"><summary>Portal</summary><div class="menu" role="menu" aria-label="Portal menu" id="portal-menu-items"><a href="/builder" data-next-link>Builder Dashboard</a><a href="/my-dashboard" data-next-link>Buyer Dashboard</a></div></details><span class="divider" aria-hidden="true"></span><a href="/pricing/" data-next-link>Pricing</a></span><span class="divider" aria-hidden="true"></span><a href="/about/" data-next-link>About</a></nav><a class="about-mobile-link" href="/about/" data-next-link>About</a><div id="site-header-auth-container"></div></div></header>';
+                }
+              })();
+            `,
+          }}
+        />
+        <HeaderLinkInterceptor />
         <StaticHeaderHTML />
         <AppI18nProvider>
           <EntitlementsProvider>

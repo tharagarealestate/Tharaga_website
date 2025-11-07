@@ -60,7 +60,11 @@ const StaticHeaderHTML = memo(function StaticHeaderHTML() {
             <a href="/about/" data-next-link>About</a>
           </nav>
           <a className="about-mobile-link" href="/about/" data-next-link>About</a>
-          <div id="site-header-auth-container"></div>
+          {/* Auth container - auth system will inject login/signup buttons here */}
+          {/* The auth system looks for .thg-auth-wrap or creates it inside header */}
+          <div id="site-header-auth-container">
+            {/* Auth system will inject .thg-auth-wrap here */}
+          </div>
         </div>
       </header>
       <HeaderLinkInterceptor />
@@ -70,8 +74,28 @@ const StaticHeaderHTML = memo(function StaticHeaderHTML() {
             (function() {
               'use strict';
               
-              // Header uses sticky positioning (like homepage) - no need for body padding
-              // The CSS already handles sticky positioning correctly
+              // Ensure auth container is ready for auth system injection
+              // The auth system from snippets/index.html will inject .thg-auth-wrap into header
+              // We ensure #site-header-auth-container exists for compatibility
+              function ensureAuthContainer() {
+                const header = document.getElementById('tharaga-static-header');
+                const authContainer = document.getElementById('site-header-auth-container');
+                
+                if (header && authContainer) {
+                  // Make header position relative if needed for absolute positioning of auth wrap
+                  const headerStyle = window.getComputedStyle(header);
+                  if (headerStyle.position === 'static') {
+                    header.style.position = 'relative';
+                  }
+                }
+              }
+              
+              // Run immediately and on DOM ready
+              if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', ensureAuthContainer);
+              } else {
+                ensureAuthContainer();
+              }
               
               // Portal menu update function (called by role manager)
               window.__updatePortalMenu = function() {
@@ -143,6 +167,11 @@ const StaticHeaderHTML = memo(function StaticHeaderHTML() {
                       }
                     }
                   }, 500);
+                  
+                  // Stop checking after 10 seconds to avoid infinite loop
+                  setTimeout(function() {
+                    clearInterval(checkRoles);
+                  }, 10000);
                   
                   window.addEventListener('thg-role-changed', function() {
                     if (window.__updatePortalMenu) {

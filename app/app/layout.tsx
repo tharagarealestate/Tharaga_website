@@ -126,7 +126,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             justify-content:space-between; 
             gap:10px; 
             position:relative; 
-            padding-right: clamp(130px, 10vw, 200px);
+            /* Remove extra padding-right - let flex handle spacing naturally */
+            padding-right: 16px;
             /* Ensure proper alignment on all pages - match homepage exactly */
             flex-wrap: nowrap;
           }

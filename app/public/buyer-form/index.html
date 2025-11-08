@@ -690,18 +690,30 @@
 <body>
 
 <!-- ===== Verified Buyer Form (Drop-in) ===== -->
-<section id="buyer-intake" style="max-width: 760px; margin: 0 auto; padding: 24px;">
-  <h3 style="font-family: 'Poppins', sans-serif; font-weight: 600; text-align:center; margin-bottom: 12px;">
-    Get Matched to Verified Properties
-  </h3>
-  <p style="text-align:center; margin:0 0 16px;">OTP-verified leads only. No spam. No brokerage.</p>
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        colors: {
+          fgMuted: 'rgb(107, 114, 128)',
+          border: 'rgb(229, 231, 235)',
+          muted: 'rgb(243, 244, 246)',
+        }
+      }
+    }
+  }
+</script>
+<section id="buyer-intake" class="mx-auto max-w-5xl px-6 py-8">
+  <h1 class="text-2xl font-bold mb-4">Get Matched to Verified Properties</h1>
+  <p class="text-sm text-fgMuted mb-6">OTP-verified leads only. No spam. No brokerage.</p>
 
   <!-- Quick presets -->
-  <div id="bf-presets" class="row" style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-bottom:10px">
-    <button type="button" class="chip" data-bf="budget" data-min="4000000" data-max="5000000">Budget: ₹40L–₹50L</button>
-    <button type="button" class="chip" data-bf="budget" data-min="5000000" data-max="7500000">Budget: ₹50L–₹75L</button>
-    <button type="button" class="chip" data-bf="bhk" data-val="2">2 BHK</button>
-    <button type="button" class="chip" data-bf="bhk" data-val="3">3 BHK</button>
+  <div id="bf-presets" class="flex gap-2 justify-center flex-wrap mb-6">
+    <button type="button" class="chip px-3 py-1 text-sm border border-border rounded-full hover:bg-muted/40 transition-colors" data-bf="budget" data-min="4000000" data-max="5000000">Budget: ₹40L–₹50L</button>
+    <button type="button" class="chip px-3 py-1 text-sm border border-border rounded-full hover:bg-muted/40 transition-colors" data-bf="budget" data-min="5000000" data-max="7500000">Budget: ₹50L–₹75L</button>
+    <button type="button" class="chip px-3 py-1 text-sm border border-border rounded-full hover:bg-muted/40 transition-colors" data-bf="bhk" data-val="2">2 BHK</button>
+    <button type="button" class="chip px-3 py-1 text-sm border border-border rounded-full hover:bg-muted/40 transition-colors" data-bf="bhk" data-val="3">3 BHK</button>
   </div>
 
   <!-- Netlify Forms attrs -->
@@ -711,7 +723,7 @@
         netlify-honeypot="bot-field"
         data-netlify-recaptcha="true"
         id="buyerForm"
-        style="background:#FAF5EF; border-radius:12px; padding:16px; font-family:'Poppins',sans-serif">
+        class="border border-border rounded p-6 bg-white">
 
     <!-- Netlify Forms hidden helpers -->
     <input type="hidden" name="form-name" value="buyer-intake" />
@@ -726,11 +738,11 @@
     <input type="hidden" name="referrer"     id="referrer">
     <input type="hidden" name="otp_verified" id="otp_verified" value="false">
 
-    <div class="grid-2">
-      <label style="display:block;">
-        <span>Name</span>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+      <label class="block">
+        <span class="block text-sm font-medium mb-2">Name</span>
         <input required type="text" name="name" placeholder="Your full name"
-               style="width:100%; padding:10px; border-radius:8px; border:1px solid #ddd;">
+               class="w-full px-3 py-2 text-sm border border-border rounded focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
       </label>
 
       <script>
@@ -760,54 +772,55 @@
       })();
       </script>
 
-      <label style="display:block;">
-        <span>Email</span>
+      <label class="block">
+        <span class="block text-sm font-medium mb-2">Email</span>
         <input required type="email" name="email" placeholder="you@example.com"
-               style="width:100%; padding:10px; border-radius:8px; border:1px solid #ddd;">
-        <div id="emailLockBadge" style="display:none;margin-top:6px;width:max-content;padding:4px 8px;border-radius:999px;border:1px solid #a7f3d0;background:#ecfdf5;color:#065f46;font-size:12px;font-weight:600;">🔒 Locked to your account</div>
-        <small id="emailNotice" style="display:none;color:#b45309;margin-top:6px;display:block;">
+               class="w-full px-3 py-2 text-sm border border-border rounded focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+        <div id="emailLockBadge" class="hidden mt-2 w-max px-2 py-1 rounded-full border border-green-200 bg-green-50 text-green-800 text-xs font-semibold">🔒 Locked to your account</div>
+        <small id="emailNotice" class="hidden text-amber-700 mt-2 block text-xs">
           Please enter your account email shown at the top-right header.
         </small>
       </label>
     </div>
 
-    <div class="grid-2 grid-right-btn">
-      <label style="display:block;">
-        <span>Phone (India)</span>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+      <label class="block">
+        <span class="block text-sm font-medium mb-2">Phone (India)</span>
         <input required type="tel" name="phone" id="phone"
           inputmode="numeric"
           pattern="^[6-9][0-9]{9}$"
           title="Enter a 10-digit Indian mobile number starting with 6–9"
           placeholder="10-digit mobile number"
-
-          style="width:100%; padding:10px; border-radius:8px; border:1px solid #ddd;">
+          class="w-full px-3 py-2 text-sm border border-border rounded focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
       </label>
 
-      <style>
-        .otp-input {
-          width: 40px;
-          height: 50px;
-          font-size: 20px;
-          text-align: center;
-          border: 2px solid #ccc;
-          border-radius: 8px;
-        }
-        .otp-input:focus {
-          border-color: #0e0e0e;
-          outline: none;
-        }
-      </style>
-
-
-      <button type="button" id="sendOtpBtn"
-        style="padding:10px; border:none; border-radius:8px; background:#0e0e0e; color:#fff; cursor:pointer;">
-        Send OTP
-      </button>
-
+      <div class="flex items-end">
+        <button type="button" id="sendOtpBtn"
+          class="w-full px-4 py-2 bg-gray-900 text-white font-semibold rounded hover:bg-gray-800 transition-colors text-sm">
+          Send OTP
+        </button>
+      </div>
     </div>
 
-    <div id="otpBlock" style="display:none; margin-top:12px; text-align:center;">
-      <div class="otp-container" style="display:flex; gap:8px; justify-content:center; margin-bottom:12px;">
+    <style>
+      .otp-input {
+        width: 40px;
+        height: 50px;
+        font-size: 20px;
+        text-align: center;
+        border: 2px solid rgb(229, 231, 235);
+        border-radius: 8px;
+      }
+      .otp-input:focus {
+        border-color: rgb(37, 99, 235);
+        outline: none;
+        ring: 2px;
+        ring-color: rgb(37, 99, 235);
+      }
+    </style>
+
+    <div id="otpBlock" class="hidden mt-4 text-center">
+      <div class="otp-container flex gap-2 justify-center mb-3">
         <input type="text" maxlength="1" class="otp-input" inputmode="numeric" pattern="[0-9]*" aria-label="OTP digit 1">
         <input type="text" maxlength="1" class="otp-input" inputmode="numeric" pattern="[0-9]*" aria-label="OTP digit 2">
         <input type="text" maxlength="1" class="otp-input" inputmode="numeric" pattern="[0-9]*" aria-label="OTP digit 3">
@@ -816,24 +829,24 @@
         <input type="text" maxlength="1" class="otp-input" inputmode="numeric" pattern="[0-9]*" aria-label="OTP digit 6">
       </div>
       <button type="button" id="verifyOtpBtn"
-              style="padding:10px 20px; border:none; border-radius:8px; background:#0e0e0e; color:#fff; cursor:pointer;">
+              class="px-4 py-2 bg-gray-900 text-white font-semibold rounded hover:bg-gray-800 transition-colors text-sm">
         Verify OTP
       </button>
-      <small id="otpStatus" style="display:block; margin-top:6px;"></small>
+      <small id="otpStatus" class="block mt-2 text-sm"></small>
     </div>
 
     <!-- Buyer profiling -->
-    <div class="grid-2">
-      <label style="display:block;">
-        <span>Preferred City / Area</span>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+      <label class="block">
+        <span class="block text-sm font-medium mb-2">Preferred City / Area</span>
         <input required type="text" name="location" placeholder="e.g., Anna Nagar, OMR, Coimbatore"
-               style="width:100%; padding:10px; border-radius:8px; border:1px solid #ddd;">
+               class="w-full px-3 py-2 text-sm border border-border rounded focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
       </label>
 
-      <label style="display:block;">
-        <span>Budget</span>
+      <label class="block">
+        <span class="block text-sm font-medium mb-2">Budget</span>
         <select required name="budget"
-                style="width:100%; padding:10px; border-radius:8px; border:1px solid #ddd;">
+                class="w-full px-3 py-2 text-sm border border-border rounded focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
           <option value="">Select</option>
           <option>Below ₹20L</option>
           <option>₹20L – ₹30L</option>
@@ -852,11 +865,11 @@
       </label>
     </div>
 
-    <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:12px;">
-      <label style="display:block;">
-        <span>Property Type</span>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+      <label class="block">
+        <span class="block text-sm font-medium mb-2">Property Type</span>
         <select required name="property_type"
-                style="width:100%; padding:10px; border-radius:8px; border:1px solid #ddd;">
+                class="w-full px-3 py-2 text-sm border border-border rounded focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
           <option value="">Select</option>
           <option>Apartment</option>
           <option>Villa</option>
@@ -865,10 +878,10 @@
         </select>
       </label>
 
-      <label style="display:block;">
-        <span>Buying Timeline</span>
+      <label class="block">
+        <span class="block text-sm font-medium mb-2">Buying Timeline</span>
         <select required name="timeline"
-                style="width:100%; padding:10px; border-radius:8px; border:1px solid #ddd;">
+                class="w-full px-3 py-2 text-sm border border-border rounded focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
           <option value="">Select</option>
           <option>ASAP (0–30 days)</option>
           <option>1–3 months</option>
@@ -878,10 +891,10 @@
       </label>
     </div>
 
-    <label style="display:block; margin-top:12px;">
-      <span>Financing</span>
+    <label class="block mb-4">
+      <span class="block text-sm font-medium mb-2">Financing</span>
       <select required name="financing"
-              style="width:100%; padding:10px; border-radius:8px; border:1px solid #ddd;">
+              class="w-full px-3 py-2 text-sm border border-border rounded focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
         <option value="">Select</option>
         <option>Loan pre-approved</option>
         <option>Loan required</option>
@@ -889,30 +902,30 @@
       </select>
     </label>
 
-    <label style="display:block; margin-top:12px;">
-      <span>Anything else?</span>
+    <label class="block mb-4">
+      <span class="block text-sm font-medium mb-2">Anything else?</span>
       <textarea name="notes" rows="3" placeholder="Bedrooms, amenities, exact localities..."
-                style="width:100%; padding:10px; border-radius:8px; border:1px solid #ddd;"></textarea>
+                class="w-full px-3 py-2 text-sm border border-border rounded focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"></textarea>
     </label>
 
     <!-- Your existing Google reCAPTCHA v2/v3 widget works with Netlify Forms 
     <div data-netlify-recaptcha="true" style="margin-top:12px;"></div>-->
 
     <button id="submitBtn" type="submit"
-            style="margin-top:14px; width:100%; padding:12px; border:none; border-radius:10px; background:#0e0e0e; color:#fff; font-weight:600; cursor:pointer;">
+            class="w-full px-4 py-3 bg-blue-600 text-white font-semibold rounded hover:bg-blue-700 transition-colors text-sm mb-3">
       Get My Property Matches
     </button>
 
-    <small style="display:block; margin-top:8px; opacity:0.8;">
+    <small class="block text-xs text-fgMuted">
       By submitting, you agree to be contacted by Tharaga. OTP verification is required to prevent spam.
     </small>
   </form>
 
   <!-- Invisible reCAPTCHA mount -->
-  <div id="otp-recaptcha" style="height:0;"></div>
+  <div id="otp-recaptcha" class="h-0"></div>
 
   <!-- Matches will render here -->
-  <div id="aiMatches" style="margin-top:20px;"></div>
+  <div id="aiMatches" class="mt-6"></div>
 </section>
 
 <!-- Firebase SDK (for OTP) -->

@@ -249,28 +249,28 @@ const StaticHeaderHTML = memo(function StaticHeaderHTML() {
                 // Build menu HTML based on user state
                 let menuHTML = '';
                 
-                // Always show Builder Dashboard link
-                if (isLoggedIn && (userRoles.includes('builder') || isAdminOwner)) {
-                  const active = primaryRole === 'builder' ? ' <span style="color:#10b981">✓</span>' : '';
-                  const verified = builderVerified ? ' <span style="color:#10b981;font-size:11px">✓ Verified</span>' : '';
-                  menuHTML += '<a href="/builder" data-next-link data-portal-link="builder">🏗️ Builder Dashboard' + active + verified + '</a>';
-                } else {
-                  // Not logged in or no builder role - show locked version
-                  menuHTML += '<a href="/builder" data-portal-link="builder" data-requires-auth="true" style="opacity:0.7;cursor:pointer;">🏗️ Builder Dashboard <span style="color:#6b7280;font-size:11px">🔒 Login Required</span></a>';
-                }
-                
-                // Always show Buyer Dashboard link
+                // Always show Buyer Dashboard link first (matches homepage order)
                 if (isLoggedIn && (userRoles.includes('buyer') || isAdminOwner)) {
-                  const active = primaryRole === 'buyer' ? ' <span style="color:#10b981">✓</span>' : '';
-                  menuHTML += '<a href="/my-dashboard" data-next-link data-portal-link="buyer">🏠 Buyer Dashboard' + active + '</a>';
+                  const active = primaryRole === 'buyer' ? '<span style="color:#10b981;font-weight:800;font-size:16px;margin-left:auto;">✓</span>' : '';
+                  menuHTML += '<a href="/my-dashboard" data-next-link data-portal-link="buyer" style="display:flex;align-items:center;justify-content:space-between;text-align:left;"><span style="display:flex;align-items:center;gap:8px;">🏠 Buyer Dashboard</span>' + active + '</a>';
                 } else {
                   // Not logged in or no buyer role - show locked version
-                  menuHTML += '<a href="/my-dashboard" data-portal-link="buyer" data-requires-auth="true" style="opacity:0.7;cursor:pointer;">🏠 Buyer Dashboard <span style="color:#6b7280;font-size:11px">🔒 Login Required</span></a>';
+                  menuHTML += '<a href="/my-dashboard" data-portal-link="buyer" data-requires-auth="true" style="opacity:0.7;cursor:pointer;display:flex;align-items:center;justify-content:space-between;text-align:left;"><span style="display:flex;align-items:center;gap:8px;">🏠 Buyer Dashboard</span><span style="color:#6b7280;font-size:11px;">🔒 Login Required</span></a>';
+                }
+                
+                // Always show Builder Dashboard link
+                if (isLoggedIn && (userRoles.includes('builder') || isAdminOwner)) {
+                  const active = primaryRole === 'builder' ? '<span style="color:#10b981;font-weight:800;font-size:16px;margin-left:auto;">✓</span>' : '';
+                  const verified = builderVerified ? '<span style="color:#10b981;font-size:11px;margin-left:auto;">✓ Verified</span>' : '';
+                  menuHTML += '<a href="/builder" data-next-link data-portal-link="builder" style="display:flex;align-items:center;justify-content:space-between;text-align:left;"><span style="display:flex;align-items:center;gap:8px;">🏗️ Builder Dashboard</span>' + (active || verified) + '</a>';
+                } else {
+                  // Not logged in or no builder role - show locked version
+                  menuHTML += '<a href="/builder" data-portal-link="builder" data-requires-auth="true" style="opacity:0.7;cursor:pointer;display:flex;align-items:center;justify-content:space-between;text-align:left;"><span style="display:flex;align-items:center;gap:8px;">🏗️ Builder Dashboard</span><span style="color:#6b7280;font-size:11px;">🔒 Login Required</span></a>';
                 }
                 
                 // Admin Panel (only if logged in and admin)
                 if (isLoggedIn && (userRoles.includes('admin') || isAdminOwner)) {
-                  menuHTML += '<a href="/admin" data-next-link style="border-top:1px solid #e5e7eb;margin-top:8px;padding-top:8px;">🛡️ Admin Panel</a>';
+                  menuHTML += '<a href="/admin" data-next-link style="border-top:1px solid #e5e7eb;margin-top:8px;padding-top:8px;display:flex;align-items:center;justify-content:space-between;text-align:left;"><span style="display:flex;align-items:center;gap:8px;">🛡️ Admin Panel</span></a>';
                 }
                 
                 portalMenuItems.innerHTML = menuHTML;

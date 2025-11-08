@@ -167,15 +167,34 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           /* Ensure Next.js Link components in dropdowns are styled correctly */
           details.dropdown .menu a,
           details.dropdown .menu a[href] {
-            display:block;
+            display:flex;
+            align-items:center;
+            justify-content:space-between;
             padding:10px 12px;
             border-radius:10px;
             color:inherit;
             text-decoration:none;
-            text-align:center;
+            text-align:left;
             transition: background .15s ease, transform .06s ease, color .15s ease, box-shadow .12s ease;
             width:100%;
             box-sizing:border-box;
+            gap:8px;
+          }
+          /* Portal dropdown items - left-align icons and text, right-align checkmarks */
+          details.dropdown .menu a[data-portal-link] {
+            display:flex;
+            align-items:center;
+            justify-content:space-between;
+            text-align:left;
+          }
+          details.dropdown .menu a[data-portal-link] > span:first-child {
+            display:flex;
+            align-items:center;
+            gap:8px;
+            flex:1;
+          }
+          details.dropdown .menu a[data-portal-link] > span:last-child {
+            margin-left:auto;
           }
           details.dropdown .menu a + a{ border-top:1px solid #f0f2f4 }
           details.dropdown .menu a:hover,
@@ -333,6 +352,89 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 
           /* Always suppress legacy About link; using new right-aligned group */
           .about-mobile-link{ display:none !important }
+          
+          /* Role Manager Enhanced Styles - Pre-inject to prevent delay */
+          /* These styles match role-manager-v2.js injectEnhancedStyles() */
+          .thg-role-section {
+            padding: 4px 0;
+          }
+          .thg-role-label {
+            font-size: 10px;
+            font-weight: 800;
+            text-transform: uppercase;
+            color: rgba(255,255,255,0.4);
+            padding: 8px 12px 6px;
+            letter-spacing: 0.8px;
+          }
+          .thg-role-icon {
+            font-size: 16px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 20px;
+          }
+          .thg-role-switcher {
+            position: relative;
+            transition: all 0.15s ease;
+            cursor: pointer;
+          }
+          .thg-role-switcher.is-active {
+            background: rgba(243, 205, 74, 0.12) !important;
+            border-left: 3px solid #f3cd4a;
+            padding-left: 9px;
+          }
+          .thg-role-switcher:not(.is-active):hover {
+            background: rgba(255, 255, 255, 0.08);
+            cursor: pointer;
+          }
+          .thg-role-badge {
+            font-size: 9px;
+            padding: 3px 8px;
+            border-radius: 10px;
+            font-weight: 700;
+            letter-spacing: 0.3px;
+          }
+          .thg-role-badge.verified {
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+          }
+          .thg-role-active {
+            color: #10b981;
+            font-weight: 800;
+            font-size: 16px;
+            margin-left: auto;
+          }
+          .thg-add-role-btn {
+            border: 1px dashed rgba(255,255,255,0.25);
+            margin-top: 4px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+          }
+          .thg-add-role-btn:hover {
+            border-color: #f3cd4a;
+            background: rgba(243, 205, 74, 0.08);
+          }
+          /* User dropdown menu - ensure proper alignment */
+          .thg-auth-menu .thg-auth-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 12px;
+            border-radius: 10px;
+            text-decoration: none;
+            color: #fff;
+            cursor: pointer;
+            justify-content: flex-start;
+          }
+          .thg-auth-menu .thg-auth-item.thg-role-switcher {
+            justify-content: space-between;
+          }
+          .thg-auth-menu .thg-auth-item.thg-role-switcher > span:first-child {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex: 1;
+          }
         ` }}
         />
         <script dangerouslySetInnerHTML={{ __html: `

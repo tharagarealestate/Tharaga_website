@@ -1,10 +1,12 @@
 "use client"
 
+import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useParams } from 'next/navigation'
 import Link from 'next/link'
-import { ArrowLeft, Mail, Phone, TrendingUp, Clock, MapPin, Home, Activity, Lightbulb, BarChart3 } from 'lucide-react'
+import { ArrowLeft, Mail, Phone, TrendingUp, Clock, MapPin, Home, Activity, Lightbulb, BarChart3, Plus } from 'lucide-react'
 import { formatDistanceToNow, format } from 'date-fns'
+import { LogInteractionModal } from './_components/LogInteractionModal'
 
 async function fetchLead(id: string) {
   const res = await fetch(`/api/leads/${id}`)
@@ -95,6 +97,8 @@ function formatDuration(seconds: number) {
 export default function LeadDetailsPage() {
   const params = useParams() as { id: string }
   const id = params.id
+  const [showLogModal, setShowLogModal] = useState(false)
+  
   const { data: lead, isLoading, isError } = useQuery({ 
     queryKey: ['lead', id], 
     queryFn: () => fetchLead(id), 
@@ -309,36 +313,76 @@ export default function LeadDetailsPage() {
           </div>
 
           {/* Interactions */}
-          {lead.interactions.length > 0 && (
-            <div className="border border-border rounded p-6 bg-white">
-              <h2 className="text-lg font-semibold mb-4">Interactions</h2>
+          <div className="border border-border rounded p-6 bg-white">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold">Interactions</h2>
+              <button
+                onClick={() => setShowLogModal(true)}
+                className="inline-flex items-center gap-2 px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-lg text-sm font-medium transition-colors"
+              >
+                <Plus className="w-4 h-4" />
+                Log Interaction
+              </button>
+            </div>
+            
+            {lead.interactions.length > 0 ? (
               <div className="space-y-3">
                 {lead.interactions.map((interaction) => (
-                  <div key={interaction.id} className="p-3 border border-border rounded">
+                  <div key={interaction.id} className="p-4 border border-border rounded-lg hover:bg-gray-50 transition-colors">
                     <div className="flex justify-between items-start mb-2">
-                      <div>
-                        <div className="font-medium capitalize">{interaction.type.replace(/_/g, ' ')}</div>
-                        <div className="text-sm text-fgMuted">{formatDistanceToNow(new Date(interaction.timestamp))} ago</div>
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-1">
+                          <div className="font-medium capitalize text-gray-900">
+                            {interaction.type.replace(/_/g, ' ')}
+                          </div>
+                          {interaction.response_time !== null && (
+                            <span className="text-xs text-gray-500">
+                              (Response: {interaction.response_time < 60 
+                                ? `${interaction.response_time}m` 
+                                : `${Math.floor(interaction.response_time / 60)}h ${interaction.response_time % 60}m`
+                              })
+                            </span>
+                          )}
+                        </div>
+                        <div className="text-sm text-fgMuted">
+                          {format(new Date(interaction.timestamp), 'MMM d, yyyy h:mm a')}
+                          {' • '}
+                          {formatDistanceToNow(new Date(interaction.timestamp))} ago
+                        </div>
                       </div>
-                      <span className={`px-2 py-1 rounded text-xs ${
+                      <span className={`px-3 py-1 rounded-full text-xs font-medium ${
                         interaction.status === 'completed' ? 'bg-green-100 text-green-800' :
                         interaction.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                        interaction.status === 'scheduled' ? 'bg-blue-100 text-blue-800' :
                         'bg-gray-100 text-gray-800'
                       }`}>
                         {interaction.status}
                       </span>
                     </div>
                     {interaction.notes && (
-                      <div className="text-sm text-fgMuted mt-2">{interaction.notes}</div>
+                      <div className="text-sm text-gray-700 mt-3 p-3 bg-gray-50 rounded-lg">
+                        {interaction.notes}
+                      </div>
                     )}
                     {interaction.outcome && (
-                      <div className="text-sm font-medium mt-2">Outcome: {interaction.outcome}</div>
+                      <div className="mt-2">
+                        <span className="text-xs text-gray-500">Outcome: </span>
+                        <span className="text-sm font-medium text-gray-900 capitalize">
+                          {interaction.outcome.replace(/_/g, ' ')}
+                        </span>
+                      </div>
                     )}
                   </div>
                 ))}
               </div>
-            </div>
-          )}
+            ) : (
+              <div className="text-center py-8 text-gray-500">
+                <Activity className="w-12 h-12 mx-auto mb-3 text-gray-400" />
+                <p className="text-sm">No interactions logged yet</p>
+                <p className="text-xs text-gray-400 mt-1">Click "Log Interaction" to record your first interaction</p>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Sidebar */}
@@ -380,10 +424,17 @@ export default function LeadDetailsPage() {
           <div className="border border-border rounded p-6 bg-white">
             <h2 className="text-lg font-semibold mb-4">Quick Actions</h2>
             <div className="space-y-2">
+              <button
+                onClick={() => setShowLogModal(true)}
+                className="w-full py-2 px-4 bg-primary-600 hover:bg-primary-700 text-white rounded text-sm font-medium flex items-center justify-center gap-2 transition-colors"
+              >
+                <Plus className="w-4 h-4" />
+                Log Interaction
+              </button>
               {lead.phone && (
                 <a 
                   href={`tel:${lead.phone}`}
-                  className="w-full py-2 px-4 bg-primary-600 hover:bg-primary-700 text-white rounded text-sm font-medium flex items-center justify-center gap-2"
+                  className="w-full py-2 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm font-medium flex items-center justify-center gap-2 transition-colors"
                 >
                   <Phone className="w-4 h-4" />
                   Call Now
@@ -391,7 +442,7 @@ export default function LeadDetailsPage() {
               )}
               <a 
                 href={`mailto:${lead.email}`}
-                className="w-full py-2 px-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded text-sm font-medium flex items-center justify-center gap-2"
+                className="w-full py-2 px-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded text-sm font-medium flex items-center justify-center gap-2 transition-colors"
               >
                 <Mail className="w-4 h-4" />
                 Send Email
@@ -400,6 +451,17 @@ export default function LeadDetailsPage() {
           </div>
         </div>
       </div>
+      
+      {/* Log Interaction Modal */}
+      {showLogModal && lead && (
+        <LogInteractionModal
+          leadId={id}
+          leadName={lead.full_name}
+          leadPhone={lead.phone}
+          leadEmail={lead.email}
+          onClose={() => setShowLogModal(false)}
+        />
+      )}
     </main>
   )
 }

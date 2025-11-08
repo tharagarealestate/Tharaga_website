@@ -138,10 +138,24 @@ export function LeadCard({ lead }: { lead: Lead }) {
           <Mail className="w-4 h-4" />
           Email
         </a>
-        <Link href={`/builder/leads/${lead.id}`} className="py-2 px-4 border border-gray-300 hover:bg-gray-50 rounded-lg transition-colors flex items-center justify-center w-full md:w-auto">
+        <Link href={`/builder/leads/${lead.id}`} className="py-2 px-4 border border-gray-300 hover:bg-gray-50 rounded-lg transition-colors flex items-center justify-center w-full md:w-auto" title="View Details">
           <ArrowRight className="w-4 h-4 text-gray-600" />
         </Link>
       </div>
+      
+      {/* Quick Stats */}
+      {lead.total_interactions !== undefined && lead.total_interactions > 0 && (
+        <div className="mt-3 pt-3 border-t border-gray-200">
+          <div className="flex items-center justify-between text-xs text-gray-500">
+            <span>{lead.total_interactions} interaction{lead.total_interactions !== 1 ? 's' : ''}</span>
+            {lead.has_pending_interactions && (
+              <span className="px-2 py-0.5 bg-yellow-100 text-yellow-800 rounded-full font-medium">
+                Pending
+              </span>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   )
 }

@@ -11,7 +11,7 @@ import { EntitlementsProvider } from '@/components/ui/FeatureGate'
 import { AppI18nProvider } from '@/components/providers/AppI18nProvider'
 import MobileBottomNav from '@/components/MobileBottomNav'
 import { PrefetchRoutes } from '@/components/providers/PrefetchRoutes'
-import StaticHeaderHTML from '@/components/StaticHeaderHTML'
+import ConditionalHeader from '@/components/ConditionalHeader'
 import { HeaderLinkInterceptor } from '@/components/HeaderLinkInterceptor'
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -669,9 +669,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             }
           })();
         `}} />
-        {/* Universal Static Header - Works on ALL pages automatically */}
-        {/* No need to import anything in feature files - header is always visible */}
-        <StaticHeaderHTML />
+        {/* Conditional Header - Only shows on homepage, hidden on all subpages */}
+        <ConditionalHeader />
         <HeaderLinkInterceptor />
                {/* Ensure auth button is always visible - prevent hiding */}
                {/* FORCE REMOVE ALL MODALS - Complete removal */}

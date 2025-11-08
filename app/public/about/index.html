@@ -8,49 +8,6 @@
   <!-- Inter font (remove if your global CSS already imports it) -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
-  <!-- Load fonts to match homepage header -->
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&display=swap" rel="stylesheet" />
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&family=Manrope:wght@400;600;700;800&display=swap" rel="stylesheet" />
-  
-  <!-- Auth configuration -->
-  <script>window.AUTH_HIDE_HEADER=false;window.AUTH_OPEN_ON_LOAD=false;</script>
-  <!-- Load role manager system -->
-  <script src="/role-manager-v2.js" defer></script>
-  <!-- Load snippets auth system -->
-  <script src="/snippets/" type="text/html" id="snippets-auth-src" style="display:none"></script>
-  <script>
-    // Extract and execute scripts from snippets/index.html
-    (function(){
-      function loadAuthSystem() {
-        const header = document.getElementById('tharaga-static-header');
-        const authContainer = document.getElementById('site-header-auth-container');
-        
-        if (!header || !authContainer) {
-          setTimeout(loadAuthSystem, 100);
-          return;
-        }
-        
-        fetch('/snippets/').then(r=>r.text()).then(html=>{
-          const parser = new DOMParser();
-          const doc = parser.parseFromString(html, 'text/html');
-          const scripts = doc.querySelectorAll('script');
-          scripts.forEach(script => {
-            if (script.textContent.includes('__thgAuthInstalledV1')) {
-              const newScript = document.createElement('script');
-              newScript.textContent = script.textContent;
-              document.head.appendChild(newScript);
-            }
-          });
-        }).catch(e => console.error('Failed to load auth:', e));
-      }
-      
-      if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', loadAuthSystem);
-      } else {
-        loadAuthSystem();
-      }
-    })();
-  </script>
 
   <style>
     /* =====================
@@ -380,47 +337,6 @@
   </style>
 </head>
 <body>
-  <!-- Universal Static Header - Match Homepage Exactly -->
-  <header class="nav" id="tharaga-static-header">
-    <div class="inner">
-      <div class="row">
-        <a class="brand" href="/" style="font-size:26px">THARAGA</a>
-        <span class="pill" id="home_pill_trust">Verified • Broker‑free</span>
-      </div>
-      <nav class="row" aria-label="Primary">
-        <span class="menu-group">
-          <details class="dropdown">
-            <summary>Features</summary>
-            <div class="menu" role="menu">
-              <a href="/tools/vastu/">Vastu</a>
-              <a href="/tools/environment/">Climate &amp; environment</a>
-              <a href="/tools/voice-tamil/">Voice (Tamil)</a>
-              <a href="/tools/verification/">Verification</a>
-              <a href="/tools/roi/">ROI</a>
-              <a href="/tools/currency-risk/">Currency risk</a>
-              <span class="divider show-mobile-only" aria-hidden="true"></span>
-              <a class="show-mobile-only" href="/pricing/">Pricing</a>
-              <a class="show-mobile-only" href="/about/">About</a>
-            </div>
-          </details>
-          <span class="divider" aria-hidden="true"></span>
-          <details class="dropdown" id="portal-menu">
-            <summary>Portal</summary>
-            <div class="menu" role="menu" aria-label="Portal menu" id="portal-menu-items">
-              <a href="/builder" data-portal-link="builder">Builder Dashboard</a>
-              <a href="/my-dashboard" data-portal-link="buyer">Buyer Dashboard</a>
-            </div>
-          </details>
-          <span class="divider" aria-hidden="true"></span>
-          <a href="/pricing/">Pricing</a>
-        </span>
-        <span class="divider" aria-hidden="true"></span>
-        <a href="/about/">About</a>
-      </nav>
-      <a class="about-mobile-link" href="/about/">About</a>
-      <div id="site-header-auth-container"></div>
-    </div>
-  </header>
   
   <main class="container">
     <section class="about-hero" aria-labelledby="about-hero-title">

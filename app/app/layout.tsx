@@ -81,9 +81,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 
           /* Header base styles - Glassy Premium Blue - EXACT MATCH TO HOMEPAGE */
           header.nav {
-            position: sticky;
-            top: 0;
-            z-index: 20;
+            position: sticky !important;
+            top: 0 !important;
+            z-index: 9999 !important;
             /* Glassmorphism Effect */
             background: linear-gradient(135deg, rgba(255,255,255,0.85), rgba(248,250,252,0.90));
             backdrop-filter: blur(20px) saturate(1.8);
@@ -100,7 +100,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           header.nav .inner { max-width:1100px; margin:0 auto; padding:10px 16px; display:flex; align-items:center; justify-content:space-between; gap:10px; position:relative; padding-right: clamp(130px, 10vw, 200px) }
           /* Brand row - flex container for brand + pill - EXACT GAP MATCH */
           header.nav .inner .row { display:flex; align-items:center; gap:10px }
-          .brand { font-family: var(--font-display); font-weight:800; letter-spacing:.2px; font-size:24px }
+          .brand { font-family: var(--font-display); font-weight:800; letter-spacing:.2px; font-size:26px }
           header.nav .brand{ color:var(--slate-900); }
           header.nav a, header.nav summary{
             color:var(--slate-900);

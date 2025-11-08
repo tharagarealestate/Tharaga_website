@@ -116,3 +116,4 @@ The header uses these CSS variables (defined in root layout):
 - All styling matches homepage exactly (font-size: 26px, gaps: 10px, etc.)
 - Mobile responsive with proper spacing for auth buttons
 
+

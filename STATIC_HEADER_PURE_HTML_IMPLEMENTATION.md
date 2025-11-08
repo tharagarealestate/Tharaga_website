@@ -113,3 +113,6 @@ Header CSS is already included in `app/app/layout.tsx` (extracted from `index.ht
 - Portal menu is hidden until roles initialize
 - All existing functionality preserved (auth, roles, etc.)
 
+
+
+

@@ -31,7 +31,8 @@
       "Bash(node:*)",
       "Bash(supabase db execute:*)",
       "Bash(clip)",
-      "Bash(npx tsc:*)"
+      "Bash(npx tsc:*)",
+      "Bash(ls -la \"E:\\Tharaga_website\\Tharaga_website\\admin\"\" 2>/dev/null || echo \"No admin folder in root \")"
     ],
     "deny": [],
     "ask": []

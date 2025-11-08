@@ -497,5 +497,120 @@
     </section>
   </main>
   
+  <!-- Header JavaScript - Portal menu updates and link interception -->
+  <script>
+    (function() {
+      'use strict';
+      
+      // Portal menu update function (called by role manager)
+      window.__updatePortalMenu = function() {
+        const portalMenuItems = document.getElementById('portal-menu-items');
+        const portalMenu = document.getElementById('portal-menu');
+        if (!portalMenuItems || !portalMenu) return;
+        
+        portalMenu.style.display = '';
+        
+        let isLoggedIn = false;
+        let userRoles = [];
+        let primaryRole = null;
+        let builderVerified = false;
+        let isAdminOwner = false;
+        
+        if (window.thgRoleManager) {
+          try {
+            const state = window.thgRoleManager.getState();
+            isLoggedIn = !!(state.initialized && state.user);
+            if (isLoggedIn) {
+              userRoles = state.roles || [];
+              primaryRole = state.primaryRole || null;
+              builderVerified = state.builderVerified || false;
+              isAdminOwner = state.user.email === 'tharagarealestate@gmail.com';
+            }
+          } catch(e) {
+            console.error('[portal-menu] Error getting role state:', e);
+          }
+        }
+        
+        let menuHTML = '';
+        
+        if (isLoggedIn && (userRoles.includes('buyer') || isAdminOwner)) {
+          const active = primaryRole === 'buyer' ? '<span style="color:#10b981;font-weight:800;font-size:16px;margin-left:auto;">✓</span>' : '';
+          menuHTML += '<a href="/my-dashboard" data-portal-link="buyer" style="display:flex;align-items:center;justify-content:space-between;text-align:left;"><span style="display:flex;align-items:center;gap:8px;">🏠 Buyer Dashboard</span>' + active + '</a>';
+        } else {
+          menuHTML += '<a href="/my-dashboard" data-portal-link="buyer" data-requires-auth="true" style="opacity:0.7;cursor:pointer;display:flex;align-items:center;justify-content:space-between;text-align:left;"><span style="display:flex;align-items:center;gap:8px;">🏠 Buyer Dashboard</span><span style="color:#6b7280;font-size:11px;">🔒 Login Required</span></a>';
+        }
+        
+        if (isLoggedIn && (userRoles.includes('builder') || isAdminOwner)) {
+          const active = primaryRole === 'builder' ? '<span style="color:#10b981;font-weight:800;font-size:16px;margin-left:auto;">✓</span>' : '';
+          const verified = builderVerified ? '<span style="color:#10b981;font-size:11px;margin-left:auto;">✓ Verified</span>' : '';
+          menuHTML += '<a href="/builder" data-portal-link="builder" style="display:flex;align-items:center;justify-content:space-between;text-align:left;"><span style="display:flex;align-items:center;gap:8px;">🏗️ Builder Dashboard</span>' + (active || verified) + '</a>';
+        } else {
+          menuHTML += '<a href="/builder" data-portal-link="builder" data-requires-auth="true" style="opacity:0.7;cursor:pointer;display:flex;align-items:center;justify-content:space-between;text-align:left;"><span style="display:flex;align-items:center;gap:8px;">🏗️ Builder Dashboard</span><span style="color:#6b7280;font-size:11px;">🔒 Login Required</span></a>';
+        }
+        
+        if (isLoggedIn && (userRoles.includes('admin') || isAdminOwner)) {
+          menuHTML += '<a href="/admin" style="border-top:1px solid #e5e7eb;margin-top:8px;padding-top:8px;display:flex;align-items:center;justify-content:space-between;text-align:left;"><span style="display:flex;align-items:center;gap:8px;">🛡️ Admin Panel</span></a>';
+        }
+        
+        portalMenuItems.innerHTML = menuHTML;
+      };
+      
+      // Initialize portal menu
+      function initPortalMenu() {
+        if (window.__updatePortalMenu) {
+          window.__updatePortalMenu();
+        }
+        
+        if (window.thgRoleManager) {
+          const checkRoles = setInterval(function() {
+            const state = window.thgRoleManager.getState();
+            if (state.initialized) {
+              clearInterval(checkRoles);
+              if (window.__updatePortalMenu) {
+                window.__updatePortalMenu();
+              }
+            }
+          }, 500);
+          
+          setTimeout(function() {
+            clearInterval(checkRoles);
+          }, 10000);
+          
+          window.addEventListener('thg-role-changed', function() {
+            if (window.__updatePortalMenu) {
+              window.__updatePortalMenu();
+            }
+          });
+        } else {
+          setTimeout(initPortalMenu, 1000);
+        }
+      }
+      
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initPortalMenu);
+      } else {
+        initPortalMenu();
+      }
+      
+      // Ensure auth container is visible
+      function ensureAuthContainer() {
+        const authContainer = document.getElementById('site-header-auth-container');
+        if (authContainer) {
+          authContainer.style.display = 'flex';
+          authContainer.style.visibility = 'visible';
+          authContainer.style.opacity = '1';
+        }
+      }
+      
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', ensureAuthContainer);
+      } else {
+        ensureAuthContainer();
+      }
+      
+      setInterval(ensureAuthContainer, 200);
+    })();
+  </script>
+
 </body>
 </html>

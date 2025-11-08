@@ -305,6 +305,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             visibility: visible !important;
             opacity: 1 !important;
             position: relative !important;
+            margin-left: auto !important;
+            /* Ensure auth button is aligned to right corner like homepage */
+            justify-content: flex-end !important;
           }
 
           /* Mobile adjustments - exact match to homepage */
@@ -426,26 +429,108 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             border-color: #f3cd4a;
             background: rgba(243, 205, 74, 0.08);
           }
-          /* User dropdown menu - ensure proper alignment */
+          /* OVERRIDE AUTH SYSTEM DARK THEME - Force Light Theme Immediately */
+          /* User dropdown menu - LIGHT THEME (override dark #0b0b0b background) */
+          header.nav .thg-auth-menu,
+          .thg-auth-menu {
+            background: linear-gradient(180deg, rgba(255,255,255,0.95), rgba(248,250,252,0.98)) !important;
+            backdrop-filter: blur(16px) saturate(1.5) !important;
+            -webkit-backdrop-filter: blur(16px) saturate(1.5) !important;
+            color: #111 !important;
+            border: 1px solid rgba(30,64,175,.12) !important;
+            box-shadow: 0 18px 40px rgba(30,64,175,.16) !important;
+            border-radius: 12px !important;
+            padding: 12px 8px 8px !important;
+            min-width: 280px !important;
+          }
+          header.nav .thg-auth-menu::before {
+            content: "" !important;
+            position: absolute !important;
+            top: 0 !important;
+            left: 0 !important;
+            right: 0 !important;
+            height: 3px !important;
+            border-radius: 12px 12px 0 0 !important;
+            background: linear-gradient(90deg, #d4af37, #1e40af) !important;
+          }
+          header.nav .thg-auth-menu .thg-auth-item,
           .thg-auth-menu .thg-auth-item {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 10px 12px;
-            border-radius: 10px;
-            text-decoration: none;
-            color: #fff;
-            cursor: pointer;
-            justify-content: flex-start;
+            display: flex !important;
+            align-items: center !important;
+            gap: 10px !important;
+            padding: 10px 12px !important;
+            border-radius: 10px !important;
+            text-decoration: none !important;
+            color: #111 !important;
+            cursor: pointer !important;
+            justify-content: flex-start !important;
           }
-          .thg-auth-menu .thg-auth-item.thg-role-switcher {
-            justify-content: space-between;
+          header.nav .thg-auth-menu .thg-auth-item:hover,
+          .thg-auth-menu .thg-auth-item:hover {
+            background: linear-gradient(90deg, rgba(30,64,175,.12), rgba(59,130,246,.06)) !important;
+            color: #1e40af !important;
           }
+          header.nav .thg-auth-menu .thg-auth-item.is-header,
+          .thg-auth-menu .thg-auth-item.is-header {
+            color: #111 !important;
+            opacity: 1 !important;
+          }
+          header.nav .thg-auth-menu .thg-auth-sep,
+          .thg-auth-menu .thg-auth-sep {
+            background: rgba(30,64,175,.14) !important;
+            height: 1px !important;
+            margin: 6px 8px !important;
+          }
+          header.nav .thg-auth-menu .thg-name,
+          .thg-auth-menu .thg-name {
+            color: #111 !important;
+          }
+          header.nav .thg-auth-menu .thg-email,
+          .thg-auth-menu .thg-email {
+            color: #64748b !important;
+          }
+          header.nav .thg-auth-menu .thg-initial-lg,
+          .thg-auth-menu .thg-initial-lg {
+            background: #1e40af !important;
+            color: #fff !important;
+          }
+          header.nav .thg-auth-menu .thg-auth-item.thg-role-switcher {
+            justify-content: space-between !important;
+          }
+          header.nav .thg-auth-menu .thg-auth-item.thg-role-switcher > span:first-child,
           .thg-auth-menu .thg-auth-item.thg-role-switcher > span:first-child {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            flex: 1;
+            display: flex !important;
+            align-items: center !important;
+            gap: 10px !important;
+            flex: 1 !important;
+          }
+          header.nav .thg-auth-menu .thg-role-label,
+          .thg-auth-menu .thg-role-label {
+            color: rgba(15,23,42,0.4) !important;
+          }
+          header.nav .thg-auth-menu .thg-role-switcher.is-active,
+          .thg-auth-menu .thg-role-switcher.is-active {
+            background: rgba(243, 205, 74, 0.12) !important;
+            border-left: 3px solid #f3cd4a !important;
+            padding-left: 9px !important;
+          }
+          header.nav .thg-auth-menu .thg-role-switcher:not(.is-active):hover,
+          .thg-auth-menu .thg-role-switcher:not(.is-active):hover {
+            background: rgba(30,64,175,.08) !important;
+          }
+          header.nav .thg-auth-menu .thg-role-active,
+          .thg-auth-menu .thg-role-active {
+            color: #10b981 !important;
+          }
+          header.nav .thg-auth-menu .thg-add-role-btn,
+          .thg-auth-menu .thg-add-role-btn {
+            border: 1px dashed rgba(30,64,175,.25) !important;
+            color: #111 !important;
+          }
+          header.nav .thg-auth-menu .thg-add-role-btn:hover,
+          .thg-auth-menu .thg-add-role-btn:hover {
+            border-color: #f3cd4a !important;
+            background: rgba(243, 205, 74, 0.08) !important;
           }
         ` }}
         />

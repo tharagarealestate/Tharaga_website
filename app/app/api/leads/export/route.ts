@@ -167,9 +167,9 @@ export async function GET(request: NextRequest) {
       .from('profiles')
       .select('role')
       .eq('id', user.id)
-      .single();
+      .maybeSingle();
     
-    if (profile?.role !== 'builder') {
+    if (!profile || profile.role !== 'builder') {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
     
@@ -568,9 +568,9 @@ export async function POST(request: NextRequest) {
       .from('profiles')
       .select('role')
       .eq('id', user.id)
-      .single();
+      .maybeSingle();
     
-    if (profile?.role !== 'builder') {
+    if (!profile || profile.role !== 'builder') {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
     

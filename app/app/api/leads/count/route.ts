@@ -30,9 +30,9 @@ export async function GET(request: NextRequest) {
       .from('profiles')
       .select('role')
       .eq('id', user.id)
-      .single();
+      .maybeSingle();
     
-    if (profile?.role !== 'builder') {
+    if (!profile || profile.role !== 'builder') {
       return NextResponse.json(
         { error: 'Forbidden - Builders only' },
         { status: 403 }
@@ -57,32 +57,47 @@ export async function GET(request: NextRequest) {
       );
     }
     
-    // Also get counts by category for potential future use
-    const { data: categoryCounts } = await supabase
+    // Get counts by category efficiently using count queries
+    // Hot leads (score >= 9)
+    const { count: hotCount, error: hotError } = await supabase
       .from('leads')
-      .select('score')
-      .eq('builder_id', user.id);
+      .select('*', { count: 'exact', head: true })
+      .eq('builder_id', user.id)
+      .gte('score', 9);
     
-    // Calculate category breakdown
-    const hotLeads = categoryCounts?.filter(l => (l.score || 0) >= 9).length || 0;
-    const warmLeads = categoryCounts?.filter(l => {
-      const score = l.score || 0;
-      return score >= 7 && score < 9;
-    }).length || 0;
+    if (hotError) {
+      console.error('[API/Leads/Count] Hot leads count error:', hotError);
+    }
+    
+    // Warm leads (score >= 7 and < 9)
+    const { count: warmCount, error: warmError } = await supabase
+      .from('leads')
+      .select('*', { count: 'exact', head: true })
+      .eq('builder_id', user.id)
+      .gte('score', 7)
+      .lt('score', 9);
+    
+    if (warmError) {
+      console.error('[API/Leads/Count] Warm leads count error:', warmError);
+    }
     
     // Get pending interactions count
-    const { count: pendingCount } = await supabase
+    const { count: pendingCount, error: pendingError } = await supabase
       .from('lead_interactions')
       .select('*', { count: 'exact', head: true })
       .eq('builder_id', user.id)
       .eq('status', 'pending');
     
+    if (pendingError) {
+      console.error('[API/Leads/Count] Pending interactions count error:', pendingError);
+    }
+    
     return NextResponse.json({
       success: true,
       data: {
         total: count || 0,
-        hot: hotLeads,
-        warm: warmLeads,
+        hot: hotCount || 0,
+        warm: warmCount || 0,
         pending_interactions: pendingCount || 0,
       },
     }, {

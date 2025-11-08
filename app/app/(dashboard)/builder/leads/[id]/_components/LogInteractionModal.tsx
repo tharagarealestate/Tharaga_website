@@ -77,7 +77,7 @@ export function LogInteractionModal({
   
   const mutation = useMutation({
     mutationFn: (data: InteractionFormData) => logInteraction(leadId, data),
-    onSuccess: () => {
+    onSuccess: (data) => {
       // Invalidate queries to refresh data
       queryClient.invalidateQueries({ queryKey: ['lead', leadId] })
       queryClient.invalidateQueries({ queryKey: ['leads'] })
@@ -85,8 +85,15 @@ export function LogInteractionModal({
       // Trigger sidebar refresh
       window.dispatchEvent(new CustomEvent('leadCountRefresh'))
       
+      // Show success message (you can replace with a toast library)
+      alert(`Interaction logged successfully! ${data.data?.interaction_type ? `Type: ${data.data.interaction_type.replace(/_/g, ' ')}` : ''}`)
+      
       // Close modal
       onClose()
+    },
+    onError: (error) => {
+      // Error is already shown in the form
+      console.error('Failed to log interaction:', error)
     },
   })
   
@@ -116,18 +123,18 @@ export function LogInteractionModal({
   
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-      <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col m-4">
+      <div className="bg-white rounded border border-border shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col m-4">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-200">
+        <div className="flex items-center justify-between p-6 border-b border-border">
           <div>
-            <h2 className="text-2xl font-bold text-gray-900">Log Interaction</h2>
-            <p className="text-sm text-gray-600 mt-1">Record interaction with {leadName}</p>
+            <h2 className="text-2xl font-bold mb-1">Log Interaction</h2>
+            <p className="text-sm text-fgMuted">Record interaction with {leadName}</p>
           </div>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            className="p-2 hover:bg-muted/40 rounded transition-colors"
           >
-            <X className="w-5 h-5 text-gray-500" />
+            <X className="w-5 h-5 text-fgMuted" />
           </button>
         </div>
         
@@ -135,7 +142,7 @@ export function LogInteractionModal({
         <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-6 space-y-6">
           {/* Interaction Type */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-3">
+            <label className="block text-sm font-medium mb-3">
               Interaction Type *
             </label>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
@@ -148,18 +155,18 @@ export function LogInteractionModal({
                     type="button"
                     onClick={() => setFormData({ ...formData, interaction_type: type.value })}
                     className={`
-                      p-4 rounded-lg border-2 transition-all text-left
+                      p-3 rounded border transition-all text-left
                       ${isSelected 
                         ? 'border-primary-600 bg-primary-50' 
-                        : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                        : 'border-border hover:bg-muted/40'
                       }
                     `}
                   >
-                    <div className="flex items-center gap-3">
-                      <div className={`p-2 rounded-lg ${type.color} text-white`}>
-                        <Icon className="w-4 h-4" />
+                    <div className="flex items-center gap-2">
+                      <div className={`p-1.5 rounded ${type.color} text-white`}>
+                        <Icon className="w-3.5 h-3.5" />
                       </div>
-                      <span className="text-sm font-medium text-gray-900">{type.label}</span>
+                      <span className="text-sm font-medium">{type.label}</span>
                     </div>
                   </button>
                 )
@@ -169,13 +176,13 @@ export function LogInteractionModal({
           
           {/* Status */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium mb-2">
               Status *
             </label>
             <select
               value={formData.status}
               onChange={(e) => setFormData({ ...formData, status: e.target.value as any })}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+              className="w-full px-3 py-2 border border-border rounded text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
             >
               <option value="completed">Completed</option>
               <option value="pending">Pending</option>
@@ -187,14 +194,14 @@ export function LogInteractionModal({
           {/* Scheduled For (if scheduled) */}
           {(formData.status === 'scheduled' || formData.interaction_type.includes('scheduled')) && (
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium mb-2">
                 Scheduled For *
               </label>
               <input
                 type="datetime-local"
                 value={formData.scheduled_for || ''}
                 onChange={(e) => setFormData({ ...formData, scheduled_for: e.target.value })}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                className="w-full px-3 py-2 border border-border rounded text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
                 required={formData.status === 'scheduled'}
               />
             </div>
@@ -202,13 +209,13 @@ export function LogInteractionModal({
           
           {/* Outcome */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium mb-2">
               Outcome
             </label>
             <select
               value={formData.outcome || ''}
               onChange={(e) => setFormData({ ...formData, outcome: e.target.value || undefined })}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+              className="w-full px-3 py-2 border border-border rounded text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
             >
               <option value="">Select outcome...</option>
               {OUTCOMES.map(outcome => (
@@ -221,7 +228,7 @@ export function LogInteractionModal({
           
           {/* Notes */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium mb-2">
               Notes
             </label>
             <textarea
@@ -230,34 +237,34 @@ export function LogInteractionModal({
               placeholder="Add any notes about this interaction..."
               rows={4}
               maxLength={5000}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 resize-none"
+              className="w-full px-3 py-2 border border-border rounded text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500 resize-none"
             />
-            <div className="text-xs text-gray-500 mt-1">
+            <div className="text-xs text-fgMuted mt-1">
               {(formData.notes?.length || 0)} / 5000 characters
             </div>
           </div>
           
           {/* Next Follow Up */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium mb-2">
               Next Follow Up
             </label>
             <input
               type="datetime-local"
               value={formData.next_follow_up || ''}
               onChange={(e) => setFormData({ ...formData, next_follow_up: e.target.value })}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+              className="w-full px-3 py-2 border border-border rounded text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
             />
           </div>
           
           {/* Quick Actions */}
-          <div className="pt-4 border-t border-gray-200">
-            <p className="text-sm font-medium text-gray-700 mb-3">Quick Actions</p>
+          <div className="pt-4 border-t border-border">
+            <p className="text-sm font-medium mb-3">Quick Actions</p>
             <div className="flex flex-wrap gap-2">
               {leadPhone && (
                 <a
                   href={`tel:${leadPhone}`}
-                  className="inline-flex items-center gap-2 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg text-sm font-medium transition-colors"
+                  className="inline-flex items-center gap-2 px-3 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded text-sm font-medium transition-colors"
                 >
                   <Phone className="w-4 h-4" />
                   Call Now
@@ -266,7 +273,7 @@ export function LogInteractionModal({
               {leadEmail && (
                 <a
                   href={`mailto:${leadEmail}`}
-                  className="inline-flex items-center gap-2 px-4 py-2 bg-purple-500 hover:bg-purple-600 text-white rounded-lg text-sm font-medium transition-colors"
+                  className="inline-flex items-center gap-2 px-3 py-2 bg-purple-500 hover:bg-purple-600 text-white rounded text-sm font-medium transition-colors"
                 >
                   <Mail className="w-4 h-4" />
                   Send Email
@@ -277,7 +284,7 @@ export function LogInteractionModal({
                   href={`https://wa.me/${leadPhone.replace(/[^0-9]/g, '')}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg text-sm font-medium transition-colors"
+                  className="inline-flex items-center gap-2 px-3 py-2 bg-green-500 hover:bg-green-600 text-white rounded text-sm font-medium transition-colors"
                 >
                   <MessageSquare className="w-4 h-4" />
                   WhatsApp
@@ -288,7 +295,7 @@ export function LogInteractionModal({
           
           {/* Error Message */}
           {mutation.isError && (
-            <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
+            <div className="p-3 bg-red-50 border border-red-200 rounded">
               <p className="text-sm text-red-800">
                 {mutation.error instanceof Error ? mutation.error.message : 'Failed to log interaction'}
               </p>
@@ -297,11 +304,11 @@ export function LogInteractionModal({
         </form>
         
         {/* Footer */}
-        <div className="flex items-center justify-end gap-3 p-6 border-t border-gray-200 bg-gray-50">
+        <div className="flex items-center justify-end gap-3 p-6 border-t border-border bg-muted/40">
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2 text-gray-700 hover:bg-gray-200 rounded-lg font-medium transition-colors"
+            className="px-4 py-2 text-fgMuted hover:bg-muted/60 rounded font-medium transition-colors"
             disabled={mutation.isPending}
           >
             Cancel
@@ -310,7 +317,7 @@ export function LogInteractionModal({
             type="submit"
             onClick={handleSubmit}
             disabled={mutation.isPending || !formData.interaction_type}
-            className="px-6 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center gap-2"
+            className="px-6 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center gap-2"
           >
             {mutation.isPending ? (
               <>

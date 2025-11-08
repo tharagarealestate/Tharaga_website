@@ -318,7 +318,7 @@ export default function LeadDetailsPage() {
               <h2 className="text-lg font-semibold">Interactions</h2>
               <button
                 onClick={() => setShowLogModal(true)}
-                className="inline-flex items-center gap-2 px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-lg text-sm font-medium transition-colors"
+                className="inline-flex items-center gap-2 px-3 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded text-sm font-medium transition-colors"
               >
                 <Plus className="w-4 h-4" />
                 Log Interaction
@@ -326,60 +326,69 @@ export default function LeadDetailsPage() {
             </div>
             
             {lead.interactions.length > 0 ? (
-              <div className="space-y-3">
-                {lead.interactions.map((interaction) => (
-                  <div key={interaction.id} className="p-4 border border-border rounded-lg hover:bg-gray-50 transition-colors">
-                    <div className="flex justify-between items-start mb-2">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-1">
-                          <div className="font-medium capitalize text-gray-900">
-                            {interaction.type.replace(/_/g, ' ')}
-                          </div>
-                          {interaction.response_time !== null && (
-                            <span className="text-xs text-gray-500">
-                              (Response: {interaction.response_time < 60 
-                                ? `${interaction.response_time}m` 
-                                : `${Math.floor(interaction.response_time / 60)}h ${interaction.response_time % 60}m`
-                              })
-                            </span>
-                          )}
-                        </div>
-                        <div className="text-sm text-fgMuted">
+              <div className="overflow-auto border border-border rounded">
+                <table className="min-w-[720px] w-full text-sm">
+                  <thead>
+                    <tr className="bg-muted/40">
+                      <th className="text-left p-3">Type</th>
+                      <th className="text-left p-3">Date</th>
+                      <th className="text-left p-3">Status</th>
+                      <th className="text-left p-3">Response Time</th>
+                      <th className="text-left p-3">Outcome</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {lead.interactions.map((interaction) => (
+                      <tr key={interaction.id} className="border-t border-border">
+                        <td className="p-3 font-medium capitalize">
+                          {interaction.type.replace(/_/g, ' ')}
+                        </td>
+                        <td className="p-3 text-fgMuted">
                           {format(new Date(interaction.timestamp), 'MMM d, yyyy h:mm a')}
-                          {' • '}
-                          {formatDistanceToNow(new Date(interaction.timestamp))} ago
+                        </td>
+                        <td className="p-3">
+                          <span className={`px-2 py-1 rounded text-xs font-medium ${
+                            interaction.status === 'completed' ? 'bg-green-100 text-green-800' :
+                            interaction.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                            interaction.status === 'scheduled' ? 'bg-blue-100 text-blue-800' :
+                            'bg-gray-100 text-gray-800'
+                          }`}>
+                            {interaction.status}
+                          </span>
+                        </td>
+                        <td className="p-3 text-fgMuted">
+                          {interaction.response_time !== null ? (
+                            interaction.response_time < 60 
+                              ? `${interaction.response_time}m` 
+                              : `${Math.floor(interaction.response_time / 60)}h ${interaction.response_time % 60}m`
+                          ) : '—'}
+                        </td>
+                        <td className="p-3 text-fgMuted capitalize">
+                          {interaction.outcome ? interaction.outcome.replace(/_/g, ' ') : '—'}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+                {/* Notes Display */}
+                {lead.interactions.some(i => i.notes) && (
+                  <div className="p-4 border-t border-border space-y-3">
+                    {lead.interactions.filter(i => i.notes).map((interaction) => (
+                      <div key={interaction.id} className="text-sm">
+                        <div className="font-medium mb-1 capitalize text-fgMuted">
+                          {interaction.type.replace(/_/g, ' ')} Notes:
                         </div>
+                        <div className="text-fgMuted">{interaction.notes}</div>
                       </div>
-                      <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                        interaction.status === 'completed' ? 'bg-green-100 text-green-800' :
-                        interaction.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                        interaction.status === 'scheduled' ? 'bg-blue-100 text-blue-800' :
-                        'bg-gray-100 text-gray-800'
-                      }`}>
-                        {interaction.status}
-                      </span>
-                    </div>
-                    {interaction.notes && (
-                      <div className="text-sm text-gray-700 mt-3 p-3 bg-gray-50 rounded-lg">
-                        {interaction.notes}
-                      </div>
-                    )}
-                    {interaction.outcome && (
-                      <div className="mt-2">
-                        <span className="text-xs text-gray-500">Outcome: </span>
-                        <span className="text-sm font-medium text-gray-900 capitalize">
-                          {interaction.outcome.replace(/_/g, ' ')}
-                        </span>
-                      </div>
-                    )}
+                    ))}
                   </div>
-                ))}
+                )}
               </div>
             ) : (
-              <div className="text-center py-8 text-gray-500">
-                <Activity className="w-12 h-12 mx-auto mb-3 text-gray-400" />
+              <div className="text-center py-8 text-fgMuted">
+                <Activity className="w-12 h-12 mx-auto mb-3 opacity-50" />
                 <p className="text-sm">No interactions logged yet</p>
-                <p className="text-xs text-gray-400 mt-1">Click "Log Interaction" to record your first interaction</p>
+                <p className="text-xs mt-1">Click "Log Interaction" to record your first interaction</p>
               </div>
             )}
           </div>

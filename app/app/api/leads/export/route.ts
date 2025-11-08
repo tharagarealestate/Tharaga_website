@@ -6,6 +6,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { cookies } from 'next/headers';
+import ExcelJS from 'exceljs';
 
 // =============================================
 // TYPES
@@ -73,31 +74,59 @@ function convertToCSV(leads: any[], fields: ExportField[]): string {
 }
 
 // =============================================
-// HELPER: Convert to Excel (TSV for simplicity)
+// HELPER: Convert to Excel (Proper .xlsx format)
 // =============================================
-function convertToExcel(leads: any[], fields: ExportField[]): string {
-  // For production, use a library like 'exceljs' for proper Excel format
-  // This is a simplified TSV version
+async function convertToExcel(leads: any[], fields: ExportField[]): Promise<Buffer> {
+  const workbook = new ExcelJS.Workbook();
+  const worksheet = workbook.addWorksheet('Leads');
   
-  const headers = fields.map(f => f.label).join('\t');
+  // Set column headers
+  worksheet.columns = fields.map(field => ({
+    header: field.label,
+    key: field.key,
+    width: 20,
+  }));
   
-  const rows = leads.map(lead => {
-    return fields.map(field => {
+  // Style header row
+  worksheet.getRow(1).font = { bold: true };
+  worksheet.getRow(1).fill = {
+    type: 'pattern',
+    pattern: 'solid',
+    fgColor: { argb: 'FFE0E0E0' },
+  };
+  
+  // Add data rows
+  leads.forEach(lead => {
+    const row: any = {};
+    fields.forEach(field => {
       let value = lead[field.key];
       
+      // Apply transformation if exists
       if (field.transform) {
         value = field.transform(value, lead);
       }
       
+      // Handle null/undefined
       if (value === null || value === undefined) {
         value = '';
       }
       
-      return String(value).replace(/\t/g, ' ');
-    }).join('\t');
+      row[field.key] = value;
+    });
+    
+    worksheet.addRow(row);
   });
   
-  return [headers, ...rows].join('\n');
+  // Auto-fit columns
+  worksheet.columns.forEach(column => {
+    if (column.width) {
+      column.width = Math.max(column.width || 10, 15);
+    }
+  });
+  
+  // Generate buffer
+  const buffer = await workbook.xlsx.writeBuffer();
+  return Buffer.from(buffer);
 }
 
 // =============================================
@@ -265,17 +294,19 @@ export async function GET(request: NextRequest) {
     // GENERATE FILE CONTENT
     // =============================================
     
-    let fileContent: string;
+    let fileContent: string | Buffer;
     let contentType: string;
     let filename: string;
     
     if (format === 'excel') {
-      fileContent = convertToExcel(enrichedLeads, exportFields);
-      contentType = 'application/vnd.ms-excel';
-      filename = `leads-export-${Date.now()}.xls`;
+      // Generate proper Excel file
+      fileContent = await convertToExcel(enrichedLeads, exportFields);
+      contentType = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+      filename = `leads-export-${Date.now()}.xlsx`;
     } else {
+      // Generate CSV file
       fileContent = convertToCSV(enrichedLeads, exportFields);
-      contentType = 'text/csv';
+      contentType = 'text/csv; charset=utf-8';
       filename = `leads-export-${Date.now()}.csv`;
     }
     
@@ -423,15 +454,23 @@ export async function POST(request: NextRequest) {
           ['email', 'full_name', 'phone', 'score', 'category', 'budget_min', 'budget_max', 'last_activity'].includes(f.key)
         );
     
-    const fileContent = format === 'excel' 
-      ? convertToExcel(enrichedLeads, exportFields)
-      : convertToCSV(enrichedLeads, exportFields);
+    let fileContent: string | Buffer;
+    let contentType: string;
+    let filename: string;
     
-    const filename = `leads-custom-export-${Date.now()}.${format === 'excel' ? 'xls' : 'csv'}`;
+    if (format === 'excel') {
+      fileContent = await convertToExcel(enrichedLeads, exportFields);
+      contentType = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+      filename = `leads-custom-export-${Date.now()}.xlsx`;
+    } else {
+      fileContent = convertToCSV(enrichedLeads, exportFields);
+      contentType = 'text/csv; charset=utf-8';
+      filename = `leads-custom-export-${Date.now()}.csv`;
+    }
     
     return new NextResponse(fileContent, {
       headers: {
-        'Content-Type': format === 'excel' ? 'application/vnd.ms-excel' : 'text/csv',
+        'Content-Type': contentType,
         'Content-Disposition': `attachment; filename="${filename}"`,
         'Cache-Control': 'no-cache',
       },

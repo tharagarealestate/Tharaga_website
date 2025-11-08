@@ -7,14 +7,27 @@ import { formatDistanceToNow } from 'date-fns'
 export type Lead = {
   id: string
   created_at: string
-  name: string
+  full_name?: string
+  name?: string
   email: string
-  phone: string
-  status: string
+  phone: string | null
+  status?: string
   score: number
-  source: string
-  budget?: number
-  property: { title?: string; location?: string }
+  category?: string
+  source?: string
+  budget_min?: number | null
+  budget_max?: number | null
+  property?: { title?: string; location?: string }
+  viewed_properties?: Array<{
+    property_id: string
+    property_title: string
+    view_count: number
+    last_viewed: string
+  }>
+  total_views?: number
+  total_interactions?: number
+  last_activity?: string | null
+  days_since_last_activity?: number
 }
 
 export function LeadCardSkeleton() {
@@ -47,7 +60,7 @@ export function LeadCard({ lead }: { lead: Lead }) {
     <div className="glass-card p-4 md:p-6 rounded-xl hover:shadow-xl transition-all duration-300 border-l-4 bg-white border-gray-200" style={{ borderLeftColor: scoreColor }}>
       <div className="flex items-start justify-between mb-4">
         <div className={`px-3 py-1 rounded-full text-sm font-bold text-white`} style={{ backgroundColor: scoreColor }}>
-          {lead.score.toFixed(1)} {getScoreLabel(lead.score)}
+          {lead.score.toFixed(1)} {lead.category || getScoreLabel(lead.score)}
         </div>
         <div className="text-xs text-gray-500">
           {formatDistanceToNow(new Date(lead.created_at))} ago
@@ -55,12 +68,14 @@ export function LeadCard({ lead }: { lead: Lead }) {
       </div>
 
       <div className="mb-4">
-        <h3 className="text-lg font-bold text-gray-900 mb-1">{lead.name}</h3>
+        <h3 className="text-lg font-bold text-gray-900 mb-1">{lead.full_name || lead.name || 'Unknown'}</h3>
         <div className="space-y-1 text-sm text-gray-600">
-          <div className="flex items-center gap-2">
-            <Phone className="w-4 h-4" />
-            <a href={`tel:${lead.phone}`} className="hover:text-primary-600">{lead.phone}</a>
-          </div>
+          {lead.phone && (
+            <div className="flex items-center gap-2">
+              <Phone className="w-4 h-4" />
+              <a href={`tel:${lead.phone}`} className="hover:text-primary-600">{lead.phone}</a>
+            </div>
+          )}
           <div className="flex items-center gap-2">
             <Mail className="w-4 h-4" />
             <a href={`mailto:${lead.email}`} className="hover:text-primary-600 truncate">{lead.email}</a>
@@ -68,34 +83,61 @@ export function LeadCard({ lead }: { lead: Lead }) {
         </div>
       </div>
 
-      <div className="mb-4 p-3 bg-gray-50 rounded-lg">
-        <div className="text-xs text-gray-600 mb-1">Interested in:</div>
-        <div className="font-semibold text-gray-900 text-sm truncate">{lead.property?.title || '-'}</div>
-        <div className="text-xs text-gray-500">{lead.property?.location || ''}</div>
-      </div>
+      {lead.viewed_properties && lead.viewed_properties.length > 0 && (
+        <div className="mb-4 p-3 bg-gray-50 rounded-lg">
+          <div className="text-xs text-gray-600 mb-1">Viewed {lead.viewed_properties.length} propert{lead.viewed_properties.length === 1 ? 'y' : 'ies'}:</div>
+          <div className="font-semibold text-gray-900 text-sm truncate">{lead.viewed_properties[0]?.property_title || '-'}</div>
+          {lead.viewed_properties.length > 1 && (
+            <div className="text-xs text-gray-500 mt-1">+{lead.viewed_properties.length - 1} more</div>
+          )}
+        </div>
+      )}
+
+      {(!lead.viewed_properties || lead.viewed_properties.length === 0) && lead.property && (
+        <div className="mb-4 p-3 bg-gray-50 rounded-lg">
+          <div className="text-xs text-gray-600 mb-1">Interested in:</div>
+          <div className="font-semibold text-gray-900 text-sm truncate">{lead.property?.title || '-'}</div>
+          <div className="text-xs text-gray-500">{lead.property?.location || ''}</div>
+        </div>
+      )}
 
       <div className="flex items-center gap-4 mb-4 text-sm">
-        <div className="flex items-center gap-1 text-gray-600">
-          <Globe className="w-4 h-4" />
-          <span className="capitalize">{lead.source}</span>
-        </div>
-        {typeof lead.budget === 'number' && (
+        {lead.total_views !== undefined && (
+          <div className="flex items-center gap-1 text-gray-600">
+            <Users className="w-4 h-4" />
+            <span>{lead.total_views} views</span>
+          </div>
+        )}
+        {lead.total_interactions !== undefined && lead.total_interactions > 0 && (
+          <div className="flex items-center gap-1 text-gray-600">
+            <span>{lead.total_interactions} interactions</span>
+          </div>
+        )}
+        {(lead.budget_min || lead.budget_max) && (
           <div className="flex items-center gap-1 text-gray-600">
             <DollarSign className="w-4 h-4" />
-            <span>₹{formatCurrency(lead.budget)}</span>
+            <span>
+              {lead.budget_min && lead.budget_max 
+                ? `₹${formatCurrency(lead.budget_min)} - ₹${formatCurrency(lead.budget_max)}`
+                : lead.budget_max 
+                  ? `Up to ₹${formatCurrency(lead.budget_max)}`
+                  : `From ₹${formatCurrency(lead.budget_min!)}`}
+            </span>
           </div>
         )}
       </div>
 
       <div className="flex flex-col md:flex-row gap-2">
-        <a href={`tel:${lead.phone}`} className="flex-1 w-full py-2 px-3 bg-primary-600 hover:bg-primary-700 text-white font-medium rounded-lg transition-colors flex items-center justify-center gap-2">
-          <Phone className="w-4 h-4" />
-          Call
+        {lead.phone && (
+          <a href={`tel:${lead.phone}`} className="flex-1 w-full py-2 px-3 bg-primary-600 hover:bg-primary-700 text-white font-medium rounded-lg transition-colors flex items-center justify-center gap-2">
+            <Phone className="w-4 h-4" />
+            Call
+          </a>
+        )}
+        <a href={`mailto:${lead.email}`} className={`${lead.phone ? 'flex-1' : 'flex-1'} w-full py-2 px-3 bg-emerald-600 hover:bg-emerald-700 text-white font-medium rounded-lg transition-colors flex items-center justify-center gap-2`}>
+          <Mail className="w-4 h-4" />
+          Email
         </a>
-        <button className="flex-1 w-full py-2 px-3 bg-emerald-600 hover:bg-emerald-700 text-white font-medium rounded-lg transition-colors flex items-center justify-center gap-2">
-          <Calendar className="w-4 h-4" />
-          Schedule
-        </button>
         <Link href={`/builder/leads/${lead.id}`} className="py-2 px-4 border border-gray-300 hover:bg-gray-50 rounded-lg transition-colors flex items-center justify-center w-full md:w-auto">
           <ArrowRight className="w-4 h-4 text-gray-600" />
         </Link>

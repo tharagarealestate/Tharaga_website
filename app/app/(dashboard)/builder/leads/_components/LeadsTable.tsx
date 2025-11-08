@@ -9,22 +9,82 @@ export function LeadsTable({ leads = [] as Lead[] }) {
   const data = useMemo(() => leads, [leads])
 
   const columns = useMemo<ColumnDef<Lead>[]>(() => [
-    { header: 'Name', accessorKey: 'name' },
-    { header: 'Contact', cell: ({ row }) => (
-      <div>
-        <div className="text-sm">{row.original.email}</div>
-        <div className="text-xs text-gray-500">{row.original.phone}</div>
-      </div>
-    ) },
-    { header: 'Property', cell: ({ row }) => (
-      <div>
-        <div className="text-sm font-medium">{row.original.property?.title || '-'}</div>
-        <div className="text-xs text-gray-500">{row.original.property?.location || ''}</div>
-      </div>
-    ) },
-    { header: 'Score', accessorKey: 'score' },
-    { header: 'Source', accessorKey: 'source' },
-    { header: 'Status', accessorKey: 'status' },
+    { 
+      header: 'Name', 
+      cell: ({ row }) => row.original.full_name || row.original.name || 'Unknown'
+    },
+    { 
+      header: 'Contact', 
+      cell: ({ row }) => (
+        <div>
+          <div className="text-sm">{row.original.email}</div>
+          {row.original.phone && (
+            <div className="text-xs text-gray-500">{row.original.phone}</div>
+          )}
+        </div>
+      )
+    },
+    { 
+      header: 'Property', 
+      cell: ({ row }) => {
+        const viewedProps = row.original.viewed_properties
+        if (viewedProps && viewedProps.length > 0) {
+          return (
+            <div>
+              <div className="text-sm font-medium">{viewedProps[0].property_title}</div>
+              <div className="text-xs text-gray-500">{viewedProps.length} propert{viewedProps.length === 1 ? 'y' : 'ies'}</div>
+            </div>
+          )
+        }
+        return (
+          <div>
+            <div className="text-sm font-medium">{row.original.property?.title || '-'}</div>
+            <div className="text-xs text-gray-500">{row.original.property?.location || ''}</div>
+          </div>
+        )
+      }
+    },
+    { 
+      header: 'Score', 
+      cell: ({ row }) => (
+        <div>
+          <div className="font-medium">{row.original.score.toFixed(1)}</div>
+          <div className="text-xs text-gray-500">{row.original.category || 'N/A'}</div>
+        </div>
+      )
+    },
+    { 
+      header: 'Activity', 
+      cell: ({ row }) => (
+        <div>
+          {row.original.total_views !== undefined && (
+            <div className="text-sm">{row.original.total_views} views</div>
+          )}
+          {row.original.total_interactions !== undefined && row.original.total_interactions > 0 && (
+            <div className="text-xs text-gray-500">{row.original.total_interactions} interactions</div>
+          )}
+        </div>
+      )
+    },
+    { 
+      header: 'Budget', 
+      cell: ({ row }) => {
+        if (!row.original.budget_min && !row.original.budget_max) return '-'
+        const formatCurrency = (n: number) => {
+          try {
+            return new Intl.NumberFormat('en-IN', { maximumFractionDigits: 0 }).format(n)
+          } catch {
+            return String(n)
+          }
+        }
+        if (row.original.budget_min && row.original.budget_max) {
+          return `₹${formatCurrency(row.original.budget_min)} - ₹${formatCurrency(row.original.budget_max)}`
+        }
+        return row.original.budget_max 
+          ? `Up to ₹${formatCurrency(row.original.budget_max)}`
+          : `From ₹${formatCurrency(row.original.budget_min!)}`
+      }
+    },
   ], [])
 
   const table = useReactTable({ data, columns, getCoreRowModel: getCoreRowModel() })

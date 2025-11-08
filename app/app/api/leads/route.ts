@@ -1,104 +1,514 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
-import { validateInput, LeadSchema, sanitizeInput } from '@/lib/security/validation'
-import { leadSubmissionRateLimiter } from '@/lib/security/rate-limiter'
-import { logSecurityEvent, AuditResourceTypes } from '@/lib/security/audit'
-import { getClientIp } from '@/lib/security/auth'
+// =============================================
+// LEADS LISTING API - COMPLETE FILTERING & PAGINATION
+// GET /api/leads?score_min=7&category=Hot Lead&page=1&limit=20
+// =============================================
+import { NextRequest, NextResponse } from 'next/server';
+import { createClient } from '@/lib/supabase/server';
+import { cookies } from 'next/headers';
 
-export const runtime = 'edge'
+// =============================================
+// TYPES
+// =============================================
+interface LeadListQuery {
+  // Pagination
+  page?: number;
+  limit?: number;
+  
+  // Filters
+  score_min?: number;
+  score_max?: number;
+  category?: 'Hot Lead' | 'Warm Lead' | 'Developing Lead' | 'Cold Lead' | 'Low Quality';
+  budget_min?: number;
+  budget_max?: number;
+  location?: string;
+  property_type?: string;
+  
+  // Search
+  search?: string; // Search in name, email, phone
+  
+  // Sorting
+  sort_by?: 'score' | 'created_at' | 'last_activity' | 'budget';
+  sort_order?: 'asc' | 'desc';
+  
+  // Date filters
+  created_after?: string; // ISO date
+  created_before?: string;
+  last_active_after?: string;
+  last_active_before?: string;
+  
+  // Interaction filters
+  has_interactions?: boolean;
+  interaction_type?: string;
+  no_response?: boolean; // Leads builder hasn't responded to
+}
 
-export async function POST(req: NextRequest) {
+interface LeadWithDetails {
+  id: string;
+  email: string;
+  full_name: string;
+  phone: string | null;
+  created_at: string;
+  
+  // Lead Score
+  score: number;
+  category: string;
+  score_breakdown: {
+    budget_alignment: number;
+    engagement: number;
+    property_fit: number;
+    time_investment: number;
+    contact_intent: number;
+    recency: number;
+  };
+  
+  // User Preferences
+  budget_min: number | null;
+  budget_max: number | null;
+  preferred_location: string | null;
+  preferred_property_type: string | null;
+  
+  // Activity Summary
+  total_views: number;
+  total_interactions: number;
+  last_activity: string | null;
+  days_since_last_activity: number;
+  
+  // Properties interested in
+  viewed_properties: Array<{
+    property_id: string;
+    property_title: string;
+    view_count: number;
+    last_viewed: string;
+  }>;
+  
+  // Interaction status
+  last_interaction: {
+    type: string;
+    timestamp: string;
+    status: string;
+  } | null;
+  has_pending_interactions: boolean;
+}
+
+// =============================================
+// GET HANDLER
+// =============================================
+export async function GET(request: NextRequest) {
   try {
-    // Rate limiting check
-    const ip = getClientIp(req)
-    const rateCheck = leadSubmissionRateLimiter.check(ip)
-    if (!rateCheck.allowed) {
-      await logSecurityEvent(
-        req,
-        'rate_limit_exceeded',
-        'api',
-        undefined,
-        undefined,
-        { endpoint: '/api/leads', ip, remaining: rateCheck.remaining }
-      )
+    const cookieStore = cookies();
+    const supabase = createClient();
+    
+    // =============================================
+    // AUTHENTICATION
+    // =============================================
+    
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    
+    if (authError || !user) {
       return NextResponse.json(
-        { error: 'Too many submissions. Please try again later.' },
-        {
-          status: 429,
-          headers: {
-            'X-RateLimit-Limit': String(leadSubmissionRateLimiter.config.maxRequests),
-            'X-RateLimit-Remaining': String(rateCheck.remaining),
-            'Retry-After': String(Math.ceil((rateCheck.resetAt - Date.now()) / 1000))
-          }
+        { error: 'Unauthorized' },
+        { status: 401 }
+      );
+    }
+    
+    // Verify user is a builder
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
+      .single();
+    
+    if (profile?.role !== 'builder') {
+      return NextResponse.json(
+        { error: 'Forbidden - Builders only' },
+        { status: 403 }
+      );
+    }
+    
+    // =============================================
+    // PARSE QUERY PARAMETERS
+    // =============================================
+    
+    const searchParams = request.nextUrl.searchParams;
+    
+    const query: LeadListQuery = {
+      page: parseInt(searchParams.get('page') || '1'),
+      limit: Math.min(parseInt(searchParams.get('limit') || '20'), 100), // Max 100
+      score_min: searchParams.get('score_min') ? parseFloat(searchParams.get('score_min')!) : undefined,
+      score_max: searchParams.get('score_max') ? parseFloat(searchParams.get('score_max')!) : undefined,
+      category: searchParams.get('category') as any,
+      budget_min: searchParams.get('budget_min') ? parseInt(searchParams.get('budget_min')!) : undefined,
+      budget_max: searchParams.get('budget_max') ? parseInt(searchParams.get('budget_max')!) : undefined,
+      location: searchParams.get('location') || undefined,
+      property_type: searchParams.get('property_type') || undefined,
+      search: searchParams.get('search') || undefined,
+      sort_by: (searchParams.get('sort_by') || 'score') as any,
+      sort_order: (searchParams.get('sort_order') || 'desc') as any,
+      created_after: searchParams.get('created_after') || undefined,
+      created_before: searchParams.get('created_before') || undefined,
+      last_active_after: searchParams.get('last_active_after') || undefined,
+      last_active_before: searchParams.get('last_active_before') || undefined,
+      has_interactions: searchParams.get('has_interactions') === 'true' ? true : undefined,
+      no_response: searchParams.get('no_response') === 'true' ? true : undefined,
+    };
+    
+    // =============================================
+    // FETCH LEADS WITH SCORING
+    // =============================================
+    
+    // First, get all leads for this builder from the leads table
+    // We'll adapt to use the existing leads table structure
+    let leadsQuery = supabase
+      .from('leads')
+      .select(`
+        id,
+        created_at,
+        name,
+        email,
+        phone,
+        message,
+        score,
+        builder_id,
+        property_id,
+        properties:property_id (
+          id,
+          title,
+          location
+        )
+      `)
+      .eq('builder_id', user.id);
+    
+    // Apply score filters
+    if (query.score_min !== undefined) {
+      leadsQuery = leadsQuery.gte('score', query.score_min);
+    }
+    if (query.score_max !== undefined) {
+      leadsQuery = leadsQuery.lte('score', query.score_max);
+    }
+    
+    // Apply date filters
+    if (query.created_after) {
+      leadsQuery = leadsQuery.gte('created_at', query.created_after);
+    }
+    if (query.created_before) {
+      leadsQuery = leadsQuery.lte('created_at', query.created_before);
+    }
+    
+    // Execute query
+    const { data: leadsData, error: leadsError } = await leadsQuery;
+    
+    if (leadsError) {
+      console.error('[API/Leads] Query error:', leadsError);
+      return NextResponse.json(
+        { error: 'Failed to fetch leads' },
+        { status: 500 }
+      );
+    }
+    
+    // =============================================
+    // ENRICH WITH ACTIVITY DATA
+    // =============================================
+    
+    const enrichedLeads: LeadWithDetails[] = await Promise.all(
+      (leadsData || []).map(async (lead: any) => {
+        const leadId = lead.id;
+        
+        // Try to get user_id from lead if available, otherwise use email to find user
+        let userId: string | null = null;
+        if (lead.email) {
+          const { data: userData } = await supabase
+            .from('profiles')
+            .select('id')
+            .eq('email', lead.email)
+            .maybeSingle();
+          userId = userData?.id || null;
         }
-      )
+        
+        // Fetch behavior stats (if user_behavior table exists)
+        let behaviors: any[] = [];
+        if (userId) {
+          const { data: behaviorData } = await supabase
+            .from('user_behavior')
+            .select('behavior_type, property_id, timestamp, duration, device_type')
+            .eq('user_id', userId)
+            .order('timestamp', { ascending: false });
+          behaviors = behaviorData || [];
+        }
+        
+        // Fetch interactions with this builder
+        const { data: interactions } = await supabase
+          .from('lead_interactions')
+          .select('*')
+          .eq('lead_id', leadId)
+          .eq('builder_id', user.id)
+          .order('timestamp', { ascending: false });
+        
+        // Calculate activity metrics
+        const totalViews = behaviors?.filter(b => b.behavior_type === 'property_view').length || 0;
+        const lastActivity = behaviors?.[0]?.timestamp || lead.created_at;
+        const daysSinceLastActivity = lastActivity
+          ? Math.floor((Date.now() - new Date(lastActivity).getTime()) / (1000 * 60 * 60 * 24))
+          : 999;
+        
+        // Get viewed properties with counts
+        const viewedPropertiesMap = new Map<string, { count: number; last_viewed: string }>();
+        behaviors?.forEach(b => {
+          if (b.behavior_type === 'property_view' && b.property_id) {
+            const existing = viewedPropertiesMap.get(b.property_id) || { count: 0, last_viewed: b.timestamp };
+            viewedPropertiesMap.set(b.property_id, {
+              count: existing.count + 1,
+              last_viewed: b.timestamp > existing.last_viewed ? b.timestamp : existing.last_viewed,
+            });
+          }
+        });
+        
+        // Fetch property details for viewed properties
+        const propertyIds = Array.from(viewedPropertiesMap.keys());
+        let viewedProperties: any[] = [];
+        if (propertyIds.length > 0) {
+          const { data: properties } = await supabase
+            .from('properties')
+            .select('id, title')
+            .in('id', propertyIds);
+          
+          viewedProperties = properties?.map(prop => ({
+            property_id: prop.id,
+            property_title: prop.title,
+            view_count: viewedPropertiesMap.get(prop.id)?.count || 0,
+            last_viewed: viewedPropertiesMap.get(prop.id)?.last_viewed || '',
+          })).sort((a, b) => b.view_count - a.view_count) || [];
+        }
+        
+        // Last interaction
+        const lastInteraction = interactions?.[0] ? {
+          type: interactions[0].interaction_type,
+          timestamp: interactions[0].timestamp,
+          status: interactions[0].status,
+        } : null;
+        
+        // Has pending interactions
+        const hasPendingInteractions = interactions?.some(i => i.status === 'pending') || false;
+        
+        // Calculate score breakdown (simplified - using lead score)
+        const baseScore = lead.score || 5;
+        const scoreBreakdown = {
+          budget_alignment: baseScore * 0.2,
+          engagement: baseScore * 0.2,
+          property_fit: baseScore * 0.2,
+          time_investment: baseScore * 0.15,
+          contact_intent: baseScore * 0.15,
+          recency: baseScore * 0.1,
+        };
+        
+        // Determine category from score
+        let category = 'Low Quality';
+        if (baseScore >= 9) category = 'Hot Lead';
+        else if (baseScore >= 7) category = 'Warm Lead';
+        else if (baseScore >= 5) category = 'Developing Lead';
+        else if (baseScore >= 3) category = 'Cold Lead';
+        
+        // Get preferences (if user_preferences table exists)
+        let preferences: any = null;
+        if (userId) {
+          const { data: prefData } = await supabase
+            .from('user_preferences')
+            .select('*')
+            .eq('user_id', userId)
+            .maybeSingle();
+          preferences = prefData;
+        }
+        
+        // Build enriched lead object
+        return {
+          id: leadId,
+          email: lead.email || '',
+          full_name: lead.name || 'Unknown',
+          phone: lead.phone || null,
+          created_at: lead.created_at,
+          
+          score: baseScore,
+          category,
+          score_breakdown: scoreBreakdown,
+          
+          budget_min: preferences?.budget_min || null,
+          budget_max: preferences?.budget_max || null,
+          preferred_location: preferences?.preferred_location || null,
+          preferred_property_type: preferences?.preferred_property_type || null,
+          
+          total_views: totalViews,
+          total_interactions: interactions?.length || 0,
+          last_activity: lastActivity,
+          days_since_last_activity: daysSinceLastActivity,
+          
+          viewed_properties: viewedProperties,
+          
+          last_interaction: lastInteraction,
+          has_pending_interactions: hasPendingInteractions,
+        };
+      })
+    );
+    
+    // =============================================
+    // APPLY CLIENT-SIDE FILTERS
+    // (Filters that couldn't be applied in SQL)
+    // =============================================
+    
+    let filteredLeads = enrichedLeads;
+    
+    // Category filter
+    if (query.category) {
+      filteredLeads = filteredLeads.filter(lead => lead.category === query.category);
     }
-
-    const body = await req.json().catch(() => ({}))
     
-    // Validate input
-    const validation = await validateInput(LeadSchema, body)
-    if (!validation.success) {
-      return NextResponse.json({ error: validation.error }, { status: 400 })
+    // Budget filter
+    if (query.budget_min) {
+      filteredLeads = filteredLeads.filter(lead => 
+        lead.budget_max && lead.budget_max >= query.budget_min!
+      );
+    }
+    if (query.budget_max) {
+      filteredLeads = filteredLeads.filter(lead => 
+        lead.budget_min && lead.budget_min <= query.budget_max!
+      );
     }
     
-    const { property_id, name, email, phone, message, builder_id } = validation.data
-
-    const url = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL
-    const key = process.env.SUPABASE_SERVICE_ROLE
-    if (!url || !key) return NextResponse.json({ error: 'Supabase env missing' }, { status: 500 })
-
-    const supabase = createClient(url, key)
-    const source = req.headers.get('referer') || req.headers.get('origin') || ''
-    
-    // Sanitize inputs before inserting
-    const sanitizedName = sanitizeInput(name || '')
-    const sanitizedEmail = email ? sanitizeInput(email) : null
-    const sanitizedPhone = phone ? sanitizeInput(phone) : null
-    const sanitizedMessage = message ? sanitizeInput(message) : null
-    
-    const { error, data } = await supabase.from('leads').insert([{
-      property_id: property_id || null,
-      builder_id: builder_id || null,
-      name: sanitizedName,
-      email: sanitizedEmail || undefined,
-      phone: sanitizedPhone || undefined,
-      message: sanitizedMessage || undefined,
-      source
-    }]).select('id').single()
-    
-    if (error) {
-      await logSecurityEvent(
-        req,
-        'lead_create_failed',
-        AuditResourceTypes.LEAD,
-        undefined,
-        undefined,
-        { error: error.message }
-      )
-      return NextResponse.json({ error: error.message }, { status: 200 })
+    // Location filter
+    if (query.location) {
+      filteredLeads = filteredLeads.filter(lead =>
+        lead.preferred_location?.toLowerCase().includes(query.location!.toLowerCase())
+      );
     }
     
-    // Log successful lead creation
-    await logSecurityEvent(
-      req,
-      'lead_created',
-      AuditResourceTypes.LEAD,
-      data?.id,
-      undefined,
-      { property_id, builder_id, hasEmail: !!email, hasPhone: !!phone }
-    )
+    // Property type filter
+    if (query.property_type) {
+      filteredLeads = filteredLeads.filter(lead =>
+        lead.preferred_property_type?.toLowerCase() === query.property_type!.toLowerCase()
+      );
+    }
     
-    return NextResponse.json({ ok: true, id: data?.id })
-  } catch (e: any) {
-    await logSecurityEvent(
-      req,
-      'lead_create_error',
-      AuditResourceTypes.LEAD,
-      undefined,
-      undefined,
-      { error: e?.message }
-    )
-    return NextResponse.json({ error: e?.message || 'Unexpected' }, { status: 500 })
+    // Search filter (name, email, phone)
+    if (query.search) {
+      const searchLower = query.search.toLowerCase();
+      filteredLeads = filteredLeads.filter(lead =>
+        lead.full_name.toLowerCase().includes(searchLower) ||
+        lead.email.toLowerCase().includes(searchLower) ||
+        lead.phone?.toLowerCase().includes(searchLower)
+      );
+    }
+    
+    // Has interactions filter
+    if (query.has_interactions === true) {
+      filteredLeads = filteredLeads.filter(lead => lead.total_interactions > 0);
+    }
+    
+    // No response filter (leads builder hasn't interacted with)
+    if (query.no_response === true) {
+      filteredLeads = filteredLeads.filter(lead => lead.total_interactions === 0);
+    }
+    
+    // Last active filters
+    if (query.last_active_after) {
+      const afterDate = new Date(query.last_active_after);
+      filteredLeads = filteredLeads.filter(lead =>
+        lead.last_activity && new Date(lead.last_activity) >= afterDate
+      );
+    }
+    if (query.last_active_before) {
+      const beforeDate = new Date(query.last_active_before);
+      filteredLeads = filteredLeads.filter(lead =>
+        lead.last_activity && new Date(lead.last_activity) <= beforeDate
+      );
+    }
+    
+    // =============================================
+    // SORTING
+    // =============================================
+    
+    const sortColumn = query.sort_by || 'score';
+    filteredLeads.sort((a, b) => {
+      let aVal: any, bVal: any;
+      
+      switch (sortColumn) {
+        case 'score':
+          aVal = a.score;
+          bVal = b.score;
+          break;
+        case 'created_at':
+          aVal = new Date(a.created_at).getTime();
+          bVal = new Date(b.created_at).getTime();
+          break;
+        case 'last_activity':
+          aVal = a.last_activity ? new Date(a.last_activity).getTime() : 0;
+          bVal = b.last_activity ? new Date(b.last_activity).getTime() : 0;
+          break;
+        case 'budget':
+          aVal = a.budget_max || 0;
+          bVal = b.budget_max || 0;
+          break;
+        default:
+          aVal = a.score;
+          bVal = b.score;
+      }
+      
+      if (query.sort_order === 'asc') {
+        return aVal > bVal ? 1 : aVal < bVal ? -1 : 0;
+      } else {
+        return aVal < bVal ? 1 : aVal > bVal ? -1 : 0;
+      }
+    });
+    
+    // =============================================
+    // PAGINATION
+    // =============================================
+    
+    const total = filteredLeads.length;
+    const totalPages = Math.ceil(total / query.limit!);
+    const offset = (query.page! - 1) * query.limit!;
+    const paginatedLeads = filteredLeads.slice(offset, offset + query.limit!);
+    
+    // =============================================
+    // CALCULATE STATISTICS
+    // =============================================
+    
+    const stats = {
+      total_leads: total,
+      hot_leads: filteredLeads.filter(l => l.category === 'Hot Lead').length,
+      warm_leads: filteredLeads.filter(l => l.category === 'Warm Lead').length,
+      developing_leads: filteredLeads.filter(l => l.category === 'Developing Lead').length,
+      cold_leads: filteredLeads.filter(l => l.category === 'Cold Lead').length,
+      average_score: total > 0 
+        ? filteredLeads.reduce((sum, l) => sum + l.score, 0) / total 
+        : 0,
+      pending_interactions: filteredLeads.filter(l => l.has_pending_interactions).length,
+      no_response_leads: filteredLeads.filter(l => l.total_interactions === 0).length,
+    };
+    
+    // =============================================
+    // RETURN RESPONSE
+    // =============================================
+    
+    return NextResponse.json({
+      success: true,
+      data: {
+        leads: paginatedLeads,
+        pagination: {
+          page: query.page,
+          limit: query.limit,
+          total,
+          total_pages: totalPages,
+          has_next: query.page! < totalPages,
+          has_prev: query.page! > 1,
+        },
+        stats,
+        filters_applied: query,
+      },
+    });
+    
+  } catch (error) {
+    console.error('[API/Leads] Server error:', error);
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
   }
 }

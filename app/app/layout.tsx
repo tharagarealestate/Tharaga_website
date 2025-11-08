@@ -568,13 +568,29 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             border: 1px dashed rgba(30,64,175,.25) !important;
             color: #111 !important;
           }
-          header.nav .thg-auth-menu .thg-add-role-btn:hover,
-          .thg-auth-menu .thg-add-role-btn:hover {
-            border-color: #f3cd4a !important;
-            background: rgba(243, 205, 74, 0.08) !important;
-          }
-        ` }}
-        />
+                 header.nav .thg-auth-menu .thg-add-role-btn:hover,
+                 .thg-auth-menu .thg-add-role-btn:hover {
+                   border-color: #f3cd4a !important;
+                   background: rgba(243, 205, 74, 0.08) !important;
+                 }
+                 
+                 /* FORCE HIDE ALL MODALS - Complete removal */
+                 .thg-auth-overlay,
+                 .thg-auth-overlay[aria-hidden="false"],
+                 .thg-auth-overlay[aria-hidden="true"] {
+                   display: none !important;
+                   visibility: hidden !important;
+                   opacity: 0 !important;
+                   pointer-events: none !important;
+                   z-index: -9999 !important;
+                 }
+                 .thg-auth-modal {
+                   display: none !important;
+                   visibility: hidden !important;
+                   opacity: 0 !important;
+                 }
+               ` }}
+               />
         <script dangerouslySetInnerHTML={{ __html: `
           (function(){
             function safeQueue(){
@@ -641,56 +657,105 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         {/* No need to import anything in feature files - header is always visible */}
         <StaticHeaderHTML />
         <HeaderLinkInterceptor />
-        {/* Ensure auth button is always visible - prevent hiding */}
-        <script dangerouslySetInnerHTML={{ __html: `
-          (function() {
-            'use strict';
-            // Force auth container to be visible immediately
-            function forceAuthVisible() {
-              const container = document.getElementById('site-header-auth-container');
-              const wrap = document.querySelector('header.nav .thg-auth-wrap');
-              const btn = document.querySelector('header.nav .thg-auth-btn');
-              
-              if (container) {
-                container.style.display = 'flex';
-                container.style.visibility = 'visible';
-                container.style.opacity = '1';
-              }
-              
-              if (wrap) {
-                wrap.style.display = 'flex';
-                wrap.style.visibility = 'visible';
-                wrap.style.opacity = '1';
-              }
-              
-              if (btn) {
-                btn.style.display = 'inline-flex';
-                btn.style.visibility = 'visible';
-                btn.style.opacity = '1';
-                btn.style.color = '#1e40af';
-                
-                const label = btn.querySelector('.thg-label');
-                if (label) {
-                  label.style.color = '#1e40af';
-                  if (!label.textContent || label.textContent.trim() === '') {
-                    label.textContent = 'Login / Signup';
-                  }
-                }
-              }
-            }
-            
-            // Run immediately
-            forceAuthVisible();
-            
-            // Run on DOM ready
-            if (document.readyState === 'loading') {
-              document.addEventListener('DOMContentLoaded', forceAuthVisible);
-            }
-            
-            // Run periodically to prevent hiding
-            setInterval(forceAuthVisible, 200);
-          })();
-        ` }} />
+               {/* Ensure auth button is always visible - prevent hiding */}
+               {/* FORCE REMOVE ALL MODALS - Complete removal */}
+               <script dangerouslySetInnerHTML={{ __html: `
+                 (function() {
+                   'use strict';
+                   
+                   // REMOVE ALL MODALS IMMEDIATELY
+                   function removeAllModals() {
+                     // Remove all modal overlays
+                     const overlays = document.querySelectorAll('.thg-auth-overlay');
+                     overlays.forEach(function(overlay) {
+                       overlay.remove();
+                     });
+                     
+                     // Force hide any remaining modals
+                     const modals = document.querySelectorAll('.thg-auth-modal');
+                     modals.forEach(function(modal) {
+                       modal.style.display = 'none';
+                       modal.style.visibility = 'hidden';
+                       modal.style.opacity = '0';
+                       modal.remove();
+                     });
+                     
+                     // Remove any modal parent elements
+                     const modalParents = document.querySelectorAll('[class*="thg-auth-overlay"]');
+                     modalParents.forEach(function(el) {
+                       if (el.classList.contains('thg-auth-overlay')) {
+                         el.remove();
+                       }
+                     });
+                   }
+                   
+                   // Run immediately
+                   removeAllModals();
+                   
+                   // Run on DOM ready
+                   if (document.readyState === 'loading') {
+                     document.addEventListener('DOMContentLoaded', removeAllModals);
+                   }
+                   
+                   // Watch for new modals being added and remove them
+                   const modalObserver = new MutationObserver(function(mutations) {
+                     removeAllModals();
+                   });
+                   
+                   modalObserver.observe(document.body, {
+                     childList: true,
+                     subtree: true
+                   });
+                   
+                   // Run periodically to catch any modals
+                   setInterval(removeAllModals, 500);
+                   
+                   // Force auth container to be visible immediately
+                   function forceAuthVisible() {
+                     const container = document.getElementById('site-header-auth-container');
+                     const wrap = document.querySelector('header.nav .thg-auth-wrap');
+                     const btn = document.querySelector('header.nav .thg-auth-btn');
+                     
+                     if (container) {
+                       container.style.display = 'flex';
+                       container.style.visibility = 'visible';
+                       container.style.opacity = '1';
+                     }
+                     
+                     if (wrap) {
+                       wrap.style.display = 'flex';
+                       wrap.style.visibility = 'visible';
+                       wrap.style.opacity = '1';
+                     }
+                     
+                     if (btn) {
+                       btn.style.display = 'inline-flex';
+                       btn.style.visibility = 'visible';
+                       btn.style.opacity = '1';
+                       btn.style.color = '#1e40af';
+                       
+                       const label = btn.querySelector('.thg-label');
+                       if (label) {
+                         label.style.color = '#1e40af';
+                         if (!label.textContent || label.textContent.trim() === '') {
+                           label.textContent = 'Login / Signup';
+                         }
+                       }
+                     }
+                   }
+                   
+                   // Run immediately
+                   forceAuthVisible();
+                   
+                   // Run on DOM ready
+                   if (document.readyState === 'loading') {
+                     document.addEventListener('DOMContentLoaded', forceAuthVisible);
+                   }
+                   
+                   // Run periodically to prevent hiding
+                   setInterval(forceAuthVisible, 200);
+                 })();
+               ` }} />
         <AppI18nProvider>
           <EntitlementsProvider>
             <PrefetchRoutes />

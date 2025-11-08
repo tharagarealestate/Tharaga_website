@@ -359,7 +359,7 @@ export async function GET(request: NextRequest) {
         .lte('created_at', dayEnd.toISOString());
       
       const avgScore = dayScores?.length 
-        ? dayScores.reduce((sum, s) => sum + (s.score || 0), 0) / dayScores.length 
+        ? dayScores.reduce((sum, s) => sum + (Number(s.score) || 0), 0) / dayScores.length 
         : 0;
       avgScores.push(parseFloat(avgScore.toFixed(2)));
       
@@ -559,24 +559,37 @@ export async function GET(request: NextRequest) {
       sourceMap.set(source, existing);
     });
     
-    // Get scores for these leads
-    const leadIds = leads?.map(l => String(l.id)) || [];
-    if (leadIds.length > 0) {
-      const { data: scores } = await supabase
-        .from('lead_scores')
-        .select('user_id, score')
-        .in('lead_id', leadIds);
-      
-      scores?.forEach(score => {
-        const lead = leads?.find(l => String(l.id) === score.user_id);
-        if (lead) {
-          const source = lead.source || 'unknown';
-          const existing = sourceMap.get(source);
-          if (existing) {
-            existing.totalScore += score.score || 0;
-          }
+    // Get scores for these leads - match by email or user_id
+    if (leads && leads.length > 0) {
+      const leadEmails = leads.map(l => l.email).filter(Boolean);
+      if (leadEmails.length > 0) {
+        const { data: profiles } = await supabase
+          .from('profiles')
+          .select('id, email')
+          .in('email', leadEmails);
+        
+        if (profiles) {
+          const profileIds = profiles.map(p => p.id);
+          const { data: scores } = await supabase
+            .from('lead_scores')
+            .select('user_id, score')
+            .in('user_id', profileIds);
+          
+          scores?.forEach(score => {
+            const profile = profiles.find(p => p.id === score.user_id);
+            if (profile) {
+              const lead = leads.find(l => l.email === profile.email);
+              if (lead) {
+                const source = lead.source || 'unknown';
+                const existing = sourceMap.get(source);
+                if (existing) {
+                  existing.totalScore += Number(score.score) || 0;
+                }
+              }
+            }
+          });
         }
-      });
+      }
     }
     
     const lead_sources = Array.from(sourceMap.entries())

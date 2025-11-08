@@ -7,6 +7,7 @@ import { Download, Plus, Users, Search, Filter, ChevronLeft, ChevronRight } from
 import { Select, Slider } from '@/components/ui'
 import { LeadCard, LeadCardSkeleton } from './_components/LeadCard'
 import { LeadsTable } from './_components/LeadsTable'
+import { ExportModal } from './_components/ExportModal'
 
 interface LeadFilters {
   page: number
@@ -88,6 +89,7 @@ export default function BuilderLeadsPage() {
   })
   const [view, setView] = useState<'grid' | 'table'>('grid')
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false)
+  const [showExportModal, setShowExportModal] = useState(false)
 
   const { data: leadsData, isLoading } = useQuery({
     queryKey: ['leads', filters],
@@ -120,7 +122,10 @@ export default function BuilderLeadsPage() {
           <Link href="/builder/leads/pipeline" className="px-3 py-2 border border-border rounded text-sm hover:bg-muted/40 transition-colors">
             Pipeline
           </Link>
-          <button className="px-3 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded text-sm inline-flex items-center gap-2">
+          <button 
+            onClick={() => setShowExportModal(true)}
+            className="px-3 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded text-sm inline-flex items-center gap-2 transition-colors"
+          >
             <Download className="w-4 h-4" />
             Export
           </button>
@@ -358,6 +363,14 @@ export default function BuilderLeadsPage() {
             List Your First Property
           </Link>
         </div>
+      )}
+      
+      {/* Export Modal */}
+      {showExportModal && (
+        <ExportModal
+          filters={filters}
+          onClose={() => setShowExportModal(false)}
+        />
       )}
     </main>
   )

@@ -197,39 +197,169 @@ export async function GET(request: NextRequest) {
     }
     
     // =============================================
-    // FETCH LEAD SCORES WITH FILTERS
+    // FETCH LEADS FOR BUILDER (with builder_id filter)
     // =============================================
     
-    let query = supabase
-      .from('lead_scores')
-      .select('*');
+    // First, get all leads for this builder from the leads table
+    let leadsQuery = supabase
+      .from('leads')
+      .select('id, email, created_at, builder_id')
+      .eq('builder_id', user.id);
     
-    if (categoryFilter) {
-      query = query.eq('category', categoryFilter);
-    }
+    // Apply date filters if needed
+    // Note: We'll filter by score after joining with lead_scores
     
-    if (scoreMin) {
-      query = query.gte('score', parseFloat(scoreMin));
-    }
+    const { data: builderLeads, error: leadsError } = await leadsQuery;
     
-    if (scoreMax) {
-      query = query.lte('score', parseFloat(scoreMax));
-    }
-    
-    const { data: leadScores, error: fetchError } = await query;
-    
-    if (fetchError) {
-      console.error('[API/Export] Fetch error:', fetchError);
+    if (leadsError) {
+      console.error('[API/Export] Leads fetch error:', leadsError);
       return NextResponse.json(
         { error: 'Failed to fetch leads' },
         { status: 500 }
       );
     }
     
-    if (!leadScores || leadScores.length === 0) {
+    if (!builderLeads || builderLeads.length === 0) {
       return NextResponse.json(
         { error: 'No leads found to export' },
         { status: 404 }
+      );
+    }
+    
+    // Get user_ids from profiles for these leads (using email)
+    const leadEmails = builderLeads.map(l => l.email).filter(Boolean);
+    
+    if (leadEmails.length === 0) {
+      return NextResponse.json(
+        { error: 'No valid lead emails found' },
+        { status: 404 }
+      );
+    }
+    
+    // Get user profiles for these emails
+    const { data: userProfiles, error: profilesError } = await supabase
+      .from('profiles')
+      .select('id, email')
+      .in('email', leadEmails);
+    
+    if (profilesError) {
+      console.error('[API/Export] Profiles fetch error:', profilesError);
+      // Continue with basic export even if profiles fail
+    }
+    
+    // Create a map of email -> user_id
+    const emailToUserId = new Map<string, string>();
+    (userProfiles || []).forEach(profile => {
+      if (profile.email) {
+        emailToUserId.set(profile.email, profile.id);
+      }
+    });
+    
+    // Get user_ids
+    const userIds = Array.from(emailToUserId.values());
+    
+    if (userIds.length === 0) {
+      // If no user_ids found, return basic lead data without scores
+      console.warn('[API/Export] No user_ids found, exporting basic lead data');
+    }
+    
+    // Fetch lead_scores for these user_ids
+    let scoresQuery = supabase
+      .from('lead_scores')
+      .select('*');
+    
+    if (userIds.length > 0) {
+      scoresQuery = scoresQuery.in('user_id', userIds);
+    } else {
+      // If no user_ids, return empty result set (will be handled below)
+      scoresQuery = scoresQuery.eq('user_id', '00000000-0000-0000-0000-000000000000'); // Dummy UUID that won't match
+    }
+    
+    if (categoryFilter) {
+      scoresQuery = scoresQuery.eq('category', categoryFilter);
+    }
+    
+    if (scoreMin) {
+      scoresQuery = scoresQuery.gte('score', parseFloat(scoreMin));
+    }
+    
+    if (scoreMax) {
+      scoresQuery = scoresQuery.lte('score', parseFloat(scoreMax));
+    }
+    
+    const { data: leadScores, error: scoresError } = await scoresQuery;
+    
+    if (scoresError && userIds.length > 0) {
+      console.error('[API/Export] Lead scores fetch error:', scoresError);
+      // Continue with basic export even if scores fail
+    }
+    
+    // Create a map of user_id -> lead_score
+    const userIdToScore = new Map<string, any>();
+    (leadScores || []).forEach(score => {
+      userIdToScore.set(score.user_id, score);
+    });
+    
+    // Create a map of email -> lead (from builderLeads)
+    const emailToLead = new Map<string, any>();
+    builderLeads.forEach(lead => {
+      if (lead.email) {
+        emailToLead.set(lead.email, lead);
+      }
+    });
+    
+    // Combine data: for each lead, get its score if available
+    const combinedLeadScores = builderLeads.map(lead => {
+      const userId = emailToUserId.get(lead.email || '');
+      const score = userId ? userIdToScore.get(userId) : null;
+      
+      if (score) {
+        return {
+          ...score,
+          lead_id: lead.id,
+          lead_email: lead.email,
+          lead_created_at: lead.created_at,
+        };
+      } else {
+        // Return basic structure even without score
+        return {
+          user_id: userId || null,
+          score: 0,
+          category: 'Low Quality',
+          budget_alignment_score: 0,
+          engagement_score: 0,
+          property_fit_score: 0,
+          time_investment_score: 0,
+          contact_intent_score: 0,
+          recency_score: 0,
+          created_at: lead.created_at,
+          updated_at: lead.created_at,
+          lead_id: lead.id,
+          lead_email: lead.email,
+          lead_created_at: lead.created_at,
+        };
+      }
+    }).filter(score => {
+      // Apply filters
+      if (categoryFilter && score.category !== categoryFilter) return false;
+      if (scoreMin && (score.score || 0) < parseFloat(scoreMin)) return false;
+      if (scoreMax && (score.score || 0) > parseFloat(scoreMax)) return false;
+      return true;
+    });
+    
+    if (combinedLeadScores.length === 0) {
+      return NextResponse.json(
+        { error: 'No leads match the selected filters' },
+        { status: 404 }
+      );
+    }
+    
+    // Safety limit: prevent exporting too many leads at once (could cause timeout)
+    const MAX_EXPORT_LIMIT = 10000;
+    if (combinedLeadScores.length > MAX_EXPORT_LIMIT) {
+      return NextResponse.json(
+        { error: `Too many leads to export (${combinedLeadScores.length}). Please apply filters to reduce the number of leads. Maximum: ${MAX_EXPORT_LIMIT}` },
+        { status: 400 }
       );
     }
     
@@ -238,36 +368,42 @@ export async function GET(request: NextRequest) {
     // =============================================
     
     const enrichedLeads = await Promise.all(
-      leadScores.map(async (leadScore: any) => {
+      combinedLeadScores.map(async (leadScore: any) => {
         try {
-          const userId = leadScore.user_id;
+          const userId = leadScore.user_id || (leadScore.lead_email ? emailToUserId.get(leadScore.lead_email || '') : null);
           
           // Fetch user profile (use maybeSingle to handle missing data)
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('email, full_name, phone')
-            .eq('id', userId)
-            .maybeSingle();
+          const { data: profile } = userId
+            ? await supabase
+                .from('profiles')
+                .select('email, full_name, phone')
+                .eq('id', userId)
+                .maybeSingle()
+            : { data: null };
           
           // Fetch preferences (use maybeSingle to handle missing data)
-          const { data: preferences } = await supabase
-            .from('user_preferences')
-            .select('budget_min, budget_max, preferred_location, preferred_property_type')
-            .eq('user_id', userId)
-            .maybeSingle();
+          const { data: preferences } = userId
+            ? await supabase
+                .from('user_preferences')
+                .select('budget_min, budget_max, preferred_location, preferred_property_type')
+                .eq('user_id', userId)
+                .maybeSingle()
+            : { data: null };
           
           // Fetch behavior stats
-          const { data: behaviors } = await supabase
-            .from('user_behavior')
-            .select('behavior_type, timestamp')
-            .eq('user_id', userId)
-            .order('timestamp', { ascending: false });
+          const { data: behaviors } = userId
+            ? await supabase
+                .from('user_behavior')
+                .select('behavior_type, timestamp')
+                .eq('user_id', userId)
+                .order('timestamp', { ascending: false })
+            : { data: null };
           
           // Fetch interactions
           const { data: interactions } = await supabase
             .from('lead_interactions')
             .select('*')
-            .eq('lead_id', String(userId))
+            .eq('lead_id', String(leadScore.lead_id || ''))
             .eq('builder_id', user.id);
           
           const totalViews = behaviors?.filter(b => b.behavior_type === 'property_view').length || 0;
@@ -276,12 +412,18 @@ export async function GET(request: NextRequest) {
             ? Math.floor((Date.now() - new Date(lastActivity).getTime()) / (1000 * 60 * 60 * 24))
             : 999;
           
+          // Get lead email from leadScore or from the lead record
+          const leadEmail = leadScore.lead_email || profile?.email || '';
+          
+          // Get lead record to access original lead data
+          const leadRecord = emailToLead.get(leadEmail);
+          
           return {
-            id: userId,
-            email: profile?.email || '',
-            full_name: profile?.full_name || 'Unknown',
-            phone: profile?.phone || null,
-            created_at: leadScore.created_at,
+            id: userId || leadRecord?.id || '',
+            email: leadEmail,
+            full_name: profile?.full_name || leadRecord?.name || 'Unknown',
+            phone: profile?.phone || leadRecord?.phone || null,
+            created_at: leadScore.lead_created_at || leadScore.created_at || leadRecord?.created_at,
             
             score: Number(leadScore.score) || 0,
             category: leadScore.category || 'Unknown',
@@ -306,12 +448,15 @@ export async function GET(request: NextRequest) {
         } catch (error) {
           console.error('[API/Export] Error enriching lead:', error);
           // Return basic data if enrichment fails
+          const leadEmail = leadScore.lead_email || '';
+          const leadRecord = emailToLead.get(leadEmail);
+          
           return {
-            id: leadScore.user_id,
-            email: '',
-            full_name: 'Unknown',
-            phone: null,
-            created_at: leadScore.created_at,
+            id: leadScore.user_id || leadRecord?.id || '',
+            email: leadEmail,
+            full_name: leadRecord?.name || 'Unknown',
+            phone: leadRecord?.phone || null,
+            created_at: leadScore.lead_created_at || leadScore.created_at || leadRecord?.created_at,
             score: Number(leadScore.score) || 0,
             category: leadScore.category || 'Unknown',
             budget_min: null,
@@ -437,57 +582,189 @@ export async function POST(request: NextRequest) {
       filters = {},
     } = body;
     
-    // Build query with all filters
-    let query = supabase
-      .from('lead_scores')
-      .select('*');
+    // =============================================
+    // FETCH LEADS FOR BUILDER (with builder_id filter)
+    // =============================================
     
-    // Apply filters
-    if (filters.category) query = query.eq('category', filters.category);
-    if (filters.score_min) query = query.gte('score', filters.score_min);
-    if (filters.score_max) query = query.lte('score', filters.score_max);
-    if (filters.created_after) query = query.gte('created_at', filters.created_after);
-    if (filters.created_before) query = query.lte('created_at', filters.created_before);
+    // First, get all leads for this builder from the leads table
+    let leadsQuery = supabase
+      .from('leads')
+      .select('id, email, created_at, builder_id, name, phone')
+      .eq('builder_id', user.id);
     
-    // Execute query
-    const { data: leadScores, error: fetchError } = await query;
+    // Apply date filters
+    if (filters.created_after) {
+      leadsQuery = leadsQuery.gte('created_at', filters.created_after);
+    }
+    if (filters.created_before) {
+      leadsQuery = leadsQuery.lte('created_at', filters.created_before);
+    }
     
-    if (fetchError) {
+    const { data: builderLeads, error: leadsError } = await leadsQuery;
+    
+    if (leadsError) {
+      console.error('[API/Export/POST] Leads fetch error:', leadsError);
       return NextResponse.json({ error: 'Failed to fetch leads' }, { status: 500 });
     }
     
-    if (!leadScores || leadScores.length === 0) {
+    if (!builderLeads || builderLeads.length === 0) {
       return NextResponse.json({ error: 'No leads found to export' }, { status: 404 });
+    }
+    
+    // Get user_ids from profiles for these leads (using email)
+    const leadEmails = builderLeads.map(l => l.email).filter(Boolean);
+    
+    if (leadEmails.length === 0) {
+      return NextResponse.json({ error: 'No valid lead emails found' }, { status: 404 });
+    }
+    
+    // Get user profiles for these emails
+    const { data: userProfiles, error: profilesError } = await supabase
+      .from('profiles')
+      .select('id, email')
+      .in('email', leadEmails);
+    
+    if (profilesError) {
+      console.error('[API/Export/POST] Profiles fetch error:', profilesError);
+    }
+    
+    // Create a map of email -> user_id
+    const emailToUserId = new Map<string, string>();
+    (userProfiles || []).forEach(profile => {
+      if (profile.email) {
+        emailToUserId.set(profile.email, profile.id);
+      }
+    });
+    
+    // Get user_ids
+    const userIds = Array.from(emailToUserId.values());
+    
+    // Fetch lead_scores for these user_ids
+    let scoresQuery = supabase
+      .from('lead_scores')
+      .select('*');
+    
+    if (userIds.length > 0) {
+      scoresQuery = scoresQuery.in('user_id', userIds);
+    } else {
+      // If no user_ids, return empty result set (will be handled below)
+      scoresQuery = scoresQuery.eq('user_id', '00000000-0000-0000-0000-000000000000'); // Dummy UUID that won't match
+    }
+    
+    // Apply filters
+    if (filters.category) scoresQuery = scoresQuery.eq('category', filters.category);
+    if (filters.score_min) scoresQuery = scoresQuery.gte('score', filters.score_min);
+    if (filters.score_max) scoresQuery = scoresQuery.lte('score', filters.score_max);
+    
+    const { data: leadScores, error: scoresError } = await scoresQuery;
+    
+    if (scoresError && userIds.length > 0) {
+      console.error('[API/Export/POST] Lead scores fetch error:', scoresError);
+    }
+    
+    // Create a map of user_id -> lead_score
+    const userIdToScore = new Map<string, any>();
+    (leadScores || []).forEach(score => {
+      userIdToScore.set(score.user_id, score);
+    });
+    
+    // Create a map of email -> lead (from builderLeads)
+    const emailToLead = new Map<string, any>();
+    builderLeads.forEach(lead => {
+      if (lead.email) {
+        emailToLead.set(lead.email, lead);
+      }
+    });
+    
+    // Combine data: for each lead, get its score if available
+    const combinedLeadScores = builderLeads.map(lead => {
+      const userId = emailToUserId.get(lead.email || '');
+      const score = userId ? userIdToScore.get(userId) : null;
+      
+      if (score) {
+        return {
+          ...score,
+          lead_id: lead.id,
+          lead_email: lead.email,
+          lead_created_at: lead.created_at,
+        };
+      } else {
+        return {
+          user_id: userId || null,
+          score: 0,
+          category: 'Low Quality',
+          budget_alignment_score: 0,
+          engagement_score: 0,
+          property_fit_score: 0,
+          time_investment_score: 0,
+          contact_intent_score: 0,
+          recency_score: 0,
+          created_at: lead.created_at,
+          updated_at: lead.created_at,
+          lead_id: lead.id,
+          lead_email: lead.email,
+          lead_created_at: lead.created_at,
+        };
+      }
+    }).filter(score => {
+      // Apply filters
+      if (filters.category && score.category !== filters.category) return false;
+      if (filters.score_min && (score.score || 0) < filters.score_min) return false;
+      if (filters.score_max && (score.score || 0) > filters.score_max) return false;
+      return true;
+    });
+    
+    if (combinedLeadScores.length === 0) {
+      return NextResponse.json({ error: 'No leads match the selected filters' }, { status: 404 });
+    }
+    
+    // Safety limit: prevent exporting too many leads at once (could cause timeout)
+    const MAX_EXPORT_LIMIT = 10000;
+    if (combinedLeadScores.length > MAX_EXPORT_LIMIT) {
+      return NextResponse.json(
+        { error: `Too many leads to export (${combinedLeadScores.length}). Please apply filters to reduce the number of leads. Maximum: ${MAX_EXPORT_LIMIT}` },
+        { status: 400 }
+      );
     }
     
     // Enrich data (same as GET handler)
     const enrichedLeads = await Promise.all(
-      leadScores.map(async (leadScore: any) => {
+      combinedLeadScores.map(async (leadScore: any) => {
         try {
-          const userId = leadScore.user_id;
+          const userId = leadScore.user_id || (leadScore.lead_email ? emailToUserId.get(leadScore.lead_email || '') : null);
           
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('email, full_name, phone')
-            .eq('id', userId)
-            .maybeSingle();
+          // Fetch user profile (use maybeSingle to handle missing data)
+          const { data: profile } = userId
+            ? await supabase
+                .from('profiles')
+                .select('email, full_name, phone')
+                .eq('id', userId)
+                .maybeSingle()
+            : { data: null };
           
-          const { data: preferences } = await supabase
-            .from('user_preferences')
-            .select('budget_min, budget_max, preferred_location, preferred_property_type')
-            .eq('user_id', userId)
-            .maybeSingle();
+          // Fetch preferences (use maybeSingle to handle missing data)
+          const { data: preferences } = userId
+            ? await supabase
+                .from('user_preferences')
+                .select('budget_min, budget_max, preferred_location, preferred_property_type')
+                .eq('user_id', userId)
+                .maybeSingle()
+            : { data: null };
           
-          const { data: behaviors } = await supabase
-            .from('user_behavior')
-            .select('behavior_type, timestamp')
-            .eq('user_id', userId)
-            .order('timestamp', { ascending: false });
+          // Fetch behavior stats
+          const { data: behaviors } = userId
+            ? await supabase
+                .from('user_behavior')
+                .select('behavior_type, timestamp')
+                .eq('user_id', userId)
+                .order('timestamp', { ascending: false })
+            : { data: null };
           
+          // Fetch interactions
           const { data: interactions } = await supabase
             .from('lead_interactions')
             .select('*')
-            .eq('lead_id', String(userId))
+            .eq('lead_id', String(leadScore.lead_id || ''))
             .eq('builder_id', user.id);
           
           const totalViews = behaviors?.filter(b => b.behavior_type === 'property_view').length || 0;
@@ -496,22 +773,33 @@ export async function POST(request: NextRequest) {
             ? Math.floor((Date.now() - new Date(lastActivity).getTime()) / (1000 * 60 * 60 * 24))
             : 999;
           
+          // Get lead email from leadScore or from the lead record
+          const leadEmail = leadScore.lead_email || profile?.email || '';
+          
+          // Get lead record to access original lead data
+          const leadRecord = emailToLead.get(leadEmail);
+          
           return {
-            id: userId,
-            email: profile?.email || '',
-            full_name: profile?.full_name || 'Unknown',
-            phone: profile?.phone || null,
-            created_at: leadScore.created_at,
+            id: userId || leadRecord?.id || '',
+            email: leadEmail,
+            full_name: profile?.full_name || leadRecord?.name || 'Unknown',
+            phone: profile?.phone || leadRecord?.phone || null,
+            created_at: leadScore.lead_created_at || leadScore.created_at || leadRecord?.created_at,
+            
             score: Number(leadScore.score) || 0,
             category: leadScore.category || 'Unknown',
+            
             budget_min: preferences?.budget_min || null,
             budget_max: preferences?.budget_max || null,
             preferred_location: preferences?.preferred_location || null,
             preferred_property_type: preferences?.preferred_property_type || null,
+            
             total_views: totalViews,
             total_interactions: interactions?.length || 0,
             last_activity: lastActivity,
             days_since_last_activity: daysSinceLastActivity,
+            
+            // Score breakdown
             budget_alignment_score: Number(leadScore.budget_alignment_score) || 0,
             engagement_score: Number(leadScore.engagement_score) || 0,
             property_fit_score: Number(leadScore.property_fit_score) || 0,
@@ -519,14 +807,17 @@ export async function POST(request: NextRequest) {
             recency_score: Number(leadScore.recency_score) || 0,
           };
         } catch (error) {
-          console.error('[API/Export] Error enriching lead:', error);
+          console.error('[API/Export/POST] Error enriching lead:', error);
           // Return basic data if enrichment fails
+          const leadEmail = leadScore.lead_email || '';
+          const leadRecord = emailToLead.get(leadEmail);
+          
           return {
-            id: leadScore.user_id,
-            email: '',
-            full_name: 'Unknown',
-            phone: null,
-            created_at: leadScore.created_at,
+            id: leadScore.user_id || leadRecord?.id || '',
+            email: leadEmail,
+            full_name: leadRecord?.name || 'Unknown',
+            phone: leadRecord?.phone || null,
+            created_at: leadScore.lead_created_at || leadScore.created_at || leadRecord?.created_at,
             score: Number(leadScore.score) || 0,
             category: leadScore.category || 'Unknown',
             budget_min: null,

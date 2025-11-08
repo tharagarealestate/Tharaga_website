@@ -320,12 +320,12 @@ export async function GET(request: NextRequest) {
     
     // Convert Buffer to proper format for NextResponse
     let responseBody: BodyInit;
-    if (Buffer.isBuffer(fileContent)) {
+    if (format === 'excel' && Buffer.isBuffer(fileContent)) {
       // For Excel files (Buffer), convert to ArrayBuffer
       responseBody = new Uint8Array(fileContent);
     } else {
       // For CSV files (string), use as-is
-      responseBody = fileContent;
+      responseBody = fileContent as string;
     }
     
     return new NextResponse(responseBody, {
@@ -487,12 +487,12 @@ export async function POST(request: NextRequest) {
     
     // Convert Buffer to proper format for NextResponse
     let responseBody: BodyInit;
-    if (Buffer.isBuffer(fileContent)) {
+    if (format === 'excel' && Buffer.isBuffer(fileContent)) {
       // For Excel files (Buffer), convert to ArrayBuffer
       responseBody = new Uint8Array(fileContent);
     } else {
       // For CSV files (string), use as-is
-      responseBody = fileContent;
+      responseBody = fileContent as string;
     }
     
     return new NextResponse(responseBody, {

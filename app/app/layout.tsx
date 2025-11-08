@@ -27,6 +27,43 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <script dangerouslySetInnerHTML={{ __html: `window.AUTH_HIDE_HEADER=false;window.AUTH_OPEN_ON_LOAD=false;` }} />
         {/* Load role manager system */}
         <script src="/role-manager-v2.js" defer></script>
+        {/* PREVENT DARK DROPDOWN - Inject light theme styles BEFORE auth system */}
+        {/* This prevents auth system's injectStyles() from injecting dark #0b0b0b styles */}
+        <style id="thg-auth-styles" dangerouslySetInnerHTML={{ __html: `
+          /* Light theme auth styles - prevents dark dropdown injection */
+          .thg-auth-wrap{ display:flex; align-items:center; position:relative; z-index:2147483000; }
+          header .thg-auth-wrap:not(#site-header-auth-container){ position:absolute; top:14px; right:16px; }
+          @media (min-width:1024px){ header .thg-auth-wrap:not(#site-header-auth-container){ top:16px; right:24px; } }
+          .thg-auth-wrap.is-fixed{ position:fixed; top:14px; right:16px; }
+          .thg-auth-btn{ appearance:none;background:transparent;color:#1e40af;border:1px solid rgba(30,64,175,.20); border-radius:9999px;padding:8px 14px;font-weight:600;cursor:pointer;line-height:1;white-space:nowrap;display:inline-flex;align-items:center;gap:8px; transition:background .15s ease, border-color .15s ease, box-shadow .15s ease; }
+          .thg-auth-btn:hover{background:rgba(30,64,175,.15)}
+          .thg-auth-btn:focus-visible{ outline:2px solid #7dd3fc; outline-offset:2px; }
+          .thg-auth-btn .thg-initial{ width:22px;height:22px;border-radius:9999px;background:#1e40af;color:#fff;display:none;align-items:center;justify-content:center;font-weight:700;font-size:11px; }
+          .thg-auth-btn.is-auth .thg-initial{ display:inline-flex; }
+          .thg-auth-btn.is-auth::after{ content:""; display:inline-block; width:0; height:0; border-left:5px solid transparent; border-right:5px solid transparent; border-top:6px solid #1e40af; transition:transform .15s ease; transform-origin:center; }
+          .thg-auth-btn[aria-expanded="true"].is-auth::after{ transform:rotate(180deg); }
+          .thg-spinner{ width:14px;height:14px;border-radius:9999px;border:2px solid rgba(30,64,175,.35);border-top-color:#1e40af; animation:thgspin .8s linear infinite; }
+          @keyframes thgspin{ to{ transform:rotate(360deg); } }
+          /* Account menu - LIGHT THEME (override dark #0b0b0b) */
+          .thg-auth-menu{ position:absolute;top:calc(100% + 10px);right:0;min-width:280px;background:linear-gradient(180deg, rgba(255,255,255,0.95), rgba(248,250,252,0.98));backdrop-filter: blur(16px) saturate(1.5);-webkit-backdrop-filter: blur(16px) saturate(1.5);color:#111; border:1px solid rgba(30,64,175,.12);border-radius:12px;padding:12px 8px 8px;box-shadow:0 18px 40px rgba(30,64,175,.16); visibility:hidden; opacity:0; transform:translateY(-6px) scale(.98); transform-origin:top right; pointer-events:none; transition:opacity .16s ease, transform .16s ease, visibility 0s linear .16s; z-index:2147483001; }
+          .thg-auth-menu::before{ content:""; position:absolute; top:0; left:0; right:0; height:3px; border-radius:12px 12px 0 0; background:linear-gradient(90deg, #d4af37, #1e40af); }
+          .thg-auth-menu[aria-hidden="false"]{ visibility:visible; opacity:1; transform:translateY(0) scale(1); pointer-events:auto; transition:opacity .16s ease, transform .16s ease, visibility 0s linear 0s; }
+          .thg-auth-item{ display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;text-decoration:none;color:#111;cursor:pointer; }
+          .thg-auth-item:hover{background:linear-gradient(90deg, rgba(30,64,175,.12), rgba(59,130,246,.06));color:#1e40af;}
+          .thg-auth-item[tabindex]{outline:none}
+          .thg-auth-item.is-header{ cursor:default;font-weight:700;opacity:1; color:#111; }
+          .thg-auth-item.is-header:hover{background:transparent}
+          .thg-auth-sep{ height:1px;background:rgba(30,64,175,.14);margin:6px 8px;border-radius:1px; }
+          .thg-initial-lg{ width:28px;height:28px;border-radius:9999px;background:#1e40af;color:#fff;display:inline-flex;align-items:center;justify-content:center;font-weight:700;font-size:12px; }
+          .thg-name-wrap{ display:flex; flex-direction:column; min-width:0; }
+          .thg-name{ overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:190px; color:#111; }
+          .thg-email{ opacity:.7; font-size:12px; overflow:hidden;text-overflow:ellipsis;white-space:nowrap; max-width:200px; color:#64748b; }
+          @media (max-width:480px){
+            .thg-auth-wrap{ top:10px; right:10px; }
+            .thg-auth-modal{ width:calc(100% - 16px); margin:0 8px; }
+            .thg-auth-menu{ right:8px; }
+          }
+        ` }} />
         {/* Load snippets auth system (inline from snippets/index.html) */}
         <script src="/snippets/" type="text/html" id="snippets-auth-src" style={{display:'none'}} />
         <script dangerouslySetInnerHTML={{ __html: `

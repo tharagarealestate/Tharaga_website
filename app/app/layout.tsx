@@ -117,7 +117,19 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           @supports not (backdrop-filter: blur(20px)) {
             header.nav { background: rgba(255,255,255,0.95); }
           }
-          header.nav .inner { max-width:1100px; margin:0 auto; padding:10px 16px; display:flex; align-items:center; justify-content:space-between; gap:10px; position:relative; padding-right: clamp(130px, 10vw, 200px) }
+          header.nav .inner { 
+            max-width:1100px; 
+            margin:0 auto; 
+            padding:10px 16px; 
+            display:flex; 
+            align-items:center; 
+            justify-content:space-between; 
+            gap:10px; 
+            position:relative; 
+            padding-right: clamp(130px, 10vw, 200px);
+            /* Ensure proper alignment on all pages - match homepage exactly */
+            flex-wrap: nowrap;
+          }
           /* Brand row - flex container for brand + pill - EXACT GAP MATCH */
           header.nav .inner .row { display:flex; align-items:center; gap:10px }
           .brand { font-family: var(--font-display); font-weight:800; letter-spacing:.2px; font-size:26px }

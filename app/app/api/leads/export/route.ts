@@ -8,6 +8,10 @@ import { createClient } from '@/lib/supabase/server';
 import { cookies } from 'next/headers';
 import ExcelJS from 'exceljs';
 
+// ExcelJS requires Node.js runtime, not edge
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
+
 // =============================================
 // TYPES
 // =============================================
@@ -314,11 +318,24 @@ export async function GET(request: NextRequest) {
     // RETURN FILE
     // =============================================
     
-    return new NextResponse(fileContent, {
+    // Convert Buffer to proper format for NextResponse
+    let responseBody: BodyInit;
+    if (Buffer.isBuffer(fileContent)) {
+      // For Excel files (Buffer), convert to ArrayBuffer
+      responseBody = new Uint8Array(fileContent);
+    } else {
+      // For CSV files (string), use as-is
+      responseBody = fileContent;
+    }
+    
+    return new NextResponse(responseBody, {
+      status: 200,
       headers: {
         'Content-Type': contentType,
         'Content-Disposition': `attachment; filename="${filename}"`,
-        'Cache-Control': 'no-cache',
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0',
       },
     });
     
@@ -468,11 +485,24 @@ export async function POST(request: NextRequest) {
       filename = `leads-custom-export-${Date.now()}.csv`;
     }
     
-    return new NextResponse(fileContent, {
+    // Convert Buffer to proper format for NextResponse
+    let responseBody: BodyInit;
+    if (Buffer.isBuffer(fileContent)) {
+      // For Excel files (Buffer), convert to ArrayBuffer
+      responseBody = new Uint8Array(fileContent);
+    } else {
+      // For CSV files (string), use as-is
+      responseBody = fileContent;
+    }
+    
+    return new NextResponse(responseBody, {
+      status: 200,
       headers: {
         'Content-Type': contentType,
         'Content-Disposition': `attachment; filename="${filename}"`,
-        'Cache-Control': 'no-cache',
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0',
       },
     });
     

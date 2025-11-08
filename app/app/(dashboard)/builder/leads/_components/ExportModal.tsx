@@ -70,14 +70,32 @@ export function ExportModal({ filters, onClose }: ExportModalProps) {
       if (filters.score_min) params.set('score_min', String(filters.score_min))
       if (filters.score_max) params.set('score_max', String(filters.score_max))
       
-      // Trigger download
+      // Use fetch API to download the file properly
       const url = `/api/leads/export?${params.toString()}`
+      const response = await fetch(url, {
+        method: 'GET',
+        credentials: 'include',
+      })
+      
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({ error: 'Failed to export' }))
+        throw new Error(error.error || 'Failed to export leads')
+      }
+      
+      // Get the blob from response
+      const blob = await response.blob()
+      
+      // Create download link
+      const downloadUrl = window.URL.createObjectURL(blob)
       const link = document.createElement('a')
-      link.href = url
-      link.download = `leads-export-${Date.now()}.${format === 'excel' ? 'xls' : 'csv'}`
+      link.href = downloadUrl
+      link.download = `leads-export-${Date.now()}.${format === 'excel' ? 'xlsx' : 'csv'}`
       document.body.appendChild(link)
       link.click()
+      
+      // Cleanup
       document.body.removeChild(link)
+      window.URL.revokeObjectURL(downloadUrl)
       
       // Close modal after a short delay
       setTimeout(() => {
@@ -85,8 +103,7 @@ export function ExportModal({ filters, onClose }: ExportModalProps) {
       }, 500)
     } catch (error) {
       console.error('Export failed:', error)
-      alert('Failed to export leads. Please try again.')
-    } finally {
+      alert(`Failed to export leads: ${error instanceof Error ? error.message : 'Please try again.'}`)
       setIsExporting(false)
     }
   }

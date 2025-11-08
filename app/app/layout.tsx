@@ -589,6 +589,22 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                    visibility: hidden !important;
                    opacity: 0 !important;
                  }
+                 
+                 /* FORCE HIDE LOGOUT CONFIRMATION DIALOG - Complete removal */
+                 .thg-confirm,
+                 .thg-confirm[aria-hidden="false"],
+                 .thg-confirm[aria-hidden="true"] {
+                   display: none !important;
+                   visibility: hidden !important;
+                   opacity: 0 !important;
+                   pointer-events: none !important;
+                   z-index: -9999 !important;
+                 }
+                 .thg-confirm-card {
+                   display: none !important;
+                   visibility: hidden !important;
+                   opacity: 0 !important;
+                 }
                ` }}
                />
         <script dangerouslySetInnerHTML={{ __html: `
@@ -663,7 +679,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                  (function() {
                    'use strict';
                    
-                   // REMOVE ALL MODALS IMMEDIATELY
+                   // REMOVE ALL MODALS AND CONFIRMATION DIALOGS IMMEDIATELY
                    function removeAllModals() {
                      // Remove all modal overlays
                      const overlays = document.querySelectorAll('.thg-auth-overlay');
@@ -678,6 +694,24 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                        modal.style.visibility = 'hidden';
                        modal.style.opacity = '0';
                        modal.remove();
+                     });
+                     
+                     // Remove logout confirmation dialogs
+                     const confirms = document.querySelectorAll('.thg-confirm');
+                     confirms.forEach(function(confirm) {
+                       confirm.style.display = 'none';
+                       confirm.style.visibility = 'hidden';
+                       confirm.style.opacity = '0';
+                       confirm.remove();
+                     });
+                     
+                     // Remove confirmation cards
+                     const confirmCards = document.querySelectorAll('.thg-confirm-card');
+                     confirmCards.forEach(function(card) {
+                       card.style.display = 'none';
+                       card.style.visibility = 'hidden';
+                       card.style.opacity = '0';
+                       card.remove();
                      });
                      
                      // Remove any modal parent elements

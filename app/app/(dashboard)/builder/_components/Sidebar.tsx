@@ -178,7 +178,7 @@ export function Sidebar() {
       submenu: [
         { href: '/builder/leads', label: 'All Leads' },
         { href: '/builder/leads/pipeline', label: 'Pipeline' },
-        { href: '/builder/leads/analytics', label: 'Analytics' },
+        { href: '/builder/analytics', label: 'Analytics' },
       ]
     },
     { href: '/builder/properties', label: 'Properties', icon: Building2, requiresPro: false, submenu: [

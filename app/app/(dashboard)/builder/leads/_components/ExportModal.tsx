@@ -78,8 +78,15 @@ export function ExportModal({ filters, onClose }: ExportModalProps) {
       })
       
       if (!response.ok) {
-        const error = await response.json().catch(() => ({ error: 'Failed to export' }))
-        throw new Error(error.error || 'Failed to export leads')
+        let errorMessage = 'Failed to export leads';
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.error || errorMessage;
+        } catch {
+          // If response is not JSON, use status text
+          errorMessage = `Export failed: ${response.status} ${response.statusText}`;
+        }
+        throw new Error(errorMessage);
       }
       
       // Get the blob from response

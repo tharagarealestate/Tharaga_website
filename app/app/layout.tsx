@@ -246,6 +246,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             top: auto !important;
             right: auto !important;
             transform: none !important;
+            margin-left: auto !important;
+            /* Ensure auth button is aligned to right corner like homepage */
+            justify-content: flex-end !important;
           }
           header.nav .thg-auth-wrap::before{
             content:"" !important; 

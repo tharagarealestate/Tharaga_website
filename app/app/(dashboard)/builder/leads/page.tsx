@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import Link from 'next/link'
 import { useQuery } from '@tanstack/react-query'
 import { Download, Plus, Users, Search, Filter, ChevronLeft, ChevronRight } from 'lucide-react'
@@ -98,6 +98,14 @@ export default function BuilderLeadsPage() {
   const pagination = leadsData?.pagination
   const stats = leadsData?.stats
   const count = leads.length
+
+  // Trigger sidebar refresh when leads data changes
+  useEffect(() => {
+    if (leadsData && !isLoading) {
+      // Dispatch custom event to refresh sidebar count
+      window.dispatchEvent(new CustomEvent('leadCountRefresh'))
+    }
+  }, [leadsData, isLoading])
 
   return (
     <main className="mx-auto max-w-7xl px-6 py-8 space-y-6">

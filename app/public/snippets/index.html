@@ -444,6 +444,16 @@ header .thg-auth-wrap:not(#site-header-auth-container){ position:absolute; top:1
     window.location.href = '/login' + (next ? '?next=' + encodeURIComponent(next) : '');
   }
   function closeAuthModal(ui){ /* No-op - modal removed */ }
+  
+  // Override window.authGate.openLoginModal and __thgOpenAuthModal to redirect instead
+  window.authGate.openLoginModal = function(opts) {
+    const next = opts?.next || location.pathname + location.search;
+    window.location.href = '/login' + (next ? '?next=' + encodeURIComponent(next) : '');
+  };
+  window.__thgOpenAuthModal = function(opts) {
+    const next = opts?.next || location.pathname + location.search;
+    window.location.href = '/login' + (next ? '?next=' + encodeURIComponent(next) : '');
+  };
   function openConfirm(ui){ ui.confirmEl.setAttribute('aria-hidden','false'); }
   // Broadcast current auth state (email only) to child iframes, sibling tabs, and embedded forms
   function broadcastAuth(user){

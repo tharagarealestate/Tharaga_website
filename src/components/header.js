@@ -108,8 +108,9 @@
           e.preventDefault();
           e.stopPropagation();
           
-          // Show professional login prompt
-          showLoginPrompt(portalType);
+      // Redirect to login page instead of showing modal
+      const next = newLink.getAttribute('href') || '/';
+      window.location.href = '/login?next=' + encodeURIComponent(next);
         } else {
           // User is authenticated - allow navigation
           // Let link interceptor handle it
@@ -121,8 +122,9 @@
     interceptHeaderLinks();
   };
   
-  // Professional login prompt function
-  function showLoginPrompt(portalType) {
+  // showLoginPrompt function REMOVED - redirects to /login instead
+  // This function is no longer needed - portal links redirect directly
+  function showLoginPrompt_DISABLED(portalType) {
     const portalName = portalType === 'builder' ? 'Builder Dashboard' : 'Buyer Dashboard';
     const portalIcon = portalType === 'builder' ? '🏗️' : '🏠';
     const portalDesc = portalType === 'builder' 

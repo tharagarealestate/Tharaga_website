@@ -83,11 +83,21 @@ const StaticHeaderHTML = memo(function StaticHeaderHTML() {
                 const authContainer = document.getElementById('site-header-auth-container');
                 
                 if (header && authContainer) {
+                  // Ensure container is always visible
+                  authContainer.style.display = 'flex';
+                  authContainer.style.visibility = 'visible';
+                  authContainer.style.opacity = '1';
+                  authContainer.style.alignItems = 'center';
+                  authContainer.style.gap = '12px';
+                  
                   // Make header position relative if needed for absolute positioning of auth wrap
                   const headerStyle = window.getComputedStyle(header);
                   if (headerStyle.position === 'static') {
                     header.style.position = 'relative';
                   }
+                  
+                  // Prevent auth system from hiding the container
+                  authContainer.setAttribute('data-thg-protected', 'true');
                 }
               }
               
@@ -97,6 +107,112 @@ const StaticHeaderHTML = memo(function StaticHeaderHTML() {
               } else {
                 ensureAuthContainer();
               }
+              
+              // Re-check periodically to ensure container stays visible
+              // This prevents the auth system from hiding it
+              setInterval(function() {
+                const authContainer = document.getElementById('site-header-auth-container');
+                if (authContainer) {
+                  const style = window.getComputedStyle(authContainer);
+                  if (style.display === 'none' || style.visibility === 'hidden' || style.opacity === '0') {
+                    authContainer.style.display = 'flex';
+                    authContainer.style.visibility = 'visible';
+                    authContainer.style.opacity = '1';
+                  }
+                }
+              }, 500);
+              
+              // Watch for auth system injection and ensure it's visible
+              const authObserver = new MutationObserver(function(mutations) {
+                const authContainer = document.getElementById('site-header-auth-container');
+                const authWrap = document.querySelector('header.nav .thg-auth-wrap');
+                const authBtn = document.querySelector('header.nav .thg-auth-btn');
+                
+                if (authContainer) {
+                  authContainer.style.display = 'flex';
+                  authContainer.style.visibility = 'visible';
+                  authContainer.style.opacity = '1';
+                  authContainer.style.alignItems = 'center';
+                  authContainer.style.gap = '12px';
+                }
+                
+                if (authWrap) {
+                  authWrap.style.display = 'flex';
+                  authWrap.style.visibility = 'visible';
+                  authWrap.style.opacity = '1';
+                  authWrap.style.alignItems = 'center';
+                  authWrap.style.gap = '12px';
+                }
+                
+                // Ensure auth button is visible and styled correctly
+                if (authBtn) {
+                  authBtn.style.display = 'inline-flex';
+                  authBtn.style.visibility = 'visible';
+                  authBtn.style.opacity = '1';
+                  authBtn.style.color = '#1e40af';
+                  authBtn.style.borderColor = 'rgba(30,64,175,.20)';
+                  authBtn.style.backgroundColor = 'rgba(30,64,175,.08)';
+                  
+                  // Ensure label text is visible and matches homepage
+                  const label = authBtn.querySelector('.thg-label');
+                  if (label) {
+                    label.style.color = '#1e40af';
+                    label.style.fontWeight = '600';
+                    // Ensure label has text (auth system sets it to "Login / Signup" when not authenticated)
+                    if (!label.textContent || label.textContent.trim() === '') {
+                      label.textContent = 'Login / Signup';
+                    }
+                    // Force label to be visible
+                    label.style.display = 'inline';
+                    label.style.visibility = 'visible';
+                    label.style.opacity = '1';
+                  }
+                  
+                  // Ensure button is properly aligned in flex layout
+                  authBtn.style.margin = '0';
+                  authBtn.style.verticalAlign = 'middle';
+                }
+              });
+              
+              const headerEl = document.getElementById('tharaga-static-header');
+              if (headerEl) {
+                authObserver.observe(headerEl, {
+                  childList: true,
+                  subtree: true,
+                  attributes: true,
+                  attributeFilter: ['style', 'class']
+                });
+              }
+              
+              // Also check periodically to ensure auth button stays visible
+              setInterval(function() {
+                const authBtn = document.querySelector('header.nav .thg-auth-btn');
+                const authContainer = document.getElementById('site-header-auth-container');
+                
+                if (authContainer) {
+                  const style = window.getComputedStyle(authContainer);
+                  if (style.display === 'none' || style.visibility === 'hidden' || parseFloat(style.opacity) < 0.1) {
+                    authContainer.style.display = 'flex';
+                    authContainer.style.visibility = 'visible';
+                    authContainer.style.opacity = '1';
+                  }
+                }
+                
+                if (authBtn) {
+                  const btnStyle = window.getComputedStyle(authBtn);
+                  if (btnStyle.display === 'none' || btnStyle.visibility === 'hidden' || parseFloat(btnStyle.opacity) < 0.1) {
+                    authBtn.style.display = 'inline-flex';
+                    authBtn.style.visibility = 'visible';
+                    authBtn.style.opacity = '1';
+                  }
+                  
+                  // Ensure label has text
+                  const label = authBtn.querySelector('.thg-label');
+                  if (label && (!label.textContent || label.textContent.trim() === '')) {
+                    label.textContent = 'Login / Signup';
+                  }
+                }
+              }, 300);
               
               // Portal menu update function (called by role manager)
               // Portal menu is ALWAYS VISIBLE - shows login prompt if user not authenticated

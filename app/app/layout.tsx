@@ -31,19 +31,39 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <script src="/snippets/" type="text/html" id="snippets-auth-src" style={{display:'none'}} />
         <script dangerouslySetInnerHTML={{ __html: `
           // Extract and execute scripts from snippets/index.html
+          // Ensure header is ready before auth system initializes
           (function(){
-            fetch('/snippets/').then(r=>r.text()).then(html=>{
-              const parser = new DOMParser();
-              const doc = parser.parseFromString(html, 'text/html');
-              const scripts = doc.querySelectorAll('script');
-              scripts.forEach(script => {
-                if (script.textContent.includes('__thgAuthInstalledV1')) {
-                  const newScript = document.createElement('script');
-                  newScript.textContent = script.textContent;
-                  document.head.appendChild(newScript);
-                }
-              });
-            }).catch(e => console.error('Failed to load auth:', e));
+            function loadAuthSystem() {
+              // Wait for header to be ready
+              const header = document.getElementById('tharaga-static-header');
+              const authContainer = document.getElementById('site-header-auth-container');
+              
+              if (!header || !authContainer) {
+                // Retry after a short delay
+                setTimeout(loadAuthSystem, 100);
+                return;
+              }
+              
+              fetch('/snippets/').then(r=>r.text()).then(html=>{
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(html, 'text/html');
+                const scripts = doc.querySelectorAll('script');
+                scripts.forEach(script => {
+                  if (script.textContent.includes('__thgAuthInstalledV1')) {
+                    const newScript = document.createElement('script');
+                    newScript.textContent = script.textContent;
+                    document.head.appendChild(newScript);
+                  }
+                });
+              }).catch(e => console.error('Failed to load auth:', e));
+            }
+            
+            // Start loading after DOM is ready
+            if (document.readyState === 'loading') {
+              document.addEventListener('DOMContentLoaded', loadAuthSystem);
+            } else {
+              loadAuthSystem();
+            }
           })();
         ` }} />
         {/* Static header styles from index.html - GLASSY PREMIUM BLUE */}
@@ -181,17 +201,58 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           }
           details.dropdown .menu .show-mobile-only{ display:none }
 
-          /* Auth button styling - Glassy header */
-          header.nav .thg-auth-wrap{ display:flex; align-items:center; gap:12px }
+          /* Auth button styling - Glassy header - EXACT MATCH TO HOMEPAGE */
+          /* Override auth system's absolute positioning - use flex layout instead */
+          header.nav .thg-auth-wrap,
+          header.nav #site-header-auth-container.thg-auth-wrap { 
+            display:flex !important; 
+            align-items:center !important; 
+            gap:12px !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+            position: relative !important;
+            top: auto !important;
+            right: auto !important;
+            transform: none !important;
+          }
           header.nav .thg-auth-wrap::before{
-            content:""; display:inline-block; width:1px; height:16px;
-            background:rgba(226,232,240,.6); border-radius:1px;
+            content:"" !important; 
+            display:inline-block !important; 
+            width:1px !important; 
+            height:16px !important;
+            background:rgba(226,232,240,.6) !important; 
+            border-radius:1px !important;
           }
           header.nav .thg-auth-btn{
             background:rgba(30,64,175,.08) !important;
             color:#1e40af !important;
             border-color:rgba(30,64,175,.20) !important;
             font-weight:600 !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+            display: inline-flex !important;
+            /* Override auth system's white text - match homepage exactly */
+            color: var(--primary) !important;
+            border: 1px solid rgba(30,64,175,.20) !important;
+          }
+          /* Override auth system default white text styles - match homepage exactly */
+          header.nav .thg-auth-btn .thg-label {
+            color: var(--primary) !important;
+            font-weight: 600 !important;
+          }
+          /* Ensure auth button text is always visible and matches homepage */
+          header.nav .thg-auth-btn,
+          header.nav .thg-auth-btn * {
+            color: var(--primary) !important;
+          }
+          /* Override auth system's white border */
+          header.nav .thg-auth-btn {
+            border-color: rgba(30,64,175,.20) !important;
+          }
+          /* Spinner should also match */
+          header.nav .thg-auth-btn .thg-spinner {
+            border-color: rgba(30,64,175,.35) !important;
+            border-top-color: var(--primary) !important;
           }
           header.nav .thg-auth-btn:hover{
             background:rgba(30,64,175,.15) !important;
@@ -199,7 +260,21 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           }
           header.nav .thg-auth-btn.is-auth::after{ border-top-color:#1e40af !important }
           header.nav .divider{ background:rgba(226,232,240,.6) }
-          #site-header-auth-container{ display:flex; align-items:center; gap:12px }
+          /* Prevent auth container from being hidden */
+          header.nav #site-header-auth-container,
+          header.nav .thg-auth-wrap {
+            display: flex !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+          }
+          #site-header-auth-container{ 
+            display:flex !important; 
+            align-items:center !important; 
+            gap:12px !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+            position: relative !important;
+          }
 
           /* Mobile adjustments - exact match to homepage */
           @media (max-width: 1080px) {
@@ -241,9 +316,19 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             details.dropdown .menu a{ padding:8px 10px }
           }
 
-          /* Desktop: vertically center the right-side auth/menu group within header */
+          /* Desktop: auth wrap should be in flex layout, not absolutely positioned */
           @media (min-width: 881px) {
-            header.nav .thg-auth-wrap:not(.is-fixed){ top:50%; transform: translateY(-50%); }
+            header.nav .thg-auth-wrap:not(.is-fixed){ 
+              position: relative !important;
+              top: auto !important;
+              transform: none !important;
+            }
+            /* Ensure auth container is properly aligned in flex layout */
+            header.nav #site-header-auth-container {
+              position: relative !important;
+              top: auto !important;
+              transform: none !important;
+            }
           }
 
           /* Always suppress legacy About link; using new right-aligned group */
@@ -316,6 +401,56 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         {/* No need to import anything in feature files - header is always visible */}
         <StaticHeaderHTML />
         <HeaderLinkInterceptor />
+        {/* Ensure auth button is always visible - prevent hiding */}
+        <script dangerouslySetInnerHTML={{ __html: `
+          (function() {
+            'use strict';
+            // Force auth container to be visible immediately
+            function forceAuthVisible() {
+              const container = document.getElementById('site-header-auth-container');
+              const wrap = document.querySelector('header.nav .thg-auth-wrap');
+              const btn = document.querySelector('header.nav .thg-auth-btn');
+              
+              if (container) {
+                container.style.display = 'flex';
+                container.style.visibility = 'visible';
+                container.style.opacity = '1';
+              }
+              
+              if (wrap) {
+                wrap.style.display = 'flex';
+                wrap.style.visibility = 'visible';
+                wrap.style.opacity = '1';
+              }
+              
+              if (btn) {
+                btn.style.display = 'inline-flex';
+                btn.style.visibility = 'visible';
+                btn.style.opacity = '1';
+                btn.style.color = '#1e40af';
+                
+                const label = btn.querySelector('.thg-label');
+                if (label) {
+                  label.style.color = '#1e40af';
+                  if (!label.textContent || label.textContent.trim() === '') {
+                    label.textContent = 'Login / Signup';
+                  }
+                }
+              }
+            }
+            
+            // Run immediately
+            forceAuthVisible();
+            
+            // Run on DOM ready
+            if (document.readyState === 'loading') {
+              document.addEventListener('DOMContentLoaded', forceAuthVisible);
+            }
+            
+            // Run periodically to prevent hiding
+            setInterval(forceAuthVisible, 200);
+          })();
+        ` }} />
         <AppI18nProvider>
           <EntitlementsProvider>
             <PrefetchRoutes />

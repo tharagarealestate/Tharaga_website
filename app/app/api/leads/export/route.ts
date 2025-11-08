@@ -463,60 +463,87 @@ export async function POST(request: NextRequest) {
     // Enrich data (same as GET handler)
     const enrichedLeads = await Promise.all(
       leadScores.map(async (leadScore: any) => {
-        const userId = leadScore.user_id;
-        
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('email, full_name, phone')
-          .eq('id', userId)
-          .single();
-        
-        const { data: preferences } = await supabase
-          .from('user_preferences')
-          .select('budget_min, budget_max, preferred_location, preferred_property_type')
-          .eq('user_id', userId)
-          .single();
-        
-        const { data: behaviors } = await supabase
-          .from('user_behavior')
-          .select('behavior_type, timestamp')
-          .eq('user_id', userId)
-          .order('timestamp', { ascending: false });
-        
-        const { data: interactions } = await supabase
-          .from('lead_interactions')
-          .select('*')
-          .eq('lead_id', String(leadScore.user_id))
-          .eq('builder_id', user.id);
-        
-        const totalViews = behaviors?.filter(b => b.behavior_type === 'property_view').length || 0;
-        const lastActivity = behaviors?.[0]?.timestamp || null;
-        const daysSinceLastActivity = lastActivity
-          ? Math.floor((Date.now() - new Date(lastActivity).getTime()) / (1000 * 60 * 60 * 24))
-          : 999;
-        
-        return {
-          id: userId,
-          email: profile?.email || '',
-          full_name: profile?.full_name || 'Unknown',
-          phone: profile?.phone || null,
-          created_at: leadScore.created_at,
-          score: Number(leadScore.score) || 0,
-          category: leadScore.category || 'Unknown',
-          budget_min: preferences?.budget_min || null,
-          budget_max: preferences?.budget_max || null,
-          preferred_location: preferences?.preferred_location || null,
-          preferred_property_type: preferences?.preferred_property_type || null,
-          total_views: totalViews,
-          total_interactions: interactions?.length || 0,
-          last_activity: lastActivity,
-          days_since_last_activity: daysSinceLastActivity,
-          budget_alignment_score: Number(leadScore.budget_alignment_score) || 0,
-          engagement_score: Number(leadScore.engagement_score) || 0,
-          property_fit_score: Number(leadScore.property_fit_score) || 0,
-          contact_intent_score: Number(leadScore.contact_intent_score) || 0,
-          recency_score: Number(leadScore.recency_score) || 0,
-        };
+        try {
+          const userId = leadScore.user_id;
+          
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('email, full_name, phone')
+            .eq('id', userId)
+            .maybeSingle();
+          
+          const { data: preferences } = await supabase
+            .from('user_preferences')
+            .select('budget_min, budget_max, preferred_location, preferred_property_type')
+            .eq('user_id', userId)
+            .maybeSingle();
+          
+          const { data: behaviors } = await supabase
+            .from('user_behavior')
+            .select('behavior_type, timestamp')
+            .eq('user_id', userId)
+            .order('timestamp', { ascending: false });
+          
+          const { data: interactions } = await supabase
+            .from('lead_interactions')
+            .select('*')
+            .eq('lead_id', String(userId))
+            .eq('builder_id', user.id);
+          
+          const totalViews = behaviors?.filter(b => b.behavior_type === 'property_view').length || 0;
+          const lastActivity = behaviors?.[0]?.timestamp || null;
+          const daysSinceLastActivity = lastActivity
+            ? Math.floor((Date.now() - new Date(lastActivity).getTime()) / (1000 * 60 * 60 * 24))
+            : 999;
+          
+          return {
+            id: userId,
+            email: profile?.email || '',
+            full_name: profile?.full_name || 'Unknown',
+            phone: profile?.phone || null,
+            created_at: leadScore.created_at,
+            score: Number(leadScore.score) || 0,
+            category: leadScore.category || 'Unknown',
+            budget_min: preferences?.budget_min || null,
+            budget_max: preferences?.budget_max || null,
+            preferred_location: preferences?.preferred_location || null,
+            preferred_property_type: preferences?.preferred_property_type || null,
+            total_views: totalViews,
+            total_interactions: interactions?.length || 0,
+            last_activity: lastActivity,
+            days_since_last_activity: daysSinceLastActivity,
+            budget_alignment_score: Number(leadScore.budget_alignment_score) || 0,
+            engagement_score: Number(leadScore.engagement_score) || 0,
+            property_fit_score: Number(leadScore.property_fit_score) || 0,
+            contact_intent_score: Number(leadScore.contact_intent_score) || 0,
+            recency_score: Number(leadScore.recency_score) || 0,
+          };
+        } catch (error) {
+          console.error('[API/Export] Error enriching lead:', error);
+          // Return basic data if enrichment fails
+          return {
+            id: leadScore.user_id,
+            email: '',
+            full_name: 'Unknown',
+            phone: null,
+            created_at: leadScore.created_at,
+            score: Number(leadScore.score) || 0,
+            category: leadScore.category || 'Unknown',
+            budget_min: null,
+            budget_max: null,
+            preferred_location: null,
+            preferred_property_type: null,
+            total_views: 0,
+            total_interactions: 0,
+            last_activity: null,
+            days_since_last_activity: 999,
+            budget_alignment_score: 0,
+            engagement_score: 0,
+            property_fit_score: 0,
+            contact_intent_score: 0,
+            recency_score: 0,
+          };
+        }
       })
     );
     
@@ -531,14 +558,33 @@ export async function POST(request: NextRequest) {
     let contentType: string;
     let filename: string;
     
-    if (format === 'excel') {
-      fileContent = await convertToExcel(enrichedLeads, exportFields);
-      contentType = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
-      filename = `leads-custom-export-${Date.now()}.xlsx`;
-    } else {
-      fileContent = convertToCSV(enrichedLeads, exportFields);
-      contentType = 'text/csv; charset=utf-8';
-      filename = `leads-custom-export-${Date.now()}.csv`;
+    try {
+      if (format === 'excel') {
+        // Generate proper Excel file
+        try {
+          fileContent = await convertToExcel(enrichedLeads, exportFields);
+          contentType = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+          filename = `leads-custom-export-${Date.now()}.xlsx`;
+        } catch (excelError) {
+          console.error('[API/Export] Excel generation error:', excelError);
+          // Fallback to CSV if Excel fails
+          console.log('[API/Export] Falling back to CSV format');
+          fileContent = convertToCSV(enrichedLeads, exportFields);
+          contentType = 'text/csv; charset=utf-8';
+          filename = `leads-custom-export-${Date.now()}.csv`;
+        }
+      } else {
+        // Generate CSV file
+        fileContent = convertToCSV(enrichedLeads, exportFields);
+        contentType = 'text/csv; charset=utf-8';
+        filename = `leads-custom-export-${Date.now()}.csv`;
+      }
+    } catch (genError) {
+      console.error('[API/Export] File generation error:', genError);
+      return NextResponse.json(
+        { error: `Failed to generate export file: ${genError instanceof Error ? genError.message : 'Unknown error'}` },
+        { status: 500 }
+      );
     }
     
     // Convert Buffer to proper format for NextResponse

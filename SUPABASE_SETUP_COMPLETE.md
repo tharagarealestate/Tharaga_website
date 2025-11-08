@@ -137,3 +137,4 @@ SELECT public.calculate_lead_score('user-uuid-here');
 
 All SQL migrations executed successfully. The behavior tracking system is fully operational in the database.
 
+

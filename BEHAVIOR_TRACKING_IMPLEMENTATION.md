@@ -184,3 +184,4 @@ Visit: `http://localhost:3000/behavior-tracking`
 - All types match `UserBehavior` from `@/types/lead-generation`
 - Design matches pricing page exactly for consistency
 
+

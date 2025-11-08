@@ -172,3 +172,4 @@ export default function ContactButtons({ propertyId }: { propertyId: string }) {
 
 The API route is complete, tested, and ready for use. It integrates seamlessly with the behavior tracking hook and ensures no data loss when users leave the page.
 
+

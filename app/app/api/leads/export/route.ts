@@ -889,14 +889,9 @@ export async function POST(request: NextRequest) {
     });
     
   } catch (error: any) {
-    console.error('[API/Export/Custom] Unexpected error:', error);
-    console.error('[API/Export/Custom] Error stack:', error?.stack);
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+    console.error('[API/Export/Custom] Error:', error);
     return NextResponse.json(
-      { 
-        error: `Export failed: ${errorMessage}`,
-        details: process.env.NODE_ENV === 'development' ? error?.message : undefined
-      },
+      { error: 'Export failed. Please try again or contact support.' },
       { status: 500 }
     );
   }

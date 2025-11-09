@@ -517,14 +517,29 @@ header .thg-auth-wrap:not(#site-header-auth-container){ position:absolute; top:1
     if (!window.supabase || !window.supabase.auth){ state.supabaseReady = false; state.loading = false; render( ui); console.warn('[thg-auth] window.supabase not found.'); return; }
     state.supabaseReady = true;
     try{ const { data } = await window.supabase.auth.getSession(); state.user = data?.session?.user || null; } catch(_){ state.user = null; } finally { state.loading = false; render(ui); try { broadcastAuth(state.user); } catch(__) {} try { setBuyerEmailLockFromUser(state.user); } catch(__) {}
-      // Initialize role manager for authenticated user
+      // Initialize role manager for authenticated user with retry mechanism
       if (state.user && state.user.email) {
         try {
           window.__thgAuthState = state;
           window.__thgAuthUI = ui;
-          if (window.thgRoleManager && typeof window.thgRoleManager.init === 'function') {
-            await window.thgRoleManager.init(state.user, ui);
-          }
+
+          // Wait for role manager to be available (with retry mechanism)
+          var retryCount = 0;
+          var maxRetries = 20;
+          var initRoleManager = async function() {
+            if (window.thgRoleManager && typeof window.thgRoleManager.init === 'function') {
+              await window.thgRoleManager.init(state.user, ui);
+              console.log('[thg-auth] Role manager initialized successfully');
+            } else if (retryCount < maxRetries) {
+              retryCount++;
+              console.warn('[thg-auth] Role manager not ready, retry ' + retryCount + '/' + maxRetries);
+              setTimeout(initRoleManager, 200);
+            } else {
+              console.error('[thg-auth] Role manager failed to load after ' + maxRetries + ' retries');
+            }
+          };
+
+          await initRoleManager();
         } catch(roleErr) {
           console.error('[thg-auth] Role manager init error:', roleErr);
         }
@@ -537,16 +552,31 @@ header .thg-auth-wrap:not(#site-header-auth-container){ position:absolute; top:1
         try { broadcastAuth(state.user); } catch(__) {}
         try { setBuyerEmailLockFromUser(state.user); } catch(__) {}
 
-        // Initialize role manager on auth state change
+        // Initialize role manager on auth state change with retry mechanism
         if (state.user && state.user.email) {
           try {
             window.__thgAuthState = state;
             window.__thgAuthUI = ui;
-            if (window.thgRoleManager && typeof window.thgRoleManager.init === 'function') {
-              await window.thgRoleManager.init(state.user, ui);
-            }
+
+            // Wait for role manager to be available (with retry mechanism)
+            var retryCount = 0;
+            var maxRetries = 20;
+            var initRoleManager = async function() {
+              if (window.thgRoleManager && typeof window.thgRoleManager.init === 'function') {
+                await window.thgRoleManager.init(state.user, ui);
+                console.log('[thg-auth] Role manager initialized on auth change');
+              } else if (retryCount < maxRetries) {
+                retryCount++;
+                console.warn('[thg-auth] Role manager not ready on auth change, retry ' + retryCount + '/' + maxRetries);
+                setTimeout(initRoleManager, 200);
+              } else {
+                console.error('[thg-auth] Role manager failed to load on auth change after ' + maxRetries + ' retries');
+              }
+            };
+
+            await initRoleManager();
           } catch(roleErr) {
-            console.error('[thg-auth] Role manager init error:', roleErr);
+            console.error('[thg-auth] Role manager init error on auth change:', roleErr);
           }
         }
 

@@ -25,8 +25,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&family=Manrope:wght@400;600;700;800&display=swap" rel="stylesheet" />
         {/* Auth configuration */}
         <script dangerouslySetInnerHTML={{ __html: `window.AUTH_HIDE_HEADER=false;window.AUTH_OPEN_ON_LOAD=false;` }} />
-        {/* Load role manager system */}
-        <script src="/role-manager-v2.js" defer></script>
+        {/* Load role manager system SYNCHRONOUSLY to ensure it's available before auth system */}
+        <script src="/role-manager-v2.js"></script>
         {/* PREVENT DARK DROPDOWN - Inject light theme styles BEFORE auth system */}
         {/* This prevents auth system's injectStyles() from injecting dark #0b0b0b styles */}
         <style id="thg-auth-styles" dangerouslySetInnerHTML={{ __html: `

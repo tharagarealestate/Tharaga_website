@@ -149,45 +149,18 @@ async function convertToExcel(leads: any[], fields: ExportField[]): Promise<Buff
 // =============================================
 export async function GET(request: NextRequest) {
   try {
-    // Create Supabase client with error handling
-    let supabase;
-    try {
-      supabase = createRouteHandlerClient({ cookies });
-    } catch (clientErr: any) {
-      console.error('[API/Leads/Export] Client creation error:', clientErr);
-      return NextResponse.json(
-        { error: 'Failed to initialize client', details: clientErr?.message },
-        { status: 500 }
-      );
-    }
-    
-    // =============================================
-    // AUTHENTICATION
-    // =============================================
-    
+    const supabase = createRouteHandlerClient({ cookies });
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     
     if (authError || !user) {
-      return NextResponse.json(
-        { error: 'Unauthorized', details: authError?.message },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
     
-    // Verify builder role
-    const { data: profile, error: profileError } = await supabase
+    const { data: profile } = await supabase
       .from('profiles')
       .select('role')
       .eq('id', user.id)
       .maybeSingle();
-    
-    if (profileError) {
-      console.error('[API/Leads/Export] Profile fetch error:', profileError);
-      return NextResponse.json(
-        { error: 'Failed to verify user role', details: profileError.message },
-        { status: 500 }
-      );
-    }
     
     if (!profile || profile.role !== 'builder') {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
@@ -560,14 +533,9 @@ export async function GET(request: NextRequest) {
     });
     
   } catch (error: any) {
-    console.error('[API/Export] Unexpected error:', error);
-    console.error('[API/Export] Error stack:', error?.stack);
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+    console.error('[API/Export] Error:', error);
     return NextResponse.json(
-      { 
-        error: `Export failed: ${errorMessage}`,
-        details: process.env.NODE_ENV === 'development' ? error?.message : undefined
-      },
+      { error: 'Export failed. Please try again or contact support.' },
       { status: 500 }
     );
   }
@@ -578,45 +546,18 @@ export async function GET(request: NextRequest) {
 // =============================================
 export async function POST(request: NextRequest) {
   try {
-    // Create Supabase client with error handling
-    let supabase;
-    try {
-      supabase = createRouteHandlerClient({ cookies });
-    } catch (clientErr: any) {
-      console.error('[API/Leads/Export] Client creation error:', clientErr);
-      return NextResponse.json(
-        { error: 'Failed to initialize client', details: clientErr?.message },
-        { status: 500 }
-      );
-    }
-    
-    // =============================================
-    // AUTHENTICATION
-    // =============================================
-    
+    const supabase = createRouteHandlerClient({ cookies });
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     
     if (authError || !user) {
-      return NextResponse.json(
-        { error: 'Unauthorized', details: authError?.message },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
     
-    // Verify builder role
-    const { data: profile, error: profileError } = await supabase
+    const { data: profile } = await supabase
       .from('profiles')
       .select('role')
       .eq('id', user.id)
       .maybeSingle();
-    
-    if (profileError) {
-      console.error('[API/Leads/Export] Profile fetch error:', profileError);
-      return NextResponse.json(
-        { error: 'Failed to verify user role', details: profileError.message },
-        { status: 500 }
-      );
-    }
     
     if (!profile || profile.role !== 'builder') {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });

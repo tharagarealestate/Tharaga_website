@@ -149,54 +149,42 @@ async function convertToExcel(leads: any[], fields: ExportField[]): Promise<Buff
 // =============================================
 export async function GET(request: NextRequest) {
   try {
-    const supabase = createRouteHandlerClient({ cookies });
+    // Create Supabase client with error handling
+    let supabase;
+    try {
+      supabase = createRouteHandlerClient({ cookies });
+    } catch (clientErr: any) {
+      console.error('[API/Leads/Export] Client creation error:', clientErr);
+      return NextResponse.json(
+        { error: 'Failed to initialize client', details: clientErr?.message },
+        { status: 500 }
+      );
+    }
     
     // =============================================
     // AUTHENTICATION
     // =============================================
     
-    let user;
-    try {
-      const { data: authData, error: authError } = await supabase.auth.getUser();
-      
-      if (authError || !authData?.user) {
-        return NextResponse.json(
-          { error: 'Unauthorized', details: authError?.message },
-          { status: 401 }
-        );
-      }
-      
-      user = authData.user;
-    } catch (authErr: any) {
-      console.error('[API/Leads/Export] Auth error:', authErr);
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    
+    if (authError || !user) {
       return NextResponse.json(
-        { error: 'Authentication failed', details: authErr?.message },
+        { error: 'Unauthorized', details: authError?.message },
         { status: 401 }
       );
     }
     
     // Verify builder role
-    let profile;
-    try {
-      const { data: profileData, error: profileError } = await supabase
-        .from('profiles')
-        .select('role')
-        .eq('id', user.id)
-        .maybeSingle();
-      
-      if (profileError) {
-        console.error('[API/Leads/Export] Profile fetch error:', profileError);
-        return NextResponse.json(
-          { error: 'Failed to verify user role', details: profileError.message },
-          { status: 500 }
-        );
-      }
-      
-      profile = profileData;
-    } catch (profileErr: any) {
-      console.error('[API/Leads/Export] Profile error:', profileErr);
+    const { data: profile, error: profileError } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
+      .maybeSingle();
+    
+    if (profileError) {
+      console.error('[API/Leads/Export] Profile fetch error:', profileError);
       return NextResponse.json(
-        { error: 'Profile verification failed', details: profileErr?.message },
+        { error: 'Failed to verify user role', details: profileError.message },
         { status: 500 }
       );
     }
@@ -590,54 +578,42 @@ export async function GET(request: NextRequest) {
 // =============================================
 export async function POST(request: NextRequest) {
   try {
-    const supabase = createRouteHandlerClient({ cookies });
+    // Create Supabase client with error handling
+    let supabase;
+    try {
+      supabase = createRouteHandlerClient({ cookies });
+    } catch (clientErr: any) {
+      console.error('[API/Leads/Export] Client creation error:', clientErr);
+      return NextResponse.json(
+        { error: 'Failed to initialize client', details: clientErr?.message },
+        { status: 500 }
+      );
+    }
     
     // =============================================
     // AUTHENTICATION
     // =============================================
     
-    let user;
-    try {
-      const { data: authData, error: authError } = await supabase.auth.getUser();
-      
-      if (authError || !authData?.user) {
-        return NextResponse.json(
-          { error: 'Unauthorized', details: authError?.message },
-          { status: 401 }
-        );
-      }
-      
-      user = authData.user;
-    } catch (authErr: any) {
-      console.error('[API/Leads/Export] Auth error:', authErr);
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    
+    if (authError || !user) {
       return NextResponse.json(
-        { error: 'Authentication failed', details: authErr?.message },
+        { error: 'Unauthorized', details: authError?.message },
         { status: 401 }
       );
     }
     
     // Verify builder role
-    let profile;
-    try {
-      const { data: profileData, error: profileError } = await supabase
-        .from('profiles')
-        .select('role')
-        .eq('id', user.id)
-        .maybeSingle();
-      
-      if (profileError) {
-        console.error('[API/Leads/Export] Profile fetch error:', profileError);
-        return NextResponse.json(
-          { error: 'Failed to verify user role', details: profileError.message },
-          { status: 500 }
-        );
-      }
-      
-      profile = profileData;
-    } catch (profileErr: any) {
-      console.error('[API/Leads/Export] Profile error:', profileErr);
+    const { data: profile, error: profileError } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
+      .maybeSingle();
+    
+    if (profileError) {
+      console.error('[API/Leads/Export] Profile fetch error:', profileError);
       return NextResponse.json(
-        { error: 'Profile verification failed', details: profileErr?.message },
+        { error: 'Failed to verify user role', details: profileError.message },
         { status: 500 }
       );
     }

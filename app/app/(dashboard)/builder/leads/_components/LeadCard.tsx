@@ -54,10 +54,28 @@ export function LeadCardSkeleton() {
   )
 }
 
-export function LeadCard({ lead }: { lead: Lead }) {
+export function LeadCard({ 
+  lead, 
+  isSelected = false, 
+  onSelect 
+}: { 
+  lead: Lead
+  isSelected?: boolean
+  onSelect?: (selected: boolean) => void
+}) {
   const scoreColor = getScoreColor(lead.score)
   return (
-    <div className="glass-card p-4 md:p-6 rounded-xl hover:shadow-xl transition-all duration-300 border-l-4 bg-white border-gray-200" style={{ borderLeftColor: scoreColor }}>
+    <div className="glass-card p-4 md:p-6 rounded-xl hover:shadow-xl transition-all duration-300 border-l-4 bg-white border-gray-200 relative" style={{ borderLeftColor: scoreColor }}>
+      {onSelect && (
+        <div className="absolute top-4 right-4">
+          <input
+            type="checkbox"
+            checked={isSelected}
+            onChange={(e) => onSelect(e.target.checked)}
+            className="w-5 h-5 text-[#6e0d25] border-gray-300 rounded focus:ring-[#6e0d25] cursor-pointer"
+          />
+        </div>
+      )}
       <div className="flex items-start justify-between mb-4">
         <div className={`px-3 py-1 rounded-full text-sm font-bold text-white`} style={{ backgroundColor: scoreColor }}>
           {lead.score.toFixed(1)} {lead.category || getScoreLabel(lead.score)}

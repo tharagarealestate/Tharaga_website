@@ -2,13 +2,48 @@
 
 import * as React from 'react'
 import { useMemo } from 'react'
-import { useReactTable, getCoreRowModel, flexRender, ColumnDef } from '@tanstack/react-table'
+import { useReactTable, getCoreRowModel, flexRender, ColumnDef, RowSelectionState } from '@tanstack/react-table'
 import { Lead } from './LeadCard'
 
-export function LeadsTable({ leads = [] as Lead[] }) {
+interface LeadsTableProps {
+  leads?: Lead[]
+  selectedLeads?: string[]
+  onSelectionChange?: (selectedIds: string[]) => void
+}
+
+export function LeadsTable({ leads = [] as Lead[], selectedLeads = [], onSelectionChange }: LeadsTableProps) {
   const data = useMemo(() => leads, [leads])
 
+  const rowSelection = useMemo(() => {
+    const selection: RowSelectionState = {}
+    selectedLeads.forEach(id => {
+      selection[id] = true
+    })
+    return selection
+  }, [selectedLeads])
+
   const columns = useMemo<ColumnDef<Lead>[]>(() => [
+    {
+      id: 'select',
+      header: ({ table }) => (
+        <input
+          type="checkbox"
+          checked={table.getIsAllPageRowsSelected()}
+          onChange={table.getToggleAllPageRowsSelectedHandler()}
+          className="w-4 h-4 text-[#6e0d25] border-gray-300 rounded focus:ring-[#6e0d25]"
+        />
+      ),
+      cell: ({ row }) => (
+        <input
+          type="checkbox"
+          checked={row.getIsSelected()}
+          onChange={row.getToggleSelectedHandler()}
+          className="w-4 h-4 text-[#6e0d25] border-gray-300 rounded focus:ring-[#6e0d25]"
+        />
+      ),
+      enableSorting: false,
+      enableHiding: false,
+    },
     { 
       header: 'Name', 
       cell: ({ row }) => row.original.full_name || row.original.name || 'Unknown'
@@ -87,7 +122,21 @@ export function LeadsTable({ leads = [] as Lead[] }) {
     },
   ], [])
 
-  const table = useReactTable({ data, columns, getCoreRowModel: getCoreRowModel() })
+  const table = useReactTable({ 
+    data, 
+    columns, 
+    getCoreRowModel: getCoreRowModel(),
+    enableRowSelection: true,
+    state: {
+      rowSelection,
+    },
+    getRowId: (row) => row.id,
+    onRowSelectionChange: (updater) => {
+      const newSelection = typeof updater === 'function' ? updater(rowSelection) : updater
+      const selectedIds = Object.keys(newSelection).filter(key => newSelection[key])
+      onSelectionChange?.(selectedIds)
+    },
+  })
 
   return (
     <div className="overflow-auto rounded-xl border border-gray-200 bg-white">

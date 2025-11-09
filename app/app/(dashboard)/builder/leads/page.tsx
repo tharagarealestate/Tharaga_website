@@ -3,11 +3,12 @@
 import { useState, useMemo, useEffect } from 'react'
 import Link from 'next/link'
 import { useQuery } from '@tanstack/react-query'
-import { Download, Plus, Users, Search, Filter, ChevronLeft, ChevronRight } from 'lucide-react'
+import { Download, Plus, Users, Search, Filter, ChevronLeft, ChevronRight, Layers } from 'lucide-react'
 import { Select, Slider } from '@/components/ui'
-import { LeadCard, LeadCardSkeleton } from './_components/LeadCard'
+import { LeadCard, LeadCardSkeleton, Lead } from './_components/LeadCard'
 import { LeadsTable } from './_components/LeadsTable'
 import { ExportModal } from './_components/ExportModal'
+import { BulkOperationsModal } from './_components/BulkOperationsModal'
 
 interface LeadFilters {
   page: number
@@ -90,6 +91,8 @@ export default function BuilderLeadsPage() {
   const [view, setView] = useState<'grid' | 'table'>('grid')
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false)
   const [showExportModal, setShowExportModal] = useState(false)
+  const [showBulkOperations, setShowBulkOperations] = useState(false)
+  const [selectedLeadIds, setSelectedLeadIds] = useState<string[]>([])
 
   const { data: leadsData, isLoading } = useQuery({
     queryKey: ['leads', filters],
@@ -109,6 +112,17 @@ export default function BuilderLeadsPage() {
     }
   }, [leadsData, isLoading])
 
+  // Get selected leads objects
+  const selectedLeads = useMemo(() => {
+    return leads.filter(lead => selectedLeadIds.includes(lead.id))
+  }, [leads, selectedLeadIds])
+
+  // Handle bulk operation success
+  function handleBulkOperationSuccess() {
+    // Refresh leads data
+    window.location.reload() // Simple refresh for now, could use query invalidation
+  }
+
   return (
     <main className="mx-auto max-w-7xl px-6 py-8 space-y-6">
       {/* Header */}
@@ -118,6 +132,15 @@ export default function BuilderLeadsPage() {
           <p className="text-sm text-fgMuted">AI-powered lead scoring, filtering, and analytics</p>
         </div>
         <div className="flex items-center gap-3">
+          {selectedLeadIds.length > 0 && (
+            <button
+              onClick={() => setShowBulkOperations(true)}
+              className="px-4 py-2 bg-[#6e0d25] hover:bg-[#8c1630] text-white rounded text-sm font-medium inline-flex items-center gap-2 transition-colors"
+            >
+              <Layers className="w-4 h-4" />
+              Bulk Operations ({selectedLeadIds.length})
+            </button>
+          )}
           <ViewToggle view={view} onChange={setView} />
           <Link href="/builder/leads/pipeline" className="px-3 py-2 border border-border rounded text-sm hover:bg-muted/40 transition-colors">
             Pipeline
@@ -346,10 +369,27 @@ export default function BuilderLeadsPage() {
         </div>
       ) : view === 'grid' ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {leads?.map((lead: any) => <LeadCard key={lead.id} lead={lead} />)}
+          {leads?.map((lead: any) => (
+            <LeadCard 
+              key={lead.id} 
+              lead={lead}
+              isSelected={selectedLeadIds.includes(lead.id)}
+              onSelect={(selected) => {
+                if (selected) {
+                  setSelectedLeadIds([...selectedLeadIds, lead.id])
+                } else {
+                  setSelectedLeadIds(selectedLeadIds.filter(id => id !== lead.id))
+                }
+              }}
+            />
+          ))}
         </div>
       ) : (
-        <LeadsTable leads={leads as any} />
+        <LeadsTable 
+          leads={leads as any}
+          selectedLeads={selectedLeadIds}
+          onSelectionChange={setSelectedLeadIds}
+        />
       )}
 
       {/* Empty State */}
@@ -370,6 +410,19 @@ export default function BuilderLeadsPage() {
         <ExportModal
           filters={filters}
           onClose={() => setShowExportModal(false)}
+        />
+      )}
+
+      {/* Bulk Operations Modal */}
+      {showBulkOperations && (
+        <BulkOperationsModal
+          isOpen={showBulkOperations}
+          onClose={() => {
+            setShowBulkOperations(false)
+            setSelectedLeadIds([]) // Clear selection after closing
+          }}
+          selectedLeads={selectedLeads}
+          onSuccess={handleBulkOperationSuccess}
         />
       )}
     </main>

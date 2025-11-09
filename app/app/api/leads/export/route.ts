@@ -150,19 +150,34 @@ async function convertToExcel(leads: any[], fields: ExportField[]): Promise<Buff
 export async function GET(request: NextRequest) {
   try {
     const supabase = createRouteHandlerClient({ cookies });
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
     
-    if (authError || !user) {
+    // Try to get session first - this might help refresh expired tokens
+    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+    
+    // If no session, try to get user directly
+    let user = session?.user;
+    let authError = sessionError;
+    
+    if (!user) {
+      const userResult = await supabase.auth.getUser();
+      user = userResult.data?.user || null;
+      authError = userResult.error || authError;
+    }
+    
+    if (!user) {
+      const cookieHeader = request.headers.get('cookie');
       console.error('[API/Export] Auth failed:', {
         error: authError?.message,
         status: authError?.status,
-        hasUser: !!user,
-        cookieHeader: request.headers.get('cookie') ? 'present' : 'missing'
+        hasSession: !!session,
+        hasCookies: !!cookieHeader,
+        cookieNames: cookieHeader ? cookieHeader.split(';').map(c => c.split('=')[0].trim()).filter(Boolean) : []
       });
+      
       return NextResponse.json(
         { 
           error: 'Unauthorized',
-          message: 'Please log in to export leads'
+          message: 'Please log in to export leads. Your session may have expired.'
         },
         { status: 401 }
       );

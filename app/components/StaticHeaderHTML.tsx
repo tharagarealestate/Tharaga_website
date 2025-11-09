@@ -246,31 +246,46 @@ const StaticHeaderHTML = memo(function StaticHeaderHTML() {
                   }
                 }
                 
-                // Build menu HTML based on user state
+                // Build menu HTML based on user state and roles
                 let menuHTML = '';
-                
-                // Always show Buyer Dashboard link first (matches homepage order)
-                if (isLoggedIn && (userRoles.includes('buyer') || isAdminOwner)) {
+
+                // Show Buyer Dashboard ONLY if:
+                // 1. User is admin owner (tharagarealestate@gmail.com) - sees ALL dashboards
+                // 2. User has buyer role OR builder role (builders can see buyer dashboard)
+                // 3. Not logged in - show locked version
+
+                if (isAdminOwner) {
+                  // Admin owner sees all three dashboards
+                  const buyerActive = primaryRole === 'buyer' ? '<span style="color:#10b981;font-weight:800;font-size:16px;margin-left:auto;">✓</span>' : '';
+                  menuHTML += '<a href="/my-dashboard" data-next-link data-portal-link="buyer" style="display:flex;align-items:center;justify-content:space-between;text-align:left;"><span style="display:flex;align-items:center;gap:8px;">🏠 Buyer Dashboard</span>' + buyerActive + '</a>';
+
+                  const builderActive = primaryRole === 'builder' ? '<span style="color:#10b981;font-weight:800;font-size:16px;margin-left:auto;">✓</span>' : '';
+                  const verified = builderVerified ? '<span style="color:#10b981;font-size:11px;">✓ Verified</span>' : '';
+                  menuHTML += '<a href="/builder" data-next-link data-portal-link="builder" style="display:flex;align-items:center;justify-content:space-between;text-align:left;"><span style="display:flex;align-items:center;gap:8px;">🏗️ Builder Dashboard</span>' + (builderActive || verified) + '</a>';
+
+                  menuHTML += '<a href="/admin" data-next-link style="border-top:1px solid #e5e7eb;margin-top:8px;padding-top:8px;display:flex;align-items:center;justify-content:space-between;text-align:left;"><span style="display:flex;align-items:center;gap:8px;">🛡️ Admin Panel</span></a>';
+                } else if (isLoggedIn && userRoles.includes('buyer') && !userRoles.includes('builder')) {
+                  // Buyer only - show only Buyer Dashboard
                   const active = primaryRole === 'buyer' ? '<span style="color:#10b981;font-weight:800;font-size:16px;margin-left:auto;">✓</span>' : '';
                   menuHTML += '<a href="/my-dashboard" data-next-link data-portal-link="buyer" style="display:flex;align-items:center;justify-content:space-between;text-align:left;"><span style="display:flex;align-items:center;gap:8px;">🏠 Buyer Dashboard</span>' + active + '</a>';
-                } else {
-                  // Not logged in or no buyer role - show locked version
+                } else if (isLoggedIn && userRoles.includes('builder')) {
+                  // Builder (with or without buyer role) - show Buyer Dashboard + Builder Dashboard
+                  const buyerActive = primaryRole === 'buyer' ? '<span style="color:#10b981;font-weight:800;font-size:16px;margin-left:auto;">✓</span>' : '';
+                  menuHTML += '<a href="/my-dashboard" data-next-link data-portal-link="buyer" style="display:flex;align-items:center;justify-content:space-between;text-align:left;"><span style="display:flex;align-items:center;gap:8px;">🏠 Buyer Dashboard</span>' + buyerActive + '</a>';
+
+                  const builderActive = primaryRole === 'builder' ? '<span style="color:#10b981;font-weight:800;font-size:16px;margin-left:auto;">✓</span>' : '';
+                  const verified = builderVerified ? '<span style="color:#10b981;font-size:11px;">✓ Verified</span>' : '';
+                  menuHTML += '<a href="/builder" data-next-link data-portal-link="builder" style="display:flex;align-items:center;justify-content:space-between;text-align:left;"><span style="display:flex;align-items:center;gap:8px;">🏗️ Builder Dashboard</span>' + (builderActive || verified) + '</a>';
+                } else if (!isLoggedIn) {
+                  // Not logged in - show locked versions for both
                   menuHTML += '<a href="/my-dashboard" data-portal-link="buyer" data-requires-auth="true" style="opacity:0.7;cursor:pointer;display:flex;align-items:center;justify-content:space-between;text-align:left;"><span style="display:flex;align-items:center;gap:8px;">🏠 Buyer Dashboard</span><span style="color:#6b7280;font-size:11px;">🔒 Login Required</span></a>';
-                }
-                
-                // Always show Builder Dashboard link
-                if (isLoggedIn && (userRoles.includes('builder') || isAdminOwner)) {
-                  const active = primaryRole === 'builder' ? '<span style="color:#10b981;font-weight:800;font-size:16px;margin-left:auto;">✓</span>' : '';
-                  const verified = builderVerified ? '<span style="color:#10b981;font-size:11px;margin-left:auto;">✓ Verified</span>' : '';
-                  menuHTML += '<a href="/builder" data-next-link data-portal-link="builder" style="display:flex;align-items:center;justify-content:space-between;text-align:left;"><span style="display:flex;align-items:center;gap:8px;">🏗️ Builder Dashboard</span>' + (active || verified) + '</a>';
-                } else {
-                  // Not logged in or no builder role - show locked version
                   menuHTML += '<a href="/builder" data-portal-link="builder" data-requires-auth="true" style="opacity:0.7;cursor:pointer;display:flex;align-items:center;justify-content:space-between;text-align:left;"><span style="display:flex;align-items:center;gap:8px;">🏗️ Builder Dashboard</span><span style="color:#6b7280;font-size:11px;">🔒 Login Required</span></a>';
                 }
-                
-                // Admin Panel (only if logged in and admin)
-                if (isLoggedIn && (userRoles.includes('admin') || isAdminOwner)) {
-                  menuHTML += '<a href="/admin" data-next-link style="border-top:1px solid #e5e7eb;margin-top:8px;padding-top:8px;display:flex;align-items:center;justify-content:space-between;text-align:left;"><span style="display:flex;align-items:center;gap:8px;">🛡️ Admin Panel</span></a>';
+
+                // Admin Panel - ONLY show for admin owner
+                // Don't show for regular admin role since it's a privilege, not a separate dashboard mode
+                if (isAdminOwner) {
+                  // Already added above in the isAdminOwner section
                 }
                 
                 portalMenuItems.innerHTML = menuHTML;

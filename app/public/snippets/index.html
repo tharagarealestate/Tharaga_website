@@ -516,9 +516,51 @@ header .thg-auth-wrap:not(#site-header-auth-container){ position:absolute; top:1
     }
     if (!window.supabase || !window.supabase.auth){ state.supabaseReady = false; state.loading = false; render( ui); console.warn('[thg-auth] window.supabase not found.'); return; }
     state.supabaseReady = true;
-    try{ const { data } = await window.supabase.auth.getSession(); state.user = data?.session?.user || null; } catch(_){ state.user = null; } finally { state.loading = false; render(ui); try { broadcastAuth(state.user); } catch(__) {} try { setBuyerEmailLockFromUser(state.user); } catch(__) {} }
+    try{ const { data } = await window.supabase.auth.getSession(); state.user = data?.session?.user || null; } catch(_){ state.user = null; } finally { state.loading = false; render(ui); try { broadcastAuth(state.user); } catch(__) {} try { setBuyerEmailLockFromUser(state.user); } catch(__) {}
+      // Initialize role manager for authenticated user
+      if (state.user && state.user.email) {
+        try {
+          window.__thgAuthState = state;
+          window.__thgAuthUI = ui;
+          if (window.thgRoleManager && typeof window.thgRoleManager.init === 'function') {
+            await window.thgRoleManager.init(state.user, ui);
+          }
+        } catch(roleErr) {
+          console.error('[thg-auth] Role manager init error:', roleErr);
+        }
+      }
+    }
     try{
-      const { data: sub } = window.supabase.auth.onAuthStateChange(function(event, session){ state.user = session?.user || null; render(ui); try { broadcastAuth(state.user); } catch(__) {} try { setBuyerEmailLockFromUser(state.user); } catch(__) {} if (event === 'PASSWORD_RECOVERY'){ window.location.href = '/login?recovery=1'; } if (state.user && state.user.email){ if (state.nextUrl){ const to = state.nextUrl; state.nextUrl = null; location.href = to; } } else { closeMenu(ui); } });
+      const { data: sub } = window.supabase.auth.onAuthStateChange(async function(event, session){
+        state.user = session?.user || null;
+        render(ui);
+        try { broadcastAuth(state.user); } catch(__) {}
+        try { setBuyerEmailLockFromUser(state.user); } catch(__) {}
+
+        // Initialize role manager on auth state change
+        if (state.user && state.user.email) {
+          try {
+            window.__thgAuthState = state;
+            window.__thgAuthUI = ui;
+            if (window.thgRoleManager && typeof window.thgRoleManager.init === 'function') {
+              await window.thgRoleManager.init(state.user, ui);
+            }
+          } catch(roleErr) {
+            console.error('[thg-auth] Role manager init error:', roleErr);
+          }
+        }
+
+        if (event === 'PASSWORD_RECOVERY'){ window.location.href = '/login?recovery=1'; }
+        if (state.user && state.user.email){
+          if (state.nextUrl){
+            const to = state.nextUrl;
+            state.nextUrl = null;
+            location.href = to;
+          }
+        } else {
+          closeMenu(ui);
+        }
+      });
       state.sub = sub?.subscription || sub || null;
     } catch(_){ }
   }

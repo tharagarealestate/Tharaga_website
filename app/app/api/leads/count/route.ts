@@ -4,7 +4,8 @@
 // Returns total lead count for the authenticated builder
 // =============================================
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
+import { cookies } from 'next/headers';
 
 // Use nodejs runtime for Supabase auth helpers compatibility
 export const runtime = 'nodejs';
@@ -12,7 +13,7 @@ export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
   try {
-    const supabase = createClient();
+    const supabase = createRouteHandlerClient({ cookies });
     
     // =============================================
     // AUTHENTICATION

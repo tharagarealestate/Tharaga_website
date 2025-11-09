@@ -4,7 +4,8 @@
 // POST /api/leads/export (with custom filters)
 // =============================================
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
+import { cookies } from 'next/headers';
 import ExcelJS from 'exceljs';
 
 // ExcelJS requires Node.js runtime, not edge
@@ -148,7 +149,7 @@ async function convertToExcel(leads: any[], fields: ExportField[]): Promise<Buff
 // =============================================
 export async function GET(request: NextRequest) {
   try {
-    const supabase = createClient();
+    const supabase = createRouteHandlerClient({ cookies });
     
     // =============================================
     // AUTHENTICATION
@@ -589,7 +590,7 @@ export async function GET(request: NextRequest) {
 // =============================================
 export async function POST(request: NextRequest) {
   try {
-    const supabase = createClient();
+    const supabase = createRouteHandlerClient({ cookies });
     
     // =============================================
     // AUTHENTICATION

@@ -212,7 +212,24 @@ export async function GET(request: NextRequest) {
       .eq('id', user.id)
       .maybeSingle();
     
-    if (!profile || profile.role !== 'builder') {
+    const role = profile?.role?.toLowerCase() || '';
+    let isBuilder = ['builder', 'builder_admin', 'builder_team', 'builder_manager', 'builder_owner'].includes(role) || role.includes('builder');
+    
+    if (!isBuilder) {
+      try {
+        const { count } = await supabase
+          .from('leads')
+          .select('*', { count: 'exact', head: true })
+          .eq('builder_id', user.id);
+        if ((count ?? 0) > 0) {
+          isBuilder = true;
+        }
+      } catch (roleCheckError) {
+        console.error('[API/Export] Builder role fallback check failed:', roleCheckError);
+      }
+    }
+    
+    if (!isBuilder) {
       return NextResponse.json(
         { error: 'Forbidden', message: 'Only builders can export leads' },
         { status: 403 }
@@ -612,7 +629,24 @@ export async function POST(request: NextRequest) {
       .eq('id', user.id)
       .maybeSingle();
     
-    if (!profile || profile.role !== 'builder') {
+    const role = profile?.role?.toLowerCase() || '';
+    let isBuilder = ['builder', 'builder_admin', 'builder_team', 'builder_manager', 'builder_owner'].includes(role) || role.includes('builder');
+    
+    if (!isBuilder) {
+      try {
+        const { count } = await supabase
+          .from('leads')
+          .select('*', { count: 'exact', head: true })
+          .eq('builder_id', user.id);
+        if ((count ?? 0) > 0) {
+          isBuilder = true;
+        }
+      } catch (roleCheckError) {
+        console.error('[API/Export] Builder role fallback check failed (POST):', roleCheckError);
+      }
+    }
+    
+    if (!isBuilder) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
     

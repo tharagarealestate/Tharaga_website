@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { X, Download, FileSpreadsheet, FileText, Check } from 'lucide-react'
+import { getSupabase } from '@/lib/supabase'
 
 interface ExportModalProps {
   filters: any
@@ -61,6 +62,20 @@ export function ExportModal({ filters, onClose }: ExportModalProps) {
     setIsExporting(true)
     
     try {
+      // Ensure session is fresh before making request
+      const supabase = getSupabase()
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession()
+      
+      if (sessionError || !session) {
+        // Try to refresh session
+        const { data: { user }, error: userError } = await supabase.auth.getUser()
+        if (userError || !user) {
+          alert('Your session has expired. Please log in again.')
+          setIsExporting(false)
+          return
+        }
+      }
+      
       // Build query params from filters
       const params = new URLSearchParams()
       params.set('format', format)

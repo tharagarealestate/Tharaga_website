@@ -221,12 +221,18 @@
   status = 200
   force = true
 
-## Proxy API to Cloud Run to avoid browser CORS and keep origin stable
-[[redirects]]
-  from = "/api/*"
-  to = "https://api.tharaga.co.in/:splat"
-  status = 200
-  force = true
+## Proxy SPECIFIC API routes to Cloud Run backend
+## IMPORTANT: Next.js API routes in app/app/api/* take precedence
+## Only proxy routes that don't exist in Next.js API routes
+## Next.js routes handled locally: /api/leads/*, /api/builder/*, /api/analytics/*, /api/me/*, /api/properties/*, /api/admin/metrics/*, /api/team-members/*, /api/tracking/*, /api/trial/*, /api/health/*, /api/__vitals
+## External backend routes (proxied): Only routes NOT in Next.js
+## Note: Netlify redirects are evaluated BEFORE Next.js routes, so we need to be specific
+## The catch-all below is commented out - Next.js routes will handle their own paths
+# [[redirects]]
+#   from = "/api/*"
+#   to = "https://api.tharaga.co.in/:splat"
+#   status = 200
+#   force = true
 
 [[headers]]
   for = "/assets/*"

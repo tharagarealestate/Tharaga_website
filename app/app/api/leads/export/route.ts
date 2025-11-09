@@ -150,7 +150,7 @@ async function convertToExcel(leads: any[], fields: ExportField[]): Promise<Buff
 // =============================================
 export async function GET(request: NextRequest) {
   try {
-    const supabase = createRouteHandlerClient({ cookies });
+    let supabase = createRouteHandlerClient({ cookies });
     
     // Try to get user from cookies first
     let { data: { user }, error: authError } = await supabase.auth.getUser();
@@ -179,8 +179,7 @@ export async function GET(request: NextRequest) {
             if (tokenUser && !tokenError) {
               user = tokenUser;
               authError = null;
-              // Use the temp client for subsequent queries if needed
-              // For now, we'll continue with the original supabase client
+              supabase = tempClient;
             }
           }
         } catch (tokenErr) {

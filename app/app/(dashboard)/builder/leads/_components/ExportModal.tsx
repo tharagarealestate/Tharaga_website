@@ -74,7 +74,11 @@ export function ExportModal({ filters, onClose }: ExportModalProps) {
       const url = `/api/leads/export?${params.toString()}`
       const response = await fetch(url, {
         method: 'GET',
-        credentials: 'include',
+        credentials: 'include', // Include cookies for authentication
+        headers: {
+          'Accept': format === 'excel' ? 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' : 'text/csv',
+        },
+        cache: 'no-store', // Ensure fresh request
       })
       
       if (!response.ok) {

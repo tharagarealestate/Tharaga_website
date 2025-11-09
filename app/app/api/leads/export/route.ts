@@ -153,7 +153,19 @@ export async function GET(request: NextRequest) {
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     
     if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      console.error('[API/Export] Auth failed:', {
+        error: authError?.message,
+        status: authError?.status,
+        hasUser: !!user,
+        cookieHeader: request.headers.get('cookie') ? 'present' : 'missing'
+      });
+      return NextResponse.json(
+        { 
+          error: 'Unauthorized',
+          message: 'Please log in to export leads'
+        },
+        { status: 401 }
+      );
     }
     
     const { data: profile } = await supabase

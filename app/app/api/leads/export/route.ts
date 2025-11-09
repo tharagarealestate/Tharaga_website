@@ -151,14 +151,29 @@ export async function GET(request: NextRequest) {
   try {
     const supabase = createRouteHandlerClient({ cookies });
     
-    // Get user - createRouteHandlerClient automatically reads from cookies
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    // Try to get user from cookies first
+    let { data: { user }, error: authError } = await supabase.auth.getUser();
     
-    if (authError || !user) {
+    // If that fails, try reading from Authorization header as fallback
+    if (!user && !authError) {
+      const authHeader = request.headers.get('authorization');
+      if (authHeader?.startsWith('Bearer ')) {
+        const token = authHeader.substring(7);
+        // Verify the token and get user
+        const { data: { user: tokenUser }, error: tokenError } = await supabase.auth.getUser(token);
+        if (tokenUser && !tokenError) {
+          user = tokenUser;
+          authError = null;
+        }
+      }
+    }
+    
+    if (!user) {
       // Log for debugging but don't expose sensitive info
       console.error('[API/Export] Auth failed:', {
         error: authError?.message,
         hasCookies: !!request.headers.get('cookie'),
+        hasAuthHeader: !!request.headers.get('authorization'),
       });
       
       return NextResponse.json(

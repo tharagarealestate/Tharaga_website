@@ -65,7 +65,7 @@ export function ExportModal({ filters, onClose }: ExportModalProps) {
       // Get Supabase client (cached instance)
       const supabase = getSupabase()
       
-      // Ensure we have a valid session - refresh if needed
+      // Get current session - this will refresh if needed
       const { data: { session }, error: sessionError } = await supabase.auth.getSession()
       
       if (!session || sessionError) {
@@ -73,6 +73,13 @@ export function ExportModal({ filters, onClose }: ExportModalProps) {
         const { data: { user }, error: userError } = await supabase.auth.getUser()
         if (userError || !user) {
           alert('Your session has expired. Please log in again.')
+          setIsExporting(false)
+          return
+        }
+        // If getUser succeeded but getSession didn't, try getSession again
+        const retrySession = await supabase.auth.getSession()
+        if (!retrySession.data?.session) {
+          alert('Unable to retrieve session. Please log in again.')
           setIsExporting(false)
           return
         }
@@ -87,15 +94,25 @@ export function ExportModal({ filters, onClose }: ExportModalProps) {
       if (filters.score_min) params.set('score_min', String(filters.score_min))
       if (filters.score_max) params.set('score_max', String(filters.score_max))
       
+      // Get the current session again to ensure we have the latest token
+      const { data: { session: currentSession } } = await supabase.auth.getSession()
+      
       // Use fetch API to download the file properly
-      // Note: credentials: 'include' ensures cookies are sent with the request
+      // Include both cookies AND authorization header as fallback
       const url = `/api/leads/export?${params.toString()}`
+      const headers: HeadersInit = {
+        'Accept': format === 'excel' ? 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' : 'text/csv',
+      }
+      
+      // Add authorization header if we have a session token
+      if (currentSession?.access_token) {
+        headers['Authorization'] = `Bearer ${currentSession.access_token}`
+      }
+      
       const response = await fetch(url, {
         method: 'GET',
         credentials: 'include', // CRITICAL: Include cookies for authentication
-        headers: {
-          'Accept': format === 'excel' ? 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' : 'text/csv',
-        },
+        headers,
         cache: 'no-store', // Ensure fresh request
       })
       

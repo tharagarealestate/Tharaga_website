@@ -5,6 +5,7 @@
 // =============================================
 import { NextRequest, NextResponse } from 'next/server';
 import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
+import { createClient } from '@supabase/supabase-js';
 import { cookies } from 'next/headers';
 import ExcelJS from 'exceljs';
 
@@ -155,15 +156,35 @@ export async function GET(request: NextRequest) {
     let { data: { user }, error: authError } = await supabase.auth.getUser();
     
     // If that fails, try reading from Authorization header as fallback
-    if (!user && !authError) {
+    if (!user) {
       const authHeader = request.headers.get('authorization');
       if (authHeader?.startsWith('Bearer ')) {
         const token = authHeader.substring(7);
-        // Verify the token and get user
-        const { data: { user: tokenUser }, error: tokenError } = await supabase.auth.getUser(token);
-        if (tokenUser && !tokenError) {
-          user = tokenUser;
-          authError = null;
+        try {
+          // Create a temporary Supabase client with the token to verify it
+          const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
+          const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY;
+          
+          if (supabaseUrl && supabaseAnonKey) {
+            const tempClient = createClient(supabaseUrl, supabaseAnonKey, {
+              global: {
+                headers: {
+                  Authorization: `Bearer ${token}`,
+                },
+              },
+            });
+            
+            // Verify the token and get user
+            const { data: { user: tokenUser }, error: tokenError } = await tempClient.auth.getUser(token);
+            if (tokenUser && !tokenError) {
+              user = tokenUser;
+              authError = null;
+              // Use the temp client for subsequent queries if needed
+              // For now, we'll continue with the original supabase client
+            }
+          }
+        } catch (tokenErr) {
+          console.error('[API/Export] Token verification failed:', tokenErr);
         }
       }
     }

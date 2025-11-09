@@ -151,38 +151,26 @@ export async function GET(request: NextRequest) {
   try {
     const supabase = createRouteHandlerClient({ cookies });
     
-    // Try to get session first - this might help refresh expired tokens
-    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+    // Get user - createRouteHandlerClient automatically reads from cookies
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
     
-    // If no session, try to get user directly
-    let user = session?.user;
-    let authError = sessionError;
-    
-    if (!user) {
-      const userResult = await supabase.auth.getUser();
-      user = userResult.data?.user || null;
-      authError = userResult.error || authError;
-    }
-    
-    if (!user) {
-      const cookieHeader = request.headers.get('cookie');
+    if (authError || !user) {
+      // Log for debugging but don't expose sensitive info
       console.error('[API/Export] Auth failed:', {
         error: authError?.message,
-        status: authError?.status,
-        hasSession: !!session,
-        hasCookies: !!cookieHeader,
-        cookieNames: cookieHeader ? cookieHeader.split(';').map(c => c.split('=')[0].trim()).filter(Boolean) : []
+        hasCookies: !!request.headers.get('cookie'),
       });
       
       return NextResponse.json(
         { 
           error: 'Unauthorized',
-          message: 'Please log in to export leads. Your session may have expired.'
+          message: 'Please log in to export leads.'
         },
         { status: 401 }
       );
     }
     
+    // Verify builder role
     const { data: profile } = await supabase
       .from('profiles')
       .select('role')
@@ -190,7 +178,10 @@ export async function GET(request: NextRequest) {
       .maybeSingle();
     
     if (!profile || profile.role !== 'builder') {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+      return NextResponse.json(
+        { error: 'Forbidden', message: 'Only builders can export leads' },
+        { status: 403 }
+      );
     }
     
     // =============================================

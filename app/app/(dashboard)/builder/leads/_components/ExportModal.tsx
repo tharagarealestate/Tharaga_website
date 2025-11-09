@@ -62,12 +62,14 @@ export function ExportModal({ filters, onClose }: ExportModalProps) {
     setIsExporting(true)
     
     try {
-      // Ensure session is fresh before making request
+      // Get Supabase client (cached instance)
       const supabase = getSupabase()
+      
+      // Ensure we have a valid session - refresh if needed
       const { data: { session }, error: sessionError } = await supabase.auth.getSession()
       
-      if (sessionError || !session) {
-        // Try to refresh session
+      if (!session || sessionError) {
+        // Try to get user directly (this will refresh the session)
         const { data: { user }, error: userError } = await supabase.auth.getUser()
         if (userError || !user) {
           alert('Your session has expired. Please log in again.')
@@ -86,10 +88,11 @@ export function ExportModal({ filters, onClose }: ExportModalProps) {
       if (filters.score_max) params.set('score_max', String(filters.score_max))
       
       // Use fetch API to download the file properly
+      // Note: credentials: 'include' ensures cookies are sent with the request
       const url = `/api/leads/export?${params.toString()}`
       const response = await fetch(url, {
         method: 'GET',
-        credentials: 'include', // Include cookies for authentication
+        credentials: 'include', // CRITICAL: Include cookies for authentication
         headers: {
           'Accept': format === 'excel' ? 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' : 'text/csv',
         },

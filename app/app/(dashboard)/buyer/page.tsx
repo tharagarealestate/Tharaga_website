@@ -1,529 +1,585 @@
-'use client'
+ 'use client';
 
-import { useState, useEffect } from 'react'
-import { Heart, Calendar, Bell, TrendingUp, MapPin, Sparkles, Home, Shield, Award, Search, Star, Filter, ArrowRight, Zap, Eye, Bookmark } from 'lucide-react'
-import { motion } from 'framer-motion'
-import Link from 'next/link'
-import Image from 'next/image'
-import dynamic from 'next/dynamic'
-import { Suspense } from 'react'
-import { getSupabase } from '@/lib/supabase'
-import { listSaved, isSaved, saveItem, removeItem } from '@/lib/saved'
-import type { RecommendationItem } from '@/types/recommendations'
-import { LeadModal } from '@/components/lead/LeadModal'
+import { useEffect, useMemo, useState } from 'react';
+import {
+  ArrowRight,
+  Award,
+  Bell,
+  Bookmark,
+  Calendar,
+  Heart,
+  MapPin,
+  Search,
+  Shield,
+  Sparkles,
+  TrendingUp,
+  Zap,
+} from 'lucide-react';
+import { motion } from 'framer-motion';
+import Link from 'next/link';
+import Image from 'next/image';
+import dynamic from 'next/dynamic';
+import { Suspense } from 'react';
 
-const RecommendationsCarousel = dynamic(() => import('@/features/recommendations/RecommendationsCarousel').then(m => m.RecommendationsCarousel), { ssr: false })
+import { getSupabase } from '@/lib/supabase';
+import { listSaved } from '@/lib/saved';
+import type { RecommendationItem } from '@/types/recommendations';
+
+const RecommendationsCarousel = dynamic(
+  () => import('@/features/recommendations/RecommendationsCarousel').then((m) => m.RecommendationsCarousel),
+  { ssr: false }
+);
 
 export default function BuyerDashboardPage() {
-  const [greeting, setGreeting] = useState('')
-  const [userName, setUserName] = useState('')
-  const [recs, setRecs] = useState<RecommendationItem[]>([])
-  const [recError, setRecError] = useState<string | null>(null)
-  const [leadFor, setLeadFor] = useState<string | null>(null)
-  const [savedCount, setSavedCount] = useState(0)
+  const [greeting, setGreeting] = useState('');
+  const [userName, setUserName] = useState('');
+  const [recs, setRecs] = useState<RecommendationItem[]>([]);
+  const [recError, setRecError] = useState<string | null>(null);
+
+  const savedProperties = useMemo(() => listSaved(), []);
 
   useEffect(() => {
-    const hour = new Date().getHours()
-    if (hour < 12) setGreeting('Good Morning')
-    else if (hour < 18) setGreeting('Good Afternoon')
-    else setGreeting('Good Evening')
+    const hour = new Date().getHours();
+    if (hour < 12) setGreeting('Good Morning');
+    else if (hour < 18) setGreeting('Good Afternoon');
+    else setGreeting('Good Evening');
 
-    // Get user name
-    const supabase = getSupabase()
+    const supabase = getSupabase();
     supabase.auth.getUser().then(({ data: { user } }) => {
       if (user?.user_metadata?.full_name) {
-        setUserName(user.user_metadata.full_name.split(' ')[0])
+        setUserName(user.user_metadata.full_name.split(' ')[0]);
       } else if (user?.email) {
-        setUserName(user.email.split('@')[0])
+        setUserName(user.email.split('@')[0]);
       }
-    })
+    });
 
-    // Load recommendations
-    const loadRecs = async () => {
+    async function loadRecommendations() {
       try {
-        const sid = typeof document !== 'undefined' ? document.cookie.match(/(?:^|; )thg_sid=([^;]+)/)?.[1] : null
-        const res = await fetch('/api/recommendations', {
+        const sid =
+          typeof document !== 'undefined'
+            ? document.cookie.match(/(?:^|; )thg_sid=([^;]+)/)?.[1]
+            : null;
+        const response = await fetch('/api/recommendations', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ session_id: sid, num_results: 6 })
-        })
-        if (res.ok) {
-          const data = await res.json()
-          setRecs(Array.isArray(data.items) ? data.items : [])
-        } else {
-          setRecError('Failed to load')
+          body: JSON.stringify({ session_id: sid, num_results: 6 }),
+        });
+
+        if (!response.ok) {
+          setRecError('Failed to load');
+          return;
         }
+
+        const data = await response.json();
+        setRecs(Array.isArray(data.items) ? data.items : []);
       } catch {
-        setRecError('Failed to load')
+        setRecError('Failed to load');
       }
     }
-    loadRecs()
 
-    // Update saved count
-    setSavedCount(listSaved().length)
-  }, [])
+    loadRecommendations();
+  }, []);
+
+  const savedCount = savedProperties.length;
 
   return (
-    <div className='min-h-screen bg-gradient-to-br from-gray-50 via-gray-50 to-primary-50/30'>
-      {/* Hero Section with Premium Glassmorphism */}
-      <div className='relative overflow-hidden bg-gradient-to-br from-primary-950 via-primary-900 to-primary-800 pb-32 pt-20'>
-        {/* Animated Background Elements */}
-        <div className='absolute inset-0 overflow-hidden'>
-          <motion.div
-            className='absolute top-20 right-20 w-96 h-96 bg-gold-500/20 rounded-full blur-3xl'
-            animate={{
-              scale: [1, 1.2, 1],
-              opacity: [0.3, 0.5, 0.3],
-            }}
-            transition={{
-              duration: 8,
-              repeat: Infinity,
-              ease: "easeInOut"
-            }}
-          />
-          <motion.div
-            className='absolute bottom-20 left-20 w-[500px] h-[500px] bg-emerald-500/20 rounded-full blur-3xl'
-            animate={{
-              scale: [1, 1.15, 1],
-              opacity: [0.3, 0.5, 0.3],
-            }}
-            transition={{
-              duration: 10,
-              repeat: Infinity,
-              ease: "easeInOut",
-              delay: 1
-            }}
-          />
-          <motion.div
-            className='absolute top-1/2 left-1/2 w-[600px] h-[600px] bg-primary-600/10 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2'
-            animate={{
-              scale: [1, 1.1, 1],
-              opacity: [0.2, 0.4, 0.2],
-            }}
-            transition={{
-              duration: 12,
-              repeat: Infinity,
-              ease: "easeInOut",
-              delay: 2
-            }}
-          />
-        </div>
+    <div className="relative min-h-screen overflow-hidden bg-gradient-to-br from-[#040b1d] via-[#06132d] to-[#0b1f3f] text-white">
+      <GradientBackdrop />
 
-        <div className='relative z-10 container mx-auto px-4 sm:px-6 lg:px-8'>
-          {/* Top Navigation Bar */}
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            className='flex items-center justify-between mb-12'
-          >
-            <div className='flex items-center gap-3'>
-              <div className='p-2 rounded-xl bg-white/10 backdrop-blur-xl border border-white/20'>
-                <Home className='w-6 h-6 text-gold-400' />
-              </div>
-              <div>
-                <h1 className='text-2xl font-display font-bold text-white'>{greeting}{userName ? `, ${userName}` : ''}</h1>
-                <p className='text-primary-200 text-sm'>Your personalized property discovery hub</p>
-              </div>
-            </div>
-            <div className='flex items-center gap-3'>
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className='p-3 rounded-xl bg-white/10 backdrop-blur-xl border border-white/20 text-white hover:bg-white/20 transition-all'
-              >
-                <Bell className='w-5 h-5' />
-              </motion.button>
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className='p-3 rounded-xl bg-white/10 backdrop-blur-xl border border-white/20 text-white hover:bg-white/20 transition-all'
-              >
-                <Calendar className='w-5 h-5' />
-              </motion.button>
-            </div>
-          </motion.div>
+      <main className="relative z-10 mx-auto flex min-h-screen w-full max-w-7xl flex-col gap-12 px-5 pb-16 pt-12 sm:px-8 lg:px-12">
+        <HeroSection greeting={greeting} name={userName} savedCount={savedCount} />
 
-          {/* Hero Content */}
-          <div className='grid lg:grid-cols-2 gap-8 items-center'>
-            <motion.div
-              initial={{ opacity: 0, x: -30 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.8, delay: 0.2 }}
-            >
-              <div className='inline-flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-500/20 backdrop-blur-xl border border-emerald-400/30 mb-6'>
-                <Sparkles className='w-4 h-4 text-emerald-300' />
-                <span className='text-emerald-200 text-sm font-medium'>AI-Powered Recommendations</span>
-              </div>
-              <h2 className='text-5xl lg:text-6xl font-display font-bold text-white mb-4 leading-tight'>
-                Find Your Dream
-                <span className='block text-gradient-gold'>Home Today</span>
-              </h2>
-              <p className='text-primary-200 text-lg mb-8 leading-relaxed'>
-                Zero brokers. Zero commissions. Just pure property discovery powered by intelligent matching.
-              </p>
-              <div className='flex flex-wrap gap-4'>
-                <motion.button
-                  whileHover={{ scale: 1.05, y: -2 }}
-                  whileTap={{ scale: 0.95 }}
-                  className='btn-gold px-8 py-4 text-base font-semibold flex items-center gap-2'
-                >
-                  <Search className='w-5 h-5' />
-                  Explore Properties
-                </motion.button>
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  className='px-8 py-4 rounded-lg bg-white/10 backdrop-blur-xl border border-white/20 text-white font-semibold hover:bg-white/20 transition-all flex items-center gap-2'
-                >
-                  <Filter className='w-5 h-5' />
-                  Advanced Filters
-                </motion.button>
-              </div>
-            </motion.div>
-
-            {/* Stats Cards */}
-            <motion.div
-              initial={{ opacity: 0, x: 30 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.8, delay: 0.4 }}
-              className='grid grid-cols-2 gap-4'
-            >
-              <StatCard
-                icon={<TrendingUp className='w-6 h-6' />}
-                value="12k+"
-                label="Properties"
-                gradient="from-gold-500 to-gold-400"
-              />
-              <StatCard
-                icon={<Shield className='w-6 h-6' />}
-                value="100%"
-                label="Zero Fees"
-                gradient="from-emerald-500 to-emerald-400"
-              />
-              <StatCard
-                icon={<Award className='w-6 h-6' />}
-                value="4.9★"
-                label="Satisfaction"
-                gradient="from-primary-500 to-primary-400"
-              />
-              <StatCard
-                icon={<Zap className='w-6 h-6' />}
-                value="AI"
-                label="Powered"
-                gradient="from-gold-500 via-emerald-500 to-primary-500"
-              />
-            </motion.div>
-          </div>
-        </div>
-      </div>
-
-      {/* Main Content */}
-      <div className='container mx-auto px-4 sm:px-6 lg:px-8 -mt-20 relative z-20'>
-        {/* Quick Actions */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.2 }}
-          className='grid grid-cols-1 md:grid-cols-3 gap-6 mb-12'
-        >
-          <QuickActionCard
-            icon={<Heart className='w-6 h-6' />}
-            title="Saved Properties"
-            count={savedCount}
-            description="Your favorite listings"
-            href="/saved"
-            gradient="from-pink-500 to-rose-500"
-          />
-          <QuickActionCard
-            icon={<Calendar className='w-6 h-6' />}
-            title="Site Visits"
-            count={0}
-            description="Upcoming appointments"
-            href="/visits"
-            gradient="from-blue-500 to-cyan-500"
-          />
-          <QuickActionCard
-            icon={<MapPin className='w-6 h-6' />}
-            title="Recent Searches"
-            count={0}
-            description="Continue exploring"
-            href="/property-listing"
-            gradient="from-emerald-500 to-teal-500"
-          />
-        </motion.div>
-
-        {/* AI Recommendations Section */}
         <motion.section
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 24 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.4 }}
-          className='mb-12'
+          transition={{ duration: 0.5, delay: 0.1 }}
+          className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4"
         >
-          <div className='flex items-center justify-between mb-6'>
-            <div>
-              <div className='flex items-center gap-3 mb-2'>
-                <div className='p-2 rounded-lg bg-gradient-to-br from-emerald-500 to-emerald-600'>
-                  <Sparkles className='w-5 h-5 text-white' />
-                </div>
-                <h2 className='text-3xl font-display font-bold text-gray-900'>AI Recommendations</h2>
-              </div>
-              <p className='text-gray-600 ml-12'>Curated just for you based on your preferences</p>
-            </div>
-            <Link
-              href="/property-listing"
-              className='flex items-center gap-2 text-primary-600 hover:text-primary-700 font-medium transition-colors'
-            >
-              View All <ArrowRight className='w-4 h-4' />
-            </Link>
-          </div>
-          <div className='bg-white/80 backdrop-blur-xl rounded-2xl border border-gray-200/50 shadow-xl p-6'>
-            <Suspense fallback={<div className='p-8 text-center text-gray-600'>Loading recommendations...</div>}>
-              <RecommendationsCarousel items={recs} isLoading={!recs.length && !recError} error={recError} />
-            </Suspense>
-          </div>
+          <StatTile icon={<TrendingUp className="h-5 w-5" />} label="Live Listings" value="12k+" accent="from-emerald-400 via-emerald-500 to-teal-400" />
+          <StatTile icon={<Shield className="h-5 w-5" />} label="Zero Brokerage" value="100%" accent="from-yellow-400 via-amber-500 to-orange-500" />
+          <StatTile icon={<Award className="h-5 w-5" />} label="Avg. Satisfaction" value="4.9★" accent="from-blue-400 via-indigo-500 to-purple-500" />
+          <StatTile icon={<Zap className="h-5 w-5" />} label="AI Match Score" value="92%" accent="from-fuchsia-400 via-pink-500 to-rose-500" />
         </motion.section>
 
-        {/* Saved Properties Showcase */}
-        <SavedPropertiesShowcase />
+        <QuickActions savedCount={savedCount} />
 
-        {/* Upcoming Visits */}
+        <RecommendationsSection recs={recs} error={recError} />
+
+        <SavedPropertiesSection saved={savedProperties} />
+
         <UpcomingVisitsSection />
 
-        {/* Trust Indicators */}
-        <TrustIndicators />
-      </div>
-
-      <LeadModal propertyId={leadFor ?? ''} open={!!leadFor} onClose={() => setLeadFor(null)} />
+        <TrustIndicatorsSection />
+      </main>
     </div>
-  )
+  );
 }
 
-function StatCard({ icon, value, label, gradient }: { icon: React.ReactNode; value: string; label: string; gradient: string }) {
+// ============================================================
+// HERO
+// ============================================================
+
+function HeroSection({ greeting, name, savedCount }: { greeting: string; name: string; savedCount: number }) {
   return (
-    <motion.div
-      whileHover={{ scale: 1.05, y: -5 }}
-      className={`relative overflow-hidden rounded-2xl bg-gradient-to-br ${gradient} p-6 shadow-xl`}
+    <motion.section
+      initial={{ opacity: 0, y: 24 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.6 }}
+      className="relative overflow-hidden rounded-[32px] border border-white/10 bg-white/8 px-6 py-10 shadow-[0_35px_120px_rgba(15,23,42,0.40)] backdrop-blur-2xl sm:px-10 sm:py-12 lg:flex lg:items-center lg:justify-between"
     >
-      <div className='absolute inset-0 bg-white/10 backdrop-blur-sm' />
-      <div className='relative z-10'>
-        <div className='text-white/90 mb-3'>{icon}</div>
-        <div className='text-3xl font-display font-bold text-white mb-1'>{value}</div>
-        <div className='text-white/80 text-sm font-medium'>{label}</div>
+      <GlowOrbs />
+
+      <div className="relative z-10 flex flex-col gap-6 text-white">
+        <div className="inline-flex items-center gap-3 rounded-full border border-emerald-400/40 bg-emerald-500/10 px-4 py-2 text-sm text-emerald-100 backdrop-blur">
+          <Sparkles className="h-4 w-4" />
+          Hyper-personalised buyer cockpit
+        </div>
+        <div>
+          <h1 className="font-display text-4xl font-semibold sm:text-5xl lg:text-6xl">
+            {greeting}
+            {name ? `, ${name}!` : '!'} <span className="inline-block text-transparent bg-clip-text bg-gradient-to-r from-amber-400 via-yellow-200 to-rose-300">Welcome back.</span>
+          </h1>
+          <p className="mt-4 max-w-xl text-base text-slate-200 sm:text-lg">
+            Track matches, manage visits, and stay ahead with a single, glassmorphic workspace tuned for clarity on any device.
+          </p>
+        </div>
+        <div className="flex flex-wrap gap-4">
+          <PrimaryActionButton href="/property-listing" icon={<Search className="h-4 w-4" />}>
+            Explore curated homes
+          </PrimaryActionButton>
+          <SecondaryActionButton href="/saved" icon={<Heart className="h-4 w-4" />}>
+            Saved shortlist ({savedCount})
+          </SecondaryActionButton>
+          <SecondaryActionButton href="/visits" icon={<Calendar className="h-4 w-4" />}>
+            Plan a site visit
+          </SecondaryActionButton>
+        </div>
       </div>
-      <div className='absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16' />
-    </motion.div>
-  )
+
+      <div className="relative z-10 mt-10 grid gap-4 sm:grid-cols-2 lg:mt-0 lg:w-[320px]">
+        <HeroMiniCard
+          title="Match Momentum"
+          value="18 new"
+          caption="since your last login"
+          icon={<Sparkles className="h-4 w-4 text-amber-300" />}
+        />
+        <HeroMiniCard
+          title="Saved Watchlist"
+          value={`${savedCount || 0}`}
+          caption="properties in shortlist"
+          icon={<Heart className="h-4 w-4 text-rose-300" />}
+        />
+        <HeroMiniCard
+          title="Visits Pipeline"
+          value="2 pending"
+          caption="awaiting confirmation"
+          icon={<Calendar className="h-4 w-4 text-sky-300" />}
+        />
+        <HeroMiniCard
+          title="Neighbourhood Radar"
+          value="6 alerts"
+          caption="fresh price movements"
+          icon={<MapPin className="h-4 w-4 text-emerald-300" />}
+        />
+      </div>
+    </motion.section>
+  );
 }
 
-function QuickActionCard({ icon, title, count, description, href, gradient }: {
-  icon: React.ReactNode
-  title: string
-  count: number
-  description: string
-  href: string
-  gradient: string
-}) {
-  return (
-    <Link href={href}>
-      <motion.div
-        whileHover={{ scale: 1.02, y: -4 }}
-        className={`relative overflow-hidden rounded-2xl bg-gradient-to-br ${gradient} p-6 shadow-lg hover:shadow-xl transition-all`}
-      >
-        <div className='absolute inset-0 bg-white/10 backdrop-blur-sm' />
-        <div className='relative z-10 flex items-start justify-between'>
-          <div>
-            <div className='text-white/90 mb-3'>{icon}</div>
-            <h3 className='text-xl font-display font-bold text-white mb-1'>{title}</h3>
-            <p className='text-white/80 text-sm mb-2'>{description}</p>
-            <div className='text-2xl font-bold text-white'>{count}</div>
-          </div>
-          <ArrowRight className='w-5 h-5 text-white/60' />
-        </div>
-      </motion.div>
-    </Link>
-  )
-}
+// ============================================================
+// QUICK ACTIONS
+// ============================================================
 
-function SavedPropertiesShowcase() {
-  const saved = listSaved().slice(0, 4)
-
-  if (saved.length === 0) {
-    return (
-      <motion.section
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6 }}
-        className='mb-12'
-      >
-        <div className='flex items-center justify-between mb-6'>
-          <div>
-            <div className='flex items-center gap-3 mb-2'>
-              <div className='p-2 rounded-lg bg-gradient-to-br from-pink-500 to-rose-500'>
-                <Bookmark className='w-5 h-5 text-white' />
-              </div>
-              <h2 className='text-3xl font-display font-bold text-gray-900'>Saved Properties</h2>
-            </div>
-            <p className='text-gray-600 ml-12'>Your favorite listings for easy access</p>
-          </div>
-          <Link
-            href="/saved"
-            className='flex items-center gap-2 text-primary-600 hover:text-primary-700 font-medium transition-colors'
-          >
-            View All <ArrowRight className='w-4 h-4' />
-          </Link>
-        </div>
-        <div className='bg-white/80 backdrop-blur-xl rounded-2xl border border-gray-200/50 shadow-xl p-12 text-center'>
-          <Bookmark className='w-16 h-16 text-gray-300 mx-auto mb-4' />
-          <p className='text-gray-600 text-lg mb-2'>No saved properties yet</p>
-          <p className='text-gray-500 mb-6'>Start exploring and save properties you love</p>
-          <Link
-            href="/property-listing"
-            className='inline-flex items-center gap-2 btn-primary'
-          >
-            <Search className='w-4 h-4' />
-            Explore Properties
-          </Link>
-        </div>
-      </motion.section>
-    )
-  }
+function QuickActions({ savedCount }: { savedCount: number }) {
+  const cards = [
+    {
+      href: '/saved',
+      icon: <Heart className="h-5 w-5 text-rose-200" />,
+      label: 'Saved Properties',
+      description: 'Revisit your shortlisted homes',
+      value: savedCount,
+      accent: 'from-rose-500/80 via-pink-500/60 to-fuchsia-500/80',
+    },
+    {
+      href: '/visits',
+      icon: <Calendar className="h-5 w-5 text-sky-200" />,
+      label: 'Site Visits',
+      description: 'Schedule and track appointments',
+      value: 0,
+      accent: 'from-sky-600/80 via-blue-500/60 to-cyan-500/80',
+    },
+    {
+      href: '/property-listing',
+      icon: <MapPin className="h-5 w-5 text-emerald-200" />,
+      label: 'Search History',
+      description: 'Continue where you left off',
+      value: 0,
+      accent: 'from-emerald-500/80 via-teal-500/60 to-green-500/80',
+    },
+    {
+      href: '/tools/cost-calculator',
+      icon: <Shield className="h-5 w-5 text-amber-200" />,
+      label: 'Cost Calculator',
+      description: 'Plan budgets with confidence',
+      value: null,
+      accent: 'from-amber-500/80 via-orange-500/60 to-yellow-500/80',
+    },
+  ];
 
   return (
     <motion.section
-      initial={{ opacity: 0, y: 20 }}
+      initial={{ opacity: 0, y: 24 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.6 }}
-      className='mb-12'
+      transition={{ duration: 0.6, delay: 0.1 }}
+      className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4"
     >
-      <div className='flex items-center justify-between mb-6'>
-        <div>
-          <div className='flex items-center gap-3 mb-2'>
-            <div className='p-2 rounded-lg bg-gradient-to-br from-pink-500 to-rose-500'>
-              <Bookmark className='w-5 h-5 text-white' />
+      {cards.map((card) => (
+        <Link key={card.label} href={card.href} className="group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-300">
+          <div className="glass-tile relative flex h-full min-h-[240px] flex-col justify-between overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-white/12 via-white/10 to-white/6 p-6 shadow-[0_20px_60px_rgba(8,15,40,0.35)] backdrop-blur-2xl transition-transform duration-200 hover:-translate-y-1 hover:shadow-[0_30px_80px_rgba(8,15,40,0.45)]">
+            <div className="absolute inset-0 opacity-70 blur-2xl" style={{ backgroundImage: `linear-gradient(135deg, ${card.accent})` }} />
+            <div className="relative z-10 flex items-center justify-between">
+              <div className="rounded-2xl bg-white/15 p-3 backdrop-blur">
+                {card.icon}
+              </div>
+              <Bell className="h-4 w-4 text-white/40 transition-opacity duration-200 group-hover:text-white/70" />
             </div>
-            <h2 className='text-3xl font-display font-bold text-gray-900'>Saved Properties</h2>
+            <div className="relative z-10 mt-8 space-y-2">
+              <div className="text-xs uppercase tracking-[0.2em] text-white/60">Workspace</div>
+              <h3 className="font-display text-xl font-semibold text-white">{card.label}</h3>
+              <p className="text-sm text-white/70">{card.description}</p>
+              {card.value !== null && <span className="text-3xl font-bold text-white">{card.value}</span>}
+            </div>
+            <div className="relative z-10 mt-6 flex items-center gap-2 text-sm font-medium text-white/70">
+              Manage
+              <ArrowRight className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-1" />
+            </div>
           </div>
-          <p className='text-gray-600 ml-12'>Your favorite listings for easy access</p>
-        </div>
-        <Link
-          href="/saved"
-          className='flex items-center gap-2 text-primary-600 hover:text-primary-700 font-medium transition-colors'
-        >
-          View All <ArrowRight className='w-4 h-4' />
         </Link>
-      </div>
-      <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6'>
-        {saved.map((item, idx) => (
-          <motion.div
-            key={item.property_id}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, delay: idx * 0.1 }}
-            whileHover={{ scale: 1.02, y: -4 }}
-            className='group relative overflow-hidden rounded-2xl bg-white shadow-lg hover:shadow-xl transition-all'
-          >
-            <Link href={`/properties/${item.property_id}`}>
-              <div className='relative h-48 w-full bg-gray-100 overflow-hidden'>
-                <Image
-                  src={item.image_url}
-                  alt={item.title}
-                  fill
-                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
-                  className='object-cover group-hover:scale-110 transition-transform duration-500'
-                />
-                <div className='absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent' />
-                <div className='absolute top-3 right-3'>
-                  <div className='p-2 rounded-full bg-white/90 backdrop-blur-sm'>
-                    <Heart className='w-4 h-4 text-pink-500 fill-pink-500' />
+      ))}
+    </motion.section>
+  );
+}
+
+// ============================================================
+// RECOMMENDATIONS
+// ============================================================
+
+function RecommendationsSection({ recs, error }: { recs: RecommendationItem[]; error: string | null }) {
+  return (
+    <motion.section
+      initial={{ opacity: 0, y: 24 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.6, delay: 0.15 }}
+      className="glass-panel space-y-6 rounded-[28px] border border-white/10 bg-white/6 p-6 shadow-[0_20px_80px_rgba(8,15,40,0.45)] backdrop-blur-2xl sm:p-8"
+    >
+      <SectionHeader
+        title="Perfect matches for you"
+        subtitle="AI compares thousands of data points to surface the most relevant homes."
+        icon={<Sparkles className="h-5 w-5 text-emerald-200" />}
+        action={{
+          label: 'View all properties',
+          href: '/property-listing',
+        }}
+      />
+      <Suspense fallback={<div className="rounded-2xl border border-white/10 bg-white/6 p-8 text-center text-white/70">Gathering recommendations…</div>}>
+        <RecommendationsCarousel items={recs} isLoading={!recs.length && !error} error={error} />
+      </Suspense>
+    </motion.section>
+  );
+}
+
+// ============================================================
+// SAVED PROPERTIES
+// ============================================================
+
+function SavedPropertiesSection({ saved }: { saved: ReturnType<typeof listSaved> }) {
+  return (
+    <motion.section
+      initial={{ opacity: 0, y: 24 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.6, delay: 0.2 }}
+      className="glass-panel space-y-6 rounded-[28px] border border-white/10 bg-white/6 p-6 shadow-[0_20px_80px_rgba(8,15,40,0.45)] backdrop-blur-2xl sm:p-8"
+    >
+      <SectionHeader
+        title="Your curated shortlist"
+        subtitle="Easily compare features, track price changes, and take the next step."
+        icon={<Bookmark className="h-5 w-5 text-rose-200" />}
+        action={{
+          label: 'Manage saved homes',
+          href: '/saved',
+        }}
+      />
+
+      {saved.length === 0 ? (
+        <div className="flex flex-col items-center gap-3 rounded-2xl border border-white/10 bg-white/4 p-10 text-white/80">
+          <Bookmark className="h-12 w-12 text-white/40" />
+          <p className="text-lg font-medium text-white">Save properties to build your personal watchlist</p>
+          <p className="text-sm text-white/60">Tap the heart icon on any property to bookmark it for later.</p>
+          <PrimaryActionButton href="/property-listing" icon={<Search className="h-4 w-4" />}>
+            Discover properties
+          </PrimaryActionButton>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-4">
+          {saved.slice(0, 4).map((item, index) => (
+            <motion.div
+              key={item.property_id}
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4, delay: index * 0.05 }}
+              className="group relative overflow-hidden rounded-2xl border border-white/10 bg-white/[0.08] shadow-[0_15px_45px_rgba(8,15,40,0.35)] backdrop-blur-xl transition-transform duration-200 hover:-translate-y-1"
+            >
+              <Link href={`/properties/${item.property_id}`} className="flex h-full flex-col">
+                <div className="relative h-48 w-full overflow-hidden">
+                  <Image
+                    src={item.image_url}
+                    alt={item.title}
+                    fill
+                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+                    className="object-cover transition-transform duration-500 group-hover:scale-105"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-black/10 to-transparent" />
+                  <div className="absolute right-3 top-3 rounded-full bg-white/80 p-2 text-rose-500 shadow">
+                    <Heart className="h-4 w-4 fill-current" />
                   </div>
                 </div>
-              </div>
-              <div className='p-4'>
-                <h3 className='font-semibold text-gray-900 line-clamp-2 mb-2 group-hover:text-primary-600 transition-colors'>
-                  {item.title}
-                </h3>
-                {item.specs && (
-                  <div className='flex items-center gap-2 text-sm text-gray-600'>
-                    {item.specs.bedrooms && <span>{item.specs.bedrooms} BHK</span>}
-                    {item.specs.area_sqft && <span>• {Math.round(item.specs.area_sqft)} sqft</span>}
-                  </div>
-                )}
-              </div>
-            </Link>
-          </motion.div>
-        ))}
-      </div>
+                <div className="flex flex-1 flex-col gap-2 p-4 text-white">
+                  <h3 className="font-semibold leading-tight text-white">{item.title}</h3>
+                  {item.specs && (
+                    <div className="flex gap-3 text-sm text-white/70">
+                      {item.specs.bedrooms && <span>{item.specs.bedrooms} BHK</span>}
+                      {item.specs.area_sqft && <span>{Math.round(item.specs.area_sqft)} sqft</span>}
+                    </div>
+                  )}
+                  <span className="mt-auto inline-flex items-center gap-2 text-sm font-medium text-amber-200">
+                    View details
+                    <ArrowRight className="h-4 w-4" />
+                  </span>
+                </div>
+              </Link>
+            </motion.div>
+          ))}
+        </div>
+      )}
     </motion.section>
-  )
+  );
 }
+
+// ============================================================
+// UPCOMING VISITS
+// ============================================================
 
 function UpcomingVisitsSection() {
   return (
     <motion.section
-      initial={{ opacity: 0, y: 20 }}
+      initial={{ opacity: 0, y: 24 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.6 }}
-      className='mb-12'
+      transition={{ duration: 0.6, delay: 0.25 }}
+      className="glass-panel space-y-4 rounded-[28px] border border-white/10 bg-white/6 p-6 text-white shadow-[0_20px_80px_rgba(8,15,40,0.45)] backdrop-blur-2xl sm:p-8"
     >
-      <div className='flex items-center justify-between mb-6'>
-        <div>
-          <div className='flex items-center gap-3 mb-2'>
-            <div className='p-2 rounded-lg bg-gradient-to-br from-blue-500 to-cyan-500'>
-              <Calendar className='w-5 h-5 text-white' />
-            </div>
-            <h2 className='text-3xl font-display font-bold text-gray-900'>Upcoming Site Visits</h2>
-          </div>
-          <p className='text-gray-600 ml-12'>Your scheduled property visits</p>
+      <SectionHeader
+        title="Upcoming site visits"
+        subtitle="Stay organised and never miss a walkthrough."
+        icon={<Calendar className="h-5 w-5 text-sky-200" />}
+      />
+      <div className="rounded-2xl border border-white/10 bg-white/[0.05] p-10 text-center text-white/70">
+        <Calendar className="mx-auto h-14 w-14 text-white/40" />
+        <p className="mt-4 text-lg text-white">No visits scheduled yet</p>
+        <p className="text-sm text-white/60">Pick your favourites and lock a time that suits you best.</p>
+        <div className="mt-6 flex justify-center">
+          <PrimaryActionButton href="/visits" icon={<Calendar className="h-4 w-4" />}>
+            Schedule a visit
+          </PrimaryActionButton>
         </div>
       </div>
-      <div className='bg-white/80 backdrop-blur-xl rounded-2xl border border-gray-200/50 shadow-xl p-8 text-center'>
-        <Calendar className='w-16 h-16 text-gray-300 mx-auto mb-4' />
-        <p className='text-gray-600 text-lg mb-2'>No upcoming visits scheduled</p>
-        <p className='text-gray-500 mb-6'>Schedule a site visit to see properties in person</p>
-        <button className='inline-flex items-center gap-2 btn-primary'>
-          <Calendar className='w-4 h-4' />
-          Schedule Visit
-        </button>
-      </div>
     </motion.section>
-  )
+  );
 }
 
-function TrustIndicators() {
+// ============================================================
+// TRUST INDICATORS
+// ============================================================
+
+function TrustIndicatorsSection() {
+  const items = [
+    {
+      icon: <Shield className="h-7 w-7 text-emerald-200" />,
+      title: 'Rigorous Verification',
+      description: 'Every property passes multi-layer checks for authenticity and compliance.',
+    },
+    {
+      icon: <Award className="h-7 w-7 text-amber-200" />,
+      title: 'Buyer-first service',
+      description: 'Dedicated advisors ensure you get the most value without brokerage fees.',
+    },
+    {
+      icon: <TrendingUp className="h-7 w-7 text-sky-200" />,
+      title: 'Market intelligence',
+      description: 'Live data keeps you informed about emerging hotspots and fair pricing.',
+    },
+  ];
+
   return (
     <motion.section
-      initial={{ opacity: 0, y: 20 }}
+      initial={{ opacity: 0, y: 24 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.6 }}
-      className='mb-12'
+      transition={{ duration: 0.6, delay: 0.3 }}
+      className="rounded-[32px] border border-white/10 bg-white/6 px-6 py-10 text-white shadow-[0_20px_90px_rgba(8,15,40,0.45)] backdrop-blur-2xl sm:px-10"
     >
-      <div className='bg-gradient-to-br from-primary-900 to-primary-800 rounded-2xl p-8 md:p-12 shadow-2xl'>
-        <div className='grid grid-cols-1 md:grid-cols-3 gap-8 text-center'>
-          <div>
-            <div className='inline-flex items-center justify-center w-16 h-16 rounded-full bg-gold-500/20 mb-4'>
-              <Shield className='w-8 h-8 text-gold-400' />
+      <div className="mx-auto grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
+        {items.map((item) => (
+          <div key={item.title} className="flex flex-col gap-4 rounded-3xl border border-white/10 bg-white/8 p-6 shadow-[0_12px_45px_rgba(8,15,40,0.25)] backdrop-blur-xl">
+            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white/10">{item.icon}</div>
+            <div>
+              <h3 className="font-display text-xl text-white">{item.title}</h3>
+              <p className="mt-2 text-sm text-white/70">{item.description}</p>
             </div>
-            <h3 className='text-xl font-display font-bold text-white mb-2'>Zero Commissions</h3>
-            <p className='text-primary-200'>Save money with our broker-free platform</p>
+            <ArrowRight className="mt-2 h-4 w-4 text-white/50" />
           </div>
-          <div>
-            <div className='inline-flex items-center justify-center w-16 h-16 rounded-full bg-emerald-500/20 mb-4'>
-              <Award className='w-8 h-8 text-emerald-400' />
-            </div>
-            <h3 className='text-xl font-display font-bold text-white mb-2'>Verified Properties</h3>
-            <p className='text-primary-200'>All listings are verified and authentic</p>
-          </div>
-          <div>
-            <div className='inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary-500/20 mb-4'>
-              <Zap className='w-8 h-8 text-primary-300' />
-            </div>
-            <h3 className='text-xl font-display font-bold text-white mb-2'>AI-Powered</h3>
-            <p className='text-primary-200'>Smart recommendations based on your preferences</p>
-          </div>
-        </div>
+        ))}
       </div>
     </motion.section>
-  )
+  );
 }
 
+// ============================================================
+// SUPPORTING ELEMENTS
+// ============================================================
+
+function GradientBackdrop() {
+  return (
+    <div aria-hidden className="pointer-events-none absolute inset-0">
+      <div className="absolute -top-20 left-1/2 h-[420px] w-[420px] -translate-x-1/2 rounded-full bg-emerald-500/20 blur-3xl sm:h-[520px] sm:w-[520px]" />
+      <div className="absolute top-32 left-[15%] h-[360px] w-[360px] rounded-full bg-indigo-600/20 blur-[160px]" />
+      <div className="absolute bottom-10 right-10 h-[400px] w-[400px] rounded-full bg-amber-500/20 blur-[160px]" />
+    </div>
+  );
+}
+
+function GlowOrbs() {
+  return (
+    <div aria-hidden className="pointer-events-none absolute inset-0">
+      <div className="absolute -right-20 top-[-120px] h-[260px] w-[260px] rounded-full bg-amber-400/20 blur-[120px]" />
+      <div className="absolute -bottom-20 left-[-80px] h-[260px] w-[260px] rounded-full bg-sky-400/20 blur-[120px]" />
+    </div>
+  );
+}
+
+function StatTile({
+  icon,
+  value,
+  label,
+  accent,
+}: {
+  icon: React.ReactNode;
+  value: string;
+  label: string;
+  accent: string;
+}) {
+  return (
+    <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-white/8 p-6 shadow-[0_20px_70px_rgba(8,15,40,0.35)] backdrop-blur-2xl">
+      <div className="absolute inset-0 opacity-80 blur-2xl" style={{ backgroundImage: `linear-gradient(135deg, ${accent})` }} />
+      <div className="relative z-10 flex flex-col gap-3 text-white">
+        <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white/15">{icon}</div>
+        <div className="text-4xl font-bold">{value}</div>
+        <div className="text-sm uppercase tracking-[0.3em] text-white/70">{label}</div>
+      </div>
+    </div>
+  );
+}
+
+function HeroMiniCard({
+  title,
+  value,
+  caption,
+  icon,
+}: {
+  title: string;
+  value: string;
+  caption: string;
+  icon: React.ReactNode;
+}) {
+  return (
+    <div className="flex flex-col gap-3 rounded-2xl border border-white/10 bg-white/6 p-4 text-white shadow-[0_12px_40px_rgba(8,15,40,0.35)] backdrop-blur-xl">
+      <div className="flex items-center justify-between text-xs uppercase tracking-[0.28em] text-white/60">
+        {title}
+        {icon}
+      </div>
+      <div className="text-2xl font-semibold text-white">{value}</div>
+      <p className="text-sm text-white/70">{caption}</p>
+    </div>
+  );
+}
+
+function SectionHeader({
+  title,
+  subtitle,
+  icon,
+  action,
+}: {
+  title: string;
+  subtitle: string;
+  icon?: React.ReactNode;
+  action?: { label: string; href: string };
+}) {
+  return (
+    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex items-start gap-4">
+        {icon && <div className="rounded-2xl bg-white/12 p-3 backdrop-blur">{icon}</div>}
+        <div>
+          <h2 className="font-display text-2xl text-white">{title}</h2>
+          <p className="mt-1 text-sm text-white/70">{subtitle}</p>
+        </div>
+      </div>
+      {action && (
+        <Link
+          href={action.href}
+          className="group inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-2 text-sm font-medium text-white/80 backdrop-blur transition hover:border-white/40 hover:text-white"
+        >
+          {action.label}
+          <ArrowRight className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-1" />
+        </Link>
+      )}
+    </div>
+  );
+}
+
+function PrimaryActionButton({
+  href,
+  icon,
+  children,
+}: {
+  href: string;
+  icon?: React.ReactNode;
+  children: React.ReactNode;
+}) {
+  return (
+    <Link
+      href={href}
+      className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-amber-400 via-orange-400 to-rose-400 px-6 py-3 text-sm font-semibold text-slate-900 shadow-[0_10px_35px_rgba(255,176,0,0.4)] transition hover:shadow-[0_15px_45px_rgba(255,176,0,0.5)]"
+    >
+      {icon}
+      {children}
+    </Link>
+  );
+}
+
+function SecondaryActionButton({
+  href,
+  icon,
+  children,
+}: {
+  href: string;
+  icon?: React.ReactNode;
+  children: React.ReactNode;
+}) {
+  return (
+    <Link
+      href={href}
+      className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-6 py-3 text-sm font-semibold text-white shadow-[0_10px_35px_rgba(8,15,40,0.3)] transition hover:border-white/40 hover:bg-white/15"
+    >
+      {icon}
+      {children}
+    </Link>
+  );
+}

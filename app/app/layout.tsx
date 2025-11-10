@@ -87,45 +87,593 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             .thg-auth-menu{ right:8px; }
           }
         ` }} />
-        {/* Load snippets auth system (inline from snippets/index.html) */}
-        <Script src="/snippets/" type="text/html" id="snippets-auth-src" strategy="beforeInteractive" style={{ display: 'none' }} />
-        <Script id="auth-loader" strategy="beforeInteractive">
+        {/* Auth system - directly embedded from snippets/index.html */}
+        <Script id="auth-system" strategy="beforeInteractive">
           {`
-          // Extract and execute scripts from snippets/index.html
-          // Ensure header is ready before auth system initializes
-          (function(){
-            function loadAuthSystem() {
-              // Wait for header to be ready
-              const header = document.getElementById('tharaga-static-header');
-              const authContainer = document.getElementById('site-header-auth-container');
-              
-              if (!header || !authContainer) {
-                // Retry after a short delay
-                setTimeout(loadAuthSystem, 100);
-                return;
-              }
-              
-              fetch('/snippets/').then(r=>r.text()).then(html=>{
-                const parser = new DOMParser();
-                const doc = parser.parseFromString(html, 'text/html');
-                const scripts = doc.querySelectorAll('script');
-                scripts.forEach(script => {
-                  if (script.textContent.includes('__thgAuthInstalledV1')) {
-                    const newScript = document.createElement('script');
-                    newScript.textContent = script.textContent;
-                    document.head.appendChild(newScript);
-                  }
-                });
-              }).catch(e => console.error('Failed to load auth:', e));
-            }
-            
-            // Start loading after DOM is ready
-            if (document.readyState === 'loading') {
-              document.addEventListener('DOMContentLoaded', loadAuthSystem);
+// Durable top-right authentication header and modal (Supabase-based)
+// Works standalone when pasted into Durable Head Code
+(function(){
+  if (window.__thgAuthInstalledV1) return; window.__thgAuthInstalledV1 = true;
+
+  const AUTH_NAV = Object.assign({ profile: '/profile', dashboard: '/dashboard', settings: null }, window.AUTH_NAV || {});
+  const Z_BASE = 2147483000;
+
+  window.authGate = window.authGate || {};
+  window.authGate.openLoginModal = function(opts){ (window.__thgOpenAuthModal || function(){ alert('Auth not ready'); })(opts||{}); };
+
+  function ready(fn){ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',fn,{once:true});} else { fn(); } }
+  function headerRoot(){ return document.querySelector('header, [role="banner"], [data-section="header"], .site-header, .Header, nav') || null; }
+  // Instead of hiding legacy/login links, wire them to open the modal directly
+  function hideLegacyAuthLinks(root){
+    var scope = (root || document);
+    var selector = 'a[href="#login"], a[href="#signup"], [data-auth-open]';
+    scope.querySelectorAll(selector).forEach(function(el){
+      if (el.__thgAuthWired) return;
+      el.__thgAuthWired = true;
+      el.addEventListener('click', function(ev){
+        try {
+          ev.preventDefault();
+          // Always open the modal directly; never click the header button, to avoid
+          // accidentally toggling the account dropdown when the user is already signed in.
+          var next = location.pathname + location.search;
+          if (window.authGate && typeof window.authGate.openLoginModal === 'function') {
+            window.authGate.openLoginModal({ next });
+          } else if (typeof window.__thgOpenAuthModal === 'function') {
+            window.__thgOpenAuthModal({ next });
+          }
+        } catch(_){ }
+      }, { passive:false });
+    });
+  }
+  function clamp(str, max){ if (!str) return ''; return str.length>max ? str.slice(0,max-1)+'…' : str; }
+  function getInitials(user){
+    const meta = user?.user_metadata || {};
+    const full = (meta.full_name || meta.name || '').trim();
+    if (full) {
+      const parts = full.split(/\\s+/).filter(Boolean);
+      const first = parts[0]?.[0] || '';
+      const last = parts.length>1 ? parts[parts.length-1][0] : '';
+      return (first+last || first || '').toUpperCase() || 'U';
+    }
+    const email = (user?.email || '').trim();
+    return email ? email[0].toUpperCase() : 'U';
+  }
+  function getDisplayName(user){
+    const meta = user?.user_metadata || {};
+    const name = (meta.full_name || meta.name || meta.username || '').trim();
+    return name || (user?.email || 'My Account');
+  }
+  // Keep buyer-form email field in sync with header auth state (same-page or embedded)
+  function lockBuyerEmailInBuyerForm(email){
+    try {
+      const scope = document.getElementById('buyerForm') || document;
+      const emailInput = scope && scope.querySelector('#buyerForm [name="email"], form#buyerForm input[name="email"]');
+      if (!emailInput) return;
+      emailInput.value = email || '';
+      emailInput.setAttribute('data-session-email', email || '');
+      emailInput.readOnly = true; emailInput.setAttribute('aria-readonly','true');
+      emailInput.disabled = true;
+      try { emailInput.setAttribute('autocomplete','off'); emailInput.setAttribute('autocapitalize','off'); emailInput.setAttribute('spellcheck','false'); } catch(_){}
+      // create/update hidden mirror used for submission
+      let hidden = document.getElementById('buyer-email-hidden');
+      if (!hidden){ hidden = document.createElement('input'); hidden.type='hidden'; hidden.name='email'; hidden.id='buyer-email-hidden'; emailInput.parentElement && emailInput.parentElement.appendChild(hidden); }
+      hidden.value = email || '';
+      // prevent duplicate name submission
+      if (emailInput.getAttribute('name')) { emailInput.setAttribute('data-original-name','email'); emailInput.removeAttribute('name'); }
+    } catch(_){}
+  }
+  function unlockBuyerEmailInBuyerForm(){
+    try {
+      const scope = document.getElementById('buyerForm') || document;
+      const emailInput = scope && scope.querySelector('#buyerForm [data-session-email], form#buyerForm input[aria-readonly]');
+      if (!emailInput) return;
+      try { emailInput.readOnly = false; emailInput.disabled = false; emailInput.removeAttribute('aria-readonly'); emailInput.removeAttribute('data-session-email'); } catch(_){}
+      try { if (!emailInput.getAttribute('name')) emailInput.setAttribute('name', emailInput.getAttribute('data-original-name') || 'email'); } catch(_){}
+      const hidden = document.getElementById('buyer-email-hidden'); if (hidden && hidden.parentElement) hidden.parentElement.removeChild(hidden);
+    } catch(_){}
+  }
+  function setBuyerEmailLockFromUser(user){
+    try { if (user && user.email) lockBuyerEmailInBuyerForm(user.email); else unlockBuyerEmailInBuyerForm(); } catch(_){}
+  }
+  function createEl(tag, cls, attrs){ const el = document.createElement(tag); if (cls) el.className = cls; if (attrs) for (var k in attrs) el.setAttribute(k, attrs[k]); return el; }
+  function validateEmail(val){ return /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(val); }
+  function ensureContainer(){
+    // First, try to use the SiteHeader's dedicated container
+    let wrap = document.getElementById('site-header-auth-container');
+    if (wrap) {
+      // Convert the container to have thg-auth-wrap styles
+      if (!wrap.classList.contains('thg-auth-wrap')) {
+        wrap.className = 'thg-auth-wrap';
+      }
+      return wrap;
+    }
+
+    // Fallback: create wrapper in header or body (original behavior)
+    wrap = document.querySelector('.thg-auth-wrap');
+    if (!wrap){
+      wrap = document.createElement('div');
+      wrap.className = 'thg-auth-wrap';
+      let hdr = headerRoot();
+      let parent = hdr || document.body;
+      if (hdr) { const cs = getComputedStyle(hdr); if (cs.position === 'static') { hdr.style.position = 'relative'; } parent.appendChild(wrap); }
+      else { wrap.classList.add('is-fixed'); parent.appendChild(wrap); }
+    }
+    return wrap;
+  }
+
+  function injectStyles(){
+    if (document.getElementById('thg-auth-styles')) return;
+  const css = \`
+/* Auth wrapper - when used in SiteHeader container, it's already positioned correctly */
+.thg-auth-wrap{ display:flex; align-items:center; position:relative; z-index:\${Z_BASE}; }
+/* Fallback positioning when not in SiteHeader */
+header .thg-auth-wrap:not(#site-header-auth-container){ position:absolute; top:14px; right:16px; }
+@media (min-width:1024px){ header .thg-auth-wrap:not(#site-header-auth-container){ top:16px; right:24px; } }
+.thg-auth-wrap.is-fixed{ position:fixed; top:14px; right:16px; }
+
+/* Header button */
+.thg-auth-btn{ appearance:none;background:transparent;color:#fff;border:1px solid rgba(255,255,255,.9); border-radius:9999px;padding:8px 14px;font-weight:600;cursor:pointer;line-height:1;white-space:nowrap;display:inline-flex;align-items:center;gap:8px; transition:background .15s ease, border-color .15s ease, box-shadow .15s ease; }
+.thg-auth-btn:hover{background:rgba(255,255,255,.08)}
+.thg-auth-btn:focus-visible{ outline:2px solid #7dd3fc; outline-offset:2px; }
+.thg-auth-btn .thg-initial{ width:22px;height:22px;border-radius:9999px;background:#fff;color:#111;display:none;align-items:center;justify-content:center;font-weight:700;font-size:11px; }
+.thg-auth-btn.is-auth .thg-initial{ display:inline-flex; }
+.thg-auth-btn.is-auth::after{ content:""; display:inline-block; width:0; height:0; border-left:5px solid transparent; border-right:5px solid transparent; border-top:6px solid rgba(255,255,255,.9); transition:transform .15s ease; transform-origin:center; }
+.thg-auth-btn[aria-expanded="true"].is-auth::after{ transform:rotate(180deg); }
+.thg-spinner{ width:14px;height:14px;border-radius:9999px;border:2px solid rgba(255,255,255,.35);border-top-color:#fff; animation:thgspin .8s linear infinite; }
+@keyframes thgspin{ to{ transform:rotate(360deg); } }
+
+/* Account menu */
+.thg-auth-menu{ position:absolute;top:calc(100% + 10px);right:0;min-width:280px;background:#0b0b0b;color:#fff; border:1px solid rgba(255,255,255,.15);border-radius:12px;padding:8px;box-shadow:0 12px 30px rgba(0,0,0,.45); visibility:hidden; opacity:0; transform:translateY(-6px) scale(.98); transform-origin:top right; pointer-events:none; transition:opacity .16s ease, transform .16s ease, visibility 0s linear .16s; z-index:\${Z_BASE+1}; }
+.thg-auth-menu[aria-hidden="false"]{ visibility:visible; opacity:1; transform:translateY(0) scale(1); pointer-events:auto; transition:opacity .16s ease, transform .16s ease, visibility 0s linear 0s; }
+.thg-auth-item{ display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;text-decoration:none;color:#fff;cursor:pointer; }
+.thg-auth-item:hover{background:rgba(255,255,255,.08)}
+.thg-auth-item[tabindex]{outline:none}
+.thg-auth-item.is-header{ cursor:default;font-weight:700;opacity:.95; }
+.thg-auth-item.is-header:hover{background:transparent}
+.thg-auth-sep{ height:1px;background:rgba(255,255,255,.12);margin:6px 8px;border-radius:1px; }
+.thg-initial-lg{ width:28px;height:28px;border-radius:9999px;background:#fff;color:#111;display:inline-flex;align-items:center;justify-content:center;font-weight:700;font-size:12px; }
+.thg-name-wrap{ display:flex; flex-direction:column; min-width:0; }
+.thg-name{ overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:190px; }
+.thg-email{ opacity:.7; font-size:12px; overflow:hidden;text-overflow:ellipsis;white-space:nowrap; max-width:200px; }
+
+/* Modal */
+.thg-auth-overlay{ position:fixed; inset:0; background:rgba(0,0,0,.55); backdrop-filter:saturate(140%) blur(6px); display:flex; align-items:center; justify-content:center; z-index:\${Z_BASE+2}; visibility:hidden; opacity:0; transition:opacity .18s ease, visibility 0s linear .18s; }
+.thg-auth-overlay[aria-hidden="false"]{ visibility:visible; opacity:1; transition:opacity .18s ease, visibility 0s linear 0s; }
+.thg-auth-modal{ width:100%; max-width:420px; background:linear-gradient(180deg, rgba(20,20,20,.98), rgba(12,12,12,.98)); color:#fff; border:1px solid rgba(255,255,255,.1); border-radius:16px; box-shadow:0 30px 60px rgba(0,0,0,.5); transform:translateY(10px) scale(.98); opacity:0; transition:transform .18s ease, opacity .18s ease; }
+.thg-auth-overlay[aria-hidden="false"] .thg-auth-modal{ transform:translateY(0) scale(1); opacity:1; }
+.thg-auth-header{ display:flex; align-items:center; justify-content:space-between; padding:16px 18px; border-bottom:1px solid rgba(255,255,255,.08); }
+.thg-auth-title{ font-weight:800; font-size:20px; }
+.thg-auth-close{ appearance:none; background:linear-gradient(180deg,#f3cd4a,#eab308,#c58a04); border:0; color:#111; cursor:pointer; font-weight:800; width:32px; height:32px; line-height:32px; border-radius:9999px; box-shadow:0 2px 6px rgba(0,0,0,.25); }
+.thg-auth-close:hover{ color:#fff; background:linear-gradient(180deg,#eab308,#c58a04,#7a5200); transform:scale(1.06); }
+.thg-auth-body{ padding:16px 18px 18px; }
+
+/* Tabs */
+.thg-tabs{ display:flex; gap:6px; background:rgba(255,255,255,.06); padding:4px; border-radius:9999px; margin-bottom:16px; }
+.thg-tab{ flex:1; text-align:center; padding:8px 10px; border-radius:9999px; cursor:pointer; font-weight:700; color:#ddd; }
+.thg-tab[aria-selected="true"]{ background:#fff; color:#111; }
+
+/* Fields */
+.thg-field{ display:flex; flex-direction:column; gap:6px; margin-bottom:12px; }
+.thg-field label{ font-size:12px; opacity:.9; }
+.thg-field label[for="thg-si-password"]::after{ content:" (optional — use Magic Link for fastest login)"; color:#9ca3af; font-weight:500; }
+.thg-input{ appearance:none; background:#121212; color:#fff; border:1px solid rgba(255,255,255,.12); border-radius:10px; padding:10px 12px; }
+.thg-input::placeholder{ color:#6b7280; }
+.thg-input:focus{ outline:2px solid #facc15; outline-offset:2px; }
+
+/* Actions and links */
+.thg-actions{ display:flex; justify-content:space-between; align-items:center; margin:6px 0 12px; }
+.thg-link{ background:none; border:0; color:#22c55e; cursor:pointer; font-size:13px; padding:0; }
+
+/* Primary CTA (yellow) */
+.thg-btn-primary{ width:100%; appearance:none; background:linear-gradient(180deg,#f8d34a,#f0b90b,#c89200); color:#111; border:1px solid rgba(250, 204, 21, .9); border-radius:12px; padding:12px 14px; font-weight:800; cursor:pointer; transition:transform .06s ease, box-shadow .06s ease, filter .12s ease; box-shadow:0 4px 0 rgba(250, 204, 21, .35); }
+.thg-btn-primary:hover{ filter:brightness(1.03); }
+.thg-btn-primary:active{ transform:translateY(1px); box-shadow:none; }
+
+/* OAuth / secondary buttons */
+.thg-oauth{ display:grid; grid-template-columns:1fr; gap:10px; margin-top:10px; }
+.thg-oauth-btn{ appearance:none; background:#0f0f0f; color:#fff; border:1px solid rgba(255,255,255,.12); border-radius:12px; padding:12px 14px; cursor:pointer; font-weight:800; display:flex; align-items:center; justify-content:center; gap:10px; }
+.thg-oauth-btn:hover{ background:#141414; }
+.thg-oauth-btn .g-icon{ width:18px; height:18px; }
+.thg-oauth-btn.google{ border-color:#333; background:#151515; }
+
+/* Errors, hints, loading */
+.thg-error{ background:rgba(239,68,68,.12); color:#fecaca; border:1px solid rgba(239,68,68,.35); border-radius:10px; padding:10px 12px; font-size:13px; display:none; }
+.thg-hint{ font-size:12px; opacity:.8; }
+.thg-loading-bar{ height:2px; width:0; background:#7dd3fc; border-radius:2px; transition:width .2s ease; }
+
+/* Confirm dialog */
+.thg-confirm{ position:fixed; inset:0; display:flex; align-items:center; justify-content:center; z-index:\${Z_BASE+3}; background:rgba(0,0,0,.55); backdrop-filter:blur(3px); visibility:hidden; opacity:0; transition:opacity .16s ease, visibility 0s linear .16s; }
+.thg-confirm[aria-hidden="false"]{ visibility:visible; opacity:1; transition:opacity .16s ease, visibility 0s linear 0s; }
+.thg-confirm-card{ width:100%; max-width:360px; background:#141414; color:#fff; border:1px solid rgba(255,255,255,.12); border-radius:12px; padding:16px; box-shadow:0 24px 50px rgba(0,0,0,.5); }
+.thg-confirm-actions{ display:flex; gap:10px; justify-content:flex-end; margin-top:12px; }
+.thg-btn{ appearance:none; border-radius:10px; padding:8px 12px; cursor:pointer; border:1px solid rgba(255,255,255,.15); background:#0f0f0f; color:#fff; }
+.thg-btn-danger{ background:#ef4444; border-color:#ef4444; color:#fff; }
+
+/* Responsive */
+@media (max-width:480px){
+  .thg-auth-wrap{ top:10px; right:10px; }
+  .thg-auth-modal{ width:calc(100% - 16px); margin:0 8px; }
+  .thg-auth-menu{ right:8px; }
+}
+
+/* tagline styling */
+.thg-tagline{ color:#9ca3af; font-size:13px; margin:-4px 0 12px; }
+\`;
+    const style = document.createElement('style');
+    style.id = 'thg-auth-styles';
+    style.textContent = css;
+    document.head.appendChild(style);
+  }
+
+  function createUI(){
+    const wrap = ensureContainer();
+    let btn = wrap.querySelector('.thg-auth-btn');
+    if (!btn){
+      btn = createEl('button', 'thg-auth-btn', { type:'button', 'aria-haspopup':'menu', 'aria-expanded':'false', 'aria-label':'Open account menu' });
+      const avatar = createEl('span', 'thg-initial');
+      avatar.textContent = 'U';
+      const label = document.createElement('span');
+      label.className = 'thg-label';
+      const spinner = createEl('span','thg-spinner',{'aria-hidden':'true'});
+      btn.appendChild(avatar); btn.appendChild(label); btn.appendChild(spinner);
+      wrap.appendChild(btn);
+    }
+
+    let menu = wrap.querySelector('.thg-auth-menu');
+    if (!menu){
+      menu = createEl('div', 'thg-auth-menu', { id:'thg-auth-menu', role:'menu', 'aria-hidden':'true' });
+      menu.innerHTML = '<div class="thg-auth-item is-header" aria-disabled="true">' +
+        '<span class="thg-initial-lg">U</span>' +
+        '<span class="thg-name-wrap">' +
+        '<span class="thg-name">User</span>' +
+        '<span class="thg-email">email@example.com</span>' +
+        '</span>' +
+        '</div>' +
+        '<div class="thg-auth-sep"></div>' +
+        '<div class="thg-auth-item" role="menuitem" tabindex="0" data-action="profile"><span>Profile</span></div>' +
+        '<div class="thg-auth-item" role="menuitem" tabindex="0" data-action="dashboard"><span>Dashboard</span></div>' +
+        (AUTH_NAV.settings ? '<div class="thg-auth-item" role="menuitem" tabindex="0" data-action="settings"><span>Settings</span></div>' : '') +
+        '<div class="thg-auth-item" role="menuitem" tabindex="0" data-action="logout"><span>Logout</span></div>';
+      wrap.appendChild(menu);
+    }
+    btn.setAttribute('aria-controls','thg-auth-menu');
+
+    // MODAL REMOVED - Login/Signup now redirects to /login page
+    // No overlay/modal creation - completely removed
+
+    let confirmEl = document.querySelector('.thg-confirm');
+    if (!confirmEl){
+      confirmEl = createEl('div','thg-confirm',{'aria-hidden':'true','role':'dialog','aria-modal':'true'});
+      confirmEl.innerHTML = '<div class="thg-confirm-card" role="document">' +
+        '<div class="thg-confirm-msg">Are you sure you want to log out?</div>' +
+        '<div class="thg-confirm-actions">' +
+        '<button type="button" class="thg-btn thg-confirm-cancel">Cancel</button>' +
+        '<button type="button" class="thg-btn thg-btn-danger thg-confirm-ok">Log out</button>' +
+        '</div></div>';
+      document.body.appendChild(confirmEl);
+    }
+
+    // Respect global flag to hide the header button completely
+    try {
+      if (window.AUTH_HIDE_HEADER === true || window.AUTH_NO_HEADER === true) {
+        if (wrap) wrap.style.display = 'none';
+      }
+    } catch(_){}
+    return { wrap, btn, menu, overlay: null, confirmEl };
+  }
+
+  const state = { user: null, loading: true, nextUrl: null, supabaseReady: false, sub: null };
+
+  function setButtonLoading(ui, isLoading){ const spinner = ui.btn.querySelector('.thg-spinner'); const label = ui.btn.querySelector('.thg-label'); if (isLoading){ ui.btn.classList.remove('is-auth'); if (label) label.textContent = 'Loading…'; if (spinner) spinner.style.display = 'inline-block'; ui.btn.setAttribute('aria-expanded','false'); } else { if (spinner) spinner.style.display = 'none'; } }
+
+  function render(ui){
+    const label = ui.btn.querySelector('.thg-label');
+    const avatar = ui.btn.querySelector('.thg-initial');
+    if (state.loading){ setButtonLoading(ui, true); return; }
+    setButtonLoading(ui, false);
+    if (state.user && state.user.email){
+      const name = getDisplayName(state.user);
+      ui.btn.classList.add('is-auth');
+      avatar.textContent = getInitials(state.user);
+      label.textContent = clamp(name, 24);
+      ui.btn.prepend(avatar);
+      const initEl = ui.menu.querySelector('.thg-initial-lg');
+      const nameEl = ui.menu.querySelector('.thg-name');
+      const emailEl = ui.menu.querySelector('.thg-email');
+      if (initEl) initEl.textContent = getInitials(state.user);
+      if (nameEl) nameEl.textContent = clamp(name, 28);
+      if (emailEl) emailEl.textContent = clamp(state.user.email || '', 30);
+    } else {
+      ui.btn.classList.remove('is-auth');
+      ui.btn.setAttribute('aria-expanded','false');
+      label.textContent = 'Login / Signup';
+      avatar.textContent = 'U';
+      ui.btn.prepend(avatar);
+      closeMenu(ui);
+    }
+  }
+
+  function openMenu(ui){ if (!state.user) return; ui.menu.setAttribute('aria-hidden','false'); ui.btn.setAttribute('aria-expanded','true'); const items = ui.menu.querySelectorAll('.thg-auth-item[role="menuitem"]'); if (items[0]) setTimeout(function(){ items[0].focus(); }, 0); }
+  function closeMenu(ui){ ui.menu.setAttribute('aria-hidden','true'); ui.btn.setAttribute('aria-expanded','false'); }
+  function toggleMenu(ui){ const isHidden = ui.menu.getAttribute('aria-hidden') === 'true'; if (isHidden) openMenu(ui); else closeMenu(ui); }
+
+  // MODAL FUNCTIONS REMOVED - Redirect to /login instead
+  function openAuthModal(ui, opts){
+    const next = opts?.next || location.pathname + location.search;
+    window.location.href = '/login' + (next ? '?next=' + encodeURIComponent(next) : '');
+  }
+  function closeAuthModal(ui){ /* No-op - modal removed */ }
+
+  // Override window.authGate.openLoginModal and __thgOpenAuthModal to redirect instead
+  window.authGate.openLoginModal = function(opts) {
+    const next = opts?.next || location.pathname + location.search;
+    window.location.href = '/login' + (next ? '?next=' + encodeURIComponent(next) : '');
+  };
+  window.__thgOpenAuthModal = function(opts) {
+    const next = opts?.next || location.pathname + location.search;
+    window.location.href = '/login' + (next ? '?next=' + encodeURIComponent(next) : '');
+  };
+  function openConfirm(ui){ ui.confirmEl.setAttribute('aria-hidden','false'); }
+  // Broadcast current auth state (email only) to child iframes, sibling tabs, and embedded forms
+  function broadcastAuth(user){
+    var loggedIn = !!(user && user.email);
+    try { window.__authGateLoggedIn = loggedIn; } catch(_) {}
+    try {
+      localStorage.setItem('__tharaga_magic_continue', JSON.stringify({ user: loggedIn ? { email: user.email } : null, ts: Date.now() }));
+    } catch(_) {}
+    try {
+      var evtType = loggedIn ? 'THARAGA_AUTH_SUCCESS' : 'THARAGA_AUTH_SIGNED_OUT';
+      if ('BroadcastChannel' in window){
+        window.__thgAuthBC = window.__thgAuthBC || new BroadcastChannel('tharaga-auth');
+        window.__thgAuthBC.postMessage(loggedIn ? { type: evtType, user: { email: user.email } } : { type: evtType });
+      }
+    } catch(_) {}
+    try {
+      var payload = loggedIn ? { type: 'THARAGA_AUTH_SUCCESS', user: { email: user.email } } : { type: 'THARAGA_AUTH_SIGNED_OUT' };
+      // Notify any embedded iframes (cross-origin safe via postMessage)
+      var iframes = document.querySelectorAll('iframe');
+      for (var i=0;i<iframes.length;i++){
+        try { iframes[i].contentWindow && iframes[i].contentWindow.postMessage(payload, '*'); } catch(__) {}
+      }
+      // If this page itself is inside an iframe, also notify parent
+      try { if (window.parent && window.parent !== window) window.parent.postMessage(payload, '*'); } catch(__) {}
+    } catch(_) {}
+  }
+  function closeConfirm(ui){ ui.confirmEl.setAttribute('aria-hidden','true'); }
+
+  function bindUI(ui){
+    ui.btn.addEventListener('click', function(e){ e.preventDefault(); if (state.user && state.user.email){ toggleMenu(ui); } else { openAuthModal(ui, { next: location.pathname + location.search }); } });
+    ui.btn.addEventListener('keydown', function(e){ if ((e.key === 'ArrowDown' || e.key === 'Enter') && state.user && state.user.email){ e.preventDefault(); openMenu(ui); } });
+    ui.menu.addEventListener('click', function(e){ const item = e.target.closest('.thg-auth-item[role="menuitem"]'); if (!item) return; const act = item.getAttribute('data-action'); if (act === 'profile'){ closeMenu(ui); location.href = AUTH_NAV.profile; return; } if (act === 'dashboard'){ closeMenu(ui); location.href = AUTH_NAV.dashboard; return; } if (act === 'settings' && AUTH_NAV.settings){ closeMenu(ui); location.href = AUTH_NAV.settings; return; } if (act === 'logout'){ closeMenu(ui); openConfirm(ui); } });
+    ui.menu.addEventListener('keydown', function(e){ if (e.key === 'Escape'){ e.preventDefault(); closeMenu(ui); ui.btn.focus(); return; } if (['ArrowDown','ArrowUp','Home','End'].indexOf(e.key) === -1) return; e.preventDefault(); const items = Array.prototype.slice.call(ui.menu.querySelectorAll('.thg-auth-item[role="menuitem"]')); const idx = items.indexOf(document.activeElement); if (!items.length) return; if (e.key === 'Home'){ items[0].focus(); return; } if (e.key === 'End'){ items[items.length - 1].focus(); return; } const next = e.key === 'ArrowDown' ? (idx + 1 + items.length) % items.length : (idx - 1 + items.length) % items.length; items[next].focus(); });
+    document.addEventListener('click', function(e){ if (ui.menu.getAttribute('aria-hidden') === 'true') return; if (!ui.menu.contains(e.target) && e.target !== ui.btn && !ui.btn.contains(e.target)){ closeMenu(ui); } });
+    // MODAL UI REMOVED - All modal event listeners removed
+    ui.confirmEl.querySelector('.thg-confirm-cancel').addEventListener('click', function(){ closeConfirm(ui); });
+    ui.confirmEl.addEventListener('click', function(e){ if (e.target === ui.confirmEl) closeConfirm(ui); });
+    ui.confirmEl.querySelector('.thg-confirm-ok').addEventListener('click', async function(){
+      try { await window.supabase?.auth?.signOut?.(); } catch(_){ }
+      // Proactively broadcast sign-out so embedded forms unlock immediately
+      try { broadcastAuth(null); } catch(_){ }
+      closeConfirm(ui);
+    });
+    window.__thgOpenAuthModal = function(opts){ openAuthModal(ui, opts); };
+    // Expose a helper to programmatically open the auth modal (never toggles dropdown)
+    window.authGate.triggerHeaderLogin = function(opts){
+      try { openAuthModal(ui, opts||{ next: location.pathname + location.search }); }
+      catch(_){ try { window.__thgOpenAuthModal && window.__thgOpenAuthModal(opts||{ next: location.pathname + location.search }); } catch(__){} }
+    };
+  }
+
+  async function initSupabase(ui){
+    state.loading = true; render(ui);
+    if (!window.supabase || !window.supabase.auth){
+      try {
+        const mod = await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm');
+        const client = mod.createClient('https://wedevtjjmdvngyshqdro.supabase.co','eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndlZGV2dGpqbWR2bmd5c2hxZHJvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU0NzYwMzgsImV4cCI6MjA3MTA1MjAzOH0.Ex2c_sx358dFdygUGMVBohyTVto6fdEQ5nydDRh9m6M');
+        window.supabase = client;
+      } catch(_) {}
+    }
+    if (!window.supabase || !window.supabase.auth){ state.supabaseReady = false; state.loading = false; render( ui); console.warn('[thg-auth] window.supabase not found.'); return; }
+    state.supabaseReady = true;
+    try{ const { data } = await window.supabase.auth.getSession(); state.user = data?.session?.user || null; } catch(_){ state.user = null; } finally { state.loading = false; render(ui); try { broadcastAuth(state.user); } catch(__) {} try { setBuyerEmailLockFromUser(state.user); } catch(__) {}
+      // Initialize role manager for authenticated user with retry mechanism
+      if (state.user && state.user.email) {
+        try {
+          window.__thgAuthState = state;
+          window.__thgAuthUI = ui;
+
+          // Wait for role manager to be available (with retry mechanism)
+          var retryCount = 0;
+          var maxRetries = 20;
+          var initRoleManager = async function() {
+            if (window.thgRoleManager && typeof window.thgRoleManager.init === 'function') {
+              await window.thgRoleManager.init(state.user, ui);
+              console.log('[thg-auth] Role manager initialized successfully');
+            } else if (retryCount < maxRetries) {
+              retryCount++;
+              console.warn('[thg-auth] Role manager not ready, retry ' + retryCount + '/' + maxRetries);
+              setTimeout(initRoleManager, 200);
             } else {
-              loadAuthSystem();
+              console.error('[thg-auth] Role manager failed to load after ' + maxRetries + ' retries');
             }
-          })();
+          };
+
+          await initRoleManager();
+        } catch(roleErr) {
+          console.error('[thg-auth] Role manager init error:', roleErr);
+        }
+      }
+    }
+    try{
+      const { data: sub } = window.supabase.auth.onAuthStateChange(async function(event, session){
+        state.user = session?.user || null;
+        render(ui);
+        try { broadcastAuth(state.user); } catch(__) {}
+        try { setBuyerEmailLockFromUser(state.user); } catch(__) {}
+
+        // Initialize role manager on auth state change with retry mechanism
+        if (state.user && state.user.email) {
+          try {
+            window.__thgAuthState = state;
+            window.__thgAuthUI = ui;
+
+            // Wait for role manager to be available (with retry mechanism)
+            var retryCount = 0;
+            var maxRetries = 20;
+            var initRoleManager = async function() {
+              if (window.thgRoleManager && typeof window.thgRoleManager.init === 'function') {
+                await window.thgRoleManager.init(state.user, ui);
+                console.log('[thg-auth] Role manager initialized on auth change');
+              } else if (retryCount < maxRetries) {
+                retryCount++;
+                console.warn('[thg-auth] Role manager not ready on auth change, retry ' + retryCount + '/' + maxRetries);
+                setTimeout(initRoleManager, 200);
+              } else {
+                console.error('[thg-auth] Role manager failed to load on auth change after ' + maxRetries + ' retries');
+              }
+            };
+
+            await initRoleManager();
+          } catch(roleErr) {
+            console.error('[thg-auth] Role manager init error on auth change:', roleErr);
+          }
+        }
+
+        if (event === 'PASSWORD_RECOVERY'){ window.location.href = '/login?recovery=1'; }
+        if (state.user && state.user.email){
+          if (state.nextUrl){
+            const to = state.nextUrl;
+            state.nextUrl = null;
+            location.href = to;
+          }
+        } else {
+          closeMenu(ui);
+        }
+      });
+      state.sub = sub?.subscription || sub || null;
+    } catch(_){ }
+  }
+
+  function observeRerenders(){ const mo = new MutationObserver(function(muts){ for (var i=0;i<muts.length;i++){ for (var j=0;j<muts[i].addedNodes.length;j++){ const n = muts[i].addedNodes[j]; if (n.nodeType !== 1) continue; hideLegacyAuthLinks(n); ensureContainer(); } } }); mo.observe(document.documentElement, { childList:true, subtree:true }); }
+
+  ready(function(){
+    hideLegacyAuthLinks(document);
+    injectStyles();
+    const ui = createUI();
+    bindUI(ui);
+    // If there is no header on the host page, we use a fixed fallback button.
+    // On white/light backgrounds (like the Netlify snippet page), the default
+    // white-on-dark styling can be invisible. Add a light-theme override only
+    // for this fallback state to ensure visibility without affecting host sites
+    // that have their own headers.
+    try {
+      if (ui.wrap && ui.wrap.classList.contains('is-fixed') && !document.getElementById('thg-auth-fixed-contrast')){
+        const style = document.createElement('style');
+        style.id = 'thg-auth-fixed-contrast';
+        style.textContent = [
+          '.thg-auth-wrap.is-fixed .thg-auth-btn{color:#111;border:1px solid rgba(0,0,0,.85);background:rgba(0,0,0,.03)}',
+          '.thg-auth-wrap.is-fixed .thg-auth-btn:hover{background:rgba(0,0,0,.06)}',
+          '.thg-auth-wrap.is-fixed .thg-auth-btn:focus-visible{outline:2px solid #2563eb;outline-offset:2px}',
+          '.thg-auth-wrap.is-fixed .thg-auth-btn.is-auth::after{border-top-color:rgba(0,0,0,.85)}',
+          '.thg-auth-wrap.is-fixed .thg-auth-menu{background:#fff;color:#111;border:1px solid rgba(0,0,0,.12);box-shadow:0 12px 30px rgba(0,0,0,.12)}',
+          '.thg-auth-wrap.is-fixed .thg-auth-item:hover{background:rgba(0,0,0,.06)}',
+          '.thg-auth-wrap.is-fixed .thg-initial{background:#111;color:#fff}',
+          '.thg-auth-wrap.is-fixed .thg-initial-lg{background:#111;color:#fff}'
+        ].join('\\n');
+        document.head && document.head.appendChild(style);
+      }
+    } catch(_){}
+    observeRerenders();
+    initSupabase(ui);
+
+    // Auto-open the auth modal on first load if configured or URL hints present
+    try {
+      const qp = new URLSearchParams(location.search);
+      const hash = (location.hash || '').trim();
+      const shouldAutoOpen = (window.AUTH_OPEN_ON_LOAD === true)
+        || qp.has('auth_open') || qp.get('login') === '1' || qp.get('open') === '1'
+        || hash === '#login' || hash === '#signup' || hash === '#auth';
+      if (shouldAutoOpen) {
+        setTimeout(function(){ try { if (!state.user) { openAuthModal(ui, { next: location.pathname + location.search }); } } catch(_){} }, 0);
+      }
+    } catch(_){}
+
+    // Allow child iframes (e.g., Netlify buyer-form) to request opening the global login
+    // Secure origin-validated postMessage listener (also supports legacy types)
+    const ALLOWED_IFRAME_ORIGINS = [location.origin];
+
+    function openDurableHeaderBehavior(meta){
+      try {
+        var el = document.getElementById('durable-head')
+          || document.querySelector('header, [role="banner"], [data-section="header"], .site-header, nav')
+          || document.querySelector('.thg-auth-wrap');
+        if (el && el.scrollIntoView) {
+          el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+        // If not authenticated, open the auth modal directly. If authenticated, do nothing.
+        var isAuthed = !!(state && state.user && state.user.email);
+        if (!isAuthed) {
+          try { openAuthModal(ui, { next: (meta && meta.next) || (location.pathname + location.search) }); }
+          catch(_) { try { window.__thgOpenAuthModal && window.__thgOpenAuthModal({ next: location.pathname + location.search }); } catch(__){} }
+        }
+      } catch (err) { console.error('openDurableHeaderBehavior error:', err); }
+    }
+    window.openDurableHeaderBehavior = openDurableHeaderBehavior;
+
+    window.addEventListener('message', function(ev){
+      try {
+        var data = ev && ev.data;
+        if (!data || typeof data !== 'object') return;
+        // Loosen origin checks for safe CTA from known child frames (e.g., Netlify buyer-form)
+        if (ev.origin && ALLOWED_IFRAME_ORIGINS.indexOf(ev.origin) === -1) {
+          var extraOk = false;
+          try {
+            var o = ev.origin || '';
+            if (/^https:\\/\\//.test(o)) {
+              if (o.indexOf('tharaga.co.in') !== -1 || o.indexOf('auth.tharaga.co.in') !== -1 || o.indexOf('netlify.app') !== -1) extraOk = true;
+              if (!extraOk && Array.isArray(window.ALLOWED_CHILD_ORIGINS) && window.ALLOWED_CHILD_ORIGINS.indexOf(o) !== -1) extraOk = true;
+            }
+          } catch(_) {}
+          if (!extraOk) return;
+        }
+
+        if (data.type === 'cta' && data.action === 'openDurableHead'){
+          console.log('Parent received openDurableHead from', ev.origin, data);
+          openDurableHeaderBehavior(data.meta || {});
+          return;
+        }
+
+        // Update header immediately when auth success is broadcast (post-auth)
+        if (data.type === 'THARAGA_AUTH_SUCCESS' && data.user && data.user.email){
+          try { state.user = { email: data.user.email, user_metadata: {} }; render(ui); } catch(_) {}
+          try { ensureSupabaseReady().then(async function(ok){ if (ok){ try { const s = await window.supabase.auth.getSession(); if (s && s.data && s.data.session && s.data.session.user){ state.user = s.data.session.user; render(ui); } } catch(_){} } }); } catch(_){}
+          return;
+        }
+
+        if (data.type === 'open_login_modal' || data.type === 'auth_open' || data.type === 'login_open' || data.type === 'trigger_header_login'){
+          // If already authenticated, ignore the request so no dropdown toggles.
+          if (state && state.user && state.user.email) { return; }
+          // Otherwise open the modal directly (never click the header button)
+          try { openAuthModal(ui, { next: data.next || (location.pathname + location.search) }); } catch(_){ }
+        }
+
+        // Navigation request from embedded forms to open listings in same tab
+        if (data.type === 'open_listings' && typeof data.url === 'string'){
+          try {
+            var o = ev.origin || '';
+            var allowed = ALLOWED_IFRAME_ORIGINS.indexOf(o) !== -1 || /tharaga\\.co\\.in|auth\\.tharaga\\.co\\.in|netlify\\.app/.test(o);
+            if (!allowed) return;
+          } catch(_) {}
+          try { location.href = data.url; } catch(_) {}
+          return;
+        }
+      } catch(_){ }
+    });
+
+    window.addEventListener('storage', function(ev){ if (ev.key === 'supabase.auth.token'){ } });
+    window.addEventListener('beforeunload', function(){ try { state.sub && state.sub.unsubscribe && state.sub.unsubscribe(); } catch(_){} });
+  });
+})();
         `}
         </Script>
         {/* Static header styles from index.html - GLASSY PREMIUM BLUE */}

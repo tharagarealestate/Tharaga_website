@@ -101,8 +101,15 @@ async function main() {
 
   // Intentionally left empty (sharedAssets = [])
 
-  // Copy root index.html as the public homepage - user prefers this design
-  // Note: auth-gate.js references have been removed from index.html (using snippets auth instead)
+  // REMOVED: Copy root index.html - now using Next.js app/app/page.tsx instead
+  // The static index.html has been converted to a proper Next.js page with all 4 sections:
+  // 1. Hero section (premium blue gradient background)
+  // 2. Trial CTA section
+  // 3. Value Proposition section (6 cards)
+  // 4. How It Works section (iframe embed)
+  // CSS has been moved to app/app/layout.tsx
+  // DO NOT uncomment this section - it will override the Next.js homepage
+  /*
   try {
     const rootIndex = path.join(repoRoot, 'index.html');
     if (await pathExists(rootIndex)) {
@@ -113,6 +120,7 @@ async function main() {
   } catch (e) {
     console.warn('[copy-static] Could not copy root index.html:', e?.message || e);
   }
+  */
 
   // Copy role-manager-v2.js to public directory
   try {

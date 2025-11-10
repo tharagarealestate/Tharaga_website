@@ -201,7 +201,7 @@ export default function PricingCard({
           
           {/* Features List */}
           <div className='space-y-4'>
-            <div className='text-white font-semibold mb-3'>What's included:</div>
+            <div className='text-white font-semibold mb-3'>What&rsquo;s included:</div>
             
             {(plan as any).features.included.map((feature: string, index: number) => (
               <div key={index} className='flex items-start gap-3'>

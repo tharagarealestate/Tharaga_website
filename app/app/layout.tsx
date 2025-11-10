@@ -1,5 +1,8 @@
 import './globals.css'
 import type { Metadata } from 'next'
+import Script from 'next/script'
+import { Playfair_Display, Plus_Jakarta_Sans, Manrope } from 'next/font/google'
+
 export const runtime = 'edge'
 
 export const metadata: Metadata = {
@@ -14,19 +17,39 @@ import { PrefetchRoutes } from '@/components/providers/PrefetchRoutes'
 import ConditionalHeader from '@/components/ConditionalHeader'
 import { HeaderLinkInterceptor } from '@/components/HeaderLinkInterceptor'
 
+const playfair = Playfair_Display({
+  subsets: ['latin'],
+  weight: ['700', '900'],
+  variable: '--font-playfair',
+  display: 'swap',
+})
+
+const plusJakarta = Plus_Jakarta_Sans({
+  subsets: ['latin'],
+  weight: ['400', '600', '700', '800'],
+  variable: '--font-plus-jakarta',
+  display: 'swap',
+})
+
+const manrope = Manrope({
+  subsets: ['latin'],
+  weight: ['400', '600', '700', '800'],
+  variable: '--font-manrope',
+  display: 'swap',
+})
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="en" className={`${playfair.variable} ${plusJakarta.variable} ${manrope.variable}`}>
       <head>
         <link rel="manifest" href="/manifest.webmanifest" />
         <meta name="theme-color" content="#ffffff" />
-        {/* Load fonts to match homepage */}
-        <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&display=swap" rel="stylesheet" />
-        <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&family=Manrope:wght@400;600;700;800&display=swap" rel="stylesheet" />
         {/* Auth configuration */}
-        <script dangerouslySetInnerHTML={{ __html: `window.AUTH_HIDE_HEADER=false;window.AUTH_OPEN_ON_LOAD=false;` }} />
+        <Script id="auth-config" strategy="beforeInteractive">
+          {`window.AUTH_HIDE_HEADER=false;window.AUTH_OPEN_ON_LOAD=false;`}
+        </Script>
         {/* Load role manager system SYNCHRONOUSLY to ensure it's available before auth system */}
-        <script src="/role-manager-v2.js"></script>
+        <Script src="/role-manager-v2.js" strategy="beforeInteractive" />
         {/* PREVENT DARK DROPDOWN - Inject light theme styles BEFORE auth system */}
         {/* This prevents auth system's injectStyles() from injecting dark #0b0b0b styles */}
         <style id="thg-auth-styles" dangerouslySetInnerHTML={{ __html: `
@@ -65,8 +88,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           }
         ` }} />
         {/* Load snippets auth system (inline from snippets/index.html) */}
-        <script src="/snippets/" type="text/html" id="snippets-auth-src" style={{display:'none'}} />
-        <script dangerouslySetInnerHTML={{ __html: `
+        <Script src="/snippets/" type="text/html" id="snippets-auth-src" strategy="beforeInteractive" style={{ display: 'none' }} />
+        <Script id="auth-loader" strategy="beforeInteractive">
+          {`
           // Extract and execute scripts from snippets/index.html
           // Ensure header is ready before auth system initializes
           (function(){
@@ -102,7 +126,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               loadAuthSystem();
             }
           })();
-        ` }} />
+        `}
+        </Script>
         {/* Static header styles from index.html - GLASSY PREMIUM BLUE */}
         <style
           dangerouslySetInnerHTML={{ __html: `
@@ -119,8 +144,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             /* Legacy support (map to new colors) */
             --brand:var(--primary); --brand-600:var(--primary-dark);
             --ink:#111111; --cream:#f7efe7; --muted:#4b5563; --ring:rgba(59,130,246,.30);
-            --font-ui:'Manrope',Inter,system-ui,-apple-system,'Segoe UI',Roboto,Helvetica,Arial;
-            --font-display:'Plus Jakarta Sans','Manrope',Inter,system-ui,-apple-system,'Segoe UI',Roboto,Helvetica,Arial;
+            --font-ui:var(--font-manrope),Inter,system-ui,-apple-system,'Segoe UI',Roboto,Helvetica,Arial;
+            --font-display:var(--font-plus-jakarta),var(--font-manrope),Inter,system-ui,-apple-system,'Segoe UI',Roboto,Helvetica,Arial;
             /* Header height for positioning dashboard elements below it */
             --header-height: 60px;
           }

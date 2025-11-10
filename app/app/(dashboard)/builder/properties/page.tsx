@@ -1,8 +1,9 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import Link from 'next/link'
+import Image from 'next/image'
 import { Building2, Plus, Grid, List, Filter, Search, TrendingUp, Eye, MessageSquare, X, MapPin, Calendar, Edit2, BarChart3, ExternalLink } from 'lucide-react'
 import { formatCrores } from '@/lib/utils'
 
@@ -462,18 +463,23 @@ function PropertyCard({ property }: { property: Property }) {
   const status = property.status || 'active'
   const pricePerSqft =
     property.priceINR && property.sqft ? Math.round(property.priceINR / property.sqft) : null
+  const [imageSrc, setImageSrc] = useState(property.image || '/property-placeholder.jpg')
+
+  useEffect(() => {
+    setImageSrc(property.image || '/property-placeholder.jpg')
+  }, [property.image])
 
   return (
     <div className='group relative overflow-hidden bg-white/70 backdrop-blur-xl border border-gray-200/50 rounded-2xl hover:shadow-2xl hover:-translate-y-2 transition-all duration-500'>
       {/* Property Image */}
       <div className='relative h-48 overflow-hidden'>
-        <img
-          src={property.image || '/property-placeholder.jpg'}
-          alt={property.title}
-          className='w-full h-full object-cover group-hover:scale-110 transition-transform duration-500'
-          onError={(e) => {
-            ;(e.target as HTMLImageElement).src = '/property-placeholder.jpg'
-          }}
+        <Image
+          src={imageSrc}
+          alt={property.title || 'Property image'}
+          fill
+          sizes='(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw'
+          className='object-cover transition-transform duration-500 group-hover:scale-110'
+          onError={() => setImageSrc('/property-placeholder.jpg')}
         />
 
         {/* Status Badge */}
@@ -570,19 +576,24 @@ function PropertyListItem({ property }: { property: Property }) {
   const status = property.status || 'active'
   const pricePerSqft =
     property.priceINR && property.sqft ? Math.round(property.priceINR / property.sqft) : null
+  const [imageSrc, setImageSrc] = useState(property.image || '/property-placeholder.jpg')
+
+  useEffect(() => {
+    setImageSrc(property.image || '/property-placeholder.jpg')
+  }, [property.image])
 
   return (
     <div className='group bg-white/70 backdrop-blur-xl border border-gray-200/50 rounded-2xl hover:shadow-xl hover:-translate-y-1 transition-all duration-300 overflow-hidden'>
       <div className='flex flex-col md:flex-row'>
         {/* Image */}
         <div className='relative w-full md:w-64 h-48 md:h-auto overflow-hidden flex-shrink-0'>
-          <img
-            src={property.image || '/property-placeholder.jpg'}
-            alt={property.title}
-            className='w-full h-full object-cover group-hover:scale-110 transition-transform duration-500'
-            onError={(e) => {
-              ;(e.target as HTMLImageElement).src = '/property-placeholder.jpg'
-            }}
+          <Image
+            src={imageSrc}
+            alt={property.title || 'Property image'}
+            fill
+            sizes='(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw'
+            className='object-cover transition-transform duration-500 group-hover:scale-110'
+            onError={() => setImageSrc('/property-placeholder.jpg')}
           />
           <div
             className={`absolute top-4 left-4 px-3 py-1 ${statusColors[status]} text-white text-xs font-semibold rounded-full backdrop-blur-sm`}

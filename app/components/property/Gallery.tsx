@@ -17,7 +17,9 @@ export function Gallery({ images, tourUrl, brochureUrl, propertyId }: GalleryPro
   const containerRef = React.useRef<HTMLDivElement | null>(null)
   const main = images?.[index] || images?.[0]
 
-  React.useEffect(() => { setIndex(0) }, [images?.[0]])
+  React.useEffect(() => {
+    setIndex(0)
+  }, [images])
 
   function open(i: number) { setIndex(i); setLightbox(true); track('gallery_open', { i }) }
   function next() { setIndex((i) => (i + 1) % Math.max(1, images.length)); track('gallery_next', { i: index }) }

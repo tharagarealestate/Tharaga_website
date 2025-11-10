@@ -41,7 +41,7 @@ export default function PricingPage() {
             
             {/* Subheadline */}
             <p className='text-xl sm:text-2xl text-gray-300 leading-relaxed mb-8'>
-              Whether you're a builder scaling your business or a buyer finding your dream home,
+              Whether you are a builder scaling your business or a buyer finding your dream home,
               <br className='hidden sm:block' />
               we have the perfect plan for you.
             </p>

@@ -270,7 +270,7 @@ export function BulkOperationsModal({ isOpen, onClose, selectedLeads, onSuccess 
                       rows={8}
                       className="w-full px-3 py-2 border border-border rounded text-sm focus:ring-2 focus:ring-[#6e0d25] focus:border-[#6e0d25]"
                     />
-                    <p className="text-xs text-fgMuted mt-1">Use {'{{name}}'} to personalize with lead's name</p>
+                    <p className="text-xs text-fgMuted mt-1">Use {'{{name}}'} to personalize with lead&rsquo;s name</p>
                   </div>
                   <div className="flex items-center gap-2">
                     <input

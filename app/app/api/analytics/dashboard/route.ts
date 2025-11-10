@@ -10,18 +10,22 @@ import { cookies } from 'next/headers';
 // TYPES
 // =============================================
 interface DashboardAnalytics {
-  // Overview Metrics
   overview: {
     total_leads: number;
     new_leads_this_period: number;
+    new_leads_change: number;
     hot_leads: number;
+    hot_leads_change: number;
     warm_leads: number;
+    warm_leads_change: number;
     active_conversations: number;
-    avg_response_time: number; // minutes
-    conversion_rate: number; // percentage
+    active_conversations_change: number;
+    avg_response_time: number;
+    response_time_change: number;
+    conversion_rate: number;
+    conversion_rate_change: number;
   };
-  
-  // Lead Quality Distribution
+
   lead_quality: {
     hot: { count: number; percentage: number };
     warm: { count: number; percentage: number };
@@ -29,40 +33,30 @@ interface DashboardAnalytics {
     cold: { count: number; percentage: number };
     low_quality: { count: number; percentage: number };
   };
-  
-  // Conversion Funnel
+
   funnel: {
-    total_visitors: number;
-    engaged_users: number; // >3 property views
-    high_intent: number; // contact intent score >5
-    contacted: number; // builder reached out
-    meetings_scheduled: number;
-    offers_made: number;
-    deals_closed: number;
-    conversion_rates: {
-      visitor_to_engaged: number;
-      engaged_to_high_intent: number;
-      high_intent_to_contacted: number;
-      contacted_to_meeting: number;
-      meeting_to_offer: number;
-      offer_to_close: number;
-      overall: number;
-    };
+    stages: Array<{
+      name: string;
+      value: number;
+      conversion_rate: number;
+    }>;
+    overall_conversion: number;
   };
-  
-  // Score Trends
+
   score_trends: {
     dates: string[];
     avg_scores: number[];
-    hot_lead_counts: number[];
-    new_lead_counts: number[];
+    hot_leads: number[];
+    new_leads: number[];
   };
-  
-  // Activity Heatmap
-  activity_by_hour: Record<number, number>; // 0-23 hours
-  activity_by_day: Record<string, number>; // Mon-Sun
-  
-  // Top Properties
+
+  activity_heatmap: {
+    by_hour: Record<string, number>;
+    by_day: Record<string, number>;
+    peak_hour: number;
+    peak_day: string;
+  };
+
   top_properties: Array<{
     property_id: string;
     property_title: string;
@@ -72,38 +66,37 @@ interface DashboardAnalytics {
     lead_count: number;
     conversion_rate: number;
   }>;
-  
-  // Response Performance
+
   response_metrics: {
-    avg_first_response_time: number; // minutes
+    avg_first_response: number;
     avg_response_time: number;
-    response_rate: number; // percentage of leads contacted
+    response_rate: number;
     pending_responses: number;
     overdue_followups: number;
   };
-  
-  // Revenue Projections
+
   revenue: {
     pipeline_value: number;
-    expected_revenue: number; // based on conversion probability
+    expected_revenue: number;
     closed_deals_value: number;
     avg_deal_size: number;
     projected_monthly: number;
   };
-  
-  // Lead Sources
+
   lead_sources: Array<{
     source: string;
     count: number;
     percentage: number;
-    avg_quality_score: number;
+    avg_quality: number;
     conversion_rate: number;
+    roi: number;
   }>;
-  
-  // Comparison (if requested)
-  comparison?: {
-    period: string;
-    metrics: Record<string, { current: number; previous: number; change: number }>;
+
+  engagement: {
+    avg_session_duration: number;
+    avg_pages_per_session: number;
+    bounce_rate: number;
+    repeat_visitors: number;
   };
 }
 
@@ -120,6 +113,8 @@ function parsePeriod(period: string): { start: Date; end: Date } {
     start.setDate(start.getDate() - 30);
   } else if (period === '90d') {
     start.setDate(start.getDate() - 90);
+  } else if (period === '1y') {
+    start.setFullYear(start.getFullYear() - 1);
   } else if (period === 'this_month') {
     start.setDate(1);
   } else if (period === 'last_month') {
@@ -131,6 +126,14 @@ function parsePeriod(period: string): { start: Date; end: Date } {
   }
   
   return { start, end };
+}
+
+function calculatePercentChange(current: number, previous: number): number {
+  if (!isFinite(previous) || previous === 0) {
+    if (current === 0) return 0;
+    return 100;
+  }
+  return parseFloat((((current - previous) / Math.abs(previous)) * 100).toFixed(1));
 }
 
 // =============================================
@@ -168,7 +171,6 @@ export async function GET(request: NextRequest) {
     
     const searchParams = request.nextUrl.searchParams;
     const periodParam = searchParams.get('period') || '30d';
-    const compareParam = searchParams.get('compare') === 'true';
     
     const { start, end } = parsePeriod(periodParam);
     
@@ -226,6 +228,48 @@ export async function GET(request: NextRequest) {
     // Conversion rate (deals closed / total leads)
     const dealsClosedCount = allInteractions?.filter(i => i.interaction_type === 'deal_closed').length || 0;
     const conversionRate = totalLeads > 0 ? (dealsClosedCount / totalLeads) * 100 : 0;
+
+    // =============================================
+    // PREVIOUS PERIOD METRICS FOR COMPARISON
+    // =============================================
+
+    const periodDurationMs = Math.max(1, end.getTime() - start.getTime());
+    const previousPeriodEnd = new Date(start);
+    const previousPeriodStart = new Date(start.getTime() - periodDurationMs);
+
+    const { data: prevLeadScores } = await supabase
+      .from('lead_scores')
+      .select('*')
+      .gte('created_at', previousPeriodStart.toISOString())
+      .lte('created_at', previousPeriodEnd.toISOString());
+
+    const { data: prevInteractions } = await supabase
+      .from('lead_interactions')
+      .select('*')
+      .eq('builder_id', user.id)
+      .gte('timestamp', previousPeriodStart.toISOString())
+      .lte('timestamp', previousPeriodEnd.toISOString());
+
+    const prevActiveConversations = new Set(prevInteractions?.map(i => i.lead_id)).size;
+    const prevResponseTimes = prevInteractions
+      ?.filter(i => i.response_time_minutes !== null)
+      .map(i => i.response_time_minutes) || [];
+    const prevAvgResponseTime = prevResponseTimes.length > 0
+      ? prevResponseTimes.reduce((sum, time) => sum + time!, 0) / prevResponseTimes.length
+      : 0;
+    const prevDealsClosedCount = prevInteractions?.filter(i => i.interaction_type === 'deal_closed').length || 0;
+    const prevTotalLeads = prevLeadScores?.length || 0;
+    const prevConversionRate = prevTotalLeads > 0 ? (prevDealsClosedCount / prevTotalLeads) * 100 : 0;
+
+    const prevHotLeads = prevLeadScores?.filter(l => l.category === 'Hot Lead').length || 0;
+    const prevWarmLeads = prevLeadScores?.filter(l => l.category === 'Warm Lead').length || 0;
+
+    const newLeadsChange = calculatePercentChange(totalLeads, prevTotalLeads);
+    const hotLeadsChange = calculatePercentChange(hotLeads, prevHotLeads);
+    const warmLeadsChange = calculatePercentChange(warmLeads, prevWarmLeads);
+    const activeConversationsChange = calculatePercentChange(activeConversations, prevActiveConversations);
+    const responseTimeChange = calculatePercentChange(avgResponseTime, prevAvgResponseTime);
+    const conversionRateChange = calculatePercentChange(conversionRate, prevConversionRate);
     
     // =============================================
     // OVERVIEW METRICS
@@ -234,11 +278,17 @@ export async function GET(request: NextRequest) {
     const overview = {
       total_leads: totalCurrentLeads,
       new_leads_this_period: totalLeads,
+      new_leads_change: newLeadsChange,
       hot_leads: hotLeads,
+      hot_leads_change: hotLeadsChange,
       warm_leads: warmLeads,
+      warm_leads_change: warmLeadsChange,
       active_conversations: activeConversations,
+      active_conversations_change: activeConversationsChange,
       avg_response_time: Math.round(avgResponseTime),
+      response_time_change: responseTimeChange,
       conversion_rate: parseFloat(conversionRate.toFixed(2)),
+      conversion_rate_change: conversionRateChange,
     };
     
     // =============================================
@@ -275,7 +325,7 @@ export async function GET(request: NextRequest) {
     // Fetch all behaviors in period
     const { data: allBehaviors } = await supabase
       .from('user_behavior')
-      .select('user_id, behavior_type, property_id, duration')
+      .select('user_id, behavior_type, property_id, duration, timestamp')
       .gte('timestamp', start.toISOString())
       .lte('timestamp', end.toISOString());
     
@@ -314,23 +364,27 @@ export async function GET(request: NextRequest) {
     const dealsClosed = dealsClosedCount;
     
     // Calculate conversion rates
+    const conversionRates = {
+      visitor_to_engaged: uniqueVisitors > 0 ? parseFloat(((engagedUsers / uniqueVisitors) * 100).toFixed(2)) : 0,
+      engaged_to_high_intent: engagedUsers > 0 ? parseFloat(((highIntentUsers / engagedUsers) * 100).toFixed(2)) : 0,
+      high_intent_to_contacted: highIntentUsers > 0 ? parseFloat(((contactedUsers / highIntentUsers) * 100).toFixed(2)) : 0,
+      contacted_to_meeting: contactedUsers > 0 ? parseFloat(((meetingsScheduled / contactedUsers) * 100).toFixed(2)) : 0,
+      meeting_to_offer: meetingsScheduled > 0 ? parseFloat(((offersMade / meetingsScheduled) * 100).toFixed(2)) : 0,
+      offer_to_close: offersMade > 0 ? parseFloat(((dealsClosed / offersMade) * 100).toFixed(2)) : 0,
+      overall: uniqueVisitors > 0 ? parseFloat(((dealsClosed / uniqueVisitors) * 100).toFixed(2)) : 0,
+    };
+
     const funnel = {
-      total_visitors: uniqueVisitors,
-      engaged_users: engagedUsers,
-      high_intent: highIntentUsers,
-      contacted: contactedUsers,
-      meetings_scheduled: meetingsScheduled,
-      offers_made: offersMade,
-      deals_closed: dealsClosed,
-      conversion_rates: {
-        visitor_to_engaged: uniqueVisitors > 0 ? parseFloat(((engagedUsers / uniqueVisitors) * 100).toFixed(2)) : 0,
-        engaged_to_high_intent: engagedUsers > 0 ? parseFloat(((highIntentUsers / engagedUsers) * 100).toFixed(2)) : 0,
-        high_intent_to_contacted: highIntentUsers > 0 ? parseFloat(((contactedUsers / highIntentUsers) * 100).toFixed(2)) : 0,
-        contacted_to_meeting: contactedUsers > 0 ? parseFloat(((meetingsScheduled / contactedUsers) * 100).toFixed(2)) : 0,
-        meeting_to_offer: meetingsScheduled > 0 ? parseFloat(((offersMade / meetingsScheduled) * 100).toFixed(2)) : 0,
-        offer_to_close: offersMade > 0 ? parseFloat(((dealsClosed / offersMade) * 100).toFixed(2)) : 0,
-        overall: uniqueVisitors > 0 ? parseFloat(((dealsClosed / uniqueVisitors) * 100).toFixed(2)) : 0,
-      },
+      stages: [
+        { name: 'Visitors', value: uniqueVisitors, conversion_rate: 100 },
+        { name: 'Engaged Users', value: engagedUsers, conversion_rate: conversionRates.visitor_to_engaged },
+        { name: 'High Intent', value: highIntentUsers, conversion_rate: conversionRates.engaged_to_high_intent },
+        { name: 'Contacted', value: contactedUsers, conversion_rate: conversionRates.high_intent_to_contacted },
+        { name: 'Meetings', value: meetingsScheduled, conversion_rate: conversionRates.contacted_to_meeting },
+        { name: 'Offers', value: offersMade, conversion_rate: conversionRates.meeting_to_offer },
+        { name: 'Deals Closed', value: dealsClosed, conversion_rate: conversionRates.offer_to_close },
+      ],
+      overall_conversion: conversionRates.overall,
     };
     
     // =============================================
@@ -375,7 +429,7 @@ export async function GET(request: NextRequest) {
       newLeadCounts.push(newCount);
     }
     
-    const score_trends = { dates, avg_scores: avgScores, hot_lead_counts: hotLeadCounts, new_lead_counts: newLeadCounts };
+    const score_trends = { dates, avg_scores: avgScores, hot_leads: hotLeadCounts, new_leads: newLeadCounts };
     
     // =============================================
     // ACTIVITY HEATMAP
@@ -402,6 +456,78 @@ export async function GET(request: NextRequest) {
         activity_by_day[day] = (activity_by_day[day] || 0) + 1;
       }
     });
+
+    const dayNameMap: Record<string, string> = {
+      Monday: 'Mon',
+      Tuesday: 'Tue',
+      Wednesday: 'Wed',
+      Thursday: 'Thu',
+      Friday: 'Fri',
+      Saturday: 'Sat',
+      Sunday: 'Sun',
+    };
+
+    const activityByHourRecord: Record<string, number> = {};
+    let peakHour = 0;
+    let peakHourCount = -1;
+    Object.entries(activity_by_hour).forEach(([hourKey, count]) => {
+      const numericHour = Number(hourKey);
+      activityByHourRecord[numericHour.toString()] = count;
+      if (count > peakHourCount) {
+        peakHour = numericHour;
+        peakHourCount = count;
+      }
+    });
+
+    const activityByDayRecord: Record<string, number> = {};
+    let peakDay = 'Mon';
+    let peakDayCount = -1;
+    Object.entries(activity_by_day).forEach(([dayName, count]) => {
+      const shortName = dayNameMap[dayName] || dayName.slice(0, 3);
+      activityByDayRecord[shortName] = count;
+      if (count > peakDayCount) {
+        peakDay = shortName;
+        peakDayCount = count;
+      }
+    });
+
+    const activity_heatmap = {
+      by_hour: activityByHourRecord,
+      by_day: activityByDayRecord,
+      peak_hour: peakHour,
+      peak_day: peakDay,
+    };
+
+    const sessionsByUser = new Map<string, { views: number; duration: number }>();
+    allBehaviors?.forEach(b => {
+      if (!b.user_id) return;
+      const existing = sessionsByUser.get(b.user_id) || { views: 0, duration: 0 };
+      if (b.behavior_type === 'property_view') {
+        existing.views += 1;
+      }
+      if (typeof b.duration === 'number') {
+        existing.duration += Number(b.duration);
+      }
+      sessionsByUser.set(b.user_id, existing);
+    });
+
+    const sessionValues = Array.from(sessionsByUser.values());
+    const totalSessions = sessionValues.length;
+    const totalDurationSeconds = sessionValues.reduce((sum, session) => sum + session.duration, 0);
+    const totalViews = sessionValues.reduce((sum, session) => sum + session.views, 0);
+    const bouncedSessions = sessionValues.filter(session => session.views <= 1).length;
+    const repeatVisitors = sessionValues.filter(session => session.views > 1).length;
+
+    const avgSessionDurationMinutes = totalSessions > 0 ? totalDurationSeconds / totalSessions / 60 : 0;
+    const avgPagesPerSession = totalSessions > 0 ? totalViews / totalSessions : 0;
+    const bounceRate = totalSessions > 0 ? (bouncedSessions / totalSessions) * 100 : 0;
+
+    const engagement = {
+      avg_session_duration: Number(avgSessionDurationMinutes.toFixed(2)),
+      avg_pages_per_session: Number(avgPagesPerSession.toFixed(2)),
+      bounce_rate: Number(bounceRate.toFixed(1)),
+      repeat_visitors: repeatVisitors,
+    };
     
     // =============================================
     // TOP PROPERTIES
@@ -486,7 +612,7 @@ export async function GET(request: NextRequest) {
     ).length || 0;
     
     const response_metrics = {
-      avg_first_response_time: Math.round(avgFirstResponseTime),
+      avg_first_response: Math.round(avgFirstResponseTime),
       avg_response_time: Math.round(avgResponseTime),
       response_rate: parseFloat(responseRate.toFixed(2)),
       pending_responses: pendingInteractions,
@@ -597,53 +723,11 @@ export async function GET(request: NextRequest) {
         source: source || 'Unknown',
         count: stats.count,
         percentage: totalLeads > 0 ? parseFloat(((stats.count / totalLeads) * 100).toFixed(1)) : 0,
-        avg_quality_score: stats.count > 0 ? parseFloat((stats.totalScore / stats.count).toFixed(2)) : 0,
-        conversion_rate: 0, // TODO: Track conversions by source
+        avg_quality: stats.count > 0 ? parseFloat((stats.totalScore / stats.count).toFixed(2)) : 0,
+        conversion_rate: stats.count > 0 ? parseFloat(((stats.conversions / Math.max(stats.count, 1)) * 100).toFixed(1)) : 0,
+        roi: 0,
       }))
       .sort((a, b) => b.count - a.count);
-    
-    // =============================================
-    // COMPARISON (if requested)
-    // =============================================
-    
-    let comparison: DashboardAnalytics['comparison'] | undefined = undefined;
-    
-    if (compareParam) {
-      // Calculate previous period
-      const periodLength = end.getTime() - start.getTime();
-      const prevStart = new Date(start.getTime() - periodLength);
-      const prevEnd = new Date(start.getTime());
-      
-      // Fetch previous period data
-      const { data: prevLeadScores } = await supabase
-        .from('lead_scores')
-        .select('*')
-        .gte('created_at', prevStart.toISOString())
-        .lte('created_at', prevEnd.toISOString());
-      
-      const prevTotalLeads = prevLeadScores?.length || 0;
-      
-      const calculateChange = (current: number, previous: number): number => {
-        if (previous === 0) return current > 0 ? 100 : 0;
-        return parseFloat((((current - previous) / previous) * 100).toFixed(2));
-      };
-      
-      comparison = {
-        period: `${prevStart.toISOString().split('T')[0]} to ${prevEnd.toISOString().split('T')[0]}`,
-        metrics: {
-          total_leads: {
-            current: totalLeads,
-            previous: prevTotalLeads,
-            change: calculateChange(totalLeads, prevTotalLeads),
-          },
-          conversion_rate: {
-            current: conversionRate,
-            previous: 0, // TODO: Calculate previous conversion rate
-            change: conversionRate,
-          },
-        },
-      };
-    }
     
     // =============================================
     // BUILD RESPONSE
@@ -654,13 +738,12 @@ export async function GET(request: NextRequest) {
       lead_quality,
       funnel,
       score_trends,
-      activity_by_hour,
-      activity_by_day,
+      activity_heatmap,
       top_properties,
       response_metrics,
       revenue,
       lead_sources,
-      comparison,
+      engagement,
     };
     
     return NextResponse.json({

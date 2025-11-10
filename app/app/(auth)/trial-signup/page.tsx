@@ -330,7 +330,7 @@ export default function TrialSignupPage() {
             <div className="lg:col-span-7 space-y-6">
               <motion.div variants={fadeIn} className="inline-flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-emerald-400">
                 <Sparkles className="h-4 w-4" />
-                <span className="text-sm">India's Most Intelligent Real Estate Sales Platform</span>
+                <span className="text-sm">India&rsquo;s Most Intelligent Real Estate Sales Platform</span>
               </motion.div>
 
               <motion.h1 variants={fadeIn} className="text-4xl sm:text-5xl lg:text-6xl font-black leading-tight">

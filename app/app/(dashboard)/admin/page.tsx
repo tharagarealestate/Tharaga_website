@@ -503,12 +503,18 @@ function MetricCard({
   accent?: 'primary' | 'emerald' | 'gold'
   children?: React.ReactNode
 }) {
-  const animated = typeof value === 'number' ? useCountUp(value) : value
+  const isNumber = typeof value === 'number'
+  const animated = useCountUp(isNumber ? (value as number) : null)
+  const displayValue = loading
+    ? '—'
+    : isNumber
+    ? animated
+    : value ?? '—'
   return (
     <Card className="bg-gray-900 border-gray-800">
       <div className="text-sm text-gray-400">{title}</div>
       <div className="mt-1 flex items-baseline gap-2">
-        <div className="text-3xl font-semibold text-gray-100 tabular-nums">{loading ? '—' : animated ?? '—'}</div>
+        <div className="text-3xl font-semibold text-gray-100 tabular-nums">{displayValue}</div>
         {sub && <div className="text-xs text-gray-400">{sub}</div>}
       </div>
       {children && <div className="mt-2">{children}</div>}
@@ -586,9 +592,13 @@ function shorten(s: string, max = 80) {
   return s.slice(0, max - 1) + '…'
 }
 
-function useCountUp(target: number, durationMs = 600) {
-  const [display, setDisplay] = useState<number>(target)
+function useCountUp(target: number | null, durationMs = 600) {
+  const [display, setDisplay] = useState<number>(typeof target === 'number' ? target : 0)
   useEffect(() => {
+    if (typeof target !== 'number') {
+      setDisplay(0)
+      return
+    }
     let raf = 0
     const start = performance.now()
     const from = display
@@ -603,5 +613,5 @@ function useCountUp(target: number, durationMs = 600) {
     return () => cancelAnimationFrame(raf)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [target])
-  return display
+  return typeof target === 'number' ? display : null
 }

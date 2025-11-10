@@ -1262,6 +1262,44 @@ header .thg-auth-wrap:not(#site-header-auth-container){ position:absolute; top:1
                  .trial-cta .shapes .blue{ bottom:-60px; left:-60px; width:420px; height:420px; background:#2563EB }
                  .trial-cta .cta-row{ display:flex; flex-wrap:wrap; gap:12px; justify-content:center; margin:16px 0 10px }
                  .trial-cta .trust{ display:flex; flex-wrap:wrap; gap:16px; justify-content:center; color:#d1d5db; margin-top:6px }
+
+                 /* VALUE PROPOSITION SECTION - COMPLETE CSS FROM ORIGINAL */
+                 .value-prop{ position:relative; padding:96px 0; background:linear-gradient(180deg,#f9fafb 0%, #ffffff 100%); overflow:hidden }
+                 .value-prop .deco{ position:absolute; border-radius:9999px; filter:blur(72px); opacity:.6; pointer-events:none }
+                 .value-prop .deco.gold{ top:-80px; left:-80px; width:260px; height:260px; background:rgba(212,175,55,.10) }
+                 .value-prop .deco.primary{ bottom:-100px; right:-100px; width:380px; height:380px; background:rgba(37,99,235,.10) }
+                 .value-prop .inner{ position:relative; max-width:1100px; margin:0 auto; padding:0 16px; z-index:1 }
+                 .value-prop .header{ text-align:center; max-width:760px; margin:0 auto 28px }
+                 .value-prop .eyebrow-gold{ display:inline-block; padding:8px 12px; border-radius:9999px; background:#fef3c7; color:#92400e; font-weight:800; font-size:12px; margin-bottom:16px }
+                 .value-prop .headline{ font-family: var(--font-display); font-weight:800; font-size:36px; line-height:1.12; color:#111; margin:0 0 12px }
+                 .value-prop .sub{ color:#4b5563; font-size:18px; line-height:1.7; margin:0 auto; max-width:680px }
+                 .vp-grid{ display:grid; grid-template-columns:1fr; gap:16px }
+                 @media (min-width:768px){ .vp-grid{ grid-template-columns:repeat(2,1fr); gap:18px } }
+                 @media (min-width:1024px){ .vp-grid{ grid-template-columns:repeat(3,1fr); gap:20px } }
+                 .glass-card{ background:rgba(255,255,255,.72); border:1px solid rgba(17,24,39,.08); border-radius:16px; padding:24px; box-shadow:0 12px 36px rgba(17,24,39,.08); backdrop-filter:blur(10px) saturate(1.02); transition: box-shadow .2s ease, transform .2s ease, border-color .2s ease }
+                 .vp-card{ height:100%; border-left:4px solid transparent; transition: border-color .2s ease }
+                 .vp-card:hover{ border-left-color: var(--gold) }
+                 .vp-card:hover .glass-card{ box-shadow:0 20px 50px rgba(17,24,39,.16); transform:translateY(-2px) }
+                 .icon-circle{ width:56px; height:56px; border-radius:14px; display:flex; align-items:center; justify-content:center; background:linear-gradient(135deg,#c69a17,#d4af37); color:#fff; margin-bottom:16px; transition: transform .2s ease }
+                 .icon-circle svg{ width:28px; height:28px }
+                 .vp-card:hover .icon-circle{ transform:scale(1.06) }
+                 .vp-title{ font-weight:800; font-size:20px; margin:0 0 10px; color:#111; transition: color .2s ease }
+                 .vp-card:hover .vp-title{ color:#1d4ed8 }
+                 .vp-desc{ color:#4b5563; line-height:1.7; margin:0 0 14px }
+                 .vp-stat{ display:flex; align-items:center; gap:8px; color:#065f46; font-weight:800 }
+                 .vp-stat svg{ width:20px; height:20px }
+                 .fade-up{ opacity:0; transform:translateY(30px); transition: opacity .5s ease, transform .5s ease; transition-delay: var(--delay, 0s) }
+                 .fade-up.in-view{ opacity:1; transform:translateY(0) }
+
+                 /* Mobile optimizations: Value Props (320px–767px) */
+                 @media (max-width:767px){
+                   .value-prop{ padding:56px 0 }
+                   .value-prop .vp-grid{ display:flex; flex-direction:column; gap:12px }
+                   .value-prop .glass-card{ padding:16px }
+                   .value-prop .icon-circle{ width:40px; height:40px; border-radius:12px; margin-bottom:12px }
+                   .value-prop .icon-circle svg{ width:20px; height:20px }
+                 }
+
                  @media (max-width: 880px) { .hero .inner { grid-template-columns: 1fr; text-align:center; } .search-grid { grid-template-columns: 1fr; } .feature-grid { grid-template-columns: 1fr; } .how .inner { grid-template-columns: 1fr; } .h1 { font-size:28px; line-height:1.16 } .sub { font-size:15px } }
                ` }}
                />

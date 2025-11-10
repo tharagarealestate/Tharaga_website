@@ -10,12 +10,13 @@ export const metadata: Metadata = {
   description: 'AI-powered real estate assistant',
 }
 
-import { EntitlementsProvider } from '@/components/ui/FeatureGate'
 import { AppI18nProvider } from '@/components/providers/AppI18nProvider'
+import { EntitlementsProvider } from '@/components/ui/FeatureGate'
 import MobileBottomNav from '@/components/MobileBottomNav'
 import { PrefetchRoutes } from '@/components/providers/PrefetchRoutes'
 import ConditionalHeader from '@/components/ConditionalHeader'
 import { HeaderLinkInterceptor } from '@/components/HeaderLinkInterceptor'
+import { NotificationProvider } from '@/contexts/NotificationContext'
 
 const playfair = Playfair_Display({
   subsets: ['latin'],
@@ -1486,10 +1487,12 @@ header .thg-auth-wrap:not(#site-header-auth-container){ position:absolute; top:1
                  })();
                ` }} />
         <AppI18nProvider>
-          <EntitlementsProvider>
-            <PrefetchRoutes />
-            {children}
-          </EntitlementsProvider>
+          <NotificationProvider>
+            <EntitlementsProvider>
+              <PrefetchRoutes />
+              {children}
+            </EntitlementsProvider>
+          </NotificationProvider>
         </AppI18nProvider>
         {/* Web Vitals reporting */}
         <script dangerouslySetInnerHTML={{ __html: `

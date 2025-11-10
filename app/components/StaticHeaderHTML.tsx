@@ -40,9 +40,6 @@ const StaticHeaderHTML = memo(function StaticHeaderHTML() {
                   <a href="/tools/verification/" data-next-link>Verification</a>
                   <a href="/tools/roi/" data-next-link>ROI</a>
                   <a href="/tools/currency-risk/" data-next-link>Currency risk</a>
-                  <span className="divider show-mobile-only" aria-hidden="true"></span>
-                  <a className="show-mobile-only" href="/pricing/" data-next-link>Pricing</a>
-                  <a className="show-mobile-only" href="/about/" data-next-link>About</a>
                 </div>
               </details>
               <span className="divider" aria-hidden="true"></span>

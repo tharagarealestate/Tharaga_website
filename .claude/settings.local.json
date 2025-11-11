@@ -28,7 +28,8 @@
       "Bash(mv:*)",
       "Bash(git reset:*)",
       "Bash(rm:*)",
-      "Bash(cp:*)"
+      "Bash(cp:*)",
+      "Bash(git rebase:*)"
     ],
     "deny": [],
     "ask": []

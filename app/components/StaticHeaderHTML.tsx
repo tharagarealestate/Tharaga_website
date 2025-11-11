@@ -212,19 +212,24 @@ const StaticHeaderHTML = memo(function StaticHeaderHTML() {
               }, 300);
               
               // Portal menu update function (called by role manager)
-              // Portal menu is ONLY visible when user is logged in
+              // Portal menu is ALWAYS visible - behavior changes based on login state
               window.__updatePortalMenu = function() {
                 const portalMenuItems = document.getElementById('portal-menu-items');
                 const portalMenu = document.getElementById('portal-menu');
+                const portalSummary = portalMenu ? portalMenu.querySelector('summary') : null;
+
                 if (!portalMenuItems || !portalMenu) return;
-                
+
+                // Portal menu is always visible
+                portalMenu.style.display = '';
+
                 // Check if user is logged in and has roles
                 let isLoggedIn = false;
                 let userRoles = [];
                 let primaryRole = null;
                 let builderVerified = false;
                 let isAdminOwner = false;
-                
+
                 if (window.thgRoleManager) {
                   try {
                     const state = window.thgRoleManager.getState();
@@ -239,15 +244,13 @@ const StaticHeaderHTML = memo(function StaticHeaderHTML() {
                     console.error('[portal-menu] Error getting role state:', e);
                   }
                 }
-                
-                // Hide Portal menu completely if user is not logged in
+
+                // If not logged in, make Portal menu redirect to login
                 if (!isLoggedIn) {
-                  portalMenu.style.display = 'none';
+                  // Show login prompt in dropdown
+                  portalMenuItems.innerHTML = '<a href="/login" style="display:flex;align-items:center;justify-content:center;text-align:center;padding:16px;color:#1e40af;font-weight:600;"><span>Login to Access Dashboards</span></a>';
                   return;
                 }
-
-                // Show Portal menu since user is logged in
-                portalMenu.style.display = '';
 
                 // Build menu HTML based on user state and roles
                 let menuHTML = '';
@@ -303,14 +306,8 @@ const StaticHeaderHTML = memo(function StaticHeaderHTML() {
               
               // showLoginPrompt function REMOVED - redirects to /login instead
 
-              // Initialize portal menu - hidden until user logs in
+              // Initialize portal menu - always visible, content changes based on login state
               function initPortalMenu() {
-                // Hide Portal menu by default - will show after user logs in
-                const portalMenu = document.getElementById('portal-menu');
-                if (portalMenu) {
-                  portalMenu.style.display = 'none';
-                }
-
                 // Update portal menu based on auth state
                 if (window.__updatePortalMenu) {
                   window.__updatePortalMenu();

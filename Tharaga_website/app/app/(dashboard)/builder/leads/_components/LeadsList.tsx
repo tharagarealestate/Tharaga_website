@@ -50,6 +50,7 @@ export interface Lead {
 interface LeadsListProps {
   onSelectLead?: (lead: Lead) => void;
   initialFilters?: Partial<FilterConfig>;
+  showInlineFilters?: boolean;
 }
 
 interface StatsSummary {
@@ -60,7 +61,7 @@ interface StatsSummary {
   average_score: number;
 }
 
-export function LeadsList({ onSelectLead, initialFilters }: LeadsListProps) {
+export function LeadsList({ onSelectLead, initialFilters, showInlineFilters = true }: LeadsListProps) {
   const supabase = useMemo(() => getSupabase(), []);
   const { trackBehavior } = useBehaviorTracking();
   const {
@@ -89,6 +90,7 @@ export function LeadsList({ onSelectLead, initialFilters }: LeadsListProps) {
     pending_interactions: 0,
     average_score: 0,
   });
+  const currentPage = filters.page ?? 1;
 
   useEffect(() => {
     if (initialFilters && !initialFiltersApplied.current) {
@@ -200,10 +202,11 @@ export function LeadsList({ onSelectLead, initialFilters }: LeadsListProps) {
 
       const activeFilters = Object.entries(filters)
         .filter(([key, value]) => {
-          if (key === 'sort_by' || key === 'sort_order') return false;
+          if (key === 'sort_by' || key === 'sort_order' || key === 'page' || key === 'limit') return false;
           if (key === 'score_min') return value !== 0;
           if (key === 'score_max') return value !== 10;
-          return value !== '' && value !== null;
+          if (Array.isArray(value)) return value.length > 0;
+          return value !== '' && value !== null && value !== undefined;
         })
         .map(([key]) => key);
 
@@ -303,8 +306,23 @@ export function LeadsList({ onSelectLead, initialFilters }: LeadsListProps) {
     try {
       const params = new URLSearchParams();
       if (filters.category) params.append('category', filters.category);
-      if (filters.score_min > 0) params.append('score_min', filters.score_min.toString());
-      if (filters.score_max < 10) params.append('score_max', filters.score_max.toString());
+      if (typeof filters.score_min === 'number' && filters.score_min > 0) {
+        params.append('score_min', filters.score_min.toString());
+      }
+      if (typeof filters.score_max === 'number' && filters.score_max < 10) {
+        params.append('score_max', filters.score_max.toString());
+      }
+      if (filters.search) params.append('search', filters.search);
+      if (filters.location) params.append('location', filters.location);
+      if (filters.property_type) params.append('property_type', filters.property_type);
+      if (filters.has_interactions) params.append('has_interactions', 'true');
+      if (filters.no_response) params.append('no_response', 'true');
+      if (filters.budget_min !== undefined && filters.budget_min !== null && filters.budget_min !== '') {
+        params.append('budget_min', filters.budget_min.toString());
+      }
+      if (filters.budget_max !== undefined && filters.budget_max !== null && filters.budget_max !== '') {
+        params.append('budget_max', filters.budget_max.toString());
+      }
 
       const response = await fetch(`/api/leads/export?format=csv&${params.toString()}`);
       if (!response.ok) {
@@ -343,16 +361,6 @@ export function LeadsList({ onSelectLead, initialFilters }: LeadsListProps) {
     },
     [onSelectLead, trackBehavior]
   );
-
-  const activeFilterCount = useMemo(() => {
-    return Object.entries(filters).reduce((count, [key, value]) => {
-      if (key === 'sort_by' || key === 'sort_order') return count;
-      if (key === 'score_min' && value === 0) return count;
-      if (key === 'score_max' && value === 10) return count;
-      if (value === '' || value === null) return count;
-      return count + 1;
-    }, 0);
-  }, [filters]);
 
   if (error) {
     return (
@@ -405,198 +413,200 @@ export function LeadsList({ onSelectLead, initialFilters }: LeadsListProps) {
         />
       </div>
 
-      <div className="bg-gradient-to-br from-[#0A1628]/80 to-[#0F1B2D]/80 backdrop-blur-xl border border-blue-500/20 rounded-2xl p-6 shadow-lg shadow-blue-500/10">
-        <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center justify-between">
-          <div className="relative flex-1 w-full lg:max-w-md">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-blue-400/50" />
-            <input
-              type="text"
-              placeholder="Search by name, email, or phone..."
-              value={searchQuery}
-              onChange={(event) => setSearchQuery(event.target.value)}
-              className="w-full pl-12 pr-4 py-3 bg-[#0A1628]/50 border border-blue-500/20 rounded-xl text-white placeholder:text-gray-400 focus:outline-none focus:border-blue-500/50 focus:ring-2 focus:ring-blue-500/20 transition-all"
-            />
+      {showInlineFilters && (
+        <div className="bg-gradient-to-br from-[#0A1628]/80 to-[#0F1B2D]/80 backdrop-blur-xl border border-blue-500/20 rounded-2xl p-6 shadow-lg shadow-blue-500/10">
+          <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center justify-between">
+            <div className="relative flex-1 w-full lg:max-w-md">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-blue-400/50" />
+              <input
+                type="text"
+                placeholder="Search by name, email, or phone..."
+                value={searchQuery}
+                onChange={(event) => setSearchQuery(event.target.value)}
+                className="w-full pl-12 pr-4 py-3 bg-[#0A1628]/50 border border-blue-500/20 rounded-xl text-white placeholder:text-gray-400 focus:outline-none focus:border-blue-500/50 focus:ring-2 focus:ring-blue-500/20 transition-all"
+              />
+            </div>
+
+            <div className="flex gap-3 w-full lg:w-auto">
+              <button
+                onClick={() => setIsFilterPanelOpen(!isFilterPanelOpen)}
+                className="flex-1 lg:flex-initial px-4 py-3 bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/30 rounded-xl text-blue-100 font-medium transition-all flex items-center justify-center gap-2 relative"
+              >
+                <Filter className="w-5 h-5" />
+                <span>Filters</span>
+                {activeFilterCount > 0 && (
+                  <span className="absolute -top-2 -right-2 w-6 h-6 bg-amber-500 text-white text-xs font-bold rounded-full flex items-center justify-center">
+                    {activeFilterCount}
+                  </span>
+                )}
+              </button>
+
+              <button
+                onClick={handleExport}
+                className="flex-1 lg:flex-initial px-4 py-3 bg-gradient-to-r from-amber-500/20 to-orange-500/20 hover:from-amber-500/30 hover:to-orange-500/30 border border-amber-500/50 rounded-xl text-amber-100 font-medium transition-all flex items-center justify-center gap-2"
+              >
+                <Download className="w-5 h-5" />
+                <span className="hidden lg:inline">Export</span>
+              </button>
+            </div>
           </div>
 
-          <div className="flex gap-3 w-full lg:w-auto">
-            <button
-              onClick={() => setIsFilterPanelOpen(!isFilterPanelOpen)}
-              className="flex-1 lg:flex-initial px-4 py-3 bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/30 rounded-xl text-blue-100 font-medium transition-all flex items-center justify-center gap-2 relative"
-            >
-              <Filter className="w-5 h-5" />
-              <span>Filters</span>
-              {activeFilterCount > 0 && (
-                <span className="absolute -top-2 -right-2 w-6 h-6 bg-amber-500 text-white text-xs font-bold rounded-full flex items-center justify-center">
-                  {activeFilterCount}
-                </span>
-              )}
-            </button>
+          <AnimatePresence>
+            {isFilterPanelOpen && (
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: 'auto', opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={{ duration: 0.3 }}
+                className="overflow-hidden"
+              >
+                <div className="mt-6 pt-6 border-t border-blue-500/20 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-blue-200/70 mb-2">Category</label>
+                    <select
+                      value={filters.category ?? ''}
+                      onChange={(event) => updateFilter('category', event.target.value)}
+                      className="w-full px-4 py-2.5 bg-[#0A1628]/50 border border-blue-500/20 rounded-xl text-white focus:outline-none focus:border-blue-500/50 transition-all"
+                    >
+                      <option value="">All Categories</option>
+                      <option value="Hot Lead">🔥 Hot Lead</option>
+                      <option value="Warm Lead">☀️ Warm Lead</option>
+                      <option value="Developing Lead">🌱 Developing Lead</option>
+                      <option value="Cold Lead">❄️ Cold Lead</option>
+                      <option value="Low Quality">⚠️ Low Quality</option>
+                    </select>
+                  </div>
 
-            <button
-              onClick={handleExport}
-              className="flex-1 lg:flex-initial px-4 py-3 bg-gradient-to-r from-amber-500/20 to-orange-500/20 hover:from-amber-500/30 hover:to-orange-500/30 border border-amber-500/50 rounded-xl text-amber-100 font-medium transition-all flex items-center justify-center gap-2"
-            >
-              <Download className="w-5 h-5" />
-              <span className="hidden lg:inline">Export</span>
-            </button>
-          </div>
-        </div>
+                  <div>
+                    <label className="block text-sm font-medium text-blue-200/70 mb-2">
+                      Score Range: {filters.score_min} - {filters.score_max}
+                    </label>
+                    <div className="flex gap-2 items-center">
+                      <input
+                        type="range"
+                        min="0"
+                        max="10"
+                        step="0.5"
+                        value={filters.score_min ?? 0}
+                        onChange={(event) => updateFilter('score_min', parseFloat(event.target.value))}
+                        className="flex-1"
+                      />
+                      <input
+                        type="range"
+                        min="0"
+                        max="10"
+                        step="0.5"
+                        value={filters.score_max ?? 10}
+                        onChange={(event) => updateFilter('score_max', parseFloat(event.target.value))}
+                        className="flex-1"
+                      />
+                    </div>
+                  </div>
 
-        <AnimatePresence>
-          {isFilterPanelOpen && (
-            <motion.div
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: 'auto', opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              transition={{ duration: 0.3 }}
-              className="overflow-hidden"
-            >
-              <div className="mt-6 pt-6 border-t border-blue-500/20 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-blue-200/70 mb-2">Category</label>
-                  <select
-                    value={filters.category ?? ''}
-                    onChange={(event) => updateFilter('category', event.target.value)}
-                    className="w-full px-4 py-2.5 bg-[#0A1628]/50 border border-blue-500/20 rounded-xl text-white focus:outline-none focus:border-blue-500/50 transition-all"
-                  >
-                    <option value="">All Categories</option>
-                    <option value="Hot Lead">🔥 Hot Lead</option>
-                    <option value="Warm Lead">☀️ Warm Lead</option>
-                    <option value="Developing Lead">🌱 Developing Lead</option>
-                    <option value="Cold Lead">❄️ Cold Lead</option>
-                    <option value="Low Quality">⚠️ Low Quality</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-blue-200/70 mb-2">
-                    Score Range: {filters.score_min} - {filters.score_max}
-                  </label>
-                  <div className="flex gap-2 items-center">
+                  <div>
+                    <label className="block text-sm font-medium text-blue-200/70 mb-2">Location</label>
                     <input
-                      type="range"
-                      min="0"
-                      max="10"
-                      step="0.5"
-                      value={filters.score_min ?? 0}
-                      onChange={(event) => updateFilter('score_min', parseFloat(event.target.value))}
-                      className="flex-1"
-                    />
-                    <input
-                      type="range"
-                      min="0"
-                      max="10"
-                      step="0.5"
-                      value={filters.score_max ?? 10}
-                      onChange={(event) => updateFilter('score_max', parseFloat(event.target.value))}
-                      className="flex-1"
+                      type="text"
+                      placeholder="e.g. Bangalore, Mumbai"
+                      value={filters.location ?? ''}
+                      onChange={(event) => updateFilter('location', event.target.value)}
+                      className="w-full px-4 py-2.5 bg-[#0A1628]/50 border border-blue-500/20 rounded-xl text-white placeholder:text-gray-400 focus:outline-none focus:border-blue-500/50 transition-all"
                     />
                   </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-blue-200/70 mb-2">Min Budget (₹)</label>
+                    <input
+                      type="number"
+                      placeholder="e.g. 5000000"
+                      value={
+                        filters.budget_min !== undefined && filters.budget_min !== null
+                          ? String(filters.budget_min)
+                          : ''
+                      }
+                      onChange={(event) => updateFilter('budget_min', event.target.value)}
+                      className="w-full px-4 py-2.5 bg-[#0A1628]/50 border border-blue-500/20 rounded-xl text-white placeholder:text-gray-400 focus:outline-none focus:border-blue-500/50 transition-all"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-blue-200/70 mb-2">Max Budget (₹)</label>
+                    <input
+                      type="number"
+                      placeholder="e.g. 10000000"
+                      value={
+                        filters.budget_max !== undefined && filters.budget_max !== null
+                          ? String(filters.budget_max)
+                          : ''
+                      }
+                      onChange={(event) => updateFilter('budget_max', event.target.value)}
+                      className="w-full px-4 py-2.5 bg-[#0A1628]/50 border border-blue-500/20 rounded-xl text-white placeholder:text-gray-400 focus:outline-none focus:border-blue-500/50 transition-all"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-blue-200/70 mb-2">Sort By</label>
+                    <select
+                      value={`${filters.sort_by ?? 'score'}-${filters.sort_order ?? 'desc'}`}
+                      onChange={(event) => {
+                        const [sortBy, sortOrder] = event.target.value.split('-') as [
+                          NonNullable<FilterConfig['sort_by']>,
+                          NonNullable<FilterConfig['sort_order']>,
+                        ];
+                        updateFilter('sort_by', sortBy);
+                        updateFilter('sort_order', sortOrder);
+                      }}
+                      className="w-full px-4 py-2.5 bg-[#0A1628]/50 border border-blue-500/20 rounded-xl text-white focus:outline-none focus:border-blue-500/50 transition-all"
+                    >
+                      <option value="score-desc">Score (High to Low)</option>
+                      <option value="score-asc">Score (Low to High)</option>
+                      <option value="created_at-desc">Newest First</option>
+                      <option value="created_at-asc">Oldest First</option>
+                      <option value="last_activity-desc">Recently Active</option>
+                      <option value="last_activity-asc">Least Active</option>
+                    </select>
+                  </div>
+
+                  <div className="md:col-span-2 lg:col-span-3 flex flex-wrap gap-3">
+                    <button
+                      onClick={() =>
+                        updateFilter('no_response', filters.no_response ? null : true)
+                      }
+                      className={`px-4 py-2 rounded-xl border transition-all ${
+                        filters.no_response
+                          ? 'bg-amber-500/20 border-amber-500/50 text-amber-100'
+                          : 'bg-[#0A1628]/50 border-blue-500/20 text-gray-300 hover:bg-blue-500/10'
+                      }`}
+                    >
+                      ⏰ No Response Yet
+                    </button>
+
+                    <button
+                      onClick={() =>
+                        updateFilter('has_interactions', filters.has_interactions ? null : true)
+                      }
+                      className={`px-4 py-2 rounded-xl border transition-all ${
+                        filters.has_interactions
+                          ? 'bg-green-500/20 border-green-500/50 text-green-100'
+                          : 'bg-[#0A1628]/50 border-blue-500/20 text-gray-300 hover:bg-blue-500/10'
+                      }`}
+                    >
+                      💬 Has Interactions
+                    </button>
+
+                    <button
+                      onClick={handleClearFilters}
+                      className="px-4 py-2 bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 rounded-xl text-red-100 transition-all"
+                    >
+                      Clear All Filters
+                    </button>
+                  </div>
                 </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-blue-200/70 mb-2">Location</label>
-                  <input
-                    type="text"
-                    placeholder="e.g. Bangalore, Mumbai"
-                    value={filters.location ?? ''}
-                    onChange={(event) => updateFilter('location', event.target.value)}
-                    className="w-full px-4 py-2.5 bg-[#0A1628]/50 border border-blue-500/20 rounded-xl text-white placeholder:text-gray-400 focus:outline-none focus:border-blue-500/50 transition-all"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-blue-200/70 mb-2">Min Budget (₹)</label>
-                  <input
-                    type="number"
-                    placeholder="e.g. 5000000"
-                    value={
-                      filters.budget_min !== undefined && filters.budget_min !== null
-                        ? String(filters.budget_min)
-                        : ''
-                    }
-                    onChange={(event) => updateFilter('budget_min', event.target.value)}
-                    className="w-full px-4 py-2.5 bg-[#0A1628]/50 border border-blue-500/20 rounded-xl text-white placeholder:text-gray-400 focus:outline-none focus:border-blue-500/50 transition-all"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-blue-200/70 mb-2">Max Budget (₹)</label>
-                  <input
-                    type="number"
-                    placeholder="e.g. 10000000"
-                    value={
-                      filters.budget_max !== undefined && filters.budget_max !== null
-                        ? String(filters.budget_max)
-                        : ''
-                    }
-                    onChange={(event) => updateFilter('budget_max', event.target.value)}
-                    className="w-full px-4 py-2.5 bg-[#0A1628]/50 border border-blue-500/20 rounded-xl text-white placeholder:text-gray-400 focus:outline-none focus:border-blue-500/50 transition-all"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-blue-200/70 mb-2">Sort By</label>
-                  <select
-                    value={`${filters.sort_by ?? 'score'}-${filters.sort_order ?? 'desc'}`}
-                    onChange={(event) => {
-                      const [sortBy, sortOrder] = event.target.value.split('-') as [
-                        NonNullable<FilterConfig['sort_by']>,
-                        NonNullable<FilterConfig['sort_order']>,
-                      ];
-                      updateFilter('sort_by', sortBy);
-                      updateFilter('sort_order', sortOrder);
-                    }}
-                    className="w-full px-4 py-2.5 bg-[#0A1628]/50 border border-blue-500/20 rounded-xl text-white focus:outline-none focus:border-blue-500/50 transition-all"
-                  >
-                    <option value="score-desc">Score (High to Low)</option>
-                    <option value="score-asc">Score (Low to High)</option>
-                    <option value="created_at-desc">Newest First</option>
-                    <option value="created_at-asc">Oldest First</option>
-                    <option value="last_activity-desc">Recently Active</option>
-                    <option value="last_activity-asc">Least Active</option>
-                  </select>
-                </div>
-
-                <div className="md:col-span-2 lg:col-span-3 flex flex-wrap gap-3">
-                  <button
-                    onClick={() =>
-                      updateFilter('no_response', filters.no_response ? null : true)
-                    }
-                    className={`px-4 py-2 rounded-xl border transition-all ${
-                      filters.no_response
-                        ? 'bg-amber-500/20 border-amber-500/50 text-amber-100'
-                        : 'bg-[#0A1628]/50 border-blue-500/20 text-gray-300 hover:bg-blue-500/10'
-                    }`}
-                  >
-                    ⏰ No Response Yet
-                  </button>
-
-                  <button
-                    onClick={() =>
-                      updateFilter('has_interactions', filters.has_interactions ? null : true)
-                    }
-                    className={`px-4 py-2 rounded-xl border transition-all ${
-                      filters.has_interactions
-                        ? 'bg-green-500/20 border-green-500/50 text-green-100'
-                        : 'bg-[#0A1628]/50 border-blue-500/20 text-gray-300 hover:bg-blue-500/10'
-                    }`}
-                  >
-                    💬 Has Interactions
-                  </button>
-
-                  <button
-                    onClick={handleClearFilters}
-                    className="px-4 py-2 bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 rounded-xl text-red-100 transition-all"
-                  >
-                    Clear All Filters
-                  </button>
-                </div>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+      )}
 
       {loading ? (
         <div className="space-y-4">
@@ -778,8 +788,8 @@ export function LeadsList({ onSelectLead, initialFilters }: LeadsListProps) {
       {totalPages > 1 && (
         <div className="flex items-center justify-center gap-2 pt-6">
           <button
-            onClick={() => setPage((previous) => Math.max(1, previous - 1))}
-            disabled={page === 1}
+            onClick={() => updateFilter('page', Math.max(1, currentPage - 1))}
+            disabled={currentPage === 1}
             className="px-4 py-2 bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/30 rounded-xl text-blue-100 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
           >
             Previous
@@ -791,9 +801,9 @@ export function LeadsList({ onSelectLead, initialFilters }: LeadsListProps) {
               return (
                 <button
                   key={pageNumber}
-                  onClick={() => setPage(pageNumber)}
+                  onClick={() => updateFilter('page', pageNumber)}
                   className={`w-10 h-10 rounded-xl font-medium transition-all ${
-                    page === pageNumber
+                    currentPage === pageNumber
                       ? 'bg-blue-500 text-white'
                       : 'bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/30 text-blue-100'
                   }`}
@@ -805,8 +815,8 @@ export function LeadsList({ onSelectLead, initialFilters }: LeadsListProps) {
           </div>
 
           <button
-            onClick={() => setPage((previous) => Math.min(totalPages, previous + 1))}
-            disabled={page === totalPages}
+            onClick={() => updateFilter('page', Math.min(totalPages, currentPage + 1))}
+            disabled={currentPage === totalPages}
             className="px-4 py-2 bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/30 rounded-xl text-blue-100 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
           >
             Next

@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
-import { cookies } from "next/headers";
+import { createClient } from "@/lib/supabase/server";
 
 const STAGE_ORDER: Record<string, number> = {
   new: 1,
@@ -29,95 +28,123 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export async function POST(request: NextRequest) {
+  const supabase = createClient();
+  const {
+    data: { user },
+    error: authError,
+  } = await supabase.auth.getUser();
+
+  if (authError || !user) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  let payload: {
+    pipeline_id?: string;
+    new_stage?: PipelineStage;
+    notes?: string;
+    deal_value?: number;
+    probability?: number;
+    expected_close_date?: string;
+    loss_reason?: string;
+  };
+
   try {
-    const supabase = createRouteHandlerClient({ cookies });
-    const { data: auth } = await supabase.auth.getUser();
+    payload = await request.json();
+  } catch {
+    return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
+  }
 
-    if (!auth?.user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+  const {
+    pipeline_id,
+    new_stage,
+    notes,
+    deal_value,
+    probability,
+    expected_close_date,
+    loss_reason,
+  } = payload;
 
-    let payload: {
-      pipeline_id?: string;
-      new_stage?: PipelineStage;
-      notes?: string;
-    };
-
-    try {
-      payload = await request.json();
-    } catch {
-      return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
-    }
-
-    const pipelineId = payload.pipeline_id?.trim();
-    const newStage = payload.new_stage;
-    const notes = payload.notes?.trim();
-
-    if (!pipelineId || !newStage) {
-      return NextResponse.json(
-        { error: "pipeline_id and new_stage are required" },
-        { status: 400 }
-      );
-    }
-
-    if (!(newStage in STAGE_ORDER)) {
-      return NextResponse.json(
-        { error: "Invalid pipeline stage" },
-        { status: 400 }
-      );
-    }
-
-    const { data: pipeline, error: pipelineError } = await supabase
-      .from("lead_pipeline")
-      .select("id, builder_id")
-      .eq("id", pipelineId)
-      .maybeSingle();
-
-    if (pipelineError) {
-      return NextResponse.json(
-        { error: pipelineError.message },
-        { status: 500 }
-      );
-    }
-
-    if (!pipeline) {
-      return NextResponse.json(
-        { error: "Pipeline record not found" },
-        { status: 404 }
-      );
-    }
-
-    if (pipeline.builder_id !== auth.user.id) {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-    }
-
-    const updatePayload: Record<string, any> = {
-      stage: newStage,
-      stage_order: STAGE_ORDER[newStage],
-    };
-    if (typeof notes === "string" && notes.length > 0) {
-      updatePayload.notes = notes;
-    }
-
-    const { error: updateError } = await supabase
-      .from("lead_pipeline")
-      .update(updatePayload)
-      .eq("id", pipelineId);
-
-    if (updateError) {
-      return NextResponse.json(
-        { error: updateError.message },
-        { status: 500 }
-      );
-    }
-
-    return NextResponse.json({ success: true });
-  } catch (error) {
-    console.error("[lead_pipeline:update-stage] unexpected error", error);
+  if (!pipeline_id || !new_stage) {
     return NextResponse.json(
-      { error: "Internal server error" },
+      { error: "Missing required fields" },
+      { status: 400 }
+    );
+  }
+
+  if (!(new_stage in STAGE_ORDER)) {
+    return NextResponse.json({ error: "Invalid stage" }, { status: 400 });
+  }
+
+  const updateData: Record<string, any> = {
+    stage: new_stage,
+    stage_order: STAGE_ORDER[new_stage],
+    updated_at: new Date().toISOString(),
+  };
+
+  if (typeof notes === "string" && notes.trim().length > 0) {
+    updateData.notes = notes.trim();
+  }
+  if (deal_value !== undefined) {
+    updateData.deal_value = deal_value;
+  }
+  if (probability !== undefined) {
+    updateData.probability = probability;
+  }
+  if (expected_close_date) {
+    updateData.expected_close_date = expected_close_date;
+  }
+  if (typeof loss_reason === "string" && loss_reason.trim().length > 0) {
+    updateData.loss_reason = loss_reason.trim();
+  }
+
+  const { data, error } = await supabase
+    .from("lead_pipeline")
+    .update(updateData)
+    .eq("id", pipeline_id)
+    .eq("builder_id", user.id)
+    .select()
+    .single();
+
+  if (error) {
+    console.error("[lead_pipeline:update-stage] update error", error);
+    return NextResponse.json(
+      { error: "Failed to update stage" },
       { status: 500 }
     );
   }
+
+  if (
+    ["qualified", "site_visit_scheduled", "offer_made", "closed_won"].includes(
+      new_stage
+    )
+  ) {
+    const notificationPayload = {
+      user_id: user.id,
+      type: "lead_interaction",
+      priority: new_stage === "closed_won" ? "high" : "medium",
+      title: `Lead moved to ${new_stage.replace(/_/g, " ")}`,
+      message: "Pipeline stage updated successfully",
+      lead_id: data.lead_id,
+      metadata: {
+        new_stage,
+        deal_value,
+      },
+      action_url: `/builder/dashboard/leads/${data.lead_id}`,
+      action_label: "View Lead",
+    };
+
+    const { error: notificationError } = await supabase
+      .from("notifications")
+      .insert(notificationPayload);
+
+    if (notificationError) {
+      console.error(
+        "[lead_pipeline:update-stage] notification error",
+        notificationError
+      );
+    }
+  }
+
+  return NextResponse.json({ success: true, data });
 }
 

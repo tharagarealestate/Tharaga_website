@@ -5,6 +5,9 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
 import { LeadsList, type Lead } from './_components/LeadsList';
+import { FilterProvider } from '@/contexts/FilterContext';
+import { FilterCollections } from './_components/FilterCollections';
+import AdvancedFilters from './_components/AdvancedFilters';
 
 export default function BuilderLeadsPage() {
   const router = useRouter();
@@ -62,7 +65,13 @@ export default function BuilderLeadsPage() {
           </header>
 
           <section className="rounded-[28px] border border-white/10 bg-white/5 p-6 shadow-xl shadow-blue-900/20 backdrop-blur-2xl sm:p-8">
-            <LeadsList onSelectLead={handleSelectLead} />
+            <FilterProvider>
+              <div className="space-y-10">
+                <AdvancedFilters />
+                <FilterCollections />
+                <LeadsList onSelectLead={handleSelectLead} showInlineFilters={false} />
+              </div>
+            </FilterProvider>
           </section>
         </div>
       </div>

@@ -60,7 +60,7 @@ const StaticHeaderHTML = memo(function StaticHeaderHTML() {
           <a className="about-mobile-link" href="/about/" data-next-link>About</a>
           {/* Auth container - auth system will inject login/signup buttons here */}
           {/* The auth system looks for .thg-auth-wrap or creates it inside header */}
-          <div id="site-header-auth-container">
+          <div id="site-header-auth-container" style={{ display: 'flex', alignItems: 'center', gap: '12px', visibility: 'visible', opacity: 1 }}>
             {/* Auth system will inject .thg-auth-wrap here */}
           </div>
         </div>
@@ -212,14 +212,11 @@ const StaticHeaderHTML = memo(function StaticHeaderHTML() {
               }, 300);
               
               // Portal menu update function (called by role manager)
-              // Portal menu is ALWAYS VISIBLE - shows login prompt if user not authenticated
+              // Portal menu is ONLY visible when user is logged in
               window.__updatePortalMenu = function() {
                 const portalMenuItems = document.getElementById('portal-menu-items');
                 const portalMenu = document.getElementById('portal-menu');
                 if (!portalMenuItems || !portalMenu) return;
-                
-                // Portal menu is always visible - no hiding logic
-                portalMenu.style.display = '';
                 
                 // Check if user is logged in and has roles
                 let isLoggedIn = false;
@@ -243,13 +240,21 @@ const StaticHeaderHTML = memo(function StaticHeaderHTML() {
                   }
                 }
                 
+                // Hide Portal menu completely if user is not logged in
+                if (!isLoggedIn) {
+                  portalMenu.style.display = 'none';
+                  return;
+                }
+
+                // Show Portal menu since user is logged in
+                portalMenu.style.display = '';
+
                 // Build menu HTML based on user state and roles
                 let menuHTML = '';
 
                 // Show Buyer Dashboard ONLY if:
                 // 1. User is admin owner (tharagarealestate@gmail.com) - sees ALL dashboards
                 // 2. User has buyer role OR builder role (builders can see buyer dashboard)
-                // 3. Not logged in - show locked version
 
                 if (isAdminOwner) {
                   // Admin owner sees all three dashboards
@@ -273,44 +278,9 @@ const StaticHeaderHTML = memo(function StaticHeaderHTML() {
                   const builderActive = primaryRole === 'builder' ? '<span style="color:#10b981;font-weight:800;font-size:16px;margin-left:auto;">✓</span>' : '';
                   const verified = builderVerified ? '<span style="color:#10b981;font-size:11px;">✓ Verified</span>' : '';
                   menuHTML += '<a href="/builder" data-next-link data-portal-link="builder" style="display:flex;align-items:center;justify-content:space-between;text-align:left;"><span style="display:flex;align-items:center;gap:8px;">🏗️ Builder Dashboard</span>' + (builderActive || verified) + '</a>';
-                } else if (!isLoggedIn) {
-                  // Not logged in - show locked versions for both
-                  menuHTML += '<a href="/my-dashboard" data-portal-link="buyer" data-requires-auth="true" style="opacity:0.7;cursor:pointer;display:flex;align-items:center;justify-content:space-between;text-align:left;"><span style="display:flex;align-items:center;gap:8px;">🏠 Buyer Dashboard</span><span style="color:#6b7280;font-size:11px;">🔒 Login Required</span></a>';
-                  menuHTML += '<a href="/builder" data-portal-link="builder" data-requires-auth="true" style="opacity:0.7;cursor:pointer;display:flex;align-items:center;justify-content:space-between;text-align:left;"><span style="display:flex;align-items:center;gap:8px;">🏗️ Builder Dashboard</span><span style="color:#6b7280;font-size:11px;">🔒 Login Required</span></a>';
-                }
-
-                // Admin Panel - ONLY show for admin owner
-                // Don't show for regular admin role since it's a privilege, not a separate dashboard mode
-                if (isAdminOwner) {
-                  // Already added above in the isAdminOwner section
                 }
                 
                 portalMenuItems.innerHTML = menuHTML;
-                
-                // Intercept portal link clicks - show login prompt if not authenticated
-                const portalLinks = portalMenuItems.querySelectorAll('a[data-portal-link]');
-                portalLinks.forEach(function(link) {
-                  // Remove old listeners
-                  const newLink = link.cloneNode(true);
-                  link.parentNode.replaceChild(newLink, link);
-                  
-                  newLink.addEventListener('click', function(e) {
-                    const requiresAuth = newLink.getAttribute('data-requires-auth') === 'true';
-                    const portalType = newLink.getAttribute('data-portal-link');
-                    
-                    if (requiresAuth) {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      
-                      // Redirect to login page instead of showing modal
-                      const next = newLink.getAttribute('href') || '/';
-                      window.location.href = '/login?next=' + encodeURIComponent(next);
-                    } else {
-                      // User is authenticated - allow navigation
-                      // Let HeaderLinkInterceptor handle it
-                    }
-                  });
-                });
                 
                 // Re-intercept regular links after portal menu update
                 if (window.__nextRouter) {
@@ -332,10 +302,16 @@ const StaticHeaderHTML = memo(function StaticHeaderHTML() {
               };
               
               // showLoginPrompt function REMOVED - redirects to /login instead
-              
-              // Initialize portal menu - always visible
+
+              // Initialize portal menu - hidden until user logs in
               function initPortalMenu() {
-                // Portal menu is always visible - initialize immediately
+                // Hide Portal menu by default - will show after user logs in
+                const portalMenu = document.getElementById('portal-menu');
+                if (portalMenu) {
+                  portalMenu.style.display = 'none';
+                }
+
+                // Update portal menu based on auth state
                 if (window.__updatePortalMenu) {
                   window.__updatePortalMenu();
                 }

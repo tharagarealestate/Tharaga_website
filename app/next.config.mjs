@@ -94,6 +94,8 @@ const nextConfig = {
     // Map legacy static paths if present in public
     rules.push({ source: '/property-listing', destination: '/property-listing/index.html' })
     rules.push({ source: '/search-filter-home', destination: '/search-filter-home/index.html' })
+    // Serve static index.html as homepage (working auth and Portal menu)
+    rules.push({ source: '/', destination: '/index.html' })
     return rules
   },
   images: {

@@ -6,12 +6,17 @@ import { PRICING_CONFIG } from '@/lib/pricing-config'
 import PricingCard from '@/components/pricing/PricingCard'
 import PricingComparison from '@/components/pricing/PricingComparison'
 import PricingFAQ from '@/components/pricing/PricingFAQ'
+import Breadcrumb from '@/components/Breadcrumb'
 
 export default function PricingPage() {
   const [activeTab, setActiveTab] = useState<'builder' | 'buyer'>('builder')
 
   return (
     <div className='min-h-screen bg-gradient-to-br from-primary-950 via-primary-900 to-primary-800 relative overflow-hidden'>
+      <Breadcrumb items={[
+        { label: 'Home', href: '/' },
+        { label: 'Pricing' }
+      ]} />
       {/* Animated Background Elements */}
       <div className='absolute inset-0 opacity-30'>
         <div className='absolute top-20 left-10 w-96 h-96 bg-gold-500 rounded-full blur-3xl animate-pulse-slow' />

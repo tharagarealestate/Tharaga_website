@@ -6,6 +6,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { cookies } from 'next/headers';
 import { z } from 'zod';
+import { getCachedServiceResendClient, type EmailSendResult } from '@/lib/email/resendClient';
 
 // =============================================
 // VALIDATION SCHEMAS
@@ -135,29 +136,22 @@ export async function POST(request: NextRequest) {
             personalizedSubject = personalizedSubject.replace(/\{\{name\}\}/g, name);
           }
           
-          // Send email (integrate with your email provider)
-          const emailSent = await sendEmail({
+          // Send email through Resend
+          const sendResult = await sendEmail({
             to: lead.email || '',
             subject: personalizedSubject,
             html: personalizedContent,
+            builderId: user.id,
+            leadId: lead.id ? String(lead.id) : undefined,
+            metadata: { bulk_operation: 'send_email', subject },
           });
-          
-          // Log interaction
-          if (emailSent && lead.id) {
-            await supabase.from('lead_interactions').insert({
-              lead_id: String(lead.id),
-              builder_id: user.id,
-              interaction_type: 'email_sent',
-              timestamp: new Date().toISOString(),
-              status: 'completed',
-              notes: `Bulk email: ${subject}`,
-            });
-          }
-          
+
           results.push({
             lead_id: lead.id,
-            success: emailSent,
+            success: sendResult.success,
             email: lead.email || null,
+            message_id: sendResult.message_id ?? null,
+            error: sendResult.success ? null : sendResult.error ?? null,
           });
           
         } catch (error) {

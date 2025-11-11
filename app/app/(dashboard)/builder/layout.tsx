@@ -5,6 +5,7 @@ import { Menu } from 'lucide-react'
 export const runtime = 'edge'
 import { Sidebar } from './_components/Sidebar'
 import { ReactQueryProvider } from '@/components/providers/ReactQueryProvider'
+import Breadcrumb from '@/components/Breadcrumb'
 
 export default function BuilderDashboardLayout({ children }: { children: ReactNode }) {
   const [open, setOpen] = useState(false)
@@ -26,11 +27,17 @@ export default function BuilderDashboardLayout({ children }: { children: ReactNo
           </div>
         )}
 
-        {/* Main Content Area - Static header is above from RootLayout */}
+        {/* Main Content Area */}
         <div className="flex-1 flex flex-col min-w-0">
-          {/* Mobile header with hamburger - positioned below static header */}
-          <div className="lg:hidden sticky top-[60px] z-40 bg-white border-b border-gray-200">
-            <div className="flex items-center justify-between px-4 py-3">
+          {/* Breadcrumb Navigation */}
+          <Breadcrumb items={[
+            { label: 'Home', href: '/' },
+            { label: 'Builder Dashboard' }
+          ]} />
+
+          {/* Mobile header with hamburger */}
+          <div className="lg:hidden bg-white border-b border-gray-200 px-4 py-3">
+            <div className="flex items-center justify-between">
               <button aria-label="Open menu" className="p-2 rounded-md border border-gray-300" onClick={() => setOpen(true)}>
                 <Menu className="w-5 h-5" />
               </button>

@@ -14,7 +14,6 @@ import { AppI18nProvider } from '@/components/providers/AppI18nProvider'
 import { EntitlementsProvider } from '@/components/ui/FeatureGate'
 import MobileBottomNav from '@/components/MobileBottomNav'
 import { PrefetchRoutes } from '@/components/providers/PrefetchRoutes'
-import ConditionalHeader from '@/components/ConditionalHeader'
 import { HeaderLinkInterceptor } from '@/components/HeaderLinkInterceptor'
 import { NotificationProvider } from '@/contexts/NotificationContext'
 
@@ -1367,8 +1366,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             }
           })();
         `}} />
-        {/* Conditional Header - Only shows on homepage, hidden on all subpages */}
-        <ConditionalHeader />
+        {/* Header removed - static index.html homepage has its own header */}
+        {/* Subpages will have breadcrumb navigation instead */}
         <HeaderLinkInterceptor />
                {/* Ensure auth button is always visible - prevent hiding */}
                {/* FORCE REMOVE ALL MODALS - Complete removal */}

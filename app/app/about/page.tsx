@@ -1,4 +1,5 @@
 import { Metadata } from 'next'
+import Breadcrumb from '@/components/Breadcrumb'
 
 export const runtime = 'edge'
 
@@ -10,6 +11,10 @@ export const metadata: Metadata = {
 export default function AboutPage() {
   return (
     <>
+      <Breadcrumb items={[
+        { label: 'Home', href: '/' },
+        { label: 'About' }
+      ]} />
       <style dangerouslySetInnerHTML={{
         __html: `
           .about-container {

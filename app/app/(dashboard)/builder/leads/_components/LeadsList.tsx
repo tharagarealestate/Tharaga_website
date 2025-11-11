@@ -344,16 +344,6 @@ export function LeadsList({ onSelectLead, initialFilters }: LeadsListProps) {
     [onSelectLead, trackBehavior]
   );
 
-  const activeFilterCount = useMemo(() => {
-    return Object.entries(filters).reduce((count, [key, value]) => {
-      if (key === 'sort_by' || key === 'sort_order') return count;
-      if (key === 'score_min' && value === 0) return count;
-      if (key === 'score_max' && value === 10) return count;
-      if (value === '' || value === null) return count;
-      return count + 1;
-    }, 0);
-  }, [filters]);
-
   if (error) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
@@ -778,8 +768,8 @@ export function LeadsList({ onSelectLead, initialFilters }: LeadsListProps) {
       {totalPages > 1 && (
         <div className="flex items-center justify-center gap-2 pt-6">
           <button
-            onClick={() => setPage((previous) => Math.max(1, previous - 1))}
-            disabled={page === 1}
+            onClick={() => updateFilter('page', Math.max(1, (filters.page ?? 1) - 1))}
+            disabled={(filters.page ?? 1) === 1}
             className="px-4 py-2 bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/30 rounded-xl text-blue-100 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
           >
             Previous
@@ -791,9 +781,9 @@ export function LeadsList({ onSelectLead, initialFilters }: LeadsListProps) {
               return (
                 <button
                   key={pageNumber}
-                  onClick={() => setPage(pageNumber)}
+                  onClick={() => updateFilter('page', pageNumber)}
                   className={`w-10 h-10 rounded-xl font-medium transition-all ${
-                    page === pageNumber
+                    (filters.page ?? 1) === pageNumber
                       ? 'bg-blue-500 text-white'
                       : 'bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/30 text-blue-100'
                   }`}
@@ -805,8 +795,8 @@ export function LeadsList({ onSelectLead, initialFilters }: LeadsListProps) {
           </div>
 
           <button
-            onClick={() => setPage((previous) => Math.min(totalPages, previous + 1))}
-            disabled={page === totalPages}
+            onClick={() => updateFilter('page', Math.min(totalPages, (filters.page ?? 1) + 1))}
+            disabled={(filters.page ?? 1) === totalPages}
             className="px-4 py-2 bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/30 rounded-xl text-blue-100 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
           >
             Next

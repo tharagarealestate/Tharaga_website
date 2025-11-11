@@ -105,69 +105,34 @@ const StaticHeaderHTML = memo(function StaticHeaderHTML() {
                 ensureAuthContainer();
               }
               
-              // Re-check periodically to ensure container stays visible
-              // This prevents the auth system from hiding it
+              // Minimal check to ensure container stays visible
+              // Only fix if completely hidden (display:none), don't force opacity/visibility
               setInterval(function() {
                 const authContainer = document.getElementById('site-header-auth-container');
                 if (authContainer) {
                   const style = window.getComputedStyle(authContainer);
-                  if (style.display === 'none' || style.visibility === 'hidden' || style.opacity === '0') {
+                  if (style.display === 'none') {
                     authContainer.style.display = 'flex';
-                    authContainer.style.visibility = 'visible';
-                    authContainer.style.opacity = '1';
                   }
                 }
-              }, 500);
+              }, 1000);
               
-              // Watch for auth system injection and ensure it's visible
+              // Watch for auth system injection - minimal interference
               const authObserver = new MutationObserver(function(mutations) {
                 const authContainer = document.getElementById('site-header-auth-container');
-                const authWrap = document.querySelector('header.nav .thg-auth-wrap');
                 const authBtn = document.querySelector('header.nav .thg-auth-btn');
-                
-                if (authContainer) {
+
+                // Only ensure container has correct display, don't force other styles
+                if (authContainer && window.getComputedStyle(authContainer).display === 'none') {
                   authContainer.style.display = 'flex';
-                  authContainer.style.visibility = 'visible';
-                  authContainer.style.opacity = '1';
-                  authContainer.style.alignItems = 'center';
-                  authContainer.style.gap = '12px';
                 }
-                
-                if (authWrap) {
-                  authWrap.style.display = 'flex';
-                  authWrap.style.visibility = 'visible';
-                  authWrap.style.opacity = '1';
-                  authWrap.style.alignItems = 'center';
-                  authWrap.style.gap = '12px';
-                }
-                
-                // Ensure auth button is visible and styled correctly
+
+                // Ensure label text exists (auth system should set this, but double-check)
                 if (authBtn) {
-                  authBtn.style.display = 'inline-flex';
-                  authBtn.style.visibility = 'visible';
-                  authBtn.style.opacity = '1';
-                  authBtn.style.color = '#1e40af';
-                  authBtn.style.borderColor = 'rgba(30,64,175,.20)';
-                  authBtn.style.backgroundColor = 'rgba(30,64,175,.08)';
-                  
-                  // Ensure label text is visible and matches homepage
                   const label = authBtn.querySelector('.thg-label');
-                  if (label) {
-                    label.style.color = '#1e40af';
-                    label.style.fontWeight = '600';
-                    // Ensure label has text (auth system sets it to "Login / Signup" when not authenticated)
-                    if (!label.textContent || label.textContent.trim() === '') {
-                      label.textContent = 'Login / Signup';
-                    }
-                    // Force label to be visible
-                    label.style.display = 'inline';
-                    label.style.visibility = 'visible';
-                    label.style.opacity = '1';
+                  if (label && (!label.textContent || label.textContent.trim() === '')) {
+                    label.textContent = 'Login / Signup';
                   }
-                  
-                  // Ensure button is properly aligned in flex layout
-                  authBtn.style.margin = '0';
-                  authBtn.style.verticalAlign = 'middle';
                 }
               });
               
@@ -181,35 +146,8 @@ const StaticHeaderHTML = memo(function StaticHeaderHTML() {
                 });
               }
               
-              // Also check periodically to ensure auth button stays visible
-              setInterval(function() {
-                const authBtn = document.querySelector('header.nav .thg-auth-btn');
-                const authContainer = document.getElementById('site-header-auth-container');
-                
-                if (authContainer) {
-                  const style = window.getComputedStyle(authContainer);
-                  if (style.display === 'none' || style.visibility === 'hidden' || parseFloat(style.opacity) < 0.1) {
-                    authContainer.style.display = 'flex';
-                    authContainer.style.visibility = 'visible';
-                    authContainer.style.opacity = '1';
-                  }
-                }
-                
-                if (authBtn) {
-                  const btnStyle = window.getComputedStyle(authBtn);
-                  if (btnStyle.display === 'none' || btnStyle.visibility === 'hidden' || parseFloat(btnStyle.opacity) < 0.1) {
-                    authBtn.style.display = 'inline-flex';
-                    authBtn.style.visibility = 'visible';
-                    authBtn.style.opacity = '1';
-                  }
-                  
-                  // Ensure label has text
-                  const label = authBtn.querySelector('.thg-label');
-                  if (label && (!label.textContent || label.textContent.trim() === '')) {
-                    label.textContent = 'Login / Signup';
-                  }
-                }
-              }, 300);
+              // Removed aggressive periodic visibility checks
+              // The auth system and CSS should handle visibility naturally
               
               // Portal menu update function (called by role manager)
               // Portal menu is ALWAYS visible - behavior changes based on login state

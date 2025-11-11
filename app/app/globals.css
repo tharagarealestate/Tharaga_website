@@ -555,3 +555,56 @@ html, body {
       .value-prop .icon-circle{ width:40px; height:40px; border-radius:12px; margin-bottom:12px }
       .value-prop .icon-circle svg{ width:20px; height:20px }
     }
+
+/* Auth button styles for glassy header (from original index.html) */
+header.nav .thg-auth-wrap { 
+  display: flex; 
+  align-items: center; 
+  gap: 12px;
+}
+
+header.nav .thg-auth-wrap::before {
+  content: ""; 
+  display: inline-block; 
+  width: 1px; 
+  height: 16px;
+  background: rgba(226,232,240,.6); 
+  border-radius: 1px;
+}
+
+header.nav .thg-auth-btn {
+  background: rgba(30,64,175,.08) !important;
+  color: var(--primary) !important;
+  border-color: rgba(30,64,175,.20) !important;
+  font-weight: 600 !important;
+}
+
+header.nav .thg-auth-btn:hover {
+  background: rgba(30,64,175,.15) !important;
+  border-color: var(--primary) !important;
+}
+
+header.nav .thg-auth-btn.is-auth::after { 
+  border-top-color: var(--primary) !important;
+}
+
+header.nav .divider { 
+  background: rgba(226,232,240,.6);
+}
+
+/* Hide injected About link on desktop; we render About in main nav */
+header.nav .thg-auth-wrap .about-link { 
+  display: none; 
+  color: var(--slate-900); 
+  font-weight: 700; 
+  text-decoration: none;
+}
+
+/* Avoid double divider line near Login (we already add ::before separator) */
+header.nav .thg-auth-wrap > .divider { 
+  display: none;
+}
+
+header.nav .thg-auth-wrap .about-link:hover { 
+  text-decoration: underline;
+}

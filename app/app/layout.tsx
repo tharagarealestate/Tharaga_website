@@ -182,9 +182,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     // First, try to use the SiteHeader's dedicated container
     let wrap = document.getElementById('site-header-auth-container');
     if (wrap) {
-      // Convert the container to have thg-auth-wrap styles
+      // ADD thg-auth-wrap class while PRESERVING the ID and any existing classes
       if (!wrap.classList.contains('thg-auth-wrap')) {
-        wrap.className = 'thg-auth-wrap';
+        wrap.classList.add('thg-auth-wrap');
       }
       return wrap;
     }
@@ -205,11 +205,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   function injectStyles(){
     if (document.getElementById('thg-auth-styles')) return;
   const css = \`
-/* Auth wrapper - when used in SiteHeader container, it's already positioned correctly */
+/* Auth wrapper - positioned by header or falls back to absolute */
 .thg-auth-wrap{ display:flex; align-items:center; position:relative; z-index:\${Z_BASE}; }
-/* Fallback positioning when not in SiteHeader */
-header .thg-auth-wrap:not(#site-header-auth-container){ position:absolute; top:14px; right:16px; }
-@media (min-width:1024px){ header .thg-auth-wrap:not(#site-header-auth-container){ top:16px; right:24px; } }
+/* When #site-header-auth-container exists, it's positioned by StaticHeaderHTML inline styles */
+/* Fallback: absolute positioning when created dynamically outside SiteHeader */
+.thg-auth-wrap:not(#site-header-auth-container){ position:absolute; top:14px; right:16px; }
+@media (min-width:1024px){ .thg-auth-wrap:not(#site-header-auth-container){ top:16px; right:24px; } }
 .thg-auth-wrap.is-fixed{ position:fixed; top:14px; right:16px; }
 
 /* Header button */

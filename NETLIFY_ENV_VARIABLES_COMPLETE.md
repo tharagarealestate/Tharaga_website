@@ -173,6 +173,7 @@ TWILIO_WEBHOOK_URL=https://tharaga.co.in/api/webhooks/twilio
 # NEXT.JS CONFIGURATION
 # =============================================
 NODE_ENV=production
+NEXT_PUBLIC_API_URL=https://tharaga-backend-796994429555.us-central1.run.app
 NEXT_PUBLIC_APP_URL=https://tharaga.co.in
 ```
 
@@ -294,7 +295,8 @@ After adding environment variables, verify:
 4. `TWILIO_WHATSAPP_NUMBER` (for WhatsApp)
 5. `DEFAULT_CALENDAR_ID` (default: 'primary')
 6. `DEFAULT_TIMEZONE` (default: 'Asia/Kolkata')
-7. `NEXT_PUBLIC_APP_URL` (for redirects)
+7. `NEXT_PUBLIC_API_URL` (for backend API calls - you already have this: `https://tharaga-backend-796994429555.us-central1.run.app`)
+8. `NEXT_PUBLIC_APP_URL` (optional - frontend URL for links in emails, e.g., `https://tharaga.co.in` - NOT currently used in calendar integration)
 
 ---
 

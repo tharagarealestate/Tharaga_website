@@ -191,7 +191,7 @@ export function Sidebar() {
       { href: '/builder/revenue/payments', label: 'Payments' },
       { href: '/builder/revenue/forecasting', label: 'Forecasting' },
     ]},
-    { href: '/builder/messaging', label: 'Professional', icon: MessageSquare, requiresPro: false, submenu: [
+    { href: '/builder/messaging', label: 'Client Outreach', icon: MessageSquare, requiresPro: false, submenu: [
       { href: '/builder/messaging', label: 'Send Messages' },
       { href: '/builder/communications', label: 'Communications' },
     ]},

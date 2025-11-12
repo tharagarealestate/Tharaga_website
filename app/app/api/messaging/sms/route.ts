@@ -7,6 +7,9 @@ import { createClient } from '@/lib/supabase/server';
 import { getTwilioClient } from '@/lib/integrations/messaging/twilioClient';
 import { z } from 'zod';
 
+// Force Node.js runtime (Twilio SDK requires Node.js built-ins)
+export const runtime = 'nodejs';
+
 // Validation schema
 const sendSMSSchema = z.object({
   to: z.string().min(10, 'Phone number must be at least 10 characters'),

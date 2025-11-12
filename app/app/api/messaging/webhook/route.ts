@@ -7,6 +7,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { twilioClient } from '@/lib/integrations/messaging/twilioClient';
 import twilio from 'twilio';
 
+// Force Node.js runtime (Twilio SDK requires Node.js built-ins)
+export const runtime = 'nodejs';
+
 export async function POST(request: NextRequest) {
   try {
     // Verify webhook authenticity

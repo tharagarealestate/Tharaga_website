@@ -6,6 +6,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { twilioClient } from '@/lib/integrations/messaging/twilioClient';
 
+// Force Node.js runtime (Twilio SDK requires Node.js built-ins)
+export const runtime = 'nodejs';
+
 export async function POST(request: NextRequest) {
   try {
     const supabase = createClient();

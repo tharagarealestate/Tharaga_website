@@ -7,6 +7,9 @@ import { createClient } from '@/lib/supabase/server';
 import { getTwilioClient } from '@/lib/integrations/messaging/twilioClient';
 import { z } from 'zod';
 
+// Force Node.js runtime (Twilio SDK requires Node.js built-ins)
+export const runtime = 'nodejs';
+
 const sendMessageSchema = z.object({
   to: z.string().min(10),
   body: z.string().min(1).max(1600),

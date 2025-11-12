@@ -1,10 +1,65 @@
 'use client'
 
-import { useState } from 'react'
-import { User, Building2, Bell, CreditCard, Shield, Users, Palette, Zap } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import Link from 'next/link'
+import { useSearchParams, useRouter } from 'next/navigation'
+import { User, Building2, Bell, CreditCard, Shield, Users, Palette, Zap, CheckCircle2, AlertCircle, X } from 'lucide-react'
 
 export default function BuilderSettingsPage() {
+  const router = useRouter()
+  const searchParams = useSearchParams()
   const [activeTab, setActiveTab] = useState('profile')
+  const [calendarStatus, setCalendarStatus] = useState<{
+    connected: boolean
+    calendar_name?: string
+    last_sync_at?: string
+    total_events_synced?: number
+  } | null>(null)
+  const [calendarMessage, setCalendarMessage] = useState<{
+    type: 'success' | 'error'
+    message: string
+  } | null>(null)
+
+  // Check for calendar callback messages
+  useEffect(() => {
+    const calendarError = searchParams.get('calendar_error')
+    const calendarConnected = searchParams.get('calendar_connected')
+
+    if (calendarError) {
+      setCalendarMessage({
+        type: 'error',
+        message: decodeURIComponent(calendarError),
+      })
+      setActiveTab('integrations')
+      // Clear error from URL
+      router.replace('/builder/settings', { scroll: false })
+      // Clear message after 5 seconds
+      setTimeout(() => setCalendarMessage(null), 5000)
+    }
+
+    if (calendarConnected) {
+      setCalendarMessage({
+        type: 'success',
+        message: 'Calendar connected successfully!',
+      })
+      setActiveTab('integrations')
+      // Refresh calendar status
+      fetchCalendarStatus()
+      // Clear success from URL
+      router.replace('/builder/settings', { scroll: false })
+      // Clear message after 5 seconds
+      setTimeout(() => setCalendarMessage(null), 5000)
+    }
+
+    // Check for tab parameter
+    const tabParam = searchParams.get('tab')
+    if (tabParam) {
+      const validTabs = ['profile', 'company', 'notifications', 'billing', 'security', 'team', 'preferences', 'integrations']
+      if (validTabs.includes(tabParam)) {
+        setActiveTab(tabParam)
+      }
+    }
+  }, [searchParams, router])
 
   const tabs = [
     { id: 'profile', label: 'Profile', icon: User },
@@ -16,6 +71,26 @@ export default function BuilderSettingsPage() {
     { id: 'preferences', label: 'Preferences', icon: Palette },
     { id: 'integrations', label: 'Integrations', icon: Zap }
   ]
+
+  // Fetch calendar status
+  const fetchCalendarStatus = async () => {
+    try {
+      const response = await fetch('/api/calendar/status')
+      const data = await response.json()
+      if (data.success) {
+        setCalendarStatus(data)
+      }
+    } catch (error) {
+      console.error('Error fetching calendar status:', error)
+    }
+  }
+
+  // Fetch calendar status on mount and when integrations tab is active
+  useEffect(() => {
+    if (activeTab === 'integrations') {
+      fetchCalendarStatus()
+    }
+  }, [activeTab])
 
   return (
     <div className='min-h-screen bg-gradient-to-br from-gray-50 to-gray-100'>
@@ -56,6 +131,32 @@ export default function BuilderSettingsPage() {
 
           {/* Content Area */}
           <div className='lg:col-span-3'>
+            {/* Calendar Status Message */}
+            {calendarMessage && (
+              <div
+                className={`mb-6 p-4 rounded-xl border flex items-center justify-between ${
+                  calendarMessage.type === 'success'
+                    ? 'bg-emerald-50 border-emerald-200 text-emerald-800'
+                    : 'bg-rose-50 border-rose-200 text-rose-800'
+                }`}
+              >
+                <div className='flex items-center gap-3'>
+                  {calendarMessage.type === 'success' ? (
+                    <CheckCircle2 className='w-5 h-5 text-emerald-600' />
+                  ) : (
+                    <AlertCircle className='w-5 h-5 text-rose-600' />
+                  )}
+                  <p className='font-medium'>{calendarMessage.message}</p>
+                </div>
+                <button
+                  onClick={() => setCalendarMessage(null)}
+                  className='text-gray-400 hover:text-gray-600 transition-colors'
+                >
+                  <X className='w-5 h-5' />
+                </button>
+              </div>
+            )}
+
             <div className='bg-white/70 backdrop-blur-xl border border-gray-200/50 rounded-2xl p-8'>
               {activeTab === 'profile' && <ProfileSettings />}
               {activeTab === 'company' && <CompanySettings />}
@@ -64,7 +165,9 @@ export default function BuilderSettingsPage() {
               {activeTab === 'security' && <SecuritySettings />}
               {activeTab === 'team' && <TeamSettings />}
               {activeTab === 'preferences' && <PreferenceSettings />}
-              {activeTab === 'integrations' && <IntegrationSettings />}
+              {activeTab === 'integrations' && (
+                <IntegrationSettings calendarStatus={calendarStatus} onStatusChange={fetchCalendarStatus} />
+              )}
             </div>
           </div>
         </div>
@@ -294,13 +397,16 @@ function NotificationSettings() {
   })
 
   const toggleNotification = (category: 'email' | 'sms' | 'push', key: string) => {
-    setNotifications(prev => ({
-      ...prev,
-      [category]: {
-        ...prev[category],
-        [key]: !prev[category][key]
+    setNotifications((prev) => {
+      const categoryData = prev[category] as Record<string, boolean>
+      return {
+        ...prev,
+        [category]: {
+          ...categoryData,
+          [key]: !categoryData[key],
+        },
       }
-    }))
+    })
   }
 
   return (
@@ -809,15 +915,111 @@ function PreferenceSettings() {
   )
 }
 
-function IntegrationSettings() {
+function IntegrationSettings({
+  calendarStatus,
+  onStatusChange,
+}: {
+  calendarStatus: {
+    connected: boolean
+    calendar_name?: string
+    last_sync_at?: string
+    total_events_synced?: number
+  } | null
+  onStatusChange: () => void
+}) {
+  const [connecting, setConnecting] = useState(false)
+  const [syncing, setSyncing] = useState(false)
+
+  // Determine calendar connection status
+  const isCalendarConnected = calendarStatus?.connected || false
+
   const integrations = [
-    { name: 'Google Calendar', desc: 'Sync your calendar events and schedule site visits', status: 'connected', icon: '📅' },
-    { name: 'WhatsApp Business', desc: 'Send automated messages and notifications via WhatsApp', status: 'connected', icon: '💬' },
-    { name: 'Zapier', desc: 'Connect with 5000+ apps and automate workflows', status: 'available', icon: '⚡' },
-    { name: 'Slack', desc: 'Get real-time notifications in your Slack workspace', status: 'available', icon: '💼' },
-    { name: 'Email Marketing', desc: 'Integrate with Mailchimp, SendGrid, and more', status: 'available', icon: '📧' },
-    { name: 'CRM Integration', desc: 'Sync leads with Salesforce, HubSpot, and other CRMs', status: 'available', icon: '🔗' }
+    {
+      name: 'Google Calendar',
+      desc: 'Sync your calendar events and schedule site visits',
+      status: isCalendarConnected ? 'connected' : 'available',
+      icon: '📅',
+      href: '/builder/settings/calendar',
+      calendarStatus,
+    },
+    {
+      name: 'WhatsApp Business',
+      desc: 'Send automated messages and notifications via WhatsApp',
+      status: 'connected',
+      icon: '💬',
+      href: '/builder/messaging',
+    },
+    {
+      name: 'Zapier',
+      desc: 'Connect with 5000+ apps and automate workflows',
+      status: 'available',
+      icon: '⚡',
+      href: '/builder/settings',
+    },
+    {
+      name: 'Slack',
+      desc: 'Get real-time notifications in your Slack workspace',
+      status: 'available',
+      icon: '💼',
+      href: '/builder/settings',
+    },
+    {
+      name: 'Email Marketing',
+      desc: 'Integrate with Mailchimp, SendGrid, and more',
+      status: 'available',
+      icon: '📧',
+      href: '/builder/settings',
+    },
+    {
+      name: 'CRM Integration',
+      desc: 'Sync leads with Salesforce, HubSpot, and other CRMs',
+      status: 'available',
+      icon: '🔗',
+      href: '/builder/settings',
+    },
   ]
+
+  // Handle calendar connect
+  const handleCalendarConnect = async () => {
+    try {
+      setConnecting(true)
+      const response = await fetch('/api/calendar/connect')
+      const data = await response.json()
+
+      if (response.ok && data.auth_url) {
+        // Redirect to Google OAuth
+        window.location.href = data.auth_url
+      } else {
+        alert(data.error || data.message || 'Failed to connect calendar')
+        setConnecting(false)
+      }
+    } catch (error: any) {
+      alert(error.message || 'Failed to connect calendar')
+      setConnecting(false)
+    }
+  }
+
+  // Handle calendar sync
+  const handleCalendarSync = async () => {
+    try {
+      setSyncing(true)
+      const response = await fetch('/api/calendar/sync', {
+        method: 'POST',
+      })
+      const data = await response.json()
+
+      if (data.success) {
+        alert(`Synced ${data.synced} events successfully!`)
+        onStatusChange()
+      } else {
+        alert(data.error || 'Failed to sync calendar')
+      }
+    } catch (error: any) {
+      alert(error.message || 'Failed to sync calendar')
+    } finally {
+      setSyncing(false)
+    }
+  }
 
   return (
     <div className='space-y-6'>
@@ -827,29 +1029,80 @@ function IntegrationSettings() {
       </div>
       <div className='grid md:grid-cols-2 gap-4'>
         {integrations.map((integration, idx) => (
-          <div key={idx} className='bg-white/60 backdrop-blur-md border border-gray-300/50 rounded-xl p-6 hover:shadow-lg transition-all'>
+          <div
+            key={idx}
+            className='bg-white/60 backdrop-blur-md border border-gray-300/50 rounded-xl p-6 hover:shadow-lg transition-all'
+          >
             <div className='flex items-start justify-between mb-4'>
               <div className='flex items-center gap-3'>
                 <div className='text-3xl'>{integration.icon}</div>
                 <div>
                   <h3 className='font-bold text-gray-900'>{integration.name}</h3>
                   <p className='text-sm text-gray-600 mt-1'>{integration.desc}</p>
+                  {/* Calendar Status Info */}
+                  {integration.name === 'Google Calendar' && integration.calendarStatus?.connected && (
+                    <div className='mt-2 text-xs text-gray-500'>
+                      {integration.calendarStatus.calendar_name && (
+                        <div>Calendar: {integration.calendarStatus.calendar_name}</div>
+                      )}
+                      {integration.calendarStatus.total_events_synced !== undefined && (
+                        <div>Events synced: {integration.calendarStatus.total_events_synced}</div>
+                      )}
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
             <div className='flex items-center justify-between'>
-              <span className={`px-3 py-1 text-xs font-medium rounded-full ${
-                integration.status === 'connected' ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-100 text-gray-700'
-              }`}>
+              <span
+                className={`px-3 py-1 text-xs font-medium rounded-full ${
+                  integration.status === 'connected'
+                    ? 'bg-emerald-100 text-emerald-700'
+                    : 'bg-gray-100 text-gray-700'
+                }`}
+              >
                 {integration.status === 'connected' ? 'Connected' : 'Available'}
               </span>
-              <button className={`px-4 py-2 text-sm font-medium rounded-lg transition-all ${
-                integration.status === 'connected'
-                  ? 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                  : 'bg-gradient-to-r from-gold-600 to-gold-500 text-white hover:shadow-lg hover:-translate-y-1'
-              }`}>
-                {integration.status === 'connected' ? 'Manage' : 'Connect'}
-              </button>
+              {integration.name === 'Google Calendar' ? (
+                <div className='flex items-center gap-2'>
+                  {integration.status === 'connected' ? (
+                    <>
+                      <button
+                        onClick={handleCalendarSync}
+                        disabled={syncing}
+                        className='px-3 py-2 text-xs font-medium text-gray-700 hover:bg-gray-100 rounded-lg transition-all disabled:opacity-50'
+                      >
+                        {syncing ? 'Syncing...' : 'Sync'}
+                      </button>
+                      <Link
+                        href={integration.href as '/' | '/builder/settings' | '/builder/settings/calendar' | '/builder/messaging'}
+                        className='px-4 py-2 text-sm font-medium rounded-lg transition-all bg-gray-100 text-gray-700 hover:bg-gray-200'
+                      >
+                        Manage
+                      </Link>
+                    </>
+                  ) : (
+                    <button
+                      onClick={handleCalendarConnect}
+                      disabled={connecting}
+                      className='px-4 py-2 text-sm font-medium rounded-lg transition-all bg-gradient-to-r from-gold-600 to-gold-500 text-white hover:shadow-lg hover:-translate-y-1 disabled:opacity-50'
+                    >
+                      {connecting ? 'Connecting...' : 'Connect'}
+                    </button>
+                  )}
+                </div>
+              ) : (
+                <Link
+                  href={integration.href as '/' | '/builder/settings' | '/builder/settings/calendar' | '/builder/messaging'}
+                  className={`px-4 py-2 text-sm font-medium rounded-lg transition-all ${
+                    integration.status === 'connected'
+                      ? 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                      : 'bg-gradient-to-r from-gold-600 to-gold-500 text-white hover:shadow-lg hover:-translate-y-1'
+                  }`}
+                >
+                  {integration.status === 'connected' ? 'Manage' : 'Connect'}
+                </Link>
+              )}
             </div>
           </div>
         ))}

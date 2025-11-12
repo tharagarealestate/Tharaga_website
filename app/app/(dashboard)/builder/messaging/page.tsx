@@ -284,7 +284,7 @@ export default function MessagingPage() {
         <div className='mb-8'>
           <h1 className='text-4xl font-bold text-white mb-2 flex items-center gap-3'>
             <MessageSquare className='w-10 h-10 text-gold-500' />
-            Messaging Center
+            Tharaga Top Level Professional
           </h1>
           <p className='text-gray-300'>Send SMS and WhatsApp messages to your leads</p>
         </div>

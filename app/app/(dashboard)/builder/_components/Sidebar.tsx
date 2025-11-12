@@ -191,7 +191,10 @@ export function Sidebar() {
       { href: '/builder/revenue/payments', label: 'Payments' },
       { href: '/builder/revenue/forecasting', label: 'Forecasting' },
     ]},
-    { href: '/builder/communications', label: 'Communications', icon: MessageSquare, requiresPro: true },
+    { href: '/builder/messaging', label: 'Messaging', icon: MessageSquare, requiresPro: true, submenu: [
+      { href: '/builder/messaging', label: 'Send Messages' },
+      { href: '/builder/communications', label: 'Communications' },
+    ]},
     { href: '/behavior-tracking', label: 'Behavior Analytics', icon: BarChart3, requiresPro: false },
     { href: '/builder/settings', label: 'Settings', icon: Settings, requiresPro: false },
   ], [leadCount, isLoadingCount])

@@ -457,8 +457,8 @@
     function parseCityFromCtx(raw){
       const s = (raw||'').toLowerCase();
       // quick picks; extend as needed
-      const cities = ['chennai','bengaluru','bangalore','mumbai','delhi','hyderabad','pune','kolkata','kochi','coimbatore','chandigarh','ahmedabad','jaipur','mysuru','mysore'];
-      for (const c of cities) { if (s.includes(c)) return c.replace('bangalore','bengaluru'); }
+      const cities = ['chennai'];
+      for (const c of cities) { if (s.includes(c)) return 'chennai'; }
       return '';
     }
     function parseBedroomsFromText(raw){

@@ -2,22 +2,22 @@
   {
     "id": 1,
     "title": "2 BHK Apartment",
-    "address": "Indiranagar, Bangalore",
+    "address": "Anna Nagar, Chennai",
     "price": "₹45 Lakhs",
     "bedrooms": 2,
     "bathrooms": 2,
-    "lat": 12.9716,
-    "lng": 77.5946
+    "lat": 13.0827,
+    "lng": 80.2707
   },
   {
     "id": 2,
     "title": "Luxury Villa",
-    "address": "Gachibowli, Hyderabad",
+    "address": "Adyar, Chennai",
     "price": "₹2.5 Crore",
     "bedrooms": 4,
     "bathrooms": 3,
-    "lat": 17.385,
-    "lng": 78.4867
+    "lat": 13.0067,
+    "lng": 80.2206
   },
   {
     "id": 3,
@@ -26,7 +26,7 @@
     "price": "₹85 Lakhs",
     "bedrooms": 3,
     "bathrooms": 2,
-    "lat": 13.0827,
-    "lng": 80.2707
+    "lat": 12.9702,
+    "lng": 80.2169
   }
 ]

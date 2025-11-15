@@ -63,13 +63,7 @@ const defaultForm: FormState = {
 };
 
 const locations = [
-  "Bengaluru",
   "Chennai",
-  "Hyderabad",
-  "Mumbai",
-  "Pune",
-  "Delhi NCR",
-  "Other",
 ];
 
 const propertyBands = ["1-5", "6-20", "21-50", "51-100", "100+"];

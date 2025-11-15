@@ -129,3 +129,4 @@ NEXT_PUBLIC_APP_URL=https://tharaga.co.in
 
 **Calendar integration works without `NEXT_PUBLIC_APP_URL`** because it uses `request.url` to auto-detect the current domain.
 
+

@@ -697,6 +697,29 @@ export class GoogleCalendarClient {
   }
 }
 
-// Export singleton instance
-export const googleCalendarClient = new GoogleCalendarClient();
+// Export singleton instance (lazy-initialized to avoid build-time errors)
+let googleCalendarClientInstance: GoogleCalendarClient | null = null;
+
+export function getGoogleCalendarClient(): GoogleCalendarClient {
+  if (!googleCalendarClientInstance) {
+    googleCalendarClientInstance = new GoogleCalendarClient();
+  }
+  return googleCalendarClientInstance;
+}
+
+// For backward compatibility, export the old name
+export const googleCalendarClient = {
+  getAuthUrl: (...args: Parameters<GoogleCalendarClient['getAuthUrl']>) => getGoogleCalendarClient().getAuthUrl(...args),
+  exchangeCodeForTokens: (...args: Parameters<GoogleCalendarClient['exchangeCodeForTokens']>) => getGoogleCalendarClient().exchangeCodeForTokens(...args),
+  saveConnection: (...args: Parameters<GoogleCalendarClient['saveConnection']>) => getGoogleCalendarClient().saveConnection(...args),
+  createEvent: (...args: Parameters<GoogleCalendarClient['createEvent']>) => getGoogleCalendarClient().createEvent(...args),
+  updateEvent: (...args: Parameters<GoogleCalendarClient['updateEvent']>) => getGoogleCalendarClient().updateEvent(...args),
+  deleteEvent: (...args: Parameters<GoogleCalendarClient['deleteEvent']>) => getGoogleCalendarClient().deleteEvent(...args),
+  getFreeBusy: (...args: Parameters<GoogleCalendarClient['getFreeBusy']>) => getGoogleCalendarClient().getFreeBusy(...args),
+  listEvents: (...args: Parameters<GoogleCalendarClient['listEvents']>) => getGoogleCalendarClient().listEvents(...args),
+  syncEvents: (...args: Parameters<GoogleCalendarClient['syncEvents']>) => getGoogleCalendarClient().syncEvents(...args),
+  createSiteVisitEvent: (...args: Parameters<GoogleCalendarClient['createSiteVisitEvent']>) => getGoogleCalendarClient().createSiteVisitEvent(...args),
+  getConnectionStatus: (...args: Parameters<GoogleCalendarClient['getConnectionStatus']>) => getGoogleCalendarClient().getConnectionStatus(...args),
+  disconnectCalendar: (...args: Parameters<GoogleCalendarClient['disconnectCalendar']>) => getGoogleCalendarClient().disconnectCalendar(...args),
+};
 

@@ -143,3 +143,28 @@ class CityTrend(BaseModel):
 class MarketTrendsResponse(BaseModel):
     items: List[CityTrend]
 
+
+# Data Collection Schemas
+class DataCollectionRequest(BaseModel):
+    property_id: str
+    force_refresh: bool = False
+
+
+class DataCollectionResponse(BaseModel):
+    success: bool
+    property_id: str
+    data_quality_score: float
+    data_completeness_score: float
+    fields_collected: int
+    sources_used: List[str]
+    message: str
+
+
+class DataQualityResponse(BaseModel):
+    property_id: str
+    data_quality_score: float
+    data_completeness_score: float
+    fields_filled: int
+    fields_total: int
+    sources: List[str]
+    last_updated: Optional[str] = None

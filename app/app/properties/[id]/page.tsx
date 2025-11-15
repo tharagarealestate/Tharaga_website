@@ -11,6 +11,11 @@ const CompareChart = dynamic(() => import('@/components/property/CompareChart').
 const InteractiveMap = dynamic(() => import('@/components/property/InteractiveMap').then(m => m.InteractiveMap), { ssr: false })
 const MatchScore = dynamic(() => import('@/components/property/MatchScore').then(m => m.MatchScore), { ssr: false })
 import { ContactForm as ContactFormClient } from '@/components/property/ContactForm'
+import RERAVerification from '@/components/property/RERAVerification'
+import RiskFlags from '@/components/property/RiskFlags'
+import DocumentUpload from '@/components/property/DocumentUpload'
+import ChennaiInsights from '@/components/property/ChennaiInsights'
+import AppreciationPrediction from '@/components/property/AppreciationPrediction'
 import { getSupabase } from '@/lib/supabase'
 
 export const revalidate = 300 // ISR: 5 minutes
@@ -291,12 +296,29 @@ export default async function PropertyPage({ params }: { params: { id: string } 
       <div className="mx-auto max-w-7xl px-4 py-6 grid grid-cols-1 lg:grid-cols-10 gap-6">
         <div className="lg:col-span-7">
           <Overview p={p} />
+          <div className="mt-6">
+            <RERAVerification propertyId={p.id} reraId={p.reraId} />
+          </div>
+          <div className="mt-6">
+            <RiskFlags propertyId={p.id} />
+          </div>
           <Description text={p.description} />
           <Amenities items={p.amenities} />
           <FloorPlan images={p.floorPlans} />
+          {p.city === 'Chennai' && (
+            <div className="mt-6">
+              <ChennaiInsights propertyId={p.id} locality={p.locality || ''} />
+            </div>
+          )}
+          <div className="mt-6">
+            <AppreciationPrediction propertyId={p.id} />
+          </div>
           <LocationInsights p={p} />
           <Financials price={p.priceINR} sqft={p.sqft} />
           <BuilderInfo p={p} builder={builder} />
+          <div className="mt-6">
+            <DocumentUpload propertyId={p.id} />
+          </div>
           <LegalDocs p={p} />
           <SimilarProperties items={similar} />
           <Reviews items={reviews} />
@@ -499,13 +521,17 @@ function LegalDocs({ p }: { p: any }){
         <DocRow label="Amenities List" />
       </div>
       <div className="mt-3 rounded border p-3 text-sm text-gray-700">
-        <div>AI Verification report:</div>
+        <div>Verification artifacts:</div>
         <ul className="list-disc ml-5">
-          <li>Title Clear: ✓ Verified on blockchain</li>
-          <li>No Legal Disputes: ✓ Checked with registrar</li>
-          <li>Builder CIBIL: A+ (Clean record)</li>
-          <li>Completion History: 90% on-time delivery</li>
+          <li>Document snapshots: Available with cryptographic hashes</li>
+          <li>RERA verification: See RERA snapshot below</li>
+          <li>Risk assessment: See risk flags below</li>
+          <li>Legal disclaimer: See disclaimer below</li>
         </ul>
+        <p className="text-xs text-gray-600 mt-2 italic">
+          These artifacts are automated snapshots for informational purposes only. 
+          For formal legal confirmation, consult a licensed property lawyer.
+        </p>
       </div>
     </div>
   )

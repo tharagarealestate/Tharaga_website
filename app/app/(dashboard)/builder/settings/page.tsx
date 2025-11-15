@@ -20,10 +20,14 @@ export default function BuilderSettingsPage() {
     message: string
   } | null>(null)
 
-  // Check for calendar callback messages
+  // Check for calendar and Zoho callback messages
   useEffect(() => {
     const calendarError = searchParams.get('calendar_error')
     const calendarConnected = searchParams.get('calendar_connected')
+    const zohoError = searchParams.get('zoho_error')
+    const zohoConnected = searchParams.get('zoho_connected')
+    const zohoDescription = searchParams.get('description')
+    const zohoMessage = searchParams.get('message')
 
     if (calendarError) {
       setCalendarMessage({
@@ -49,6 +53,28 @@ export default function BuilderSettingsPage() {
       router.replace('/builder/settings', { scroll: false })
       // Clear message after 5 seconds
       setTimeout(() => setCalendarMessage(null), 5000)
+    }
+
+    // Handle Zoho callback messages
+    if (zohoError) {
+      const errorMsg = zohoDescription || zohoMessage || zohoError;
+      setCalendarMessage({
+        type: 'error',
+        message: `Zoho CRM: ${decodeURIComponent(errorMsg)}`,
+      });
+      setActiveTab('integrations');
+      router.replace('/builder/settings', { scroll: false });
+      setTimeout(() => setCalendarMessage(null), 8000);
+    }
+
+    if (zohoConnected === 'true') {
+      setCalendarMessage({
+        type: 'success',
+        message: 'Zoho CRM connected successfully!',
+      });
+      setActiveTab('integrations');
+      router.replace('/builder/settings', { scroll: false });
+      setTimeout(() => setCalendarMessage(null), 5000);
     }
 
     // Check for tab parameter
@@ -333,7 +359,7 @@ function CompanySettings() {
           <label className='block text-sm font-medium text-gray-700 mb-2'>Company Address</label>
           <textarea
             rows={3}
-            defaultValue='123 Business Park, Andheri West, Mumbai - 400053'
+            defaultValue='123 Business Park, Anna Nagar, Chennai - 600040'
             className='w-full px-4 py-3 bg-white/60 backdrop-blur-md border border-gray-300/50 rounded-xl focus:ring-2 focus:ring-gold-500/50 focus:border-gold-500'
           />
         </div>
@@ -360,7 +386,7 @@ function CompanySettings() {
           <label className='block text-sm font-medium text-gray-700 mb-2'>About Company</label>
           <textarea
             rows={4}
-            defaultValue='Skyline Builders is a leading real estate development company with over 15 years of experience in creating premium residential and commercial spaces across Mumbai.'
+            defaultValue='Skyline Builders is a leading real estate development company with over 15 years of experience in creating premium residential and commercial spaces in Chennai.'
             className='w-full px-4 py-3 bg-white/60 backdrop-blur-md border border-gray-300/50 rounded-xl focus:ring-2 focus:ring-gold-500/50 focus:border-gold-500'
           />
         </div>
@@ -654,9 +680,9 @@ function SecuritySettings() {
         <h3 className='text-lg font-bold text-gray-900 mb-4'>Active Sessions</h3>
         <div className='space-y-3'>
           {[
-            { device: 'Chrome on Windows', location: 'Mumbai, India', current: true },
-            { device: 'Safari on iPhone', location: 'Mumbai, India', current: false },
-            { device: 'Firefox on Mac', location: 'Delhi, India', current: false }
+            { device: 'Chrome on Windows', location: 'Chennai, India', current: true },
+            { device: 'Safari on iPhone', location: 'Chennai, India', current: false },
+            { device: 'Firefox on Mac', location: 'Chennai, India', current: false }
           ].map((session, idx) => (
             <div key={idx} className='flex items-center justify-between p-4 border border-gray-200/50 rounded-xl'>
               <div>
@@ -884,8 +910,6 @@ function PreferenceSettings() {
               className='w-full px-4 py-3 bg-white/60 backdrop-blur-md border border-gray-300/50 rounded-xl focus:ring-2 focus:ring-gold-500/50 focus:border-gold-500'
             >
               <option value='INR'>INR (₹)</option>
-              <option value='USD'>USD ($)</option>
-              <option value='EUR'>EUR (€)</option>
             </select>
           </div>
         </div>
@@ -929,9 +953,43 @@ function IntegrationSettings({
 }) {
   const [connecting, setConnecting] = useState(false)
   const [syncing, setSyncing] = useState(false)
+  const [zohoStatus, setZohoStatus] = useState<{
+    connected: boolean
+    account_name?: string
+    last_sync_at?: string
+    total_synced?: number
+  } | null>(null)
+  const [loadingZoho, setLoadingZoho] = useState(true)
 
   // Determine calendar connection status
   const isCalendarConnected = calendarStatus?.connected || false
+
+  // Fetch Zoho status
+  useEffect(() => {
+    const fetchZohoStatus = async () => {
+      try {
+        setLoadingZoho(true)
+        const response = await fetch('/api/crm/zoho/status')
+        const data = await response.json()
+        if (data.success) {
+          setZohoStatus({
+            connected: data.connected,
+            account_name: data.account_name,
+            last_sync_at: data.last_sync_at,
+            total_synced: data.total_synced,
+          })
+        } else {
+          setZohoStatus({ connected: false })
+        }
+      } catch (error) {
+        console.error('Error fetching Zoho status:', error)
+        setZohoStatus({ connected: false })
+      } finally {
+        setLoadingZoho(false)
+      }
+    }
+    fetchZohoStatus()
+  }, [])
 
   const integrations = [
     {
@@ -941,6 +999,14 @@ function IntegrationSettings({
       icon: '📅',
       href: '/builder/settings/calendar',
       calendarStatus,
+    },
+    {
+      name: 'Zoho CRM',
+      desc: 'Sync leads and deals with Zoho CRM for seamless management',
+      status: zohoStatus?.connected ? 'connected' : 'available',
+      icon: '🔗',
+      href: '/builder/settings/zoho',
+      zohoStatus,
     },
     {
       name: 'WhatsApp Business',
@@ -968,13 +1034,6 @@ function IntegrationSettings({
       desc: 'Integrate with Mailchimp, SendGrid, and more',
       status: 'available',
       icon: '📧',
-      href: '/builder/settings',
-    },
-    {
-      name: 'CRM Integration',
-      desc: 'Sync leads with Salesforce, HubSpot, and other CRMs',
-      status: 'available',
-      icon: '🔗',
       href: '/builder/settings',
     },
   ]
@@ -1050,6 +1109,17 @@ function IntegrationSettings({
                       )}
                     </div>
                   )}
+                  {/* Zoho Status Info */}
+                  {integration.name === 'Zoho CRM' && integration.zohoStatus?.connected && (
+                    <div className='mt-2 text-xs text-gray-500'>
+                      {integration.zohoStatus.account_name && (
+                        <div>Account: {integration.zohoStatus.account_name}</div>
+                      )}
+                      {integration.zohoStatus.total_synced !== undefined && (
+                        <div>Records synced: {integration.zohoStatus.total_synced}</div>
+                      )}
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -1075,7 +1145,7 @@ function IntegrationSettings({
                         {syncing ? 'Syncing...' : 'Sync'}
                       </button>
                       <Link
-                        href={integration.href as '/' | '/builder/settings' | '/builder/settings/calendar' | '/builder/messaging'}
+                        href={integration.href as '/' | '/builder/settings' | '/builder/settings/calendar' | '/builder/messaging' | '/builder/settings/zoho'}
                         className='px-4 py-2 text-sm font-medium rounded-lg transition-all bg-gray-100 text-gray-700 hover:bg-gray-200'
                       >
                         Manage
@@ -1093,7 +1163,7 @@ function IntegrationSettings({
                 </div>
               ) : (
                 <Link
-                  href={integration.href as '/' | '/builder/settings' | '/builder/settings/calendar' | '/builder/messaging'}
+                  href={integration.href as '/' | '/builder/settings' | '/builder/settings/calendar' | '/builder/messaging' | '/builder/settings/zoho'}
                   className={`px-4 py-2 text-sm font-medium rounded-lg transition-all ${
                     integration.status === 'connected'
                       ? 'bg-gray-100 text-gray-700 hover:bg-gray-200'

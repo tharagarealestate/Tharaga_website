@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from 'react'
+import { matchChennaiLocality, getCanonicalLocality } from '@/lib/tamil-locality-matcher'
 
 const SR = typeof window !== 'undefined' ? (window as any).webkitSpeechRecognition || (window as any).SpeechRecognition : undefined
 
@@ -8,8 +9,18 @@ export default function TamilVoiceSearchPage(){
   const [supported, setSupported] = React.useState<boolean>(false)
   const [listening, setListening] = React.useState(false)
   const [text, setText] = React.useState('')
+  const [suggestions, setSuggestions] = React.useState<Array<{canonical: string; similarity: number}>>([])
 
   React.useEffect(()=>{ setSupported(!!SR) },[])
+
+  React.useEffect(() => {
+    if (text) {
+      const matches = matchChennaiLocality(text, 2)
+      setSuggestions(matches.map(m => ({ canonical: m.canonical, similarity: m.similarity })))
+    } else {
+      setSuggestions([])
+    }
+  }, [text])
 
   function start(){
     if (!SR) return
@@ -27,7 +38,12 @@ export default function TamilVoiceSearchPage(){
     rec.start()
   }
 
-  const searchUrl = text ? `/property-listing/?q=${encodeURIComponent(text)}` : '/property-listing/'
+  const canonicalLocality = text ? getCanonicalLocality(text) : null
+  const searchUrl = canonicalLocality 
+    ? `/property-listing/?q=${encodeURIComponent(canonicalLocality)}&locality=${encodeURIComponent(canonicalLocality)}`
+    : text 
+      ? `/property-listing/?q=${encodeURIComponent(text)}` 
+      : '/property-listing/'
 
   return (
     <main className="mx-auto max-w-3xl px-6 py-8">
@@ -44,7 +60,35 @@ export default function TamilVoiceSearchPage(){
           <div className="text-xs text-fgMuted mb-1">Recognized text</div>
           <div className="font-mono text-sm break-words">{text || '—'}</div>
         </div>
-        <p className="text-xs text-fgMuted">We set recognition language to ta-IN. You can refine the query after transcription.</p>
+        
+        {/* Locality Suggestions */}
+        {suggestions.length > 0 && (
+          <div className="rounded-lg border border-border p-3 bg-canvas space-y-2">
+            <div className="text-xs text-fgMuted mb-2">Did you mean?</div>
+            {suggestions.map((suggestion, idx) => (
+              <button
+                key={idx}
+                onClick={() => {
+                  const canonical = suggestion.canonical
+                  window.location.href = `/property-listing/?q=${encodeURIComponent(canonical)}&locality=${encodeURIComponent(canonical)}`
+                }}
+                className="w-full text-left px-3 py-2 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors"
+              >
+                <div className="font-medium text-gray-900">{suggestion.canonical}</div>
+                <div className="text-xs text-gray-500">Match: {(suggestion.similarity * 100).toFixed(0)}%</div>
+              </button>
+            ))}
+          </div>
+        )}
+        
+        {canonicalLocality && (
+          <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-3">
+            <div className="text-xs text-emerald-700 font-medium mb-1">Matched Locality:</div>
+            <div className="text-sm text-emerald-900 font-semibold">{canonicalLocality}</div>
+          </div>
+        )}
+        
+        <p className="text-xs text-fgMuted">Tamil-first voice search (Chennai). We set recognition language to ta-IN. You can refine the query after transcription.</p>
       </div>
     </main>
   )

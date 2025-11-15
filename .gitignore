@@ -69,3 +69,6 @@ service-account.json
 # Supabase Client Configuration
 js/config.js
 backend/.env
+
+# Local Netlify folder
+.netlify

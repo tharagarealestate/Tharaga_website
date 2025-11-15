@@ -38,8 +38,17 @@ export function Slider({ value, onValueChange, min = 0, max = 100, step = 1, cla
   }
 
   return (
-    <div className={clsx('w-full', className)}>
-      <div className="flex items-center gap-3">
+    <div className={clsx('w-full relative', className)}>
+      <div className="relative h-2 bg-gray-200 rounded-full">
+        {/* Active range track */}
+        <div
+          className="absolute h-2 bg-indigo-500 rounded-full"
+          style={{
+            left: `${((internal[0] - min) / (max - min)) * 100}%`,
+            width: `${((internal[1] - internal[0]) / (max - min)) * 100}%`,
+          }}
+        />
+        {/* Min thumb */}
         <input
           type="range"
           min={min}
@@ -47,8 +56,12 @@ export function Slider({ value, onValueChange, min = 0, max = 100, step = 1, cla
           step={step}
           value={internal[0]}
           onChange={onChangeMin}
-          className="w-full accent-[color:var(--color-accent)]"
+          className="absolute w-full h-2 opacity-0 cursor-pointer z-10"
+          style={{
+            background: 'transparent',
+          }}
         />
+        {/* Max thumb */}
         <input
           type="range"
           min={min}
@@ -56,7 +69,23 @@ export function Slider({ value, onValueChange, min = 0, max = 100, step = 1, cla
           step={step}
           value={internal[1]}
           onChange={onChangeMax}
-          className="w-full accent-[color:var(--color-accent)]"
+          className="absolute w-full h-2 opacity-0 cursor-pointer z-20"
+          style={{
+            background: 'transparent',
+          }}
+        />
+        {/* Visual thumbs */}
+        <div
+          className="absolute w-4 h-4 bg-indigo-600 rounded-full shadow-md border-2 border-white -top-1 z-30"
+          style={{
+            left: `calc(${((internal[0] - min) / (max - min)) * 100}% - 8px)`,
+          }}
+        />
+        <div
+          className="absolute w-4 h-4 bg-indigo-600 rounded-full shadow-md border-2 border-white -top-1 z-30"
+          style={{
+            left: `calc(${((internal[1] - min) / (max - min)) * 100}% - 8px)`,
+          }}
         />
       </div>
     </div>

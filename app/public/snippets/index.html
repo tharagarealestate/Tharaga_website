@@ -379,8 +379,52 @@ header .thg-auth-wrap:not(#site-header-auth-container){ position:absolute; top:1
     }
     btn.setAttribute('aria-controls','thg-auth-menu');
 
-    // MODAL REMOVED - Login/Signup now redirects to /login page
-    // No overlay/modal creation - completely removed
+    let overlay = document.querySelector('.thg-auth-overlay');
+    if (!overlay){
+      overlay = createEl('div','thg-auth-overlay',{'aria-hidden':'true','aria-modal':'true','role':'dialog'});
+      overlay.innerHTML = `
+        <div class="thg-auth-modal" role="document" aria-labelledby="thg-auth-title">
+          <div class="thg-auth-header">
+            <div class="thg-auth-title" id="thg-auth-title">Sign in</div>
+            <button class="thg-auth-close" type="button" aria-label="Close">✕</button>
+          </div>
+          <div class="thg-loading-bar" aria-hidden="true"></div>
+          <div class="thg-auth-body">
+            <div class="thg-tagline">"Browse only approved builder projects — safe, transparent, and verified"</div>
+            <div class="thg-tabs" role="tablist" aria-label="Authentication method">
+              <button class="thg-tab" role="tab" id="thg-tab-signin" aria-controls="thg-panel-signin" aria-selected="true">Sign in</button>
+              <button class="thg-tab" role="tab" id="thg-tab-signup" aria-controls="thg-panel-signup" aria-selected="false">Create account</button>
+            </div>
+            <div class="thg-error" role="alert"></div>
+            <div id="thg-panel-signin" role="tabpanel" aria-labelledby="thg-tab-signin">
+              <div class="thg-field"><label for="thg-si-email">Email</label><input id="thg-si-email" class="thg-input" type="email" autocomplete="email" placeholder="you@example.com" /></div>
+              <div class="thg-field"><label for="thg-si-password">Password</label><input id="thg-si-password" class="thg-input" type="password" autocomplete="current-password" placeholder="Your password" /></div>
+              <div class="thg-actions"><button class="thg-link" type="button" id="thg-forgot">Forgot password?</button><span class="thg-hint"></span></div>
+              <button class="thg-btn-primary" type="button" id="thg-signin-btn">Sign in</button>
+              <div class="thg-oauth"><button class="thg-oauth-btn google" type="button" data-provider="google"><svg class="g-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" aria-hidden="true"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.2 32.6 29 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 6 1.2 8.1 3.2l5.7-5.7C34.6 6.1 29.6 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20c10 0 19-7.3 19-20 0-1.3-.1-2.7-.4-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.5 16.6 18.9 14 24 14c3.1 0 6 1.2 8.1 3.2l5.7-5.7C34.6 6.1 29.6 4 24 4c-7.7 0-14.3 4.3-17.7 10.7z"/><path fill="#4CAF50" d="M24 44c5 0 9.6-1.9 13-5.1l-6-5.1C29.9 35.6 27.1 36 24 36c-5 0-9.3-3.4-10.8-8l-6.7 5.1C10 40.2 16.5 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-1.3 3.1-4.6 8-11.3 8-5 0-9.3-3.4-10.8-8l-6.7 5.1C10 40.2 16.5 44 24 44c10 0 19-7.3 19-20 0-1.3-.1-2.7-.4-3.5z"/></svg><span>Continue with Google</span></button></div>
+            </div>
+            <div id="thg-panel-signup" role="tabpanel" aria-labelledby="thg-tab-signup" hidden>
+              <div class="thg-field"><label for="thg-su-name">Full name (optional)</label><input id="thg-su-name" class="thg-input" type="text" autocomplete="name" placeholder="Ada Lovelace" /></div>
+              <div class="thg-field"><label for="thg-su-email">Email</label><input id="thg-su-email" class="thg-input" type="email" autocomplete="email" placeholder="you@example.com" /></div>
+              <div class="thg-field"><label for="thg-su-password">Password</label><input id="thg-su-password" class="thg-input" type="password" autocomplete="new-password" placeholder="At least 8 characters" /></div>
+              <div class="thg-actions"><span class="thg-hint">Use a strong password. You can add name later.</span></div>
+              <button class="thg-btn-primary" type="button" id="thg-signup-btn">Create account</button>
+              <div class="thg-oauth"><button class="thg-oauth-btn google" type="button" data-provider="google"><svg class="g-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" aria-hidden="true"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.2 32.6 29 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 6 1.2 8.1 3.2l5.7-5.7C34.6 6.1 29.6 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20c10 0 19-7.3 19-20 0-1.3-.1-2.7-.4-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.5 16.6 18.9 14 24 14c3.1 0 6 1.2 8.1 3.2l5.7-5.7C34.6 6.1 29.6 4 24 4c-7.7 0-14.3 4.3-17.7 10.7z"/><path fill="#4CAF50" d="M24 44c5 0 9.6-1.9 13-5.1l-6-5.1C29.9 35.6 27.1 36 24 36c-5 0-9.3-3.4-10.8-8l-6.7 5.1C10 40.2 16.5 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-1.3 3.1-4.6 8-11.3 8-5 0-9.3-3.4-10.8-8l-6.7 5.1C10 40.2 16.5 44 24 44c10 0 19-7.3 19-20 0-1.3-.1-2.7-.4-3.5z"/></svg><span>Sign up with Google</span></button></div>
+            </div>
+            <div id="thg-panel-reset" role="tabpanel" aria-labelledby="thg-tab-reset" hidden>
+              <div class="thg-field"><label for="thg-rp-email">Email</label><input id="thg-rp-email" class="thg-input" type="email" autocomplete="email" placeholder="you@example.com" /></div>
+              <div class="thg-actions"><span class="thg-hint">We’ll email a password reset link.</span></div>
+              <button class="thg-btn-primary" type="button" id="thg-reset-btn">Send reset link</button>
+            </div>
+            <div id="thg-panel-update" role="tabpanel" aria-labelledby="thg-tab-update" hidden>
+              <div class="thg-field"><label for="thg-up-password">New password</label><input id="thg-up-password" class="thg-input" type="password" autocomplete="new-password" placeholder="Enter a new password" /></div>
+              <div class="thg-actions"><span class="thg-hint">You’re recovering your account.</span></div>
+              <button class="thg-btn-primary" type="button" id="thg-update-btn">Update password</button>
+            </div>
+          </div>
+        </div>`;
+      document.body.appendChild(overlay);
+    }
 
     let confirmEl = document.querySelector('.thg-confirm');
     if (!confirmEl){
@@ -400,7 +444,7 @@ header .thg-auth-wrap:not(#site-header-auth-container){ position:absolute; top:1
         if (wrap) wrap.style.display = 'none';
       }
     } catch(_){}
-    return { wrap, btn, menu, overlay: null, confirmEl };
+    return { wrap, btn, menu, overlay, confirmEl };
   }
 
   const state = { user: null, loading: true, nextUrl: null, supabaseReady: false, sub: null };
@@ -438,22 +482,12 @@ header .thg-auth-wrap:not(#site-header-auth-container){ position:absolute; top:1
   function closeMenu(ui){ ui.menu.setAttribute('aria-hidden','true'); ui.btn.setAttribute('aria-expanded','false'); }
   function toggleMenu(ui){ const isHidden = ui.menu.getAttribute('aria-hidden') === 'true'; if (isHidden) openMenu(ui); else closeMenu(ui); }
 
-  // MODAL FUNCTIONS REMOVED - Redirect to /login instead
-  function openAuthModal(ui, opts){ 
-    const next = opts?.next || location.pathname + location.search;
-    window.location.href = '/login' + (next ? '?next=' + encodeURIComponent(next) : '');
-  }
-  function closeAuthModal(ui){ /* No-op - modal removed */ }
-  
-  // Override window.authGate.openLoginModal and __thgOpenAuthModal to redirect instead
-  window.authGate.openLoginModal = function(opts) {
-    const next = opts?.next || location.pathname + location.search;
-    window.location.href = '/login' + (next ? '?next=' + encodeURIComponent(next) : '');
-  };
-  window.__thgOpenAuthModal = function(opts) {
-    const next = opts?.next || location.pathname + location.search;
-    window.location.href = '/login' + (next ? '?next=' + encodeURIComponent(next) : '');
-  };
+  function showError(uiOverlay, msg){ const el = uiOverlay.querySelector('.thg-error'); if (!el) return; el.textContent = msg; el.style.display = 'block'; }
+  function clearError(uiOverlay){ const el = uiOverlay.querySelector('.thg-error'); if (!el) return; el.textContent = ''; el.style.display = 'none'; }
+  function setModalLoading(uiOverlay, loading){ const bar = uiOverlay.querySelector('.thg-loading-bar'); if (!bar) return; if (loading){ bar.style.width = '75%'; } else { bar.style.width = '0'; } }
+  function showPanel(uiOverlay, id, title){ ['signin','signup','reset','update'].forEach(function(key){ const panel = uiOverlay.querySelector('#thg-panel-'+key); if (panel) panel.hidden = (key !== id); }); const tEl = uiOverlay.querySelector('#thg-auth-title'); if (tEl) tEl.textContent = title; clearError(uiOverlay); }
+  function openAuthModal(ui, opts){ state.nextUrl = opts?.next || null; ui.overlay.setAttribute('aria-hidden','false'); showPanel(ui.overlay, 'signin', 'Sign in'); setTimeout(function(){ const el = ui.overlay.querySelector('#thg-si-email'); if (el) el.focus(); }, 0); }
+  function closeAuthModal(ui){ ui.overlay.setAttribute('aria-hidden','true'); }
   function openConfirm(ui){ ui.confirmEl.setAttribute('aria-hidden','false'); }
   // Broadcast current auth state (email only) to child iframes, sibling tabs, and embedded forms
   function broadcastAuth(user){
@@ -488,7 +522,34 @@ header .thg-auth-wrap:not(#site-header-auth-container){ position:absolute; top:1
     ui.menu.addEventListener('click', function(e){ const item = e.target.closest('.thg-auth-item[role="menuitem"]'); if (!item) return; const act = item.getAttribute('data-action'); if (act === 'profile'){ closeMenu(ui); location.href = AUTH_NAV.profile; return; } if (act === 'dashboard'){ closeMenu(ui); location.href = AUTH_NAV.dashboard; return; } if (act === 'settings' && AUTH_NAV.settings){ closeMenu(ui); location.href = AUTH_NAV.settings; return; } if (act === 'logout'){ closeMenu(ui); openConfirm(ui); } });
     ui.menu.addEventListener('keydown', function(e){ if (e.key === 'Escape'){ e.preventDefault(); closeMenu(ui); ui.btn.focus(); return; } if (['ArrowDown','ArrowUp','Home','End'].indexOf(e.key) === -1) return; e.preventDefault(); const items = Array.prototype.slice.call(ui.menu.querySelectorAll('.thg-auth-item[role="menuitem"]')); const idx = items.indexOf(document.activeElement); if (!items.length) return; if (e.key === 'Home'){ items[0].focus(); return; } if (e.key === 'End'){ items[items.length - 1].focus(); return; } const next = e.key === 'ArrowDown' ? (idx + 1 + items.length) % items.length : (idx - 1 + items.length) % items.length; items[next].focus(); });
     document.addEventListener('click', function(e){ if (ui.menu.getAttribute('aria-hidden') === 'true') return; if (!ui.menu.contains(e.target) && e.target !== ui.btn && !ui.btn.contains(e.target)){ closeMenu(ui); } });
-    // MODAL UI REMOVED - All modal event listeners removed
+    const tabSignIn = ui.overlay.querySelector('#thg-tab-signin');
+    const tabSignUp = ui.overlay.querySelector('#thg-tab-signup');
+    function selectTab(which){ const a = which==='signin'; tabSignIn.setAttribute('aria-selected', a ? 'true' : 'false'); tabSignUp.setAttribute('aria-selected', a ? 'false' : 'true'); showPanel(ui.overlay, a ? 'signin' : 'signup', a ? 'Sign in' : 'Create account'); const first = ui.overlay.querySelector(a ? '#thg-si-email' : '#thg-su-name'); if (first) first.focus(); }
+    tabSignIn.addEventListener('click', function(){ selectTab('signin'); });
+    tabSignUp.addEventListener('click', function(){ selectTab('signup'); });
+    ui.overlay.addEventListener('click', function(e){ if (e.target === ui.overlay) closeAuthModal(ui); });
+    ui.overlay.querySelector('.thg-auth-close').addEventListener('click', function(){ closeAuthModal(ui); });
+    document.addEventListener('keydown', function(e){ if (e.key === 'Escape' && ui.overlay.getAttribute('aria-hidden') === 'false') closeAuthModal(ui); });
+    const forgotBtn = ui.overlay.querySelector('#thg-forgot');
+    forgotBtn.addEventListener('click', function(){ showPanel(ui.overlay, 'reset', 'Reset password'); const el = ui.overlay.querySelector('#thg-rp-email'); const source = ui.overlay.querySelector('#thg-si-email'); if (source && el && source.value) el.value = source.value; if (el) el.focus(); });
+    ui.overlay.querySelector('#thg-signin-btn').addEventListener('click', async function(){ if (!state.supabaseReady){ showError(ui.overlay, 'Authentication is not initialized.'); return; } const email = ui.overlay.querySelector('#thg-si-email').value.trim(); const password = ui.overlay.querySelector('#thg-si-password').value; if (!validateEmail(email)) { showError(ui.overlay, 'Enter a valid email.'); return; } if (!password || password.length < 6) { showError(ui.overlay, 'Enter your password.'); return; } clearError(ui.overlay); setModalLoading(ui.overlay, true); try{ const { error } = await window.supabase.auth.signInWithPassword({ email, password }); if (error) { showError(ui.overlay, error.message || 'Failed to sign in.'); } } catch(ex){ showError(ui.overlay, 'Network error. Please try again.'); } finally { setModalLoading(ui.overlay, false); } });
+    ui.overlay.querySelector('#thg-signup-btn').addEventListener('click', async function(){ if (!state.supabaseReady){ showError(ui.overlay, 'Authentication is not initialized.'); return; } const name = ui.overlay.querySelector('#thg-su-name').value.trim(); const email = ui.overlay.querySelector('#thg-su-email').value.trim(); const password = ui.overlay.querySelector('#thg-su-password').value; if (!validateEmail(email)) { showError(ui.overlay, 'Enter a valid email.'); return; } if (!password || password.length < 8) { showError(ui.overlay, 'Password must be at least 8 characters.'); return; } clearError(ui.overlay); setModalLoading(ui.overlay, true); try{ const { error } = await window.supabase.auth.signUp({ email, password, options: { data: name ? { full_name: name } : {} } }); if (error) { showError(ui.overlay, error.message || 'Failed to create account.'); } else { showError(ui.overlay, 'Check your email to verify your account.'); } } catch(ex){ showError(ui.overlay, 'Network error. Please try again.'); } finally { setModalLoading(ui.overlay, false); } });
+
+    // Removed openHostedAuth function - no longer needed with direct OAuth flow
+
+    // Ensure a Supabase client exists before starting OAuth
+    async function ensureSupabaseReady(){
+      try {
+        if (window.supabase && window.supabase.auth) return true;
+        const mod = await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm');
+        const client = mod.createClient('https://wedevtjjmdvngyshqdro.supabase.co','eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndlZGV2dGpqbWR2bmd5c2hxZHJvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU0NzYwMzgsImV4cCI6MjA3MTA1MjAzOH0.Ex2c_sx358dFdygUGMVBohyTVto6fdEQ5nydDRh9m6M');
+        window.supabase = client;
+        return !!(window.supabase && window.supabase.auth);
+      } catch(_) { return false; }
+    }
+    ui.overlay.querySelectorAll('.thg-oauth-btn').forEach(function(btn){ btn.addEventListener('click', async function(){ const provider = btn.getAttribute('data-provider'); clearError(ui.overlay); setModalLoading(ui.overlay, true); try{ if (!(await ensureSupabaseReady())){ showError(ui.overlay, 'Authentication is loading. Please try again in a moment.'); setModalLoading(ui.overlay, false); return; } const redirectTo = location.origin + location.pathname + location.search; const { data, error } = await window.supabase.auth.signInWithOAuth({ provider, options: { redirectTo, queryParams: { prompt: 'select_account' } } }); if (error) { const msg = /provider is not enabled/i.test(error.message||'') ? 'Google sign-in is not available yet.' : (error.message || 'Could not start sign in.'); showError(ui.overlay, msg); setModalLoading(ui.overlay, false); return; } if (data && data.url){ location.href = data.url; } else { setModalLoading(ui.overlay, false); showError(ui.overlay, 'Could not start ' + provider + ' sign in.'); } } catch(ex){ showError(ui.overlay, 'Error: ' + (ex.message || 'Could not start sign in')); setModalLoading(ui.overlay, false); } }); });
+    ui.overlay.querySelector('#thg-reset-btn').addEventListener('click', async function(){ if (!state.supabaseReady){ showError(ui.overlay, 'Authentication is not initialized.'); return; } const email = ui.overlay.querySelector('#thg-rp-email').value.trim(); if (!validateEmail(email)) { showError(ui.overlay, 'Enter a valid email.'); return; } clearError(ui.overlay); setModalLoading(ui.overlay, true); try{ const redirectTo = location.origin + location.pathname + location.search; const { error } = await window.supabase.auth.resetPasswordForEmail(email, { redirectTo }); if (error) { showError(ui.overlay, error.message || 'Failed to send reset link.'); } else { showError(ui.overlay, 'Reset link sent. Check your email.'); } } catch(ex){ showError(ui.overlay, 'Network error. Please try again.'); } finally { setModalLoading(ui.overlay, false); } });
+    ui.overlay.querySelector('#thg-update-btn').addEventListener('click', async function(){ if (!state.supabaseReady){ showError(ui.overlay, 'Authentication is not initialized.'); return; } const password = ui.overlay.querySelector('#thg-up-password').value; if (!password || password.length < 8) { showError(ui.overlay, 'Password must be at least 8 characters.'); return; } clearError(ui.overlay); setModalLoading(ui.overlay, true); try{ const { error } = await window.supabase.auth.updateUser({ password }); if (error) { showError(ui.overlay, error.message || 'Failed to update password.'); } else { showPanel(ui.overlay, 'signin', 'Sign in'); showError(ui.overlay, 'Password updated. Please sign in.'); } } catch(ex){ showError(ui.overlay, 'Network error. Please try again.'); } finally { setModalLoading(ui.overlay, false); } });
     ui.confirmEl.querySelector('.thg-confirm-cancel').addEventListener('click', function(){ closeConfirm(ui); });
     ui.confirmEl.addEventListener('click', function(e){ if (e.target === ui.confirmEl) closeConfirm(ui); });
     ui.confirmEl.querySelector('.thg-confirm-ok').addEventListener('click', async function(){
@@ -516,81 +577,9 @@ header .thg-auth-wrap:not(#site-header-auth-container){ position:absolute; top:1
     }
     if (!window.supabase || !window.supabase.auth){ state.supabaseReady = false; state.loading = false; render( ui); console.warn('[thg-auth] window.supabase not found.'); return; }
     state.supabaseReady = true;
-    try{ const { data } = await window.supabase.auth.getSession(); state.user = data?.session?.user || null; } catch(_){ state.user = null; } finally { state.loading = false; render(ui); try { broadcastAuth(state.user); } catch(__) {} try { setBuyerEmailLockFromUser(state.user); } catch(__) {}
-      // Initialize role manager for authenticated user with retry mechanism
-      if (state.user && state.user.email) {
-        try {
-          window.__thgAuthState = state;
-          window.__thgAuthUI = ui;
-
-          // Wait for role manager to be available (with retry mechanism)
-          var retryCount = 0;
-          var maxRetries = 20;
-          var initRoleManager = async function() {
-            if (window.thgRoleManager && typeof window.thgRoleManager.init === 'function') {
-              await window.thgRoleManager.init(state.user, ui);
-              console.log('[thg-auth] Role manager initialized successfully');
-            } else if (retryCount < maxRetries) {
-              retryCount++;
-              console.warn('[thg-auth] Role manager not ready, retry ' + retryCount + '/' + maxRetries);
-              setTimeout(initRoleManager, 200);
-            } else {
-              console.error('[thg-auth] Role manager failed to load after ' + maxRetries + ' retries');
-            }
-          };
-
-          await initRoleManager();
-        } catch(roleErr) {
-          console.error('[thg-auth] Role manager init error:', roleErr);
-        }
-      }
-    }
+    try{ const { data } = await window.supabase.auth.getSession(); state.user = data?.session?.user || null; } catch(_){ state.user = null; } finally { state.loading = false; render(ui); try { broadcastAuth(state.user); } catch(__) {} try { setBuyerEmailLockFromUser(state.user); } catch(__) {} }
     try{
-      const { data: sub } = window.supabase.auth.onAuthStateChange(async function(event, session){
-        state.user = session?.user || null;
-        render(ui);
-        try { broadcastAuth(state.user); } catch(__) {}
-        try { setBuyerEmailLockFromUser(state.user); } catch(__) {}
-
-        // Initialize role manager on auth state change with retry mechanism
-        if (state.user && state.user.email) {
-          try {
-            window.__thgAuthState = state;
-            window.__thgAuthUI = ui;
-
-            // Wait for role manager to be available (with retry mechanism)
-            var retryCount = 0;
-            var maxRetries = 20;
-            var initRoleManager = async function() {
-              if (window.thgRoleManager && typeof window.thgRoleManager.init === 'function') {
-                await window.thgRoleManager.init(state.user, ui);
-                console.log('[thg-auth] Role manager initialized on auth change');
-              } else if (retryCount < maxRetries) {
-                retryCount++;
-                console.warn('[thg-auth] Role manager not ready on auth change, retry ' + retryCount + '/' + maxRetries);
-                setTimeout(initRoleManager, 200);
-              } else {
-                console.error('[thg-auth] Role manager failed to load on auth change after ' + maxRetries + ' retries');
-              }
-            };
-
-            await initRoleManager();
-          } catch(roleErr) {
-            console.error('[thg-auth] Role manager init error on auth change:', roleErr);
-          }
-        }
-
-        if (event === 'PASSWORD_RECOVERY'){ window.location.href = '/login?recovery=1'; }
-        if (state.user && state.user.email){
-          if (state.nextUrl){
-            const to = state.nextUrl;
-            state.nextUrl = null;
-            location.href = to;
-          }
-        } else {
-          closeMenu(ui);
-        }
-      });
+      const { data: sub } = window.supabase.auth.onAuthStateChange(function(event, session){ state.user = session?.user || null; render(ui); try { broadcastAuth(state.user); } catch(__) {} try { setBuyerEmailLockFromUser(state.user); } catch(__) {} if (event === 'PASSWORD_RECOVERY'){ const overlay = ui.overlay; overlay.setAttribute('aria-hidden','false'); showPanel(overlay, 'update', 'Set new password'); setTimeout(function(){ const el = overlay.querySelector('#thg-up-password'); if (el) el.focus(); }, 0); } if (state.user && state.user.email){ if (state.nextUrl){ const to = state.nextUrl; state.nextUrl = null; try { closeAuthModal(ui); } catch(_){} location.href = to; } else { try { closeAuthModal(ui); } catch(_){} } } else { closeMenu(ui); } });
       state.sub = sub?.subscription || sub || null;
     } catch(_){ }
   }

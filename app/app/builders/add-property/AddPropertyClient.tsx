@@ -1,7 +1,10 @@
 "use client"
-import { useState } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import Image from 'next/image'
+import { useSearchParams } from 'next/navigation'
 import { Button, Input, Select, TextArea, Card, Badge } from '@/components/ui'
+// TODO: Re-enable when ComprehensivePropertyData component is created
+// import ComprehensivePropertyData from '@/components/property/ComprehensivePropertyData'
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 
 let supabaseClient: SupabaseClient | null = null
@@ -18,15 +21,54 @@ function getSupabase(): SupabaseClient {
 }
 
 export default function AddPropertyPage() {
+  const searchParams = useSearchParams()
+  const propertyId = searchParams?.get('id')
   const [step, setStep] = useState(1)
   const [busy, setBusy] = useState(false)
   const [msg, setMsg] = useState<string | null>(null)
   const [tier, setTier] = useState<'starter'|'growth'|'scale'>('starter')
   const [limit, setLimit] = useState<number>(1)
+  const [showComprehensiveData, setShowComprehensiveData] = useState(false)
   const [form, setForm] = useState({
-    title: '', description: '', city: '', locality: '', property_type: 'Apartment',
+    title: '', description: '', city: 'Chennai', locality: '', property_type: 'Apartment',
     bedrooms: '', bathrooms: '', price_inr: '', sqft: '', images: [] as string[]
   })
+
+  useEffect(() => {
+    if (propertyId) {
+      // Load existing property data for editing
+      loadPropertyData(propertyId)
+    }
+  }, [propertyId])
+
+  async function loadPropertyData(id: string) {
+    try {
+      const { data, error } = await getSupabase()
+        .from('properties')
+        .select('*')
+        .eq('id', id)
+        .single()
+      
+      if (error) throw error
+      if (data) {
+        setForm({
+          title: data.title || '',
+          description: data.description || '',
+          city: data.city || '',
+          locality: data.locality || '',
+          property_type: data.property_type || 'Apartment',
+          bedrooms: String(data.bedrooms || ''),
+          bathrooms: String(data.bathrooms || ''),
+          price_inr: String(data.price_inr || ''),
+          sqft: String(data.sqft || ''),
+          images: (data.images as string[]) || []
+        })
+        setStep(2)
+      }
+    } catch (e: any) {
+      setMsg(e?.message || 'Failed to load property')
+    }
+  }
 
   async function ensureAuth() {
     const { data: { session } } = await getSupabase().auth.getSession()
@@ -97,10 +139,25 @@ export default function AddPropertyPage() {
           return
         }
       }
-      const { error } = await getSupabase().from('properties').insert([payload])
-      if (error) throw error
-      setMsg('Submitted! Pending verification.')
-      setStep(3)
+      if (propertyId) {
+        // Update existing property
+        const { error } = await getSupabase()
+          .from('properties')
+          .update(payload)
+          .eq('id', propertyId)
+        if (error) throw error
+        setMsg('Property updated successfully!')
+      } else {
+        // Insert new property
+        const { data, error } = await getSupabase().from('properties').insert([payload]).select().single()
+        if (error) throw error
+        // Update propertyId for comprehensive data
+        if (data?.id) {
+          window.history.replaceState({}, '', `?id=${data.id}`)
+        }
+        setMsg('Submitted! Pending verification.')
+        setStep(3)
+      }
     } catch (e: any) {
       setMsg(e?.message || 'Save failed')
     } finally {
@@ -129,7 +186,7 @@ export default function AddPropertyPage() {
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-sm font-medium">City</label>
-              <Input required value={form.city} onChange={e=>setForm({...form, city:e.target.value})} />
+              <Input required value={form.city} onChange={e=>setForm({...form, city:e.target.value})} placeholder="Chennai" readOnly />
             </div>
             <div>
               <label className="block text-sm font-medium">Locality</label>
@@ -196,8 +253,33 @@ export default function AddPropertyPage() {
       {step === 3 && (
         <Card>
           <div className="font-semibold text-fg">Thanks! Your property is submitted.</div>
-          <div className="text-fgMuted text-sm">We’ll verify details and make it visible to buyers shortly.</div>
+          <div className="text-fgMuted text-sm">We'll verify details and make it visible to buyers shortly.</div>
+          {propertyId && (
+            <div className="mt-4">
+              <Button onClick={() => setShowComprehensiveData(true)}>
+                Add Comprehensive Property Data
+              </Button>
+            </div>
+          )}
         </Card>
+      )}
+
+      {/* Comprehensive Property Data Section */}
+      {/* TODO: Re-enable when ComprehensivePropertyData component is created
+      {(showComprehensiveData || (propertyId && step === 2)) && propertyId && (
+        <div className="mt-8">
+          <ComprehensivePropertyData propertyId={propertyId} />
+        </div>
+      )}
+      */}
+
+      {/* Toggle button for comprehensive data when editing */}
+      {propertyId && step === 2 && !showComprehensiveData && (
+        <div className="mt-6 text-center">
+          <Button variant="secondary" onClick={() => setShowComprehensiveData(true)}>
+            Manage Comprehensive Property Data (500+ fields)
+          </Button>
+        </div>
       )}
     </main>
   )

@@ -8,7 +8,7 @@
   <script type="module" src="/js/fragment-handle.js"></script>
   <!-- Auth header/modal: use the durable snippet so CTA can open the global login container -->
   <!-- Ensure auth-gate is available so fallbacks can open the login modal if header is missing -->
-  <script src="https://auth.tharaga.co.in/login_signup_glassdrop/auth-gate.js" defer></script>
+  <script src="/login_signup_glassdrop/auth-gate.js" defer></script>
   
   <!-- Inline auth removed; using durable-auth-head.html -->
   <!-- <script>
@@ -161,52 +161,8 @@
     }
     btn.setAttribute('aria-controls','thg-auth-menu');
 
-    let overlay = document.querySelector('.thg-auth-overlay');
-    if (!overlay){
-      overlay = createEl('div','thg-auth-overlay',{'aria-hidden':'true','aria-modal':'true','role':'dialog'});
-      overlay.innerHTML = `
-        <div class="thg-auth-modal" role="document" aria-labelledby="thg-auth-title">
-          <div class="thg-auth-header">
-            <div class="thg-auth-title" id="thg-auth-title">Sign in to continue</div>
-            <button class="thg-auth-close" type="button" aria-label="Close">✕</button>
-          </div>
-          <div class="thg-loading-bar" aria-hidden="true"></div>
-          <div class="thg-auth-body">
-            <div class="thg-tagline">"Browse only approved builder projects — safe, transparent, and verified"</div>
-            <div class="thg-tabs" role="tablist" aria-label="Authentication method">
-              <button class="thg-tab" role="tab" id="thg-tab-signin" aria-controls="thg-panel-signin" aria-selected="true">Sign in</button>
-              <button class="thg-tab" role="tab" id="thg-tab-signup" aria-controls="thg-panel-signup" aria-selected="false">Create account</button>
-            </div>
-            <div class="thg-error" role="alert"></div>
-            <div id="thg-panel-signin" role="tabpanel" aria-labelledby="thg-tab-signin">
-              <div class="thg-field"><label for="thg-si-email">Email</label><input id="thg-si-email" class="thg-input" type="email" autocomplete="email" placeholder="you@example.com" /></div>
-              <div class="thg-field"><label for="thg-si-password">Password</label><input id="thg-si-password" class="thg-input" type="password" autocomplete="current-password" placeholder="Your password" /></div>
-              <div class="thg-actions"><button class="thg-link" type="button" id="thg-forgot">Forgot password?</button><span class="thg-hint"></span></div>
-              <button class="thg-btn-primary" type="button" id="thg-signin-btn">Sign in</button>
-              <div class="thg-oauth"><button class="thg-oauth-btn google" type="button" data-provider="google">Continue with Google</button></div>
-            </div>
-            <div id="thg-panel-signup" role="tabpanel" aria-labelledby="thg-tab-signup" hidden>
-              <div class="thg-field"><label for="thg-su-name">Full name (optional)</label><input id="thg-su-name" class="thg-input" type="text" autocomplete="name" placeholder="Ada Lovelace" /></div>
-              <div class="thg-field"><label for="thg-su-email">Email</label><input id="thg-su-email" class="thg-input" type="email" autocomplete="email" placeholder="you@example.com" /></div>
-              <div class="thg-field"><label for="thg-su-password">Password</label><input id="thg-su-password" class="thg-input" type="password" autocomplete="new-password" placeholder="At least 8 characters" /></div>
-              <div class="thg-actions"><span class="thg-hint">Use a strong password. You can add name later.</span></div>
-              <button class="thg-btn-primary" type="button" id="thg-signup-btn">Create account</button>
-              <div class="thg-oauth"><button class="thg-oauth-btn google" type="button" data-provider="google">Sign up with Google</button></div>
-            </div>
-            <div id="thg-panel-reset" role="tabpanel" aria-labelledby="thg-tab-reset" hidden>
-              <div class="thg-field"><label for="thg-rp-email">Email</label><input id="thg-rp-email" class="thg-input" type="email" autocomplete="email" placeholder="you@example.com" /></div>
-              <div class="thg-actions"><span class="thg-hint">We'll email a password reset link.</span></div>
-              <button class="thg-btn-primary" type="button" id="thg-reset-btn">Send reset link</button>
-            </div>
-            <div id="thg-panel-update" role="tabpanel" aria-labelledby="thg-tab-update" hidden>
-              <div class="thg-field"><label for="thg-up-password">New password</label><input id="thg-up-password" class="thg-input" type="password" autocomplete="new-password" placeholder="Enter a new password" /></div>
-              <div class="thg-actions"><span class="thg-hint">You're recovering your account.</span></div>
-              <button class="thg-btn-primary" type="button" id="thg-update-btn">Update password</button>
-            </div>
-          </div>
-        </div>`;
-      document.body.appendChild(overlay);
-    }
+    // MODAL REMOVED - Login/Signup now redirects to /login page
+    // No overlay/modal creation - completely removed
 
     let confirmEl = document.querySelector('.thg-confirm');
     if (!confirmEl){
@@ -219,7 +175,7 @@
         '</div></div>';
       document.body.appendChild(confirmEl);
     }
-    return { wrap, btn, menu, overlay, confirmEl };
+    return { wrap, btn, menu, overlay: null, confirmEl };
   }
 
   const state = { user: null, loading: true, nextUrl: null, supabaseReady: false, sub: null };
@@ -257,12 +213,12 @@
   function closeMenu(ui){ ui.menu.setAttribute('aria-hidden','true'); ui.btn.setAttribute('aria-expanded','false'); }
   function toggleMenu(ui){ const isHidden = ui.menu.getAttribute('aria-hidden') === 'true'; if (isHidden) openMenu(ui); else closeMenu(ui); }
 
-  function showError(uiOverlay, msg){ const el = uiOverlay.querySelector('.thg-error'); if (!el) return; el.textContent = msg; el.style.display = 'block'; }
-  function clearError(uiOverlay){ const el = uiOverlay.querySelector('.thg-error'); if (!el) return; el.textContent = ''; el.style.display = 'none'; }
-  function setModalLoading(uiOverlay, loading){ const bar = uiOverlay.querySelector('.thg-loading-bar'); if (!bar) return; if (loading){ bar.style.width = '75%'; } else { bar.style.width = '0'; } }
-  function showPanel(uiOverlay, id, title){ ['signin','signup','reset','update'].forEach(function(key){ const panel = uiOverlay.querySelector('#thg-panel-'+key); if (panel) panel.hidden = (key !== id); }); const tEl = uiOverlay.querySelector('#thg-auth-title'); if (tEl) tEl.textContent = title; clearError(uiOverlay); }
-  function openAuthModal(ui, opts){ state.nextUrl = opts?.next || null; ui.overlay.setAttribute('aria-hidden','false'); showPanel(ui.overlay, 'signin', 'Sign in'); setTimeout(function(){ const el = ui.overlay.querySelector('#thg-si-email'); if (el) el.focus(); }, 0); }
-  function closeAuthModal(ui){ ui.overlay.setAttribute('aria-hidden','true'); }
+  // MODAL FUNCTIONS REMOVED - Redirect to /login instead
+  function openAuthModal(ui, opts){ 
+    const next = opts?.next || location.pathname + location.search;
+    window.location.href = '/login' + (next ? '?next=' + encodeURIComponent(next) : '');
+  }
+  function closeAuthModal(ui){ /* No-op - modal removed */ }
   function openConfirm(ui){ ui.confirmEl.setAttribute('aria-hidden','false'); }
   function closeConfirm(ui){ ui.confirmEl.setAttribute('aria-hidden','true'); }
 
@@ -272,25 +228,16 @@
     ui.menu.addEventListener('click', function(e){ const item = e.target.closest('.thg-auth-item[role="menuitem"]'); if (!item) return; const act = item.getAttribute('data-action'); if (act === 'profile'){ closeMenu(ui); location.href = AUTH_NAV.profile; return; } if (act === 'dashboard'){ closeMenu(ui); location.href = AUTH_NAV.dashboard; return; } if (act === 'settings' && AUTH_NAV.settings){ closeMenu(ui); location.href = AUTH_NAV.settings; return; } if (act === 'logout'){ closeMenu(ui); openConfirm(ui); } });
     ui.menu.addEventListener('keydown', function(e){ if (e.key === 'Escape'){ e.preventDefault(); closeMenu(ui); ui.btn.focus(); return; } if (['ArrowDown','ArrowUp','Home','End'].indexOf(e.key) === -1) return; e.preventDefault(); const items = Array.prototype.slice.call(ui.menu.querySelectorAll('.thg-auth-item[role="menuitem"]')); const idx = items.indexOf(document.activeElement); if (!items.length) return; if (e.key === 'Home'){ items[0].focus(); return; } if (e.key === 'End'){ items[items.length - 1].focus(); return; } const next = e.key === 'ArrowDown' ? (idx + 1 + items.length) % items.length : (idx - 1 + items.length) % items.length; items[next].focus(); });
     document.addEventListener('click', function(e){ if (ui.menu.getAttribute('aria-hidden') === 'true') return; if (!ui.menu.contains(e.target) && e.target !== ui.btn && !ui.btn.contains(e.target)){ closeMenu(ui); } });
-    const tabSignIn = ui.overlay.querySelector('#thg-tab-signin');
-    const tabSignUp = ui.overlay.querySelector('#thg-tab-signup');
-    function selectTab(which){ const a = which==='signin'; tabSignIn.setAttribute('aria-selected', a ? 'true' : 'false'); tabSignUp.setAttribute('aria-selected', a ? 'false' : 'true'); showPanel(ui.overlay, a ? 'signin' : 'signup', a ? 'Sign in' : 'Create account'); const first = ui.overlay.querySelector(a ? '#thg-si-email' : '#thg-su-name'); if (first) first.focus(); }
-    tabSignIn.addEventListener('click', function(){ selectTab('signin'); });
-    tabSignUp.addEventListener('click', function(){ selectTab('signup'); });
-    ui.overlay.addEventListener('click', function(e){ if (e.target === ui.overlay) closeAuthModal(ui); });
-    ui.overlay.querySelector('.thg-auth-close').addEventListener('click', function(){ closeAuthModal(ui); });
-    document.addEventListener('keydown', function(e){ if (e.key === 'Escape' && ui.overlay.getAttribute('aria-hidden') === 'false') closeAuthModal(ui); });
-    const forgotBtn = ui.overlay.querySelector('#thg-forgot');
-    forgotBtn.addEventListener('click', function(){ showPanel(ui.overlay, 'reset', 'Reset password'); const el = ui.overlay.querySelector('#thg-rp-email'); const source = ui.overlay.querySelector('#thg-si-email'); if (source && el && source.value) el.value = source.value; if (el) el.focus(); });
-    ui.overlay.querySelector('#thg-signin-btn').addEventListener('click', async function(){ if (!state.supabaseReady){ showError(ui.overlay, 'Authentication is not initialized.'); return; } const email = ui.overlay.querySelector('#thg-si-email').value.trim(); const password = ui.overlay.querySelector('#thg-si-password').value; if (!validateEmail(email)) { showError(ui.overlay, 'Enter a valid email.'); return; } if (!password || password.length < 6) { showError(ui.overlay, 'Enter your password.'); return; } clearError(ui.overlay); setModalLoading(ui.overlay, true); try{ const { error } = await window.supabase.auth.signInWithPassword({ email, password }); if (error) { showError(ui.overlay, error.message || 'Failed to sign in.'); } } catch(ex){ showError(ui.overlay, 'Network error. Please try again.'); } finally { setModalLoading(ui.overlay, false); } });
-    ui.overlay.querySelector('#thg-signup-btn').addEventListener('click', async function(){ if (!state.supabaseReady){ showError(ui.overlay, 'Authentication is not initialized.'); return; } const name = ui.overlay.querySelector('#thg-su-name').value.trim(); const email = ui.overlay.querySelector('#thg-su-email').value.trim(); const password = ui.overlay.querySelector('#thg-su-password').value; if (!validateEmail(email)) { showError(ui.overlay, 'Enter a valid email.'); return; } if (!password || password.length < 8) { showError(ui.overlay, 'Password must be at least 8 characters.'); return; } clearError(ui.overlay); setModalLoading(ui.overlay, true); try{ const { error } = await window.supabase.auth.signUp({ email, password, options: { data: name ? { full_name: name } : {} } }); if (error) { showError(ui.overlay, error.message || 'Failed to create account.'); } else { showError(ui.overlay, 'Check your email to verify your account.'); } } catch(ex){ showError(ui.overlay, 'Network error. Please try again.'); } finally { setModalLoading(ui.overlay, false); } });
-    ui.overlay.querySelectorAll('.thg-oauth-btn').forEach(function(btn){ btn.addEventListener('click', async function(){ if (!state.supabaseReady){ showError(ui.overlay, 'Authentication is not initialized.'); return; } const provider = btn.getAttribute('data-provider'); clearError(ui.overlay); setModalLoading(ui.overlay, true); try{ const redirectTo = location.origin + location.pathname + location.search; const { data, error } = await window.supabase.auth.signInWithOAuth({ provider, options: { redirectTo, skipBrowserRedirect: true, queryParams: { prompt: 'select_account' } } }); if (error) { const msg = /provider is not enabled/i.test(error.message||'') ? 'Google sign-in is not available yet.' : (error.message || 'Could not start sign in.'); showError(ui.overlay, msg); setModalLoading(ui.overlay, false); return; } if (data && data.url){ location.href = data.url; } else { setModalLoading(ui.overlay, false); showError(ui.overlay, 'Could not start ' + provider + ' sign in.'); } } catch(ex){ showError(ui.overlay, 'Failed to start ' + provider + ' sign in.'); setModalLoading(ui.overlay, false); } }); });
-    ui.overlay.querySelector('#thg-reset-btn').addEventListener('click', async function(){ if (!state.supabaseReady){ showError(ui.overlay, 'Authentication is not initialized.'); return; } const email = ui.overlay.querySelector('#thg-rp-email').value.trim(); if (!validateEmail(email)) { showError(ui.overlay, 'Enter a valid email.'); return; } clearError(ui.overlay); setModalLoading(ui.overlay, true); try{ const redirectTo = location.origin + location.pathname + location.search; const { error } = await window.supabase.auth.resetPasswordForEmail(email, { redirectTo }); if (error) { showError(ui.overlay, error.message || 'Failed to send reset link.'); } else { showError(ui.overlay, 'Reset link sent. Check your email.'); } } catch(ex){ showError(ui.overlay, 'Network error. Please try again.'); } finally { setModalLoading(ui.overlay, false); } });
-    ui.overlay.querySelector('#thg-update-btn').addEventListener('click', async function(){ if (!state.supabaseReady){ showError(ui.overlay, 'Authentication is not initialized.'); return; } const password = ui.overlay.querySelector('#thg-up-password').value; if (!password || password.length < 8) { showError(ui.overlay, 'Password must be at least 8 characters.'); return; } clearError(ui.overlay); setModalLoading(ui.overlay, true); try{ const { error } = await window.supabase.auth.updateUser({ password }); if (error) { showError(ui.overlay, error.message || 'Failed to update password.'); } else { showPanel(ui.overlay, 'signin', 'Sign in'); showError(ui.overlay, 'Password updated. Please sign in.'); } } catch(ex){ showError(ui.overlay, 'Network error. Please try again.'); } finally { setModalLoading(ui.overlay, false); } });
+    // MODAL UI REMOVED - All modal event listeners removed
     ui.confirmEl.querySelector('.thg-confirm-cancel').addEventListener('click', function(){ closeConfirm(ui); });
     ui.confirmEl.addEventListener('click', function(e){ if (e.target === ui.confirmEl) closeConfirm(ui); });
     ui.confirmEl.querySelector('.thg-confirm-ok').addEventListener('click', async function(){ try { await window.supabase?.auth?.signOut?.(); } catch(_){} closeConfirm(ui); });
     window.__thgOpenAuthModal = function(opts){ openAuthModal(ui, opts); };
+    // Override to redirect instead of opening modal
+    window.authGate.openLoginModal = function(opts) {
+      const next = opts?.next || location.pathname + location.search;
+      window.location.href = '/login' + (next ? '?next=' + encodeURIComponent(next) : '');
+    };
   }
 
   async function initSupabase(ui){
@@ -306,7 +253,7 @@
     state.supabaseReady = true;
     try{ const { data } = await window.supabase.auth.getSession(); state.user = data?.session?.user || null; } catch(_){ state.user = null; } finally { state.loading = false; render(ui); }
     try{
-      const { data: sub } = window.supabase.auth.onAuthStateChange(function(event, session){ state.user = session?.user || null; render(ui); if (event === 'PASSWORD_RECOVERY'){ const overlay = ui.overlay; overlay.setAttribute('aria-hidden','false'); showPanel(overlay, 'update', 'Set new password'); setTimeout(function(){ const el = overlay.querySelector('#thg-up-password'); if (el) el.focus(); }, 0); } if (state.user && state.user.email){ if (state.nextUrl){ const to = state.nextUrl; state.nextUrl = null; try { closeAuthModal(ui); } catch(_){} location.href = to; } else { try { closeAuthModal(ui); } catch(_){} } } else { closeMenu(ui); } });
+      const { data: sub } = window.supabase.auth.onAuthStateChange(function(event, session){ state.user = session?.user || null; render(ui); if (event === 'PASSWORD_RECOVERY'){ window.location.href = '/login?recovery=1'; } if (state.user && state.user.email){ if (state.nextUrl){ const to = state.nextUrl; state.nextUrl = null; location.href = to; } } else { closeMenu(ui); } });
       state.sub = sub?.subscription || sub || null;
     } catch(_){ }
   }
@@ -318,7 +265,7 @@
   </script> -->
   <!-- Unified auth overlay include (overrides any legacy handlers) -->
   <script>
-    window.DURABLE_AUTH_URL = 'https://auth.tharaga.co.in/login_signup_glassdrop/';
+    window.DURABLE_AUTH_URL = '/login_signup_glassdrop/';
     window.AUTH_NAV = { profile: '/profile', dashboard: '/dashboard' };
   </script>
   
@@ -526,52 +473,8 @@
       }
       btn.setAttribute('aria-controls','thg-auth-menu');
   
-      let overlay = document.querySelector('.thg-auth-overlay');
-      if (!overlay){
-        overlay = createEl('div','thg-auth-overlay',{'aria-hidden':'true','aria-modal':'true','role':'dialog'});
-        overlay.innerHTML = `
-          <div class="thg-auth-modal" role="document" aria-labelledby="thg-auth-title">
-            <div class="thg-auth-header">
-              <div class="thg-auth-title" id="thg-auth-title">Sign in to continue</div>
-              <button class="thg-auth-close" type="button" aria-label="Close">✕</button>
-            </div>
-            <div class="thg-loading-bar" aria-hidden="true"></div>
-            <div class="thg-auth-body">
-              <div class="thg-tagline">"Browse only approved builder projects — safe, transparent, and verified"</div>
-              <div class="thg-tabs" role="tablist" aria-label="Authentication method">
-                <button class="thg-tab" role="tab" id="thg-tab-signin" aria-controls="thg-panel-signin" aria-selected="true">Sign in</button>
-                <button class="thg-tab" role="tab" id="thg-tab-signup" aria-controls="thg-panel-signup" aria-selected="false">Create account</button>
-              </div>
-              <div class="thg-error" role="alert"></div>
-              <div id="thg-panel-signin" role="tabpanel" aria-labelledby="thg-tab-signin">
-                <div class="thg-field"><label for="thg-si-email">Email</label><input id="thg-si-email" class="thg-input" type="email" autocomplete="email" placeholder="you@example.com" /></div>
-                <div class="thg-field"><label for="thg-si-password">Password</label><input id="thg-si-password" class="thg-input" type="password" autocomplete="current-password" placeholder="Your password" /></div>
-                <div class="thg-actions"><button class="thg-link" type="button" id="thg-forgot">Forgot password?</button><span class="thg-hint"></span></div>
-                <button class="thg-btn-primary" type="button" id="thg-signin-btn">Sign in</button>
-                <div class="thg-oauth"><button class="thg-oauth-btn google" type="button" data-provider="google">Continue with Google</button></div>
-              </div>
-              <div id="thg-panel-signup" role="tabpanel" aria-labelledby="thg-tab-signup" hidden>
-                <div class="thg-field"><label for="thg-su-name">Full name (optional)</label><input id="thg-su-name" class="thg-input" type="text" autocomplete="name" placeholder="Ada Lovelace" /></div>
-                <div class="thg-field"><label for="thg-su-email">Email</label><input id="thg-su-email" class="thg-input" type="email" autocomplete="email" placeholder="you@example.com" /></div>
-                <div class="thg-field"><label for="thg-su-password">Password</label><input id="thg-su-password" class="thg-input" type="password" autocomplete="new-password" placeholder="At least 8 characters" /></div>
-                <div class="thg-actions"><span class="thg-hint">Use a strong password. You can add name later.</span></div>
-                <button class="thg-btn-primary" type="button" id="thg-signup-btn">Create account</button>
-                <div class="thg-oauth"><button class="thg-oauth-btn google" type="button" data-provider="google">Sign up with Google</button></div>
-              </div>
-              <div id="thg-panel-reset" role="tabpanel" aria-labelledby="thg-tab-reset" hidden>
-                <div class="thg-field"><label for="thg-rp-email">Email</label><input id="thg-rp-email" class="thg-input" type="email" autocomplete="email" placeholder="you@example.com" /></div>
-                <div class="thg-actions"><span class="thg-hint">We'll email a password reset link.</span></div>
-                <button class="thg-btn-primary" type="button" id="thg-reset-btn">Send reset link</button>
-              </div>
-              <div id="thg-panel-update" role="tabpanel" aria-labelledby="thg-tab-update" hidden>
-                <div class="thg-field"><label for="thg-up-password">New password</label><input id="thg-up-password" class="thg-input" type="password" autocomplete="new-password" placeholder="Enter a new password" /></div>
-                <div class="thg-actions"><span class="thg-hint">You're recovering your account.</span></div>
-                <button class="thg-btn-primary" type="button" id="thg-update-btn">Update password</button>
-              </div>
-            </div>
-          </div>`;
-        document.body.appendChild(overlay);
-      }
+      // MODAL REMOVED - Login/Signup now redirects to /login page
+      // No overlay/modal creation - completely removed
   
       let confirmEl = document.querySelector('.thg-confirm');
       if (!confirmEl){
@@ -584,7 +487,7 @@
           '</div></div>';
         document.body.appendChild(confirmEl);
       }
-      return { wrap, btn, menu, overlay, confirmEl };
+      return { wrap, btn, menu, overlay: null, confirmEl };
     }
   
     const state = { user: null, loading: true, nextUrl: null, supabaseReady: false, sub: null };
@@ -622,12 +525,12 @@
     function closeMenu(ui){ ui.menu.setAttribute('aria-hidden','true'); ui.btn.setAttribute('aria-expanded','false'); }
     function toggleMenu(ui){ const isHidden = ui.menu.getAttribute('aria-hidden') === 'true'; if (isHidden) openMenu(ui); else closeMenu(ui); }
   
-    function showError(uiOverlay, msg){ const el = uiOverlay.querySelector('.thg-error'); if (!el) return; el.textContent = msg; el.style.display = 'block'; }
-    function clearError(uiOverlay){ const el = uiOverlay.querySelector('.thg-error'); if (!el) return; el.textContent = ''; el.style.display = 'none'; }
-    function setModalLoading(uiOverlay, loading){ const bar = uiOverlay.querySelector('.thg-loading-bar'); if (!bar) return; if (loading){ bar.style.width = '75%'; } else { bar.style.width = '0'; } }
-    function showPanel(uiOverlay, id, title){ ['signin','signup','reset','update'].forEach(function(key){ const panel = uiOverlay.querySelector('#thg-panel-'+key); if (panel) panel.hidden = (key !== id); }); const tEl = uiOverlay.querySelector('#thg-auth-title'); if (tEl) tEl.textContent = title; clearError(uiOverlay); }
-    function openAuthModal(ui, opts){ state.nextUrl = opts?.next || null; ui.overlay.setAttribute('aria-hidden','false'); showPanel(ui.overlay, 'signin', 'Sign in'); setTimeout(function(){ const el = ui.overlay.querySelector('#thg-si-email'); if (el) el.focus(); }, 0); }
-    function closeAuthModal(ui){ ui.overlay.setAttribute('aria-hidden','true'); }
+    // MODAL FUNCTIONS REMOVED - Redirect to /login instead
+    function openAuthModal(ui, opts){ 
+      const next = opts?.next || location.pathname + location.search;
+      window.location.href = '/login' + (next ? '?next=' + encodeURIComponent(next) : '');
+    }
+    function closeAuthModal(ui){ /* No-op - modal removed */ }
     function openConfirm(ui){ ui.confirmEl.setAttribute('aria-hidden','false'); }
     function closeConfirm(ui){ ui.confirmEl.setAttribute('aria-hidden','true'); }
   
@@ -637,25 +540,16 @@
       ui.menu.addEventListener('click', function(e){ const item = e.target.closest('.thg-auth-item[role="menuitem"]'); if (!item) return; const act = item.getAttribute('data-action'); if (act === 'profile'){ closeMenu(ui); location.href = AUTH_NAV.profile; return; } if (act === 'dashboard'){ closeMenu(ui); location.href = AUTH_NAV.dashboard; return; } if (act === 'settings' && AUTH_NAV.settings){ closeMenu(ui); location.href = AUTH_NAV.settings; return; } if (act === 'logout'){ closeMenu(ui); openConfirm(ui); } });
       ui.menu.addEventListener('keydown', function(e){ if (e.key === 'Escape'){ e.preventDefault(); closeMenu(ui); ui.btn.focus(); return; } if (['ArrowDown','ArrowUp','Home','End'].indexOf(e.key) === -1) return; e.preventDefault(); const items = Array.prototype.slice.call(ui.menu.querySelectorAll('.thg-auth-item[role="menuitem"]')); const idx = items.indexOf(document.activeElement); if (!items.length) return; if (e.key === 'Home'){ items[0].focus(); return; } if (e.key === 'End'){ items[items.length - 1].focus(); return; } const next = e.key === 'ArrowDown' ? (idx + 1 + items.length) % items.length : (idx - 1 + items.length) % items.length; items[next].focus(); });
       document.addEventListener('click', function(e){ if (ui.menu.getAttribute('aria-hidden') === 'true') return; if (!ui.menu.contains(e.target) && e.target !== ui.btn && !ui.btn.contains(e.target)){ closeMenu(ui); } });
-      const tabSignIn = ui.overlay.querySelector('#thg-tab-signin');
-      const tabSignUp = ui.overlay.querySelector('#thg-tab-signup');
-      function selectTab(which){ const a = which==='signin'; tabSignIn.setAttribute('aria-selected', a ? 'true' : 'false'); tabSignUp.setAttribute('aria-selected', a ? 'false' : 'true'); showPanel(ui.overlay, a ? 'signin' : 'signup', a ? 'Sign in' : 'Create account'); const first = ui.overlay.querySelector(a ? '#thg-si-email' : '#thg-su-name'); if (first) first.focus(); }
-      tabSignIn.addEventListener('click', function(){ selectTab('signin'); });
-      tabSignUp.addEventListener('click', function(){ selectTab('signup'); });
-      ui.overlay.addEventListener('click', function(e){ if (e.target === ui.overlay) closeAuthModal(ui); });
-      ui.overlay.querySelector('.thg-auth-close').addEventListener('click', function(){ closeAuthModal(ui); });
-      document.addEventListener('keydown', function(e){ if (e.key === 'Escape' && ui.overlay.getAttribute('aria-hidden') === 'false') closeAuthModal(ui); });
-      const forgotBtn = ui.overlay.querySelector('#thg-forgot');
-      forgotBtn.addEventListener('click', function(){ showPanel(ui.overlay, 'reset', 'Reset password'); const el = ui.overlay.querySelector('#thg-rp-email'); const source = ui.overlay.querySelector('#thg-si-email'); if (source && el && source.value) el.value = source.value; if (el) el.focus(); });
-      ui.overlay.querySelector('#thg-signin-btn').addEventListener('click', async function(){ if (!state.supabaseReady){ showError(ui.overlay, 'Authentication is not initialized.'); return; } const email = ui.overlay.querySelector('#thg-si-email').value.trim(); const password = ui.overlay.querySelector('#thg-si-password').value; if (!validateEmail(email)) { showError(ui.overlay, 'Enter a valid email.'); return; } if (!password || password.length < 6) { showError(ui.overlay, 'Enter your password.'); return; } clearError(ui.overlay); setModalLoading(ui.overlay, true); try{ const { error } = await window.supabase.auth.signInWithPassword({ email, password }); if (error) { showError(ui.overlay, error.message || 'Failed to sign in.'); } } catch(ex){ showError(ui.overlay, 'Network error. Please try again.'); } finally { setModalLoading(ui.overlay, false); } });
-      ui.overlay.querySelector('#thg-signup-btn').addEventListener('click', async function(){ if (!state.supabaseReady){ showError(ui.overlay, 'Authentication is not initialized.'); return; } const name = ui.overlay.querySelector('#thg-su-name').value.trim(); const email = ui.overlay.querySelector('#thg-su-email').value.trim(); const password = ui.overlay.querySelector('#thg-su-password').value; if (!validateEmail(email)) { showError(ui.overlay, 'Enter a valid email.'); return; } if (!password || password.length < 8) { showError(ui.overlay, 'Password must be at least 8 characters.'); return; } clearError(ui.overlay); setModalLoading(ui.overlay, true); try{ const { error } = await window.supabase.auth.signUp({ email, password, options: { data: name ? { full_name: name } : {} } }); if (error) { showError(ui.overlay, error.message || 'Failed to create account.'); } else { showError(ui.overlay, 'Check your email to verify your account.'); } } catch(ex){ showError(ui.overlay, 'Network error. Please try again.'); } finally { setModalLoading(ui.overlay, false); } });
-      ui.overlay.querySelectorAll('.thg-oauth-btn').forEach(function(btn){ btn.addEventListener('click', async function(){ if (!state.supabaseReady){ showError(ui.overlay, 'Authentication is not initialized.'); return; } const provider = btn.getAttribute('data-provider'); clearError(ui.overlay); setModalLoading(ui.overlay, true); try{ const redirectTo = location.origin + location.pathname + location.search; const { data, error } = await window.supabase.auth.signInWithOAuth({ provider, options: { redirectTo, skipBrowserRedirect: true, queryParams: { prompt: 'select_account' } } }); if (error) { const msg = /provider is not enabled/i.test(error.message||'') ? 'Google sign-in is not available yet.' : (error.message || 'Could not start sign in.'); showError(ui.overlay, msg); setModalLoading(ui.overlay, false); return; } if (data && data.url){ location.href = data.url; } else { setModalLoading(ui.overlay, false); showError(ui.overlay, 'Could not start ' + provider + ' sign in.'); } } catch(ex){ showError(ui.overlay, 'Failed to start ' + provider + ' sign in.'); setModalLoading(ui.overlay, false); } }); });
-      ui.overlay.querySelector('#thg-reset-btn').addEventListener('click', async function(){ if (!state.supabaseReady){ showError(ui.overlay, 'Authentication is not initialized.'); return; } const email = ui.overlay.querySelector('#thg-rp-email').value.trim(); if (!validateEmail(email)) { showError(ui.overlay, 'Enter a valid email.'); return; } clearError(ui.overlay); setModalLoading(ui.overlay, true); try{ const redirectTo = location.origin + location.pathname + location.search; const { error } = await window.supabase.auth.resetPasswordForEmail(email, { redirectTo }); if (error) { showError(ui.overlay, error.message || 'Failed to send reset link.'); } else { showError(ui.overlay, 'Reset link sent. Check your email.'); } } catch(ex){ showError(ui.overlay, 'Network error. Please try again.'); } finally { setModalLoading(ui.overlay, false); } });
-      ui.overlay.querySelector('#thg-update-btn').addEventListener('click', async function(){ if (!state.supabaseReady){ showError(ui.overlay, 'Authentication is not initialized.'); return; } const password = ui.overlay.querySelector('#thg-up-password').value; if (!password || password.length < 8) { showError(ui.overlay, 'Password must be at least 8 characters.'); return; } clearError(ui.overlay); setModalLoading(ui.overlay, true); try{ const { error } = await window.supabase.auth.updateUser({ password }); if (error) { showError(ui.overlay, error.message || 'Failed to update password.'); } else { showPanel(ui.overlay, 'signin', 'Sign in'); showError(ui.overlay, 'Password updated. Please sign in.'); } } catch(ex){ showError(ui.overlay, 'Network error. Please try again.'); } finally { setModalLoading(ui.overlay, false); } });
+      // MODAL UI REMOVED - All modal event listeners removed
       ui.confirmEl.querySelector('.thg-confirm-cancel').addEventListener('click', function(){ closeConfirm(ui); });
       ui.confirmEl.addEventListener('click', function(e){ if (e.target === ui.confirmEl) closeConfirm(ui); });
       ui.confirmEl.querySelector('.thg-confirm-ok').addEventListener('click', async function(){ try { await window.supabase?.auth?.signOut?.(); } catch(_){} closeConfirm(ui); });
       window.__thgOpenAuthModal = function(opts){ openAuthModal(ui, opts); };
+    // Override to redirect instead of opening modal
+    window.authGate.openLoginModal = function(opts) {
+      const next = opts?.next || location.pathname + location.search;
+      window.location.href = '/login' + (next ? '?next=' + encodeURIComponent(next) : '');
+    };
       // Expose a helper to programmatically trigger the header button from anywhere
       window.authGate.triggerHeaderLogin = function(opts){
         try { ui.btn && ui.btn.click(); }
@@ -676,7 +570,7 @@
       state.supabaseReady = true;
       try{ const { data } = await window.supabase.auth.getSession(); state.user = data?.session?.user || null; } catch(_){ state.user = null; } finally { state.loading = false; render(ui); }
       try{
-        const { data: sub } = window.supabase.auth.onAuthStateChange(function(event, session){ state.user = session?.user || null; render(ui); if (event === 'PASSWORD_RECOVERY'){ const overlay = ui.overlay; overlay.setAttribute('aria-hidden','false'); showPanel(overlay, 'update', 'Set new password'); setTimeout(function(){ const el = overlay.querySelector('#thg-up-password'); if (el) el.focus(); }, 0); } if (state.user && state.user.email){ if (state.nextUrl){ const to = state.nextUrl; state.nextUrl = null; try { closeAuthModal(ui); } catch(_){} location.href = to; } else { try { closeAuthModal(ui); } catch(_){} } } else { closeMenu(ui); } });
+        const { data: sub } = window.supabase.auth.onAuthStateChange(function(event, session){ state.user = session?.user || null; render(ui); if (event === 'PASSWORD_RECOVERY'){ window.location.href = '/login?recovery=1'; } if (state.user && state.user.email){ if (state.nextUrl){ const to = state.nextUrl; state.nextUrl = null; location.href = to; } } else { closeMenu(ui); } });
         state.sub = sub?.subscription || sub || null;
       } catch(_){ }
     }
@@ -690,18 +584,30 @@
 <body>
 
 <!-- ===== Verified Buyer Form (Drop-in) ===== -->
-<section id="buyer-intake" style="max-width: 760px; margin: 0 auto; padding: 24px;">
-  <h3 style="font-family: 'Poppins', sans-serif; font-weight: 600; text-align:center; margin-bottom: 12px;">
-    Get Matched to Verified Properties
-  </h3>
-  <p style="text-align:center; margin:0 0 16px;">OTP-verified leads only. No spam. No brokerage.</p>
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        colors: {
+          fgMuted: 'rgb(107, 114, 128)',
+          border: 'rgb(229, 231, 235)',
+          muted: 'rgb(243, 244, 246)',
+        }
+      }
+    }
+  }
+</script>
+<section id="buyer-intake" class="mx-auto max-w-5xl px-6 py-8">
+  <h1 class="text-2xl font-bold mb-4">Get Matched to Verified Properties</h1>
+  <p class="text-sm text-fgMuted mb-6">OTP-verified leads only. No spam. No brokerage.</p>
 
   <!-- Quick presets -->
-  <div id="bf-presets" class="row" style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-bottom:10px">
-    <button type="button" class="chip" data-bf="budget" data-min="4000000" data-max="5000000">Budget: ₹40L–₹50L</button>
-    <button type="button" class="chip" data-bf="budget" data-min="5000000" data-max="7500000">Budget: ₹50L–₹75L</button>
-    <button type="button" class="chip" data-bf="bhk" data-val="2">2 BHK</button>
-    <button type="button" class="chip" data-bf="bhk" data-val="3">3 BHK</button>
+  <div id="bf-presets" class="flex gap-2 justify-center flex-wrap mb-6">
+    <button type="button" class="chip px-3 py-1 text-sm border border-border rounded-full hover:bg-muted/40 transition-colors" data-bf="budget" data-min="4000000" data-max="5000000">Budget: ₹40L–₹50L</button>
+    <button type="button" class="chip px-3 py-1 text-sm border border-border rounded-full hover:bg-muted/40 transition-colors" data-bf="budget" data-min="5000000" data-max="7500000">Budget: ₹50L–₹75L</button>
+    <button type="button" class="chip px-3 py-1 text-sm border border-border rounded-full hover:bg-muted/40 transition-colors" data-bf="bhk" data-val="2">2 BHK</button>
+    <button type="button" class="chip px-3 py-1 text-sm border border-border rounded-full hover:bg-muted/40 transition-colors" data-bf="bhk" data-val="3">3 BHK</button>
   </div>
 
   <!-- Netlify Forms attrs -->
@@ -711,7 +617,7 @@
         netlify-honeypot="bot-field"
         data-netlify-recaptcha="true"
         id="buyerForm"
-        style="background:#FAF5EF; border-radius:12px; padding:16px; font-family:'Poppins',sans-serif">
+        class="border border-border rounded p-6 bg-white">
 
     <!-- Netlify Forms hidden helpers -->
     <input type="hidden" name="form-name" value="buyer-intake" />
@@ -726,11 +632,11 @@
     <input type="hidden" name="referrer"     id="referrer">
     <input type="hidden" name="otp_verified" id="otp_verified" value="false">
 
-    <div class="grid-2">
-      <label style="display:block;">
-        <span>Name</span>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+      <label class="block">
+        <span class="block text-sm font-medium mb-2">Name</span>
         <input required type="text" name="name" placeholder="Your full name"
-               style="width:100%; padding:10px; border-radius:8px; border:1px solid #ddd;">
+               class="w-full px-3 py-2 text-sm border border-border rounded focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
       </label>
 
       <script>
@@ -760,54 +666,55 @@
       })();
       </script>
 
-      <label style="display:block;">
-        <span>Email</span>
+      <label class="block">
+        <span class="block text-sm font-medium mb-2">Email</span>
         <input required type="email" name="email" placeholder="you@example.com"
-               style="width:100%; padding:10px; border-radius:8px; border:1px solid #ddd;">
-        <div id="emailLockBadge" style="display:none;margin-top:6px;width:max-content;padding:4px 8px;border-radius:999px;border:1px solid #a7f3d0;background:#ecfdf5;color:#065f46;font-size:12px;font-weight:600;">🔒 Locked to your account</div>
-        <small id="emailNotice" style="display:none;color:#b45309;margin-top:6px;display:block;">
+               class="w-full px-3 py-2 text-sm border border-border rounded focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+        <div id="emailLockBadge" class="hidden mt-2 w-max px-2 py-1 rounded-full border border-green-200 bg-green-50 text-green-800 text-xs font-semibold">🔒 Locked to your account</div>
+        <small id="emailNotice" class="hidden text-amber-700 mt-2 block text-xs">
           Please enter your account email shown at the top-right header.
         </small>
       </label>
     </div>
 
-    <div class="grid-2 grid-right-btn">
-      <label style="display:block;">
-        <span>Phone (India)</span>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+      <label class="block">
+        <span class="block text-sm font-medium mb-2">Phone (India)</span>
         <input required type="tel" name="phone" id="phone"
           inputmode="numeric"
           pattern="^[6-9][0-9]{9}$"
           title="Enter a 10-digit Indian mobile number starting with 6–9"
           placeholder="10-digit mobile number"
-
-          style="width:100%; padding:10px; border-radius:8px; border:1px solid #ddd;">
+          class="w-full px-3 py-2 text-sm border border-border rounded focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
       </label>
 
-      <style>
-        .otp-input {
-          width: 40px;
-          height: 50px;
-          font-size: 20px;
-          text-align: center;
-          border: 2px solid #ccc;
-          border-radius: 8px;
-        }
-        .otp-input:focus {
-          border-color: #0e0e0e;
-          outline: none;
-        }
-      </style>
-
-
-      <button type="button" id="sendOtpBtn"
-        style="padding:10px; border:none; border-radius:8px; background:#0e0e0e; color:#fff; cursor:pointer;">
-        Send OTP
-      </button>
-
+      <div class="flex items-end">
+        <button type="button" id="sendOtpBtn"
+          class="w-full px-4 py-2 bg-gray-900 text-white font-semibold rounded hover:bg-gray-800 transition-colors text-sm">
+          Send OTP
+        </button>
+      </div>
     </div>
 
-    <div id="otpBlock" style="display:none; margin-top:12px; text-align:center;">
-      <div class="otp-container" style="display:flex; gap:8px; justify-content:center; margin-bottom:12px;">
+    <style>
+      .otp-input {
+        width: 40px;
+        height: 50px;
+        font-size: 20px;
+        text-align: center;
+        border: 2px solid rgb(229, 231, 235);
+        border-radius: 8px;
+      }
+      .otp-input:focus {
+        border-color: rgb(37, 99, 235);
+        outline: none;
+        ring: 2px;
+        ring-color: rgb(37, 99, 235);
+      }
+    </style>
+
+    <div id="otpBlock" class="hidden mt-4 text-center">
+      <div class="otp-container flex gap-2 justify-center mb-3">
         <input type="text" maxlength="1" class="otp-input" inputmode="numeric" pattern="[0-9]*" aria-label="OTP digit 1">
         <input type="text" maxlength="1" class="otp-input" inputmode="numeric" pattern="[0-9]*" aria-label="OTP digit 2">
         <input type="text" maxlength="1" class="otp-input" inputmode="numeric" pattern="[0-9]*" aria-label="OTP digit 3">
@@ -816,24 +723,24 @@
         <input type="text" maxlength="1" class="otp-input" inputmode="numeric" pattern="[0-9]*" aria-label="OTP digit 6">
       </div>
       <button type="button" id="verifyOtpBtn"
-              style="padding:10px 20px; border:none; border-radius:8px; background:#0e0e0e; color:#fff; cursor:pointer;">
+              class="px-4 py-2 bg-gray-900 text-white font-semibold rounded hover:bg-gray-800 transition-colors text-sm">
         Verify OTP
       </button>
-      <small id="otpStatus" style="display:block; margin-top:6px;"></small>
+      <small id="otpStatus" class="block mt-2 text-sm"></small>
     </div>
 
     <!-- Buyer profiling -->
-    <div class="grid-2">
-      <label style="display:block;">
-        <span>Preferred City / Area</span>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+      <label class="block">
+        <span class="block text-sm font-medium mb-2">Preferred City / Area</span>
         <input required type="text" name="location" placeholder="e.g., Anna Nagar, OMR, Coimbatore"
-               style="width:100%; padding:10px; border-radius:8px; border:1px solid #ddd;">
+               class="w-full px-3 py-2 text-sm border border-border rounded focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
       </label>
 
-      <label style="display:block;">
-        <span>Budget</span>
+      <label class="block">
+        <span class="block text-sm font-medium mb-2">Budget</span>
         <select required name="budget"
-                style="width:100%; padding:10px; border-radius:8px; border:1px solid #ddd;">
+                class="w-full px-3 py-2 text-sm border border-border rounded focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
           <option value="">Select</option>
           <option>Below ₹20L</option>
           <option>₹20L – ₹30L</option>
@@ -852,11 +759,11 @@
       </label>
     </div>
 
-    <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:12px;">
-      <label style="display:block;">
-        <span>Property Type</span>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+      <label class="block">
+        <span class="block text-sm font-medium mb-2">Property Type</span>
         <select required name="property_type"
-                style="width:100%; padding:10px; border-radius:8px; border:1px solid #ddd;">
+                class="w-full px-3 py-2 text-sm border border-border rounded focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
           <option value="">Select</option>
           <option>Apartment</option>
           <option>Villa</option>
@@ -865,10 +772,10 @@
         </select>
       </label>
 
-      <label style="display:block;">
-        <span>Buying Timeline</span>
+      <label class="block">
+        <span class="block text-sm font-medium mb-2">Buying Timeline</span>
         <select required name="timeline"
-                style="width:100%; padding:10px; border-radius:8px; border:1px solid #ddd;">
+                class="w-full px-3 py-2 text-sm border border-border rounded focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
           <option value="">Select</option>
           <option>ASAP (0–30 days)</option>
           <option>1–3 months</option>
@@ -878,10 +785,10 @@
       </label>
     </div>
 
-    <label style="display:block; margin-top:12px;">
-      <span>Financing</span>
+    <label class="block mb-4">
+      <span class="block text-sm font-medium mb-2">Financing</span>
       <select required name="financing"
-              style="width:100%; padding:10px; border-radius:8px; border:1px solid #ddd;">
+              class="w-full px-3 py-2 text-sm border border-border rounded focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
         <option value="">Select</option>
         <option>Loan pre-approved</option>
         <option>Loan required</option>
@@ -889,30 +796,30 @@
       </select>
     </label>
 
-    <label style="display:block; margin-top:12px;">
-      <span>Anything else?</span>
+    <label class="block mb-4">
+      <span class="block text-sm font-medium mb-2">Anything else?</span>
       <textarea name="notes" rows="3" placeholder="Bedrooms, amenities, exact localities..."
-                style="width:100%; padding:10px; border-radius:8px; border:1px solid #ddd;"></textarea>
+                class="w-full px-3 py-2 text-sm border border-border rounded focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"></textarea>
     </label>
 
     <!-- Your existing Google reCAPTCHA v2/v3 widget works with Netlify Forms 
     <div data-netlify-recaptcha="true" style="margin-top:12px;"></div>-->
 
     <button id="submitBtn" type="submit"
-            style="margin-top:14px; width:100%; padding:12px; border:none; border-radius:10px; background:#0e0e0e; color:#fff; font-weight:600; cursor:pointer;">
+            class="w-full px-4 py-3 bg-blue-600 text-white font-semibold rounded hover:bg-blue-700 transition-colors text-sm mb-3">
       Get My Property Matches
     </button>
 
-    <small style="display:block; margin-top:8px; opacity:0.8;">
+    <small class="block text-xs text-fgMuted">
       By submitting, you agree to be contacted by Tharaga. OTP verification is required to prevent spam.
     </small>
   </form>
 
   <!-- Invisible reCAPTCHA mount -->
-  <div id="otp-recaptcha" style="height:0;"></div>
+  <div id="otp-recaptcha" class="h-0"></div>
 
   <!-- Matches will render here -->
-  <div id="aiMatches" style="margin-top:20px;"></div>
+  <div id="aiMatches" class="mt-6"></div>
 </section>
 
 <!-- Firebase SDK (for OTP) -->

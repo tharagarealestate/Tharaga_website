@@ -36,8 +36,8 @@ export default function VerificationTools(){
   const [fraud, setFraud] = React.useState<any>(null)
 
   // Predictive
-  const [city, setCity] = React.useState('Bengaluru')
-  const [locality, setLocality] = React.useState('Indiranagar')
+  const [city, setCity] = React.useState('Chennai')
+  const [locality, setLocality] = React.useState('Anna Nagar')
   const [pred, setPred] = React.useState<any>(null)
 
   const onRera = async ()=> setReraRes(await verifyRera({ rera_id: reraId, state: reraState, project_name: projectName, promoter_name: promoterName }))
@@ -65,7 +65,7 @@ export default function VerificationTools(){
         )}
       </Section>
 
-      <Section title="Blockchain title verification">
+      <Section title="Document snapshot immutability (proof-of-snapshot)">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
           <input className="rounded-lg border px-3 py-2" placeholder="Property ID" value={propId} onChange={(e)=>setPropId(e.target.value)} />
           <input className="rounded-lg border px-3 py-2 font-mono" placeholder="Document hash (hex)" value={docHash} onChange={(e)=>setDocHash(e.target.value)} />

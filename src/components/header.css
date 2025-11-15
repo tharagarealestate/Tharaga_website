@@ -1,0 +1,447 @@
+/**
+ * Tharaga Global Header Styles
+ * =============================
+ * 
+ * Namespaced CSS for the universal header component.
+ * All styles are prefixed with .tharaga-header to avoid conflicts with page-specific CSS.
+ * 
+ * IMPORTANT: This file should be loaded before any page-specific CSS to ensure
+ * header styles take precedence. Use !important sparingly and only for critical
+ * layout properties (position, z-index) to prevent accidental hiding.
+ */
+
+/* CSS Variables - Global scope for consistency */
+:root {
+  /* Primary Colors - Premium Blue (Trust & Technology) */
+  --tharaga-primary: #1e40af;
+  --tharaga-primary-light: #3b82f6;
+  --tharaga-primary-dark: #1e3a8a;
+  /* Accent - Tharaga Gold (Prestige) */
+  --tharaga-gold: #d4af37;
+  --tharaga-gold-light: #f5e6c8;
+  /* Neutrals - Cool Grays */
+  --tharaga-slate-50: #f8fafc;
+  --tharaga-slate-100: #f1f5f9;
+  --tharaga-slate-200: #e2e8f0;
+  --tharaga-slate-300: #cbd5e1;
+  --tharaga-slate-600: #475569;
+  --tharaga-slate-700: #334155;
+  --tharaga-slate-900: #0f172a;
+  /* Semantic */
+  --tharaga-success: #10b981;
+  --tharaga-warning: #f59e0b;
+  --tharaga-danger: #ef4444;
+  /* Fonts */
+  --tharaga-font-ui: 'Manrope', Inter, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial;
+  --tharaga-font-display: 'Plus Jakarta Sans', 'Manrope', Inter, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial;
+  /* Header height for positioning dashboard elements below it */
+  --tharaga-header-height: 60px;
+  
+  /* Legacy support - map to new variables */
+  --primary: var(--tharaga-primary);
+  --primary-light: var(--tharaga-primary-light);
+  --primary-dark: var(--tharaga-primary-dark);
+  --gold: var(--tharaga-gold);
+  --gold-light: var(--tharaga-gold-light);
+  --slate-50: var(--tharaga-slate-50);
+  --slate-100: var(--tharaga-slate-100);
+  --slate-200: var(--tharaga-slate-200);
+  --slate-300: var(--tharaga-slate-300);
+  --slate-600: var(--tharaga-slate-600);
+  --slate-700: var(--tharaga-slate-700);
+  --slate-900: var(--tharaga-slate-900);
+  --success: var(--tharaga-success);
+  --warning: var(--tharaga-warning);
+  --danger: var(--tharaga-danger);
+  --font-ui: var(--tharaga-font-ui);
+  --font-display: var(--tharaga-font-display);
+  --header-height: var(--tharaga-header-height);
+}
+
+/* Header base styles - Glassy Premium Blue - EXACT MATCH TO HOMEPAGE */
+/* Use high z-index and !important for position to prevent accidental hiding */
+.tharaga-header,
+header.nav.tharaga-header,
+header.tharaga-header.nav {
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 9999 !important; /* High z-index to ensure header is always on top */
+  /* Glassmorphism Effect */
+  background: linear-gradient(135deg, rgba(255,255,255,0.85), rgba(248,250,252,0.90)) !important;
+  backdrop-filter: blur(20px) saturate(1.8);
+  -webkit-backdrop-filter: blur(20px) saturate(1.8);
+  /* Premium Borders */
+  border-top: 2px solid var(--tharaga-gold);
+  border-bottom: 1px solid rgba(226,232,240,0.6);
+  box-shadow: 0 1px 3px rgba(15,23,42,0.03), 0 10px 40px rgba(15,23,42,0.04);
+  /* Prevent layout shift - set explicit height */
+  min-height: var(--tharaga-header-height);
+  /* Ensure header is not affected by parent transforms (prevents clipping) */
+  transform: none !important;
+}
+
+/* Fallback for older browsers */
+@supports not (backdrop-filter: blur(20px)) {
+  .tharaga-header,
+  header.nav.tharaga-header {
+    background: rgba(255,255,255,0.95) !important;
+  }
+}
+
+/* Header inner container */
+.tharaga-header .inner {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 10px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  position: relative;
+  padding-right: clamp(130px, 10vw, 200px);
+}
+
+/* Brand row - flex container for brand + pill */
+.tharaga-header .inner .row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Brand logo */
+.tharaga-header .brand {
+  font-family: var(--tharaga-font-display);
+  font-weight: 800;
+  letter-spacing: 0.2px;
+  font-size: 24px;
+  color: var(--tharaga-slate-900);
+  text-decoration: none;
+}
+
+.tharaga-header .brand:hover {
+  text-decoration: none;
+}
+
+/* Trust pill */
+.tharaga-header .pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: #fff;
+  border: 1px solid #eee;
+  font-size: 12px;
+  color: #111;
+}
+
+/* Navigation links */
+.tharaga-header a,
+.tharaga-header summary {
+  color: var(--tharaga-slate-900);
+  font-weight: 600;
+  transition: background 0.2s ease, color 0.2s ease;
+  text-decoration: none;
+}
+
+.tharaga-header a:hover,
+.tharaga-header summary:hover {
+  background: linear-gradient(135deg, rgba(30,64,175,0.08), rgba(59,130,246,0.06));
+  color: var(--tharaga-primary);
+  border-radius: 8px;
+  text-decoration: none;
+}
+
+/* Header nav layout */
+.tharaga-header nav.row {
+  gap: 12px;
+  align-items: center;
+  flex-wrap: nowrap;
+  margin-left: auto;
+}
+
+.tharaga-header nav.row a,
+.tharaga-header nav.row summary {
+  font-weight: 700;
+}
+
+.tharaga-header .menu-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.tharaga-header .divider {
+  width: 1px;
+  height: 16px;
+  background: #e5e7eb;
+  border-radius: 1px;
+  display: inline-block;
+}
+
+/* Dropdown styling */
+.tharaga-header details.dropdown {
+  position: relative;
+}
+
+.tharaga-header details.dropdown > summary {
+  list-style: none;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: 16px;
+}
+
+.tharaga-header details.dropdown > summary::-webkit-details-marker {
+  display: none;
+}
+
+.tharaga-header details.dropdown > summary::after {
+  content: "";
+  width: 0;
+  height: 0;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-top: 6px solid currentColor;
+  opacity: 0.8;
+  transition: transform 0.18s ease;
+}
+
+.tharaga-header details.dropdown[open] > summary::after {
+  transform: rotate(180deg);
+}
+
+.tharaga-header details.dropdown .menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  min-width: 240px;
+  background: linear-gradient(180deg, rgba(255,255,255,0.95), rgba(248,250,252,0.98));
+  backdrop-filter: blur(16px) saturate(1.5);
+  color: #111;
+  border: 1px solid rgba(30,64,175,0.12);
+  border-radius: 12px;
+  padding: 12px 8px 8px;
+  box-shadow: 0 18px 40px rgba(30,64,175,0.16);
+  z-index: 10000; /* Higher than header z-index */
+  opacity: 0;
+  transform: translateY(-6px) scale(0.98);
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 0.18s ease, transform 0.18s ease, visibility 0s linear 0.18s;
+}
+
+.tharaga-header details.dropdown .menu::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  border-radius: 12px 12px 0 0;
+  background: linear-gradient(90deg, #d4af37, #1e40af);
+}
+
+.tharaga-header details.dropdown[open] .menu {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  visibility: visible;
+  pointer-events: auto;
+  transition: opacity 0.18s ease, transform 0.18s ease, visibility 0s linear 0s;
+}
+
+.tharaga-header details.dropdown .menu a,
+.tharaga-header details.dropdown .menu a[href] {
+  display: block;
+  padding: 10px 12px;
+  border-radius: 10px;
+  color: inherit;
+  text-decoration: none;
+  text-align: center;
+  transition: background 0.15s ease, transform 0.06s ease, color 0.15s ease, box-shadow 0.12s ease;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.tharaga-header details.dropdown .menu a + a {
+  border-top: 1px solid #f0f2f4;
+}
+
+.tharaga-header details.dropdown .menu a:hover,
+.tharaga-header details.dropdown .menu a[href]:hover {
+  background: linear-gradient(90deg, rgba(30,64,175,0.12), rgba(59,130,246,0.06));
+  color: var(--tharaga-primary);
+  box-shadow: inset 0 0 0 1px rgba(30,64,175,0.18);
+  text-decoration: none;
+}
+
+.tharaga-header details.dropdown .menu a:focus-visible,
+.tharaga-header details.dropdown .menu a[href]:focus-visible {
+  outline: 0;
+  box-shadow: 0 0 0 2px rgba(59,130,246,0.30), inset 0 0 0 1px rgba(30,64,175,0.24);
+}
+
+.tharaga-header details.dropdown .menu a:active,
+.tharaga-header details.dropdown .menu a[href]:active {
+  transform: translateY(1px);
+  background: linear-gradient(180deg, rgba(30,64,175,0.20), rgba(59,130,246,0.10));
+}
+
+.tharaga-header details.dropdown .menu .divider {
+  display: block;
+  width: auto;
+  height: 1px;
+  background: rgba(30,64,175,0.14);
+  margin: 6px 6px;
+  border-radius: 1px;
+}
+
+.tharaga-header details.dropdown .menu .show-mobile-only {
+  display: none;
+}
+
+/* Auth button styling */
+.tharaga-header .thg-auth-wrap {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.tharaga-header .thg-auth-wrap::before {
+  content: "";
+  display: inline-block;
+  width: 1px;
+  height: 16px;
+  background: rgba(226,232,240,0.6);
+  border-radius: 1px;
+}
+
+.tharaga-header .thg-auth-btn {
+  background: rgba(30,64,175,0.08) !important;
+  color: var(--tharaga-primary) !important;
+  border-color: rgba(30,64,175,0.20) !important;
+  font-weight: 600 !important;
+}
+
+.tharaga-header .thg-auth-btn:hover {
+  background: rgba(30,64,175,0.15) !important;
+  border-color: var(--tharaga-primary) !important;
+}
+
+.tharaga-header .thg-auth-btn.is-auth::after {
+  border-top-color: var(--tharaga-primary) !important;
+}
+
+.tharaga-header .divider {
+  background: rgba(226,232,240,0.6);
+}
+
+.tharaga-header #site-header-auth-container,
+.tharaga-header__actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* Mobile adjustments */
+@media (max-width: 1080px) {
+  .tharaga-header #home_pill_trust {
+    display: none;
+  }
+  .tharaga-header .inner {
+    padding-right: 200px;
+  }
+}
+
+@media (max-width: 880px) {
+  .tharaga-header .inner {
+    padding-right: 160px;
+    flex-wrap: nowrap;
+    gap: 8px;
+  }
+  .tharaga-header .brand {
+    font-size: 22px;
+  }
+  .tharaga-header .inner .row {
+    flex: 0 0 auto;
+    justify-content: flex-start;
+  }
+  .tharaga-header nav.row {
+    white-space: nowrap;
+    gap: 10px;
+  }
+  .tharaga-header nav.row a,
+  .tharaga-header nav.row summary {
+    padding: 4px 0;
+    font-size: 13px;
+  }
+  .tharaga-header details.dropdown > summary {
+    font-size: 16px;
+    padding: 6px 10px;
+  }
+  .tharaga-header .divider {
+    height: 14px;
+  }
+  .tharaga-header .thg-auth-wrap .about-link {
+    display: none;
+  }
+  .tharaga-header nav.row > a[href='/about/'] {
+    display: none;
+  }
+  .tharaga-header nav.row > .divider {
+    display: none;
+  }
+  .tharaga-header .about-mobile-link {
+    display: none;
+  }
+  .tharaga-header nav.row .menu-group > a[href='/pricing/'] {
+    display: none;
+  }
+  .tharaga-header nav.row .menu-group > .divider {
+    display: none;
+  }
+  .tharaga-header details.dropdown .menu .show-mobile-only {
+    display: block;
+  }
+  .tharaga-header .thg-auth-wrap {
+    position: absolute;
+    top: 10px;
+    right: 12px;
+    padding: 0;
+    gap: 10px;
+  }
+  .tharaga-header .thg-auth-wrap::before {
+    height: 14px;
+  }
+  .tharaga-header #home_pill_trust {
+    display: none;
+  }
+  .tharaga-header details.dropdown .menu {
+    position: absolute;
+    left: auto;
+    right: 0;
+    top: calc(100% + 8px);
+    min-width: 230px;
+    border-radius: 12px;
+  }
+  .tharaga-header details.dropdown .menu a {
+    padding: 8px 10px;
+  }
+}
+
+/* Desktop: vertically center the right-side auth/menu group */
+@media (min-width: 881px) {
+  .tharaga-header .thg-auth-wrap:not(.is-fixed) {
+    top: 50%;
+    transform: translateY(-50%);
+  }
+}
+
+/* Always suppress legacy About link */
+.tharaga-header .about-mobile-link {
+  display: none !important;
+}
+

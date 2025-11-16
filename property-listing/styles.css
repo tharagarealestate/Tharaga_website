@@ -82,6 +82,7 @@ body::after {
   background: rgb(var(--gold-500));
   border-radius: 50%;
   filter: blur(96px);
+  -webkit-filter: blur(96px);
   animation: pulse-slow 6s ease-in-out infinite;
   opacity: 0.6;
   pointer-events: none;
@@ -109,6 +110,7 @@ body > .bg-blob-2 {
   background: rgb(var(--emerald-500));
   border-radius: 50%;
   filter: blur(96px);
+  -webkit-filter: blur(96px);
   animation: pulse-slow 6s ease-in-out infinite;
   animation-delay: 1s;
   opacity: 0.6;
@@ -764,11 +766,12 @@ select[multiple] {
 }
 
 /* ============================================
-   RESPONSIVE
+   RESPONSIVE - Mobile Glassmorphic Design
    ============================================ */
 @media (max-width: 1024px) {
   .layout-two-column {
     flex-direction: column;
+    gap: 20px;
   }
   
   .layout-two-column .filter-container {
@@ -776,32 +779,293 @@ select[multiple] {
     max-height: none;
     max-width: 100%;
     width: 100%;
+    /* Maintain glassmorphic on tablet */
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
   }
   
   .top-row {
     flex-direction: column;
+    gap: 12px;
   }
   
   .filter-grid {
     grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+  
+  /* Ensure cards maintain glass look on tablet */
+  .card {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
   }
 }
 
-@media (max-width: 640px) {
+@media (max-width: 768px) {
+  /* Adjust background blobs for mobile */
+  body::after {
+    width: 280px;
+    height: 280px;
+    top: 40px;
+    left: 20px;
+    filter: blur(64px);
+    -webkit-filter: blur(64px);
+    opacity: 0.5;
+  }
+  
+  body > .bg-blob-2 {
+    width: 400px;
+    height: 400px;
+    bottom: 40px;
+    right: 20px;
+    filter: blur(64px);
+    -webkit-filter: blur(64px);
+    opacity: 0.5;
+  }
+  
+  .header .inner.hero {
+    padding: 64px 16px 32px;
+    gap: 20px;
+  }
+  
+  .hero-badge {
+    padding: 6px 12px;
+    font-size: 12px;
+  }
+  
+  .hero-title {
+    font-size: 40px;
+    line-height: 1.15;
+  }
+  
+  .hero-title-accent {
+    margin-top: 6px;
+  }
+  
   .container {
     padding: 16px;
   }
   
-  .hero-title {
-    font-size: 36px;
+  /* Filter container - full glassmorphic on mobile */
+  .layout-two-column .filter-container {
+    padding: 16px;
+    border-radius: 20px;
+    /* Ensure glass effect is visible */
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
+  }
+  
+  .filter-pill-row {
+    gap: 6px;
+    margin-bottom: 16px;
+  }
+  
+  .filter-pill {
+    padding: 10px 0;
+    font-size: 14px;
   }
   
   .filter-grid {
     grid-template-columns: 1fr;
+    gap: 12px;
   }
   
+  .filter-grid label {
+    font-size: 13px;
+    margin-bottom: 6px;
+  }
+  
+  .input, select, textarea {
+    padding: 10px 12px;
+    font-size: 14px;
+    /* Ensure glass effect on inputs */
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+  }
+  
+  /* Buttons - maintain glassmorphic on mobile */
+  .btn {
+    padding: 12px 18px;
+    font-size: 14px;
+    /* Touch-friendly size */
+    min-height: 44px;
+  }
+  
+  .btn:not(.secondary):not(.ghost) {
+    background: linear-gradient(135deg, rgb(var(--gold-600)) 0%, rgb(var(--gold-500)) 100%);
+    box-shadow: 0 4px 16px 0 rgba(212, 175, 55, 0.3);
+  }
+  
+  /* Cards - full glassmorphic on mobile */
   .grid {
     grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  
+  .card {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 20px;
+    /* Remove hover transform on mobile (touch devices) */
+    transform: none;
+  }
+  
+  .card:active {
+    transform: scale(0.98);
+    background: rgba(255, 255, 255, 0.12);
+  }
+  
+  /* Touch-friendly interactive elements */
+  .filter-pill:active {
+    transform: scale(0.95);
+  }
+  
+  .btn:active {
+    transform: scale(0.97);
+  }
+  
+  .chip:active, .chip-rem:active {
+    transform: scale(0.95);
+  }
+  
+  /* Ensure backdrop-filter works on iOS Safari */
+  @supports (-webkit-backdrop-filter: blur(24px)) {
+    .layout-two-column .filter-container,
+    .card,
+    .input,
+    select,
+    textarea,
+    .tag,
+    .chip,
+    .chip-rem {
+      -webkit-backdrop-filter: blur(24px);
+    }
+  }
+  
+  .card-img {
+    height: 220px;
+  }
+  
+  .card-body {
+    padding: 16px;
+  }
+  
+  .price-loud {
+    font-size: 22px;
+  }
+  
+  .loc-loud {
+    font-size: 15px;
+  }
+  
+  /* Tags and chips - glassmorphic on mobile */
+  .tag, .chip, .chip-rem {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    padding: 6px 12px;
+    font-size: 12px;
+  }
+  
+  /* Price slider - maintain glass look */
+  .price-range {
+    margin-top: 8px;
+  }
+  
+  .price-range .slider-track {
+    background: rgba(255, 255, 255, 0.1);
+  }
+  
+  .price-values {
+    font-size: 13px;
+    margin-top: 8px;
+  }
+  
+  /* Footer */
+  .footer {
+    padding: 32px 16px 16px;
+    font-size: 12px;
+  }
+  
+  /* Toast and floating elements */
+  .toast {
+    left: 16px;
+    right: 16px;
+    transform: none;
+    width: auto;
+    bottom: 16px;
+    padding: 12px 16px;
+    font-size: 13px;
+  }
+  
+  .pill-floating {
+    left: 16px;
+    right: 16px;
+    transform: none;
+    width: auto;
+    bottom: 80px;
+    padding: 12px 16px;
+  }
+  
+  /* Pager */
+  .pager {
+    gap: 6px;
+    margin: 20px 0;
+    flex-wrap: wrap;
+  }
+  
+  .pager .page {
+    padding: 8px 12px;
+    font-size: 13px;
+    min-height: 40px;
+  }
+}
+
+@media (max-width: 480px) {
+  .hero-title {
+    font-size: 32px;
+  }
+  
+  .hero-badge-text {
+    font-size: 11px;
+  }
+  
+  .container {
+    padding: 12px;
+  }
+  
+  .layout-two-column .filter-container {
+    padding: 14px;
+    border-radius: 16px;
+  }
+  
+  .filter-pill {
+    padding: 8px 0;
+    font-size: 13px;
+  }
+  
+  .card-img {
+    height: 200px;
+  }
+  
+  .price-loud {
+    font-size: 20px;
+  }
+  
+  .btn {
+    padding: 10px 16px;
+    font-size: 13px;
   }
 }
 

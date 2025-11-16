@@ -1,8 +1,7 @@
 [build]
-  base = "app"
-  command = "npm install && npm --prefix ../netlify/functions install --no-audit --no-fund --omit=dev && node ../scripts/ensure-next-public-env.mjs && node ../scripts/copy-static.cjs && npm run build"
-  publish = ".next"
-  functions = "../netlify/functions"
+  command = "cd app && npm install && npm --prefix ../netlify/functions install --no-audit --no-fund --omit=dev && node ../scripts/ensure-next-public-env.mjs && node ../scripts/copy-static.cjs && npm run build"
+  publish = "app/.next"
+  functions = "netlify/functions"
 
 [[plugins]]
   package = "@netlify/plugin-nextjs"

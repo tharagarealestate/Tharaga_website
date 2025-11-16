@@ -107,7 +107,8 @@ const nextConfig = {
     // Back-compat: legacy underscore embed path -> new embed path
     rules.push({ source: '/_embed/:path*', destination: '/embed/:path*' })
     // Map legacy static paths if present in public
-    rules.push({ source: '/property-listing', destination: '/property-listing/index.html' })
+    // NOTE: /property-listing is now handled by the App Router page at app/app/property-listing/page.tsx,
+    // so we intentionally do NOT rewrite it to the legacy static HTML anymore.
     rules.push({ source: '/search-filter-home', destination: '/search-filter-home/index.html' })
     // Serve static index.html as homepage (working auth and Portal menu)
     rules.push({ source: '/', destination: '/index.html' })

@@ -21,6 +21,29 @@ img{max-width:100%;display:block}
 
 .container{max-width:1100px;margin:0 auto;padding:24px}
 
+/* === Two-column layout for filters + listings === */
+.layout-two-column{
+  display:flex;
+  gap:24px;
+  align-items:flex-start;
+}
+
+/* Left sidebar: filter box */
+.layout-two-column .filter-container{
+  flex:0 0 320px;
+  max-width:320px;
+  position:sticky;
+  top:16px;
+  max-height:calc(100vh - 48px);
+  overflow:auto;
+}
+
+/* Right content: listings and stats */
+.layout-two-column .listings-main{
+  flex:1;
+  min-width:0;
+}
+
 .header {
   position: static; /* scrolls with the page */
   top: auto;
@@ -264,7 +287,17 @@ img{max-width:100%;display:block}
 /* Mobile compact adjustments */
 @media (max-width: 720px){
   .container{ padding: 16px; }
-  .filter-container{ position: static; top: auto; padding: 12px; }
+  .layout-two-column{
+    flex-direction:column;
+  }
+  .layout-two-column .filter-container{
+    position: static;
+    top: auto;
+    max-height:none;
+    max-width:100%;
+    width:100%;
+    padding: 12px;
+  }
   .top-row{ flex-direction: column; }
   .filter-grid{ grid-template-columns: 1fr 1fr; }
   .card-img{ height: 180px; }

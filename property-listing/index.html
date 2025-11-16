@@ -26,8 +26,9 @@
     </div>
   </header>
 
-  <main class="container">
+  <main class="container layout-two-column">
 
+    <!-- LEFT: Filters Sidebar -->
     <section class="filter-container compact">
       <!-- Property Type Pills -->
   <div class="filter-pill-row">
@@ -198,31 +199,34 @@
       </div>
     </section>
 
-    <!-- Premium toolbar: presets, recent searches, save search -->
-    <section class="filter-toolbar" style="margin:10px 0 6px">
-      <div class="row" id="presetChips" style="gap:8px; flex-wrap:wrap"></div>
-      <div class="row" style="justify-content:space-between; gap:8px; margin-top:8px; align-items:center">
-        <div id="recentChips" class="row" style="gap:8px; flex-wrap:wrap"></div>
-        <div class="row" style="gap:10px; align-items:center">
-          <button id="saveSearch" class="btn ghost">Save search</button>
+    <!-- RIGHT: Listing Content Area -->
+    <section class="listings-main">
+      <!-- Premium toolbar: presets, recent searches, save search -->
+      <section class="filter-toolbar" style="margin:10px 0 6px">
+        <div class="row" id="presetChips" style="gap:8px; flex-wrap:wrap"></div>
+        <div class="row" style="justify-content:space-between; gap:8px; margin-top:8px; align-items:center">
+          <div id="recentChips" class="row" style="gap:8px; flex-wrap:wrap"></div>
+          <div class="row" style="gap:10px; align-items:center">
+            <button id="saveSearch" class="btn ghost">Save search</button>
+          </div>
         </div>
-      </div>
+      </section>
+
+      <!-- ✅ MAP SECTION -->
+      <!--<section id="mapSection" style="margin:20px 0;">
+      <div id="map" style="height: 500px; width: 100%; border-radius: 10px;"></div>
+    </section>-->
+
+      <!-- Results -->
+      <section id="stats" class="row" style="margin:12px 0 4px">
+        <div class="tag" id="count">0 results</div>
+        <div class="row" id="activeFilters" style="gap:8px"></div>
+      </section>
+
+      <div id="resultNotice" class="result-notice" aria-live="polite" role="status" hidden></div>
+      <section id="results" class="grid" style="grid-template-columns:repeat(auto-fill,minmax(300px,1fr));"></section>
+      <div id="pager" class="pager"></div>
     </section>
-
-    <!-- ✅ MAP SECTION -->
-  <!--<section id="mapSection" style="margin:20px 0;">
-    <div id="map" style="height: 500px; width: 100%; border-radius: 10px;"></div>
-  </section>-->
-
-    <!-- Results -->
-    <section id="stats" class="row" style="margin:12px 0 4px">
-      <div class="tag" id="count">0 results</div>
-      <div class="row" id="activeFilters" style="gap:8px"></div>
-    </section>
-
-    <div id="resultNotice" class="result-notice" aria-live="polite" role="status" hidden></div>
-    <section id="results" class="grid" style="grid-template-columns:repeat(auto-fill,minmax(300px,1fr));"></section>
-    <div id="pager" class="pager"></div>
   </main>
 
   <footer class="footer">© Tharaga — Safe, Transparent, Verified</footer>

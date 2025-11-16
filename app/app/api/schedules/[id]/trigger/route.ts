@@ -11,7 +11,7 @@ export async function POST(
   { params }: { params: { id: string } }
 ) {
   try {
-    const supabase = createClient()
+    const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
 
     if (!user) {
@@ -56,4 +56,5 @@ export async function POST(
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
 }
+
 

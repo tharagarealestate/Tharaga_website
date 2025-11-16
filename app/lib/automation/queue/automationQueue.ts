@@ -30,13 +30,23 @@ export interface QueueItem {
 }
 
 export class AutomationQueue {
-  private supabase = createClient()
+  private supabase: Awaited<ReturnType<typeof createClient>> | null = null
+
+  /**
+   * Lazy-load Supabase client (must be called during request handling)
+   */
+  private async getSupabase() {
+    if (!this.supabase) {
+      this.supabase = await createClient()
+    }
+    return this.supabase
+  }
 
   /**
    * Queue an automation for execution
    */
   async queueAutomation(job: QueueJob): Promise<string> {
-    const { data, error } = await this.supabase
+    const { data, error } = await (await this.getSupabase())
       .from('automation_queue')
       .insert({
         automation_id: job.automation_id,
@@ -62,7 +72,7 @@ export class AutomationQueue {
    * Get pending jobs
    */
   async getPendingJobs(limit: number = 10): Promise<QueueItem[]> {
-    const { data, error } = await this.supabase
+    const { data, error } = await (await this.getSupabase())
       .from('automation_queue')
       .select('*')
       .eq('status', 'pending')
@@ -82,12 +92,12 @@ export class AutomationQueue {
    * Mark job as processing
    */
   async markProcessing(jobId: string): Promise<void> {
-    const { error } = await this.supabase
+    const { error } = await (await this.getSupabase())
       .from('automation_queue')
       .update({
         status: 'processing',
         started_at: new Date().toISOString(),
-        attempts: this.supabase.raw('attempts + 1'),
+        attempts: (await this.getSupabase()).raw('attempts + 1'),
       })
       .eq('id', jobId)
 
@@ -100,7 +110,7 @@ export class AutomationQueue {
    * Mark job as completed
    */
   async markCompleted(jobId: string, executionId?: string): Promise<void> {
-    const { error } = await this.supabase
+    const { error } = await (await this.getSupabase())
       .from('automation_queue')
       .update({
         status: 'completed',
@@ -118,7 +128,7 @@ export class AutomationQueue {
    * Mark job as failed
    */
   async markFailed(jobId: string, errorMessage: string): Promise<void> {
-    const { data: job } = await this.supabase
+    const { data: job } = await (await this.getSupabase())
       .from('automation_queue')
       .select('attempts, max_attempts')
       .eq('id', jobId)
@@ -130,7 +140,7 @@ export class AutomationQueue {
 
     const shouldRetry = job.attempts < job.max_attempts
 
-    const { error } = await this.supabase
+    const { error } = await (await this.getSupabase())
       .from('automation_queue')
       .update({
         status: shouldRetry ? 'pending' : 'failed',
@@ -165,7 +175,7 @@ export class AutomationQueue {
 
     if (builder_id) {
       // Get automation IDs for this builder
-      const { data: automations } = await this.supabase
+      const { data: automations } = await (await this.getSupabase())
         .from('automations')
         .select('id')
         .eq('builder_id', builder_id)
@@ -178,7 +188,7 @@ export class AutomationQueue {
 
       // Get queue stats for these automations
       for (const status of ['pending', 'processing', 'completed', 'failed'] as const) {
-        const { count } = await this.supabase
+        const { count } = await (await this.getSupabase())
           .from('automation_queue')
           .select('*', { count: 'exact', head: true })
           .eq('status', status)
@@ -189,7 +199,7 @@ export class AutomationQueue {
     } else {
       // Get all queue stats
       for (const status of ['pending', 'processing', 'completed', 'failed'] as const) {
-        const { count } = await this.supabase
+        const { count } = await (await this.getSupabase())
           .from('automation_queue')
           .select('*', { count: 'exact', head: true })
           .eq('status', status)

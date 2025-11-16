@@ -25,7 +25,17 @@ export interface ActionResult {
 }
 
 export class ActionExecutor {
-  private supabase = createClient()
+  private supabase: Awaited<ReturnType<typeof createClient>> | null = null
+
+  /**
+   * Lazy-load Supabase client (must be called during request handling)
+   */
+  private async getSupabase() {
+    if (!this.supabase) {
+      this.supabase = await createClient()
+    }
+    return this.supabase
+  }
 
   /**
    * Execute a single action
@@ -306,4 +316,5 @@ export class ActionExecutor {
 }
 
 export const actionExecutor = new ActionExecutor()
+
 

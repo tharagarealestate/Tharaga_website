@@ -18,7 +18,17 @@ export interface TriggerEvent {
 }
 
 export class EventListener {
-  private supabase = createClient()
+  private supabase: Awaited<ReturnType<typeof createClient>> | null = null
+
+  /**
+   * Lazy-load Supabase client (must be called during request handling)
+   */
+  private async getSupabase() {
+    if (!this.supabase) {
+      this.supabase = await createClient()
+    }
+    return this.supabase
+  }
 
   /**
    * Trigger an event and evaluate matching automations
@@ -30,7 +40,7 @@ export class EventListener {
       let insertError: any = null
 
       // Try trigger_events table first
-      const result1 = await this.supabase
+      const result1 = await (await this.getSupabase())
         .from('trigger_events')
         .insert({
           trigger_type: event.trigger_type,
@@ -47,7 +57,7 @@ export class EventListener {
 
       if (result1.error) {
         // Try automation_trigger_events table as fallback
-        const result2 = await this.supabase
+        const result2 = await (await this.getSupabase())
           .from('automation_trigger_events')
           .insert({
             trigger_type: event.trigger_type,
@@ -77,7 +87,7 @@ export class EventListener {
       }
 
       // Find active automations for this builder
-      const { data: automations, error: fetchError } = await this.supabase
+      const { data: automations, error: fetchError } = await (await this.getSupabase())
         .from('automations')
         .select('*')
         .eq('builder_id', event.builder_id)
@@ -108,16 +118,16 @@ export class EventListener {
             // Update trigger event with matched automation (if column exists)
             try {
               // Try trigger_events first
-              await this.supabase
+              await (await this.getSupabase())
                 .from('trigger_events')
                 .update({
                   matched_automations: [...(triggerEvent.matched_automations || []), automation.id],
                 })
                 .eq('id', triggerEvent.id)
-                .then(({ error }) => {
+                .then(async ({ error }) => {
                   if (error) {
                     // Try automation_trigger_events as fallback
-                    return this.supabase
+                    return (await this.getSupabase())
                       .from('automation_trigger_events')
                       .update({
                         matched_automations: [...(triggerEvent.matched_automations || []), automation.id],

@@ -180,3 +180,4 @@ CREATE POLICY "Enable insert for authenticated users" ON public.property_audit_p
 COMMIT;
 
 
+

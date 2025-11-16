@@ -57,7 +57,13 @@ export class TwilioClient {
     const authToken = process.env.TWILIO_AUTH_TOKEN;
 
     if (!accountSid || !authToken) {
-      throw new Error('Twilio credentials not configured');
+      console.warn('Twilio credentials not configured. Twilio features will not work.');
+      // Create dummy client to avoid null checks
+      this.client = {} as twilio.Twilio;
+      this.twilioPhone = '';
+      this.twilioWhatsApp = '';
+      this.webhookUrl = '';
+      return;
     }
 
     this.client = twilio(accountSid, authToken);
@@ -212,7 +218,7 @@ export class TwilioClient {
     variables: Record<string, any>;
   }): Promise<MessageSendResult> {
     try {
-      const supabase = createClient();
+      const supabase = await createClient();
       // Fetch template from database
       const { data: template, error: templateError } = await supabase
         .from('message_templates')
@@ -271,7 +277,7 @@ export class TwilioClient {
     variables: Record<string, any>;
   }): Promise<MessageSendResult> {
     try {
-      const supabase = createClient();
+      const supabase = await createClient();
       // Fetch template from database
       const { data: template, error: templateError } = await supabase
         .from('message_templates')
@@ -514,7 +520,7 @@ export class TwilioClient {
     cost?: string | null;
   }): Promise<void> {
     try {
-      const supabase = createClient();
+      const supabase = await createClient();
       // Find lead by phone number (remove non-digits for matching)
       const phoneDigits = params.to.replace(/\D/g, '');
       
@@ -557,7 +563,7 @@ export class TwilioClient {
     error_message?: string;
   }): Promise<void> {
     try {
-      const supabase = createClient();
+      const supabase = await createClient();
       // Update the metadata in lead_interactions
       const { data: interactions } = await supabase
         .from('lead_interactions')
@@ -763,5 +769,20 @@ export function getTwilioClient(): TwilioClient {
   return twilioClientInstance;
 }
 
-export const twilioClient = getTwilioClient();
+// Lazy-loaded export to avoid errors during build
+export const twilioClient = {
+  get instance() {
+    return getTwilioClient();
+  },
+  sendSMS: (...args: Parameters<TwilioClient['sendSMS']>) => getTwilioClient().sendSMS(...args),
+  sendWhatsApp: (...args: Parameters<TwilioClient['sendWhatsApp']>) => getTwilioClient().sendWhatsApp(...args),
+  sendTemplateSMS: (...args: Parameters<TwilioClient['sendTemplateSMS']>) => getTwilioClient().sendTemplateSMS(...args),
+  sendTemplateWhatsApp: (...args: Parameters<TwilioClient['sendTemplateWhatsApp']>) => getTwilioClient().sendTemplateWhatsApp(...args),
+  sendBulkSMS: (...args: Parameters<TwilioClient['sendBulkSMS']>) => getTwilioClient().sendBulkSMS(...args),
+  sendBulkWhatsApp: (...args: Parameters<TwilioClient['sendBulkWhatsApp']>) => getTwilioClient().sendBulkWhatsApp(...args),
+  handleWebhook: (...args: Parameters<TwilioClient['handleWebhook']>) => getTwilioClient().handleWebhook(...args),
+  getMessageDetails: (...args: Parameters<TwilioClient['getMessageDetails']>) => getTwilioClient().getMessageDetails(...args),
+  getAccountBalance: (...args: Parameters<TwilioClient['getAccountBalance']>) => getTwilioClient().getAccountBalance(...args),
+  getMessageHistory: (...args: Parameters<TwilioClient['getMessageHistory']>) => getTwilioClient().getMessageHistory(...args),
+};
 

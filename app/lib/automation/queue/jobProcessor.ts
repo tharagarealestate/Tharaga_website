@@ -13,10 +13,20 @@ export interface ProcessorOptions {
 }
 
 export class JobProcessor {
-  private supabase = createClient()
+  private supabase: Awaited<ReturnType<typeof createClient>> | null = null
   private intervalId?: NodeJS.Timeout
   private isProcessing = false
   private options: Required<ProcessorOptions>
+
+  /**
+   * Lazy-load Supabase client (must be called during request handling)
+   */
+  private async getSupabase() {
+    if (!this.supabase) {
+      this.supabase = await createClient()
+    }
+    return this.supabase
+  }
 
   constructor(options: ProcessorOptions = {}) {
     this.options = {
@@ -97,7 +107,7 @@ export class JobProcessor {
       await automationQueue.markProcessing(job.id)
 
       // Get automation
-      const { data: automation, error: fetchError } = await this.supabase
+      const { data: automation, error: fetchError } = await (await this.getSupabase())
         .from('automations')
         .select('*')
         .eq('id', job.automation_id)
@@ -108,7 +118,7 @@ export class JobProcessor {
       }
 
       // Create execution record
-      const { data: execution, error: execError } = await this.supabase
+      const { data: execution, error: execError } = await (await this.getSupabase())
         .from('automation_executions')
         .insert({
           automation_id: automation.id,
@@ -144,7 +154,7 @@ export class JobProcessor {
       const failed = results.filter(r => !r.success).length
 
       // Update execution record
-      await this.supabase
+      await (await this.getSupabase())
         .from('automation_executions')
         .update({
           status: failed === 0 ? 'success' : 'failed',
@@ -173,21 +183,22 @@ export class JobProcessor {
    * Update automation statistics
    */
   private async updateAutomationStats(automationId: string, success: boolean): Promise<void> {
-    await this.supabase.rpc('update_automation_stats', {
+    await (await this.getSupabase()).rpc('update_automation_stats', {
       p_automation_id: automationId,
       p_success: success,
-    }).catch(() => {
+    }).catch(async () => {
       // Fallback if RPC doesn't exist
-      this.supabase
+      const supabase = await this.getSupabase()
+      await supabase
         .from('automations')
         .update({
-          total_executions: this.supabase.raw('total_executions + 1'),
+          total_executions: supabase.raw('total_executions + 1'),
           successful_executions: success
-            ? this.supabase.raw('successful_executions + 1')
-            : this.supabase.raw('successful_executions'),
+            ? supabase.raw('successful_executions + 1')
+            : supabase.raw('successful_executions'),
           failed_executions: success
-            ? this.supabase.raw('failed_executions')
-            : this.supabase.raw('failed_executions + 1'),
+            ? supabase.raw('failed_executions')
+            : supabase.raw('failed_executions + 1'),
           last_execution_at: new Date().toISOString(),
         })
         .eq('id', automationId)
@@ -207,4 +218,5 @@ export class JobProcessor {
 }
 
 export const jobProcessor = new JobProcessor()
+
 

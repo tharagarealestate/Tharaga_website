@@ -142,7 +142,7 @@ function calculatePercentChange(current: number, previous: number): number {
 export async function GET(request: NextRequest) {
   try {
     const cookieStore = cookies();
-    const supabase = createClient();
+    const supabase = await createClient();
     
     // =============================================
     // AUTHENTICATION

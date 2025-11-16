@@ -7,10 +7,17 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import Razorpay from 'razorpay';
 
-const razorpay = new Razorpay({
-  key_id: process.env.RAZORPAY_KEY_ID || '',
-  key_secret: process.env.RAZORPAY_KEY_SECRET || '',
-});
+let razorpayInstance: Razorpay | null = null;
+
+function getRazorpayClient(): Razorpay {
+  if (!razorpayInstance) {
+    razorpayInstance = new Razorpay({
+      key_id: process.env.RAZORPAY_KEY_ID || '',
+      key_secret: process.env.RAZORPAY_KEY_SECRET || '',
+    });
+  }
+  return razorpayInstance;
+}
 
 export const runtime = 'nodejs';
 
@@ -19,7 +26,7 @@ export const runtime = 'nodejs';
  */
 export async function POST(req: NextRequest) {
   try {
-    const supabase = createClient();
+    const supabase = await createClient();
 
     // Get authenticated user
     const { data: { user }, error: authError } = await supabase.auth.getUser();
@@ -79,7 +86,7 @@ export async function POST(req: NextRequest) {
     // Create or get customer
     let customer_id = customer.id || null;
     if (!customer_id) {
-      const cust = await razorpay.customers.create({
+      const cust = await getRazorpayClient().customers.create({
         name: customer.name || user.user_metadata?.name || '',
         email: email || user.email || customer.email || '',
         contact: phone || user.user_metadata?.phone || customer.contact || '',
@@ -92,7 +99,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Create subscription with builder_id in notes
-    const subscription = await razorpay.subscriptions.create({
+    const subscription = await getRazorpayClient().subscriptions.create({
       plan_id,
       customer_notify: 1,
       total_count: annual ? 12 : 1, // For monthly plans, total_count=1 (auto-renew); for annual, set appropriate count
@@ -153,6 +160,7 @@ export async function POST(req: NextRequest) {
     );
   }
 }
+
 
 
 

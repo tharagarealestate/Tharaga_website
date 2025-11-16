@@ -10,7 +10,7 @@ export const runtime = 'nodejs';
 
 export async function POST(request: NextRequest) {
   try {
-    const supabase = createClient();
+    const supabase = await createClient();
 
     // Get current user
     const { data: { user }, error: authError } = await supabase.auth.getUser();
@@ -184,7 +184,7 @@ async function syncLeadsToCRM(
   builder_id: string,
   lead_ids?: string[]
 ): Promise<{ successful: number; failed: number; errors: string[] }> {
-  const supabase = createClient();
+  const supabase = await createClient();
   let successful = 0;
   let failed = 0;
   const errors: string[] = [];
@@ -332,7 +332,7 @@ async function syncDealsToCRM(
   builder_id: string,
   deal_ids?: string[]
 ): Promise<{ successful: number; failed: number; errors: string[] }> {
-  const supabase = createClient();
+  const supabase = await createClient();
   let successful = 0;
   let failed = 0;
   const errors: string[] = [];

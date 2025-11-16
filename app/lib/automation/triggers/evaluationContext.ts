@@ -19,7 +19,7 @@ export async function buildEvaluationContext(
   eventData: Record<string, any>,
   builderId: string
 ): Promise<EvaluationContext> {
-  const supabase = createClient()
+  const supabase = await createClient()
   const context: EvaluationContext = {
     event: eventData,
     builder_id: builderId,
@@ -66,4 +66,5 @@ export async function buildEvaluationContext(
 
   return context
 }
+
 

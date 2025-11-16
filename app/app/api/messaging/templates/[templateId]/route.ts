@@ -20,7 +20,7 @@ export async function GET(
   { params }: { params: { templateId: string } }
 ) {
   try {
-    const supabase = createClient();
+    const supabase = await createClient();
     
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     if (authError || !user) {
@@ -56,7 +56,7 @@ export async function PATCH(
   { params }: { params: { templateId: string } }
 ) {
   try {
-    const supabase = createClient();
+    const supabase = await createClient();
     
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     if (authError || !user) {
@@ -120,7 +120,7 @@ export async function DELETE(
   { params }: { params: { templateId: string } }
 ) {
   try {
-    const supabase = createClient();
+    const supabase = await createClient();
     
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     if (authError || !user) {

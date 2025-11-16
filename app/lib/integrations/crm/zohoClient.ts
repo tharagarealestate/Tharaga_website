@@ -106,8 +106,8 @@ export interface ZohoTokens {
 // =============================================
 export class ZohoClient {
   private axios: AxiosInstance;
-  private supabase = createClient();
-  
+  private supabase: Awaited<ReturnType<typeof createClient>> | null = null;
+
   private clientId: string;
   private clientSecret: string;
   private redirectUri: string;
@@ -145,6 +145,16 @@ export class ZohoClient {
       (response) => response,
       (error: AxiosError) => this.handleApiError(error)
     );
+  }
+
+  /**
+   * Lazy-load Supabase client (must be called during request handling)
+   */
+  private async getSupabase() {
+    if (!this.supabase) {
+      this.supabase = await createClient();
+    }
+    return this.supabase;
   }
 
   /**
@@ -244,7 +254,7 @@ export class ZohoClient {
     const orgInfo = await this.getOrganization(params.tokens.access_token, params.tokens.api_domain);
 
     // Save to database
-    const { error } = await this.supabase
+    const { error } = await (await this.getSupabase())
       .from('integrations')
       .upsert({
         builder_id: params.builder_id,
@@ -277,7 +287,7 @@ export class ZohoClient {
     access_token: string;
     api_domain: string;
   } | null> {
-    const { data: integration, error } = await this.supabase
+    const { data: integration, error } = await (await this.getSupabase())
       .from('integrations')
       .select('*')
       .eq('builder_id', builder_id)
@@ -299,7 +309,7 @@ export class ZohoClient {
         const newTokens = await this.refreshAccessToken(config.refresh_token);
         
         // Update tokens in database
-        await this.supabase
+        await (await this.getSupabase())
           .from('integrations')
           .update({
             config: {
@@ -319,7 +329,7 @@ export class ZohoClient {
         console.error('Failed to refresh token:', error);
         
         // Mark integration as disconnected
-        await this.supabase
+        await (await this.getSupabase())
           .from('integrations')
           .update({
             is_connected: false,
@@ -479,7 +489,7 @@ export class ZohoClient {
         return { success: false, error: 'Integration not found' };
       }
 
-      const { data: existingMapping } = await this.supabase
+      const { data: existingMapping } = await (await this.getSupabase())
         .from('crm_record_mappings')
         .select('crm_id')
         .eq('integration_id', integrationId)
@@ -589,7 +599,7 @@ export class ZohoClient {
         return { success: false, error: 'Integration not found' };
       }
 
-      const { data: contactMapping } = await this.supabase
+      const { data: contactMapping } = await (await this.getSupabase())
         .from('crm_record_mappings')
         .select('crm_id')
         .eq('integration_id', integrationId)
@@ -634,7 +644,7 @@ export class ZohoClient {
       };
 
       // Check if deal exists
-      const { data: existingMapping } = await this.supabase
+      const { data: existingMapping } = await (await this.getSupabase())
         .from('crm_record_mappings')
         .select('crm_id')
         .eq('integration_id', integrationId)
@@ -751,7 +761,7 @@ export class ZohoClient {
         return { success: false, error: 'Integration not found' };
       }
 
-      const { data: existingMapping } = await this.supabase
+      const { data: existingMapping } = await (await this.getSupabase())
         .from('crm_record_mappings')
         .select('tharaga_id')
         .eq('integration_id', integrationId)
@@ -763,7 +773,7 @@ export class ZohoClient {
 
       if (existingMapping?.tharaga_id) {
         // Update existing lead
-        await this.supabase
+        await (await this.getSupabase())
           .from('auth.users')
           .update({
             email: leadData.email,
@@ -781,7 +791,7 @@ export class ZohoClient {
         leadId = existingMapping.tharaga_id;
       } else {
         // Create new lead
-        const { data: newLead, error } = await this.supabase.auth.admin.createUser({
+        const { data: newLead, error } = await (await this.getSupabase()).auth.admin.createUser({
           email: leadData.email,
           email_confirm: true,
           phone: leadData.phone,
@@ -902,7 +912,7 @@ export class ZohoClient {
 
       for (const lead_id of batch) {
         // Get lead data
-        const { data: lead } = await this.supabase
+        const { data: lead } = await (await this.getSupabase())
           .from('auth.users')
           .select('*')
           .eq('id', lead_id)
@@ -954,7 +964,7 @@ export class ZohoClient {
           if (operation === 'insert' || operation === 'update') {
             // Find builder by checking all integrations
             // In production, you should have a better way to identify this
-            const { data: integrations } = await this.supabase
+            const { data: integrations } = await (await this.getSupabase())
               .from('integrations')
               .select('builder_id')
               .eq('integration_type', 'crm')
@@ -986,7 +996,7 @@ export class ZohoClient {
   ): Promise<ZohoContact> {
     // Get custom field mappings
     const integrationId = await this.getIntegrationId(builder_id);
-    const { data: mappings } = await this.supabase
+    const { data: mappings } = await (await this.getSupabase())
       .from('crm_field_mappings')
       .select('*')
       .eq('integration_id', integrationId!)
@@ -1058,7 +1068,7 @@ export class ZohoClient {
     contact: any
   ): Promise<any> {
     const integrationId = await this.getIntegrationId(builder_id);
-    const { data: mappings } = await this.supabase
+    const { data: mappings } = await (await this.getSupabase())
       .from('crm_field_mappings')
       .select('*')
       .eq('integration_id', integrationId!)
@@ -1121,7 +1131,7 @@ export class ZohoClient {
     ];
 
     for (const mapping of defaultMappings) {
-      await this.supabase
+      await (await this.getSupabase())
         .from('crm_field_mappings')
         .upsert({
           integration_id: integrationId,
@@ -1147,7 +1157,7 @@ export class ZohoClient {
     const integrationId = await this.getIntegrationId(params.builder_id);
     if (!integrationId) return;
 
-    await this.supabase
+    await (await this.getSupabase())
       .from('crm_record_mappings')
       .upsert({
         integration_id: integrationId,
@@ -1176,7 +1186,7 @@ export class ZohoClient {
     const integrationId = await this.getIntegrationId(params.builder_id);
     if (!integrationId) return;
 
-    await this.supabase
+    await (await this.getSupabase())
       .from('crm_sync_log')
       .insert({
         integration_id: integrationId,
@@ -1194,7 +1204,7 @@ export class ZohoClient {
    * Get integration ID
    */
   private async getIntegrationId(builder_id: string): Promise<string | null> {
-    const { data } = await this.supabase
+    const { data } = await (await this.getSupabase())
       .from('integrations')
       .select('id')
       .eq('builder_id', builder_id)
@@ -1215,7 +1225,7 @@ export class ZohoClient {
     last_sync_at?: string;
     total_synced?: number;
   }> {
-    const { data: integration } = await this.supabase
+    const { data: integration } = await (await this.getSupabase())
       .from('integrations')
       .select('*')
       .eq('builder_id', builder_id)

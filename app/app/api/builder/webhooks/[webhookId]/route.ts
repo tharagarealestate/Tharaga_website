@@ -4,11 +4,12 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { createWebhookManager, type Webhook } from '@/lib/webhooks/manager'
 
-async function resolveBuilderId(req: NextRequest, supabase = createClient()): Promise<string | null> {
+async function resolveBuilderId(req: NextRequest, supabase?: Awaited<ReturnType<typeof createClient>>): Promise<string | null> {
+  const client = supabase || await createClient()
   try {
     const {
       data: { user },
-    } = await supabase.auth.getUser()
+    } = await client.auth.getUser()
     if (user?.id) return user.id
   } catch (error) {
     console.warn('[API] webhooks builder auth lookup failed', error)
@@ -19,7 +20,7 @@ async function resolveBuilderId(req: NextRequest, supabase = createClient()): Pr
 }
 
 export async function GET(req: NextRequest, { params }: { params: { webhookId: string } }) {
-  const supabase = createClient()
+  const supabase = await createClient()
   const manager = createWebhookManager({ supabase })
   const builderId = await resolveBuilderId(req, supabase)
 
@@ -37,7 +38,7 @@ export async function GET(req: NextRequest, { params }: { params: { webhookId: s
 }
 
 export async function PATCH(req: NextRequest, { params }: { params: { webhookId: string } }) {
-  const supabase = createClient()
+  const supabase = await createClient()
   const manager = createWebhookManager({ supabase })
   const builderId = await resolveBuilderId(req, supabase)
 
@@ -82,7 +83,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { webhookId:
 }
 
 export async function DELETE(req: NextRequest, { params }: { params: { webhookId: string } }) {
-  const supabase = createClient()
+  const supabase = await createClient()
   const manager = createWebhookManager({ supabase })
   const builderId = await resolveBuilderId(req, supabase)
 

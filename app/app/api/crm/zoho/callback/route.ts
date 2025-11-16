@@ -40,7 +40,7 @@ export async function GET(request: NextRequest) {
     const builder_id = state;
 
     // Verify builder exists and is authenticated
-    const supabase = createClient();
+    const supabase = await createClient();
     
     // First verify the current user is authenticated
     const { data: { user }, error: authError } = await supabase.auth.getUser();

@@ -1,4 +1,5 @@
 import createNextIntlPlugin from 'next-intl/plugin'
+import path from 'path'
 // Attempt to load bundle analyzer when ANALYZE=true and dependency is present
 let withBundleAnalyzer = (config) => config
 try {
@@ -13,6 +14,15 @@ const nextConfig = {
   reactStrictMode: true,
   experimental: {
     typedRoutes: true,
+  },
+  webpack: (config) => {
+    // Ensure '@' alias resolves to the app directory during bundling (Netlify/Linux envs)
+    config.resolve = config.resolve || {}
+    config.resolve.alias = config.resolve.alias || {}
+    if (!config.resolve.alias['@']) {
+      config.resolve.alias['@'] = path.resolve(__dirname)
+    }
+    return config
   },
   compiler: {
     // Strip console.* in production build except errors/warnings

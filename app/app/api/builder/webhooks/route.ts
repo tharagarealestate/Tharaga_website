@@ -4,11 +4,12 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { createWebhookManager } from '@/lib/webhooks/manager'
 
-async function getBuilderId(req: NextRequest, supabase = createClient()): Promise<string | null> {
+async function getBuilderId(req: NextRequest, supabase?: Awaited<ReturnType<typeof createClient>>): Promise<string | null> {
+  const client = supabase || await createClient()
   try {
     const {
       data: { user },
-    } = await supabase.auth.getUser()
+    } = await client.auth.getUser()
     if (user?.id) return user.id
   } catch (error) {
     console.warn('[API] webhooks builder auth lookup failed', error)
@@ -19,7 +20,7 @@ async function getBuilderId(req: NextRequest, supabase = createClient()): Promis
 }
 
 export async function GET(req: NextRequest) {
-  const supabase = createClient()
+  const supabase = await createClient()
   const builderId = await getBuilderId(req, supabase)
 
   if (!builderId) {
@@ -37,7 +38,7 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  const supabase = createClient()
+  const supabase = await createClient()
   const builderId = await getBuilderId(req, supabase)
 
   if (!builderId) {

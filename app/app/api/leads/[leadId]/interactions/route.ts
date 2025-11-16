@@ -57,7 +57,7 @@ export async function POST(
 ) {
   try {
     const cookieStore = cookies();
-    const supabase = createClient();
+    const supabase = await createClient();
     
     // =============================================
     // AUTHENTICATION
@@ -281,7 +281,7 @@ export async function GET(
 ) {
   try {
     const cookieStore = cookies();
-    const supabase = createClient();
+    const supabase = await createClient();
     
     // =============================================
     // AUTHENTICATION

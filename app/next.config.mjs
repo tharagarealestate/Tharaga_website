@@ -1,5 +1,10 @@
 import createNextIntlPlugin from 'next-intl/plugin'
 import path from 'path'
+import { fileURLToPath } from 'url'
+
+// ESM-safe __dirname replacement
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
 // Attempt to load bundle analyzer when ANALYZE=true and dependency is present
 let withBundleAnalyzer = (config) => config
 try {

@@ -60,6 +60,10 @@ html, body {
   min-height: 100vh;
   position: relative;
   overflow-x: hidden;
+  /* Crisp font rendering - matching pricing page */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
 }
 
 /* Animated Background Blobs - Exact from pricing page */
@@ -156,10 +160,10 @@ img {
   max-height: calc(100vh - 48px);
   overflow-y: auto;
   margin-left: 0;
-  /* Exact glass card styling from pricing page */
+  /* Exact glass card styling from pricing page with saturation */
   background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
   border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: 24px;
   padding: 20px;
@@ -212,8 +216,8 @@ img {
   gap: 8px;
   padding: 8px 16px;
   background: rgba(212, 175, 55, 0.2);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px) saturate(180%);
+  -webkit-backdrop-filter: blur(8px) saturate(180%);
   border: 1px solid rgba(212, 175, 55, 0.3);
   border-radius: 999px;
   margin-bottom: 8px;
@@ -242,6 +246,10 @@ img {
   color: white;
   margin: 0;
   letter-spacing: -0.02em;
+  /* Crisp font rendering */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
 }
 
 @media (min-width: 640px) {
@@ -346,13 +354,16 @@ img {
   border-radius: 12px;
   border: 1px solid rgba(255, 255, 255, 0.2);
   background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px) saturate(180%);
+  -webkit-backdrop-filter: blur(8px) saturate(180%);
   outline: none;
   width: 100%;
   font-size: 14px;
   color: rgb(var(--gray-300));
   transition: all 0.2s ease;
+  /* Crisp text rendering */
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
 }
 
 .input:focus, select:focus, textarea:focus {
@@ -533,8 +544,8 @@ select[multiple] {
 
 .card {
   background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
   border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: 20px;
   overflow: hidden;
@@ -543,14 +554,17 @@ select[multiple] {
   position: relative;
 }
 
+/* Shimmer effect on hover - exact from pricing page */
 .card::before {
   content: '';
   position: absolute;
   inset: 0;
-  background: linear-gradient(135deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
   opacity: 0;
-  transition: opacity 0.5s ease;
+  transform: translateX(-100%);
+  transition: transform 1s ease-in-out, opacity 0.5s ease;
   pointer-events: none;
+  z-index: 1;
 }
 
 .card:hover {
@@ -562,6 +576,7 @@ select[multiple] {
 
 .card:hover::before {
   opacity: 1;
+  transform: translateX(100%);
 }
 
 .card-img {
@@ -637,10 +652,13 @@ select[multiple] {
   border-radius: 999px;
   border: 1px solid rgba(255, 255, 255, 0.2);
   background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px) saturate(180%);
+  -webkit-backdrop-filter: blur(8px) saturate(180%);
   font-size: 12px;
   color: rgb(var(--gray-300));
   font-weight: 500;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
 }
 
 .chip, .chip-rem {
@@ -651,11 +669,14 @@ select[multiple] {
   border-radius: 999px;
   border: 1px solid rgba(255, 255, 255, 0.2);
   background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px) saturate(180%);
+  -webkit-backdrop-filter: blur(8px) saturate(180%);
   font-size: 12px;
   color: rgb(var(--gray-300));
   cursor: pointer;
   transition: all 0.2s ease;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
 }
 
 .chip:hover, .chip-rem:hover {
@@ -734,13 +755,16 @@ select[multiple] {
   bottom: 24px;
   transform: translateX(-50%);
   background: rgba(15, 23, 42, 0.95);
-  backdrop-filter: blur(16px);
+  backdrop-filter: blur(16px) saturate(180%);
+  -webkit-backdrop-filter: blur(16px) saturate(180%);
   color: white;
   padding: 12px 20px;
   border-radius: 12px;
   box-shadow: 0 10px 32px rgba(0, 0, 0, 0.35);
   z-index: 1000;
   border: 1px solid rgba(255, 255, 255, 0.2);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
 }
 
 .pill-floating {
@@ -751,13 +775,16 @@ select[multiple] {
   padding: 12px 20px;
   border-radius: 999px;
   background: rgba(15, 23, 42, 0.95);
-  backdrop-filter: blur(16px);
+  backdrop-filter: blur(16px) saturate(180%);
+  -webkit-backdrop-filter: blur(16px) saturate(180%);
   color: white;
   border: 1px solid rgba(255, 255, 255, 0.2);
   box-shadow: 0 10px 28px rgba(0, 0, 0, 0.3);
   z-index: 1000;
   cursor: pointer;
   transition: all 0.2s ease;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
 }
 
 .pill-floating:hover {

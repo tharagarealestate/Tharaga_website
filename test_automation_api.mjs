@@ -185,3 +185,5 @@ console.log('   ⚠️  Or execute manually in Supabase SQL Editor\n');
 
 
 
+
+

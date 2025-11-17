@@ -888,74 +888,442 @@ select[multiple] {
 }
 
 /* ============================================
-   RESPONSIVE - Mobile
+   RESPONSIVE - Mobile (Comprehensive)
    ============================================ */
-@media (max-width: 768px) {
-  .bg-blob-gold {
-    width: 280px;
-    height: 280px;
-    top: 40px;
-    left: 20px;
-    filter: blur(64px);
-    -webkit-filter: blur(64px);
-    opacity: 0.5;
+
+/* Tablet and below */
+@media (max-width: 1024px) {
+  .main-content {
+    flex-direction: column;
+    padding: 0 16px 16px 16px;
+    gap: 16px;
   }
-  
-  .bg-blob-emerald {
-    width: 400px;
-    height: 400px;
-    bottom: 40px;
-    right: 20px;
-    filter: blur(64px);
-    -webkit-filter: blur(64px);
-    opacity: 0.5;
-  }
-  
-  .hero-section {
-    padding: 64px 16px 32px;
-  }
-  
-  .hero-title {
-    font-size: 40px;
-  }
-  
+
   .filter-sidebar {
-    padding: 16px;
+    position: static;
+    max-width: 100%;
+    width: 100%;
+    max-height: none;
+    margin-left: 0;
+    padding: 20px;
     border-radius: 20px;
   }
-  
-  .filter-grid {
-    grid-template-columns: 1fr;
-    gap: 12px;
-  }
-  
-  .toast {
-    left: 16px;
-    right: 16px;
-    transform: none;
-    width: auto;
-    bottom: 16px;
-  }
-  
-  .pill-floating {
-    left: 16px;
-    right: 16px;
-    transform: none;
-    width: auto;
-    bottom: 80px;
+
+  .listings-content {
+    width: 100%;
   }
 }
 
-@media (max-width: 480px) {
-  .hero-title {
-    font-size: 32px;
+/* Mobile - 768px and below */
+@media (max-width: 768px) {
+  /* Background blobs - smaller on mobile */
+  .bg-blob-gold {
+    width: 240px;
+    height: 240px;
+    top: 20px;
+    left: 10px;
+    filter: blur(60px);
+    -webkit-filter: blur(60px);
+    opacity: 0.4;
   }
   
+  .bg-blob-emerald {
+    width: 320px;
+    height: 320px;
+    bottom: 20px;
+    right: 10px;
+    filter: blur(60px);
+    -webkit-filter: blur(60px);
+    opacity: 0.4;
+  }
+  
+  /* Hero section - compact mobile */
+  .hero-section {
+    padding: 32px 16px 24px;
+    max-width: 100%;
+  }
+
+  .hero-content {
+    max-width: 100%;
+  }
+
+  .hero-badge {
+    padding: 5px 12px;
+    margin-bottom: 12px;
+    font-size: 12px;
+  }
+
+  .hero-badge-dot {
+    width: 6px;
+    height: 6px;
+  }
+
+  .hero-badge-text {
+    font-size: 12px;
+  }
+
+  .hero-title {
+    font-size: 28px;
+    line-height: 1.2;
+    margin: 0;
+  }
+  
+  /* Main content - mobile spacing */
+  .main-content {
+    padding: 0 12px 12px 12px;
+    gap: 16px;
+  }
+  
+  /* Filter sidebar - mobile optimized */
+  .filter-sidebar {
+    padding: 16px;
+    border-radius: 16px;
+  }
+
+  .filter-pill-row {
+    gap: 6px;
+    margin-bottom: 16px;
+  }
+
+  .filter-pill {
+    padding: 10px 0;
+    font-size: 13px;
+  }
+
+  .top-row {
+    gap: 14px;
+    margin-bottom: 16px;
+  }
+
+  .search-input-wrapper {
+    gap: 6px;
+    margin-bottom: 4px;
+  }
+
+  .search-large {
+    font-size: 14px;
+    padding: 10px 12px;
+  }
+
+  .btn.secondary {
+    padding: 10px 14px;
+    font-size: 12px;
+  }
+
+  .search-hint {
+    font-size: 11px;
+  }
+
+  .filter-grid {
+    grid-template-columns: 1fr;
+    gap: 14px;
+    margin-bottom: 16px;
+  }
+
+  .filter-grid label {
+    font-size: 12px;
+    margin-bottom: 6px;
+  }
+
+  .input, select, textarea {
+    padding: 10px 12px;
+    font-size: 14px;
+  }
+
+  .grid-2 {
+    gap: 8px;
+  }
+
+  .metro-control {
+    gap: 4px;
+  }
+
+  .metro-label {
+    font-size: 11px;
+  }
+
+  .metro-input {
+    width: 60px;
+    padding: 8px;
+  }
+
+  .filter-actions {
+    margin-top: 16px;
+  }
+
+  .btn {
+    padding: 10px 16px;
+    font-size: 13px;
+  }
+
+  /* Listings content - mobile */
+  .listings-content {
+    width: 100%;
+  }
+
+  .filter-toolbar {
+    margin: 8px 0 12px;
+  }
+
+  .toolbar-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+    margin-top: 6px;
+  }
+
+  .stats-row {
+    margin: 8px 0 12px;
+    gap: 6px;
+  }
+
+  .tag {
+    padding: 5px 10px;
+    font-size: 11px;
+  }
+
+  .chip, .chip-rem {
+    padding: 5px 10px;
+    font-size: 11px;
+    gap: 4px;
+  }
+
+  /* Property cards - mobile */
+  .results-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .card {
+    border-radius: 16px;
+  }
+
+  .card-img {
+    height: 220px;
+  }
+
+  .card-body {
+    padding: 16px;
+  }
+
+  .price-loud {
+    font-size: 20px;
+    margin-bottom: 6px;
+  }
+
+  .loc-loud {
+    font-size: 14px;
+    margin-bottom: 10px;
+  }
+
+  /* Footer - mobile */
+  .footer {
+    padding: 32px 16px 20px;
+    font-size: 12px;
+  }
+
+  /* Toast and floating elements - mobile */
+  .toast {
+    left: 12px;
+    right: 12px;
+    transform: none;
+    width: auto;
+    bottom: 12px;
+    padding: 10px 16px;
+    font-size: 13px;
+  }
+  
+  .pill-floating {
+    left: 12px;
+    right: 12px;
+    transform: none;
+    width: auto;
+    bottom: 72px;
+    padding: 10px 16px;
+    font-size: 13px;
+  }
+
+  /* Pager - mobile */
+  .pager {
+    gap: 6px;
+    margin: 20px 0;
+  }
+
+  .pager .page {
+    padding: 8px 12px;
+    font-size: 13px;
+  }
+
+  .result-notice {
+    margin: 10px 0;
+    padding: 10px 14px;
+    font-size: 13px;
+  }
+}
+
+/* Small mobile - 480px and below */
+@media (max-width: 480px) {
+  /* Hero - extra small */
+  .hero-section {
+    padding: 24px 12px 20px;
+  }
+
+  .hero-badge {
+    padding: 4px 10px;
+    margin-bottom: 10px;
+  }
+
+  .hero-badge-text {
+    font-size: 11px;
+  }
+
+  .hero-title {
+    font-size: 24px;
+  }
+  
+  /* Main content - extra small */
+  .main-content {
+    padding: 0 8px 8px 8px;
+    gap: 12px;
+  }
+  
+  /* Filter sidebar - extra small */
   .filter-sidebar {
     padding: 14px;
+    border-radius: 12px;
   }
-  
+
+  .filter-pill-row {
+    gap: 4px;
+    margin-bottom: 12px;
+  }
+
+  .filter-pill {
+    padding: 8px 0;
+    font-size: 12px;
+  }
+
+  .top-row {
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+
+  .search-large {
+    padding: 9px 10px;
+    font-size: 13px;
+  }
+
+  .btn.secondary {
+    padding: 9px 12px;
+    font-size: 11px;
+  }
+
+  .filter-grid {
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+
+  .filter-grid label {
+    font-size: 11px;
+    margin-bottom: 5px;
+  }
+
+  .input, select, textarea {
+    padding: 9px 10px;
+    font-size: 13px;
+  }
+
+  .filter-actions {
+    margin-top: 12px;
+  }
+
+  .btn {
+    padding: 9px 14px;
+    font-size: 12px;
+  }
+
+  /* Cards - extra small */
   .card-img {
     height: 200px;
+  }
+
+  .card-body {
+    padding: 14px;
+  }
+
+  .price-loud {
+    font-size: 18px;
+  }
+
+  .loc-loud {
+    font-size: 13px;
+  }
+
+  /* Stats and toolbar - extra small */
+  .filter-toolbar {
+    margin: 6px 0 10px;
+  }
+
+  .stats-row {
+    margin: 6px 0 10px;
+  }
+
+  .tag {
+    padding: 4px 8px;
+    font-size: 10px;
+  }
+
+  .chip, .chip-rem {
+    padding: 4px 8px;
+    font-size: 10px;
+  }
+
+  /* Footer - extra small */
+  .footer {
+    padding: 24px 12px 16px;
+    font-size: 11px;
+  }
+
+  /* Toast - extra small */
+  .toast {
+    left: 8px;
+    right: 8px;
+    bottom: 8px;
+    padding: 9px 14px;
+    font-size: 12px;
+  }
+  
+  .pill-floating {
+    left: 8px;
+    right: 8px;
+    bottom: 64px;
+    padding: 9px 14px;
+    font-size: 12px;
+  }
+}
+
+/* Touch-friendly adjustments for all mobile */
+@media (max-width: 768px) {
+  /* Ensure all interactive elements are at least 44x44px for touch */
+  .btn, .filter-pill, .chip, .chip-rem, .tag, .pager .page {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  /* Inputs should be easily tappable */
+  .input, select, textarea {
+    min-height: 44px;
+  }
+
+  /* Price slider thumbs - larger on mobile */
+  .price-range {
+    --thumb-size: 24px;
+    height: 40px;
+  }
+
+  .price-range input[type="range"]::-webkit-slider-thumb,
+  .price-range input[type="range"]::-moz-range-thumb {
+    width: 24px;
+    height: 24px;
   }
 }

@@ -228,13 +228,6 @@ html, body {
   align-items: flex-start;
 }
 
-@media (max-width: 1024px) {
-  .main-content {
-    flex-direction: column;
-    padding: 16px;
-  }
-}
-
 /* ============================================
    FILTER SIDEBAR - Glass Card (Exact from pricing)
    ============================================ */

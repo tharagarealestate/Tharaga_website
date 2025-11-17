@@ -275,15 +275,23 @@ export function FilterProvider({ children }: { children: ReactNode }) {
   // FETCH SAVED FILTERS & PRESETS
   // =============================================
 
-  useEffect(() => {
-    if (!initialLoadDone.current) return
-    fetchFilterPresets()
-  }, [fetchFilterPresets])
+  const fetchFilterPresets = useCallback(async () => {
+    try {
+      setLoading(true)
+      const { data, error } = await supabase
+        .from('filter_presets')
+        .select('*')
+        .eq('is_active', true)
+        .order('sort_order', { ascending: true })
 
-  useEffect(() => {
-    if (!initialLoadDone.current) return
-    fetchSavedFilters()
-  }, [fetchSavedFilters])
+      if (error) throw error
+      setFilterPresets((data || []).map(normalizeFilterPreset))
+    } catch (error) {
+      console.error('[FilterProvider] Error fetching filter presets:', error)
+    } finally {
+      setLoading(false)
+    }
+  }, [supabase])
 
   const fetchSavedFilters = useCallback(async () => {
     if (!user) {
@@ -324,23 +332,15 @@ export function FilterProvider({ children }: { children: ReactNode }) {
     }
   }, [supabase, user])
 
-  const fetchFilterPresets = useCallback(async () => {
-    try {
-      setLoading(true)
-      const { data, error } = await supabase
-        .from('filter_presets')
-        .select('*')
-        .eq('is_active', true)
-        .order('sort_order', { ascending: true })
+  useEffect(() => {
+    if (!initialLoadDone.current) return
+    fetchFilterPresets()
+  }, [fetchFilterPresets])
 
-      if (error) throw error
-      setFilterPresets((data || []).map(normalizeFilterPreset))
-    } catch (error) {
-      console.error('[FilterProvider] Error fetching filter presets:', error)
-    } finally {
-      setLoading(false)
-    }
-  }, [supabase])
+  useEffect(() => {
+    if (!initialLoadDone.current) return
+    fetchSavedFilters()
+  }, [fetchSavedFilters])
 
   // =============================================
   // FILTER ACTIONS

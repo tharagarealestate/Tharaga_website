@@ -50,6 +50,7 @@ export interface Lead {
 interface LeadsListProps {
   onSelectLead?: (lead: Lead) => void;
   initialFilters?: Partial<FilterConfig>;
+  showInlineFilters?: boolean;
 }
 
 interface StatsSummary {
@@ -60,7 +61,7 @@ interface StatsSummary {
   average_score: number;
 }
 
-export function LeadsList({ onSelectLead, initialFilters }: LeadsListProps) {
+export function LeadsList({ onSelectLead, initialFilters, showInlineFilters = true }: LeadsListProps) {
   const supabase = useMemo(() => getSupabase(), []);
   const { trackBehavior } = useBehaviorTracking();
   const {
@@ -530,12 +531,13 @@ export function LeadsList({ onSelectLead, initialFilters }: LeadsListProps) {
                   <select
                     value={`${filters.sort_by ?? 'score'}-${filters.sort_order ?? 'desc'}`}
                     onChange={(event) => {
-                      const [sortBy, sortOrder] = event.target.value.split('-') as [
-                        NonNullable<FilterConfig['sort_by']>,
-                        NonNullable<FilterConfig['sort_order']>,
-                      ];
-                      updateFilter('sort_by', sortBy);
-                      updateFilter('sort_order', sortOrder);
+                      const parts = event.target.value.split('-');
+                      if (parts.length >= 2) {
+                        const sortBy = parts[0] as NonNullable<FilterConfig['sort_by']>;
+                        const sortOrder = parts[1] as NonNullable<FilterConfig['sort_order']>;
+                        updateFilter('sort_by', sortBy);
+                        updateFilter('sort_order', sortOrder);
+                      }
                     }}
                     className="w-full px-4 py-2.5 bg-[#0A1628]/50 border border-blue-500/20 rounded-xl text-white focus:outline-none focus:border-blue-500/50 transition-all"
                   >

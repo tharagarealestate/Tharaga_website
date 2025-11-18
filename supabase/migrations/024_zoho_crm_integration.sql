@@ -245,3 +245,5 @@ COMMENT ON FUNCTION public.get_crm_sync_stats IS 'Get sync statistics for an int
 
 
 
+
+

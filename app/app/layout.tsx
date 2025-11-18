@@ -723,10 +723,138 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             border-top: 2px solid var(--gold);
             border-bottom: 1px solid rgba(226,232,240,0.6);
             box-shadow: 0 1px 3px rgba(15,23,42,0.03), 0 10px 40px rgba(15,23,42,0.04);
+            transition: min-height 0.2s ease, padding 0.2s ease, top 0.2s ease;
           }
+          
+          /* Homepage-specific glassmorphic header styling - Matches Pricing page */
+          /* Higher specificity to override base styles */
+          body:has(.hero-premium) header.nav,
+          .homepage-header header.nav {
+            position: fixed !important;
+            top: 16px !important;
+            left: 50% !important;
+            transform: translateX(-50%) !important;
+            width: min(1200px, calc(100% - 48px)) !important;
+            max-width: 1400px !important;
+            /* Glassmorphic container matching Pricing page */
+            background: rgba(255, 255, 255, 0.12) !important;
+            backdrop-filter: blur(10px) !important;
+            -webkit-backdrop-filter: blur(10px) !important;
+            border: 1px solid rgba(255, 255, 255, 0.18) !important;
+            border-radius: 16px !important;
+            box-shadow: 0 6px 24px rgba(12, 18, 32, 0.22) !important;
+            /* Remove top gold border for homepage */
+            border-top: 1px solid rgba(255, 255, 255, 0.18) !important;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.18) !important;
+            min-height: 72px !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            z-index: 9999 !important;
+          }
+          
+          /* Sticky shrink state for homepage header */
+          body:has(.hero-premium) header.nav.is-scrolled,
+          .homepage-header header.nav.is-scrolled {
+            min-height: 56px !important;
+            top: 8px !important;
+          }
+          
+          /* Homepage header inner container */
+          body:has(.hero-premium) header.nav .inner,
+          .homepage-header header.nav .inner {
+            max-width: 100% !important;
+            padding: 12px 20px !important;
+            margin: 0 !important;
+            padding-right: clamp(130px, 10vw, 200px) !important;
+          }
+          
+          body:has(.hero-premium) header.nav.is-scrolled .inner,
+          .homepage-header header.nav.is-scrolled .inner {
+            padding: 8px 20px !important;
+          }
+          
+          /* Homepage header text color - ensure contrast */
+          body:has(.hero-premium) header.nav a,
+          body:has(.hero-premium) header.nav summary,
+          body:has(.hero-premium) header.nav .brand,
+          .homepage-header header.nav a,
+          .homepage-header header.nav summary,
+          .homepage-header header.nav .brand {
+            color: var(--slate-900) !important;
+            text-shadow: 0 1px 2px rgba(255, 255, 255, 0.8);
+          }
+          
+          /* Dark hero background variant */
+          body:has(.hero-premium.dark-hero) header.nav a,
+          body:has(.hero-premium.dark-hero) header.nav summary,
+          body:has(.hero-premium.dark-hero) header.nav .brand,
+          .homepage-header.dark-hero header.nav a,
+          .homepage-header.dark-hero header.nav summary,
+          .homepage-header.dark-hero header.nav .brand {
+            color: rgba(255, 255, 255, 0.95) !important;
+            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+          }
+          
+          body:has(.hero-premium.dark-hero) header.nav,
+          .homepage-header.dark-hero header.nav {
+            background: rgba(15, 23, 42, 0.25) !important;
+            border: 1px solid rgba(255, 255, 255, 0.12) !important;
+            backdrop-filter: blur(12px) !important;
+            -webkit-backdrop-filter: blur(12px) !important;
+          }
+          
+          /* Homepage CTA button styling - Primary CTA with #3A6FF8 */
+          body:has(.hero-premium) header.nav .thg-auth-btn,
+          .homepage-header header.nav .thg-auth-btn {
+            background: #3A6FF8 !important;
+            color: #ffffff !important;
+            border-color: #3A6FF8 !important;
+            font-weight: 600 !important;
+            padding: 8px 20px !important;
+            border-radius: 8px !important;
+            transition: all 0.2s ease !important;
+          }
+          
+          body:has(.hero-premium) header.nav .thg-auth-btn:hover,
+          .homepage-header header.nav .thg-auth-btn:hover {
+            background: #2563eb !important;
+            border-color: #2563eb !important;
+            transform: translateY(-2px) !important;
+            box-shadow: 0 4px 12px rgba(58, 111, 248, 0.3) !important;
+          }
+          
+          /* Active page indicator */
+          header.nav nav.row a[aria-current="page"]::after,
+          header.nav nav.row a.active::after {
+            content: "";
+            position: absolute;
+            bottom: -4px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 24px;
+            height: 3px;
+            background: #3A6FF8;
+            border-radius: 2px;
+          }
+          
+          header.nav nav.row a {
+            position: relative;
+            padding-bottom: 4px;
+          }
+          
+          /* Hover states with translateY effect */
+          header.nav nav.row a:hover,
+          header.nav nav.row summary:hover {
+            transform: translateY(-2px);
+          }
+          
           /* Fallback for older browsers */
           @supports not (backdrop-filter: blur(20px)) {
             header.nav { background: rgba(255,255,255,0.95); }
+            body:has(.hero-premium) header.nav,
+            .homepage-header header.nav {
+              background: rgba(255, 255, 255, 0.25) !important;
+            }
           }
           header.nav .inner { 
             max-width:1100px; 
@@ -932,6 +1060,128 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             /* Reserve extra space for auth button to avoid collisions */
             header.nav .inner{ padding-right:200px }
           }
+          /* Mobile hamburger menu for homepage */
+          @media (max-width: 767px) {
+            /* Reduce blur on mobile for performance */
+            body:has(.hero-premium) header.nav,
+            .homepage-header header.nav {
+              backdrop-filter: blur(8px) !important;
+              -webkit-backdrop-filter: blur(8px) !important;
+              background: rgba(255, 255, 255, 0.25) !important;
+            }
+            
+            body:has(.hero-premium) header.nav .inner,
+            .homepage-header header.nav .inner {
+              padding: 10px 16px !important;
+              padding-right: 50px !important;
+            }
+            
+            /* Hide desktop nav on mobile for homepage */
+            body:has(.hero-premium) header.nav nav.row,
+            .homepage-header header.nav nav.row {
+              display: none;
+            }
+            
+            /* Show hamburger button */
+            body:has(.hero-premium) header.nav .mobile-menu-toggle,
+            .homepage-header header.nav .mobile-menu-toggle {
+              display: flex !important;
+              align-items: center;
+              justify-content: center;
+              width: 44px;
+              height: 44px;
+              background: transparent;
+              border: 1px solid rgba(255, 255, 255, 0.2);
+              border-radius: 8px;
+              cursor: pointer;
+              position: absolute;
+              right: 12px;
+              top: 50%;
+              transform: translateY(-50%);
+              z-index: 10001;
+            }
+            
+            /* Mobile menu overlay */
+            body:has(.hero-premium) header.nav .mobile-menu-overlay,
+            .homepage-header header.nav .mobile-menu-overlay {
+              position: fixed;
+              inset: 0;
+              background: rgba(0, 0, 0, 0.8);
+              backdrop-filter: blur(4px);
+              z-index: 10000;
+              opacity: 0;
+              visibility: hidden;
+              transition: opacity 0.2s ease, visibility 0.2s ease;
+            }
+            
+            body:has(.hero-premium) header.nav .mobile-menu-overlay.is-open,
+            .homepage-header header.nav .mobile-menu-overlay.is-open {
+              opacity: 1;
+              visibility: visible;
+            }
+            
+            /* Mobile menu panel */
+            body:has(.hero-premium) header.nav .mobile-menu-panel,
+            .homepage-header header.nav .mobile-menu-panel {
+              position: fixed;
+              top: 0;
+              right: 0;
+              width: min(320px, 85vw);
+              height: 100vh;
+              background: rgba(255, 255, 255, 0.95);
+              backdrop-filter: blur(20px);
+              border-left: 1px solid rgba(0, 0, 0, 0.1);
+              padding: 80px 24px 24px;
+              transform: translateX(100%);
+              transition: transform 0.3s ease;
+              z-index: 10001;
+              overflow-y: auto;
+            }
+            
+            body:has(.hero-premium) header.nav .mobile-menu-panel.is-open,
+            .homepage-header header.nav .mobile-menu-panel.is-open {
+              transform: translateX(0);
+            }
+            
+            /* Mobile menu links */
+            body:has(.hero-premium) header.nav .mobile-menu-panel a,
+            .homepage-header header.nav .mobile-menu-panel a {
+              display: block;
+              padding: 16px;
+              color: var(--slate-900);
+              font-weight: 600;
+              border-radius: 8px;
+              margin-bottom: 8px;
+              min-height: 44px;
+              display: flex;
+              align-items: center;
+            }
+            
+            body:has(.hero-premium) header.nav .mobile-menu-panel a:hover,
+            .homepage-header header.nav .mobile-menu-panel a:hover {
+              background: rgba(58, 111, 248, 0.1);
+              color: #3A6FF8;
+            }
+            
+            /* Mobile menu close button */
+            body:has(.hero-premium) header.nav .mobile-menu-close,
+            .homepage-header header.nav .mobile-menu-close {
+              position: absolute;
+              top: 20px;
+              right: 20px;
+              width: 44px;
+              height: 44px;
+              background: transparent;
+              border: 1px solid rgba(0, 0, 0, 0.1);
+              border-radius: 8px;
+              cursor: pointer;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              color: var(--slate-900);
+            }
+          }
+          
           @media (max-width: 880px) {
             /* Mobile header: keep single-row like desktop, just tighter
                Reserve more right-side space so "Features | Login / Signup" never overlaps */
@@ -1208,7 +1458,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                  .text-gradient{ background:none !important; -webkit-background-clip:initial !important; background-clip:initial !important; color:#111 !important }
                  .ai-hero-figure{ margin:0; width:100%; display:grid; place-items:center; justify-self:center }
                  .ai-hero-art{ width:min(520px,95%); height:auto; opacity:.96; filter:drop-shadow(0 18px 40px rgba(30,64,175,.22)); display:block; margin:0 auto; transform:scaleX(-1); }
-                 .hero-premium{ min-height:100vh; padding-top:72px; padding-bottom:72px; color:#fff; background:linear-gradient(135deg, #071328 0%, #0F2D52 55%, #1A4173 100%); overflow:hidden; position:relative; }
+                 .hero-premium{ min-height:100vh; padding-top:calc(72px + 32px) !important; padding-bottom:72px; color:#fff; background:linear-gradient(135deg, #071328 0%, #0F2D52 55%, #1A4173 100%); overflow:hidden; position:relative; }
+                 @media (max-width: 767px) {
+                   .hero-premium{ padding-top:calc(72px + 24px) !important; }
+                 }
                  .hero-premium .inner{ max-width:1200px; margin:0 auto; padding:0 16px; display:grid; grid-template-columns:1fr; gap:32px; align-items:center }
                  @media (min-width: 1024px){ .hero-premium .inner{ grid-template-columns:1.05fr .95fr; gap:48px } }
                  .hero-premium .eyebrow{ display:inline-flex; align-items:center; gap:10px; padding:8px 12px; border-radius:9999px; background:rgba(212,175,55,.16); border:1px solid rgba(212,175,55,.28) }
@@ -1363,6 +1616,159 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               window.addEventListener('load', function(){
                 navigator.serviceWorker.register('/sw.js').catch(function(){});
               });
+            }
+            
+            // Homepage header sticky shrink behavior
+            function initHomepageHeader() {
+              const header = document.querySelector('header.nav');
+              if (!header) return;
+              
+              // Check if we're on homepage
+              const isHomepage = document.querySelector('.hero-premium') || document.body.classList.contains('homepage-header');
+              if (!isHomepage) return;
+              
+              // Add class to body for CSS fallback
+              document.body.classList.add('homepage-header');
+              
+              let lastScrollY = window.scrollY;
+              let ticking = false;
+              
+              function updateHeader() {
+                const scrollY = window.scrollY;
+                
+                if (scrollY > 50) {
+                  header.classList.add('is-scrolled');
+                } else {
+                  header.classList.remove('is-scrolled');
+                }
+                
+                lastScrollY = scrollY;
+                ticking = false;
+              }
+              
+              function onScroll() {
+                if (!ticking) {
+                  window.requestAnimationFrame(updateHeader);
+                  ticking = true;
+                }
+              }
+              
+              window.addEventListener('scroll', onScroll, { passive: true });
+              updateHeader();
+            }
+            
+            // Mobile menu functionality
+            function initMobileMenu() {
+              const header = document.querySelector('header.nav');
+              if (!header) return;
+              
+              const toggleBtn = header.querySelector('.mobile-menu-toggle');
+              const overlay = header.querySelector('.mobile-menu-overlay');
+              const panel = header.querySelector('.mobile-menu-panel');
+              const desktopNav = header.querySelector('nav.row');
+              
+              if (!toggleBtn || !overlay || !panel) return;
+              
+              function populateMobileMenu() {
+                if (!desktopNav || !panel) return;
+                
+                const menuItems = desktopNav.querySelectorAll('a, details');
+                let menuHTML = '';
+                
+                menuItems.forEach(function(item) {
+                  if (item.tagName === 'A') {
+                    const href = item.getAttribute('href') || '#';
+                    const text = item.textContent.trim();
+                    menuHTML += '<a href="' + href + '" data-next-link>' + text + '</a>';
+                  } else if (item.tagName === 'DETAILS') {
+                    const summary = item.querySelector('summary');
+                    const menu = item.querySelector('.menu');
+                    if (summary && menu) {
+                      menuHTML += '<div class="mobile-menu-group">';
+                      menuHTML += '<div class="mobile-menu-title">' + summary.textContent.trim() + '</div>';
+                      const links = menu.querySelectorAll('a');
+                      links.forEach(function(link) {
+                        const href = link.getAttribute('href') || '#';
+                        const text = link.textContent.trim();
+                        menuHTML += '<a href="' + href + '" data-next-link class="mobile-menu-item">' + text + '</a>';
+                      });
+                      menuHTML += '</div>';
+                    }
+                  }
+                });
+                
+                const authContainer = header.querySelector('#site-header-auth-container');
+                if (authContainer) {
+                  const authLinks = authContainer.querySelectorAll('a, button');
+                  if (authLinks.length > 0) {
+                    menuHTML += '<div class="mobile-menu-divider"></div>';
+                    authLinks.forEach(function(link) {
+                      const href = link.getAttribute('href') || '#';
+                      const text = link.textContent.trim();
+                      const isButton = link.tagName === 'BUTTON';
+                      if (isButton) {
+                        menuHTML += '<button class="mobile-menu-cta">' + text + '</button>';
+                      } else {
+                        menuHTML += '<a href="' + href + '" data-next-link class="mobile-menu-cta">' + text + '</a>';
+                      }
+                    });
+                  }
+                }
+                
+                panel.innerHTML = '<button class="mobile-menu-close" aria-label="Close menu"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>' + menuHTML;
+                
+                const newCloseBtn = panel.querySelector('.mobile-menu-close');
+                if (newCloseBtn) {
+                  newCloseBtn.addEventListener('click', closeMenu);
+                }
+              }
+              
+              function openMenu() {
+                overlay.classList.add('is-open');
+                panel.classList.add('is-open');
+                toggleBtn.setAttribute('aria-expanded', 'true');
+                document.body.style.overflow = 'hidden';
+                populateMobileMenu();
+              }
+              
+              function closeMenu() {
+                overlay.classList.remove('is-open');
+                panel.classList.remove('is-open');
+                toggleBtn.setAttribute('aria-expanded', 'false');
+                document.body.style.overflow = '';
+              }
+              
+              toggleBtn.addEventListener('click', openMenu);
+              overlay.addEventListener('click', closeMenu);
+              
+              document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape' && panel.classList.contains('is-open')) {
+                  closeMenu();
+                }
+              });
+              
+              function updateMobileMenuVisibility() {
+                if (window.innerWidth <= 767) {
+                  toggleBtn.style.display = 'flex';
+                } else {
+                  toggleBtn.style.display = 'none';
+                  closeMenu();
+                }
+              }
+              
+              window.addEventListener('resize', updateMobileMenuVisibility);
+              updateMobileMenuVisibility();
+            }
+            
+            // Initialize on DOM ready
+            if (document.readyState === 'loading') {
+              document.addEventListener('DOMContentLoaded', function() {
+                initHomepageHeader();
+                initMobileMenu();
+              });
+            } else {
+              initHomepageHeader();
+              initMobileMenu();
             }
           })();
         `}} />

@@ -235,9 +235,97 @@ html, body {
       border-top: 2px solid var(--gold);
       border-bottom: 1px solid rgba(226,232,240,0.6);
       box-shadow: 0 1px 3px rgba(15,23,42,0.03), 0 10px 40px rgba(15,23,42,0.04);
+      transition: min-height 0.2s ease, padding 0.2s ease, top 0.2s ease;
       /* Fallback for older browsers */
       @supports not (backdrop-filter: blur(20px)) {
         background: rgba(255,255,255,0.95);
+      }
+    }
+    
+    /* Homepage-specific glassmorphic header styling - Matches Pricing page */
+    body:has(.hero-premium) header.nav,
+    .homepage-header header.nav {
+      position: fixed !important;
+      top: 16px !important;
+      left: 50% !important;
+      transform: translateX(-50%) !important;
+      width: min(1200px, calc(100% - 48px)) !important;
+      max-width: 1400px !important;
+      background: rgba(255, 255, 255, 0.12) !important;
+      backdrop-filter: blur(10px) !important;
+      -webkit-backdrop-filter: blur(10px) !important;
+      border: 1px solid rgba(255, 255, 255, 0.18) !important;
+      border-radius: 16px !important;
+      box-shadow: 0 6px 24px rgba(12, 18, 32, 0.22) !important;
+      border-top: 1px solid rgba(255, 255, 255, 0.18) !important;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.18) !important;
+      min-height: 72px !important;
+      padding: 0 !important;
+      margin: 0 !important;
+      z-index: 9999 !important;
+    }
+    
+    /* Sticky shrink state */
+    body:has(.hero-premium) header.nav.is-scrolled,
+    .homepage-header header.nav.is-scrolled {
+      min-height: 56px !important;
+      top: 8px !important;
+    }
+    
+    /* Homepage header inner container */
+    body:has(.hero-premium) header.nav .inner,
+    .homepage-header header.nav .inner {
+      max-width: 100% !important;
+      padding: 12px 20px !important;
+      margin: 0 !important;
+      padding-right: clamp(130px, 10vw, 200px) !important;
+    }
+    
+    body:has(.hero-premium) header.nav.is-scrolled .inner,
+    .homepage-header header.nav.is-scrolled .inner {
+      padding: 8px 20px !important;
+    }
+    
+    /* Homepage header text color */
+    body:has(.hero-premium) header.nav a,
+    body:has(.hero-premium) header.nav summary,
+    body:has(.hero-premium) header.nav .brand,
+    .homepage-header header.nav a,
+    .homepage-header header.nav summary,
+    .homepage-header header.nav .brand {
+      color: var(--slate-900) !important;
+      text-shadow: 0 1px 2px rgba(255, 255, 255, 0.8);
+    }
+    
+    /* Homepage CTA button styling */
+    body:has(.hero-premium) header.nav .thg-auth-btn,
+    .homepage-header header.nav .thg-auth-btn {
+      background: #3A6FF8 !important;
+      color: #ffffff !important;
+      border-color: #3A6FF8 !important;
+      font-weight: 600 !important;
+      padding: 8px 20px !important;
+      border-radius: 8px !important;
+    }
+    
+    body:has(.hero-premium) header.nav .thg-auth-btn:hover,
+    .homepage-header header.nav .thg-auth-btn:hover {
+      background: #2563eb !important;
+      border-color: #2563eb !important;
+      transform: translateY(-2px) !important;
+      box-shadow: 0 4px 12px rgba(58, 111, 248, 0.3) !important;
+    }
+    
+    /* Homepage hero padding */
+    body:has(.hero-premium) .hero-premium,
+    .homepage-header .hero-premium {
+      padding-top: calc(72px + 32px) !important;
+    }
+    
+    @media (max-width: 767px) {
+      body:has(.hero-premium) .hero-premium,
+      .homepage-header .hero-premium {
+        padding-top: calc(72px + 24px) !important;
       }
     }
     /* Reserve space on the right for About | Login group */

@@ -45,16 +45,13 @@
       transform: translateX(-50%) !important;
       width: min(1200px, calc(100% - 48px)) !important;
       max-width: 1400px !important;
-      /* Glassmorphic container EXACTLY matching Pricing page cards */
+      /* EXACT Builder Pro container styling from pricing page */
       background: rgba(255, 255, 255, 0.1) !important;
       backdrop-filter: blur(24px) !important;
       -webkit-backdrop-filter: blur(24px) !important;
       border: 1px solid rgba(255, 255, 255, 0.2) !important;
-      border-radius: 16px !important;
+      border-radius: 24px !important;
       box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15) !important;
-      /* Remove top gold border for homepage */
-      border-top: 1px solid rgba(255, 255, 255, 0.2) !important;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.2) !important;
       min-height: 72px !important;
       padding: 0 !important;
       margin: 0 !important;
@@ -62,7 +59,7 @@
       transition: min-height 0.2s ease, padding 0.2s ease, top 0.2s ease, box-shadow 0.2s ease;
       /* Fallback for older browsers */
       @supports not (backdrop-filter: blur(24px)) {
-        background: rgba(255, 255, 255, 0.2) !important;
+        background: rgba(255, 255, 255, 0.25) !important;
       }
     }
     
@@ -90,12 +87,11 @@
       padding: 10px 24px !important;
     }
     .brand { font-family: var(--font-display); font-weight:800; letter-spacing:.2px; font-size:24px }
-    /* White text for visibility on dark hero background - matching pricing page */
-    header.nav .brand{ color:#ffffff !important; text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1); }
+    /* White text matching pricing page - no text-shadow needed with solid background */
+    header.nav .brand{ color:#ffffff !important; font-weight:800 !important; }
     header.nav a, header.nav summary{
       color:#ffffff !important;
-      font-weight:600;
-      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+      font-weight:700 !important;
       transition: background 0.2s ease, color 0.2s ease, transform 0.2s ease;
     }
     header.nav a:hover, header.nav summary:hover{
@@ -112,14 +108,13 @@
       gap:8px; 
       padding:6px 12px; 
       border-radius:999px; 
-      background:rgba(255, 255, 255, 0.15) !important; 
-      backdrop-filter: blur(8px) !important;
-      -webkit-backdrop-filter: blur(8px) !important;
-      border:1px solid rgba(255, 255, 255, 0.25) !important; 
+      background:rgba(255, 255, 255, 0.1) !important; 
+      backdrop-filter: blur(24px) !important;
+      -webkit-backdrop-filter: blur(24px) !important;
+      border:1px solid rgba(255, 255, 255, 0.2) !important; 
       font-size:12px; 
       color:#ffffff !important;
-      font-weight:600;
-      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+      font-weight:700 !important;
     }
     .hero { position:relative; padding:56px 16px 28px; background:
       linear-gradient(180deg, rgba(255,255,255,1), rgba(255,255,255,.92)); }
@@ -192,7 +187,7 @@
       padding:6px 12px; 
       border-radius:8px; 
       font-size:15px;
-      font-weight:600;
+      font-weight:700 !important;
       color:#ffffff !important;
       transition: background 0.2s ease;
     }
@@ -212,7 +207,7 @@
       margin-left:4px;
     }
     details.dropdown[open] > summary::after{ transform:rotate(180deg) }
-    /* Dropdown menu: EXACT glassmorphic design matching pricing page */
+    /* Dropdown menu: EXACT Builder Pro container styling - NOT transparent */
     details.dropdown .menu{
       position:absolute; 
       top:calc(100% + 10px); 
@@ -222,8 +217,8 @@
       backdrop-filter: blur(24px) !important;
       -webkit-backdrop-filter: blur(24px) !important;
       border:1px solid rgba(255, 255, 255, 0.2) !important;
-      border-radius:12px; 
-      padding:8px;
+      border-radius:24px !important;
+      padding:12px;
       box-shadow:0 8px 32px 0 rgba(31, 38, 135, 0.15) !important;
       z-index:10000; 
       opacity:0; 
@@ -231,6 +226,11 @@
       visibility:hidden; 
       pointer-events:none;
       transition:opacity .18s ease, transform .18s ease, visibility 0s linear .18s;
+    }
+    @supports not (backdrop-filter: blur(24px)) {
+      details.dropdown .menu {
+        background:rgba(255, 255, 255, 0.25) !important;
+      }
     }
     details.dropdown .menu::before{
       content:""; 
@@ -256,7 +256,7 @@
       color:#ffffff !important; 
       text-decoration:none; 
       text-align:left; 
-      font-weight:500;
+      font-weight:600 !important;
       font-size:14px;
       transition: background .15s ease, transform .06s ease, color .15s ease;
       margin-bottom:2px;
@@ -302,14 +302,14 @@
     }
     /* Login/Signup button - glassy gradient matching pricing page */
     header.nav .thg-auth-btn{
-      background: rgba(255, 255, 255, 0.15) !important;
-      backdrop-filter: blur(8px) !important;
-      -webkit-backdrop-filter: blur(8px) !important;
+      background: rgba(255, 255, 255, 0.1) !important;
+      backdrop-filter: blur(24px) !important;
+      -webkit-backdrop-filter: blur(24px) !important;
       color: #ffffff !important;
-      border: 1px solid rgba(255, 255, 255, 0.25) !important;
-      font-weight: 600 !important;
+      border: 1px solid rgba(255, 255, 255, 0.2) !important;
+      font-weight: 700 !important;
       padding: 8px 18px !important;
-      border-radius: 8px !important;
+      border-radius: 12px !important;
       transition: all 0.2s ease !important;
       font-size:14px;
       white-space:nowrap;
@@ -322,11 +322,12 @@
     }
     /* User button when logged in - glassy styling */
     header.nav .thg-auth-btn.is-auth{
-      background: rgba(255, 255, 255, 0.15) !important;
-      backdrop-filter: blur(8px) !important;
-      -webkit-backdrop-filter: blur(8px) !important;
-      border: 1px solid rgba(255, 255, 255, 0.25) !important;
+      background: rgba(255, 255, 255, 0.1) !important;
+      backdrop-filter: blur(24px) !important;
+      -webkit-backdrop-filter: blur(24px) !important;
+      border: 1px solid rgba(255, 255, 255, 0.2) !important;
       color: #ffffff !important;
+      font-weight: 700 !important;
     }
     header.nav .thg-auth-btn.is-auth:hover{
       background: rgba(255, 255, 255, 0.25) !important;
@@ -417,12 +418,11 @@
       .sub { font-size:15px }
     }
 
-    /* Homepage header text color - ensure contrast */
+    /* Homepage header text color - white matching pricing page */
     header.nav a,
     header.nav summary,
     header.nav .brand {
-      color: var(--slate-900) !important;
-      text-shadow: 0 1px 2px rgba(255, 255, 255, 0.8);
+      color: #ffffff !important;
     }
     
     /* Active page indicator */
@@ -863,10 +863,10 @@
 @keyframes thgspin{ to{ transform:rotate(360deg); } }
 
 /* Account menu */
-.thg-auth-menu{ position:absolute;top:calc(100% + 10px);right:0;min-width:280px;background:rgba(255, 255, 255, 0.1) !important;backdrop-filter: blur(24px) !important;-webkit-backdrop-filter: blur(24px) !important;color:#ffffff !important; border:1px solid rgba(255,255,255,0.2) !important;border-radius:12px;padding:8px;box-shadow:0 8px 32px 0 rgba(31, 38, 135, 0.15) !important; visibility:hidden; opacity:0; transform:translateY(-6px) scale(.98); transform-origin:top right; pointer-events:none; transition:opacity .16s ease, transform .16s ease, visibility 0s linear .16s; z-index:${Z_BASE+1}; }
-.thg-auth-menu::before{ content:""; position:absolute; top:0; left:0; right:0; height:2px; border-radius:12px 12px 0 0; background:linear-gradient(90deg, #d4af37, #1e40af); }
+.thg-auth-menu{ position:absolute;top:calc(100% + 10px);right:0;min-width:280px;background:rgba(255, 255, 255, 0.1) !important;backdrop-filter: blur(24px) !important;-webkit-backdrop-filter: blur(24px) !important;color:#ffffff !important; border:1px solid rgba(255,255,255,0.2) !important;border-radius:24px !important;padding:12px;box-shadow:0 8px 32px 0 rgba(31, 38, 135, 0.15) !important; visibility:hidden; opacity:0; transform:translateY(-6px) scale(.98); transform-origin:top right; pointer-events:none; transition:opacity .16s ease, transform .16s ease, visibility 0s linear .16s; z-index:${Z_BASE+1}; }
+.thg-auth-menu::before{ content:""; position:absolute; top:0; left:0; right:0; height:2px; border-radius:24px 24px 0 0; background:linear-gradient(90deg, #d4af37, #1e40af); }
 .thg-auth-menu[aria-hidden="false"]{ visibility:visible; opacity:1; transform:translateY(0) scale(1); pointer-events:auto; transition:opacity .16s ease, transform .16s ease, visibility 0s linear 0s; }
-.thg-auth-item{ display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:8px;text-decoration:none;color:#ffffff !important;cursor:pointer; font-weight:500; font-size:14px; transition: background .15s ease, transform .06s ease; margin-bottom:2px; }
+.thg-auth-item{ display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:8px;text-decoration:none;color:#ffffff !important;cursor:pointer; font-weight:600 !important; font-size:14px; transition: background .15s ease, transform .06s ease; margin-bottom:2px; }
 .thg-auth-item:last-child{ margin-bottom:0; }
 .thg-auth-item:hover{background:rgba(255,255,255,0.15) !important; transform:translateX(2px); }
 .thg-auth-item[tabindex]{outline:none}

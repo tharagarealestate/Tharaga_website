@@ -243,7 +243,7 @@ html, body {
       }
     }
     
-    /* Homepage header overrides base styles - higher specificity */
+    /* Homepage header overrides base styles - EXACT Builder Pro container styling from pricing page */
     body:has(.hero-premium) header.nav,
     .homepage-header header.nav {
       position: fixed !important;
@@ -252,18 +252,48 @@ html, body {
       transform: translateX(-50%) !important;
       width: min(1200px, calc(100% - 48px)) !important;
       max-width: 1400px !important;
-      background: rgba(255, 255, 255, 0.12) !important;
-      backdrop-filter: blur(10px) !important;
-      -webkit-backdrop-filter: blur(10px) !important;
-      border: 1px solid rgba(255, 255, 255, 0.18) !important;
-      border-radius: 16px !important;
-      box-shadow: 0 6px 24px rgba(12, 18, 32, 0.22) !important;
-      border-top: 1px solid rgba(255, 255, 255, 0.18) !important;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.18) !important;
+      /* EXACT Builder Pro container styling from pricing page */
+      background: rgba(255, 255, 255, 0.1) !important;
+      backdrop-filter: blur(24px) !important;
+      -webkit-backdrop-filter: blur(24px) !important;
+      /* Gold border matching Builder Pro highlighted card */
+      border: 2px solid rgba(212, 175, 55, 0.5) !important;
+      border-radius: 24px !important;
+      box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15), 0 0 0 1px rgba(212, 175, 55, 0.3) !important;
       min-height: 72px !important;
       padding: 0 !important;
       margin: 0 !important;
       z-index: 9999 !important;
+      transition: min-height 0.2s ease, padding 0.2s ease, top 0.2s ease, box-shadow 0.2s ease;
+      position: relative;
+      overflow: visible !important;
+    }
+    
+    @supports not (backdrop-filter: blur(24px)) {
+      body:has(.hero-premium) header.nav,
+      .homepage-header header.nav {
+        background: rgba(255, 255, 255, 0.25) !important;
+      }
+    }
+    
+    /* Gold shimmer effect - matching Builder Pro container */
+    body:has(.hero-premium) header.nav::before,
+    .homepage-header header.nav::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+      transform: translateX(-100%);
+      animation: shimmer 3s ease-in-out infinite;
+      pointer-events: none;
+      z-index: 1;
+      border-radius: 24px;
+    }
+    
+    @keyframes shimmer {
+      0% { transform: translateX(-100%); }
+      50% { transform: translateX(100%); }
+      100% { transform: translateX(100%); }
     }
     
     /* Sticky shrink state for homepage */
@@ -273,34 +303,306 @@ html, body {
       top: 8px !important;
     }
     
-    /* Homepage header text color */
-    body:has(.hero-premium) header.nav a,
-    body:has(.hero-premium) header.nav summary,
-    body:has(.hero-premium) header.nav .brand,
-    .homepage-header header.nav a,
-    .homepage-header header.nav summary,
-    .homepage-header header.nav .brand {
-      color: var(--slate-900) !important;
-      text-shadow: 0 1px 2px rgba(255, 255, 255, 0.8);
+    /* Homepage header inner container - perfect alignment */
+    body:has(.hero-premium) header.nav .inner,
+    .homepage-header header.nav .inner {
+      max-width: 100% !important;
+      padding: 14px 24px !important;
+      margin: 0 !important;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      position: relative;
+      padding-right: clamp(140px, 12vw, 220px) !important;
+      height: 100%;
+      min-height: inherit;
+      z-index: 2;
+      overflow: visible !important;
     }
     
-    /* Homepage CTA button styling */
+    body:has(.hero-premium) header.nav.is-scrolled .inner,
+    .homepage-header header.nav.is-scrolled .inner {
+      padding: 10px 24px !important;
+    }
+    
+    /* White text matching pricing page - no text-shadow needed with solid background */
+    body:has(.hero-premium) header.nav .brand,
+    .homepage-header header.nav .brand {
+      color: #ffffff !important;
+      font-weight: 800 !important;
+    }
+    
+    body:has(.hero-premium) header.nav a,
+    body:has(.hero-premium) header.nav summary,
+    .homepage-header header.nav a,
+    .homepage-header header.nav summary {
+      color: #ffffff !important;
+      font-weight: 700 !important;
+      transition: background 0.2s ease, color 0.2s ease, transform 0.2s ease;
+    }
+    
+    body:has(.hero-premium) header.nav a:hover,
+    body:has(.hero-premium) header.nav summary:hover,
+    .homepage-header header.nav a:hover,
+    .homepage-header header.nav summary:hover {
+      background: rgba(255, 255, 255, 0.15) !important;
+      color: #ffffff !important;
+      border-radius: 8px;
+      text-decoration: none;
+      transform: translateY(-1px);
+    }
+    
+    /* Trust pill - glassy styling matching pricing page */
+    body:has(.hero-premium) header.nav .pill,
+    .homepage-header header.nav .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 12px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.1) !important;
+      backdrop-filter: blur(24px) !important;
+      -webkit-backdrop-filter: blur(24px) !important;
+      border: 1px solid rgba(255, 255, 255, 0.2) !important;
+      font-size: 12px;
+      color: #ffffff !important;
+      font-weight: 700 !important;
+    }
+    
+    /* Dropdown styling - non-transparent for perfect visibility */
+    body:has(.hero-premium) details.dropdown,
+    .homepage-header details.dropdown {
+      position: relative;
+      z-index: 10001;
+    }
+    
+    body:has(.hero-premium) details.dropdown > summary,
+    .homepage-header details.dropdown > summary {
+      list-style: none;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-size: 15px;
+      font-weight: 700 !important;
+      color: #ffffff !important;
+      transition: background 0.2s ease;
+    }
+    
+    body:has(.hero-premium) details.dropdown > summary:hover,
+    .homepage-header details.dropdown > summary:hover {
+      background: rgba(255, 255, 255, 0.15) !important;
+    }
+    
+    body:has(.hero-premium) details.dropdown > summary::-webkit-details-marker,
+    .homepage-header details.dropdown > summary::-webkit-details-marker {
+      display: none;
+    }
+    
+    body:has(.hero-premium) details.dropdown > summary::after,
+    .homepage-header details.dropdown > summary::after {
+      content: "";
+      width: 0;
+      height: 0;
+      border-left: 5px solid transparent;
+      border-right: 5px solid transparent;
+      border-top: 6px solid rgba(255, 255, 255, 0.9);
+      opacity: 0.9;
+      transition: transform 0.18s ease;
+      margin-left: 4px;
+    }
+    
+    body:has(.hero-premium) details.dropdown[open] > summary::after,
+    .homepage-header details.dropdown[open] > summary::after {
+      transform: rotate(180deg);
+    }
+    
+    /* Dropdown menu: Non-transparent for perfect visibility */
+    body:has(.hero-premium) details.dropdown .menu,
+    .homepage-header details.dropdown .menu {
+      position: absolute;
+      top: calc(100% + 10px);
+      right: 0;
+      min-width: 240px;
+      background: rgba(255, 255, 255, 0.95) !important;
+      backdrop-filter: blur(24px) !important;
+      -webkit-backdrop-filter: blur(24px) !important;
+      border: 1px solid rgba(255, 255, 255, 0.3) !important;
+      border-radius: 24px !important;
+      padding: 12px;
+      box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.25) !important;
+      z-index: 10000;
+      opacity: 0;
+      transform: translateY(-6px) scale(0.98);
+      visibility: hidden;
+      pointer-events: none;
+      transition: opacity 0.18s ease, transform 0.18s ease, visibility 0s linear 0.18s;
+    }
+    
+    @supports not (backdrop-filter: blur(24px)) {
+      body:has(.hero-premium) details.dropdown .menu,
+      .homepage-header details.dropdown .menu {
+        background: rgba(255, 255, 255, 0.98) !important;
+      }
+    }
+    
+    body:has(.hero-premium) details.dropdown .menu::before,
+    .homepage-header details.dropdown .menu::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+      border-radius: 12px 12px 0 0;
+      background: linear-gradient(90deg, #d4af37, #1e40af);
+    }
+    
+    body:has(.hero-premium) details.dropdown[open] .menu,
+    .homepage-header details.dropdown[open] .menu {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+      visibility: visible;
+      pointer-events: auto;
+      transition: opacity 0.18s ease, transform 0.18s ease, visibility 0s linear 0s;
+    }
+    
+    body:has(.hero-premium) details.dropdown .menu a,
+    .homepage-header details.dropdown .menu a {
+      display: block;
+      padding: 10px 14px;
+      border-radius: 8px;
+      color: #111 !important;
+      text-decoration: none;
+      text-align: left;
+      font-weight: 600 !important;
+      font-size: 14px;
+      transition: background 0.15s ease, transform 0.06s ease, color 0.15s ease;
+      margin-bottom: 2px;
+    }
+    
+    body:has(.hero-premium) details.dropdown .menu a:last-child,
+    .homepage-header details.dropdown .menu a:last-child {
+      margin-bottom: 0;
+    }
+    
+    body:has(.hero-premium) details.dropdown .menu a:hover,
+    .homepage-header details.dropdown .menu a:hover {
+      background: rgba(0, 0, 0, 0.05) !important;
+      color: #111 !important;
+      transform: translateX(2px);
+    }
+    
+    /* Auth buttons on glassy header - EXACT pricing page glassy gradient */
+    body:has(.hero-premium) header.nav .thg-auth-wrap,
+    .homepage-header header.nav .thg-auth-wrap {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      position: absolute;
+      right: 20px;
+      top: 50%;
+      transform: translateY(-50%);
+    }
+    
+    body:has(.hero-premium) header.nav .thg-auth-wrap::before,
+    .homepage-header header.nav .thg-auth-wrap::before {
+      content: "";
+      display: inline-block;
+      width: 1px;
+      height: 20px;
+      background: rgba(255, 255, 255, 0.3) !important;
+      border-radius: 1px;
+    }
+    
+    /* Login/Signup button - glassy gradient matching pricing page */
     body:has(.hero-premium) header.nav .thg-auth-btn,
     .homepage-header header.nav .thg-auth-btn {
-      background: #3A6FF8 !important;
+      background: rgba(255, 255, 255, 0.1) !important;
+      backdrop-filter: blur(24px) !important;
+      -webkit-backdrop-filter: blur(24px) !important;
       color: #ffffff !important;
-      border-color: #3A6FF8 !important;
-      font-weight: 600 !important;
-      padding: 8px 20px !important;
-      border-radius: 8px !important;
+      border: 1px solid rgba(255, 255, 255, 0.2) !important;
+      font-weight: 700 !important;
+      padding: 8px 18px !important;
+      border-radius: 12px !important;
+      transition: all 0.2s ease !important;
+      font-size: 14px;
+      white-space: nowrap;
     }
     
     body:has(.hero-premium) header.nav .thg-auth-btn:hover,
     .homepage-header header.nav .thg-auth-btn:hover {
-      background: #2563eb !important;
-      border-color: #2563eb !important;
-      transform: translateY(-2px) !important;
-      box-shadow: 0 4px 12px rgba(58, 111, 248, 0.3) !important;
+      background: rgba(255, 255, 255, 0.25) !important;
+      border-color: rgba(255, 255, 255, 0.35) !important;
+      transform: translateY(-1px) !important;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+    }
+    
+    /* User button when logged in - glassy styling */
+    body:has(.hero-premium) header.nav .thg-auth-btn.is-auth,
+    .homepage-header header.nav .thg-auth-btn.is-auth {
+      background: rgba(255, 255, 255, 0.1) !important;
+      backdrop-filter: blur(24px) !important;
+      -webkit-backdrop-filter: blur(24px) !important;
+      border: 1px solid rgba(255, 255, 255, 0.2) !important;
+      color: #ffffff !important;
+      font-weight: 700 !important;
+    }
+    
+    body:has(.hero-premium) header.nav .thg-auth-btn.is-auth:hover,
+    .homepage-header header.nav .thg-auth-btn.is-auth:hover {
+      background: rgba(255, 255, 255, 0.25) !important;
+      border-color: rgba(255, 255, 255, 0.35) !important;
+    }
+    
+    body:has(.hero-premium) header.nav .thg-auth-btn.is-auth::after,
+    .homepage-header header.nav .thg-auth-btn.is-auth::after {
+      border-top-color: rgba(255, 255, 255, 0.9) !important;
+    }
+    
+    body:has(.hero-premium) header.nav .thg-auth-btn .thg-initial,
+    .homepage-header header.nav .thg-auth-btn .thg-initial {
+      background: rgba(255, 255, 255, 0.2) !important;
+      color: #ffffff !important;
+      border: 1px solid rgba(255, 255, 255, 0.3) !important;
+    }
+    
+    /* Hide any X/close buttons in header completely */
+    body:has(.hero-premium) header.nav button[aria-label*="close" i],
+    body:has(.hero-premium) header.nav button[aria-label*="Close" i],
+    body:has(.hero-premium) header.nav .close,
+    body:has(.hero-premium) header.nav .close-btn,
+    body:has(.hero-premium) header.nav button.close,
+    body:has(.hero-premium) header.nav [class*="close"],
+    body:has(.hero-premium) header.nav [class*="x-icon"],
+    body:has(.hero-premium) header.nav svg[aria-label*="close" i],
+    body:has(.hero-premium) header.nav button:has(svg[aria-label*="close" i]),
+    body:has(.hero-premium) header.nav .thg-auth-wrap button:has(svg),
+    body:has(.hero-premium) header.nav .thg-auth-wrap > button:not(.thg-auth-btn),
+    .homepage-header header.nav button[aria-label*="close" i],
+    .homepage-header header.nav button[aria-label*="Close" i],
+    .homepage-header header.nav .close,
+    .homepage-header header.nav .close-btn,
+    .homepage-header header.nav button.close,
+    .homepage-header header.nav [class*="close"],
+    .homepage-header header.nav [class*="x-icon"],
+    .homepage-header header.nav svg[aria-label*="close" i],
+    .homepage-header header.nav button:has(svg[aria-label*="close" i]),
+    .homepage-header header.nav .thg-auth-wrap button:has(svg),
+    .homepage-header header.nav .thg-auth-wrap > button:not(.thg-auth-btn) {
+      display: none !important;
+      visibility: hidden !important;
+      opacity: 0 !important;
+      pointer-events: none !important;
+    }
+    
+    body:has(.hero-premium) header.nav .divider,
+    .homepage-header header.nav .divider {
+      background: rgba(255, 255, 255, 0.3) !important;
     }
     
     /* Homepage hero padding */
@@ -315,21 +617,18 @@ html, body {
         padding-top: calc(72px + 24px) !important;
       }
     }
+    
     /* Reserve space on the right for About | Login group */
-    header.nav .inner { max-width:1100px; margin:0 auto; padding:10px 16px; display:flex; align-items:center; justify-content:space-between; gap:10px; position:relative; padding-right: clamp(130px, 10vw, 200px) }
-    
-    /* Homepage header inner container overrides */
-    body:has(.hero-premium) header.nav .inner,
-    .homepage-header header.nav .inner {
-      max-width: 100% !important;
-      padding: 12px 20px !important;
-      margin: 0 !important;
-      padding-right: clamp(130px, 10vw, 200px) !important;
-    }
-    
-    body:has(.hero-premium) header.nav.is-scrolled .inner,
-    .homepage-header header.nav.is-scrolled .inner {
-      padding: 8px 20px !important;
+    header.nav .inner { 
+      max-width: 1100px; 
+      margin: 0 auto; 
+      padding: 10px 16px; 
+      display: flex; 
+      align-items: center; 
+      justify-content: space-between; 
+      gap: 10px; 
+      position: relative; 
+      padding-right: clamp(130px, 10vw, 200px);
     }
     .brand { font-family: var(--font-display); font-weight:800; letter-spacing:.2px; font-size:24px }
     header.nav .brand{ color:var(--slate-900); }

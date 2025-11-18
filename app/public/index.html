@@ -49,18 +49,37 @@
       background: rgba(255, 255, 255, 0.1) !important;
       backdrop-filter: blur(24px) !important;
       -webkit-backdrop-filter: blur(24px) !important;
-      border: 1px solid rgba(255, 255, 255, 0.2) !important;
+      /* Gold border matching Builder Pro highlighted card */
+      border: 2px solid rgba(212, 175, 55, 0.5) !important;
       border-radius: 24px !important;
-      box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15) !important;
+      box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15), 0 0 0 1px rgba(212, 175, 55, 0.3) !important;
       min-height: 72px !important;
       padding: 0 !important;
       margin: 0 !important;
       z-index: 9999 !important;
       transition: min-height 0.2s ease, padding 0.2s ease, top 0.2s ease, box-shadow 0.2s ease;
+      position: relative;
+      overflow: hidden;
       /* Fallback for older browsers */
       @supports not (backdrop-filter: blur(24px)) {
         background: rgba(255, 255, 255, 0.25) !important;
       }
+    }
+    /* Gold shimmer effect - matching Builder Pro container */
+    header.nav::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+      transform: translateX(-100%);
+      animation: shimmer 3s ease-in-out infinite;
+      pointer-events: none;
+      z-index: 1;
+    }
+    @keyframes shimmer {
+      0% { transform: translateX(-100%); }
+      50% { transform: translateX(100%); }
+      100% { transform: translateX(100%); }
     }
     
     /* Sticky shrink state for homepage header */
@@ -81,6 +100,7 @@
       padding-right: clamp(140px, 12vw, 220px) !important;
       height:100%;
       min-height:inherit;
+      z-index: 2;
     }
     
     header.nav.is-scrolled .inner {
@@ -207,19 +227,19 @@
       margin-left:4px;
     }
     details.dropdown[open] > summary::after{ transform:rotate(180deg) }
-    /* Dropdown menu: EXACT Builder Pro container styling - NOT transparent */
+    /* Dropdown menu: NOT transparent - solid background matching Builder Pro */
     details.dropdown .menu{
       position:absolute; 
       top:calc(100% + 10px); 
       right:0; 
       min-width:240px;
-      background:rgba(255, 255, 255, 0.1) !important;
+      background:rgba(255, 255, 255, 0.15) !important;
       backdrop-filter: blur(24px) !important;
       -webkit-backdrop-filter: blur(24px) !important;
-      border:1px solid rgba(255, 255, 255, 0.2) !important;
+      border:1px solid rgba(255, 255, 255, 0.25) !important;
       border-radius:24px !important;
       padding:12px;
-      box-shadow:0 8px 32px 0 rgba(31, 38, 135, 0.15) !important;
+      box-shadow:0 8px 32px 0 rgba(31, 38, 135, 0.25) !important;
       z-index:10000; 
       opacity:0; 
       transform:translateY(-6px) scale(.98);
@@ -229,7 +249,7 @@
     }
     @supports not (backdrop-filter: blur(24px)) {
       details.dropdown .menu {
-        background:rgba(255, 255, 255, 0.25) !important;
+        background:rgba(255, 255, 255, 0.35) !important;
       }
     }
     details.dropdown .menu::before{
@@ -340,6 +360,23 @@
       background:rgba(255, 255, 255, 0.2) !important;
       color:#ffffff !important;
       border:1px solid rgba(255, 255, 255, 0.3) !important;
+    }
+    /* Hide any X/close buttons in header completely */
+    header.nav button[aria-label*="close" i],
+    header.nav button[aria-label*="Close" i],
+    header.nav .close,
+    header.nav .close-btn,
+    header.nav button.close,
+    header.nav [class*="close"],
+    header.nav [class*="x-icon"],
+    header.nav svg[aria-label*="close" i],
+    header.nav button:has(svg[aria-label*="close" i]),
+    header.nav .thg-auth-wrap button:has(svg),
+    header.nav .thg-auth-wrap > button:not(.thg-auth-btn) {
+      display: none !important;
+      visibility: hidden !important;
+      opacity: 0 !important;
+      pointer-events: none !important;
     }
     header.nav .divider{ background:rgba(255, 255, 255, 0.3) !important }
     /* Right-group About | Login */
@@ -863,7 +900,7 @@
 @keyframes thgspin{ to{ transform:rotate(360deg); } }
 
 /* Account menu */
-.thg-auth-menu{ position:absolute;top:calc(100% + 10px);right:0;min-width:280px;background:rgba(255, 255, 255, 0.1) !important;backdrop-filter: blur(24px) !important;-webkit-backdrop-filter: blur(24px) !important;color:#ffffff !important; border:1px solid rgba(255,255,255,0.2) !important;border-radius:24px !important;padding:12px;box-shadow:0 8px 32px 0 rgba(31, 38, 135, 0.15) !important; visibility:hidden; opacity:0; transform:translateY(-6px) scale(.98); transform-origin:top right; pointer-events:none; transition:opacity .16s ease, transform .16s ease, visibility 0s linear .16s; z-index:${Z_BASE+1}; }
+.thg-auth-menu{ position:absolute;top:calc(100% + 10px);right:0;min-width:280px;background:rgba(255, 255, 255, 0.15) !important;backdrop-filter: blur(24px) !important;-webkit-backdrop-filter: blur(24px) !important;color:#ffffff !important; border:1px solid rgba(255,255,255,0.25) !important;border-radius:24px !important;padding:12px;box-shadow:0 8px 32px 0 rgba(31, 38, 135, 0.25) !important; visibility:hidden; opacity:0; transform:translateY(-6px) scale(.98); transform-origin:top right; pointer-events:none; transition:opacity .16s ease, transform .16s ease, visibility 0s linear .16s; z-index:${Z_BASE+1}; }
 .thg-auth-menu::before{ content:""; position:absolute; top:0; left:0; right:0; height:2px; border-radius:24px 24px 0 0; background:linear-gradient(90deg, #d4af37, #1e40af); }
 .thg-auth-menu[aria-hidden="false"]{ visibility:visible; opacity:1; transform:translateY(0) scale(1); pointer-events:auto; transition:opacity .16s ease, transform .16s ease, visibility 0s linear 0s; }
 .thg-auth-item{ display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:8px;text-decoration:none;color:#ffffff !important;cursor:pointer; font-weight:600 !important; font-size:14px; transition: background .15s ease, transform .06s ease; margin-bottom:2px; }

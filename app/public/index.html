@@ -90,12 +90,16 @@
       padding: 10px 24px !important;
     }
     .brand { font-family: var(--font-display); font-weight:800; letter-spacing:.2px; font-size:24px }
-    /* White text for visibility on dark hero background - matching pricing page */
-    header.nav .brand{ color:#ffffff !important; text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1); }
+    /* White text for visibility on dark hero background - matching pricing page with stronger shadow */
+    header.nav .brand{ 
+      color:#ffffff !important; 
+      font-weight:800 !important;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.4), 0 0 8px rgba(0, 0, 0, 0.2), 0 1px 2px rgba(0, 0, 0, 0.3) !important;
+    }
     header.nav a, header.nav summary{
       color:#ffffff !important;
-      font-weight:600;
-      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+      font-weight:700 !important;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.4), 0 0 8px rgba(0, 0, 0, 0.2), 0 1px 2px rgba(0, 0, 0, 0.3) !important;
       transition: background 0.2s ease, color 0.2s ease, transform 0.2s ease;
     }
     header.nav a:hover, header.nav summary:hover{
@@ -118,8 +122,8 @@
       border:1px solid rgba(255, 255, 255, 0.25) !important; 
       font-size:12px; 
       color:#ffffff !important;
-      font-weight:600;
-      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+      font-weight:700 !important;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.4), 0 0 8px rgba(0, 0, 0, 0.2), 0 1px 2px rgba(0, 0, 0, 0.3) !important;
     }
     .hero { position:relative; padding:56px 16px 28px; background:
       linear-gradient(180deg, rgba(255,255,255,1), rgba(255,255,255,.92)); }
@@ -155,8 +159,11 @@
       box-shadow: 0 8px 18px rgba(30,64,175,.22);
     }
     .btn.secondary { background:#fff; color:var(--brand) }
-    /* White text on glassy header - matching pricing page */
-    header.nav a, header.nav summary, header.nav .brand { color:#ffffff !important; text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1); }
+    /* White text on glassy header - matching pricing page with stronger shadow for visibility */
+    header.nav a, header.nav summary, header.nav .brand { 
+      color:#ffffff !important; 
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.4), 0 0 8px rgba(0, 0, 0, 0.2), 0 1px 2px rgba(0, 0, 0, 0.3) !important;
+    }
     /* Header nav additions - perfect alignment */
     header.nav nav.row { 
       gap:16px; 
@@ -167,7 +174,7 @@
     }
     /* Match About styling on Features/Pricing */
     header.nav nav.row a, header.nav nav.row summary { 
-      font-weight:600;
+      font-weight:700 !important;
       font-size:15px;
       letter-spacing:0.01em;
       padding:6px 12px;
@@ -192,8 +199,9 @@
       padding:6px 12px; 
       border-radius:8px; 
       font-size:15px;
-      font-weight:600;
+      font-weight:700 !important;
       color:#ffffff !important;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.4), 0 0 8px rgba(0, 0, 0, 0.2), 0 1px 2px rgba(0, 0, 0, 0.3) !important;
       transition: background 0.2s ease;
     }
     details.dropdown > summary:hover {
@@ -256,8 +264,9 @@
       color:#ffffff !important; 
       text-decoration:none; 
       text-align:left; 
-      font-weight:500;
+      font-weight:600 !important;
       font-size:14px;
+      text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3), 0 0 6px rgba(0, 0, 0, 0.15) !important;
       transition: background .15s ease, transform .06s ease, color .15s ease;
       margin-bottom:2px;
     }
@@ -307,12 +316,13 @@
       -webkit-backdrop-filter: blur(8px) !important;
       color: #ffffff !important;
       border: 1px solid rgba(255, 255, 255, 0.25) !important;
-      font-weight: 600 !important;
+      font-weight: 700 !important;
       padding: 8px 18px !important;
       border-radius: 8px !important;
       transition: all 0.2s ease !important;
       font-size:14px;
       white-space:nowrap;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.4), 0 0 8px rgba(0, 0, 0, 0.2), 0 1px 2px rgba(0, 0, 0, 0.3) !important;
     }
     header.nav .thg-auth-btn:hover{
       background: rgba(255, 255, 255, 0.25) !important;
@@ -327,6 +337,8 @@
       -webkit-backdrop-filter: blur(8px) !important;
       border: 1px solid rgba(255, 255, 255, 0.25) !important;
       color: #ffffff !important;
+      font-weight: 700 !important;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.4), 0 0 8px rgba(0, 0, 0, 0.2), 0 1px 2px rgba(0, 0, 0, 0.3) !important;
     }
     header.nav .thg-auth-btn.is-auth:hover{
       background: rgba(255, 255, 255, 0.25) !important;
@@ -339,6 +351,36 @@
       background:rgba(255, 255, 255, 0.2) !important;
       color:#ffffff !important;
       border:1px solid rgba(255, 255, 255, 0.3) !important;
+      font-weight: 700 !important;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3) !important;
+    }
+    /* Hide any X/close buttons in the header */
+    header.nav button[aria-label*="close" i],
+    header.nav button[aria-label*="Close" i],
+    header.nav .close,
+    header.nav .close-btn,
+    header.nav button.close,
+    header.nav [class*="close"],
+    header.nav [class*="x-icon"],
+    header.nav svg[aria-label*="close" i] {
+      display: none !important;
+      visibility: hidden !important;
+    }
+    /* Auth dropdown menu text visibility - matching pricing page */
+    .thg-auth-menu .thg-auth-item {
+      font-weight: 600 !important;
+      text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3), 0 0 6px rgba(0, 0, 0, 0.15) !important;
+    }
+    .thg-auth-menu .thg-auth-item.is-header {
+      font-weight: 700 !important;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.4), 0 0 8px rgba(0, 0, 0, 0.2) !important;
+    }
+    .thg-auth-menu .thg-name {
+      font-weight: 700 !important;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3) !important;
+    }
+    .thg-auth-menu .thg-email {
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2) !important;
     }
     header.nav .divider{ background:rgba(255, 255, 255, 0.3) !important }
     /* Right-group About | Login */

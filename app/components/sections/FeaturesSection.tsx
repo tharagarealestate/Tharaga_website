@@ -1,3 +1,5 @@
+'use client'
+
 import React from 'react'
 import { Brain, FileCheck, TrendingUp, Users, Globe, Zap } from 'lucide-react'
 import { GlassContainer } from '@/components/ui/GlassContainer'
@@ -58,20 +60,31 @@ const features: Feature[] = [
 
 export function FeaturesSection() {
   return (
-    <section className="py-24 relative overflow-hidden">
-      {/* Dark Background with Gradient */}
-      <div className="absolute inset-0 bg-gradient-to-b from-section-dark-from via-blue-950 to-section-dark-to -z-10" />
-      
-      {/* Animated Orbs */}
-      <div className="absolute top-40 left-20 w-64 h-64 bg-blue-500/20 rounded-full blur-3xl animate-pulse" />
-      <div className="absolute bottom-40 right-20 w-96 h-96 bg-purple-500/20 rounded-full blur-3xl animate-pulse delay-1000" />
+    <section className="py-24 relative overflow-hidden bg-gradient-to-br from-primary-950 via-primary-900 to-primary-800">
+      {/* Animated Background Elements - Matching Pricing Page */}
+      <div className="absolute inset-0 opacity-30">
+        <div className="absolute top-40 left-20 w-96 h-96 bg-gold-500 rounded-full blur-3xl animate-pulse-slow" />
+        <div 
+          className="absolute bottom-40 right-20 w-[600px] h-[600px] bg-emerald-500 rounded-full blur-3xl animate-pulse-slow" 
+          style={{ animationDelay: '1s' }} 
+        />
+      </div>
 
-      <div className="container mx-auto px-4 relative">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         <div className="text-center mb-16">
-          <h2 className="text-4xl md:text-5xl font-bold text-white mb-4">
-            India's First AI-Powered Wealth Intelligence Platform
+          {/* Badge */}
+          <div className="inline-flex items-center gap-2 px-4 py-2 bg-gold-500/20 backdrop-blur-sm border border-gold-500/30 rounded-full mb-6">
+            <span className="w-2 h-2 bg-gold-500 rounded-full animate-pulse" />
+            <span className="text-gold-300 text-sm font-medium">
+              The Tharaga Difference
+            </span>
+          </div>
+          
+          <h2 className="font-display text-4xl sm:text-5xl lg:text-6xl font-bold text-white mb-4">
+            India's First AI-Powered
+            <span className="text-gradient-gold block mt-2">Wealth Intelligence Platform</span>
           </h2>
-          <p className="text-xl text-white/70 max-w-3xl mx-auto">
+          <p className="text-xl sm:text-2xl text-gray-300 leading-relaxed max-w-3xl mx-auto">
             We're building India's first AI-powered wealth intelligence platform for real estate. Every feature is designed to make you richer, smarter, faster.
           </p>
         </div>
@@ -81,29 +94,34 @@ export function FeaturesSection() {
             <ShimmerCard key={index}>
               <GlassContainer 
                 intensity="medium"
-                className="p-8 h-full hover:scale-[1.02] transition-transform duration-300"
+                className="p-8 h-full backdrop-blur-xl bg-white/10 border-2 border-white/20 hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 group"
               >
-                {/* Icon with Gradient Background */}
-                <div className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${feature.gradient} flex items-center justify-center mb-6`}>
-                  <feature.icon className="w-8 h-8 text-white" />
-                </div>
+                {/* Shimmer Effect on Hover - Matching Pricing Cards */}
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-in-out pointer-events-none rounded-2xl" />
+                
+                <div className="relative">
+                  {/* Icon with Gradient Background */}
+                  <div className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${feature.gradient} flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300`}>
+                    <feature.icon className="w-8 h-8 text-white" />
+                  </div>
 
-                {/* Title */}
-                <h3 className="text-2xl font-bold text-white mb-4">
-                  {feature.title}
-                </h3>
+                  {/* Title */}
+                  <h3 className="text-2xl font-bold text-white mb-4">
+                    {feature.title}
+                  </h3>
 
-                {/* Description */}
-                <p className="text-white/70 mb-6 leading-relaxed">
-                  {feature.description}
-                </p>
+                  {/* Description */}
+                  <p className="text-gray-300 mb-6 leading-relaxed">
+                    {feature.description}
+                  </p>
 
-                {/* Badge */}
-                <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 border border-white/20">
-                  <Zap className="w-4 h-4 text-green-400" />
-                  <span className="text-sm font-semibold text-green-400">
-                    {feature.badge}
-                  </span>
+                  {/* Badge - Matching Pricing Page Style */}
+                  <div className="inline-flex items-center gap-2 px-3 py-1 bg-emerald-500/20 border border-emerald-500/30 rounded-full">
+                    <Zap className="w-3 h-3 text-emerald-400" />
+                    <span className="text-xs font-bold text-emerald-400">
+                      {feature.badge}
+                    </span>
+                  </div>
                 </div>
               </GlassContainer>
             </ShimmerCard>

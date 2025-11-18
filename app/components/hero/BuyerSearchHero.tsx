@@ -51,7 +51,7 @@ export function BuyerSearchHero() {
   return (
     <GlassContainer 
       intensity="medium"
-      className="p-8 max-w-5xl mx-auto"
+      className="p-8 max-w-5xl mx-auto backdrop-blur-xl bg-white/10 border-2 border-white/20"
     >
       {/* Search Input */}
       <div className="relative mb-6">

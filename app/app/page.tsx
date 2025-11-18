@@ -12,14 +12,14 @@ export const metadata: Metadata = {
 
 export default function HomePage() {
   return (
-    <>
+    <div className="homepage-header">
       <main>
         <HeroSection />
         <DashboardCTASection />
         <FeaturesSection />
       </main>
       <Footer />
-    </>
+    </div>
   )
 }
 

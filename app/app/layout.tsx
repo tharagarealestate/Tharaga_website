@@ -16,6 +16,7 @@ import MobileBottomNav from '@/components/MobileBottomNav'
 import { PrefetchRoutes } from '@/components/providers/PrefetchRoutes'
 import { HeaderLinkInterceptor } from '@/components/HeaderLinkInterceptor'
 import { NotificationProvider } from '@/contexts/NotificationContext'
+import StaticHeaderHTML from '@/components/StaticHeaderHTML'
 
 const playfair = Playfair_Display({
   subsets: ['latin'],
@@ -1772,8 +1773,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             }
           })();
         `}} />
-        {/* Header removed - static index.html homepage has its own header */}
-        {/* Subpages will have breadcrumb navigation instead */}
+        {/* Universal Header - appears on all pages */}
+        <StaticHeaderHTML />
         <HeaderLinkInterceptor />
                {/* Ensure auth button is always visible - prevent hiding */}
                {/* FORCE REMOVE ALL MODALS - Complete removal */}

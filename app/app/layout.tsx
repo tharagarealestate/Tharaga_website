@@ -398,21 +398,31 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   function closeMenu(ui){ ui.menu.setAttribute('aria-hidden','true'); ui.btn.setAttribute('aria-expanded','false'); }
   function toggleMenu(ui){ const isHidden = ui.menu.getAttribute('aria-hidden') === 'true'; if (isHidden) openMenu(ui); else closeMenu(ui); }
 
-  // MODAL FUNCTIONS REMOVED - Redirect to /login instead
+  // Open auth in hosted page (new window) instead of redirecting
   function openAuthModal(ui, opts){
     const next = opts?.next || location.pathname + location.search;
-    window.location.href = '/login' + (next ? '?next=' + encodeURIComponent(next) : '');
+    const base = window.DURABLE_AUTH_URL || 'https://auth.tharaga.co.in/login_signup_glassdrop/';
+    const url = new URL(base);
+    url.searchParams.set('next', next);
+    // Open in new window instead of redirecting
+    window.open(url.toString(), 'tharaga-auth', 'width=480,height=640,scrollbars=yes,resizable=yes');
   }
   function closeAuthModal(ui){ /* No-op - modal removed */ }
 
-  // Override window.authGate.openLoginModal and __thgOpenAuthModal to redirect instead
+  // Override window.authGate.openLoginModal and __thgOpenAuthModal to open hosted auth page
   window.authGate.openLoginModal = function(opts) {
     const next = opts?.next || location.pathname + location.search;
-    window.location.href = '/login' + (next ? '?next=' + encodeURIComponent(next) : '');
+    const base = window.DURABLE_AUTH_URL || 'https://auth.tharaga.co.in/login_signup_glassdrop/';
+    const url = new URL(base);
+    url.searchParams.set('next', next);
+    window.open(url.toString(), 'tharaga-auth', 'width=480,height=640,scrollbars=yes,resizable=yes');
   };
   window.__thgOpenAuthModal = function(opts) {
     const next = opts?.next || location.pathname + location.search;
-    window.location.href = '/login' + (next ? '?next=' + encodeURIComponent(next) : '');
+    const base = window.DURABLE_AUTH_URL || 'https://auth.tharaga.co.in/login_signup_glassdrop/';
+    const url = new URL(base);
+    url.searchParams.set('next', next);
+    window.open(url.toString(), 'tharaga-auth', 'width=480,height=640,scrollbars=yes,resizable=yes');
   };
   function openConfirm(ui){ ui.confirmEl.setAttribute('aria-hidden','false'); }
   // Broadcast current auth state (email only) to child iframes, sibling tabs, and embedded forms
@@ -1773,59 +1783,62 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           })();
         `}} />
         {/* Header from index.html - exact structure */}
-        <header className="nav" dangerouslySetInnerHTML={{ __html: `
-          <div class="inner">
-            <div class="row"><a class="brand" href="/" style="font-size:26px">THARAGA</a><span class="pill" id="home_pill_trust">Verified • Broker‑free</span></div>
-            <nav class="row" aria-label="Primary">
-              <span class="menu-group">
-                <details class="dropdown">
+        <header className="nav" role="banner">
+          <div className="inner">
+            <div className="row">
+              <a className="brand" href="/" style={{ fontSize: '26px' }}>THARAGA</a>
+              <span className="pill" id="home_pill_trust">Verified • Broker‑free</span>
+            </div>
+            <nav className="row" aria-label="Primary">
+              <span className="menu-group">
+                <details className="dropdown">
                   <summary>Features</summary>
-                  <div class="menu" role="menu">
+                  <div className="menu" role="menu">
                     <a href="/tools/vastu/" data-next-link>Vastu</a>
                     <a href="/tools/environment/" data-next-link>Climate & environment</a>
                     <a href="/tools/voice-tamil/" data-next-link>Voice (Tamil)</a>
                     <a href="/tools/verification/" data-next-link>Verification</a>
                     <a href="/tools/roi/" data-next-link>ROI</a>
                     <a href="/tools/currency-risk/" data-next-link>Currency risk</a>
-                    <span class="divider show-mobile-only" aria-hidden="true"></span>
-                    <a class="show-mobile-only" href="/pricing/" data-next-link>Pricing</a>
-                    <a class="show-mobile-only" href="/about/" data-next-link>About</a>
+                    <span className="divider show-mobile-only" aria-hidden="true"></span>
+                    <a className="show-mobile-only" href="/pricing/" data-next-link>Pricing</a>
+                    <a className="show-mobile-only" href="/about/" data-next-link>About</a>
                   </div>
                 </details>
-                <span class="divider" aria-hidden="true"></span>
-                <details class="dropdown" id="portal-menu">
+                <span className="divider" aria-hidden="true"></span>
+                <details className="dropdown" id="portal-menu">
                   <summary>Portal</summary>
-                  <div class="menu" role="menu" aria-label="Portal menu" id="portal-menu-items">
+                  <div className="menu" role="menu" aria-label="Portal menu" id="portal-menu-items">
                     <a href="/builder" data-next-link data-portal-link="builder">Builder Dashboard</a>
                     <a href="/my-dashboard" data-next-link data-portal-link="buyer">Buyer Dashboard</a>
                   </div>
                 </details>
-                <span class="divider" aria-hidden="true"></span>
+                <span className="divider" aria-hidden="true"></span>
                 <a href="/pricing/" data-next-link>Pricing</a>
               </span>
-              <span class="divider" aria-hidden="true"></span>
+              <span className="divider" aria-hidden="true"></span>
               <a href="/about/" data-next-link>About</a>
             </nav>
-            <a class="about-mobile-link" href="/about/" data-next-link>About</a>
-            <div id="site-header-auth-container" class="tharaga-header__actions"></div>
-            <button class="mobile-menu-toggle" aria-label="Toggle menu" aria-expanded="false" aria-controls="mobile-menu-panel" style="display: none;">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <a className="about-mobile-link" href="/about/" data-next-link>About</a>
+            <div id="site-header-auth-container" className="tharaga-header__actions"></div>
+            <button className="mobile-menu-toggle" aria-label="Toggle menu" aria-expanded="false" aria-controls="mobile-menu-panel" style={{ display: 'none' }}>
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <line x1="3" y1="6" x2="21" y2="6"/>
                 <line x1="3" y1="12" x2="21" y2="12"/>
                 <line x1="3" y1="18" x2="21" y2="18"/>
               </svg>
             </button>
-            <div class="mobile-menu-overlay" aria-hidden="true"></div>
-            <nav class="mobile-menu-panel" id="mobile-menu-panel" aria-label="Mobile navigation">
-              <button class="mobile-menu-close" aria-label="Close menu">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <div className="mobile-menu-overlay" aria-hidden="true"></div>
+            <nav className="mobile-menu-panel" id="mobile-menu-panel" aria-label="Mobile navigation">
+              <button className="mobile-menu-close" aria-label="Close menu">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <line x1="18" y1="6" x2="6" y2="18"/>
                   <line x1="6" y1="6" x2="18" y2="18"/>
                 </svg>
               </button>
             </nav>
           </div>
-        ` }} />
+        </header>
         <HeaderLinkInterceptor />
                {/* Ensure auth button is always visible - prevent hiding */}
                {/* FORCE REMOVE ALL MODALS - Complete removal */}

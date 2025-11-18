@@ -225,6 +225,7 @@ html, body {
       color:#000; }
     a { color:#0b63ff; text-decoration:none }
     a:hover { text-decoration:underline }
+    /* Base header styles - applies to all pages except homepage */
     header.nav {
       position:sticky; top:0; z-index:20;
       /* Glassmorphism Effect - Premium Translucent White */
@@ -242,7 +243,7 @@ html, body {
       }
     }
     
-    /* Homepage-specific glassmorphic header styling - Matches Pricing page */
+    /* Homepage header overrides base styles - higher specificity */
     body:has(.hero-premium) header.nav,
     .homepage-header header.nav {
       position: fixed !important;
@@ -265,25 +266,11 @@ html, body {
       z-index: 9999 !important;
     }
     
-    /* Sticky shrink state */
+    /* Sticky shrink state for homepage */
     body:has(.hero-premium) header.nav.is-scrolled,
     .homepage-header header.nav.is-scrolled {
       min-height: 56px !important;
       top: 8px !important;
-    }
-    
-    /* Homepage header inner container */
-    body:has(.hero-premium) header.nav .inner,
-    .homepage-header header.nav .inner {
-      max-width: 100% !important;
-      padding: 12px 20px !important;
-      margin: 0 !important;
-      padding-right: clamp(130px, 10vw, 200px) !important;
-    }
-    
-    body:has(.hero-premium) header.nav.is-scrolled .inner,
-    .homepage-header header.nav.is-scrolled .inner {
-      padding: 8px 20px !important;
     }
     
     /* Homepage header text color */
@@ -330,6 +317,20 @@ html, body {
     }
     /* Reserve space on the right for About | Login group */
     header.nav .inner { max-width:1100px; margin:0 auto; padding:10px 16px; display:flex; align-items:center; justify-content:space-between; gap:10px; position:relative; padding-right: clamp(130px, 10vw, 200px) }
+    
+    /* Homepage header inner container overrides */
+    body:has(.hero-premium) header.nav .inner,
+    .homepage-header header.nav .inner {
+      max-width: 100% !important;
+      padding: 12px 20px !important;
+      margin: 0 !important;
+      padding-right: clamp(130px, 10vw, 200px) !important;
+    }
+    
+    body:has(.hero-premium) header.nav.is-scrolled .inner,
+    .homepage-header header.nav.is-scrolled .inner {
+      padding: 8px 20px !important;
+    }
     .brand { font-family: var(--font-display); font-weight:800; letter-spacing:.2px; font-size:24px }
     header.nav .brand{ color:var(--slate-900); }
     header.nav a, header.nav summary{

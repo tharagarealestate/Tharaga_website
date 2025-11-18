@@ -304,8 +304,33 @@ async def verify_rera(payload: ReraVerifyRequest) -> ReraVerifyResponse:
         developer_name=payload.promoter_name
     )
     
-    # Store snapshot in database (if property_id provided in future)
-    # For now, just return the snapshot
+    # Store snapshot in database
+    try:
+        snapshot_record = {
+            'rera_id': rera_id,
+            'state': state,
+            'project_name': snapshot.get('project_name'),
+            'developer_name': snapshot.get('developer_name'),
+            'registration_number': snapshot.get('parsed_fields', {}).get('registration_number') if isinstance(snapshot.get('parsed_fields'), dict) else None,
+            'status': snapshot.get('status'),
+            'expiry_date': snapshot.get('parsed_fields', {}).get('expiry_date') if isinstance(snapshot.get('parsed_fields'), dict) else None,
+            'raw_html': snapshot['raw_html'],
+            'parsed_fields': snapshot.get('parsed_fields'),
+            'snapshot_hash': snapshot.get('snapshot_hash'),
+            'source_url': source_url or snapshot.get('source_url'),
+            'data_source': snapshot.get('data_source', 'UNKNOWN'),
+            'collected_at': snapshot.get('collected_at'),
+        }
+        
+        # Add property_id if provided
+        if payload.property_id:
+            snapshot_record['property_id'] = payload.property_id
+        
+        # Insert snapshot
+        supabase.table('rera_snapshots').insert(snapshot_record).execute()
+    except Exception as e:
+        # Log error but don't fail the request
+        logger.warning(f"Failed to store RERA snapshot: {e}")
     
     verified = snapshot.get('status', '').lower() in ('active', 'verified')
     confidence = 0.9 if verified and snapshot.get('data_source') != 'SYNTHETIC' else 0.7

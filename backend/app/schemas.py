@@ -55,6 +55,7 @@ class ReraVerifyRequest(BaseModel):
     state: Optional[str] = Field(default=None, description="State or UT for RERA portal (e.g., KA, TN, MH)")
     project_name: Optional[str] = None
     promoter_name: Optional[str] = None
+    property_id: Optional[str] = Field(default=None, description="Property ID to associate snapshot with")
 
 
 class ReraVerifyResponse(BaseModel):

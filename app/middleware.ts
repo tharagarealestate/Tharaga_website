@@ -19,12 +19,11 @@ const handleI18nRouting = createMiddleware({
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl
 
-  // 0) Serve static homepage for root path using public/index.html
-  // This keeps Render/Vercel/Node deployments consistent with Netlify, where
-  // the static marketing homepage lives in app/public/index.html.
-  if (pathname === '/') {
-    return NextResponse.rewrite(new URL('/index.html', req.url))
-  }
+  // 0) Allow Next.js homepage to be served (app/app/page.tsx)
+  // The new glassmorphic homepage is now a Next.js page component
+  // if (pathname === '/') {
+  //   return NextResponse.rewrite(new URL('/index.html', req.url))
+  // }
 
   // 1) Normalize legacy /app/* -> /*
   if (pathname === '/app' || pathname.startsWith('/app/')) {
@@ -41,11 +40,11 @@ export async function middleware(req: NextRequest) {
     return NextResponse.next()
   }
 
-  // 3) Homepage for explicit locale root -> serve static marketing homepage
+  // 3) Homepage for explicit locale root -> serve Next.js homepage
   // e.g. /en, /ta, /hi should show same homepage as /
-  if (/^\/(en|ta|hi)\/?$/.test(pathname)) {
-    return NextResponse.rewrite(new URL('/index.html', req.url))
-  }
+  // if (/^\/(en|ta|hi)\/?$/.test(pathname)) {
+  //   return NextResponse.rewrite(new URL('/index.html', req.url))
+  // }
 
   // 4) next-intl locale routing (only for explicit locale-prefixed paths)
   const first = pathname.split('/')[1]

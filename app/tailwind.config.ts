@@ -41,6 +41,37 @@ const config: Config = {
           400: 'rgb(var(--primary-400) / <alpha-value>)',
           300: 'rgb(var(--primary-300) / <alpha-value>)',
         },
+        // Brand Colors for Homepage
+        brand: {
+          'gradient-light': '#E8F1FF',
+          'gradient-dark': '#C9DBF8',
+          'accent-blue': '#3A6FF8',
+          'accent-purple': '#6A5ACD',
+        },
+        // Section Backgrounds
+        section: {
+          'light': '#F7FAFF',
+          'dark-from': '#0F172A',
+          'dark-to': '#1E293B',
+        },
+        // Glass Effects
+        glass: {
+          'bg': 'rgba(255, 255, 255, 0.15)',
+          'border': 'rgba(255, 255, 255, 0.25)',
+        },
+        // Text Colors
+        text: {
+          'primary': '#0F172A',
+          'secondary': '#475569',
+          'light': '#F8FAFC',
+          'muted': '#94A3B8',
+        },
+        // CTA Colors
+        cta: {
+          'primary': '#3A6FF8',
+          'hover': '#1E40AF',
+          'success': '#22C55E',
+        },
         gold: {
           900: 'rgb(var(--gold-900) / <alpha-value>)',
           800: 'rgb(var(--gold-800) / <alpha-value>)',
@@ -162,6 +193,7 @@ const config: Config = {
       backdropBlur: {
         xs: '2px',
         '4xl': '72px',
+        'glass': '12px',
       },
       backdropSaturate: {
         180: '180%',

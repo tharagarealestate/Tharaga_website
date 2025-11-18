@@ -59,7 +59,7 @@
       z-index: 9999 !important;
       transition: min-height 0.2s ease, padding 0.2s ease, top 0.2s ease, box-shadow 0.2s ease;
       position: relative;
-      overflow: hidden;
+      overflow: visible !important;
       /* Fallback for older browsers */
       @supports not (backdrop-filter: blur(24px)) {
         background: rgba(255, 255, 255, 0.25) !important;
@@ -101,6 +101,7 @@
       height:100%;
       min-height:inherit;
       z-index: 2;
+      overflow: visible !important;
     }
     
     header.nav.is-scrolled .inner {
@@ -1607,7 +1608,7 @@
           </div>
         </article>
 
-        <!-- 2. Blockchain-Verified Titles -->
+        <!-- 2. Document Snapshot Immutability -->
         <article class="vp-card fade-up" style="--delay:.10s">
           <div class="glass-card">
             <div class="icon-circle"><i data-lucide="shield"></i></div>
@@ -1632,7 +1633,7 @@
           <div class="glass-card">
             <div class="icon-circle"><i data-lucide="line-chart"></i></div>
             <h3 class="vp-title">ROI Prediction Engine</h3>
-            <p class="vp-desc">Know your property's future value before you buy. Our ML models forecast appreciation with 85% accuracy.</p>
+            <p class="vp-desc">Know your property's future value before you buy. Explainable ML-based appreciation bands (Low / Medium / High) help you make informed decisions.</p>
             <div class="vp-stat"><i data-lucide="trending-up"></i><span>+24% avg. 3-year ROI</span></div>
           </div>
         </article>

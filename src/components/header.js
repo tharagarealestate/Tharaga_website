@@ -338,11 +338,166 @@
     }
   }
   
+  // Homepage sticky shrink behavior
+  function initHomepageHeader() {
+    const header = document.getElementById('tharaga-static-header');
+    if (!header) return;
+    
+    // Check if we're on homepage (has .hero-premium class or homepage-header class)
+    const isHomepage = document.querySelector('.hero-premium') || document.body.classList.contains('homepage-header');
+    if (!isHomepage) return;
+    
+    // Add class to body for CSS fallback (for browsers that don't support :has())
+    document.body.classList.add('homepage-header');
+    
+    let lastScrollY = window.scrollY;
+    let ticking = false;
+    
+    function updateHeader() {
+      const scrollY = window.scrollY;
+      
+      if (scrollY > 50) {
+        header.classList.add('is-scrolled');
+      } else {
+        header.classList.remove('is-scrolled');
+      }
+      
+      lastScrollY = scrollY;
+      ticking = false;
+    }
+    
+    function onScroll() {
+      if (!ticking) {
+        window.requestAnimationFrame(updateHeader);
+        ticking = true;
+      }
+    }
+    
+    window.addEventListener('scroll', onScroll, { passive: true });
+    updateHeader(); // Initial check
+  }
+  
+  // Mobile menu functionality
+  function initMobileMenu() {
+    const header = document.getElementById('tharaga-static-header');
+    if (!header) return;
+    
+    const toggleBtn = header.querySelector('.mobile-menu-toggle');
+    const closeBtn = header.querySelector('.mobile-menu-close');
+    const overlay = header.querySelector('.mobile-menu-overlay');
+    const panel = header.querySelector('.mobile-menu-panel');
+    const desktopNav = header.querySelector('nav.row');
+    
+    if (!toggleBtn || !overlay || !panel) return;
+    
+    // Populate mobile menu with desktop nav items
+    function populateMobileMenu() {
+      if (!desktopNav || !panel) return;
+      
+      const menuItems = desktopNav.querySelectorAll('a, details');
+      let menuHTML = '';
+      
+      menuItems.forEach(function(item) {
+        if (item.tagName === 'A') {
+          const href = item.getAttribute('href') || '#';
+          const text = item.textContent.trim();
+          menuHTML += '<a href="' + href + '" data-next-link>' + text + '</a>';
+        } else if (item.tagName === 'DETAILS') {
+          const summary = item.querySelector('summary');
+          const menu = item.querySelector('.menu');
+          if (summary && menu) {
+            menuHTML += '<div class="mobile-menu-group">';
+            menuHTML += '<div class="mobile-menu-title">' + summary.textContent.trim() + '</div>';
+            const links = menu.querySelectorAll('a');
+            links.forEach(function(link) {
+              const href = link.getAttribute('href') || '#';
+              const text = link.textContent.trim();
+              menuHTML += '<a href="' + href + '" data-next-link class="mobile-menu-item">' + text + '</a>';
+            });
+            menuHTML += '</div>';
+          }
+        }
+      });
+      
+      // Add auth buttons if available
+      const authContainer = header.querySelector('#site-header-auth-container');
+      if (authContainer) {
+        const authLinks = authContainer.querySelectorAll('a, button');
+        if (authLinks.length > 0) {
+          menuHTML += '<div class="mobile-menu-divider"></div>';
+          authLinks.forEach(function(link) {
+            const href = link.getAttribute('href') || '#';
+            const text = link.textContent.trim();
+            const isButton = link.tagName === 'BUTTON';
+            if (isButton) {
+              menuHTML += '<button class="mobile-menu-cta">' + text + '</button>';
+            } else {
+              menuHTML += '<a href="' + href + '" data-next-link class="mobile-menu-cta">' + text + '</a>';
+            }
+          });
+        }
+      }
+      
+      panel.innerHTML = '<button class="mobile-menu-close" aria-label="Close menu"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>' + menuHTML;
+      
+      // Re-attach close button listener
+      const newCloseBtn = panel.querySelector('.mobile-menu-close');
+      if (newCloseBtn) {
+        newCloseBtn.addEventListener('click', closeMenu);
+      }
+      
+      // Re-intercept links
+      interceptHeaderLinks();
+    }
+    
+    function openMenu() {
+      overlay.classList.add('is-open');
+      panel.classList.add('is-open');
+      toggleBtn.setAttribute('aria-expanded', 'true');
+      document.body.style.overflow = 'hidden';
+      
+      // Populate menu on open
+      populateMobileMenu();
+    }
+    
+    function closeMenu() {
+      overlay.classList.remove('is-open');
+      panel.classList.remove('is-open');
+      toggleBtn.setAttribute('aria-expanded', 'false');
+      document.body.style.overflow = '';
+    }
+    
+    toggleBtn.addEventListener('click', openMenu);
+    overlay.addEventListener('click', closeMenu);
+    
+    // Close on escape key
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape' && panel.classList.contains('is-open')) {
+        closeMenu();
+      }
+    });
+    
+    // Show/hide toggle button based on screen size
+    function updateMobileMenuVisibility() {
+      if (window.innerWidth <= 767) {
+        toggleBtn.style.display = 'flex';
+      } else {
+        toggleBtn.style.display = 'none';
+        closeMenu(); // Close menu if resizing to desktop
+      }
+    }
+    
+    window.addEventListener('resize', updateMobileMenuVisibility);
+    updateMobileMenuVisibility();
+  }
+  
   // Initialize header functionality
   function init() {
     ensureAuthContainer();
     interceptHeaderLinks();
     initPortalMenu();
+    initHomepageHeader();
+    initMobileMenu();
     
     // Re-intercept links when DOM changes (e.g., portal menu updates)
     const observer = new MutationObserver(function() {

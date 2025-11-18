@@ -68,6 +68,35 @@
     <div id="site-header-auth-container" class="tharaga-header__actions">
       <!-- Auth system will inject .thg-auth-wrap here -->
     </div>
+    
+    <!-- Mobile menu toggle button (hidden on desktop) -->
+    <button 
+      class="mobile-menu-toggle" 
+      aria-label="Toggle menu" 
+      aria-expanded="false" 
+      aria-controls="mobile-menu-panel"
+      style="display: none;"
+    >
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <line x1="3" y1="6" x2="21" y2="6"/>
+        <line x1="3" y1="12" x2="21" y2="12"/>
+        <line x1="3" y1="18" x2="21" y2="18"/>
+      </svg>
+    </button>
+    
+    <!-- Mobile menu overlay -->
+    <div class="mobile-menu-overlay" aria-hidden="true"></div>
+    
+    <!-- Mobile menu panel -->
+    <nav class="mobile-menu-panel" id="mobile-menu-panel" aria-label="Mobile navigation">
+      <button class="mobile-menu-close" aria-label="Close menu">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="18" y1="6" x2="6" y2="18"/>
+          <line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+      <!-- Mobile menu items will be populated by JavaScript -->
+    </nav>
   </div>
 </header>
 

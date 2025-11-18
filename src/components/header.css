@@ -78,6 +78,101 @@ header.tharaga-header.nav {
   min-height: var(--tharaga-header-height);
   /* Ensure header is not affected by parent transforms (prevents clipping) */
   transform: none !important;
+  transition: min-height 0.2s ease, padding 0.2s ease;
+}
+
+/* Homepage-specific glassmorphic header styling */
+/* Matches Pricing page header design with fixed positioning and rounded container */
+/* Higher specificity to override globals.css header.nav styles */
+body:has(.hero-premium) header.nav.tharaga-header,
+body:has(.hero-premium) header.tharaga-header.nav,
+body:has(.hero-premium) .tharaga-header,
+.homepage-header header.nav.tharaga-header,
+.homepage-header header.tharaga-header.nav,
+.homepage-header .tharaga-header {
+  position: fixed !important;
+  top: 16px !important; /* top-4 = 16px */
+  left: 50% !important;
+  transform: translateX(-50%) !important;
+  width: min(1200px, calc(100% - 48px)) !important;
+  max-width: 1400px !important;
+  /* Glassmorphic container matching Pricing page */
+  background: rgba(255, 255, 255, 0.12) !important;
+  backdrop-filter: blur(10px) !important;
+  -webkit-backdrop-filter: blur(10px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.18) !important;
+  border-radius: 16px !important;
+  box-shadow: 0 6px 24px rgba(12, 18, 32, 0.22) !important;
+  /* Remove top gold border for homepage - override globals.css */
+  border-top: 1px solid rgba(255, 255, 255, 0.18) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.18) !important;
+  min-height: 72px !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  z-index: 9999 !important; /* Override globals.css z-index: 20 */
+}
+
+/* Sticky shrink state for homepage header */
+body:has(.hero-premium) header.nav.tharaga-header.is-scrolled,
+body:has(.hero-premium) header.tharaga-header.nav.is-scrolled,
+body:has(.hero-premium) .tharaga-header.is-scrolled,
+.homepage-header header.nav.tharaga-header.is-scrolled,
+.homepage-header header.tharaga-header.nav.is-scrolled,
+.homepage-header .tharaga-header.is-scrolled {
+  min-height: 56px !important;
+  top: 8px !important;
+}
+
+/* Homepage header inner container - override globals.css */
+body:has(.hero-premium) header.nav.tharaga-header .inner,
+body:has(.hero-premium) header.tharaga-header.nav .inner,
+body:has(.hero-premium) .tharaga-header .inner,
+.homepage-header header.nav.tharaga-header .inner,
+.homepage-header header.tharaga-header.nav .inner,
+.homepage-header .tharaga-header .inner {
+  max-width: 100% !important;
+  padding: 12px 20px !important;
+  margin: 0 !important;
+  padding-right: clamp(130px, 10vw, 200px) !important;
+}
+
+body:has(.hero-premium) header.nav.tharaga-header.is-scrolled .inner,
+body:has(.hero-premium) header.tharaga-header.nav.is-scrolled .inner,
+body:has(.hero-premium) .tharaga-header.is-scrolled .inner,
+.homepage-header header.nav.tharaga-header.is-scrolled .inner,
+.homepage-header header.tharaga-header.nav.is-scrolled .inner,
+.homepage-header .tharaga-header.is-scrolled .inner {
+  padding: 8px 20px !important;
+}
+
+/* Homepage header text color - ensure contrast on hero backgrounds */
+body:has(.hero-premium) .tharaga-header a,
+body:has(.hero-premium) .tharaga-header summary,
+body:has(.hero-premium) .tharaga-header .brand,
+.homepage-header .tharaga-header a,
+.homepage-header .tharaga-header summary,
+.homepage-header .tharaga-header .brand {
+  color: var(--tharaga-slate-900) !important;
+  text-shadow: 0 1px 2px rgba(255, 255, 255, 0.8);
+}
+
+/* Dark hero background variant - switch to lighter text */
+body:has(.hero-premium.dark-hero) .tharaga-header a,
+body:has(.hero-premium.dark-hero) .tharaga-header summary,
+body:has(.hero-premium.dark-hero) .tharaga-header .brand,
+.homepage-header.dark-hero .tharaga-header a,
+.homepage-header.dark-hero .tharaga-header summary,
+.homepage-header.dark-hero .tharaga-header .brand {
+  color: rgba(255, 255, 255, 0.95) !important;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+body:has(.hero-premium.dark-hero) .tharaga-header,
+.homepage-header.dark-hero .tharaga-header {
+  background: rgba(15, 23, 42, 0.25) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
 }
 
 /* Fallback for older browsers */
@@ -443,5 +538,310 @@ header.tharaga-header.nav {
 /* Always suppress legacy About link */
 .tharaga-header .about-mobile-link {
   display: none !important;
+}
+
+/* Homepage CTA button styling - Primary CTA with #3A6FF8 */
+body:has(.hero-premium) .tharaga-header .thg-auth-btn,
+.homepage-header .tharaga-header .thg-auth-btn {
+  background: #3A6FF8 !important;
+  color: #ffffff !important;
+  border-color: #3A6FF8 !important;
+  font-weight: 600 !important;
+  padding: 8px 20px !important;
+  border-radius: 8px !important;
+  transition: all 0.2s ease !important;
+}
+
+body:has(.hero-premium) .tharaga-header .thg-auth-btn:hover,
+.homepage-header .tharaga-header .thg-auth-btn:hover {
+  background: #2563eb !important;
+  border-color: #2563eb !important;
+  transform: translateY(-2px) !important;
+  box-shadow: 0 4px 12px rgba(58, 111, 248, 0.3) !important;
+}
+
+/* Secondary CTA (outline style) */
+body:has(.hero-premium) .tharaga-header .thg-auth-btn.secondary,
+.homepage-header .tharaga-header .thg-auth-btn.secondary {
+  background: transparent !important;
+  color: var(--tharaga-slate-900) !important;
+  border: 1px solid rgba(255, 255, 255, 0.3) !important;
+}
+
+body:has(.hero-premium) .tharaga-header .thg-auth-btn.secondary:hover,
+.homepage-header .tharaga-header .thg-auth-btn.secondary:hover {
+  background: rgba(255, 255, 255, 0.1) !important;
+  border-color: rgba(255, 255, 255, 0.4) !important;
+}
+
+/* Active page indicator - small pill under nav item */
+.tharaga-header nav.row a[aria-current="page"]::after,
+.tharaga-header nav.row a.active::after {
+  content: "";
+  position: absolute;
+  bottom: -4px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 24px;
+  height: 3px;
+  background: #3A6FF8;
+  border-radius: 2px;
+}
+
+.tharaga-header nav.row a {
+  position: relative;
+  padding-bottom: 4px;
+}
+
+/* Hover states with translateY effect */
+.tharaga-header nav.row a:hover,
+.tharaga-header nav.row summary:hover {
+  transform: translateY(-2px);
+}
+
+/* Focus states for accessibility */
+.tharaga-header a:focus-visible,
+.tharaga-header summary:focus-visible,
+.tharaga-header button:focus-visible {
+  outline: 2px solid #3A6FF8;
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+.tharaga-header .mobile-menu-toggle:focus-visible,
+.tharaga-header .mobile-menu-close:focus-visible {
+  outline: 2px solid #3A6FF8;
+  outline-offset: 2px;
+}
+
+/* Mobile hamburger menu for homepage */
+@media (max-width: 767px) {
+  /* Reduce blur on mobile for performance */
+  body:has(.hero-premium) .tharaga-header,
+  .homepage-header .tharaga-header {
+    backdrop-filter: blur(8px) !important;
+    -webkit-backdrop-filter: blur(8px) !important;
+    background: rgba(255, 255, 255, 0.25) !important;
+  }
+  
+  body:has(.hero-premium) .tharaga-header .inner,
+  .homepage-header .tharaga-header .inner {
+    padding: 10px 16px !important;
+    padding-right: 50px !important;
+  }
+  
+  /* Hide desktop nav on mobile */
+  body:has(.hero-premium) .tharaga-header nav.row,
+  .homepage-header .tharaga-header nav.row {
+    display: none;
+  }
+  
+  /* Show hamburger button */
+  body:has(.hero-premium) .tharaga-header .mobile-menu-toggle,
+  .homepage-header .tharaga-header .mobile-menu-toggle {
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    background: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 8px;
+    cursor: pointer;
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 10001;
+  }
+  
+  /* Mobile menu overlay */
+  body:has(.hero-premium) .tharaga-header .mobile-menu-overlay,
+  .homepage-header .tharaga-header .mobile-menu-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(4px);
+    z-index: 10000;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.2s ease, visibility 0.2s ease;
+  }
+  
+  body:has(.hero-premium) .tharaga-header .mobile-menu-overlay.is-open,
+  .homepage-header .tharaga-header .mobile-menu-overlay.is-open {
+    opacity: 1;
+    visibility: visible;
+  }
+  
+  /* Mobile menu panel */
+  body:has(.hero-premium) .tharaga-header .mobile-menu-panel,
+  .homepage-header .tharaga-header .mobile-menu-panel {
+    position: fixed;
+    top: 0;
+    right: 0;
+    width: min(320px, 85vw);
+    height: 100vh;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(20px);
+    border-left: 1px solid rgba(0, 0, 0, 0.1);
+    padding: 80px 24px 24px;
+    transform: translateX(100%);
+    transition: transform 0.3s ease;
+    z-index: 10001;
+    overflow-y: auto;
+  }
+  
+  body:has(.hero-premium) .tharaga-header .mobile-menu-panel.is-open,
+  .homepage-header .tharaga-header .mobile-menu-panel.is-open {
+    transform: translateX(0);
+  }
+  
+  /* Mobile menu links */
+  body:has(.hero-premium) .tharaga-header .mobile-menu-panel a,
+  .homepage-header .tharaga-header .mobile-menu-panel a {
+    display: block;
+    padding: 16px;
+    color: var(--tharaga-slate-900);
+    font-weight: 600;
+    border-radius: 8px;
+    margin-bottom: 8px;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+  }
+  
+  body:has(.hero-premium) .tharaga-header .mobile-menu-panel a:hover,
+  .homepage-header .tharaga-header .mobile-menu-panel a:hover {
+    background: rgba(58, 111, 248, 0.1);
+    color: #3A6FF8;
+  }
+  
+  /* Mobile menu close button */
+  body:has(.hero-premium) .tharaga-header .mobile-menu-close,
+  .homepage-header .tharaga-header .mobile-menu-close {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    width: 44px;
+    height: 44px;
+    background: transparent;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--tharaga-slate-900);
+  }
+  
+  body:has(.hero-premium) .tharaga-header .mobile-menu-close:hover,
+  .homepage-header .tharaga-header .mobile-menu-close:hover {
+    background: rgba(0, 0, 0, 0.05);
+  }
+  
+  /* Mobile menu groups */
+  body:has(.hero-premium) .tharaga-header .mobile-menu-group,
+  .homepage-header .tharaga-header .mobile-menu-group {
+    margin-bottom: 24px;
+  }
+  
+  body:has(.hero-premium) .tharaga-header .mobile-menu-title,
+  .homepage-header .tharaga-header .mobile-menu-title {
+    font-weight: 700;
+    font-size: 14px;
+    color: var(--tharaga-slate-600);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 12px;
+    padding: 0 16px;
+  }
+  
+  body:has(.hero-premium) .tharaga-header .mobile-menu-item,
+  .homepage-header .tharaga-header .mobile-menu-item {
+    padding-left: 32px;
+    font-size: 15px;
+  }
+  
+  body:has(.hero-premium) .tharaga-header .mobile-menu-divider,
+  .homepage-header .tharaga-header .mobile-menu-divider {
+    height: 1px;
+    background: rgba(0, 0, 0, 0.1);
+    margin: 24px 0;
+  }
+  
+  body:has(.hero-premium) .tharaga-header .mobile-menu-cta,
+  .homepage-header .tharaga-header .mobile-menu-cta {
+    background: #3A6FF8;
+    color: #ffffff;
+    font-weight: 600;
+    text-align: center;
+    margin-top: 8px;
+  }
+  
+  body:has(.hero-premium) .tharaga-header .mobile-menu-cta:hover,
+  .homepage-header .tharaga-header .mobile-menu-cta:hover {
+    background: #2563eb;
+  }
+}
+
+/* Tablet adjustments */
+@media (min-width: 768px) and (max-width: 1023px) {
+  body:has(.hero-premium) .tharaga-header,
+  .homepage-header .tharaga-header {
+    width: min(1000px, calc(100% - 32px)) !important;
+  }
+}
+
+/* Large screens */
+@media (min-width: 1400px) {
+  body:has(.hero-premium) .tharaga-header,
+  .homepage-header .tharaga-header {
+    max-width: 1400px !important;
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .tharaga-header,
+  .tharaga-header * {
+    transition: none !important;
+    animation: none !important;
+  }
+  
+  body:has(.hero-premium) .tharaga-header.is-scrolled,
+  .homepage-header .tharaga-header.is-scrolled {
+    transition: none !important;
+  }
+}
+
+/* Skip to content link for accessibility */
+.skip-to-content {
+  position: absolute;
+  top: -100px;
+  left: 0;
+  background: #3A6FF8;
+  color: #ffffff;
+  padding: 12px 20px;
+  text-decoration: none;
+  z-index: 100000;
+  border-radius: 0 0 8px 0;
+}
+
+.skip-to-content:focus {
+  top: 0;
+}
+
+/* Homepage hero section - add top padding to account for fixed header */
+body:has(.hero-premium) .hero-premium,
+.homepage-header .hero-premium {
+  padding-top: calc(72px + 32px) !important; /* header height + spacing */
+}
+
+@media (max-width: 767px) {
+  body:has(.hero-premium) .hero-premium,
+  .homepage-header .hero-premium {
+    padding-top: calc(72px + 24px) !important;
+  }
 }
 

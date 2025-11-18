@@ -47,7 +47,9 @@ export default function CalendarSettingsPage() {
   const fetchStatus = async () => {
     try {
       setLoading(true)
-      const response = await fetch('/api/calendar/status')
+      const response = await fetch('/api/calendar/status', {
+        credentials: 'include',
+      })
       const data = await response.json()
 
       if (data.success) {
@@ -71,7 +73,9 @@ export default function CalendarSettingsPage() {
     try {
       setConnecting(true)
       setError(null)
-      const response = await fetch('/api/calendar/connect')
+      const response = await fetch('/api/calendar/connect', {
+        credentials: 'include',
+      })
       const data = await response.json()
 
       if (response.ok && data.auth_url) {
@@ -94,6 +98,7 @@ export default function CalendarSettingsPage() {
       setError(null)
       const response = await fetch('/api/calendar/sync', {
         method: 'POST',
+        credentials: 'include',
       })
       const data = await response.json()
 
@@ -123,6 +128,7 @@ export default function CalendarSettingsPage() {
       setError(null)
       const response = await fetch('/api/calendar/disconnect', {
         method: 'POST',
+        credentials: 'include',
       })
       const data = await response.json()
 

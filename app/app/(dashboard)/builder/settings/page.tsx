@@ -101,7 +101,9 @@ export default function BuilderSettingsPage() {
   // Fetch calendar status
   const fetchCalendarStatus = async () => {
     try {
-      const response = await fetch('/api/calendar/status')
+      const response = await fetch('/api/calendar/status', {
+        credentials: 'include',
+      })
       const data = await response.json()
       if (data.success) {
         setCalendarStatus(data)
@@ -969,7 +971,9 @@ function IntegrationSettings({
     const fetchZohoStatus = async () => {
       try {
         setLoadingZoho(true)
-        const response = await fetch('/api/crm/zoho/status')
+        const response = await fetch('/api/crm/zoho/status', {
+          credentials: 'include',
+        })
         const data = await response.json()
         if (data.success) {
           setZohoStatus({
@@ -1042,7 +1046,9 @@ function IntegrationSettings({
   const handleCalendarConnect = async () => {
     try {
       setConnecting(true)
-      const response = await fetch('/api/calendar/connect')
+      const response = await fetch('/api/calendar/connect', {
+        credentials: 'include',
+      })
       const data = await response.json()
 
       if (response.ok && data.auth_url) {
@@ -1064,6 +1070,7 @@ function IntegrationSettings({
       setSyncing(true)
       const response = await fetch('/api/calendar/sync', {
         method: 'POST',
+        credentials: 'include',
       })
       const data = await response.json()
 

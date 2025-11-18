@@ -122,7 +122,9 @@ export default function ZohoCRMPage() {
   const fetchStatus = async () => {
     try {
       setLoading(true)
-      const response = await fetch('/api/crm/zoho/status')
+      const response = await fetch('/api/crm/zoho/status', {
+        credentials: 'include',
+      })
       const data = await response.json()
 
       if (data.success) {
@@ -161,7 +163,9 @@ export default function ZohoCRMPage() {
     if (!status?.connected) return
     try {
       setLoadingMappings(true)
-      const response = await fetch('/api/crm/zoho/field-mappings')
+      const response = await fetch('/api/crm/zoho/field-mappings', {
+        credentials: 'include',
+      })
       const data = await response.json()
       if (data.success) {
         setFieldMappings(data.mappings || [])
@@ -288,7 +292,9 @@ export default function ZohoCRMPage() {
       if (logFilters.sync_direction) params.append('sync_direction', logFilters.sync_direction)
       if (logFilters.status) params.append('status', logFilters.status)
 
-      const response = await fetch(`/api/crm/zoho/sync-logs?${params.toString()}`)
+      const response = await fetch(`/api/crm/zoho/sync-logs?${params.toString()}`, {
+        credentials: 'include',
+      })
       const data = await response.json()
 
       if (data.success) {
@@ -320,7 +326,9 @@ export default function ZohoCRMPage() {
   const handleConnect = async () => {
     try {
       setConnecting(true)
-      const response = await fetch('/api/crm/zoho/connect')
+      const response = await fetch('/api/crm/zoho/connect', {
+        credentials: 'include',
+      })
       const data = await response.json()
 
       if (data.success && data.auth_url) {
@@ -352,6 +360,7 @@ export default function ZohoCRMPage() {
       setDisconnecting(true)
       const response = await fetch('/api/crm/zoho/disconnect', {
         method: 'POST',
+        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
         },
@@ -392,6 +401,7 @@ export default function ZohoCRMPage() {
       setSyncResults(null)
       const response = await fetch('/api/crm/zoho/sync', {
         method: 'POST',
+        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
         },

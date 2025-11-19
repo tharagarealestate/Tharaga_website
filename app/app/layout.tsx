@@ -1908,7 +1908,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         `}} />
       </head>
       <body className="font-ui bg-canvas text-fg">
-        <Header />
         <script dangerouslySetInnerHTML={{ __html: `
           (function(){
             if ('serviceWorker' in navigator) {

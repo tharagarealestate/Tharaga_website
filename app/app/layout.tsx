@@ -1908,6 +1908,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         `}} />
       </head>
       <body className="font-ui bg-canvas text-fg">
+        {/* Header mount point - header will be injected here by header-injector.js */}
+        <div id="tharaga-header-mount"></div>
+
+        {/* Load header injector to inject the universal header */}
+        <Script src="/src/components/header-injector.js" strategy="afterInteractive" />
+
         <script dangerouslySetInnerHTML={{ __html: `
           (function(){
             if ('serviceWorker' in navigator) {
@@ -2058,15 +2064,25 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               updateMobileMenuVisibility();
             }
             
-            // Initialize on DOM ready
-            if (document.readyState === 'loading') {
-              document.addEventListener('DOMContentLoaded', function() {
-                initHomepageHeader();
-                initMobileMenu();
-              });
-            } else {
+            // Initialize on DOM ready OR when header is loaded
+            function initialize() {
               initHomepageHeader();
               initMobileMenu();
+            }
+
+            // Listen for header loaded event (from header-injector.js)
+            document.addEventListener('tharaga-header-loaded', initialize, { once: true });
+
+            // Also initialize on DOM ready (fallback if header loads before this script)
+            if (document.readyState === 'loading') {
+              document.addEventListener('DOMContentLoaded', initialize);
+            } else {
+              // Check if header already exists
+              const header = document.querySelector('header.nav');
+              if (header) {
+                initialize();
+              }
+              // If not, wait for header-loaded event
             }
           })();
         `}} />

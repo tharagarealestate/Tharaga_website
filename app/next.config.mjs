@@ -110,9 +110,8 @@ const nextConfig = {
     // NOTE: /property-listing is now handled by the App Router page at app/app/property-listing/page.tsx,
     // so we intentionally do NOT rewrite it to the legacy static HTML anymore.
     rules.push({ source: '/search-filter-home', destination: '/search-filter-home/index.html' })
-    // DISABLED: Use Next.js App Router for homepage instead of static index.html
-    // This ensures the header from layout.tsx appears on the homepage
-    // rules.push({ source: '/', destination: '/index.html' })
+    // Serve static index.html as homepage (has working auth and Supabase integration)
+    rules.push({ source: '/', destination: '/index.html' })
     return rules
   },
   images: {

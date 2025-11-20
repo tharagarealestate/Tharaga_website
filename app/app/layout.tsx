@@ -16,7 +16,6 @@ import MobileBottomNav from '@/components/MobileBottomNav'
 import { PrefetchRoutes } from '@/components/providers/PrefetchRoutes'
 import { HeaderLinkInterceptor } from '@/components/HeaderLinkInterceptor'
 import { NotificationProvider } from '@/contexts/NotificationContext'
-import Header from '@/components/Header'
 
 const playfair = Playfair_Display({
   subsets: ['latin'],
@@ -1909,7 +1908,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         `}} />
       </head>
       <body className="font-ui bg-canvas text-fg">
-        <Header />
         <script dangerouslySetInnerHTML={{ __html: `
           (function(){
             if ('serviceWorker' in navigator) {

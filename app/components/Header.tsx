@@ -43,9 +43,7 @@ export default function Header() {
         </nav>
         <a className="about-mobile-link" href="/about/">About</a>
         {/* Auth container - auth system will inject login/signup buttons here */}
-        <div id="site-header-auth-container" className="tharaga-header__actions">
-          {/* Auth system will inject .thg-auth-wrap here */}
-        </div>
+        <div id="site-header-auth-container" className="tharaga-header__actions"></div>
         {/* Mobile menu toggle button (hidden on desktop) */}
         <button
           className="mobile-menu-toggle"

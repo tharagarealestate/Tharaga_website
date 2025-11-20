@@ -566,7 +566,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     } catch(_){ }
   }
 
-  function observeRerenders(){ const mo = new MutationObserver(function(muts){ for (var i=0;i<muts.length;i++){ for (var j=0;j<muts[i].addedNodes.length;j++){ const n = muts[i].addedNodes[j]; if (n.nodeType !== 1) continue; hideLegacyAuthLinks(n); ensureContainer(); } } }); mo.observe(document.documentElement, { childList:true, subtree:true }); }
+  function observeRerenders(ui){ const mo = new MutationObserver(function(muts){ for (var i=0;i<muts.length;i++){ for (var j=0;j<muts[i].addedNodes.length;j++){ const n = muts[i].addedNodes[j]; if (n.nodeType !== 1) continue; hideLegacyAuthLinks(n); const newWrap = ensureContainer(); if (newWrap && newWrap !== ui.wrap) { ui.wrap = newWrap; if (!newWrap.querySelector('.thg-auth-btn')) { const btn = ui.btn; if (btn && btn.parentNode !== newWrap) newWrap.appendChild(btn); const menu = ui.menu; if (menu && menu.parentNode !== newWrap) newWrap.appendChild(menu); } } } } }); mo.observe(document.documentElement, { childList:true, subtree:true }); }
 
   ready(function(){
     hideLegacyAuthLinks(document);
@@ -595,7 +595,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         document.head && document.head.appendChild(style);
       }
     } catch(_){}
-    observeRerenders();
+    observeRerenders(ui);
     initSupabase(ui);
 
     // Auto-open the auth modal on first load if configured or URL hints present

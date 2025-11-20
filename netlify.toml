@@ -1,10 +1,9 @@
 [build]
-  command = "cd app && npm install && npm --prefix ../netlify/functions install --no-audit --no-fund --omit=dev && node ../scripts/ensure-next-public-env.mjs && node ../scripts/copy-static.cjs && npm run build"
-  publish = "app/.next"
+  # Netlify: Serve static files from app/public (includes index.html with header)
+  # Vercel: Serves Next.js app with Header component
+  command = "cd app && npm install && npm --prefix ../netlify/functions install --no-audit --no-fund --omit=dev && node ../scripts/ensure-next-public-env.mjs && node ../scripts/copy-static.cjs"
+  publish = "app/public"
   functions = "netlify/functions"
-
-[[plugins]]
-  package = "@netlify/plugin-nextjs"
 
 [[plugins]]
   package = "@netlify/plugin-functions-install-core"

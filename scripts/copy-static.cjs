@@ -65,7 +65,7 @@ async function main() {
   // This drastically reduces the published asset size in Netlify.
   const allowedDirs = new Set([
     'auth-email-landing',
-    // 'login_signup_glassdrop', // REMOVED - using snippets auth system instead
+    'login_signup_glassdrop', // Auth popup page - required for login/signup button
     'Reset_password',
     'property-listing',
     'snippets',

@@ -39,14 +39,14 @@
     a { color:#0b63ff; text-decoration:none }
     a:hover { text-decoration:underline }
     header.nav {
-      position:fixed !important;
+      position: fixed !important;
       top: 16px !important;
       left: 50% !important;
       transform: translateX(-50%) !important;
       width: min(1200px, calc(100% - 48px)) !important;
       max-width: 1400px !important;
       /* EXACT Builder Pro container styling from pricing page */
-      background: rgba(255, 255, 255, 0.1) !important;
+      background: rgba(255, 255, 255, 0.95) !important;
       backdrop-filter: blur(24px) !important;
       -webkit-backdrop-filter: blur(24px) !important;
       /* Gold border matching Builder Pro highlighted card */
@@ -56,9 +56,10 @@
       min-height: 72px !important;
       padding: 0 !important;
       margin: 0 !important;
-      z-index: 9999 !important;
+      z-index: 99999 !important;
+      display: block !important;
+      visibility: visible !important;
       transition: min-height 0.2s ease, padding 0.2s ease, top 0.2s ease, box-shadow 0.2s ease;
-      position: relative;
       overflow: visible !important;
       /* Fallback for older browsers */
       @supports not (backdrop-filter: blur(24px)) {

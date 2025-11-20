@@ -1,0 +1,4 @@
+# Vercel build configuration
+.git
+node_modules
+*.md

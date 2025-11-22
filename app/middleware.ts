@@ -19,11 +19,12 @@ const handleI18nRouting = createMiddleware({
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl
 
-  // 0) Allow Next.js homepage to be served (app/app/page.tsx)
-  // The new glassmorphic homepage is now a Next.js page component
-  // if (pathname === '/') {
-  //   return NextResponse.rewrite(new URL('/index.html', req.url))
-  // }
+  // 0) Serve static index.html for homepage
+  // The static HTML contains: Header, Hero, Dashboard CTA, Features, Footer
+  // with complete Supabase auth integration
+  if (pathname === '/') {
+    return NextResponse.rewrite(new URL('/index.html', req.url))
+  }
 
   // 1) Normalize legacy /app/* -> /*
   if (pathname === '/app' || pathname.startsWith('/app/')) {

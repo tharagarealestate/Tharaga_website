@@ -542,12 +542,47 @@ class WorkflowEngine:
             if not recipient_email:
                 raise ValueError("Recipient email not found")
             
-            # Generate/personalize content
-            body_template = template.get('body_template') or template.get('body', '')
-            email_body = self._personalize_template(body_template, lead_data)
-            
-            subject_template = template.get('subject', 'Property Inquiry Follow-up')
-            subject = self._personalize_template(subject_template, lead_data)
+            # Generate/personalize content (use AI if template has use_ai_generation flag)
+            if template.get('use_ai_generation', False):
+                from services.ai_message_generator import ai_message_generator, MessageGenerationRequest
+                lead_id = str(lead_data.get('id', ''))
+                if lead_id:
+                    try:
+                        request = MessageGenerationRequest(
+                            lead_id=lead_id,
+                            channel='email',
+                            message_type='follow_up',
+                            tone=template.get('tone', 'professional'),
+                            include_cta=True
+                        )
+                        result = await ai_message_generator.generate_message(request)
+                        recommended = next(
+                            v for v in result.variants
+                            if v.variant_id == result.recommended_variant
+                        )
+                        email_body = recommended.content
+                        subject = recommended.subject or template.get('subject', 'Property Inquiry Follow-up')
+                    except Exception as e:
+                        logger.error(f"AI email generation failed, using fallback: {e}")
+                        body_template = template.get('body_template') or template.get('body', '')
+                        email_body = self._personalize_template(body_template, lead_data)
+                        subject = self._personalize_template(
+                            template.get('subject', 'Property Inquiry Follow-up'),
+                            lead_data
+                        )
+                else:
+                    body_template = template.get('body_template') or template.get('body', '')
+                    email_body = self._personalize_template(body_template, lead_data)
+                    subject = self._personalize_template(
+                        template.get('subject', 'Property Inquiry Follow-up'),
+                        lead_data
+                    )
+            else:
+                body_template = template.get('body_template') or template.get('body', '')
+                email_body = self._personalize_template(body_template, lead_data)
+                
+                subject_template = template.get('subject', 'Property Inquiry Follow-up')
+                subject = self._personalize_template(subject_template, lead_data)
             
             # Get builder info for sender
             property_data = lead_data.get('properties', {})

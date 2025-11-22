@@ -1,0 +1,2661 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Tharaga — Verified homes. Human UX. AI inside.</title>
+  <meta name="description" content="Broker‑free, verified properties with AI‑matched discovery, cultural tools for India & NRI, and builder‑grade storytelling."/>
+  <script type="module" src="/js/fragment-handle.js"></script>
+  <script src="/js/analytics.js" defer></script>
+  <script src="/js/home.js" defer></script>
+  <script src="https://unpkg.com/lucide@latest" defer></script>
+  <!-- Removed globe script; no globe on hero -->
+  <link rel="stylesheet" href="/css/brand.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&display=swap" rel="stylesheet" />
+  
+  <style>
+    :root {
+      /* Primary Colors - Premium Blue (Trust & Technology) */
+      --primary:#1e40af; --primary-light:#3b82f6; --primary-dark:#1e3a8a;
+      /* Accent - Tharaga Gold (Prestige) */
+      --gold:#d4af37; --gold-light:#f5e6c8;
+      /* Neutrals - Cool Grays */
+      --slate-50:#f8fafc; --slate-100:#f1f5f9; --slate-200:#e2e8f0; --slate-300:#cbd5e1;
+      --slate-600:#475569; --slate-700:#334155; --slate-900:#0f172a;
+      /* Semantic */
+      --success:#10b981; --warning:#f59e0b; --danger:#ef4444;
+      /* Legacy support (map to new colors) */
+      --brand:var(--primary); --brand-600:var(--primary-dark);
+      --ink:#111111; --cream:#f7efe7; --muted:#4b5563; --ring:rgba(59,130,246,.30);
+      --font-ui:'Manrope',Inter,system-ui,-apple-system,'Segoe UI',Roboto,Helvetica,Arial;
+      --font-display:'Plus Jakarta Sans','Manrope',Inter,system-ui,-apple-system,'Segoe UI',Roboto,Helvetica,Arial;
+    }
+    /* Metallic-glass canvas: calm, premium, high-clarity neutrals */
+    body { font-family: var(--font-ui); margin:0; padding:0; background:
+      radial-gradient(1200px 520px at 12% -10%, rgba(255,255,255,.78), rgba(255,255,255,0) 55%),
+      radial-gradient(900px 360px at 95% 0%, rgba(212,175,55,.08), rgba(212,175,55,0) 60%),
+      linear-gradient(180deg, #f3f5f8 0%, #edf1f6 36%, #e9edf2 100%);
+      color:#000; }
+    a { color:#0b63ff; text-decoration:none }
+    a:hover { text-decoration:underline }
+    header.nav {
+      position:fixed !important;
+      top: 16px !important;
+      left: 50% !important;
+      transform: translateX(-50%) !important;
+      width: min(1200px, calc(100% - 48px)) !important;
+      max-width: 1400px !important;
+      /* EXACT Builder Pro container styling from pricing page */
+      background: rgba(255, 255, 255, 0.1) !important;
+      backdrop-filter: blur(24px) !important;
+      -webkit-backdrop-filter: blur(24px) !important;
+      /* Gold border matching Builder Pro highlighted card */
+      border: 2px solid rgba(212, 175, 55, 0.5) !important;
+      border-radius: 24px !important;
+      box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15), 0 0 0 1px rgba(212, 175, 55, 0.3) !important;
+      min-height: 72px !important;
+      padding: 0 !important;
+      margin: 0 !important;
+      z-index: 9999 !important;
+      transition: min-height 0.2s ease, padding 0.2s ease, top 0.2s ease, box-shadow 0.2s ease;
+      position: relative;
+      overflow: visible !important;
+      /* Fallback for older browsers */
+      @supports not (backdrop-filter: blur(24px)) {
+        background: rgba(255, 255, 255, 0.25) !important;
+      }
+    }
+    /* Gold shimmer effect - matching Builder Pro container */
+    header.nav::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+      transform: translateX(-100%);
+      animation: shimmer 3s ease-in-out infinite;
+      pointer-events: none;
+      z-index: 1;
+    }
+    @keyframes shimmer {
+      0% { transform: translateX(-100%); }
+      50% { transform: translateX(100%); }
+      100% { transform: translateX(100%); }
+    }
+    
+    /* Sticky shrink state for homepage header */
+    header.nav.is-scrolled {
+      min-height: 56px !important;
+      top: 8px !important;
+    }
+    /* Homepage header inner container - perfect alignment */
+    header.nav .inner { 
+      max-width: 100% !important;
+      padding: 14px 24px !important;
+      margin: 0 !important;
+      display:flex; 
+      align-items:center; 
+      justify-content:space-between; 
+      gap:16px; 
+      position:relative; 
+      padding-right: clamp(140px, 12vw, 220px) !important;
+      height:100%;
+      min-height:inherit;
+      z-index: 2;
+      overflow: visible !important;
+    }
+    
+    header.nav.is-scrolled .inner {
+      padding: 10px 24px !important;
+    }
+    .brand { font-family: var(--font-display); font-weight:800; letter-spacing:.2px; font-size:24px }
+    /* White text matching pricing page - no text-shadow needed with solid background */
+    header.nav .brand{ color:#ffffff !important; font-weight:800 !important; }
+    header.nav a, header.nav summary{
+      color:#ffffff !important;
+      font-weight:700 !important;
+      transition: background 0.2s ease, color 0.2s ease, transform 0.2s ease;
+    }
+    header.nav a:hover, header.nav summary:hover{
+      background: rgba(255, 255, 255, 0.15) !important;
+      color: #ffffff !important;
+      border-radius: 8px;
+      text-decoration: none;
+      transform: translateY(-1px);
+    }
+    /* Trust pill - glassy styling matching pricing page */
+    .pill { 
+      display:inline-flex; 
+      align-items:center; 
+      gap:8px; 
+      padding:6px 12px; 
+      border-radius:999px; 
+      background:rgba(255, 255, 255, 0.1) !important; 
+      backdrop-filter: blur(24px) !important;
+      -webkit-backdrop-filter: blur(24px) !important;
+      border:1px solid rgba(255, 255, 255, 0.2) !important; 
+      font-size:12px; 
+      color:#ffffff !important;
+      font-weight:700 !important;
+    }
+    .hero { position:relative; padding:56px 16px 28px; background:
+      linear-gradient(180deg, rgba(255,255,255,1), rgba(255,255,255,.92)); }
+    /* Remove cloudy overlay for a crisp look */
+    .hero::before{ content:none }
+    /* Ensure darker, high-contrast text inside hero (matches other sections) */
+    .hero, .hero .h1, .hero .sub, .hero label{ color:#111 !important }
+    .hero .inner { max-width:1100px; margin:0 auto; display:grid; grid-template-columns: 1fr; gap:28px; align-items:center; justify-items:center; text-align:center }
+    .h1 { font-family: var(--font-display); font-weight:700; font-size:36px; line-height:1.12; margin:0 0 12px; letter-spacing:.01em; color:#111 }
+    .sub { color:#111; opacity:1; font-size:16px; margin:0 0 18px; letter-spacing:.01em }
+    .search-card {
+      background:rgba(255,255,255,.72);
+      border:1px solid rgba(30,64,175,.10);
+      border-radius:16px;
+      box-shadow:0 12px 36px rgba(30,64,175,.12);
+      backdrop-filter: blur(12px) saturate(1.05);
+      padding:14px;
+    }
+    .search-grid { display:grid; grid-template-columns:1.2fr .8fr .8fr auto; gap:10px }
+    .chip-row { display:flex; gap:8px; flex-wrap:wrap }
+    .chip { padding:8px 10px; border-radius:999px; border:1px solid #e5e7eb; background:#fff; cursor:pointer; font-weight:600; font-size:13px }
+    .chip[aria-pressed="true"] { background:var(--brand); color:#fff; border-color:var(--brand) }
+    .btn {
+      display:inline-flex; align-items:center; justify-content:center; gap:8px;
+      padding:10px 14px; border-radius:12px;
+      border:1px solid var(--primary); background:var(--primary); color:#fff;
+      font-weight:650;
+      transition: background .15s ease, box-shadow .15s ease, transform .15s ease;
+    }
+    .btn:hover{
+      background: var(--primary-light);
+      transform: translateY(-1px);
+      box-shadow: 0 8px 18px rgba(30,64,175,.22);
+    }
+    .btn.secondary { background:#fff; color:var(--brand) }
+    /* White text on glassy header - matching pricing page */
+    header.nav a, header.nav summary, header.nav .brand { color:#ffffff !important; text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1); }
+    /* Header nav additions - perfect alignment */
+    header.nav nav.row { 
+      gap:16px; 
+      align-items:center; 
+      flex-wrap:nowrap; 
+      margin-left:auto;
+      display:flex;
+    }
+    /* Match About styling on Features/Pricing */
+    header.nav nav.row a, header.nav nav.row summary { 
+      font-weight:600;
+      font-size:15px;
+      letter-spacing:0.01em;
+      padding:6px 12px;
+    }
+    .menu-group{ display:inline-flex; align-items:center; gap:16px }
+    .divider{ 
+      width:1px; 
+      height:20px; 
+      background:rgba(255, 255, 255, 0.3) !important; 
+      border-radius:1px; 
+      display:inline-block;
+      flex-shrink:0;
+    }
+    details.dropdown{ position:relative; z-index: 10001; }
+    /* Dropdown summary - matching pricing page styling */
+    details.dropdown > summary{ 
+      list-style:none; 
+      cursor:pointer; 
+      display:inline-flex; 
+      align-items:center; 
+      gap:6px; 
+      padding:6px 12px; 
+      border-radius:8px; 
+      font-size:15px;
+      font-weight:700 !important;
+      color:#ffffff !important;
+      transition: background 0.2s ease;
+    }
+    details.dropdown > summary:hover {
+      background:rgba(255, 255, 255, 0.15) !important;
+    }
+    details.dropdown > summary::-webkit-details-marker{ display:none }
+    details.dropdown > summary::after{ 
+      content:""; 
+      width:0; 
+      height:0; 
+      border-left:5px solid transparent; 
+      border-right:5px solid transparent; 
+      border-top:6px solid rgba(255, 255, 255, 0.9); 
+      opacity:.9; 
+      transition:transform .18s ease;
+      margin-left:4px;
+    }
+    details.dropdown[open] > summary::after{ transform:rotate(180deg) }
+    /* Dropdown menu: Non-transparent for perfect visibility */
+    details.dropdown .menu{
+      position:absolute; 
+      top:calc(100% + 10px); 
+      right:0; 
+      min-width:240px;
+      background:rgba(255, 255, 255, 0.95) !important;
+      backdrop-filter: blur(24px) !important;
+      -webkit-backdrop-filter: blur(24px) !important;
+      border:1px solid rgba(255, 255, 255, 0.3) !important;
+      border-radius:24px !important;
+      padding:12px;
+      box-shadow:0 8px 32px 0 rgba(31, 38, 135, 0.25) !important;
+      z-index:10000; 
+      opacity:0; 
+      transform:translateY(-6px) scale(.98);
+      visibility:hidden; 
+      pointer-events:none;
+      transition:opacity .18s ease, transform .18s ease, visibility 0s linear .18s;
+    }
+    @supports not (backdrop-filter: blur(24px)) {
+      details.dropdown .menu {
+        background:rgba(255, 255, 255, 0.98) !important;
+      }
+    }
+    details.dropdown .menu::before{
+      content:""; 
+      position:absolute; 
+      top:0; 
+      left:0; 
+      right:0; 
+      height:2px;
+      border-radius:12px 12px 0 0;
+      background:linear-gradient(90deg, #d4af37, #1e40af);
+    }
+    details.dropdown[open] .menu{ 
+      opacity:1; 
+      transform:translateY(0) scale(1); 
+      visibility:visible; 
+      pointer-events:auto; 
+      transition:opacity .18s ease, transform .18s ease, visibility 0s linear 0s;
+    }
+    details.dropdown .menu a{ 
+      display:block; 
+      padding:10px 14px; 
+      border-radius:8px; 
+      color:#111 !important; 
+      text-decoration:none; 
+      text-align:left; 
+      font-weight:600 !important;
+      font-size:14px;
+      transition: background .15s ease, transform .06s ease, color .15s ease;
+      margin-bottom:2px;
+    }
+    details.dropdown .menu a:last-child {
+      margin-bottom:0;
+    }
+    details.dropdown .menu a:hover{
+      background:rgba(0, 0, 0, 0.05) !important;
+      color:#111 !important;
+      transform:translateX(2px);
+    }
+    details.dropdown .menu a:focus-visible{
+      outline:0;
+      box-shadow:0 0 0 2px var(--ring), inset 0 0 0 1px rgba(30,64,175,.24);
+    }
+    details.dropdown .menu a:active{
+      transform:translateY(1px);
+      background:linear-gradient(180deg, rgba(30,64,175,.20), rgba(59,130,246,.10));
+    }
+    /* Horizontal divider inside dropdown */
+    details.dropdown .menu .divider{
+      display:block; width:auto; height:1px;
+      background:rgba(30,64,175,.14); margin:6px 6px; border-radius:1px;
+    }
+    /* Auth buttons on glassy header - EXACT pricing page glassy gradient */
+    header.nav .thg-auth-wrap{ 
+      display:flex; 
+      align-items:center; 
+      gap:12px;
+      position:absolute;
+      right:20px;
+      top:50%;
+      transform:translateY(-50%);
+    }
+    header.nav .thg-auth-wrap::before{
+      content:""; 
+      display:inline-block; 
+      width:1px; 
+      height:20px;
+      background:rgba(255, 255, 255, 0.3) !important; 
+      border-radius:1px;
+    }
+    /* Login/Signup button - glassy gradient matching pricing page */
+    header.nav .thg-auth-btn{
+      background: rgba(255, 255, 255, 0.1) !important;
+      backdrop-filter: blur(24px) !important;
+      -webkit-backdrop-filter: blur(24px) !important;
+      color: #ffffff !important;
+      border: 1px solid rgba(255, 255, 255, 0.2) !important;
+      font-weight: 700 !important;
+      padding: 8px 18px !important;
+      border-radius: 12px !important;
+      transition: all 0.2s ease !important;
+      font-size:14px;
+      white-space:nowrap;
+    }
+    header.nav .thg-auth-btn:hover{
+      background: rgba(255, 255, 255, 0.25) !important;
+      border-color: rgba(255, 255, 255, 0.35) !important;
+      transform: translateY(-1px) !important;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+    }
+    /* User button when logged in - glassy styling */
+    header.nav .thg-auth-btn.is-auth{
+      background: rgba(255, 255, 255, 0.1) !important;
+      backdrop-filter: blur(24px) !important;
+      -webkit-backdrop-filter: blur(24px) !important;
+      border: 1px solid rgba(255, 255, 255, 0.2) !important;
+      color: #ffffff !important;
+      font-weight: 700 !important;
+    }
+    header.nav .thg-auth-btn.is-auth:hover{
+      background: rgba(255, 255, 255, 0.25) !important;
+      border-color: rgba(255, 255, 255, 0.35) !important;
+    }
+    header.nav .thg-auth-btn.is-auth::after{ 
+      border-top-color:rgba(255, 255, 255, 0.9) !important;
+    }
+    header.nav .thg-auth-btn .thg-initial{
+      background:rgba(255, 255, 255, 0.2) !important;
+      color:#ffffff !important;
+      border:1px solid rgba(255, 255, 255, 0.3) !important;
+    }
+    /* Hide any X/close buttons in header completely */
+    header.nav button[aria-label*="close" i],
+    header.nav button[aria-label*="Close" i],
+    header.nav .close,
+    header.nav .close-btn,
+    header.nav button.close,
+    header.nav [class*="close"],
+    header.nav [class*="x-icon"],
+    header.nav svg[aria-label*="close" i],
+    header.nav button:has(svg[aria-label*="close" i]),
+    header.nav .thg-auth-wrap button:has(svg),
+    header.nav .thg-auth-wrap > button:not(.thg-auth-btn) {
+      display: none !important;
+      visibility: hidden !important;
+      opacity: 0 !important;
+      pointer-events: none !important;
+    }
+    header.nav .divider{ background:rgba(255, 255, 255, 0.3) !important }
+    /* Right-group About | Login */
+    /* Hide injected About on desktop; we render About in main nav */
+    header.nav .thg-auth-wrap .about-link{ display:none; color:var(--slate-900); font-weight:700; text-decoration:none }
+    /* Avoid double line near Login (we already add ::before separator) */
+    header.nav .thg-auth-wrap > .divider{ display:none }
+    header.nav .thg-auth-wrap .about-link:hover{ text-decoration:underline }
+    /* Show top-level About in main nav on desktop */
+    header.nav nav.row > a[href="/about/"]{ display:inline-block }
+    /* Hidden by default; shown only on mobile */
+    .about-mobile-link{ display:none }
+    /* Mobile-only items inside Features dropdown are hidden by default */
+    details.dropdown .menu .show-mobile-only{ display:none }
+    .features { max-width:1100px; margin:26px auto; padding:0 16px; color:#111 }
+    /* Default iframe height tuned for content; JS will refine precisely */
+    #how-works-animated iframe{ height: clamp(320px, 58vw, 560px); }
+    .feature-grid { display:grid; grid-template-columns: repeat(3, 1fr); gap:14px }
+    .card {
+      background:#fff; border:1px solid var(--slate-200); border-radius:16px;
+      box-shadow:0 12px 36px rgba(30,64,175,.1); padding:16px;
+    }
+    .how {
+      background:linear-gradient(180deg, rgba(30,64,175,.04), rgba(59,130,246,.02));
+      border-top:1px solid var(--slate-200); border-bottom:1px solid var(--slate-200);
+    }
+    .how .inner { max-width:1100px; margin:0 auto; padding:24px 16px; display:grid; grid-template-columns: repeat(3, 1fr); gap:14px }
+    .kpi-row { display:flex; gap:14px; flex-wrap:wrap; align-items:center }
+    .kpi { font-family: var(--font-display); font-weight:700; font-size:22px }
+    .footer { max-width:1100px; margin:0 auto; padding:28px 16px; color:#666; font-size:14px }
+    
+    /* Earlier tablet breakpoint tweaks to prevent nav/right overlap */
+    @media (max-width: 1080px) {
+      /* Hide trust pill a bit earlier to free space */
+      #home_pill_trust{ display:none }
+      /* Reserve extra space for auth button to avoid collisions */
+      header.nav .inner{ padding-right:200px }
+    }
+    @media (max-width: 880px) {
+      .hero .inner { grid-template-columns: 1fr; text-align:center; }
+      .search-grid { grid-template-columns: 1fr; }
+      .feature-grid { grid-template-columns: 1fr; }
+      .how .inner { grid-template-columns: 1fr; }
+      /* Mobile header: keep single-row like desktop, just tighter
+         Reserve more right-side space so "Features | Login / Signup" never overlaps */
+      header.nav .inner { padding-right:160px; flex-wrap:nowrap; gap:8px }
+      .brand { font-size:22px }
+      header.nav .inner .row { flex:0 0 auto; justify-content:flex-start }
+      header.nav nav.row { white-space:nowrap; gap:10px }
+      header.nav nav.row a, header.nav nav.row summary { padding:4px 0; font-size:13px }
+      /* Make Features font-size match Login/Signup on mobile */
+      details.dropdown > summary{ font-size:16px; padding:6px 10px }
+      .divider{ height:14px }
+      /* Move About into Features menu on mobile; hide right-group About */
+      header.nav .thg-auth-wrap .about-link{ display:none }
+      header.nav nav.row > a[href="/about/"]{ display:none }
+      /* Hide nav-level divider before About on mobile */
+      header.nav nav.row > .divider{ display:none }
+      .about-mobile-link{ display:none }
+      /* Hide top-level Pricing in main nav on mobile */
+      header.nav nav.row .menu-group > a[href="/pricing/"]{ display:none }
+      /* Hide the internal divider in nav when Pricing is hidden */
+      header.nav nav.row .menu-group > .divider{ display:none }
+      /* Show mobile-only items inside Features dropdown */
+      details.dropdown .menu .show-mobile-only{ display:block }
+      /* Right-side auth group position */
+      header.nav .thg-auth-wrap{ position:absolute; top:10px; right:12px; padding:0; gap:10px }
+      header.nav .thg-auth-wrap::before{ height:14px }
+      /* Hide trust pill to avoid crowding on small screens */
+      #home_pill_trust{ display:none }
+      /* Use the same dropdown style as desktop */
+      details.dropdown .menu{ position:absolute; left:auto; right:0; top:calc(100% + 8px); min-width:230px; border-radius:12px; }
+      details.dropdown .menu a{ padding:8px 10px }
+      /* Mobile typography refinements */
+      .h1 { font-size:28px; line-height:1.16 }
+      .sub { font-size:15px }
+    }
+
+    /* Homepage header text color - white matching pricing page */
+    header.nav a,
+    header.nav summary,
+    header.nav .brand {
+      color: #ffffff !important;
+    }
+    
+    /* Active page indicator */
+    header.nav nav.row a[aria-current="page"]::after,
+    header.nav nav.row a.active::after {
+      content: "";
+      position: absolute;
+      bottom: -4px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 24px;
+      height: 3px;
+      background: #3A6FF8;
+      border-radius: 2px;
+    }
+    
+    header.nav nav.row a {
+      position: relative;
+      padding-bottom: 4px;
+    }
+    
+    /* Hover states with translateY effect */
+    header.nav nav.row a:hover,
+    header.nav nav.row summary:hover {
+      transform: translateY(-2px);
+    }
+    
+    /* Mobile hamburger menu for homepage */
+    @media (max-width: 767px) {
+      /* Reduce blur on mobile for performance */
+      header.nav {
+        backdrop-filter: blur(8px) !important;
+        -webkit-backdrop-filter: blur(8px) !important;
+        background: rgba(255, 255, 255, 0.25) !important;
+      }
+      
+      header.nav .inner {
+        padding: 10px 16px !important;
+        padding-right: 50px !important;
+      }
+      
+      /* Hide desktop nav on mobile for homepage */
+      header.nav nav.row {
+        display: none;
+      }
+      
+      /* Show hamburger button */
+      header.nav .mobile-menu-toggle {
+        display: flex !important;
+        align-items: center;
+        justify-content: center;
+        width: 44px;
+        height: 44px;
+        background: rgba(255, 255, 255, 0.15) !important;
+        backdrop-filter: blur(8px) !important;
+        -webkit-backdrop-filter: blur(8px) !important;
+        border: 1px solid rgba(255, 255, 255, 0.25) !important;
+        border-radius: 8px;
+        cursor: pointer;
+        position: absolute;
+        right: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+        z-index: 10001;
+        color: #ffffff !important;
+        transition: all 0.2s ease;
+      }
+      
+      header.nav .mobile-menu-toggle:hover {
+        background: rgba(255, 255, 255, 0.25) !important;
+        border-color: rgba(255, 255, 255, 0.35) !important;
+      }
+      
+      /* Mobile menu overlay */
+      header.nav .mobile-menu-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.8);
+        backdrop-filter: blur(4px);
+        z-index: 10000;
+        opacity: 0;
+        visibility: hidden;
+        transition: opacity 0.2s ease, visibility 0.2s ease;
+      }
+      
+      header.nav .mobile-menu-overlay.is-open {
+        opacity: 1;
+        visibility: visible;
+      }
+      
+      /* Mobile menu panel - glassmorphic matching pricing page */
+      header.nav .mobile-menu-panel {
+        position: fixed;
+        top: 0;
+        right: 0;
+        width: min(320px, 85vw);
+        height: 100vh;
+        background: rgba(255, 255, 255, 0.1) !important;
+        backdrop-filter: blur(24px) !important;
+        -webkit-backdrop-filter: blur(24px) !important;
+        border-left: 1px solid rgba(255, 255, 255, 0.2) !important;
+        padding: 80px 24px 24px;
+        transform: translateX(100%);
+        transition: transform 0.3s ease;
+        z-index: 10001;
+        overflow-y: auto;
+        box-shadow: -8px 0 32px 0 rgba(31, 38, 135, 0.15) !important;
+      }
+      
+      header.nav .mobile-menu-panel.is-open {
+        transform: translateX(0);
+      }
+      
+      header.nav .mobile-menu-panel a {
+        display: block;
+        padding: 16px;
+        color: #ffffff !important;
+        font-weight: 600;
+        border-radius: 8px;
+        margin-bottom: 8px;
+        min-height: 44px;
+        display: flex;
+        align-items: center;
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+      }
+      
+      header.nav .mobile-menu-panel a:hover {
+        background: rgba(255, 255, 255, 0.15) !important;
+        color: #ffffff !important;
+      }
+      
+      /* Mobile menu close button */
+      header.nav .mobile-menu-close {
+        position: absolute;
+        top: 20px;
+        right: 20px;
+        width: 44px;
+        height: 44px;
+        background: rgba(255, 255, 255, 0.15) !important;
+        backdrop-filter: blur(8px) !important;
+        -webkit-backdrop-filter: blur(8px) !important;
+        border: 1px solid rgba(255, 255, 255, 0.25) !important;
+        border-radius: 8px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #ffffff !important;
+        transition: all 0.2s ease;
+      }
+      
+      header.nav .mobile-menu-close:hover {
+        background: rgba(255, 255, 255, 0.25) !important;
+        border-color: rgba(255, 255, 255, 0.35) !important;
+      }
+    }
+    
+    /* Desktop: vertically center the right-side auth/menu group within header */
+    @media (min-width: 881px) {
+      header.nav .thg-auth-wrap:not(.is-fixed){ top:50%; transform: translateY(-50%); }
+    }
+
+    /* Always suppress legacy About link; using new right-aligned group */
+    .about-mobile-link{ display:none !important }
+
+    /* Force plain black headings if any gradient elsewhere */
+    .text-gradient{ background:none !important; -webkit-background-clip:initial !important; background-clip:initial !important; color:#111 !important }
+    /* Transparent AI art next to hero */
+    .ai-hero-figure{ margin:0; width:100%; display:grid; place-items:center; justify-self:center }
+    .ai-hero-art{
+      width:min(520px,95%); height:auto; opacity:.96;
+      filter:drop-shadow(0 18px 40px rgba(30,64,175,.22));
+      display:block; margin:0 auto; transform:scaleX(-1);
+    }
+    
+    /* Premium hero (static implementation of Next.js design) */
+    .hero-premium{ min-height:100vh; padding-top:calc(72px + 32px) !important; padding-bottom:72px; color:#fff; background:linear-gradient(135deg, #071328 0%, #0F2D52 55%, #1A4173 100%); overflow:hidden; position:relative; }
+    @media (max-width: 767px) {
+      .hero-premium{ padding-top:calc(72px + 24px) !important; }
+    }
+    .hero-premium .inner{ max-width:1200px; margin:0 auto; padding:0 16px; display:grid; grid-template-columns:1fr; gap:32px; align-items:center }
+    @media (min-width: 1024px){ .hero-premium .inner{ grid-template-columns:1.05fr .95fr; gap:48px } }
+    .hero-premium .eyebrow{ display:inline-flex; align-items:center; gap:10px; padding:8px 12px; border-radius:9999px; background:rgba(212,175,55,.16); border:1px solid rgba(212,175,55,.28) }
+    .hero-premium .dot{ width:8px; height:8px; border-radius:9999px; background:#d4af37; animation:pulse 1.8s ease-in-out infinite }
+    .hero-premium .headline{ font-family:'Playfair Display', Georgia, serif; font-weight:900; letter-spacing:.2px; line-height:1.06; font-size:44px; margin:14px 0 10px }
+    @media (min-width:640px){ .hero-premium .headline{ font-size:56px } }
+    @media (min-width:1024px){ .hero-premium .headline{ font-size:72px } }
+    .text-gradient-gold{ background:linear-gradient(90deg,#C99A1E,#D4AF37,#E5C86D); -webkit-background-clip:text; background-clip:text; color:transparent }
+    .hero-premium .subhead{ color:#e5e7eb; font-size:18px; line-height:1.6; max-width:640px; margin:0 0 18px }
+    .hero-premium .subhead strong{ color:#f5d779 }
+    .trust-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin:18px 0 22px; max-width:640px }
+    .trust-card{ text-align:center; background:rgba(255,255,255,.10); border:1px solid rgba(255,255,255,.16); border-radius:14px; padding:14px; backdrop-filter:blur(10px) }
+    .trust-card .k{ font-size:26px; font-weight:800; color:#f1cc4c; margin-bottom:4px }
+    .trust-card .t{ font-size:12px; color:#d1d5db }
+    .cta-row{ display:flex; flex-wrap:wrap; gap:12px }
+    .btn-gold{ appearance:none; border:0; background:linear-gradient(90deg,#c69a17,#d4af37); color:#0f172a; font-weight:800; padding:12px 16px; border-radius:12px; box-shadow:0 10px 30px rgba(212,175,55,.22); display:inline-flex; align-items:center; gap:10px; text-decoration:none }
+    .btn-gold:hover{ filter:brightness(1.02); transform:translateY(-1px) }
+    .btn-glass{ background:rgba(255,255,255,.12); border:1px solid rgba(255,255,255,.22); color:#fff; font-weight:700; padding:12px 16px; border-radius:12px; display:inline-flex; align-items:center; gap:10px; text-decoration:none }
+    .btn-glass:hover{ background:rgba(255,255,255,.18) }
+    .proof{ display:flex; align-items:center; gap:14px; margin-top:16px }
+    .avatars{ display:flex }
+    .avatars img{ width:40px; height:40px; border-radius:9999px; border:2px solid #071328; margin-left:-10px; background:#ddd }
+    .avatars img:first-child{ margin-left:0 }
+    .stars{ display:flex; gap:4px; margin-bottom:2px }
+    .star{ width:16px; height:16px; color:#d4af37 }
+
+    .visual{ position:relative; width:100%; display:none }
+    @media (min-width:1024px){ .visual{ display:block } }
+    .card-3d{ position:relative; background:rgba(255,255,255,.85); border:1px solid rgba(212,175,55,.15); border-radius:18px; padding:16px; box-shadow:0 18px 40px rgba(7,19,40,.25); transform:rotate(3deg); transition:transform .45s ease }
+    .card-3d:hover{ transform:rotate(0deg) }
+    .badge{ display:inline-flex; align-items:center; gap:6px; padding:4px 8px; border-radius:9999px; background:#d1fae5; color:#065f46; font-size:12px; font-weight:700 }
+    .ai-badge{ position:absolute; top:-10px; right:-10px; background:rgba(255,255,255,.9); border:1px solid rgba(17,24,39,.08); border-radius:14px; padding:12px; box-shadow:0 16px 36px rgba(0,0,0,.22) }
+    .roi-badge{ position:absolute; bottom:-10px; left:-10px; background:rgba(255,255,255,.9); border:1px solid rgba(17,24,39,.08); border-radius:14px; padding:12px; box-shadow:0 16px 36px rgba(0,0,0,.22) }
+
+    /* Background shapes */
+    .shape{ position:absolute; border-radius:9999px; filter:blur(60px); opacity:.24; pointer-events:none }
+    .shape.gold{ width:280px; height:280px; left:6%; top:10%; background:#d4af37; animation:floatY 6s ease-in-out infinite }
+    .shape.blue{ width:360px; height:360px; right:6%; bottom:10%; background:#2563EB; animation:floatY2 7s ease-in-out infinite }
+
+    /* Scroll indicator */
+    .scroll-indicator{ position:absolute; bottom:18px; left:50%; transform:translateX(-50%); animation:bounce 1.6s ease-in-out infinite; opacity:.8 }
+
+    /* Animations */
+    @keyframes pulse{ 0%,100%{ transform:scale(1); opacity:.8 } 50%{ transform:scale(1.18); opacity:1 } }
+    @keyframes floatY{ 0%,100%{ transform:translateY(0) } 50%{ transform:translateY(12px) } }
+    @keyframes floatY2{ 0%,100%{ transform:translateY(0) } 50%{ transform:translateY(-14px) } }
+    @keyframes slideInLeft{ from{ opacity:0; transform:translateX(-36px) } to{ opacity:1; transform:translateX(0) } }
+    @keyframes scaleIn{ from{ opacity:0; transform:scale(.92) } to{ opacity:1; transform:scale(1) } }
+    @keyframes bounce{ 0%,100%{ transform:translate(-50%,0) } 50%{ transform:translate(-50%,-8px) } }
+    
+    /* Value Proposition Section */
+    .value-prop{ position:relative; padding:96px 0; background:linear-gradient(180deg,#f9fafb 0%, #ffffff 100%); overflow:hidden }
+    .value-prop .deco{ position:absolute; border-radius:9999px; filter:blur(72px); opacity:.6; pointer-events:none }
+    .value-prop .deco.gold{ top:-80px; left:-80px; width:260px; height:260px; background:rgba(212,175,55,.10) }
+    .value-prop .deco.primary{ bottom:-100px; right:-100px; width:380px; height:380px; background:rgba(37,99,235,.10) }
+    .value-prop .inner{ position:relative; max-width:1100px; margin:0 auto; padding:0 16px; z-index:1 }
+    .value-prop .header{ text-align:center; max-width:760px; margin:0 auto 28px }
+    .value-prop .eyebrow-gold{ display:inline-block; padding:8px 12px; border-radius:9999px; background:#fef3c7; color:#92400e; font-weight:800; font-size:12px; margin-bottom:16px }
+    .value-prop .headline{ font-family: var(--font-display); font-weight:800; font-size:36px; line-height:1.12; color:#111; margin:0 0 12px }
+    .value-prop .sub{ color:#4b5563; font-size:18px; line-height:1.7; margin:0 auto; max-width:680px }
+    
+    /* Trial CTA Section (moved from Next.js) */
+    .trial-cta{ position:relative; padding:72px 0; color:#fff; background:linear-gradient(135deg, #071328 0%, #0F2D52 55%, #1A4173 100%); overflow:hidden }
+    .trial-cta .inner{ max-width:1100px; margin:0 auto; padding:0 16px; text-align:center }
+    .trial-cta .badge{ display:inline-flex; align-items:center; gap:10px; padding:8px 12px; border-radius:9999px; background:rgba(16,185,129,.18); border:1px solid rgba(16,185,129,.35); margin-bottom:16px }
+    .trial-cta .headline{ font-family:'Playfair Display', Georgia, serif; font-weight:900; letter-spacing:.2px; line-height:1.06; font-size:44px; margin:14px 0 10px }
+    @media (min-width:640px){ .trial-cta .headline{ font-size:56px } }
+    @media (min-width:1024px){ .trial-cta .headline{ font-size:64px } }
+    .trial-cta .subhead{ color:#e5e7eb; font-size:18px; line-height:1.6; max-width:640px; margin:0 auto 18px }
+    .trial-cta .shapes .shape{ position:absolute; border-radius:9999px; filter:blur(60px); opacity:.25; pointer-events:none }
+    .trial-cta .shapes .gold{ top:-40px; right:-40px; width:380px; height:380px; background:#d4af37 }
+    .trial-cta .shapes .blue{ bottom:-60px; left:-60px; width:420px; height:420px; background:#2563EB }
+    .trial-cta .cta-row{ display:flex; flex-wrap:wrap; gap:12px; justify-content:center; margin:16px 0 10px }
+    .trial-cta .trust{ display:flex; flex-wrap:wrap; gap:16px; justify-content:center; color:#d1d5db; margin-top:6px }
+    .vp-grid{ display:grid; grid-template-columns:1fr; gap:16px }
+    @media (min-width:768px){ .vp-grid{ grid-template-columns:repeat(2,1fr); gap:18px } }
+    @media (min-width:1024px){ .vp-grid{ grid-template-columns:repeat(3,1fr); gap:20px } }
+    .glass-card{ background:rgba(255,255,255,.72); border:1px solid rgba(17,24,39,.08); border-radius:16px; padding:24px; box-shadow:0 12px 36px rgba(17,24,39,.08); backdrop-filter:blur(10px) saturate(1.02); transition: box-shadow .2s ease, transform .2s ease, border-color .2s ease }
+    .vp-card{ height:100%; border-left:4px solid transparent; transition: border-color .2s ease }
+    .vp-card:hover{ border-left-color: var(--gold) }
+    .vp-card:hover .glass-card{ box-shadow:0 20px 50px rgba(17,24,39,.16); transform:translateY(-2px) }
+    .icon-circle{ width:56px; height:56px; border-radius:14px; display:flex; align-items:center; justify-content:center; background:linear-gradient(135deg,#c69a17,#d4af37); color:#fff; margin-bottom:16px; transition: transform .2s ease }
+    .icon-circle svg{ width:28px; height:28px }
+    .vp-card:hover .icon-circle{ transform:scale(1.06) }
+    .vp-title{ font-weight:800; font-size:20px; margin:0 0 10px; color:#111; transition: color .2s ease }
+    .vp-card:hover .vp-title{ color:#1d4ed8 }
+    .vp-desc{ color:#4b5563; line-height:1.7; margin:0 0 14px }
+    .vp-stat{ display:flex; align-items:center; gap:8px; color:#065f46; font-weight:800 }
+    .vp-stat svg{ width:20px; height:20px }
+    .fade-up{ opacity:0; transform:translateY(30px); transition: opacity .5s ease, transform .5s ease; transition-delay: var(--delay, 0s) }
+    .fade-up.in-view{ opacity:1; transform:translateY(0) }
+    /* Mobile optimizations: Value Props (320px–767px) */
+    @media (max-width:767px){
+      .value-prop{ padding:56px 0 }
+      .value-prop .vp-grid{ display:flex; flex-direction:column; gap:12px }
+      .value-prop .glass-card{ padding:16px }
+      .value-prop .icon-circle{ width:40px; height:40px; border-radius:12px; margin-bottom:12px }
+      .value-prop .icon-circle svg{ width:20px; height:20px }
+    }
+  </style>
+
+  <!-- Load Role Manager V2 - Optimized for speed and smooth UX -->
+  <script src="/role-manager-v2.js"></script>
+
+  <!-- Load Route Guard - Phase 3: Route Protection -->
+  <script src="/route-guard.js"></script>
+
+  <!-- Load Builder Onboarding Checklist - Phase 5 -->
+  <script src="/builder-onboarding-checklist.js"></script>
+
+  <!-- Durable Head Code (from snippets/index.html) -->
+  <!-- 0) Auto-open on load (optional) -->
+  <!-- Default disabled to prevent unexpected login popup on home -->
+  <script>window.AUTH_OPEN_ON_LOAD = false;</script>
+  <!-- Defensive: clean malformed Durable fragments like #https:/auth... that some hosts prepend -->
+  <script>
+    (function(){
+      try {
+        var h = (location.hash||'').trim();
+        if (/^#https?:\/+/.test(h)) { history.replaceState(null,'',location.href.replace(location.hash,'')); }
+      } catch(_) {}
+    })();
+  </script>
+  <!-- Show header Login/Signup button -->
+  <script>window.AUTH_HIDE_HEADER = false;</script>
+
+  <!-- 1) Configure globals BEFORE loading scripts -->
+  <script>
+    window.AUTH_NAV = { profile: '/profile', dashboard: '/dashboard' };
+    // Optional routes:
+    // window.AUTH_NAV = { profile: '/account', dashboard: '/app' };
+    // window.AUTH_NAV.settings = '/settings';
+    // REMOVED: window.DURABLE_AUTH_URL - using snippets inline auth instead
+    // Optional: auto-open the auth modal on page load
+    // window.AUTH_OPEN_ON_LOAD = true; // or use ?auth_open=1
+  </script>
+
+  <!-- REMOVED: auth-gate.js loader - using snippets inline auth system instead -->
+
+  <!-- Inline durable auth header UI (safe to paste into Durable Head Code) -->
+  <script>
+  // Durable top-right authentication header and modal (Supabase-based)
+  // Works standalone when pasted into Durable Head Code
+  (function(){
+    if (window.__thgAuthInstalledV1) return; window.__thgAuthInstalledV1 = true;
+
+    const AUTH_NAV = Object.assign({ profile: '/profile', dashboard: '/dashboard', settings: null }, window.AUTH_NAV || {});
+    const Z_BASE = 2147483000;
+
+    window.authGate = window.authGate || {};
+    window.authGate.openLoginModal = function(opts){ (window.__thgOpenAuthModal || function(){ alert('Auth not ready'); })(opts||{}); };
+
+    function ready(fn){ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',fn,{once:true});} else { fn(); } }
+    function headerRoot(){ return document.querySelector('header, [role="banner"], [data-section="header"], .site-header, .Header, nav') || null; }
+    // Instead of hiding legacy/login links, wire them to open the modal directly
+    function hideLegacyAuthLinks(root){
+      var scope = (root || document);
+      var selector = 'a[href="#login"], a[href="#signup"], [data-auth-open]';
+      scope.querySelectorAll(selector).forEach(function(el){
+        if (el.__thgAuthWired) return;
+        el.__thgAuthWired = true;
+        el.addEventListener('click', function(ev){
+          try {
+            ev.preventDefault();
+            // Always open the modal directly; never click the header button, to avoid
+            // accidentally toggling the account dropdown when the user is already signed in.
+            var next = location.pathname + location.search;
+            if (window.authGate && typeof window.authGate.openLoginModal === 'function') {
+              window.authGate.openLoginModal({ next });
+            } else if (typeof window.__thgOpenAuthModal === 'function') {
+              window.__thgOpenAuthModal({ next });
+            }
+          } catch(_){ }
+        }, { passive:false });
+      });
+    }
+    function clamp(str, max){ if (!str) return ''; return str.length>max ? str.slice(0,max-1)+'…' : str; }
+    function getInitials(user){
+      const meta = user?.user_metadata || {};
+      const full = (meta.full_name || meta.name || '').trim();
+      if (full) {
+        const parts = full.split(/\s+/).filter(Boolean);
+        const first = parts[0]?.[0] || '';
+        const last = parts.length>1 ? parts[parts.length-1][0] : '';
+        return (first+last || first || '').toUpperCase() || 'U';
+      }
+      const email = (user?.email || '').trim();
+      return email ? email[0].toUpperCase() : 'U';
+    }
+    function getDisplayName(user){
+      const meta = user?.user_metadata || {};
+      const name = (meta.full_name || meta.name || meta.username || '').trim();
+      return name || (user?.email || 'My Account');
+    }
+    // Keep buyer-form email field in sync with header auth state (same-page or embedded)
+    function lockBuyerEmailInBuyerForm(email){
+      try {
+        const scope = document.getElementById('buyerForm') || document;
+        const emailInput = scope && scope.querySelector('#buyerForm [name="email"], form#buyerForm input[name="email"]');
+        if (!emailInput) return;
+        emailInput.value = email || '';
+        emailInput.setAttribute('data-session-email', email || '');
+        emailInput.readOnly = true; emailInput.setAttribute('aria-readonly','true');
+        emailInput.disabled = true;
+        try { emailInput.setAttribute('autocomplete','off'); emailInput.setAttribute('autocapitalize','off'); emailInput.setAttribute('spellcheck','false'); } catch(_){}
+        // create/update hidden mirror used for submission
+        let hidden = document.getElementById('buyer-email-hidden');
+        if (!hidden){ hidden = document.createElement('input'); hidden.type='hidden'; hidden.name='email'; hidden.id='buyer-email-hidden'; emailInput.parentElement && emailInput.parentElement.appendChild(hidden); }
+        hidden.value = email || '';
+        // prevent duplicate name submission
+        if (emailInput.getAttribute('name')) { emailInput.setAttribute('data-original-name','email'); emailInput.removeAttribute('name'); }
+      } catch(_){ }
+    }
+    function unlockBuyerEmailInBuyerForm(){
+      try {
+        const scope = document.getElementById('buyerForm') || document;
+        const emailInput = scope && scope.querySelector('#buyerForm [data-session-email], form#buyerForm input[aria-readonly]');
+        if (!emailInput) return;
+        try { emailInput.readOnly = false; emailInput.disabled = false; emailInput.removeAttribute('aria-readonly'); emailInput.removeAttribute('data-session-email'); } catch(_){}
+        try { if (!emailInput.getAttribute('name')) emailInput.setAttribute('name', emailInput.getAttribute('data-original-name') || 'email'); } catch(_){}
+        const hidden = document.getElementById('buyer-email-hidden'); if (hidden && hidden.parentElement) hidden.parentElement.removeChild(hidden);
+      } catch(_){ }
+    }
+    function setBuyerEmailLockFromUser(user){
+      try { if (user && user.email) lockBuyerEmailInBuyerForm(user.email); else unlockBuyerEmailInBuyerForm(); } catch(_){}
+    }
+    function createEl(tag, cls, attrs){ const el = document.createElement(tag); if (cls) el.className = cls; if (attrs) for (var k in attrs) el.setAttribute(k, attrs[k]); return el; }
+    function validateEmail(val){ return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val); }
+    function ensureContainer(){
+      let hdr = headerRoot();
+      let wrap = document.querySelector('.thg-auth-wrap');
+      if (!wrap){
+        wrap = document.createElement('div');
+        wrap.className = 'thg-auth-wrap';
+        let parent = hdr || document.body;
+        if (hdr) { const cs = getComputedStyle(hdr); if (cs.position === 'static') { hdr.style.position = 'relative'; } parent.appendChild(wrap); }
+        else { wrap.classList.add('is-fixed'); parent.appendChild(wrap); }
+      }
+      return wrap;
+    }
+
+    function injectStyles(){
+      if (document.getElementById('thg-auth-styles')) return;
+      const css = `
+.thg-auth-wrap{ position:absolute; top:14px; right:16px; display:flex; align-items:center; z-index:${Z_BASE}; }
+@media (min-width:1024px){ .thg-auth-wrap{ top:16px; right:24px; } }
+.thg-auth-wrap.is-fixed{ position:fixed; top:14px; right:16px; }
+
+/* Header button */
+.thg-auth-btn{ appearance:none;background:transparent;color:#fff;border:1px solid rgba(255,255,255,.9); border-radius:9999px;padding:8px 14px;font-weight:600;cursor:pointer;line-height:1;white-space:nowrap;display:inline-flex;align-items:center;gap:8px; transition:background .15s ease, border-color .15s ease, box-shadow .15s ease; }
+.thg-auth-btn:hover{background:rgba(255,255,255,.08)}
+.thg-auth-btn:focus-visible{ outline:2px solid #7dd3fc; outline-offset:2px; }
+.thg-auth-btn .thg-initial{ width:22px;height:22px;border-radius:9999px;background:#fff;color:#111;display:none;align-items:center;justify-content:center;font-weight:700;font-size:11px; }
+.thg-auth-btn.is-auth .thg-initial{ display:inline-flex; }
+.thg-auth-btn.is-auth::after{ content:""; display:inline-block; width:0; height:0; border-left:5px solid transparent; border-right:5px solid transparent; border-top:6px solid rgba(255,255,255,.9); transition:transform .15s ease; transform-origin:center; }
+.thg-auth-btn[aria-expanded="true"].is-auth::after{ transform:rotate(180deg); }
+.thg-spinner{ width:14px;height:14px;border-radius:9999px;border:2px solid rgba(255,255,255,.35);border-top-color:#fff; animation:thgspin .8s linear infinite; }
+@keyframes thgspin{ to{ transform:rotate(360deg); } }
+
+/* Account menu */
+.thg-auth-menu{ position:absolute;top:calc(100% + 10px);right:0;min-width:280px;background:rgba(255, 255, 255, 0.95) !important;backdrop-filter: blur(24px) !important;-webkit-backdrop-filter: blur(24px) !important;color:#111 !important; border:1px solid rgba(255,255,255,0.3) !important;border-radius:24px !important;padding:12px;box-shadow:0 8px 32px 0 rgba(31, 38, 135, 0.25) !important; visibility:hidden; opacity:0; transform:translateY(-6px) scale(.98); transform-origin:top right; pointer-events:none; transition:opacity .16s ease, transform .16s ease, visibility 0s linear .16s; z-index:${Z_BASE+1}; }
+.thg-auth-menu::before{ content:""; position:absolute; top:0; left:0; right:0; height:2px; border-radius:24px 24px 0 0; background:linear-gradient(90deg, #d4af37, #1e40af); }
+.thg-auth-menu[aria-hidden="false"]{ visibility:visible; opacity:1; transform:translateY(0) scale(1); pointer-events:auto; transition:opacity .16s ease, transform .16s ease, visibility 0s linear 0s; }
+.thg-auth-item{ display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:8px;text-decoration:none;color:#111 !important;cursor:pointer; font-weight:600 !important; font-size:14px; transition: background .15s ease, transform .06s ease; margin-bottom:2px; }
+.thg-auth-item:last-child{ margin-bottom:0; }
+.thg-auth-item:hover{background:rgba(0,0,0,0.05) !important; transform:translateX(2px); }
+.thg-auth-item[tabindex]{outline:none}
+.thg-auth-item.is-header{ cursor:default;font-weight:700;opacity:1; color:#111 !important; }
+.thg-auth-item.is-header:hover{background:transparent; transform:none; }
+.thg-auth-sep{ height:1px;background:rgba(0,0,0,0.1) !important;margin:6px 8px;border-radius:1px; }
+.thg-initial-lg{ width:28px;height:28px;border-radius:9999px;background:rgba(0, 0, 0, 0.1) !important;color:#111 !important;border:1px solid rgba(0, 0, 0, 0.15) !important;display:inline-flex;align-items:center;justify-content:center;font-weight:700;font-size:12px; }
+.thg-name-wrap{ display:flex; flex-direction:column; min-width:0; }
+.thg-name{ overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:190px; color:#111 !important; }
+.thg-email{ opacity:.7; font-size:12px; overflow:hidden;text-overflow:ellipsis;white-space:nowrap; max-width:200px; color:rgba(0, 0, 0, 0.7) !important; }
+
+/* Modal */
+.thg-auth-overlay{ position:fixed; inset:0; background:rgba(0,0,0,.55); backdrop-filter:saturate(140%) blur(6px); display:flex; align-items:center; justify-content:center; z-index:${Z_BASE+2}; visibility:hidden; opacity:0; transition:opacity .18s ease, visibility 0s linear .18s; }
+.thg-auth-overlay[aria-hidden="false"]{ visibility:visible; opacity:1; transition:opacity .18s ease, visibility 0s linear 0s; }
+.thg-auth-modal{ width:100%; max-width:420px; background:linear-gradient(180deg, rgba(20,20,20,.98), rgba(12,12,12,.98)); color:#fff; border:1px solid rgba(255,255,255,.1); border-radius:16px; box-shadow:0 30px 60px rgba(0,0,0,.5); transform:translateY(10px) scale(.98); opacity:0; transition:transform .18s ease, opacity .18s ease; }
+.thg-auth-overlay[aria-hidden="false"] .thg-auth-modal{ transform:translateY(0) scale(1); opacity:1; }
+.thg-auth-header{ display:flex; align-items:center; justify-content:space-between; padding:16px 18px; border-bottom:1px solid rgba(255,255,255,.08); }
+.thg-auth-title{ font-weight:800; font-size:20px; }
+.thg-auth-close{ appearance:none; background:linear-gradient(180deg,#f3cd4a,#eab308,#c58a04); border:0; color:#111; cursor:pointer; font-weight:800; width:32px; height:32px; line-height:32px; border-radius:9999px; box-shadow:0 2px 6px rgba(0,0,0,.25); }
+.thg-auth-close:hover{ color:#fff; background:linear-gradient(180deg,#eab308,#c58a04,#7a5200); transform:scale(1.06); }
+.thg-auth-body{ padding:16px 18px 18px; }
+
+/* Tabs */
+.thg-tabs{ display:flex; gap:6px; background:rgba(255,255,255,.06); padding:4px; border-radius:9999px; margin-bottom:16px; }
+.thg-tab{ flex:1; text-align:center; padding:8px 10px; border-radius:9999px; cursor:pointer; font-weight:700; color:#ddd; }
+.thg-tab[aria-selected="true"]{ background:#fff; color:#111; }
+
+/* Fields */
+.thg-field{ display:flex; flex-direction:column; gap:6px; margin-bottom:12px; }
+.thg-field label{ font-size:12px; opacity:.9; }
+.thg-field label[for="thg-si-password"]::after{ content:" (optional — use Magic Link for fastest login)"; color:#9ca3af; font-weight:500; }
+.thg-input{ appearance:none; background:#121212; color:#fff; border:1px solid rgba(255,255,255,.12); border-radius:10px; padding:10px 12px; }
+.thg-input::placeholder{ color:#6b7280; }
+.thg-input:focus{ outline:2px solid #facc15; outline-offset:2px; }
+
+/* Actions and links */
+.thg-actions{ display:flex; justify-content:space-between; align-items:center; margin:6px 0 12px; }
+.thg-link{ background:none; border:0; color:#22c55e; cursor:pointer; font-size:13px; padding:0; }
+
+/* Primary CTA (yellow) */
+.thg-btn-primary{ width:100%; appearance:none; background:linear-gradient(180deg,#f8d34a,#f0b90b,#c89200); color:#111; border:1px solid rgba(250, 204, 21, .9); border-radius:12px; padding:12px 14px; font-weight:800; cursor:pointer; transition:transform .06s ease, box-shadow .06s ease, filter .12s ease; box-shadow:0 4px 0 rgba(250, 204, 21, .35); }
+.thg-btn-primary:hover{ filter:brightness(1.03); }
+.thg-btn-primary:active{ transform:translateY(1px); box-shadow:none; }
+
+/* OAuth / secondary buttons */
+.thg-oauth{ display:grid; grid-template-columns:1fr; gap:10px; margin-top:10px; }
+.thg-oauth-btn{ appearance:none; background:#0f0f0f; color:#fff; border:1px solid rgba(255,255,255,.12); border-radius:12px; padding:12px 14px; cursor:pointer; font-weight:800; display:flex; align-items:center; justify-content:center; gap:10px; }
+.thg-oauth-btn:hover{ background:#141414; }
+.thg-oauth-btn .g-icon{ width:18px; height:18px; }
+.thg-oauth-btn.google{ border-color:#333; background:#151515; }
+
+/* Errors, hints, loading */
+.thg-error{ background:rgba(239,68,68,.12); color:#fecaca; border:1px solid rgba(239,68,68,.35); border-radius:10px; padding:10px 12px; font-size:13px; display:none; }
+.thg-hint{ font-size:12px; opacity:.8; }
+.thg-loading-bar{ height:2px; width:0; background:#7dd3fc; border-radius:2px; transition:width .2s ease; }
+
+/* Confirm dialog */
+.thg-confirm{ position:fixed; inset:0; display:flex; align-items:center; justify-content:center; z-index:${Z_BASE+3}; background:rgba(0,0,0,.55); backdrop-filter:blur(3px); visibility:hidden; opacity:0; transition:opacity .16s ease, visibility 0s linear .16s; }
+.thg-confirm[aria-hidden="false"]{ visibility:visible; opacity:1; transition:opacity .16s ease, visibility 0s linear 0s; }
+.thg-confirm-card{ width:100%; max-width:360px; background:#141414; color:#fff; border:1px solid rgba(255,255,255,.12); border-radius:12px; padding:16px; box-shadow:0 24px 50px rgba(0,0,0,.5); }
+.thg-confirm-actions{ display:flex; gap:10px; justify-content:flex-end; margin-top:12px; }
+.thg-btn{ appearance:none; border-radius:10px; padding:8px 12px; cursor:pointer; border:1px solid rgba(255,255,255,.15); background:#0f0f0f; color:#fff; }
+.thg-btn-danger{ background:#ef4444; border-color:#ef4444; color:#fff; }
+
+/* Responsive */
+@media (max-width:480px){
+  .thg-auth-wrap{ top:10px; right:10px; }
+  .thg-auth-modal{ width:calc(100% - 16px); margin:0 8px; }
+  .thg-auth-menu{ right:8px; }
+}
+
+/* tagline styling */
+.thg-tagline{ color:#9ca3af; font-size:13px; margin:-4px 0 12px; }
+`;
+      const style = document.createElement('style');
+      style.id = 'thg-auth-styles';
+      style.textContent = css;
+      document.head.appendChild(style);
+    }
+
+    function createUI(){
+      const wrap = ensureContainer();
+      // Ensure About | divider appears before the Login/Signup button
+      let about = wrap.querySelector('a.about-link');
+      if (!about){
+        about = createEl('a', 'about-link', { href:'/about/', 'aria-label':'About Tharaga' });
+        about.textContent = 'About';
+        // Insert About at the start of the group
+        wrap.appendChild(about);
+        const sep = createEl('span','divider',{'aria-hidden':'true'});
+        wrap.appendChild(sep);
+      }
+      let btn = wrap.querySelector('.thg-auth-btn');
+      if (!btn){
+        btn = createEl('button', 'thg-auth-btn', { type:'button', 'aria-haspopup':'menu', 'aria-expanded':'false', 'aria-label':'Open account menu' });
+        const avatar = createEl('span', 'thg-initial');
+        avatar.textContent = 'U';
+        const label = document.createElement('span');
+        label.className = 'thg-label';
+        const spinner = createEl('span','thg-spinner',{'aria-hidden':'true'});
+        btn.appendChild(avatar); btn.appendChild(label); btn.appendChild(spinner);
+        wrap.appendChild(btn);
+      }
+
+      let menu = wrap.querySelector('.thg-auth-menu');
+      if (!menu){
+        menu = createEl('div', 'thg-auth-menu', { id:'thg-auth-menu', role:'menu', 'aria-hidden':'true' });
+        menu.innerHTML = '<div class="thg-auth-item is-header" aria-disabled="true">' +
+          '<span class="thg-initial-lg">U</span>' +
+          '<span class="thg-name-wrap">' +
+          '<span class="thg-name">User</span>' +
+          '<span class="thg-email">email@example.com</span>' +
+          '</span>' +
+          '</div>' +
+          '<div class="thg-auth-sep"></div>' +
+          '<div class="thg-auth-item" role="menuitem" tabindex="0" data-action="profile"><span>Profile</span></div>' +
+          '<div class="thg-auth-item" role="menuitem" tabindex="0" data-action="dashboard"><span>Dashboard</span></div>' +
+          (AUTH_NAV.settings ? '<div class="thg-auth-item" role="menuitem" tabindex="0" data-action="settings"><span>Settings</span></div>' : '') +
+          '<div class="thg-auth-item" role="menuitem" tabindex="0" data-action="logout"><span>Logout</span></div>';
+        wrap.appendChild(menu);
+      }
+      btn.setAttribute('aria-controls','thg-auth-menu');
+
+      let overlay = document.querySelector('.thg-auth-overlay');
+      if (!overlay){
+        overlay = createEl('div','thg-auth-overlay',{'aria-hidden':'true','aria-modal':'true','role':'dialog'});
+        overlay.innerHTML = `
+          <div class="thg-auth-modal" role="document" aria-labelledby="thg-auth-title">
+            <div class="thg-auth-header">
+              <div class="thg-auth-title" id="thg-auth-title">Sign in</div>
+              <button class="thg-auth-close" type="button" aria-label="Close">✕</button>
+            </div>
+            <div class="thg-loading-bar" aria-hidden="true"></div>
+            <div class="thg-auth-body">
+              <div class="thg-tagline">"Browse only approved builder projects — safe, transparent, and verified"</div>
+              <div class="thg-tabs" role="tablist" aria-label="Authentication method">
+                <button class="thg-tab" role="tab" id="thg-tab-signin" aria-controls="thg-panel-signin" aria-selected="true">Sign in</button>
+                <button class="thg-tab" role="tab" id="thg-tab-signup" aria-controls="thg-panel-signup" aria-selected="false">Create account</button>
+              </div>
+              <div class="thg-error" role="alert"></div>
+              <div id="thg-panel-signin" role="tabpanel" aria-labelledby="thg-tab-signin">
+                <div class="thg-field"><label for="thg-si-email">Email</label><input id="thg-si-email" class="thg-input" type="email" autocomplete="email" placeholder="you@example.com" /></div>
+                <div class="thg-field"><label for="thg-si-password">Password</label><input id="thg-si-password" class="thg-input" type="password" autocomplete="current-password" placeholder="Your password" /></div>
+                <div class="thg-actions"><button class="thg-link" type="button" id="thg-forgot">Forgot password?</button><span class="thg-hint"></span></div>
+                <button class="thg-btn-primary" type="button" id="thg-signin-btn">Sign in</button>
+                <div class="thg-oauth"><button class="thg-oauth-btn google" type="button" data-provider="google"><svg class="g-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" aria-hidden="true"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.2 32.6 29 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 6 1.2 8.1 3.2l5.7-5.7C34.6 6.1 29.6 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20c10 0 19-7.3 19-20 0-1.3-.1-2.7-.4-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.5 16.6 18.9 14 24 14c3.1 0 6 1.2 8.1 3.2l5.7-5.7C34.6 6.1 29.6 4 24 4c-7.7 0-14.3 4.3-17.7 10.7z"/><path fill="#4CAF50" d="M24 44c5 0 9.6-1.9 13-5.1l-6-5.1C29.9 35.6 27.1 36 24 36c-5 0-9.3-3.4-10.8-8l-6.7 5.1C10 40.2 16.5 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-1.3 3.1-4.6 8-11.3 8-5 0-9.3-3.4-10.8-8l-6.7 5.1C10 40.2 16.5 44 24 44z"/></svg><span>Continue with Google</span></button></div>
+              </div>
+              <div id="thg-panel-signup" role="tabpanel" aria-labelledby="thg-tab-signup" hidden>
+                <div class="thg-field"><label for="thg-su-name">Full name (optional)</label><input id="thg-su-name" class="thg-input" type="text" autocomplete="name" placeholder="Ada Lovelace" /></div>
+                <div class="thg-field"><label for="thg-su-email">Email</label><input id="thg-su-email" class="thg-input" type="email" autocomplete="email" placeholder="you@example.com" /></div>
+                <div class="thg-field"><label for="thg-su-password">Password</label><input id="thg-su-password" class="thg-input" type="password" autocomplete="new-password" placeholder="At least 8 characters" /></div>
+                <div class="thg-actions"><span class="thg-hint">Use a strong password. You can add name later.</span></div>
+                <button class="thg-btn-primary" type="button" id="thg-signup-btn">Create account</button>
+                <div class="thg-oauth"><button class="thg-oauth-btn google" type="button" data-provider="google"><svg class="g-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" aria-hidden="true"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.2 32.6 29 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 6 1.2 8.1 3.2l5.7-5.7C34.6 6.1 29.6 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20c10 0 19-7.3 19-20 0-1.3-.1-2.7-.4-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.5 16.6 18.9 14 24 14c3.1 0 6 1.2 8.1 3.2l5.7-5.7C34.6 6.1 29.6 4 24 4c-7.7 0-14.3 4.3-17.7 10.7z"/><path fill="#4CAF50" d="M24 44c5 0 9.6-1.9 13-5.1l-6-5.1C29.9 35.6 27.1 36 24 36c-5 0-9.3-3.4-10.8-8l-6.7 5.1C10 40.2 16.5 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-1.3 3.1-4.6 8-11.3 8-5 0-9.3-3.4-10.8-8l-6.7 5.1C10 40.2 16.5 44 24 44z"/></svg><span>Sign up with Google</span></button></div>
+              </div>
+              <div id="thg-panel-reset" role="tabpanel" aria-labelledby="thg-tab-reset" hidden>
+                <div class="thg-field"><label for="thg-rp-email">Email</label><input id="thg-rp-email" class="thg-input" type="email" autocomplete="email" placeholder="you@example.com" /></div>
+                <div class="thg-actions"><span class="thg-hint">We’ll email a password reset link.</span></div>
+                <button class="thg-btn-primary" type="button" id="thg-reset-btn">Send reset link</button>
+              </div>
+              <div id="thg-panel-update" role="tabpanel" aria-labelledby="thg-tab-update" hidden>
+                <div class="thg-field"><label for="thg-up-password">New password</label><input id="thg-up-password" class="thg-input" type="password" autocomplete="new-password" placeholder="Enter a new password" /></div>
+                <div class="thg-actions"><span class="thg-hint">You’re recovering your account.</span></div>
+                <button class="thg-btn-primary" type="button" id="thg-update-btn">Update password</button>
+              </div>
+            </div>
+          </div>`;
+        document.body.appendChild(overlay);
+      }
+
+      let confirmEl = document.querySelector('.thg-confirm');
+      if (!confirmEl){
+        confirmEl = createEl('div','thg-confirm',{'aria-hidden':'true','role':'dialog','aria-modal':'true'});
+        confirmEl.innerHTML = '<div class="thg-confirm-card" role="document">' +
+          '<div class="thg-confirm-msg">Are you sure you want to log out?</div>' +
+          '<div class="thg-confirm-actions">' +
+          '<button type="button" class="thg-btn thg-confirm-cancel">Cancel</button>' +
+          '<button type="button" class="thg-btn thg-btn-danger thg-confirm-ok">Log out</button>' +
+          '</div></div>';
+        document.body.appendChild(confirmEl);
+      }
+
+      // Respect global flag to hide the header button completely
+      try {
+        if (window.AUTH_HIDE_HEADER === true || window.AUTH_NO_HEADER === true) {
+          if (wrap) wrap.style.display = 'none';
+        }
+      } catch(_){ }
+      return { wrap, btn, menu, overlay, confirmEl };
+    }
+
+    const state = { user: null, loading: true, nextUrl: null, supabaseReady: false, sub: null };
+
+    function setButtonLoading(ui, isLoading){ const spinner = ui.btn.querySelector('.thg-spinner'); const label = ui.btn.querySelector('.thg-label'); if (isLoading){ ui.btn.classList.remove('is-auth'); if (label) label.textContent = 'Loading…'; if (spinner) spinner.style.display = 'inline-block'; ui.btn.setAttribute('aria-expanded','false'); } else { if (spinner) spinner.style.display = 'none'; } }
+
+    function render(ui){
+      console.log('[thg-auth] render() called, state.user:', state.user?.email || 'none', 'state.loading:', state.loading);
+      const label = ui.btn.querySelector('.thg-label');
+      const avatar = ui.btn.querySelector('.thg-initial');
+      if (state.loading){ setButtonLoading(ui, true); return; }
+      setButtonLoading(ui, false);
+      if (state.user && state.user.email){
+        const name = getDisplayName(state.user);
+        console.log('[thg-auth] User logged in, updating button to:', name);
+        ui.btn.classList.add('is-auth');
+        avatar.textContent = getInitials(state.user);
+        label.textContent = clamp(name, 24);
+        ui.btn.prepend(avatar);
+        const initEl = ui.menu.querySelector('.thg-initial-lg');
+        const nameEl = ui.menu.querySelector('.thg-name');
+        const emailEl = ui.menu.querySelector('.thg-email');
+        if (initEl) initEl.textContent = getInitials(state.user);
+        if (nameEl) nameEl.textContent = clamp(name, 28);
+        if (emailEl) emailEl.textContent = clamp(state.user.email || '', 30);
+      } else {
+        console.log('[thg-auth] No user, showing Login/Signup button');
+        ui.btn.classList.remove('is-auth');
+        ui.btn.setAttribute('aria-expanded','false');
+        label.textContent = 'Login / Signup';
+        avatar.textContent = 'U';
+        ui.btn.prepend(avatar);
+        closeMenu(ui);
+      }
+    }
+
+    function openMenu(ui){ if (!state.user) return; ui.menu.setAttribute('aria-hidden','false'); ui.btn.setAttribute('aria-expanded','true'); const items = ui.menu.querySelectorAll('.thg-auth-item[role="menuitem"]'); if (items[0]) setTimeout(function(){ items[0].focus(); }, 0); }
+    function closeMenu(ui){ ui.menu.setAttribute('aria-hidden','true'); ui.btn.setAttribute('aria-expanded','false'); }
+    function toggleMenu(ui){ const isHidden = ui.menu.getAttribute('aria-hidden') === 'true'; if (isHidden) openMenu(ui); else closeMenu(ui); }
+
+    function showError(uiOverlay, msg){ const el = uiOverlay.querySelector('.thg-error'); if (!el) return; el.textContent = msg; el.style.display = 'block'; }
+    function clearError(uiOverlay){ const el = uiOverlay.querySelector('.thg-error'); if (!el) return; el.textContent = ''; el.style.display = 'none'; }
+    function setModalLoading(uiOverlay, loading){ const bar = uiOverlay.querySelector('.thg-loading-bar'); if (!bar) return; if (loading){ bar.style.width = '75%'; } else { bar.style.width = '0'; } }
+    function showPanel(uiOverlay, id, title){ ['signin','signup','reset','update'].forEach(function(key){ const panel = uiOverlay.querySelector('#thg-panel-'+key); if (panel) panel.hidden = (key !== id); }); const tEl = uiOverlay.querySelector('#thg-auth-title'); if (tEl) tEl.textContent = title; clearError(uiOverlay); }
+    function openAuthModal(ui, opts){
+      state.nextUrl = opts?.next || null;
+      ui.overlay.setAttribute('aria-hidden','false');
+      showPanel(ui.overlay, 'signin', 'Sign in');
+      // Kick auth init as soon as modal opens so OAuth can proceed immediately
+      (async ()=>{
+        try {
+          const ok = await ensureSupabaseReady();
+          if (ok) { state.supabaseReady = true; }
+        } catch(_) {}
+      })();
+      setTimeout(function(){ const el = ui.overlay.querySelector('#thg-si-email'); if (el) el.focus(); }, 0);
+    }
+    function closeAuthModal(ui){ ui.overlay.setAttribute('aria-hidden','true'); }
+    function openConfirm(ui){ ui.confirmEl.setAttribute('aria-hidden','false'); }
+    // Broadcast current auth state (email only) to child iframes, sibling tabs, and embedded forms
+    function broadcastAuth(user){
+      var loggedIn = !!(user && user.email);
+      try { window.__authGateLoggedIn = loggedIn; } catch(_) {}
+      try {
+        localStorage.setItem('__tharaga_magic_continue', JSON.stringify({ user: loggedIn ? { email: user.email } : null, ts: Date.now() }));
+      } catch(_) {}
+      try {
+        var evtType = loggedIn ? 'THARAGA_AUTH_SUCCESS' : 'THARAGA_AUTH_SIGNED_OUT';
+        if ('BroadcastChannel' in window){
+          window.__thgAuthBC = window.__thgAuthBC || new BroadcastChannel('tharaga-auth');
+          window.__thgAuthBC.postMessage(loggedIn ? { type: evtType, user: { email: user.email } } : { type: evtType });
+        }
+      } catch(_) {}
+      try {
+        var payload = loggedIn ? { type: 'THARAGA_AUTH_SUCCESS', user: { email: user.email } } : { type: 'THARAGA_AUTH_SIGNED_OUT' };
+        // Notify any embedded iframes (cross-origin safe via postMessage)
+        var iframes = document.querySelectorAll('iframe');
+        for (var i=0;i<iframes.length;i++){
+          try { iframes[i].contentWindow && iframes[i].contentWindow.postMessage(payload, '*'); } catch(__) {}
+        }
+        // If this page itself is inside an iframe, also notify parent
+        try { if (window.parent && window.parent !== window) window.parent.postMessage(payload, '*'); } catch(__) {}
+      } catch(_) {}
+    }
+    function closeConfirm(ui){ ui.confirmEl.setAttribute('aria-hidden','true'); }
+
+    // Removed openHostedAuth function - using direct OAuth flow instead
+
+    // Ensure a Supabase client is available before starting OAuth
+    async function ensureSupabaseReady(){
+      try {
+        if (window.supabase && window.supabase.auth) return true;
+        const mod = await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm');
+        const client = mod.createClient('https://wedevtjjmdvngyshqdro.supabase.co','eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndlZGV2dGpqbWR2bmd5c2hxZHJvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU0NzYwMzgsImV4cCI6MjA3MTA1MjAzOH0.Ex2c_sx358dFdygUGMVBohyTVto6fdEQ5nydDRh9m6M');
+        window.supabase = client;
+        return !!(window.supabase && window.supabase.auth);
+      } catch(_){ return false; }
+    }
+
+    function bindUI(ui){
+      ui.btn.addEventListener('click', function(e){ e.preventDefault(); if (state.user && state.user.email){ toggleMenu(ui); } else { openAuthModal(ui, { next: location.pathname + location.search }); } });
+      ui.btn.addEventListener('keydown', function(e){ if ((e.key === 'ArrowDown' || e.key === 'Enter') && state.user && state.user.email){ e.preventDefault(); openMenu(ui); } });
+      ui.menu.addEventListener('click', function(e){ const item = e.target.closest('.thg-auth-item[role="menuitem"]'); if (!item) return; const act = item.getAttribute('data-action'); if (act === 'profile'){ closeMenu(ui); location.href = AUTH_NAV.profile; return; } if (act === 'dashboard'){ closeMenu(ui); location.href = AUTH_NAV.dashboard; return; } if (act === 'settings' && AUTH_NAV.settings){ closeMenu(ui); location.href = AUTH_NAV.settings; return; } if (act === 'logout'){ closeMenu(ui); openConfirm(ui); } });
+      ui.menu.addEventListener('keydown', function(e){ if (e.key === 'Escape'){ e.preventDefault(); closeMenu(ui); ui.btn.focus(); return; } if (['ArrowDown','ArrowUp','Home','End'].indexOf(e.key) === -1) return; e.preventDefault(); const items = Array.prototype.slice.call(ui.menu.querySelectorAll('.thg-auth-item[role="menuitem"]')); const idx = items.indexOf(document.activeElement); if (!items.length) return; if (e.key === 'Home'){ items[0].focus(); return; } if (e.key === 'End'){ items[items.length - 1].focus(); return; } const next = e.key === 'ArrowDown' ? (idx + 1 + items.length) % items.length : (idx - 1 + items.length) % items.length; items[next].focus(); });
+      document.addEventListener('click', function(e){ if (ui.menu.getAttribute('aria-hidden') === 'true') return; if (!ui.menu.contains(e.target) && e.target !== ui.btn && !ui.btn.contains(e.target)){ closeMenu(ui); } });
+      const tabSignIn = ui.overlay.querySelector('#thg-tab-signin');
+      const tabSignUp = ui.overlay.querySelector('#thg-tab-signup');
+      function selectTab(which){ const a = which==='signin'; tabSignIn.setAttribute('aria-selected', a ? 'true' : 'false'); tabSignUp.setAttribute('aria-selected', a ? 'false' : 'true'); showPanel(ui.overlay, a ? 'signin' : 'signup', a ? 'Sign in' : 'Create account'); const first = ui.overlay.querySelector(a ? '#thg-si-email' : '#thg-su-name'); if (first) first.focus(); }
+      tabSignIn.addEventListener('click', function(){ selectTab('signin'); });
+      tabSignUp.addEventListener('click', function(){ selectTab('signup'); });
+      ui.overlay.addEventListener('click', function(e){ if (e.target === ui.overlay) closeAuthModal(ui); });
+      ui.overlay.querySelector('.thg-auth-close').addEventListener('click', function(){ closeAuthModal(ui); });
+      document.addEventListener('keydown', function(e){ if (e.key === 'Escape' && ui.overlay.getAttribute('aria-hidden') === 'false') closeAuthModal(ui); });
+      const forgotBtn = ui.overlay.querySelector('#thg-forgot');
+      forgotBtn.addEventListener('click', function(){ showPanel(ui.overlay, 'reset', 'Reset password'); const el = ui.overlay.querySelector('#thg-rp-email'); const source = ui.overlay.querySelector('#thg-si-email'); if (source && el && source.value) el.value = source.value; if (el) el.focus(); });
+      ui.overlay.querySelector('#thg-signin-btn').addEventListener('click', async function(){ if (!state.supabaseReady){ showError(ui.overlay, 'Authentication is not initialized.'); return; } const email = ui.overlay.querySelector('#thg-si-email').value.trim(); const password = ui.overlay.querySelector('#thg-si-password').value; if (!validateEmail(email)) { showError(ui.overlay, 'Enter a valid email.'); return; } if (!password || password.length < 6) { showError(ui.overlay, 'Enter your password.'); return; } clearError(ui.overlay); setModalLoading(ui.overlay, true); try{ const { error } = await window.supabase.auth.signInWithPassword({ email, password }); if (error) { showError(ui.overlay, error.message || 'Failed to sign in.'); } } catch(ex){ showError(ui.overlay, 'Network error. Please try again.'); } finally { setModalLoading(ui.overlay, false); } });
+      ui.overlay.querySelector('#thg-signup-btn').addEventListener('click', async function(){ if (!state.supabaseReady){ showError(ui.overlay, 'Authentication is not initialized.'); return; } const name = ui.overlay.querySelector('#thg-su-name').value.trim(); const email = ui.overlay.querySelector('#thg-su-email').value.trim(); const password = ui.overlay.querySelector('#thg-su-password').value; if (!validateEmail(email)) { showError(ui.overlay, 'Enter a valid email.'); return; } if (!password || password.length < 8) { showError(ui.overlay, 'Password must be at least 8 characters.'); return; } clearError(ui.overlay); setModalLoading(ui.overlay, true); try{ const { error } = await window.supabase.auth.signUp({ email, password, options: { data: name ? { full_name: name } : {} } }); if (error) { showError(ui.overlay, error.message || 'Failed to create account.'); } else { showError(ui.overlay, 'Check your email to verify your account.'); } } catch(ex){ showError(ui.overlay, 'Network error. Please try again.'); } finally { setModalLoading(ui.overlay, false); } });
+      ui.overlay.querySelectorAll('.thg-oauth-btn').forEach(function(btn){ btn.addEventListener('click', async function(){ const provider = btn.getAttribute('data-provider'); clearError(ui.overlay); setModalLoading(ui.overlay, true); try{ await ensureSupabaseReady(); if (!window.supabase || !window.supabase.auth){ showError(ui.overlay, 'Authentication is not available. Please reload the page.'); setModalLoading(ui.overlay, false); return; } const redirectTo = location.origin + location.pathname + location.search; const { data, error } = await window.supabase.auth.signInWithOAuth({ provider, options: { redirectTo, queryParams: { prompt: 'select_account' } } }); if (error) { const msg = /provider is not enabled/i.test(error.message||'') ? 'Google sign-in is not available yet.' : (error.message || 'Could not start sign in.'); showError(ui.overlay, msg); setModalLoading(ui.overlay, false); return; } if (data && data.url){ location.href = data.url; } else { setModalLoading(ui.overlay, false); showError(ui.overlay, 'Could not start ' + provider + ' sign in.'); } } catch(ex){ showError(ui.overlay, 'Error: ' + (ex.message || 'Could not start sign in')); setModalLoading(ui.overlay, false); } }); });
+      ui.overlay.querySelector('#thg-reset-btn').addEventListener('click', async function(){ if (!state.supabaseReady){ showError(ui.overlay, 'Authentication is not initialized.'); return; } const email = ui.overlay.querySelector('#thg-rp-email').value.trim(); if (!validateEmail(email)) { showError(ui.overlay, 'Enter a valid email.'); return; } clearError(ui.overlay); setModalLoading(ui.overlay, true); try{ const redirectTo = location.origin + location.pathname + location.search; const { error } = await window.supabase.auth.resetPasswordForEmail(email, { redirectTo }); if (error) { showError(ui.overlay, error.message || 'Failed to send reset link.'); } else { showError(ui.overlay, 'Reset link sent. Check your email.'); } } catch(ex){ showError(ui.overlay, 'Network error. Please try again.'); } finally { setModalLoading(ui.overlay, false); } });
+      ui.overlay.querySelector('#thg-update-btn').addEventListener('click', async function(){ if (!state.supabaseReady){ showError(ui.overlay, 'Authentication is not initialized.'); return; } const password = ui.overlay.querySelector('#thg-up-password').value; if (!password || password.length < 8) { showError(ui.overlay, 'Password must be at least 8 characters.'); return; } clearError(ui.overlay); setModalLoading(ui.overlay, true); try{ const { error } = await window.supabase.auth.updateUser({ password }); if (error) { showError(ui.overlay, error.message || 'Failed to update password.'); } else { showPanel(ui.overlay, 'signin', 'Sign in'); showError(ui.overlay, 'Password updated. Please sign in.'); } } catch(ex){ showError(ui.overlay, 'Network error. Please try again.'); } finally { setModalLoading(ui.overlay, false); } });
+      ui.confirmEl.querySelector('.thg-confirm-cancel').addEventListener('click', function(){ closeConfirm(ui); });
+      ui.confirmEl.addEventListener('click', function(e){ if (e.target === ui.confirmEl) closeConfirm(ui); });
+      ui.confirmEl.querySelector('.thg-confirm-ok').addEventListener('click', async function(){
+        try { await window.supabase?.auth?.signOut?.(); } catch(_){ }
+        // Proactively broadcast sign-out so embedded forms unlock immediately
+        try { broadcastAuth(null); } catch(_){ }
+        closeConfirm(ui);
+      });
+      window.__thgOpenAuthModal = function(opts){ openAuthModal(ui, opts); };
+      // Expose a helper to programmatically open the auth modal (never toggles dropdown)
+      window.authGate.triggerHeaderLogin = function(opts){
+        try { openAuthModal(ui, opts||{ next: location.pathname + location.search }); }
+        catch(_){ try { window.__thgOpenAuthModal && window.__thgOpenAuthModal(opts||{ next: location.pathname + location.search }); } catch(__){} }
+      };
+    }
+
+    async function initSupabase(ui){
+      state.loading = true; render(ui);
+      if (!window.supabase || !window.supabase.auth){
+        try {
+          const mod = await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm');
+          const client = mod.createClient('https://wedevtjjmdvngyshqdro.supabase.co','eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndlZGV2dGpqbWR2bmd5c2hxZHJvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU0NzYwMzgsImV4cCI6MjA3MTA1MjAzOH0.Ex2c_sx358dFdygUGMVBohyTVto6fdEQ5nydDRh9m6M');
+          window.supabase = client;
+        } catch(_) {}
+      }
+      if (!window.supabase || !window.supabase.auth){ state.supabaseReady = false; state.loading = false; render( ui); console.warn('[thg-auth] window.supabase not found.'); return; }
+      state.supabaseReady = true;
+
+      // Check if this is an OAuth callback (post_auth=1 or access_token in URL)
+      const urlParams = new URLSearchParams(location.search);
+      const isOAuthCallback = urlParams.has('post_auth') || location.hash.includes('access_token');
+
+      try{
+        const { data } = await window.supabase.auth.getSession();
+        state.user = data?.session?.user || null;
+        console.log('[thg-auth] getSession called, user:', state.user?.email || 'none', 'isOAuthCallback:', isOAuthCallback);
+
+        // If OAuth callback and user is logged in, clean up URL
+        if (isOAuthCallback && state.user) {
+          console.log('[thg-auth] OAuth callback detected, cleaning URL');
+          // Clean up URL parameters without page reload
+          const cleanUrl = location.origin + location.pathname;
+          history.replaceState(null, '', cleanUrl);
+        }
+      } catch(_){
+        state.user = null;
+      } finally {
+        state.loading = false;
+        render(ui);
+        console.log('[thg-auth] render() called after getSession');
+        try { broadcastAuth(state.user); } catch(__) {}
+        try { setBuyerEmailLockFromUser(state.user); } catch(__) {}
+
+        // Initialize role manager for existing logged-in users
+        if (state.user && window.thgRoleManager) {
+          console.log('[thg-auth] Initializing role manager on page load');
+          window.thgRoleManager.init(state.user, ui).catch(err => console.error('[thg-auth] Role manager init error:', err));
+        }
+      }
+
+      try{
+        const { data: sub } = window.supabase.auth.onAuthStateChange(function(event, session){
+          console.log('[thg-auth] onAuthStateChange fired, event:', event, 'user:', session?.user?.email || 'none');
+          state.user = session?.user || null;
+          render(ui);
+          console.log('[thg-auth] render() called from onAuthStateChange');
+          try { broadcastAuth(state.user); } catch(__) {}
+          try { setBuyerEmailLockFromUser(state.user); } catch(__) {}
+
+          // Initialize role manager for new sign-ins and existing sessions
+          if ((event === 'SIGNED_IN' || event === 'INITIAL_SESSION') && state.user && window.thgRoleManager) {
+            console.log('[thg-auth] Initializing role manager for user');
+            window.thgRoleManager.init(state.user, ui).catch(err => console.error('[thg-auth] Role manager init error:', err));
+          }
+
+          if (event === 'PASSWORD_RECOVERY'){ const overlay = ui.overlay; overlay.setAttribute('aria-hidden','false'); showPanel(overlay, 'update', 'Set new password'); setTimeout(function(){ const el = overlay.querySelector('#thg-up-password'); if (el) el.focus(); }, 0); }
+          if (state.user && state.user.email){ if (state.nextUrl){ const to = state.nextUrl; state.nextUrl = null; try { closeAuthModal(ui); } catch(_){} location.href = to; } else { try { closeAuthModal(ui); } catch(_){} } } else { closeMenu(ui); }
+        });
+        state.sub = sub?.subscription || sub || null;
+      } catch(_){ }
+    }
+
+    function observeRerenders(){ const mo = new MutationObserver(function(muts){ for (var i=0;i<muts.length;i++){ for (var j=0;j<muts[i].addedNodes.length;j++){ const n = muts[i].addedNodes[j]; if (n.nodeType !== 1) continue; hideLegacyAuthLinks(n); ensureContainer(); } } }); mo.observe(document.documentElement, { childList:true, subtree:true }); }
+
+    ready(function(){
+      hideLegacyAuthLinks(document);
+      injectStyles();
+      const ui = createUI();
+      bindUI(ui);
+
+      // Store UI globally for role manager access
+      window.__thgAuthUI = ui;
+      window.__thgAuthState = state;
+      // If there is no header on the host page, we use a fixed fallback button.
+      // On white/light backgrounds (like the Netlify snippet page), the default
+      // white-on-dark styling can be invisible. Add a light-theme override only
+      // for this fallback state to ensure visibility without affecting host sites
+      // that have their own headers.
+      try {
+        if (ui.wrap && ui.wrap.classList.contains('is-fixed') && !document.getElementById('thg-auth-fixed-contrast')){
+          const style = document.createElement('style');
+          style.id = 'thg-auth-fixed-contrast';
+          style.textContent = [
+            '.thg-auth-wrap.is-fixed .thg-auth-btn{color:#111;border:1px solid rgba(0,0,0,.85);background:rgba(0,0,0,.03)}',
+            '.thg-auth-wrap.is-fixed .thg-auth-btn:hover{background:rgba(0,0,0,.06)}',
+            '.thg-auth-wrap.is-fixed .thg-auth-btn:focus-visible{outline:2px solid #2563eb;outline-offset:2px}',
+            '.thg-auth-wrap.is-fixed .thg-auth-btn.is-auth::after{border-top-color:rgba(0,0,0,.85)}',
+            '.thg-auth-wrap.is-fixed .thg-auth-menu{background:#fff;color:#111;border:1px solid rgba(0,0,0,.12);box-shadow:0 12px 30px rgba(0,0,0,.12)}',
+            '.thg-auth-wrap.is-fixed .thg-auth-item:hover{background:rgba(0,0,0,.06)}',
+            '.thg-auth-wrap.is-fixed .thg-initial{background:#111;color:#fff}',
+            '.thg-auth-wrap.is-fixed .thg-initial-lg{background:#111;color:#fff}'
+          ].join('\n');
+          document.head && document.head.appendChild(style);
+        }
+      } catch(_){ }
+      observeRerenders();
+      initSupabase(ui);
+
+      // Auto-open the auth modal on first load if configured or URL hints present
+      try {
+        const qp = new URLSearchParams(location.search);
+        const hash = (location.hash || '').trim();
+        const shouldAutoOpen = (window.AUTH_OPEN_ON_LOAD === true)
+          || qp.has('auth_open') || qp.get('login') === '1' || qp.get('open') === '1'
+          || hash === '#login' || hash === '#signup' || hash === '#auth';
+        if (shouldAutoOpen) {
+          setTimeout(function(){ try { if (!state.user) { openAuthModal(ui, { next: location.pathname + location.search }); } } catch(_){} }, 0);
+        }
+      } catch(_){ }
+
+      // Allow child iframes (e.g., Netlify buyer-form) to request opening the global login
+      // Secure origin-validated postMessage listener (also supports legacy types)
+      const ALLOWED_IFRAME_ORIGINS = [location.origin];
+
+      function openDurableHeaderBehavior(meta){
+        try {
+          var el = document.getElementById('durable-head')
+            || document.querySelector('header, [role="banner"], [data-section="header"], .site-header, nav')
+            || document.querySelector('.thg-auth-wrap');
+          if (el && el.scrollIntoView) {
+            el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          }
+          // If not authenticated, open the auth modal directly. If authenticated, do nothing.
+          var isAuthed = !!(state && state.user && state.user.email);
+          if (!isAuthed) {
+            try { openAuthModal(ui, { next: (meta && meta.next) || (location.pathname + location.search) }); }
+            catch(_) { try { window.__thgOpenAuthModal && window.__thgOpenAuthModal({ next: location.pathname + location.search }); } catch(__){} }
+          }
+        } catch (err) { console.error('openDurableHeaderBehavior error:', err); }
+      }
+      window.openDurableHeaderBehavior = openDurableHeaderBehavior;
+
+      window.addEventListener('message', function(ev){
+        try {
+          var data = ev && ev.data;
+          if (!data || typeof data !== 'object') return;
+          // Loosen origin checks for safe CTA from known child frames (e.g., Netlify buyer-form)
+          if (ev.origin && ALLOWED_IFRAME_ORIGINS.indexOf(ev.origin) === -1) {
+            var extraOk = false;
+            try {
+              var o = ev.origin || '';
+              if (/^https:\/\//.test(o)) {
+                if (o.indexOf('tharaga.co.in') !== -1 || o.indexOf('auth.tharaga.co.in') !== -1 || o.indexOf('netlify.app') !== -1) extraOk = true;
+                if (!extraOk && Array.isArray(window.ALLOWED_CHILD_ORIGINS) && window.ALLOWED_CHILD_ORIGINS.indexOf(o) !== -1) extraOk = true;
+              }
+            } catch(_) {}
+            if (!extraOk) return;
+          }
+
+          if (data.type === 'cta' && data.action === 'openDurableHead'){
+            console.log('Parent received openDurableHead from', ev.origin, data);
+            openDurableHeaderBehavior(data.meta || {});
+            return;
+          }
+
+          // Update header immediately when child reports auth success
+          if (data.type === 'THARAGA_AUTH_SUCCESS' && data.user && data.user.email){
+            try { state.user = { email: data.user.email, user_metadata: {} }; render(ui); } catch(_) {}
+            // try to sync full session when/if client becomes available
+            try { ensureSupabaseReady().then(async function(ok){ if (ok){ try { const s = await window.supabase.auth.getSession(); if (s && s.data && s.data.session && s.data.session.user){ state.user = s.data.session.user; render(ui); } } catch(_){} } }); } catch(_){}
+            return;
+          }
+
+          if (data.type === 'open_login_modal' || data.type === 'auth_open' || data.type === 'login_open' || data.type === 'trigger_header_login'){
+            // If already authenticated, ignore the request so no dropdown toggles.
+            if (state && state.user && state.user.email) { return; }
+            // Otherwise open the modal directly (never click the header button)
+            try { openAuthModal(ui, { next: data.next || (location.pathname + location.search) }); } catch(_){ }
+          }
+
+          // Navigation request from embedded forms to open listings in same tab
+          if (data.type === 'open_listings' && typeof data.url === 'string'){
+            try {
+              var o = ev.origin || '';
+              var allowed = ALLOWED_IFRAME_ORIGINS.indexOf(o) !== -1 || /tharaga\.co\.in|auth\.tharaga\.co\.in|netlify\.app/.test(o);
+              if (!allowed) return;
+            } catch(_) {}
+            try { location.href = data.url; } catch(_) {}
+            return;
+          }
+        } catch(_){ }
+      });
+
+      window.addEventListener('storage', function(ev){ if (ev.key === 'supabase.auth.token'){ } });
+      window.addEventListener('beforeunload', function(){ try { state.sub && state.sub.unsubscribe && state.sub.unsubscribe(); } catch(_){} });
+    });
+  })();
+  </script>
+
+  <!-- Auth configuration -->
+  <script>
+    window.AUTH_HIDE_HEADER=false;window.AUTH_OPEN_ON_LOAD=false;
+  </script>
+
+  <!-- Auth system styles - Light theme -->
+  <style id="thg-auth-styles">
+    /* Light theme auth styles - prevents dark dropdown injection */
+    .thg-auth-wrap{ display:flex; align-items:center; position:relative; z-index:2147483000; }
+    header .thg-auth-wrap:not(#site-header-auth-container){ position:absolute; top:14px; right:16px; }
+    @media (min-width:1024px){ header .thg-auth-wrap:not(#site-header-auth-container){ top:16px; right:24px; } }
+    .thg-auth-wrap.is-fixed{ position:fixed; top:14px; right:16px; }
+    .thg-auth-btn{ appearance:none;background:transparent;color:#1e40af;border:1px solid rgba(30,64,175,.20); border-radius:9999px;padding:8px 14px;font-weight:600;cursor:pointer;line-height:1;white-space:nowrap;display:inline-flex;align-items:center;gap:8px; transition:background .15s ease, border-color .15s ease, box-shadow .15s ease; }
+    .thg-auth-btn:hover{background:rgba(30,64,175,.15)}
+    .thg-auth-btn:focus-visible{ outline:2px solid #7dd3fc; outline-offset:2px; }
+    .thg-auth-btn .thg-initial{ width:22px;height:22px;border-radius:9999px;background:#1e40af;color:#fff;display:none;align-items:center;justify-content:center;font-weight:700;font-size:11px; }
+    .thg-auth-btn.is-auth .thg-initial{ display:inline-flex; }
+    .thg-auth-btn.is-auth::after{ content:""; display:inline-block; width:0; height:0; border-left:5px solid transparent; border-right:5px solid transparent; border-top:6px solid #1e40af; transition:transform .15s ease; transform-origin:center; }
+    .thg-auth-btn[aria-expanded="true"].is-auth::after{ transform:rotate(180deg); }
+    .thg-spinner{ width:14px;height:14px;border-radius:9999px;border:2px solid rgba(30,64,175,.35);border-top-color:#1e40af; animation:thgspin .8s linear infinite; }
+    @keyframes thgspin{ to{ transform:rotate(360deg); } }
+    /* Account menu - LIGHT THEME (override dark #0b0b0b) */
+    .thg-auth-menu{ position:absolute;top:calc(100% + 10px);right:0;min-width:280px;background:linear-gradient(180deg, rgba(255,255,255,0.95), rgba(248,250,252,0.98));backdrop-filter: blur(16px) saturate(1.5);-webkit-backdrop-filter: blur(16px) saturate(1.5);color:#111; border:1px solid rgba(30,64,175,.12);border-radius:12px;padding:12px 8px 8px;box-shadow:0 18px 40px rgba(30,64,175,.16); visibility:hidden; opacity:0; transform:translateY(-6px) scale(.98); transform-origin:top right; pointer-events:none; transition:opacity .16s ease, transform .16s ease, visibility 0s linear .16s; z-index:2147483001; }
+    .thg-auth-menu::before{ content:""; position:absolute; top:0; left:0; right:0; height:3px; border-radius:12px 12px 0 0; background:linear-gradient(90deg, #d4af37, #1e40af); }
+    .thg-auth-menu[aria-hidden="false"]{ visibility:visible; opacity:1; transform:translateY(0) scale(1); pointer-events:auto; transition:opacity .16s ease, transform .16s ease, visibility 0s linear 0s; }
+    .thg-auth-item{ display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;text-decoration:none;color:#111;cursor:pointer; }
+    .thg-auth-item:hover{background:linear-gradient(90deg, rgba(30,64,175,.12), rgba(59,130,246,.06));color:#1e40af;}
+    .thg-auth-item[tabindex]{outline:none}
+    .thg-auth-item.is-header{ cursor:default;font-weight:700;opacity:1; color:#111; }
+    .thg-auth-item.is-header:hover{background:transparent}
+    .thg-auth-sep{ height:1px;background:rgba(30,64,175,.14);margin:6px 8px;border-radius:1px; }
+    .thg-initial-lg{ width:28px;height:28px;border-radius:9999px;background:#1e40af;color:#fff;display:inline-flex;align-items:center;justify-content:center;font-weight:700;font-size:12px; }
+    .thg-name-wrap{ display:flex; flex-direction:column; min-width:0; }
+    .thg-name{ overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:190px; color:#111; }
+    .thg-email{ opacity:.7; font-size:12px; overflow:hidden;text-overflow:ellipsis;white-space:nowrap; max-width:200px; color:#64748b; }
+    @media (max-width:480px){
+      .thg-auth-wrap{ top:10px; right:10px; }
+      .thg-auth-modal{ width:calc(100% - 16px); margin:0 8px; }
+      .thg-auth-menu{ right:8px; }
+    }
+  </style>
+
+  <!-- Auth system script -->
+  <script>
+// Durable top-right authentication header and modal (Supabase-based)
+// Works standalone when pasted into Durable Head Code
+(function(){
+  if (window.__thgAuthInstalledV1) return; window.__thgAuthInstalledV1 = true;
+
+  const AUTH_NAV = Object.assign({ profile: '/profile', dashboard: '/dashboard', settings: null }, window.AUTH_NAV || {});
+  const Z_BASE = 2147483000;
+
+  window.authGate = window.authGate || {};
+  window.authGate.openLoginModal = function(opts){ (window.__thgOpenAuthModal || function(){ alert('Auth not ready'); })(opts||{}); };
+
+  function ready(fn){ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',fn,{once:true});} else { fn(); } }
+  function headerRoot(){ return document.querySelector('header, [role="banner"], [data-section="header"], .site-header, .Header, nav') || null; }
+  // Instead of hiding legacy/login links, wire them to open the modal directly
+  function hideLegacyAuthLinks(root){
+    var scope = (root || document);
+    var selector = 'a[href="#login"], a[href="#signup"], [data-auth-open]';
+    scope.querySelectorAll(selector).forEach(function(el){
+      if (el.__thgAuthWired) return;
+      el.__thgAuthWired = true;
+      el.addEventListener('click', function(ev){
+        try {
+          ev.preventDefault();
+          // Always open the modal directly; never click the header button, to avoid
+          // accidentally toggling the account dropdown when the user is already signed in.
+          var next = location.pathname + location.search;
+          if (window.authGate && typeof window.authGate.openLoginModal === 'function') {
+            window.authGate.openLoginModal({ next });
+          } else if (typeof window.__thgOpenAuthModal === 'function') {
+            window.__thgOpenAuthModal({ next });
+          }
+        } catch(_){ }
+      }, { passive:false });
+    });
+  }
+  function clamp(str, max){ if (!str) return ''; return str.length>max ? str.slice(0,max-1)+'…' : str; }
+  function getInitials(user){
+    const meta = user?.user_metadata || {};
+    const full = (meta.full_name || meta.name || '').trim();
+    if (full) {
+      const parts = full.split(/\\s+/).filter(Boolean);
+      const first = parts[0]?.[0] || '';
+      const last = parts.length>1 ? parts[parts.length-1][0] : '';
+      return (first+last || first || '').toUpperCase() || 'U';
+    }
+    const email = (user?.email || '').trim();
+    return email ? email[0].toUpperCase() : 'U';
+  }
+  function getDisplayName(user){
+    const meta = user?.user_metadata || {};
+    const name = (meta.full_name || meta.name || meta.username || '').trim();
+    return name || (user?.email || 'My Account');
+  }
+  // Keep buyer-form email field in sync with header auth state (same-page or embedded)
+  function lockBuyerEmailInBuyerForm(email){
+    try {
+      const scope = document.getElementById('buyerForm') || document;
+      const emailInput = scope && scope.querySelector('#buyerForm [name="email"], form#buyerForm input[name="email"]');
+      if (!emailInput) return;
+      emailInput.value = email || '';
+      emailInput.setAttribute('data-session-email', email || '');
+      emailInput.readOnly = true; emailInput.setAttribute('aria-readonly','true');
+      emailInput.disabled = true;
+      try { emailInput.setAttribute('autocomplete','off'); emailInput.setAttribute('autocapitalize','off'); emailInput.setAttribute('spellcheck','false'); } catch(_){}
+      // create/update hidden mirror used for submission
+      let hidden = document.getElementById('buyer-email-hidden');
+      if (!hidden){ hidden = document.createElement('input'); hidden.type='hidden'; hidden.name='email'; hidden.id='buyer-email-hidden'; emailInput.parentElement && emailInput.parentElement.appendChild(hidden); }
+      hidden.value = email || '';
+      // prevent duplicate name submission
+      if (emailInput.getAttribute('name')) { emailInput.setAttribute('data-original-name','email'); emailInput.removeAttribute('name'); }
+    } catch(_){}
+  }
+  function unlockBuyerEmailInBuyerForm(){
+    try {
+      const scope = document.getElementById('buyerForm') || document;
+      const emailInput = scope && scope.querySelector('#buyerForm [data-session-email], form#buyerForm input[aria-readonly]');
+      if (!emailInput) return;
+      try { emailInput.readOnly = false; emailInput.disabled = false; emailInput.removeAttribute('aria-readonly'); emailInput.removeAttribute('data-session-email'); } catch(_){}
+      try { if (!emailInput.getAttribute('name')) emailInput.setAttribute('name', emailInput.getAttribute('data-original-name') || 'email'); } catch(_){}
+      const hidden = document.getElementById('buyer-email-hidden'); if (hidden && hidden.parentElement) hidden.parentElement.removeChild(hidden);
+    } catch(_){}
+  }
+  function setBuyerEmailLockFromUser(user){
+    try { if (user && user.email) lockBuyerEmailInBuyerForm(user.email); else unlockBuyerEmailInBuyerForm(); } catch(_){}
+  }
+  function createEl(tag, cls, attrs){ const el = document.createElement(tag); if (cls) el.className = cls; if (attrs) for (var k in attrs) el.setAttribute(k, attrs[k]); return el; }
+  function validateEmail(val){ return /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(val); }
+  function ensureContainer(){
+    // First, try to use the SiteHeader's dedicated container
+    let wrap = document.getElementById('site-header-auth-container');
+    if (wrap) {
+      // ADD thg-auth-wrap class while PRESERVING the ID and any existing classes
+      if (!wrap.classList.contains('thg-auth-wrap')) {
+        wrap.classList.add('thg-auth-wrap');
+      }
+      return wrap;
+    }
+
+    // Fallback: create wrapper in header or body (original behavior)
+    wrap = document.querySelector('.thg-auth-wrap');
+    if (!wrap){
+      wrap = document.createElement('div');
+      wrap.className = 'thg-auth-wrap';
+      let hdr = headerRoot();
+      let parent = hdr || document.body;
+      if (hdr) { const cs = getComputedStyle(hdr); if (cs.position === 'static') { hdr.style.position = 'relative'; } parent.appendChild(wrap); }
+      else { wrap.classList.add('is-fixed'); parent.appendChild(wrap); }
+    }
+    return wrap;
+  }
+
+  function injectStyles(){
+    if (document.getElementById('thg-auth-styles')) return;
+  const css = \`
+/* Auth wrapper - positioned by header or falls back to absolute */
+.thg-auth-wrap{ display:flex; align-items:center; position:relative; z-index:\${Z_BASE}; }
+/* When #site-header-auth-container exists, it's positioned by StaticHeaderHTML inline styles */
+/* Fallback: absolute positioning when created dynamically outside SiteHeader */
+.thg-auth-wrap:not(#site-header-auth-container){ position:absolute; top:14px; right:16px; }
+@media (min-width:1024px){ .thg-auth-wrap:not(#site-header-auth-container){ top:16px; right:24px; } }
+.thg-auth-wrap.is-fixed{ position:fixed; top:14px; right:16px; }
+
+/* Header button */
+.thg-auth-btn{ appearance:none;background:transparent;color:#fff;border:1px solid rgba(255,255,255,.9); border-radius:9999px;padding:8px 14px;font-weight:600;cursor:pointer;line-height:1;white-space:nowrap;display:inline-flex;align-items:center;gap:8px; transition:background .15s ease, border-color .15s ease, box-shadow .15s ease; }
+.thg-auth-btn:hover{background:rgba(255,255,255,.08)}
+.thg-auth-btn:focus-visible{ outline:2px solid #7dd3fc; outline-offset:2px; }
+.thg-auth-btn .thg-initial{ width:22px;height:22px;border-radius:9999px;background:#fff;color:#111;display:none;align-items:center;justify-content:center;font-weight:700;font-size:11px; }
+.thg-auth-btn.is-auth .thg-initial{ display:inline-flex; }
+.thg-auth-btn.is-auth::after{ content:""; display:inline-block; width:0; height:0; border-left:5px solid transparent; border-right:5px solid transparent; border-top:6px solid rgba(255,255,255,.9); transition:transform .15s ease; transform-origin:center; }
+.thg-auth-btn[aria-expanded="true"].is-auth::after{ transform:rotate(180deg); }
+.thg-spinner{ width:14px;height:14px;border-radius:9999px;border:2px solid rgba(255,255,255,.35);border-top-color:#fff; animation:thgspin .8s linear infinite; }
+@keyframes thgspin{ to{ transform:rotate(360deg); } }
+
+/* Account menu */
+.thg-auth-menu{ position:absolute;top:calc(100% + 10px);right:0;min-width:280px;background:#0b0b0b;color:#fff; border:1px solid rgba(255,255,255,.15);border-radius:12px;padding:8px;box-shadow:0 12px 30px rgba(0,0,0,.45); visibility:hidden; opacity:0; transform:translateY(-6px) scale(.98); transform-origin:top right; pointer-events:none; transition:opacity .16s ease, transform .16s ease, visibility 0s linear .16s; z-index:\${Z_BASE+1}; }
+.thg-auth-menu[aria-hidden="false"]{ visibility:visible; opacity:1; transform:translateY(0) scale(1); pointer-events:auto; transition:opacity .16s ease, transform .16s ease, visibility 0s linear 0s; }
+.thg-auth-item{ display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;text-decoration:none;color:#fff;cursor:pointer; }
+.thg-auth-item:hover{background:rgba(255,255,255,.08)}
+.thg-auth-item[tabindex]{outline:none}
+.thg-auth-item.is-header{ cursor:default;font-weight:700;opacity:.95; }
+.thg-auth-item.is-header:hover{background:transparent}
+.thg-auth-sep{ height:1px;background:rgba(255,255,255,.12);margin:6px 8px;border-radius:1px; }
+.thg-initial-lg{ width:28px;height:28px;border-radius:9999px;background:#fff;color:#111;display:inline-flex;align-items:center;justify-content:center;font-weight:700;font-size:12px; }
+.thg-name-wrap{ display:flex; flex-direction:column; min-width:0; }
+.thg-name{ overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:190px; }
+.thg-email{ opacity:.7; font-size:12px; overflow:hidden;text-overflow:ellipsis;white-space:nowrap; max-width:200px; }
+
+/* Modal */
+.thg-auth-overlay{ position:fixed; inset:0; background:rgba(0,0,0,.55); backdrop-filter:saturate(140%) blur(6px); display:flex; align-items:center; justify-content:center; z-index:\${Z_BASE+2}; visibility:hidden; opacity:0; transition:opacity .18s ease, visibility 0s linear .18s; }
+.thg-auth-overlay[aria-hidden="false"]{ visibility:visible; opacity:1; transition:opacity .18s ease, visibility 0s linear 0s; }
+.thg-auth-modal{ width:100%; max-width:420px; background:linear-gradient(180deg, rgba(20,20,20,.98), rgba(12,12,12,.98)); color:#fff; border:1px solid rgba(255,255,255,.1); border-radius:16px; box-shadow:0 30px 60px rgba(0,0,0,.5); transform:translateY(10px) scale(.98); opacity:0; transition:transform .18s ease, opacity .18s ease; }
+.thg-auth-overlay[aria-hidden="false"] .thg-auth-modal{ transform:translateY(0) scale(1); opacity:1; }
+.thg-auth-header{ display:flex; align-items:center; justify-content:space-between; padding:16px 18px; border-bottom:1px solid rgba(255,255,255,.08); }
+.thg-auth-title{ font-weight:800; font-size:20px; }
+.thg-auth-close{ appearance:none; background:linear-gradient(180deg,#f3cd4a,#eab308,#c58a04); border:0; color:#111; cursor:pointer; font-weight:800; width:32px; height:32px; line-height:32px; border-radius:9999px; box-shadow:0 2px 6px rgba(0,0,0,.25); }
+.thg-auth-close:hover{ color:#fff; background:linear-gradient(180deg,#eab308,#c58a04,#7a5200); transform:scale(1.06); }
+.thg-auth-body{ padding:16px 18px 18px; }
+
+/* Tabs */
+.thg-tabs{ display:flex; gap:6px; background:rgba(255,255,255,.06); padding:4px; border-radius:9999px; margin-bottom:16px; }
+.thg-tab{ flex:1; text-align:center; padding:8px 10px; border-radius:9999px; cursor:pointer; font-weight:700; color:#ddd; }
+.thg-tab[aria-selected="true"]{ background:#fff; color:#111; }
+
+/* Fields */
+.thg-field{ display:flex; flex-direction:column; gap:6px; margin-bottom:12px; }
+.thg-field label{ font-size:12px; opacity:.9; }
+.thg-field label[for="thg-si-password"]::after{ content:" (optional — use Magic Link for fastest login)"; color:#9ca3af; font-weight:500; }
+.thg-input{ appearance:none; background:#121212; color:#fff; border:1px solid rgba(255,255,255,.12); border-radius:10px; padding:10px 12px; }
+.thg-input::placeholder{ color:#6b7280; }
+.thg-input:focus{ outline:2px solid #facc15; outline-offset:2px; }
+
+/* Actions and links */
+.thg-actions{ display:flex; justify-content:space-between; align-items:center; margin:6px 0 12px; }
+.thg-link{ background:none; border:0; color:#22c55e; cursor:pointer; font-size:13px; padding:0; }
+
+/* Primary CTA (yellow) */
+.thg-btn-primary{ width:100%; appearance:none; background:linear-gradient(180deg,#f8d34a,#f0b90b,#c89200); color:#111; border:1px solid rgba(250, 204, 21, .9); border-radius:12px; padding:12px 14px; font-weight:800; cursor:pointer; transition:transform .06s ease, box-shadow .06s ease, filter .12s ease; box-shadow:0 4px 0 rgba(250, 204, 21, .35); }
+.thg-btn-primary:hover{ filter:brightness(1.03); }
+.thg-btn-primary:active{ transform:translateY(1px); box-shadow:none; }
+
+/* OAuth / secondary buttons */
+.thg-oauth{ display:grid; grid-template-columns:1fr; gap:10px; margin-top:10px; }
+.thg-oauth-btn{ appearance:none; background:#0f0f0f; color:#fff; border:1px solid rgba(255,255,255,.12); border-radius:12px; padding:12px 14px; cursor:pointer; font-weight:800; display:flex; align-items:center; justify-content:center; gap:10px; }
+.thg-oauth-btn:hover{ background:#141414; }
+.thg-oauth-btn .g-icon{ width:18px; height:18px; }
+.thg-oauth-btn.google{ border-color:#333; background:#151515; }
+
+/* Errors, hints, loading */
+.thg-error{ background:rgba(239,68,68,.12); color:#fecaca; border:1px solid rgba(239,68,68,.35); border-radius:10px; padding:10px 12px; font-size:13px; display:none; }
+.thg-hint{ font-size:12px; opacity:.8; }
+.thg-loading-bar{ height:2px; width:0; background:#7dd3fc; border-radius:2px; transition:width .2s ease; }
+
+/* Confirm dialog */
+.thg-confirm{ position:fixed; inset:0; display:flex; align-items:center; justify-content:center; z-index:\${Z_BASE+3}; background:rgba(0,0,0,.55); backdrop-filter:blur(3px); visibility:hidden; opacity:0; transition:opacity .16s ease, visibility 0s linear .16s; }
+.thg-confirm[aria-hidden="false"]{ visibility:visible; opacity:1; transition:opacity .16s ease, visibility 0s linear 0s; }
+.thg-confirm-card{ width:100%; max-width:360px; background:#141414; color:#fff; border:1px solid rgba(255,255,255,.12); border-radius:12px; padding:16px; box-shadow:0 24px 50px rgba(0,0,0,.5); }
+.thg-confirm-actions{ display:flex; gap:10px; justify-content:flex-end; margin-top:12px; }
+.thg-btn{ appearance:none; border-radius:10px; padding:8px 12px; cursor:pointer; border:1px solid rgba(255,255,255,.15); background:#0f0f0f; color:#fff; }
+.thg-btn-danger{ background:#ef4444; border-color:#ef4444; color:#fff; }
+
+/* Responsive */
+@media (max-width:480px){
+  .thg-auth-wrap{ top:10px; right:10px; }
+  .thg-auth-modal{ width:calc(100% - 16px); margin:0 8px; }
+  .thg-auth-menu{ right:8px; }
+}
+
+/* tagline styling */
+.thg-tagline{ color:#9ca3af; font-size:13px; margin:-4px 0 12px; }
+\`;
+    const style = document.createElement('style');
+    style.id = 'thg-auth-styles';
+    style.textContent = css;
+    document.head.appendChild(style);
+  }
+
+  function createUI(){
+    const wrap = ensureContainer();
+    let btn = wrap.querySelector('.thg-auth-btn');
+    if (!btn){
+      btn = createEl('button', 'thg-auth-btn', { type:'button', 'aria-haspopup':'menu', 'aria-expanded':'false', 'aria-label':'Open account menu' });
+      const avatar = createEl('span', 'thg-initial');
+      avatar.textContent = 'U';
+      const label = document.createElement('span');
+      label.className = 'thg-label';
+      const spinner = createEl('span','thg-spinner',{'aria-hidden':'true'});
+      btn.appendChild(avatar); btn.appendChild(label); btn.appendChild(spinner);
+      wrap.appendChild(btn);
+    }
+
+    let menu = wrap.querySelector('.thg-auth-menu');
+    if (!menu){
+      menu = createEl('div', 'thg-auth-menu', { id:'thg-auth-menu', role:'menu', 'aria-hidden':'true' });
+      menu.innerHTML = '<div class="thg-auth-item is-header" aria-disabled="true">' +
+        '<span class="thg-initial-lg">U</span>' +
+        '<span class="thg-name-wrap">' +
+        '<span class="thg-name">User</span>' +
+        '<span class="thg-email">email@example.com</span>' +
+        '</span>' +
+        '</div>' +
+        '<div class="thg-auth-sep"></div>' +
+        '<div class="thg-auth-item" role="menuitem" tabindex="0" data-action="profile"><span>Profile</span></div>' +
+        '<div class="thg-auth-item" role="menuitem" tabindex="0" data-action="dashboard"><span>Dashboard</span></div>' +
+        (AUTH_NAV.settings ? '<div class="thg-auth-item" role="menuitem" tabindex="0" data-action="settings"><span>Settings</span></div>' : '') +
+        '<div class="thg-auth-item" role="menuitem" tabindex="0" data-action="logout"><span>Logout</span></div>';
+      wrap.appendChild(menu);
+    }
+    btn.setAttribute('aria-controls','thg-auth-menu');
+
+    // MODAL REMOVED - Login/Signup now redirects to /login page
+    // No overlay/modal creation - completely removed
+
+    let confirmEl = document.querySelector('.thg-confirm');
+    if (!confirmEl){
+      confirmEl = createEl('div','thg-confirm',{'aria-hidden':'true','role':'dialog','aria-modal':'true'});
+      confirmEl.innerHTML = '<div class="thg-confirm-card" role="document">' +
+        '<div class="thg-confirm-msg">Are you sure you want to log out?</div>' +
+        '<div class="thg-confirm-actions">' +
+        '<button type="button" class="thg-btn thg-confirm-cancel">Cancel</button>' +
+        '<button type="button" class="thg-btn thg-btn-danger thg-confirm-ok">Log out</button>' +
+        '</div></div>';
+      document.body.appendChild(confirmEl);
+    }
+
+    // Respect global flag to hide the header button completely
+    try {
+      if (window.AUTH_HIDE_HEADER === true || window.AUTH_NO_HEADER === true) {
+        if (wrap) wrap.style.display = 'none';
+      }
+    } catch(_){}
+    return { wrap, btn, menu, overlay: null, confirmEl };
+  }
+
+  const state = { user: null, loading: true, nextUrl: null, supabaseReady: false, sub: null };
+
+  function setButtonLoading(ui, isLoading){ const spinner = ui.btn.querySelector('.thg-spinner'); const label = ui.btn.querySelector('.thg-label'); if (isLoading){ ui.btn.classList.remove('is-auth'); if (label) label.textContent = 'Loading…'; if (spinner) spinner.style.display = 'inline-block'; ui.btn.setAttribute('aria-expanded','false'); } else { if (spinner) spinner.style.display = 'none'; } }
+
+  function render(ui){
+    const label = ui.btn.querySelector('.thg-label');
+    const avatar = ui.btn.querySelector('.thg-initial');
+    if (state.loading){ setButtonLoading(ui, true); return; }
+    setButtonLoading(ui, false);
+    if (state.user && state.user.email){
+      const name = getDisplayName(state.user);
+      ui.btn.classList.add('is-auth');
+      avatar.textContent = getInitials(state.user);
+      label.textContent = clamp(name, 24);
+      ui.btn.prepend(avatar);
+      const initEl = ui.menu.querySelector('.thg-initial-lg');
+      const nameEl = ui.menu.querySelector('.thg-name');
+      const emailEl = ui.menu.querySelector('.thg-email');
+      if (initEl) initEl.textContent = getInitials(state.user);
+      if (nameEl) nameEl.textContent = clamp(name, 28);
+      if (emailEl) emailEl.textContent = clamp(state.user.email || '', 30);
+    } else {
+      ui.btn.classList.remove('is-auth');
+      ui.btn.setAttribute('aria-expanded','false');
+      label.textContent = 'Login / Signup';
+      avatar.textContent = 'U';
+      ui.btn.prepend(avatar);
+      closeMenu(ui);
+    }
+  }
+
+  function openMenu(ui){ if (!state.user) return; ui.menu.setAttribute('aria-hidden','false'); ui.btn.setAttribute('aria-expanded','true'); const items = ui.menu.querySelectorAll('.thg-auth-item[role="menuitem"]'); if (items[0]) setTimeout(function(){ items[0].focus(); }, 0); }
+  function closeMenu(ui){ ui.menu.setAttribute('aria-hidden','true'); ui.btn.setAttribute('aria-expanded','false'); }
+  function toggleMenu(ui){ const isHidden = ui.menu.getAttribute('aria-hidden') === 'true'; if (isHidden) openMenu(ui); else closeMenu(ui); }
+
+  // Open auth in hosted page (new window) instead of redirecting
+  function openAuthModal(ui, opts){
+    const next = opts?.next || location.pathname + location.search;
+    const base = window.DURABLE_AUTH_URL || 'https://auth.tharaga.co.in/login_signup_glassdrop/';
+    const url = new URL(base);
+    url.searchParams.set('next', next);
+    // Open in new window instead of redirecting
+    window.open(url.toString(), 'tharaga-auth', 'width=480,height=640,scrollbars=yes,resizable=yes');
+  }
+  function closeAuthModal(ui){ /* No-op - modal removed */ }
+
+  // Override window.authGate.openLoginModal and __thgOpenAuthModal to open hosted auth page
+  window.authGate.openLoginModal = function(opts) {
+    const next = opts?.next || location.pathname + location.search;
+    const base = window.DURABLE_AUTH_URL || 'https://auth.tharaga.co.in/login_signup_glassdrop/';
+    const url = new URL(base);
+    url.searchParams.set('next', next);
+    window.open(url.toString(), 'tharaga-auth', 'width=480,height=640,scrollbars=yes,resizable=yes');
+  };
+  window.__thgOpenAuthModal = function(opts) {
+    const next = opts?.next || location.pathname + location.search;
+    const base = window.DURABLE_AUTH_URL || 'https://auth.tharaga.co.in/login_signup_glassdrop/';
+    const url = new URL(base);
+    url.searchParams.set('next', next);
+    window.open(url.toString(), 'tharaga-auth', 'width=480,height=640,scrollbars=yes,resizable=yes');
+  };
+  function openConfirm(ui){ ui.confirmEl.setAttribute('aria-hidden','false'); }
+  // Broadcast current auth state (email only) to child iframes, sibling tabs, and embedded forms
+  function broadcastAuth(user){
+    var loggedIn = !!(user && user.email);
+    try { window.__authGateLoggedIn = loggedIn; } catch(_) {}
+    try {
+      localStorage.setItem('__tharaga_magic_continue', JSON.stringify({ user: loggedIn ? { email: user.email } : null, ts: Date.now() }));
+    } catch(_) {}
+    try {
+      var evtType = loggedIn ? 'THARAGA_AUTH_SUCCESS' : 'THARAGA_AUTH_SIGNED_OUT';
+      if ('BroadcastChannel' in window){
+        window.__thgAuthBC = window.__thgAuthBC || new BroadcastChannel('tharaga-auth');
+        window.__thgAuthBC.postMessage(loggedIn ? { type: evtType, user: { email: user.email } } : { type: evtType });
+      }
+    } catch(_) {}
+    try {
+      var payload = loggedIn ? { type: 'THARAGA_AUTH_SUCCESS', user: { email: user.email } } : { type: 'THARAGA_AUTH_SIGNED_OUT' };
+      // Notify any embedded iframes (cross-origin safe via postMessage)
+      var iframes = document.querySelectorAll('iframe');
+      for (var i=0;i<iframes.length;i++){
+        try { iframes[i].contentWindow && iframes[i].contentWindow.postMessage(payload, '*'); } catch(__) {}
+      }
+      // If this page itself is inside an iframe, also notify parent
+      try { if (window.parent && window.parent !== window) window.parent.postMessage(payload, '*'); } catch(__) {}
+    } catch(_) {}
+  }
+  function closeConfirm(ui){ ui.confirmEl.setAttribute('aria-hidden','true'); }
+
+  function bindUI(ui){
+    ui.btn.addEventListener('click', function(e){ e.preventDefault(); if (state.user && state.user.email){ toggleMenu(ui); } else { openAuthModal(ui, { next: location.pathname + location.search }); } });
+    ui.btn.addEventListener('keydown', function(e){ if ((e.key === 'ArrowDown' || e.key === 'Enter') && state.user && state.user.email){ e.preventDefault(); openMenu(ui); } });
+    ui.menu.addEventListener('click', function(e){ const item = e.target.closest('.thg-auth-item[role="menuitem"]'); if (!item) return; const act = item.getAttribute('data-action'); if (act === 'profile'){ closeMenu(ui); location.href = AUTH_NAV.profile; return; } if (act === 'dashboard'){ closeMenu(ui); location.href = AUTH_NAV.dashboard; return; } if (act === 'settings' && AUTH_NAV.settings){ closeMenu(ui); location.href = AUTH_NAV.settings; return; } if (act === 'logout'){ closeMenu(ui); openConfirm(ui); } });
+    ui.menu.addEventListener('keydown', function(e){ if (e.key === 'Escape'){ e.preventDefault(); closeMenu(ui); ui.btn.focus(); return; } if (['ArrowDown','ArrowUp','Home','End'].indexOf(e.key) === -1) return; e.preventDefault(); const items = Array.prototype.slice.call(ui.menu.querySelectorAll('.thg-auth-item[role="menuitem"]')); const idx = items.indexOf(document.activeElement); if (!items.length) return; if (e.key === 'Home'){ items[0].focus(); return; } if (e.key === 'End'){ items[items.length - 1].focus(); return; } const next = e.key === 'ArrowDown' ? (idx + 1 + items.length) % items.length : (idx - 1 + items.length) % items.length; items[next].focus(); });
+    document.addEventListener('click', function(e){ if (ui.menu.getAttribute('aria-hidden') === 'true') return; if (!ui.menu.contains(e.target) && e.target !== ui.btn && !ui.btn.contains(e.target)){ closeMenu(ui); } });
+    // MODAL UI REMOVED - All modal event listeners removed
+    ui.confirmEl.querySelector('.thg-confirm-cancel').addEventListener('click', function(){ closeConfirm(ui); });
+    ui.confirmEl.addEventListener('click', function(e){ if (e.target === ui.confirmEl) closeConfirm(ui); });
+    ui.confirmEl.querySelector('.thg-confirm-ok').addEventListener('click', async function(){
+      try { await window.supabase?.auth?.signOut?.(); } catch(_){ }
+      // Proactively broadcast sign-out so embedded forms unlock immediately
+      try { broadcastAuth(null); } catch(_){ }
+      closeConfirm(ui);
+    });
+    window.__thgOpenAuthModal = function(opts){ openAuthModal(ui, opts); };
+    // Expose a helper to programmatically open the auth modal (never toggles dropdown)
+    window.authGate.triggerHeaderLogin = function(opts){
+      try { openAuthModal(ui, opts||{ next: location.pathname + location.search }); }
+      catch(_){ try { window.__thgOpenAuthModal && window.__thgOpenAuthModal(opts||{ next: location.pathname + location.search }); } catch(__){} }
+    };
+  }
+
+  async function initSupabase(ui){
+    state.loading = true; render(ui);
+    if (!window.supabase || !window.supabase.auth){
+      try {
+        const mod = await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm');
+        const client = mod.createClient('https://wedevtjjmdvngyshqdro.supabase.co','eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndlZGV2dGpqbWR2bmd5c2hxZHJvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU0NzYwMzgsImV4cCI6MjA3MTA1MjAzOH0.Ex2c_sx358dFdygUGMVBohyTVto6fdEQ5nydDRh9m6M');
+        window.supabase = client;
+      } catch(_) {}
+    }
+    if (!window.supabase || !window.supabase.auth){ state.supabaseReady = false; state.loading = false; render( ui); console.warn('[thg-auth] window.supabase not found.'); return; }
+    state.supabaseReady = true;
+    try{ const { data } = await window.supabase.auth.getSession(); state.user = data?.session?.user || null; } catch(_){ state.user = null; } finally { state.loading = false; render(ui); try { broadcastAuth(state.user); } catch(__) {} try { setBuyerEmailLockFromUser(state.user); } catch(__) {}
+      // Initialize role manager for authenticated user with retry mechanism
+      if (state.user && state.user.email) {
+        try {
+          window.__thgAuthState = state;
+          window.__thgAuthUI = ui;
+
+          // Wait for role manager to be available (with retry mechanism)
+          var retryCount = 0;
+          var maxRetries = 20;
+          var initRoleManager = async function() {
+            if (window.thgRoleManager && typeof window.thgRoleManager.init === 'function') {
+              await window.thgRoleManager.init(state.user, ui);
+              console.log('[thg-auth] Role manager initialized successfully');
+            } else if (retryCount < maxRetries) {
+              retryCount++;
+              console.warn('[thg-auth] Role manager not ready, retry ' + retryCount + '/' + maxRetries);
+              setTimeout(initRoleManager, 200);
+            } else {
+              console.error('[thg-auth] Role manager failed to load after ' + maxRetries + ' retries');
+            }
+          };
+
+          await initRoleManager();
+        } catch(roleErr) {
+          console.error('[thg-auth] Role manager init error:', roleErr);
+        }
+      }
+    }
+    try{
+      const { data: sub } = window.supabase.auth.onAuthStateChange(async function(event, session){
+        state.user = session?.user || null;
+        render(ui);
+        try { broadcastAuth(state.user); } catch(__) {}
+        try { setBuyerEmailLockFromUser(state.user); } catch(__) {}
+
+        // Initialize role manager on auth state change with retry mechanism
+        if (state.user && state.user.email) {
+          try {
+            window.__thgAuthState = state;
+            window.__thgAuthUI = ui;
+
+            // Wait for role manager to be available (with retry mechanism)
+            var retryCount = 0;
+            var maxRetries = 20;
+            var initRoleManager = async function() {
+              if (window.thgRoleManager && typeof window.thgRoleManager.init === 'function') {
+                await window.thgRoleManager.init(state.user, ui);
+                console.log('[thg-auth] Role manager initialized on auth change');
+              } else if (retryCount < maxRetries) {
+                retryCount++;
+                console.warn('[thg-auth] Role manager not ready on auth change, retry ' + retryCount + '/' + maxRetries);
+                setTimeout(initRoleManager, 200);
+              } else {
+                console.error('[thg-auth] Role manager failed to load on auth change after ' + maxRetries + ' retries');
+              }
+            };
+
+            await initRoleManager();
+          } catch(roleErr) {
+            console.error('[thg-auth] Role manager init error on auth change:', roleErr);
+          }
+        }
+
+        if (event === 'PASSWORD_RECOVERY'){ window.location.href = '/login?recovery=1'; }
+        if (state.user && state.user.email){
+          if (state.nextUrl){
+            const to = state.nextUrl;
+            state.nextUrl = null;
+            location.href = to;
+          }
+        } else {
+          closeMenu(ui);
+        }
+      });
+      state.sub = sub?.subscription || sub || null;
+    } catch(_){ }
+  }
+
+  function observeRerenders(){ const mo = new MutationObserver(function(muts){ for (var i=0;i<muts.length;i++){ for (var j=0;j<muts[i].addedNodes.length;j++){ const n = muts[i].addedNodes[j]; if (n.nodeType !== 1) continue; hideLegacyAuthLinks(n); ensureContainer(); } } }); mo.observe(document.documentElement, { childList:true, subtree:true }); }
+
+  ready(function(){
+    hideLegacyAuthLinks(document);
+    injectStyles();
+    const ui = createUI();
+    bindUI(ui);
+    // If there is no header on the host page, we use a fixed fallback button.
+    // On white/light backgrounds (like the Netlify snippet page), the default
+    // white-on-dark styling can be invisible. Add a light-theme override only
+    // for this fallback state to ensure visibility without affecting host sites
+    // that have their own headers.
+    try {
+      if (ui.wrap && ui.wrap.classList.contains('is-fixed') && !document.getElementById('thg-auth-fixed-contrast')){
+        const style = document.createElement('style');
+        style.id = 'thg-auth-fixed-contrast';
+        style.textContent = [
+          '.thg-auth-wrap.is-fixed .thg-auth-btn{color:#111;border:1px solid rgba(0,0,0,.85);background:rgba(0,0,0,.03)}',
+          '.thg-auth-wrap.is-fixed .thg-auth-btn:hover{background:rgba(0,0,0,.06)}',
+          '.thg-auth-wrap.is-fixed .thg-auth-btn:focus-visible{outline:2px solid #2563eb;outline-offset:2px}',
+          '.thg-auth-wrap.is-fixed .thg-auth-btn.is-auth::after{border-top-color:rgba(0,0,0,.85)}',
+          '.thg-auth-wrap.is-fixed .thg-auth-menu{background:#fff;color:#111;border:1px solid rgba(0,0,0,.12);box-shadow:0 12px 30px rgba(0,0,0,.12)}',
+          '.thg-auth-wrap.is-fixed .thg-auth-item:hover{background:rgba(0,0,0,.06)}',
+          '.thg-auth-wrap.is-fixed .thg-initial{background:#111;color:#fff}',
+          '.thg-auth-wrap.is-fixed .thg-initial-lg{background:#111;color:#fff}'
+        ].join('\\n');
+        document.head && document.head.appendChild(style);
+      }
+    } catch(_){}
+    observeRerenders();
+    initSupabase(ui);
+
+    // Auto-open the auth modal on first load if configured or URL hints present
+    try {
+      const qp = new URLSearchParams(location.search);
+      const hash = (location.hash || '').trim();
+      const shouldAutoOpen = (window.AUTH_OPEN_ON_LOAD === true)
+        || qp.has('auth_open') || qp.get('login') === '1' || qp.get('open') === '1'
+        || hash === '#login' || hash === '#signup' || hash === '#auth';
+      if (shouldAutoOpen) {
+        setTimeout(function(){ try { if (!state.user) { openAuthModal(ui, { next: location.pathname + location.search }); } } catch(_){} }, 0);
+      }
+    } catch(_){}
+
+    // Allow child iframes (e.g., Netlify buyer-form) to request opening the global login
+    // Secure origin-validated postMessage listener (also supports legacy types)
+    const ALLOWED_IFRAME_ORIGINS = [location.origin];
+
+    function openDurableHeaderBehavior(meta){
+      try {
+        var el = document.getElementById('durable-head')
+          || document.querySelector('header, [role="banner"], [data-section="header"], .site-header, nav')
+          || document.querySelector('.thg-auth-wrap');
+        if (el && el.scrollIntoView) {
+          el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+        // If not authenticated, open the auth modal directly. If authenticated, do nothing.
+        var isAuthed = !!(state && state.user && state.user.email);
+        if (!isAuthed) {
+          try { openAuthModal(ui, { next: (meta && meta.next) || (location.pathname + location.search) }); }
+          catch(_) { try { window.__thgOpenAuthModal && window.__thgOpenAuthModal({ next: location.pathname + location.search }); } catch(__){} }
+        }
+      } catch (err) { console.error('openDurableHeaderBehavior error:', err); }
+    }
+    window.openDurableHeaderBehavior = openDurableHeaderBehavior;
+
+    window.addEventListener('message', function(ev){
+      try {
+        var data = ev && ev.data;
+        if (!data || typeof data !== 'object') return;
+        // Loosen origin checks for safe CTA from known child frames (e.g., Netlify buyer-form)
+        if (ev.origin && ALLOWED_IFRAME_ORIGINS.indexOf(ev.origin) === -1) {
+          var extraOk = false;
+          try {
+            var o = ev.origin || '';
+            if (/^https:\\/\\//.test(o)) {
+              if (o.indexOf('tharaga.co.in') !== -1 || o.indexOf('auth.tharaga.co.in') !== -1 || o.indexOf('netlify.app') !== -1) extraOk = true;
+              if (!extraOk && Array.isArray(window.ALLOWED_CHILD_ORIGINS) && window.ALLOWED_CHILD_ORIGINS.indexOf(o) !== -1) extraOk = true;
+            }
+          } catch(_) {}
+          if (!extraOk) return;
+        }
+
+        if (data.type === 'cta' && data.action === 'openDurableHead'){
+          console.log('Parent received openDurableHead from', ev.origin, data);
+          openDurableHeaderBehavior(data.meta || {});
+          return;
+        }
+
+        // Update header immediately when auth success is broadcast (post-auth)
+        if (data.type === 'THARAGA_AUTH_SUCCESS' && data.user && data.user.email){
+          try { state.user = { email: data.user.email, user_metadata: {} }; render(ui); } catch(_) {}
+          try { ensureSupabaseReady().then(async function(ok){ if (ok){ try { const s = await window.supabase.auth.getSession(); if (s && s.data && s.data.session && s.data.session.user){ state.user = s.data.session.user; render(ui); } } catch(_){} } }); } catch(_){}
+          return;
+        }
+
+        if (data.type === 'open_login_modal' || data.type === 'auth_open' || data.type === 'login_open' || data.type === 'trigger_header_login'){
+          // If already authenticated, ignore the request so no dropdown toggles.
+          if (state && state.user && state.user.email) { return; }
+          // Otherwise open the modal directly (never click the header button)
+          try { openAuthModal(ui, { next: data.next || (location.pathname + location.search) }); } catch(_){ }
+        }
+
+        // Navigation request from embedded forms to open listings in same tab
+        if (data.type === 'open_listings' && typeof data.url === 'string'){
+          try {
+            var o = ev.origin || '';
+            var allowed = ALLOWED_IFRAME_ORIGINS.indexOf(o) !== -1 || /tharaga\\.co\\.in|auth\\.tharaga\\.co\\.in|netlify\\.app/.test(o);
+            if (!allowed) return;
+          } catch(_) {}
+          try { location.href = data.url; } catch(_) {}
+          return;
+        }
+      } catch(_){ }
+    });
+
+    window.addEventListener('storage', function(ev){ if (ev.key === 'supabase.auth.token'){ } });
+    window.addEventListener('beforeunload', function(){ try { state.sub && state.sub.unsubscribe && state.sub.unsubscribe(); } catch(_){} });
+  });
+  </script>
+
+</head>
+<body>
+  <header class="nav">
+    <div class="inner">
+      <div class="row"><a class="brand" href="/" style="font-size:26px">THARAGA</a><span class="pill" id="home_pill_trust">Verified • Broker‑free</span></div>
+      <nav class="row" aria-label="Primary">
+        <span class="menu-group">
+          <details class="dropdown">
+            <summary>Features</summary>
+            <div class="menu" role="menu">
+              <a href="/tools/vastu/">Vastu</a>
+              <a href="/tools/environment/">Climate & environment</a>
+              <a href="/tools/voice-tamil/">Voice (Tamil)</a>
+              <a href="/tools/verification/">Verification</a>
+              <a href="/tools/roi/">ROI</a>
+              <a href="/tools/currency-risk/">Currency risk</a>
+              <!-- Mobile-only injected: Pricing + About (hidden on desktop) -->
+              <span class="divider show-mobile-only" aria-hidden="true"></span>
+              <a class="show-mobile-only" href="/pricing/">Pricing</a>
+              <a class="show-mobile-only" href="/about/">About</a>
+            </div>
+          </details>
+          <span class="divider" aria-hidden="true"></span>
+          <!-- Portal dropdown (dynamic based on user role) -->
+          <details class="dropdown" id="portal-menu">
+            <summary>Portal</summary>
+            <div class="menu" role="menu" aria-label="Portal menu" id="portal-menu-items">
+              <!-- Dynamically populated by role manager -->
+              <a href="/builder">Builder Dashboard</a>
+              <a href="/my-dashboard">Buyer Dashboard</a>
+            </div>
+          </details>
+          <span class="divider" aria-hidden="true"></span>
+          <a href="/pricing/">Pricing</a>
+        </span>
+        <span class="divider" aria-hidden="true"></span>
+        <a href="/about/">About</a>
+      </nav>
+      <a class="about-mobile-link" href="/about/">About</a>
+      <!-- Auth container - auth system will inject login/signup buttons here -->
+      <div id="site-header-auth-container" class="tharaga-header__actions">
+        <!-- Auth system will inject .thg-auth-wrap here -->
+      </div>
+      <!-- Mobile menu toggle button (hidden on desktop) -->
+      <button 
+        class="mobile-menu-toggle" 
+        aria-label="Toggle menu" 
+        aria-expanded="false" 
+        aria-controls="mobile-menu-panel"
+        style="display: none;"
+      >
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="3" y1="6" x2="21" y2="6"/>
+          <line x1="3" y1="12" x2="21" y2="12"/>
+          <line x1="3" y1="18" x2="21" y2="18"/>
+        </svg>
+      </button>
+      <!-- Mobile menu overlay -->
+      <div class="mobile-menu-overlay" aria-hidden="true"></div>
+      <!-- Mobile menu panel -->
+      <nav class="mobile-menu-panel" id="mobile-menu-panel" aria-label="Mobile navigation">
+        <button class="mobile-menu-close" aria-label="Close menu">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"/>
+            <line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+        <!-- Mobile menu items will be populated by JavaScript -->
+      </nav>
+      <!-- Right-side auth group is injected by auth script; ensure Features sits near it by letting nav push left via margin-left:auto -->
+    </div>
+  </header>
+
+  <main>
+    <!-- Hero Section -->
+    <section class="hero-premium relative min-h-screen flex items-center py-20">
+      <!-- Background Gradient -->
+      <div class="absolute inset-0 bg-gradient-to-br from-primary-950 via-primary-900 to-primary-800 -z-10"></div>
+
+      <!-- Animated Background Elements -->
+      <div class="absolute inset-0 opacity-30 -z-10 overflow-hidden">
+        <div class="absolute top-20 left-10 w-96 h-96 bg-gold-500 rounded-full blur-3xl animate-pulse-slow"></div>
+        <div class="absolute bottom-20 right-10 w-[600px] h-[600px] bg-emerald-500 rounded-full blur-3xl animate-pulse-slow" style="animation-delay: 1s;"></div>
+      </div>
+
+      <div class="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+        <!-- Headlines -->
+        <div class="text-center mb-12">
+          <!-- Badge -->
+          <div class="inline-flex items-center gap-2 px-4 py-2 bg-gold-500/20 backdrop-blur-sm border border-gold-500/30 rounded-full mb-6">
+            <span class="w-2 h-2 bg-gold-500 rounded-full animate-pulse"></span>
+            <span class="text-gold-300 text-sm font-medium">
+              India's First AI-Powered Real Estate Platform
+            </span>
+          </div>
+
+          <h1 class="font-display text-5xl sm:text-6xl lg:text-7xl font-bold text-white mb-6">
+            Invest Smart.
+            <span class="text-gradient-gold block mt-2">Live Well. Build Wealth.</span>
+          </h1>
+
+          <p class="text-xl sm:text-2xl text-gray-300 leading-relaxed mb-8 max-w-3xl mx-auto">
+            Smarter sourcing, verified builders, measurable outcomes — invest with confidence.
+          </p>
+        </div>
+
+        <!-- Search Container -->
+        <div class="max-w-3xl mx-auto">
+          <div class="p-8 backdrop-blur-xl bg-white/10 border-2 border-white/20 rounded-2xl">
+            <!-- Search Input -->
+            <div class="relative mb-6">
+              <svg class="absolute left-4 top-1/2 -translate-y-1/2 text-yellow-500 w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+              <input
+                type="text"
+                id="hero-search-input"
+                placeholder="Search by location, builder, or project name..."
+                class="w-full pl-14 pr-4 py-4 rounded-xl bg-white/20 backdrop-blur-sm border border-white/30 text-white placeholder:text-white/60 focus:outline-none focus:ring-2 focus:ring-yellow-500/50 text-lg"
+              />
+            </div>
+
+            <!-- Filter Chips -->
+            <div class="flex flex-wrap gap-3 mb-6">
+              <button class="filter-chip px-5 py-2.5 rounded-lg backdrop-blur-sm border bg-white/10 border-white/20 text-white/80 hover:bg-white/20 font-medium transition-all duration-200" data-filter="bhk">
+                2-3 BHK
+              </button>
+              <button class="filter-chip px-5 py-2.5 rounded-lg backdrop-blur-sm border bg-white/10 border-white/20 text-white/80 hover:bg-white/20 font-medium transition-all duration-200" data-filter="budget">
+                ₹50L - 1Cr
+              </button>
+              <button class="filter-chip px-5 py-2.5 rounded-lg backdrop-blur-sm border bg-white/10 border-white/20 text-white/80 hover:bg-white/20 font-medium transition-all duration-200" data-filter="readiness">
+                Ready to Move
+              </button>
+              <a href="/property-listing" class="px-5 py-2.5 rounded-lg bg-white/10 border border-white/20 text-white/80 hover:bg-white/20 backdrop-blur-sm transition-all duration-200 font-medium">
+                + More Filters
+              </a>
+            </div>
+
+            <!-- AI Search Button -->
+            <button id="ai-search-btn" class="w-full py-4 rounded-xl bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-gray-900 font-bold text-lg flex items-center justify-center gap-3 transition-all duration-300 shadow-lg shadow-yellow-500/25">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"></path></svg>
+              AI Search
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Dashboard CTA Section -->
+    <section class="py-24 bg-gradient-to-br from-primary-950 via-primary-900 to-primary-800 relative overflow-hidden">
+      <!-- Animated Background Elements -->
+      <div class="absolute inset-0 opacity-30">
+        <div class="absolute top-20 left-10 w-96 h-96 bg-gold-500 rounded-full blur-3xl animate-pulse-slow"></div>
+        <div class="absolute bottom-20 right-10 w-[600px] h-[600px] bg-emerald-500 rounded-full blur-3xl animate-pulse-slow" style="animation-delay: 1s;"></div>
+      </div>
+
+      <div class="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+        <div class="text-center mb-16">
+          <h2 class="font-display text-4xl sm:text-5xl lg:text-6xl font-bold text-white mb-4">
+            Built for Both Sides of the Market
+          </h2>
+          <p class="text-xl sm:text-2xl text-gray-300 leading-relaxed max-w-2xl mx-auto">
+            Whether you're building your dream home or building your portfolio, we've got you covered
+          </p>
+        </div>
+
+        <div class="grid md:grid-cols-2 gap-8 max-w-6xl mx-auto">
+          <!-- Buyer Card -->
+          <div class="p-8 backdrop-blur-xl bg-white/10 border-2 border-white/20 rounded-2xl hover:shadow-2xl hover:-translate-y-2 transition-all duration-500">
+            <div class="flex items-start gap-4 mb-6">
+              <div class="w-14 h-14 rounded-xl bg-gradient-to-br from-brand-accent-blue to-brand-accent-purple flex items-center justify-center flex-shrink-0">
+                <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+              </div>
+              <div>
+                <h3 class="text-2xl font-bold text-white mb-2">
+                  Property Buyers
+                </h3>
+                <p class="text-gray-300">
+                  Discover your perfect property with zero broker fees
+                </p>
+              </div>
+            </div>
+
+            <div class="space-y-4 mb-8">
+              <div class="flex items-start gap-3">
+                <svg class="w-5 h-5 text-blue-400 flex-shrink-0 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
+                <div>
+                  <p class="font-semibold text-white">Verified Properties Only</p>
+                  <p class="text-sm text-gray-300">RERA-approved listings with document verification</p>
+                </div>
+              </div>
+              <div class="flex items-start gap-3">
+                <svg class="w-5 h-5 text-blue-400 flex-shrink-0 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                <div>
+                  <p class="font-semibold text-white">AI-Powered Matching</p>
+                  <p class="text-sm text-gray-300">Get personalized property recommendations instantly</p>
+                </div>
+              </div>
+              <div class="flex items-start gap-3">
+                <svg class="w-5 h-5 text-blue-400 flex-shrink-0 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg>
+                <div>
+                  <p class="font-semibold text-white">Save ₹3-5 Lakhs</p>
+                  <p class="text-sm text-gray-300">Zero brokerage. Direct builder pricing</p>
+                </div>
+              </div>
+            </div>
+
+            <a href="/my-dashboard" class="w-full flex items-center justify-center gap-2 px-6 py-4 bg-gradient-to-r from-blue-600 to-blue-500 text-white font-semibold rounded-xl hover:shadow-2xl hover:shadow-blue-500/50 hover:-translate-y-1 transition-all duration-300 group">
+              Explore Buyer Dashboard
+              <svg class="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+            </a>
+          </div>
+
+          <!-- Builder Card -->
+          <div class="p-8 backdrop-blur-xl bg-white/10 border-2 border-white/20 rounded-2xl hover:shadow-2xl hover:-translate-y-2 transition-all duration-500">
+            <div class="flex items-start gap-4 mb-6">
+              <div class="w-14 h-14 rounded-xl bg-gradient-to-br from-yellow-500 to-orange-500 flex items-center justify-center flex-shrink-0">
+                <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
+              </div>
+              <div>
+                <h3 class="text-2xl font-bold text-white mb-2">
+                  Property Builders
+                </h3>
+                <p class="text-gray-300">
+                  Connect with serious, qualified buyers directly
+                </p>
+              </div>
+            </div>
+
+            <div class="space-y-4 mb-8">
+              <div class="flex items-start gap-3">
+                <svg class="w-5 h-5 text-gold-400 flex-shrink-0 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+                <div>
+                  <p class="font-semibold text-white">Pre-Qualified Leads</p>
+                  <p class="text-sm text-gray-300">AI-scored leads based on budget and intent</p>
+                </div>
+              </div>
+              <div class="flex items-start gap-3">
+                <svg class="w-5 h-5 text-gold-400 flex-shrink-0 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                <div>
+                  <p class="font-semibold text-white">Automated Follow-ups</p>
+                  <p class="text-sm text-gray-300">CRM automation to never miss an opportunity</p>
+                </div>
+              </div>
+              <div class="flex items-start gap-3">
+                <svg class="w-5 h-5 text-gold-400 flex-shrink-0 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg>
+                <div>
+                  <p class="font-semibold text-white">Higher Conversion</p>
+                  <p class="text-sm text-gray-300">3x faster sales cycle with matched buyers</p>
+                </div>
+              </div>
+            </div>
+
+            <a href="/builder" class="w-full flex items-center justify-center gap-2 px-6 py-4 bg-gradient-to-r from-gold-600 to-gold-500 text-primary-950 font-semibold rounded-xl hover:shadow-2xl hover:shadow-gold-500/50 hover:-translate-y-1 transition-all duration-300 group">
+              Explore Builder Dashboard
+              <svg class="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+            </a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="py-24 relative overflow-hidden bg-gradient-to-br from-primary-950 via-primary-900 to-primary-800">
+      <!-- Animated Background Elements -->
+      <div class="absolute inset-0 opacity-30">
+        <div class="absolute top-40 left-20 w-96 h-96 bg-gold-500 rounded-full blur-3xl animate-pulse-slow"></div>
+        <div class="absolute bottom-40 right-20 w-[600px] h-[600px] bg-emerald-500 rounded-full blur-3xl animate-pulse-slow" style="animation-delay: 1s;"></div>
+      </div>
+
+      <div class="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+        <div class="text-center mb-16">
+          <!-- Badge -->
+          <div class="inline-flex items-center gap-2 px-4 py-2 bg-gold-500/20 backdrop-blur-sm border border-gold-500/30 rounded-full mb-6">
+            <span class="w-2 h-2 bg-gold-500 rounded-full animate-pulse"></span>
+            <span class="text-gold-300 text-sm font-medium">
+              The Tharaga Difference
+            </span>
+          </div>
+
+          <h2 class="font-display text-4xl sm:text-5xl lg:text-6xl font-bold text-white mb-4">
+            India's First AI-Powered
+            <span class="text-gradient-gold block mt-2">Wealth Intelligence Platform</span>
+          </h2>
+          <p class="text-xl sm:text-2xl text-gray-300 leading-relaxed max-w-3xl mx-auto">
+            We're building India's first AI-powered wealth intelligence platform for real estate. Every feature is designed to make you richer, smarter, faster.
+          </p>
+        </div>
+
+        <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-7xl mx-auto">
+          <!-- Feature Cards -->
+          <div class="p-8 backdrop-blur-xl bg-white/10 border-2 border-white/20 rounded-2xl hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 group relative overflow-hidden">
+            <div class="relative">
+              <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
+                <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path></svg>
+              </div>
+              <h3 class="text-2xl font-bold text-white mb-4">AI-Powered Intelligence</h3>
+              <p class="text-gray-300 mb-6 leading-relaxed">Multi-dimensional property insights—price trends, flood & safety indicators, infrastructure context and rental yield estimates. See property insights for data sources and limitations.</p>
+              <div class="inline-flex items-center gap-2 px-3 py-1 bg-emerald-500/20 border border-emerald-500/30 rounded-full">
+                <svg class="w-3 h-3 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                <span class="text-xs font-bold text-emerald-400">Explainable ML-based appreciation bands (Low / Medium / High)</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="p-8 backdrop-blur-xl bg-white/10 border-2 border-white/20 rounded-2xl hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 group relative overflow-hidden">
+            <div class="relative">
+              <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
+                <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+              </div>
+              <h3 class="text-2xl font-bold text-white mb-4">Document Snapshot Immutability</h3>
+              <p class="text-gray-300 mb-6 leading-relaxed">Fraud-risk reduction toolkit. Each listing includes public registry snapshots, uploaded document hashes, and an independent audit report. This is not a substitute for a legal title search.</p>
+              <div class="inline-flex items-center gap-2 px-3 py-1 bg-emerald-500/20 border border-emerald-500/30 rounded-full">
+                <svg class="w-3 h-3 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                <span class="text-xs font-bold text-emerald-400">Cryptographic verification for auditability</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="p-8 backdrop-blur-xl bg-white/10 border-2 border-white/20 rounded-2xl hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 group relative overflow-hidden">
+            <div class="relative">
+              <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
+                <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg>
+              </div>
+              <h3 class="text-2xl font-bold text-white mb-4">Zero Broker Commission</h3>
+              <p class="text-gray-300 mb-6 leading-relaxed">Connect directly with verified builders. Save ₹3-5 lakhs on brokerage. That's a vacation in Europe, on us.</p>
+              <div class="inline-flex items-center gap-2 px-3 py-1 bg-emerald-500/20 border border-emerald-500/30 rounded-full">
+                <svg class="w-3 h-3 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                <span class="text-xs font-bold text-emerald-400">₹1,200/sqft avg. savings</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="p-8 backdrop-blur-xl bg-white/10 border-2 border-white/20 rounded-2xl hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 group relative overflow-hidden">
+            <div class="relative">
+              <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-orange-500 to-red-500 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
+                <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg>
+              </div>
+              <h3 class="text-2xl font-bold text-white mb-4">ROI Prediction Engine</h3>
+              <p class="text-gray-300 mb-6 leading-relaxed">Know your property's future value before you buy. Our ML models forecast appreciation with 85% accuracy.</p>
+              <div class="inline-flex items-center gap-2 px-3 py-1 bg-emerald-500/20 border border-emerald-500/30 rounded-full">
+                <svg class="w-3 h-3 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                <span class="text-xs font-bold text-emerald-400">+24% avg. 3-year ROI</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="p-8 backdrop-blur-xl bg-white/10 border-2 border-white/20 rounded-2xl hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 group relative overflow-hidden">
+            <div class="relative">
+              <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
+                <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+              </div>
+              <h3 class="text-2xl font-bold text-white mb-4">Family Decision Tools</h3>
+              <p class="text-gray-300 mb-6 leading-relaxed">Compare properties, calculate EMIs, assess risks—all in one dashboard. Make decisions together, confidently.</p>
+              <div class="inline-flex items-center gap-2 px-3 py-1 bg-emerald-500/20 border border-emerald-500/30 rounded-full">
+                <svg class="w-3 h-3 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                <span class="text-xs font-bold text-emerald-400">28 hours saved per buyer</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="p-8 backdrop-blur-xl bg-white/10 border-2 border-white/20 rounded-2xl hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 group relative overflow-hidden">
+            <div class="relative">
+              <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-yellow-500 to-orange-500 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
+                <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+              </div>
+              <h3 class="text-2xl font-bold text-white mb-4">Tamil Voice Search</h3>
+              <p class="text-gray-300 mb-6 leading-relaxed">Search properties in your language, your way. Our voice AI understands context, not just keywords.</p>
+              <div class="inline-flex items-center gap-2 px-3 py-1 bg-emerald-500/20 border border-emerald-500/30 rounded-full">
+                <svg class="w-3 h-3 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                <span class="text-xs font-bold text-emerald-400">5+ regional languages</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="relative bg-gradient-to-b from-section-dark-from to-black text-white pt-20 pb-8">
+      <!-- Newsletter Section -->
+      <div class="container mx-auto px-4 mb-16">
+        <div class="p-8 md:p-12 max-w-4xl mx-auto text-center backdrop-blur-sm bg-white/5 border border-white/10 rounded-2xl">
+          <h3 class="text-3xl font-bold mb-4">
+            Stay Ahead of the Market
+          </h3>
+          <p class="text-white/70 mb-8 max-w-2xl mx-auto">
+            Get weekly property insights, market trends, and exclusive deals delivered to your inbox
+          </p>
+          <form class="flex flex-col sm:flex-row gap-4 max-w-md mx-auto">
+            <input
+              type="email"
+              placeholder="Enter your email"
+              class="flex-1 px-6 py-4 rounded-xl bg-white/10 border border-white/20 backdrop-blur-sm text-white placeholder:text-white/50 focus:outline-none focus:ring-2 focus:ring-yellow-500/50"
+            />
+            <button
+              type="submit"
+              class="px-8 py-4 bg-gradient-to-r from-yellow-500 to-orange-500 rounded-xl font-semibold hover:shadow-lg transition-all duration-300 flex items-center justify-center gap-2 group"
+            >
+              Subscribe
+              <svg class="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+            </button>
+          </form>
+        </div>
+      </div>
+
+      <!-- Main Footer Content -->
+      <div class="container mx-auto px-4">
+        <div class="grid md:grid-cols-2 lg:grid-cols-5 gap-12 mb-16">
+          <!-- Company Info -->
+          <div class="lg:col-span-2">
+            <a href="/" class="inline-block mb-6">
+              <span class="text-3xl font-bold bg-gradient-to-r from-yellow-500 to-orange-500 bg-clip-text text-transparent">
+                Tharaga
+              </span>
+            </a>
+            <p class="text-white/70 mb-6 leading-relaxed">
+              India's first AI-powered zero-commission real estate platform. Connect directly with verified builders and build real wealth.
+            </p>
+
+            <!-- Trust Badges -->
+            <div class="flex flex-wrap gap-4 mb-6">
+              <div class="flex items-center gap-2 px-4 py-2 bg-white/10 rounded-lg border border-white/20">
+                <svg class="w-4 h-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
+                <span class="text-sm font-semibold text-white">RERA Verified</span>
+              </div>
+              <div class="flex items-center gap-2 px-4 py-2 bg-white/10 rounded-lg border border-white/20">
+                <svg class="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                <span class="text-sm font-semibold text-white">5+ Languages</span>
+              </div>
+            </div>
+
+            <!-- Social Links -->
+            <div class="flex gap-4">
+              <a href="https://facebook.com/tharaga" target="_blank" rel="noopener noreferrer" class="w-10 h-10 rounded-lg bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors border border-white/20">
+                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+              </a>
+              <a href="https://twitter.com/tharaga" target="_blank" rel="noopener noreferrer" class="w-10 h-10 rounded-lg bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors border border-white/20">
+                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M23.953 4.57a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723c-.951.555-2.005.959-3.127 1.184a4.92 4.92 0 00-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 01-2.228-.616v.06a4.923 4.923 0 003.946 4.827 4.996 4.996 0 01-2.212.085 4.936 4.936 0 004.604 3.417 9.867 9.867 0 01-6.102 2.105c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 007.557 2.209c9.053 0 13.998-7.496 13.998-13.985 0-.21 0-.42-.015-.63A9.935 9.935 0 0024 4.59z"/></svg>
+              </a>
+              <a href="https://instagram.com/tharaga" target="_blank" rel="noopener noreferrer" class="w-10 h-10 rounded-lg bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors border border-white/20">
+                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0C8.74 0 8.333.015 7.053.072 5.775.132 4.905.333 4.14.63c-.789.306-1.459.717-2.126 1.384S.935 3.35.63 4.14C.333 4.905.131 5.775.072 7.053.012 8.333 0 8.74 0 12s.015 3.667.072 4.947c.06 1.277.261 2.148.558 2.913.306.788.717 1.459 1.384 2.126.667.666 1.336 1.079 2.126 1.384.766.296 1.636.499 2.913.558C8.333 23.988 8.74 24 12 24s3.667-.015 4.947-.072c1.277-.06 2.148-.262 2.913-.558.788-.306 1.459-.718 2.126-1.384.666-.667 1.079-1.335 1.384-2.126.296-.765.499-1.636.558-2.913.06-1.28.072-1.687.072-4.947s-.015-3.667-.072-4.947c-.06-1.277-.262-2.149-.558-2.913-.306-.789-.718-1.459-1.384-2.126C21.319 1.347 20.651.935 19.86.63c-.765-.297-1.636-.499-2.913-.558C15.667.012 15.26 0 12 0zm0 2.16c3.203 0 3.585.016 4.85.071 1.17.055 1.805.249 2.227.415.562.217.96.477 1.382.896.419.42.679.819.896 1.381.164.422.36 1.057.413 2.227.057 1.266.07 1.646.07 4.85s-.015 3.585-.074 4.85c-.061 1.17-.256 1.805-.421 2.227-.224.562-.479.96-.899 1.382-.419.419-.824.679-1.38.896-.42.164-1.065.36-2.235.413-1.274.057-1.649.07-4.859.07-3.211 0-3.586-.015-4.859-.074-1.171-.061-1.816-.256-2.236-.421-.569-.224-.96-.479-1.379-.899-.421-.419-.69-.824-.9-1.38-.165-.42-.359-1.065-.42-2.235-.045-1.26-.061-1.649-.061-4.844 0-3.196.016-3.586.061-4.861.061-1.17.255-1.814.42-2.234.21-.57.479-.96.9-1.381.419-.419.81-.689 1.379-.898.42-.166 1.051-.361 2.221-.421 1.275-.045 1.65-.06 4.859-.06l.045.03zm0 3.678c-3.405 0-6.162 2.76-6.162 6.162 0 3.405 2.76 6.162 6.162 6.162 3.405 0 6.162-2.76 6.162-6.162 0-3.405-2.76-6.162-6.162-6.162zM12 16c-2.21 0-4-1.79-4-4s1.79-4 4-4 4 1.79 4 4-1.79 4-4 4zm7.846-10.405c0 .795-.646 1.44-1.44 1.44-.795 0-1.44-.646-1.44-1.44 0-.794.646-1.439 1.44-1.439.793-.001 1.44.645 1.44 1.439z"/></svg>
+              </a>
+              <a href="https://linkedin.com/company/tharaga" target="_blank" rel="noopener noreferrer" class="w-10 h-10 rounded-lg bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors border border-white/20">
+                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
+              </a>
+            </div>
+          </div>
+
+          <!-- Products -->
+          <div>
+            <h4 class="font-bold text-lg mb-6">Products</h4>
+            <ul class="space-y-4">
+              <li><a href="/my-dashboard" class="text-white/70 hover:text-white transition-colors">Buyer Dashboard</a></li>
+              <li><a href="/builder" class="text-white/70 hover:text-white transition-colors">Builder Dashboard</a></li>
+              <li><a href="/property-listing" class="text-white/70 hover:text-white transition-colors">Property Search</a></li>
+              <li><a href="/pricing" class="text-white/70 hover:text-white transition-colors">Pricing</a></li>
+              <li><a href="/tools" class="text-white/70 hover:text-white transition-colors">Features</a></li>
+            </ul>
+          </div>
+
+          <!-- Company -->
+          <div>
+            <h4 class="font-bold text-lg mb-6">Company</h4>
+            <ul class="space-y-4">
+              <li><a href="/about" class="text-white/70 hover:text-white transition-colors">About Us</a></li>
+              <li><a href="/careers" class="text-white/70 hover:text-white transition-colors">Careers</a></li>
+              <li><a href="/blog" class="text-white/70 hover:text-white transition-colors">Blog</a></li>
+              <li><a href="/press" class="text-white/70 hover:text-white transition-colors">Press Kit</a></li>
+              <li><a href="/contact" class="text-white/70 hover:text-white transition-colors">Contact</a></li>
+            </ul>
+          </div>
+
+          <!-- Legal & Support -->
+          <div>
+            <h4 class="font-bold text-lg mb-6">Legal & Support</h4>
+            <ul class="space-y-4">
+              <li><a href="/privacy" class="text-white/70 hover:text-white transition-colors">Privacy Policy</a></li>
+              <li><a href="/terms" class="text-white/70 hover:text-white transition-colors">Terms of Service</a></li>
+              <li><a href="/refund" class="text-white/70 hover:text-white transition-colors">Refund Policy</a></li>
+              <li><a href="/help" class="text-white/70 hover:text-white transition-colors">Help Center</a></li>
+              <li><a href="/sitemap" class="text-white/70 hover:text-white transition-colors">Sitemap</a></li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Contact Info -->
+        <div class="grid md:grid-cols-3 gap-6 mb-12 pb-12 border-b border-white/10">
+          <div class="flex items-start gap-4">
+            <div class="w-10 h-10 rounded-lg bg-white/10 flex items-center justify-center flex-shrink-0">
+              <svg class="w-5 h-5 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
+            </div>
+            <div>
+              <p class="font-semibold mb-1">Email</p>
+              <a href="mailto:hello@tharaga.co.in" class="text-white/70 hover:text-white transition-colors">
+                hello@tharaga.co.in
+              </a>
+            </div>
+          </div>
+
+          <div class="flex items-start gap-4">
+            <div class="w-10 h-10 rounded-lg bg-white/10 flex items-center justify-center flex-shrink-0">
+              <svg class="w-5 h-5 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path></svg>
+            </div>
+            <div>
+              <p class="font-semibold mb-1">Phone</p>
+              <a href="tel:+919876543210" class="text-white/70 hover:text-white transition-colors">
+                +91 98765 43210
+              </a>
+            </div>
+          </div>
+
+          <div class="flex items-start gap-4">
+            <div class="w-10 h-10 rounded-lg bg-white/10 flex items-center justify-center flex-shrink-0">
+              <svg class="w-5 h-5 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+            </div>
+            <div>
+              <p class="font-semibold mb-1">Address</p>
+              <p class="text-white/70">
+                Chennai, Tamil Nadu, India
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Bottom Bar -->
+        <div class="flex flex-col md:flex-row justify-between items-center gap-4 text-white/50 text-sm">
+          <p>
+            © <span id="footer-year"></span> Tharaga. All rights reserved. Built with ❤️ in India.
+          </p>
+          <div class="flex items-center gap-6">
+            <a href="/privacy" class="hover:text-white transition-colors">Privacy</a>
+            <a href="/terms" class="hover:text-white transition-colors">Terms</a>
+            <a href="/cookies" class="hover:text-white transition-colors">Cookies</a>
+          </div>
+        </div>
+      </div>
+    </footer>
+  </main>
+
+  <!-- Search functionality script -->
+  <script>
+    // Set current year in footer
+    document.getElementById('footer-year').textContent = new Date().getFullYear();
+
+    // Filter chip functionality
+    const filterChips = document.querySelectorAll('.filter-chip');
+    const activeFilters = new Set();
+
+    filterChips.forEach(chip => {
+      chip.addEventListener('click', () => {
+        const filter = chip.dataset.filter;
+        if (activeFilters.has(filter)) {
+          activeFilters.delete(filter);
+          chip.classList.remove('bg-white/30', 'border-white/50', 'text-white');
+          chip.classList.add('bg-white/10', 'border-white/20', 'text-white/80');
+        } else {
+          activeFilters.add(filter);
+          chip.classList.add('bg-white/30', 'border-white/50', 'text-white');
+          chip.classList.remove('bg-white/10', 'border-white/20', 'text-white/80');
+        }
+      });
+    });
+
+    // AI Search button functionality
+    document.getElementById('ai-search-btn').addEventListener('click', () => {
+      const searchInput = document.getElementById('hero-search-input');
+      const query = searchInput.value.trim();
+
+      const params = new URLSearchParams();
+      if (query) {
+        params.set('q', query);
+      }
+
+      if (activeFilters.has('bhk')) {
+        params.set('bhk', '2-3');
+      }
+      if (activeFilters.has('budget')) {
+        params.set('minPrice', '5000000');
+        params.set('maxPrice', '10000000');
+      }
+      if (activeFilters.has('readiness')) {
+        params.set('status', 'ready');
+      }
+
+      window.location.href = '/property-listing/?' + params.toString();
+    });
+
+    // Allow Enter key to trigger search
+    document.getElementById('hero-search-input').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        document.getElementById('ai-search-btn').click();
+      }
+    });
+  </script>
+
+</body>
+</html>

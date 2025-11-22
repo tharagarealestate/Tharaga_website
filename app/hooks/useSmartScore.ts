@@ -95,7 +95,7 @@ export interface ScoreAnalytics {
 // =============================================
 // HOOK IMPLEMENTATION
 // =============================================
-export function useSmartScore(leadId?: number) {
+export function useSmartScore(leadId?: number | string) {
   const supabase = getSupabase();
   const [score, setScore] = useState<SmartScore | null>(null);
   const [history, setHistory] = useState<ScoreHistory[]>([]);
@@ -142,11 +142,14 @@ export function useSmartScore(leadId?: number) {
   const fetchScore = useCallback(async () => {
     if (!leadId) return;
 
+    const leadIdNum = typeof leadId === 'string' ? parseInt(leadId, 10) : leadId;
+    if (isNaN(leadIdNum)) return;
+
     setLoading(true);
     setError(null);
 
     try {
-      const response = await fetch(`/api/smartscore/calculate?lead_ids=${leadId}`);
+      const response = await fetch(`/api/smartscore/calculate?lead_ids=${leadIdNum}`);
       const data = await response.json();
 
       if (!response.ok) {
@@ -170,6 +173,9 @@ export function useSmartScore(leadId?: number) {
   const calculateScore = useCallback(async (forceRecalculate = false) => {
     if (!leadId) return;
 
+    const leadIdNum = typeof leadId === 'string' ? parseInt(leadId, 10) : leadId;
+    if (isNaN(leadIdNum)) return;
+
     setCalculating(true);
     setError(null);
 
@@ -178,7 +184,7 @@ export function useSmartScore(leadId?: number) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          lead_ids: [leadId],
+          lead_ids: [leadIdNum],
           force_recalculate: forceRecalculate,
           notify_builders: true
         })
@@ -210,8 +216,11 @@ export function useSmartScore(leadId?: number) {
   const fetchHistory = useCallback(async (days = 30) => {
     if (!leadId) return;
 
+    const leadIdNum = typeof leadId === 'string' ? parseInt(leadId, 10) : leadId;
+    if (isNaN(leadIdNum)) return;
+
     try {
-      const response = await fetch(`/api/smartscore/history?lead_id=${leadId}&days=${days}`);
+      const response = await fetch(`/api/smartscore/history?lead_id=${leadIdNum}&days=${days}`);
       const data = await response.json();
 
       if (response.ok && data.history) {
@@ -229,16 +238,19 @@ export function useSmartScore(leadId?: number) {
   useEffect(() => {
     if (!leadId || !user) return;
 
+    const leadIdNum = typeof leadId === 'string' ? parseInt(leadId, 10) : leadId;
+    if (isNaN(leadIdNum)) return;
+
     // Subscribe to score updates
     const channel = supabase
-      .channel(`smartscore:${leadId}`)
+      .channel(`smartscore:${leadIdNum}`)
       .on(
         'postgres_changes',
         {
           event: 'UPDATE',
           schema: 'public',
           table: 'leads',
-          filter: `id=eq.${leadId}`
+          filter: `id=eq.${leadIdNum}`
         },
         (payload) => {
           console.log('🔄 SmartScore updated:', payload.new);

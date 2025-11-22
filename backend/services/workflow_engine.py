@@ -394,9 +394,12 @@ class WorkflowEngine:
             if not recipient_phone.startswith('+'):
                 recipient_phone = '+91' + recipient_phone.lstrip('0')
             
-            # Generate/personalize message
-            body_template = template.get('body_template') or template.get('body', '')
-            message_body = self._personalize_template(body_template, lead_data)
+            # Generate/personalize message (use AI if template has use_ai_generation flag)
+            if template.get('use_ai_generation', False):
+                message_body = await self._generate_ai_message(template, lead_data)
+            else:
+                body_template = template.get('body_template') or template.get('body', '')
+                message_body = self._personalize_template(body_template, lead_data)
             
             # Send via Twilio
             from_number = f'whatsapp:{TWILIO_WHATSAPP_NUMBER or "+1234567890"}'
@@ -473,9 +476,12 @@ class WorkflowEngine:
             if not recipient_phone.startswith('+'):
                 recipient_phone = '+91' + recipient_phone.lstrip('0')
             
-            # Generate/personalize message
-            body_template = template.get('body_template') or template.get('body', '')
-            message_body = self._personalize_template(body_template, lead_data)
+            # Generate/personalize message (use AI if template has use_ai_generation flag)
+            if template.get('use_ai_generation', False):
+                message_body = await self._generate_ai_message(template, lead_data)
+            else:
+                body_template = template.get('body_template') or template.get('body', '')
+                message_body = self._personalize_template(body_template, lead_data)
             
             # Send via Twilio
             from_number = TWILIO_SMS_NUMBER or "+1234567890"
@@ -734,45 +740,75 @@ class WorkflowEngine:
         return result
     
     async def _generate_ai_message(self, template: Dict, lead_data: Dict) -> str:
-        """Generate personalized message using AI (fallback to template)"""
-        if not openai:
-            return self._personalize_template(template.get('body_template') or template.get('body', ''), lead_data)
-        
+        """Generate personalized message using AI Message Generator Service"""
         try:
-            # Build prompt
-            prompt_template = template.get('ai_prompt_template', '')
+            # Import AI message generator
+            from services.ai_message_generator import generate_personalized_message
+            
+            # Determine message type from template category/name
+            template_name = (template.get('name', '') or '').lower()
+            template_category = (template.get('category', '') or '').lower()
+            
+            message_type = 'follow_up'  # Default
+            
+            if 'welcome' in template_name or 'welcome' in template_category:
+                message_type = 'welcome'
+            elif 'follow' in template_name or 'follow' in template_category:
+                message_type = 'follow_up'
+            elif 'match' in template_name or 'match' in template_category:
+                message_type = 'property_match'
+            elif 'visit' in template_name or 'visit' in template_category:
+                message_type = 'site_visit_reminder'
+            elif 'hot' in template_name or 'hot' in template_category:
+                message_type = 'hot_lead_alert'
+            elif 'engagement' in template_name or 'engagement' in template_category:
+                message_type = 'engagement_boost'
+            elif 'conversion' in template_name or 'conversion' in template_category:
+                message_type = 'conversion_push'
+            
+            # Determine channel from template
+            channel = template.get('channel', 'whatsapp')
+            if channel not in ['whatsapp', 'sms', 'email']:
+                # Infer from template type
+                if 'email' in template_name or template.get('subject'):
+                    channel = 'email'
+                elif 'sms' in template_name:
+                    channel = 'sms'
+                else:
+                    channel = 'whatsapp'
+            
+            # Get tone from template
             tone = template.get('tone', 'professional')
             
-            # Personalize prompt
-            prompt = self._personalize_template(prompt_template, lead_data)
+            # Get lead_id from lead_data
+            lead_id = str(lead_data.get('id', ''))
+            if not lead_id:
+                # Fallback if no lead_id
+                logger.warning("No lead_id found, using template personalization fallback")
+                return self._personalize_template(
+                    template.get('body_template') or template.get('body', ''),
+                    lead_data
+                )
             
-            # Add context
-            context = f"""
-You are writing a {tone} message for a real estate platform.
-Lead Details:
-- Name: {lead_data.get('name', 'Customer')}
-- SmartScore: {lead_data.get('smartscore_v2', lead_data.get('score', 0))}/100
-- Priority: {lead_data.get('priority_tier', 'Developing')}
-- Interested in: {lead_data.get('properties', {}).get('title', 'property')}
-
-Generate a personalized {template.get('channel', 'message')} message. Keep it concise (max 160 chars for SMS, 300 for WhatsApp, 500 for email).
-"""
-            
-            # Call OpenAI
-            response = openai.ChatCompletion.create(
-                model="gpt-3.5-turbo",
-                messages=[
-                    {"role": "system", "content": context},
-                    {"role": "user", "content": prompt}
-                ],
-                max_tokens=500,
-                temperature=0.7
+            # Generate message using AI service
+            message = await generate_personalized_message(
+                lead_id=lead_id,
+                message_type=message_type,
+                channel=channel,
+                tone=tone,
+                include_cta=True
             )
             
-            generated_text = response.choices[0].message.content.strip()
+            logger.info(f"AI message generated via service: {len(message)} chars")
+            return message
             
-            logger.info(f"AI message generated: {len(generated_text)} chars")
-            return generated_text
+        except Exception as e:
+            logger.error(f"AI message generation failed: {str(e)}")
+            # Fallback to template personalization
+            return self._personalize_template(
+                template.get('body_template') or template.get('body', ''),
+                lead_data
+            )
             
         except Exception as e:
             logger.error(f"AI generation failed: {str(e)}")

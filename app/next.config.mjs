@@ -110,8 +110,9 @@ const nextConfig = {
     // NOTE: /property-listing is now handled by the App Router page at app/app/property-listing/page.tsx,
     // so we intentionally do NOT rewrite it to the legacy static HTML anymore.
     rules.push({ source: '/search-filter-home', destination: '/search-filter-home/index.html' })
-    // Serve static index.html as homepage (has working header with auth)
-    rules.push({ source: '/', destination: '/index.html' })
+    // Homepage is now fully handled by Next.js App Router (app/app/page.tsx)
+    // REMOVED: Rewrite to static index.html - this was causing sections to not render
+    // The Next.js page component includes HeroSection, DashboardCTASection, and FeaturesSection
     return rules
   },
   images: {

@@ -706,6 +706,36 @@ async def compute_risk_flags(property_id: str):
         raise HTTPException(status_code=500, detail=str(e))
 
 
+# ===========================================
+# Smart Distribution Engine Endpoints
+# ===========================================
+
+@app.post("/ai/distribution/distribute")
+async def distribute_listing(request: Request):
+    """Distribute a listing to qualified buyers"""
+    try:
+        from .ai.distribution_engine import SmartDistributionEngine
+        
+        body = await request.json()
+        listing_id = body.get("listing_id")
+        
+        if not listing_id:
+            raise HTTPException(status_code=400, detail="listing_id is required")
+        
+        engine = SmartDistributionEngine()
+        result = await engine.distribute_listing(listing_id)
+        
+        if not result.get("success"):
+            raise HTTPException(status_code=400, detail=result.get("error", "Distribution failed"))
+        
+        return result
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Distribution error: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 # Note: Old data collection endpoints removed - replaced with Chennai Phase-1 features 
 if __name__ == "__main__":
     import uvicorn

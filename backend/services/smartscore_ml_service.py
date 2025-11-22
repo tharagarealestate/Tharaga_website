@@ -31,14 +31,21 @@ import logging
 # =============================================
 logger = logging.getLogger(__name__)
 
-# Supabase connection
-SUPABASE_URL = os.getenv("SUPABASE_URL")
-SUPABASE_SERVICE_KEY = os.getenv("SUPABASE_SERVICE_ROLE_KEY")
+# Supabase connection - lazy initialization to avoid issues during import
+_supabase_client: Optional[Client] = None
 
-if not SUPABASE_URL or not SUPABASE_SERVICE_KEY:
-    raise ValueError("SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY must be set")
-
-supabase: Client = create_client(SUPABASE_URL, SUPABASE_SERVICE_KEY)
+def get_supabase_client() -> Client:
+    """Lazy initialization of Supabase client"""
+    global _supabase_client
+    if _supabase_client is None:
+        SUPABASE_URL = os.getenv("SUPABASE_URL")
+        SUPABASE_SERVICE_KEY = os.getenv("SUPABASE_SERVICE_ROLE_KEY")
+        
+        if not SUPABASE_URL or not SUPABASE_SERVICE_KEY:
+            raise ValueError("SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY must be set")
+        
+        _supabase_client = create_client(SUPABASE_URL, SUPABASE_SERVICE_KEY)
+    return _supabase_client
 
 # Model paths
 MODEL_DIR = os.getenv("MODEL_DIR", "/app/models")
@@ -91,6 +98,7 @@ class FeatureEngineer:
         """
         try:
             # Fetch lead data
+            supabase = get_supabase_client()
             lead_response = supabase.table('leads').select(
                 '*, buyer_id, budget, buying_urgency, status, created_at'
             ).eq('id', lead_id).maybe_single().execute()
@@ -115,13 +123,14 @@ class FeatureEngineer:
             user_prefs = None
             if buyer_id:
                 try:
+                    supabase = get_supabase_client()
                     buyer_response = supabase.table('buyer_profiles').select('*').eq('user_id', buyer_id).maybe_single().execute()
                     if buyer_response.data:
                         buyer_profile = buyer_response.data
                         features['financing_approved'] = 1 if buyer_profile.get('preferences', {}).get('financing_pre_approved') else 0
                         features['first_time_buyer'] = 1 if buyer_profile.get('first_time_buyer') else 0
                     
-                    prefs_response = supabase.table('user_preferences').select('*').eq('user_id', buyer_id).maybe_single().execute()
+                    prefs_response = get_supabase_client().table('user_preferences').select('*').eq('user_id', buyer_id).maybe_single().execute()
                     if prefs_response.data:
                         user_prefs = prefs_response.data
                         features['min_budget'] = float(user_prefs.get('budget_min', 0) or 0)
@@ -149,6 +158,7 @@ class FeatureEngineer:
             if buyer_id:
                 ninety_days_ago = (datetime.now() - timedelta(days=90)).isoformat()
                 try:
+                    supabase = get_supabase_client()
                     behaviors = supabase.table('user_behavior').select('*').eq(
                         'user_id', buyer_id
                     ).gte('timestamp', ninety_days_ago).execute()
@@ -228,6 +238,7 @@ class FeatureEngineer:
             
             # 3. INQUIRY/INTERACTION FEATURES
             try:
+                supabase = get_supabase_client()
                 interactions = supabase.table('lead_interactions').select('*').eq(
                     'lead_id', lead_id
                 ).execute()
@@ -671,6 +682,7 @@ class ModelManager:
         """Fetch and prepare training data from Supabase"""
         try:
             # Fetch converted leads
+            supabase = get_supabase_client()
             conversions = supabase.table('lead_conversions').select(
                 '*, leads!inner(*)'
             ).limit(min_samples * 2).execute()
@@ -703,7 +715,7 @@ class ModelManager:
                     continue
             
             # Fetch non-converted leads
-            non_converted = supabase.table('leads').select('id').in_(
+            non_converted = get_supabase_client().table('leads').select('id').in_(
                 'status', ['lost']
             ).limit(min_samples).execute()
             
@@ -745,6 +757,7 @@ async def _get_cached_score(lead_id: int, ttl_minutes: int) -> Optional[SmartSco
     try:
         cutoff = datetime.now() - timedelta(minutes=ttl_minutes)
         
+        supabase = get_supabase_client()
         result = supabase.table('smartscore_history').select('*').eq(
             'lead_id', lead_id
         ).gte('created_at', cutoff.isoformat()).order(
@@ -779,6 +792,7 @@ async def _save_score_to_db(score: SmartScoreResponse):
     """Save SmartScore to leads table and history"""
     try:
         # Update leads table
+        supabase = get_supabase_client()
         supabase.table('leads').update({
             'smartscore_v2': score.smartscore,
             'conversion_probability': score.conversion_probability,
@@ -811,6 +825,7 @@ async def _batch_score_update():
     """Background task to update all active leads"""
     try:
         # Fetch all active leads
+        supabase = get_supabase_client()
         leads = supabase.table('leads').select('id').in_(
             'status', ['new', 'contacted', 'qualified']
         ).execute()

@@ -807,6 +807,25 @@ except Exception as e:
     logger.warning(f"ML Service routes not available: {e}")
     ml_router = None
 
+# ===========================================
+# Workflow Engine Service Endpoints
+# ===========================================
+
+try:
+    import sys
+    from pathlib import Path
+    # Add backend directory to path for services imports
+    backend_dir = Path(__file__).parent.parent
+    if str(backend_dir) not in sys.path:
+        sys.path.insert(0, str(backend_dir))
+    
+    from services.workflow_routes import router as workflow_router
+    app.include_router(workflow_router)
+    logger.info("Workflow Engine routes included successfully")
+except Exception as e:
+    logger.warning(f"Workflow Engine routes not available: {e}")
+    workflow_router = None
+
 # Note: Old data collection endpoints removed - replaced with Chennai Phase-1 features 
 if __name__ == "__main__":
     import uvicorn

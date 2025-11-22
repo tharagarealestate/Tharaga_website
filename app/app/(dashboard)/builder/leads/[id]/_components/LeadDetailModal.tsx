@@ -42,6 +42,7 @@ import {
   ResponsiveContainer,
 } from 'recharts';
 import { getSupabase } from '@/lib/supabase';
+import SmartScoreCard from '@/components/leads/SmartScoreCard';
 
 interface LeadDetail {
   id: string;
@@ -620,6 +621,11 @@ function OverviewTab({ lead, categoryStyle }: { lead: LeadDetail; categoryStyle:
       exit={{ opacity: 0, y: -20 }}
       className="space-y-6"
     >
+      {/* SmartScore 2.0 Card */}
+      <div className="mb-6">
+        <SmartScoreCard leadId={lead.id.toString()} variant="glass" />
+      </div>
+      
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <motion.div
           whileHover={{ scale: 1.02 }}

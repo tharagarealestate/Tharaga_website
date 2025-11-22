@@ -5,7 +5,7 @@ import time
 import os
 from typing import Optional
 
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import FastAPI, HTTPException, Request, BackgroundTasks
 from prometheus_client import Counter, Histogram, generate_latest, CONTENT_TYPE_LATEST
 from fastapi.responses import Response, JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
@@ -733,6 +733,58 @@ async def distribute_listing(request: Request):
         raise
     except Exception as e:
         logger.error(f"Distribution error: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# ===========================================
+# AI Virtual Staging Endpoints
+# ===========================================
+
+@app.post("/ai/staging/process")
+async def process_staging(request: Request, background_tasks: BackgroundTasks):
+    """Process virtual staging job in background"""
+    try:
+        from .ai.virtual_staging import VirtualStagingService
+        
+        body = await request.json()
+        job_id = body.get("job_id")
+        original_image_url = body.get("original_image_url")
+        style = body.get("style")
+        room_type = body.get("room_type")
+        
+        if not all([job_id, original_image_url, style, room_type]):
+            raise HTTPException(status_code=400, detail="Missing required fields: job_id, original_image_url, style, room_type")
+        
+        staging_service = VirtualStagingService()
+        
+        # Validate job exists
+        job_response = staging_service.supabase.table("virtual_staging_jobs")\
+            .select("*")\
+            .eq("id", job_id)\
+            .maybe_single()\
+            .execute()
+        
+        if not job_response.data:
+            raise HTTPException(status_code=404, detail="Job not found")
+        
+        # Process in background
+        background_tasks.add_task(
+            staging_service.stage_image,
+            job_id,
+            original_image_url,
+            style,
+            room_type
+        )
+        
+        return {
+            "success": True,
+            "job_id": job_id,
+            "message": "Staging job started. Subscribe to real-time progress updates."
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Staging processing error: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
 
 

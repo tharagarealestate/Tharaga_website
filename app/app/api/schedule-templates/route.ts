@@ -15,6 +15,7 @@ import {
 } from '@/lib/automation/triggers/scheduleTemplates';
 
 export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
 
 /**
  * GET /api/schedule-templates

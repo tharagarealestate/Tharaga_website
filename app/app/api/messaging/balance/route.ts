@@ -8,6 +8,7 @@ import { getTwilioClient } from '@/lib/integrations/messaging/twilioClient';
 
 // Force Node.js runtime (Twilio SDK requires Node.js built-ins)
 export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
 
 export async function GET(req: NextRequest) {
   try {

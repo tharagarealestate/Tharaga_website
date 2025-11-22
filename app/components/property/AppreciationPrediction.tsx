@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { TrendingUp, TrendingDown, TrendingFlat, ChevronDown, ChevronUp, Info, Sparkles } from 'lucide-react'
+import { TrendingUp, TrendingDown, Minus, ChevronDown, ChevronUp, Info, Sparkles } from 'lucide-react'
 import { getSupabase } from '@/lib/supabase'
 
 interface AppreciationPredictionProps {
@@ -131,7 +131,7 @@ export default function AppreciationPrediction({ propertyId }: AppreciationPredi
       bg: 'from-amber-500 to-amber-600',
       text: 'text-amber-700',
       border: 'border-amber-300',
-      icon: TrendingFlat,
+      icon: Minus,
     },
     LOW: {
       bg: 'from-red-500 to-red-600',

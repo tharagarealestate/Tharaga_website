@@ -1,3 +1,4 @@
+import { Header } from '@/components/sections/Header'
 import { HeroSection } from '@/components/sections/HeroSection'
 import { DashboardCTASection } from '@/components/sections/DashboardCTASection'
 import { FeaturesSection } from '@/components/sections/FeaturesSection'
@@ -13,6 +14,7 @@ export const metadata: Metadata = {
 export default function HomePage() {
   return (
     <div className="homepage-header">
+      <Header />
       <main>
         <HeroSection />
         <DashboardCTASection />

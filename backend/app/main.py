@@ -862,6 +862,60 @@ except Exception as e:
     logger.warning(f"AI Content Generator routes not available: {e}")
     ai_content_router = None
 
+# ===========================================
+# Recommendation Engine Service Endpoints
+# ===========================================
+
+try:
+    import sys
+    from pathlib import Path
+    backend_dir = Path(__file__).parent.parent
+    if str(backend_dir) not in sys.path:
+        sys.path.insert(0, str(backend_dir))
+    
+    from services.recommendation_routes import router as recommendation_router
+    app.include_router(recommendation_router)
+    logger.info("Recommendation Engine routes included successfully")
+except Exception as e:
+    logger.warning(f"Recommendation Engine routes not available: {e}")
+    recommendation_router = None
+
+# ===========================================
+# Listing Optimizer Service Endpoints
+# ===========================================
+
+try:
+    import sys
+    from pathlib import Path
+    backend_dir = Path(__file__).parent.parent
+    if str(backend_dir) not in sys.path:
+        sys.path.insert(0, str(backend_dir))
+    
+    from services.optimizer_routes import router as optimizer_router
+    app.include_router(optimizer_router)
+    logger.info("Listing Optimizer routes included successfully")
+except Exception as e:
+    logger.warning(f"Listing Optimizer routes not available: {e}")
+    optimizer_router = None
+
+# ===========================================
+# Webhook Manager Service Endpoints
+# ===========================================
+
+try:
+    import sys
+    from pathlib import Path
+    backend_dir = Path(__file__).parent.parent
+    if str(backend_dir) not in sys.path:
+        sys.path.insert(0, str(backend_dir))
+    
+    from services.webhook_routes import router as webhook_router
+    app.include_router(webhook_router)
+    logger.info("Webhook Manager routes included successfully")
+except Exception as e:
+    logger.warning(f"Webhook Manager routes not available: {e}")
+    webhook_router = None
+
 # Note: Old data collection endpoints removed - replaced with Chennai Phase-1 features 
 if __name__ == "__main__":
     import uvicorn

@@ -19,12 +19,10 @@ const handleI18nRouting = createMiddleware({
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl
 
-  // 0) Serve static index.html for homepage
-  // The static HTML contains: Header, Hero, Dashboard CTA, Features, Footer
-  // with complete Supabase auth integration
-  if (pathname === '/') {
-    return NextResponse.rewrite(new URL('/index.html', req.url))
-  }
+  // 0) Homepage uses Next.js App Router (app/app/page.tsx)
+  // Renders React components: Header, HeroSection, DashboardCTASection, FeaturesSection, Footer
+  // Header includes Supabase auth integration via layout.tsx auth script
+  // No rewrite needed - let Next.js handle it normally
 
   // 1) Normalize legacy /app/* -> /*
   if (pathname === '/app' || pathname.startsWith('/app/')) {

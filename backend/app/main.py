@@ -934,6 +934,23 @@ except Exception as e:
     logger.warning(f"Seller Optimization Engine routes not available: {e}")
     seller_optimizer_router = None
 
+# ===========================================
+# Social Media Distribution Service Endpoints
+# ===========================================
+try:
+    import sys
+    from pathlib import Path
+    backend_dir = Path(__file__).parent.parent
+    if str(backend_dir) not in sys.path:
+        sys.path.insert(0, str(backend_dir))
+    
+    from services.social_media_routes import router as social_media_router
+    app.include_router(social_media_router)
+    logger.info("Social Media routes included successfully")
+except Exception as e:
+    logger.warning(f"Social Media routes not available: {e}")
+    social_media_router = None
+
 # Note: Old data collection endpoints removed - replaced with Chennai Phase-1 features 
 if __name__ == "__main__":
     import uvicorn

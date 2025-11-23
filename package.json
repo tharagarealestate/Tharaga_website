@@ -3,7 +3,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "vercel-build": "next build",
+    "vercel-build": "cd app && npm run build",
     "serve": "npx http-server -p 43217 -a 127.0.0.1 -c-1 .",
     "test": "vitest",
     "test:ui": "vitest --ui",

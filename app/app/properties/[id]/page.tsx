@@ -3,13 +3,12 @@ import { Metadata, ResolvingMetadata } from 'next'
 import { notFound } from 'next/navigation'
 import { Suspense } from 'react'
 import { MapPin, Bed, Maximize, Car, Building2, Compass, Calendar, Star, ShieldCheck } from 'lucide-react'
-import dynamic from 'next/dynamic'
-const Gallery = dynamic(() => import('@/components/property/Gallery').then(m => m.Gallery), { ssr: false })
-const EMICalcClient = dynamic(() => import('@/components/property/EMICalculator').then(m => m.EMICalculator), { ssr: false })
-const ExpandableText = dynamic(() => import('@/components/property/ExpandableText').then(m => m.ExpandableText), { ssr: false })
-const CompareChart = dynamic(() => import('@/components/property/CompareChart').then(m => m.CompareChart), { ssr: false })
-const InteractiveMap = dynamic(() => import('@/components/property/InteractiveMap').then(m => m.InteractiveMap), { ssr: false })
-const MatchScore = dynamic(() => import('@/components/property/MatchScore').then(m => m.MatchScore), { ssr: false })
+import ClientGallery from '@/components/property/ClientGallery'
+import ClientEMICalculator from '@/components/property/ClientEMICalculator'
+import ClientExpandableText from '@/components/property/ClientExpandableText'
+import ClientCompareChart from '@/components/property/ClientCompareChart'
+import ClientInteractiveMap from '@/components/property/ClientInteractiveMap'
+import ClientMatchScore from '@/components/property/ClientMatchScore'
 import { ContactForm as ContactFormClient } from '@/components/property/ContactForm'
 import RERAVerification from '@/components/property/RERAVerification'
 import RiskFlags from '@/components/property/RiskFlags'
@@ -291,7 +290,7 @@ export default async function PropertyPage({ params }: { params: { id: string } 
   return (
     <div className="min-h-screen">
       <section className="w-full">
-        <Gallery images={p.images} tourUrl={p.tourUrl} brochureUrl={p.brochureUrl} propertyId={p.id} />
+        <ClientGallery images={p.images} tourUrl={p.tourUrl} brochureUrl={p.brochureUrl} propertyId={p.id} />
       </section>
       <div className="mx-auto max-w-7xl px-4 py-6 grid grid-cols-1 lg:grid-cols-10 gap-6">
         <div className="lg:col-span-7">
@@ -326,7 +325,7 @@ export default async function PropertyPage({ params }: { params: { id: string } 
         <div className="lg:col-span-3">
           <StickySidebar p={p} />
           <div className="mt-4">
-            <MatchScore propertyId={p.id} />
+            <ClientMatchScore propertyId={p.id} />
           </div>
         </div>
       </div>
@@ -374,7 +373,7 @@ function Description({ text }: { text: string }) {
   return (
     <div className="prose max-w-none mt-8">
       <h2 className="text-2xl font-semibold">Description</h2>
-      <ExpandableText text={text} maxWords={300} />
+      <ClientExpandableText text={text} maxWords={300} />
       <div className="mt-4 grid gap-2 md:grid-cols-3">
         <Highlight>Recently Price Reduced by ₹5L</Highlight>
         <Highlight>High Demand - 50 views this week</Highlight>
@@ -433,7 +432,7 @@ function LocationInsights({ p }: { p: any }){
   return (
     <div className="mt-8">
       <h2 className="text-2xl font-semibold mb-3">Location Insights</h2>
-      <InteractiveMap lat={p.lat} lng={p.lng} workplace={null} />
+      <ClientInteractiveMap lat={p.lat} lng={p.lng} workplace={null} />
       <div className="mt-3 grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
         <div className="rounded border p-3">Connectivity: 8/10</div>
         <div className="rounded border p-3">Social Infrastructure: 9/10</div>
@@ -467,7 +466,7 @@ function Financials({ price, sqft }: { price?: number|null; sqft?: number|null }
           <Row label="Total" value={formatINR(total)} bold />
         </div>
         <div className="rounded border p-4">
-          <EMICalcClient defaultPrincipal={Math.min(base, Math.max(0, base - (base*0.2)))} />
+          <ClientEMICalculator defaultPrincipal={Math.min(base, Math.max(0, base - (base*0.2)))} />
         </div>
       </div>
     </div>
@@ -554,7 +553,7 @@ function SimilarProperties({ items }: { items: any[] }){
   return (
     <div className="mt-8">
       <h2 className="text-2xl font-semibold mb-3">You Might Also Like</h2>
-      <CompareChart items={items} />
+      <ClientCompareChart items={items} />
       <div className="grid md:grid-cols-3 gap-4">
         {items.slice(0, 6).map((it)=> (
           <div key={it.id} className="rounded border overflow-hidden">

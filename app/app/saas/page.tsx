@@ -1,3 +1,5 @@
+"use client"
+
 import dynamic from 'next/dynamic'
 
 // Client animated section; disable SSR since it uses browser-only APIs/animations

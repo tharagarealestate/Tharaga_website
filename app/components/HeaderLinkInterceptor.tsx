@@ -1,3 +1,5 @@
+"use client"
+
 // Extend Window interface
 declare global {
   interface Window {
@@ -13,7 +15,6 @@ declare global {
  * This client component intercepts clicks on header links and uses Next.js router
  * for client-side navigation, ensuring the header stays fixed while content loads.
  */
-"use client"
 
 import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'

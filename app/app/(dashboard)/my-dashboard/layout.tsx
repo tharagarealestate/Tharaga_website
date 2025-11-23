@@ -1,10 +1,8 @@
 import * as React from 'react'
 import type { Metadata } from 'next'
-import dynamic from 'next/dynamic'
 import Breadcrumb from '@/components/Breadcrumb'
-
-const TopNav = dynamic(() => import('./_components/TopNav'), { ssr: false })
-const MobileBottomNav = dynamic(() => import('./_components/MobileBottomNav'), { ssr: false })
+import ClientTopNav from './_components/ClientTopNav'
+import ClientMobileBottomNav from './_components/ClientMobileBottomNav'
 
 export const metadata: Metadata = {
   title: 'My Dashboard',
@@ -18,11 +16,11 @@ export default function MyDashboardLayout({ children }: { children: React.ReactN
         { label: 'Home', href: '/' },
         { label: 'Buyer Dashboard' }
       ]} />
-      <TopNav />
+      <ClientTopNav />
       <div className="mx-auto max-w-7xl pb-20 pt-4">
         {children}
       </div>
-      <MobileBottomNav />
+      <ClientMobileBottomNav />
     </div>
   )
 }

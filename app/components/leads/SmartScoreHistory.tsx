@@ -138,7 +138,7 @@ export default function SmartScoreHistory({
       created_at: item.created_at
     }))
     // Process history into chart format
-    const processed = historyData.map(item => ({
+    const processed = normalizedHistory.map(item => ({
       date: format(parseISO(item.created_at), 'MMM dd'),
       score: parseFloat(item.score_value?.toString() || '0'),
       conversion_prob: parseFloat(item.conversion_probability?.toString() || '0') * 100,

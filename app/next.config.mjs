@@ -110,10 +110,17 @@ const nextConfig = {
     // NOTE: /property-listing is now handled by the App Router page at app/app/property-listing/page.tsx,
     // so we intentionally do NOT rewrite it to the legacy static HTML anymore.
     rules.push({ source: '/search-filter-home', destination: '/search-filter-home/index.html' })
+<<<<<<< HEAD
     // Serve static index.html as homepage - contains header + all sections with Supabase integration
     // This static HTML has: Header (with Supabase auth), Hero (with AI predictions), Dashboard CTA, Features, Footer
     // All Supabase configurations and role manager are integrated and working perfectly
     rules.push({ source: '/', destination: '/index.html' })
+=======
+    // Homepage is now handled by Next.js App Router (app/app/page.tsx)
+    // React components: Header, HeroSection, DashboardCTASection, FeaturesSection, Footer
+    // No rewrite needed - Next.js will serve the React page automatically
+    // rules.push({ source: '/', destination: '/index.html' }) // REMOVED - using React components instead
+>>>>>>> 6575ef3431647dd6c20473b0b39a0688110ef6cb
     return rules
   },
   images: {

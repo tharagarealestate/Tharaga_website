@@ -951,6 +951,23 @@ except Exception as e:
     logger.warning(f"Social Media routes not available: {e}")
     social_media_router = None
 
+# ===========================================
+# Partner Portal Syndication Service Endpoints
+# ===========================================
+try:
+    import sys
+    from pathlib import Path
+    backend_dir = Path(__file__).parent.parent
+    if str(backend_dir) not in sys.path:
+        sys.path.insert(0, str(backend_dir))
+    
+    from services.partner_portals_routes import router as partner_portals_router
+    app.include_router(partner_portals_router)
+    logger.info("Partner Portals routes included successfully")
+except Exception as e:
+    logger.warning(f"Partner Portals routes not available: {e}")
+    partner_portals_router = None
+
 # Note: Old data collection endpoints removed - replaced with Chennai Phase-1 features 
 if __name__ == "__main__":
     import uvicorn

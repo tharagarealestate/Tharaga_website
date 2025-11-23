@@ -8,3 +8,5 @@ export default function ClientInteractiveMap(props: any) {
   return <InteractiveMap {...props} />
 }
 
+
+

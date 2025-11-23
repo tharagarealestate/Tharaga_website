@@ -71,3 +71,5 @@ async def sync_portal_metrics(syndicated_listing_id: str):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+
+

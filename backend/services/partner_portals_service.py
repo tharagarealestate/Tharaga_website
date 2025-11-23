@@ -587,3 +587,5 @@ class PartnerPortalsService:
         
         return metrics
 
+
+

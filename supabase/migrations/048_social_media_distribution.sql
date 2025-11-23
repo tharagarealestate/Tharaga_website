@@ -369,3 +369,5 @@ CREATE POLICY "Builders can manage their campaigns"
   FOR ALL
   USING (auth.uid() = builder_id);
 
+
+

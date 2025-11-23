@@ -200,22 +200,22 @@ export default function SmartScoreAnalyticsDashboard({
 
       <div className="max-w-7xl mx-auto relative z-10 space-y-6">
         {/* Header */}
-        <div className="relative rounded-3xl overflow-hidden transition-all duration-500 backdrop-blur-xl bg-white/10 border border-white/20 shadow-[0_8px_32px_0_rgba(31,38,135,0.15)] p-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <div className="bg-gold-500/20 border border-gold-500/30 rounded-lg p-3">
-                <BarChart3 className="w-6 h-6 text-gold-500" />
+        <div className="relative rounded-3xl overflow-hidden transition-all duration-500 backdrop-blur-xl bg-white/10 border border-white/20 shadow-[0_8px_32px_0_rgba(31,38,135,0.15)] p-4 sm:p-6">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div className="flex items-center space-x-3 flex-1">
+              <div className="bg-gold-500/20 border border-gold-500/30 rounded-lg p-2 sm:p-3 flex-shrink-0">
+                <BarChart3 className="w-5 h-5 sm:w-6 sm:h-6 text-gold-500" />
               </div>
-              <div>
-                <h2 className="text-2xl font-bold text-white">SmartScore Analytics</h2>
-                <p className="text-white/60">Comprehensive lead qualification insights</p>
+              <div className="min-w-0">
+                <h2 className="text-xl sm:text-2xl font-bold text-white">SmartScore Analytics</h2>
+                <p className="text-sm sm:text-base text-white/60">Comprehensive lead qualification insights</p>
               </div>
             </div>
-            <div className="flex items-center space-x-3">
+            <div className="flex items-center space-x-2 sm:space-x-3 w-full sm:w-auto">
               <Select
                 value={selectedPeriod}
                 onChange={(e) => setSelectedPeriod(e.target.value as '7d' | '30d' | '90d' | '1y')}
-                className="bg-white/5 border-white/20 text-white w-40"
+                className="bg-white/5 border-white/20 text-white flex-1 sm:w-40 text-sm sm:text-base min-h-[44px]"
               >
                 <option value="7d">Last 7 days</option>
                 <option value="30d">Last 30 days</option>
@@ -227,7 +227,7 @@ export default function SmartScoreAnalyticsDashboard({
                 size="sm"
                 onClick={handleRefresh}
                 disabled={isRefreshing}
-                className="text-white/70 hover:text-white hover:bg-white/10"
+                className="text-white/70 hover:text-white hover:bg-white/10 min-h-[44px] min-w-[44px]"
               >
                 <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
               </Button>
@@ -235,7 +235,7 @@ export default function SmartScoreAnalyticsDashboard({
                 variant="invisible"
                 size="sm"
                 onClick={handleExport}
-                className="text-white/70 hover:text-white hover:bg-white/10"
+                className="text-white/70 hover:text-white hover:bg-white/10 min-h-[44px] min-w-[44px]"
               >
                 <Download className="w-4 h-4" />
               </Button>
@@ -244,8 +244,8 @@ export default function SmartScoreAnalyticsDashboard({
         </div>
 
         {/* Overview Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="group relative rounded-3xl overflow-hidden transition-all duration-500 backdrop-blur-xl bg-white/10 border border-white/20 hover:bg-white/15 hover:border-white/30 p-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+          <div className="group relative rounded-3xl overflow-hidden transition-all duration-500 backdrop-blur-xl bg-white/10 border border-white/20 hover:bg-white/15 hover:border-white/30 p-4 sm:p-6">
             <div className='absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-in-out pointer-events-none' />
             <div className="relative z-10">
               <div className="flex items-center justify-between mb-2">
@@ -254,10 +254,10 @@ export default function SmartScoreAnalyticsDashboard({
                   Total
                 </Badge>
               </div>
-              <div className="text-3xl font-bold text-white mb-1">
+              <div className="text-2xl sm:text-3xl font-bold text-white mb-1">
                 {analytics.overview.total_leads}
               </div>
-              <div className="text-sm text-white/60">Active Leads</div>
+              <div className="text-xs sm:text-sm text-white/60">Active Leads</div>
             </div>
           </div>
 

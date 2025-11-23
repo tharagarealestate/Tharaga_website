@@ -303,7 +303,7 @@ export default function LeadTierManager({
           </div>
 
           {/* Tier Stats */}
-          <div className='grid grid-cols-5 gap-2 mb-6'>
+          <div className='grid grid-cols-2 sm:grid-cols-5 gap-2 sm:gap-2 mb-4 sm:mb-6'>
             {Object.entries(TIER_CONFIG).map(([tier, config]) => {
               const Icon = config.icon
               const count = tierStats[tier as keyof typeof tierStats]
@@ -312,34 +312,34 @@ export default function LeadTierManager({
                   key={tier}
                   onClick={() => setSelectedTier(selectedTier === tier ? 'all' : tier)}
                   className={`
-                    relative rounded-xl p-3 border-2 transition-all
+                    relative rounded-xl p-2 sm:p-3 border-2 transition-all min-h-[44px]
                     ${selectedTier === tier
                       ? `${config.bgColor} ${config.borderColor} border-opacity-50`
                       : 'bg-white/5 border-white/10 hover:bg-white/10'
                     }
                   `}
                 >
-                  <Icon className={`w-5 h-5 mx-auto mb-1 ${config.textColor}`} />
-                  <div className={`text-lg font-bold ${config.textColor}`}>{count}</div>
-                  <div className="text-xs text-white/60">{config.label}</div>
+                  <Icon className={`w-4 h-4 sm:w-5 sm:h-5 mx-auto mb-1 ${config.textColor}`} />
+                  <div className={`text-base sm:text-lg font-bold ${config.textColor}`}>{count}</div>
+                  <div className="text-[10px] sm:text-xs text-white/60">{config.label}</div>
                 </button>
               )
             })}
           </div>
 
           {/* Search and Bulk Actions */}
-          <div className='flex items-center gap-3 mb-4'>
+          <div className='flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3 mb-4'>
             <input
               type="text"
               placeholder="Search leads..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="flex-1 bg-white/5 border border-white/20 rounded-lg px-4 py-2 text-white placeholder-white/40 focus:outline-none focus:border-gold-500/50"
+              className="flex-1 bg-white/5 border border-white/20 rounded-lg px-3 sm:px-4 py-2.5 sm:py-2 text-white placeholder-white/40 focus:outline-none focus:border-gold-500/50 text-sm sm:text-base min-h-[44px]"
             />
             {selectedLeads.size > 0 && (
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-white/60">{selectedLeads.size} selected</span>
-                <div className="flex gap-1">
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+                <span className="text-xs sm:text-sm text-white/60 text-center sm:text-left">{selectedLeads.size} selected</span>
+                <div className="flex flex-wrap gap-1 sm:gap-1">
                   {Object.keys(TIER_CONFIG).map(tier => (
                     <Button
                       key={tier}
@@ -347,7 +347,7 @@ export default function LeadTierManager({
                       size="sm"
                       onClick={() => handleTierChange(Array.from(selectedLeads), tier)}
                       disabled={updating}
-                      className={`${TIER_CONFIG[tier as keyof typeof TIER_CONFIG].bgColor} ${TIER_CONFIG[tier as keyof typeof TIER_CONFIG].textColor} hover:opacity-80`}
+                      className={`${TIER_CONFIG[tier as keyof typeof TIER_CONFIG].bgColor} ${TIER_CONFIG[tier as keyof typeof TIER_CONFIG].textColor} hover:opacity-80 text-xs sm:text-sm min-h-[36px] sm:min-h-[44px]`}
                     >
                       {TIER_CONFIG[tier as keyof typeof TIER_CONFIG].label}
                     </Button>
@@ -357,7 +357,7 @@ export default function LeadTierManager({
                   variant="invisible"
                   size="sm"
                   onClick={deselectAll}
-                  className="text-white/70 hover:text-white hover:bg-white/10"
+                  className="text-white/70 hover:text-white hover:bg-white/10 min-h-[36px] sm:min-h-[44px] min-w-[44px]"
                 >
                   <X className="w-4 h-4" />
                 </Button>
@@ -368,7 +368,7 @@ export default function LeadTierManager({
                 variant="invisible"
                 size="sm"
                 onClick={selectAll}
-                className="text-white/70 hover:text-white hover:bg-white/10"
+                className="text-white/70 hover:text-white hover:bg-white/10 min-h-[44px] text-sm sm:text-base"
               >
                 Select All
               </Button>

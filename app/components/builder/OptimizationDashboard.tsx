@@ -253,41 +253,41 @@ export default function OptimizationDashboard({ propertyId }: OptimizationDashbo
         {/* Shimmer Effect on Hover */}
         <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-in-out pointer-events-none" />
         
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 relative">
-          <div>
-            <CardTitle className="text-2xl font-bold text-primary-200">Listing Performance</CardTitle>
-            <CardDescription className="text-primary-300">AI-powered optimization insights</CardDescription>
+        <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between space-y-3 sm:space-y-0 pb-2 relative">
+          <div className="flex-1">
+            <CardTitle className="text-xl sm:text-2xl font-bold text-primary-200">Listing Performance</CardTitle>
+            <CardDescription className="text-sm sm:text-base text-primary-300">AI-powered optimization insights</CardDescription>
           </div>
           <Button
             onClick={runAnalysis}
             disabled={isAnalyzing}
-            className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-primary-600 to-purple-600 text-white rounded-xl font-medium hover:shadow-lg transition-all disabled:opacity-50"
+            className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 sm:px-6 py-2.5 sm:py-3 bg-gradient-to-r from-primary-600 to-purple-600 text-white rounded-xl font-medium hover:shadow-lg transition-all disabled:opacity-50 min-h-[44px]"
           >
             {isAnalyzing ? (
               <>
-                <Loader2 className="h-5 w-5 animate-spin" />
-                Analyzing...
+                <Loader2 className="h-4 w-4 sm:h-5 sm:w-5 animate-spin" />
+                <span className="text-sm sm:text-base">Analyzing...</span>
               </>
             ) : (
               <>
-                <Zap className="w-5 h-5" />
-                Re-analyze
+                <Zap className="w-4 w-4 sm:h-5 sm:w-5" />
+                <span className="text-sm sm:text-base">Re-analyze</span>
               </>
             )}
           </Button>
         </CardHeader>
         
         <CardContent className="relative">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
             {/* Overall Score */}
-            <div className="bg-white/5 backdrop-blur-sm rounded-xl p-4 border border-white/10 shadow-sm">
+            <div className="bg-white/5 backdrop-blur-sm rounded-xl p-3 sm:p-4 border border-white/10 shadow-sm">
               <div className="flex items-center justify-between mb-2">
-                <span className="text-sm text-primary-300">Overall Score</span>
-                <Target className="w-5 h-5 text-primary-400" />
+                <span className="text-xs sm:text-sm text-primary-300">Overall Score</span>
+                <Target className="w-4 h-4 sm:w-5 sm:h-5 text-primary-400" />
               </div>
-              <div className="text-3xl font-bold text-white">
+              <div className="text-2xl sm:text-3xl font-bold text-white">
                 {performance.overall_score?.toFixed(0) || 0}
-                <span className="text-lg text-primary-400">/100</span>
+                <span className="text-base sm:text-lg text-primary-400">/100</span>
               </div>
               <div className="mt-2 h-2 bg-white/10 rounded-full overflow-hidden">
                 <motion.div
@@ -300,51 +300,51 @@ export default function OptimizationDashboard({ propertyId }: OptimizationDashbo
             </div>
             
             {/* Total Views */}
-            <div className="bg-white/5 backdrop-blur-sm rounded-xl p-4 border border-white/10 shadow-sm">
+            <div className="bg-white/5 backdrop-blur-sm rounded-xl p-3 sm:p-4 border border-white/10 shadow-sm">
               <div className="flex items-center justify-between mb-2">
-                <span className="text-sm text-primary-300">Total Views</span>
-                <BarChart3 className="w-5 h-5 text-green-400" />
+                <span className="text-xs sm:text-sm text-primary-300">Total Views</span>
+                <BarChart3 className="w-4 h-4 sm:w-5 sm:h-5 text-green-400" />
               </div>
-              <div className="text-3xl font-bold text-white">{performance.total_views || 0}</div>
+              <div className="text-2xl sm:text-3xl font-bold text-white">{performance.total_views || 0}</div>
               <div className="flex items-center gap-1 mt-1">
                 {performance.view_trend === 'increasing' ? (
                   <>
-                    <TrendingUp className="w-4 h-4 text-green-400" />
-                    <span className="text-sm text-green-400">Trending up</span>
+                    <TrendingUp className="w-3 h-3 sm:w-4 sm:h-4 text-green-400" />
+                    <span className="text-xs sm:text-sm text-green-400">Trending up</span>
                   </>
                 ) : performance.view_trend === 'decreasing' ? (
                   <>
-                    <TrendingDown className="w-4 h-4 text-red-400" />
-                    <span className="text-sm text-red-400">Trending down</span>
+                    <TrendingDown className="w-3 h-3 sm:w-4 sm:h-4 text-red-400" />
+                    <span className="text-xs sm:text-sm text-red-400">Trending down</span>
                   </>
                 ) : (
-                  <span className="text-sm text-primary-400">Stable</span>
+                  <span className="text-xs sm:text-sm text-primary-400">Stable</span>
                 )}
               </div>
             </div>
             
             {/* Market Position */}
-            <div className="bg-white/5 backdrop-blur-sm rounded-xl p-4 border border-white/10 shadow-sm">
+            <div className="bg-white/5 backdrop-blur-sm rounded-xl p-3 sm:p-4 border border-white/10 shadow-sm">
               <div className="flex items-center justify-between mb-2">
-                <span className="text-sm text-primary-300">Market Rank</span>
-                <TrendingUp className="w-5 h-5 text-purple-400" />
+                <span className="text-xs sm:text-sm text-primary-300">Market Rank</span>
+                <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5 text-purple-400" />
               </div>
-              <div className="text-3xl font-bold text-white">
+              <div className="text-2xl sm:text-3xl font-bold text-white">
                 #{performance.market_position || 'N/A'}
               </div>
-              <span className="text-sm text-primary-400">Among similar listings</span>
+              <span className="text-xs sm:text-sm text-primary-400">Among similar listings</span>
             </div>
             
             {/* Contact Rate */}
-            <div className="bg-white/5 backdrop-blur-sm rounded-xl p-4 border border-white/10 shadow-sm">
+            <div className="bg-white/5 backdrop-blur-sm rounded-xl p-3 sm:p-4 border border-white/10 shadow-sm">
               <div className="flex items-center justify-between mb-2">
-                <span className="text-sm text-primary-300">Contact Rate</span>
-                <Users className="w-5 h-5 text-orange-400" />
+                <span className="text-xs sm:text-sm text-primary-300">Contact Rate</span>
+                <Users className="w-4 h-4 sm:w-5 sm:h-5 text-orange-400" />
               </div>
-              <div className="text-3xl font-bold text-white">
+              <div className="text-2xl sm:text-3xl font-bold text-white">
                 {performance.view_to_contact_rate?.toFixed(1) || 0}%
               </div>
-              <span className="text-sm text-primary-400">View to contact</span>
+              <span className="text-xs sm:text-sm text-primary-400">View to contact</span>
             </div>
           </div>
         </CardContent>
@@ -353,12 +353,12 @@ export default function OptimizationDashboard({ propertyId }: OptimizationDashbo
       {/* Alert Summary */}
       {(criticalCount > 0 || highCount > 0) && (
         <Card className="bg-gradient-to-br from-orange-500/20 to-red-500/20 backdrop-blur-lg border border-orange-500/50 shadow-lg text-white">
-          <CardContent className="p-4">
-            <div className="flex items-start gap-3">
-              <AlertCircle className="w-6 h-6 text-orange-400 flex-shrink-0 mt-0.5" />
-              <div>
-                <h3 className="font-semibold text-white">Action Required</h3>
-                <p className="text-primary-200 text-sm">
+          <CardContent className="p-3 sm:p-4">
+            <div className="flex items-start gap-2 sm:gap-3">
+              <AlertCircle className="w-5 h-5 sm:w-6 sm:h-6 text-orange-400 flex-shrink-0 mt-0.5" />
+              <div className="flex-1 min-w-0">
+                <h3 className="text-sm sm:text-base font-semibold text-white">Action Required</h3>
+                <p className="text-xs sm:text-sm text-primary-200 mt-1">
                   {criticalCount > 0 && `${criticalCount} critical issues `}
                   {criticalCount > 0 && highCount > 0 && 'and '}
                   {highCount > 0 && `${highCount} high-priority improvements`} found
@@ -374,14 +374,14 @@ export default function OptimizationDashboard({ propertyId }: OptimizationDashbo
         {/* Shimmer Effect on Hover */}
         <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-in-out pointer-events-none" />
         
-        <CardHeader className="relative">
-          <CardTitle className="text-xl font-bold text-primary-200 flex items-center gap-2">
-            <Lightbulb className="w-6 h-6 text-primary-400" />
-            AI Recommendations ({suggestions.length})
+        <CardHeader className="relative p-4 sm:p-6">
+          <CardTitle className="text-lg sm:text-xl font-bold text-primary-200 flex items-center gap-2">
+            <Lightbulb className="w-5 h-5 sm:w-6 sm:h-6 text-primary-400" />
+            <span>AI Recommendations <span className="text-primary-300">({suggestions.length})</span></span>
           </CardTitle>
         </CardHeader>
         
-        <CardContent className="relative space-y-4">
+        <CardContent className="relative space-y-3 sm:space-y-4 p-4 sm:p-6 pt-0">
           <AnimatePresence>
             {suggestions.map((suggestion) => {
               const Icon = getCategoryIcon(suggestion.category);
@@ -400,45 +400,45 @@ export default function OptimizationDashboard({ propertyId }: OptimizationDashbo
                   )}
                 >
                   <div
-                    className="p-4 cursor-pointer"
+                    className="p-3 sm:p-4 cursor-pointer min-h-[44px]"
                     onClick={() => setSelectedSuggestion(isExpanded ? null : suggestion.id)}
                   >
-                    <div className="flex items-start gap-4">
+                    <div className="flex items-start gap-3 sm:gap-4">
                       <div className={clsx(
-                        "p-3 rounded-xl bg-gradient-to-br border border-white/20",
+                        "p-2 sm:p-3 rounded-xl bg-gradient-to-br border border-white/20 flex-shrink-0",
                         getPriorityColor(suggestion.priority)
                       )}>
-                        <Icon className="w-6 h-6 text-white" />
+                        <Icon className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
                       </div>
                       
-                      <div className="flex-1">
-                        <div className="flex items-start justify-between gap-4 mb-2">
-                          <div>
-                            <div className="flex items-center gap-2 mb-1">
-                              <h4 className="font-semibold text-white">{suggestion.title}</h4>
-                              <Badge className={getPriorityBadgeColor(suggestion.priority)}>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 sm:gap-4 mb-2">
+                          <div className="flex-1 min-w-0">
+                            <div className="flex flex-wrap items-center gap-2 mb-1">
+                              <h4 className="text-sm sm:text-base font-semibold text-white break-words">{suggestion.title}</h4>
+                              <Badge className={clsx(getPriorityBadgeColor(suggestion.priority), "text-xs")}>
                                 {suggestion.priority}
                               </Badge>
                             </div>
-                            <p className="text-sm text-primary-200">{suggestion.description}</p>
+                            <p className="text-xs sm:text-sm text-primary-200 break-words">{suggestion.description}</p>
                           </div>
                           
-                          <div className="text-right">
-                            <div className="text-2xl font-bold text-primary-400">{suggestion.impact_score}</div>
+                          <div className="text-left sm:text-right flex-shrink-0">
+                            <div className="text-xl sm:text-2xl font-bold text-primary-400">{suggestion.impact_score}</div>
                             <div className="text-xs text-primary-300">Impact</div>
                           </div>
                         </div>
                         
-                        <div className="flex items-center gap-4 text-sm">
+                        <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-xs sm:text-sm">
                           {suggestion.estimated_view_increase_pct && (
                             <div className="flex items-center gap-1 text-green-400">
-                              <TrendingUp className="w-4 h-4" />
+                              <TrendingUp className="w-3 h-3 sm:w-4 sm:h-4" />
                               <span>+{suggestion.estimated_view_increase_pct}% views</span>
                             </div>
                           )}
                           {suggestion.estimated_lead_increase_pct && (
                             <div className="flex items-center gap-1 text-purple-400">
-                              <Users className="w-4 h-4" />
+                              <Users className="w-3 h-3 sm:w-4 sm:h-4" />
                               <span>+{suggestion.estimated_lead_increase_pct}% leads</span>
                             </div>
                           )}
@@ -455,17 +455,17 @@ export default function OptimizationDashboard({ propertyId }: OptimizationDashbo
                         exit={{ height: 0 }}
                         className="border-t border-white/10 bg-white/5 overflow-hidden"
                       >
-                        <div className="p-4 space-y-4">
+                        <div className="p-3 sm:p-4 space-y-3 sm:space-y-4">
                           <div>
-                            <h5 className="font-medium text-white mb-2">Action Steps:</h5>
+                            <h5 className="text-sm sm:text-base font-medium text-white mb-2">Action Steps:</h5>
                             <div className="space-y-2">
                               {suggestion.action_steps.map((step) => (
-                                <div key={step.step} className="flex items-start gap-3">
-                                  <div className="flex-shrink-0 w-6 h-6 rounded-full bg-primary-500/20 text-primary-300 flex items-center justify-center text-sm font-medium border border-primary-500/30">
+                                <div key={step.step} className="flex items-start gap-2 sm:gap-3">
+                                  <div className="flex-shrink-0 w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-primary-500/20 text-primary-300 flex items-center justify-center text-xs sm:text-sm font-medium border border-primary-500/30">
                                     {step.step}
                                   </div>
-                                  <div className="flex-1">
-                                    <p className="text-sm text-primary-200">{step.action}</p>
+                                  <div className="flex-1 min-w-0">
+                                    <p className="text-xs sm:text-sm text-primary-200 break-words">{step.action}</p>
                                     <Badge className={clsx(
                                       "text-xs mt-1",
                                       step.difficulty === 'easy' ? 'bg-green-500/20 text-green-400 border-green-500/30' :
@@ -481,13 +481,13 @@ export default function OptimizationDashboard({ propertyId }: OptimizationDashbo
                           </div>
                           
                           <Button
-                            onClick={(e) => {
+                            onClick={(e: React.MouseEvent) => {
                               e.stopPropagation();
                               implementSuggestion(suggestion.id);
                             }}
-                            className="w-full bg-primary-600 hover:bg-primary-700 text-white"
+                            className="w-full bg-primary-600 hover:bg-primary-700 text-white min-h-[44px] text-sm sm:text-base"
                           >
-                            <CheckCircle2 className="w-5 h-5 mr-2" />
+                            <CheckCircle2 className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
                             Mark as Implemented
                           </Button>
                         </div>
@@ -500,10 +500,10 @@ export default function OptimizationDashboard({ propertyId }: OptimizationDashbo
           </AnimatePresence>
           
           {suggestions.length === 0 && (
-            <div className="text-center py-12 bg-white/5 rounded-xl border-2 border-dashed border-white/10">
-              <CheckCircle2 className="w-16 h-16 text-green-400 mx-auto mb-4" />
-              <h3 className="text-xl font-semibold text-white mb-2">All Optimized!</h3>
-              <p className="text-primary-300">Your listing is performing well. Keep monitoring for new insights.</p>
+            <div className="text-center py-8 sm:py-12 bg-white/5 rounded-xl border-2 border-dashed border-white/10 px-4">
+              <CheckCircle2 className="w-12 h-12 sm:w-16 sm:h-16 text-green-400 mx-auto mb-3 sm:mb-4" />
+              <h3 className="text-lg sm:text-xl font-semibold text-white mb-2">All Optimized!</h3>
+              <p className="text-sm sm:text-base text-primary-300">Your listing is performing well. Keep monitoring for new insights.</p>
             </div>
           )}
         </CardContent>

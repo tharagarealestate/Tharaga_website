@@ -114,60 +114,60 @@ export function AutomationDashboard({ builderId }: AutomationDashboardProps) {
     <div className="space-y-6">
       {/* Stats Cards */}
       {stats && (
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-          <div className="p-6 rounded-3xl bg-white/10 backdrop-blur-xl border border-white/20">
-            <div className="text-3xl font-bold text-white">{stats.total}</div>
-            <div className="text-sm text-gray-400 mt-1">Total Automations</div>
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
+          <div className="p-4 sm:p-6 rounded-3xl bg-white/10 backdrop-blur-xl border border-white/20">
+            <div className="text-2xl sm:text-3xl font-bold text-white">{stats.total}</div>
+            <div className="text-xs sm:text-sm text-gray-400 mt-1">Total Automations</div>
           </div>
-          <div className="p-6 rounded-3xl bg-white/10 backdrop-blur-xl border border-white/20">
-            <div className="text-3xl font-bold text-emerald-400">{stats.active}</div>
-            <div className="text-sm text-gray-400 mt-1">Active</div>
+          <div className="p-4 sm:p-6 rounded-3xl bg-white/10 backdrop-blur-xl border border-white/20">
+            <div className="text-2xl sm:text-3xl font-bold text-emerald-400">{stats.active}</div>
+            <div className="text-xs sm:text-sm text-gray-400 mt-1">Active</div>
           </div>
-          <div className="p-6 rounded-3xl bg-white/10 backdrop-blur-xl border border-white/20">
-            <div className="text-3xl font-bold text-blue-400">{stats.today_executions}</div>
-            <div className="text-sm text-gray-400 mt-1">Today&apos;s Executions</div>
+          <div className="p-4 sm:p-6 rounded-3xl bg-white/10 backdrop-blur-xl border border-white/20">
+            <div className="text-2xl sm:text-3xl font-bold text-blue-400">{stats.today_executions}</div>
+            <div className="text-xs sm:text-sm text-gray-400 mt-1">Today&apos;s Executions</div>
           </div>
-          <div className="p-6 rounded-3xl bg-white/10 backdrop-blur-xl border border-white/20">
-            <div className="text-3xl font-bold text-gold-400">{successRate.toFixed(1)}%</div>
-            <div className="text-sm text-gray-400 mt-1">Success Rate</div>
+          <div className="p-4 sm:p-6 rounded-3xl bg-white/10 backdrop-blur-xl border border-white/20">
+            <div className="text-2xl sm:text-3xl font-bold text-gold-400">{successRate.toFixed(1)}%</div>
+            <div className="text-xs sm:text-sm text-gray-400 mt-1">Success Rate</div>
           </div>
-          <div className="p-6 rounded-3xl bg-white/10 backdrop-blur-xl border border-white/20">
-            <div className="text-3xl font-bold text-orange-400">{stats.pending_jobs}</div>
-            <div className="text-sm text-gray-400 mt-1">Pending Jobs</div>
+          <div className="p-4 sm:p-6 rounded-3xl bg-white/10 backdrop-blur-xl border border-white/20 col-span-2 sm:col-span-1">
+            <div className="text-2xl sm:text-3xl font-bold text-orange-400">{stats.pending_jobs}</div>
+            <div className="text-xs sm:text-sm text-gray-400 mt-1">Pending Jobs</div>
           </div>
         </div>
       )}
 
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold text-white">Automations</h1>
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0">
+        <h1 className="text-2xl sm:text-3xl font-bold text-white">Automations</h1>
         <button
           onClick={() => router.push(`/builder/automations/new?builder_id=${builderId}`)}
-          className="px-6 py-3 rounded-xl bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30 transition-all duration-200 flex items-center gap-2"
+          className="w-full sm:w-auto px-4 sm:px-6 py-2.5 sm:py-3 rounded-xl bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30 transition-all duration-200 flex items-center justify-center gap-2 min-h-[44px] text-sm sm:text-base"
         >
-          <Plus className="w-5 h-5" />
-          New Automation
+          <Plus className="w-4 h-4 sm:w-5 sm:h-5" />
+          <span>New Automation</span>
         </button>
       </div>
 
       {/* Filters */}
-      <div className="flex items-center gap-4">
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4">
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-gray-400" />
           <input
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search automations..."
-            className="w-full pl-10 pr-4 py-2 rounded-xl bg-white/10 backdrop-blur-sm border border-white/20 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
+            className="w-full pl-9 sm:pl-10 pr-4 py-2.5 sm:py-2 rounded-xl bg-white/10 backdrop-blur-sm border border-white/20 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 text-sm sm:text-base min-h-[44px]"
           />
         </div>
         <div className="flex items-center gap-2">
-          <Filter className="w-5 h-5 text-gray-400" />
+          <Filter className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400" />
           <select
             value={filter}
             onChange={(e) => setFilter(e.target.value as any)}
-            className="px-4 py-2 rounded-xl bg-white/10 backdrop-blur-sm border border-white/20 text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
+            className="px-3 sm:px-4 py-2.5 sm:py-2 rounded-xl bg-white/10 backdrop-blur-sm border border-white/20 text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50 text-sm sm:text-base min-h-[44px]"
           >
             <option value="all">All</option>
             <option value="active">Active</option>

@@ -132,37 +132,37 @@ function ExecutionRow({ execution, onViewDetails }: ExecutionRowProps) {
   return (
     <div className="group relative">
       <div className="relative rounded-3xl overflow-hidden transition-all duration-500 backdrop-blur-xl bg-white/10 border border-white/20 p-4 hover:bg-white/15 hover:border-white/30">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0">
           {/* Left Section - Workflow Info */}
-          <div className="flex items-center space-x-4 flex-1">
+          <div className="flex items-start sm:items-center space-x-3 sm:space-x-4 flex-1 min-w-0">
             {/* Status Badge */}
-            <div className={`${status.color} p-2 rounded-lg`}>
+            <div className={`${status.color} p-2 rounded-lg flex-shrink-0`}>
               <StatusIcon className="w-4 h-4 text-white" />
             </div>
             
             {/* Info */}
             <div className="flex-1 min-w-0">
-              <div className="flex items-center space-x-2 mb-1">
+              <div className="flex flex-wrap items-center gap-2 mb-1">
                 <h4 className="text-white font-semibold text-sm truncate">
                   {execution.workflow_template?.name || 'Unknown Workflow'}
                 </h4>
-                <Badge tone="default" className="bg-white/10 text-white border-white/20 text-xs">
+                <Badge tone="default" className="bg-white/10 text-white border-white/20 text-xs flex-shrink-0">
                   {execution.workflow_template?.trigger_type || 'manual'}
                 </Badge>
               </div>
               
-              <div className="flex items-center space-x-4 text-xs text-white/60">
+              <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4 text-xs text-white/60">
                 <span className="flex items-center">
                   <span className="font-medium text-white/80 mr-1">Lead:</span>
-                  {execution.lead?.name || 'Unknown'}
+                  <span className="truncate">{execution.lead?.name || 'Unknown'}</span>
                 </span>
                 <span className="flex items-center">
-                  <Clock className="w-3 h-3 mr-1" />
+                  <Clock className="w-3 h-3 mr-1 flex-shrink-0" />
                   {format(new Date(execution.triggered_at), 'MMM d, h:mm a')}
                 </span>
                 {execution.execution_time_ms && (
                   <span className="flex items-center">
-                    <TrendingUp className="w-3 h-3 mr-1" />
+                    <TrendingUp className="w-3 h-3 mr-1 flex-shrink-0" />
                     {execution.execution_time_ms}ms
                   </span>
                 )}
@@ -190,18 +190,18 @@ function ExecutionRow({ execution, onViewDetails }: ExecutionRowProps) {
           </div>
           
           {/* Right Section - Status & Actions */}
-          <div className="flex items-center space-x-3">
-            <Badge className={`${status.color} text-white border-none`}>
+          <div className="flex items-center space-x-2 sm:space-x-3 flex-shrink-0">
+            <Badge className={`${status.color} text-white border-none text-xs sm:text-sm`}>
               {status.label}
             </Badge>
             <Button
               onClick={() => onViewDetails(execution.id)}
               size="sm"
               variant="invisible"
-              className="text-white/70 hover:text-white hover:bg-white/10"
+              className="text-white/70 hover:text-white hover:bg-white/10 min-h-[44px] text-xs sm:text-sm"
             >
-              <Eye className="w-4 h-4 mr-1" />
-              Details
+              <Eye className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
+              <span className="hidden sm:inline">Details</span>
             </Button>
           </div>
         </div>
@@ -415,7 +415,7 @@ export default function WorkflowMonitoring() {
           </div>
           
           {/* Stats Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6 sm:mb-8">
             <StatsCard
               title="Total Executions"
               value={stats.total_executions}
@@ -448,23 +448,23 @@ export default function WorkflowMonitoring() {
           </div>
           
           {/* Filters */}
-          <div className="relative rounded-3xl overflow-hidden transition-all duration-500 backdrop-blur-xl bg-white/10 border border-white/20 shadow-[0_8px_32px_0_rgba(31,38,135,0.15)] p-4">
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between space-y-3 md:space-y-0 md:space-x-4">
+          <div className="relative rounded-3xl overflow-hidden transition-all duration-500 backdrop-blur-xl bg-white/10 border border-white/20 shadow-[0_8px_32px_0_rgba(31,38,135,0.15)] p-3 sm:p-4">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-3 sm:space-y-0 sm:space-x-4">
               {/* Search */}
-              <div className="flex-1 max-w-md relative">
+              <div className="flex-1 w-full sm:max-w-md relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
                 <Input
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Search workflows or leads..."
-                  className="bg-white/5 border-white/20 text-white pl-10"
+                  className="bg-white/5 border-white/20 text-white pl-10 text-sm sm:text-base min-h-[44px]"
                 />
               </div>
               
               {/* Status Filter */}
               <div className="flex items-center space-x-3">
-                <Filter className="w-4 h-4 text-white/60" />
-                <Select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="w-40 bg-white/5 border-white/20 text-white">
+                <Filter className="w-4 h-4 text-white/60 flex-shrink-0" />
+                <Select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="w-full sm:w-40 bg-white/5 border-white/20 text-white text-sm sm:text-base min-h-[44px]">
                   <option value="all">All Status</option>
                   <option value="pending">Pending</option>
                   <option value="running">Running</option>

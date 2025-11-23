@@ -916,6 +916,24 @@ except Exception as e:
     logger.warning(f"Webhook Manager routes not available: {e}")
     webhook_router = None
 
+# ===========================================
+# Seller Optimization Engine Service Endpoints
+# ===========================================
+
+try:
+    import sys
+    from pathlib import Path
+    backend_dir = Path(__file__).parent.parent
+    if str(backend_dir) not in sys.path:
+        sys.path.insert(0, str(backend_dir))
+    
+    from services.seller_optimizer_routes import router as seller_optimizer_router
+    app.include_router(seller_optimizer_router)
+    logger.info("Seller Optimization Engine routes included successfully")
+except Exception as e:
+    logger.warning(f"Seller Optimization Engine routes not available: {e}")
+    seller_optimizer_router = None
+
 # Note: Old data collection endpoints removed - replaced with Chennai Phase-1 features 
 if __name__ == "__main__":
     import uvicorn

@@ -331,37 +331,37 @@ DECLARE
   v_market_position INTEGER := 1;
   v_property RECORD;
 BEGIN
-  -- Get behavior tracking metrics
+  -- Get behavior tracking metrics from user_behavior table
   SELECT 
-    COUNT(DISTINCT CASE WHEN event_type = 'property_view' THEN id END)::INTEGER,
-    COUNT(DISTINCT CASE WHEN event_type = 'property_view' THEN user_id END)::INTEGER,
-    AVG(CASE WHEN event_type = 'property_view' THEN time_spent ELSE NULL END)::DECIMAL(10,2),
-    COUNT(DISTINCT CASE WHEN event_type = 'property_view' AND time_spent < 10 THEN id END)::DECIMAL(5,2) / 
-      NULLIF(COUNT(DISTINCT CASE WHEN event_type = 'property_view' THEN id END), 0) * 100,
-    COUNT(DISTINCT CASE WHEN event_type = 'save' THEN id END)::INTEGER,
-    COUNT(DISTINCT CASE WHEN event_type = 'share' THEN id END)::INTEGER,
-    COUNT(DISTINCT CASE WHEN event_type = 'property_view' AND created_at > NOW() - INTERVAL '7 days' THEN id END)::INTEGER,
-    COUNT(DISTINCT CASE WHEN event_type = 'property_view' AND created_at > NOW() - INTERVAL '30 days' THEN id END)::INTEGER
+    COUNT(DISTINCT CASE WHEN behavior_type = 'property_view' THEN id END)::INTEGER,
+    COUNT(DISTINCT CASE WHEN behavior_type = 'property_view' THEN user_id END)::INTEGER,
+    AVG(CASE WHEN behavior_type = 'property_view' THEN duration ELSE NULL END)::DECIMAL(10,2),
+    COUNT(DISTINCT CASE WHEN behavior_type = 'property_view' AND duration < 10 THEN id END)::DECIMAL(5,2) / 
+      NULLIF(COUNT(DISTINCT CASE WHEN behavior_type = 'property_view' THEN id END), 0) * 100,
+    COUNT(DISTINCT CASE WHEN behavior_type = 'saved_property' THEN id END)::INTEGER,
+    COUNT(DISTINCT CASE WHEN behavior_type = 'compared_properties' THEN id END)::INTEGER,
+    COUNT(DISTINCT CASE WHEN behavior_type = 'property_view' AND timestamp > NOW() - INTERVAL '7 days' THEN id END)::INTEGER,
+    COUNT(DISTINCT CASE WHEN behavior_type = 'property_view' AND timestamp > NOW() - INTERVAL '30 days' THEN id END)::INTEGER
   INTO 
     v_total_views, v_unique_viewers, v_avg_time, v_bounce_rate, 
     v_saves, v_shares, v_last_7_days, v_last_30_days
-  FROM behavior_tracking
+  FROM user_behavior
   WHERE property_id = p_property_id;
   
-  -- Get lead metrics
+  -- Get lead metrics (property_id is text in leads table, convert UUID to text for comparison)
   SELECT 
     COUNT(*)::INTEGER,
     COUNT(*) FILTER (WHERE smartscore_v2 >= 70)::INTEGER,
     COUNT(*) FILTER (WHERE smartscore_v2 >= 90)::INTEGER
   INTO v_leads, v_qualified_leads, v_hot_leads
   FROM leads
-  WHERE property_id = p_property_id;
+  WHERE property_id = p_property_id::text;
   
-  -- Get contact requests
+  -- Get contact requests (from leads that have this property_id)
   SELECT COUNT(*)::INTEGER INTO v_contact_requests
-  FROM lead_interactions
-  WHERE property_id = p_property_id
-  AND interaction_type IN ('call_request', 'email_sent', 'whatsapp_message');
+  FROM leads
+  WHERE property_id = p_property_id::text
+  AND status IN ('contacted', 'interested', 'qualified');
   
   -- Calculate conversion rates
   v_view_to_save := CASE 
@@ -449,18 +449,28 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-DROP TRIGGER IF EXISTS auto_update_performance_on_behavior ON behavior_tracking;
+DROP TRIGGER IF EXISTS auto_update_performance_on_behavior ON user_behavior;
 CREATE TRIGGER auto_update_performance_on_behavior
-AFTER INSERT OR UPDATE ON behavior_tracking
+AFTER INSERT OR UPDATE ON user_behavior
 FOR EACH ROW
+WHEN (NEW.property_id IS NOT NULL)
 EXECUTE FUNCTION trigger_update_listing_performance();
 
 -- Trigger to auto-update on new leads
 CREATE OR REPLACE FUNCTION trigger_update_performance_on_lead()
 RETURNS TRIGGER AS $$
+DECLARE
+  v_property_uuid UUID;
 BEGIN
   IF NEW.property_id IS NOT NULL THEN
-    PERFORM calculate_listing_performance(NEW.property_id);
+    -- property_id in leads is text, try to convert to UUID
+    BEGIN
+      v_property_uuid := NEW.property_id::uuid;
+      PERFORM calculate_listing_performance(v_property_uuid);
+    EXCEPTION WHEN OTHERS THEN
+      -- If conversion fails, skip (invalid UUID format)
+      NULL;
+    END;
   END IF;
   RETURN NEW;
 END;
@@ -516,10 +526,10 @@ USING (
 );
 
 -- Competitive Analysis
-ALTER TABLE public.competitive_analysis ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.competitive_analysis_new ENABLE ROW LEVEL SECURITY;
 
-DROP POLICY IF EXISTS "Builders can view their competitive analysis" ON public.competitive_analysis;
-CREATE POLICY "Builders can view their competitive analysis" ON public.competitive_analysis
+DROP POLICY IF EXISTS "Builders can view their competitive analysis" ON public.competitive_analysis_new;
+CREATE POLICY "Builders can view their competitive analysis" ON public.competitive_analysis_new
 FOR SELECT
 USING (
   EXISTS (

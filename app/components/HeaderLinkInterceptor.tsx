@@ -11,7 +11,7 @@ declare global {
 
 /**
  * Next.js Link Interceptor for Static Header
- * 
+ *
  * This client component intercepts clicks on header links and uses Next.js router
  * for client-side navigation, ensuring the header stays fixed while content loads.
  */
@@ -42,7 +42,7 @@ export function HeaderLinkInterceptor() {
           if (!href || href.startsWith('#') || href.startsWith('http')) return
 
           e.preventDefault()
-          
+
           // Use Next.js router for client-side navigation
           if (window.__nextRouter) {
             window.__nextRouter.push(href)

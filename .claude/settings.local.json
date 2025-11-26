@@ -30,7 +30,8 @@
       "Bash(rm:*)",
       "Bash(cp:*)",
       "Bash(git rebase:*)",
-      "Bash(git checkout:*)"
+      "Bash(git checkout:*)",
+      "Bash(git config:*)"
     ],
     "deny": [],
     "ask": []

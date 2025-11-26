@@ -528,7 +528,7 @@ function LegalDocs({ p }: { p: any }){
           <li>Legal disclaimer: See disclaimer below</li>
         </ul>
         <p className="text-xs text-gray-600 mt-2 italic">
-          These artifacts are automated snapshots for informational purposes only. 
+          These artifacts are automated snapshots for informational purposes only.
           For formal legal confirmation, consult a licensed property lawyer.
         </p>
       </div>

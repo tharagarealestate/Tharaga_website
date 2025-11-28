@@ -24,7 +24,6 @@ export default function RemoteManagementPage(){
     <main className="mx-auto max-w-4xl px-6 py-8">
       <Breadcrumb items={[
         { label: 'Home', href: '/' },
-        { label: 'Tools', href: '/tools' },
         { label: 'Remote Management' }
       ]} />
       <h1 className="text-2xl font-bold text-plum mb-4">Remote property management</h1>

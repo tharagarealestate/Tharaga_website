@@ -50,7 +50,6 @@ export default function TamilVoiceSearchPage(){
     <main className="mx-auto max-w-3xl px-6 py-8">
       <Breadcrumb items={[
         { label: 'Home', href: '/' },
-        { label: 'Tools', href: '/tools' },
         { label: 'Tamil Voice Search' }
       ]} />
       <h1 className="text-2xl font-bold text-fg mb-4">Tamil voice search</h1>

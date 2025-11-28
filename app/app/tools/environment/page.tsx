@@ -27,7 +27,6 @@ export default function EnvironmentIntelPage(){
     <main className="mx-auto max-w-3xl px-6 py-8">
       <Breadcrumb items={[
         { label: 'Home', href: '/' },
-        { label: 'Tools', href: '/tools' },
         { label: 'Environment Intelligence' }
       ]} />
       <h1 className="text-2xl font-bold text-plum mb-4">Environment intelligence</h1>

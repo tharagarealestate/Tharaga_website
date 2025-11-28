@@ -50,7 +50,6 @@ export default function VerificationTools(){
     <main className="mx-auto max-w-5xl px-6 py-8 space-y-6">
       <Breadcrumb items={[
         { label: 'Home', href: '/' },
-        { label: 'Tools', href: '/tools' },
         { label: 'Verification Tools' }
       ]} />
       <h1 className="text-2xl font-bold text-plum">Verification & risk tools</h1>

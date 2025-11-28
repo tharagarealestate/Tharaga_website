@@ -66,35 +66,16 @@ export default function Page() {
     )
   }
 
-  // Show login prompt if not authenticated (but don't redirect)
+  // Redirect to login if not authenticated
+  useEffect(() => {
+    if (!loading && !user) {
+      router.push('/login?next=/my-dashboard')
+    }
+  }, [loading, user, router])
+  
+  // Show nothing while redirecting
   if (!user) {
-    return (
-      <div className="min-h-screen bg-gradient-to-b from-[#0F172A] via-[#1E293B] to-[#0F172A]">
-        <DashboardHeader />
-        <div className="container mx-auto px-4 py-8 pt-20">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="max-w-2xl mx-auto mt-20"
-          >
-            <div className="glass-card p-8 text-center">
-              <h1 className="text-3xl md:text-4xl font-bold text-white mb-4">
-                Welcome to Your Dashboard
-              </h1>
-              <p className="text-gray-400 mb-6">
-                Please login to access your personalized property dashboard
-              </p>
-              <a
-                href="/login?next=/my-dashboard"
-                className="btn-gold inline-block"
-              >
-                Login to Continue
-              </a>
-            </div>
-          </motion.div>
-        </div>
-      </div>
-    )
+    return null
   }
 
   return (

@@ -39,22 +39,19 @@ export default function Breadcrumb({ items }: BreadcrumbProps) {
               <Link
                 href={item.href}
                 style={{
-                  color: '#3b82f6',
+                  color: '#e5e7eb',
                   textDecoration: 'none',
                   fontSize: '14px',
                   transition: 'all 0.2s ease',
                   fontWeight: 500,
-                  textShadow: '0 0 20px rgba(59, 130, 246, 0.3)',
                   cursor: 'pointer',
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.color = '#2563eb'
-                  e.currentTarget.style.textShadow = '0 0 25px rgba(37, 99, 235, 0.5)'
+                  e.currentTarget.style.color = '#ffffff'
                   e.currentTarget.style.textDecoration = 'underline'
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.color = '#3b82f6'
-                  e.currentTarget.style.textShadow = '0 0 20px rgba(59, 130, 246, 0.3)'
+                  e.currentTarget.style.color = '#e5e7eb'
                   e.currentTarget.style.textDecoration = 'none'
                 }}
               >
@@ -65,7 +62,6 @@ export default function Breadcrumb({ items }: BreadcrumbProps) {
                 color: '#e5e7eb',
                 fontWeight: 600,
                 fontSize: '14px',
-                textShadow: 'none',
                 opacity: 0.9,
               }}>
                 {item.label}

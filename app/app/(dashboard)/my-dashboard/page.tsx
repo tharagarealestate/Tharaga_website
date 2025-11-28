@@ -152,5 +152,5 @@ export default function Page() {
         }
       `}</style>
     </div>
-  )
+  );
 }

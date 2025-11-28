@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from 'react'
+import Breadcrumb from '@/components/Breadcrumb'
 
 function fmtINR(n: number){
   return new Intl.NumberFormat('en-IN', { style:'currency', currency:'INR', maximumFractionDigits:0 }).format(n)
@@ -29,8 +30,14 @@ export default function RoiPage(){
   const roi = Math.round(((totalInflow - totalOutflow) / totalOutflow) * 100)
 
   return (
-    <main className="mx-auto max-w-3xl px-6 py-8">
-      <h1 className="text-2xl font-bold text-plum mb-4">Investment ROI calculator</h1>
+    <>
+      <Breadcrumb items={[
+        { label: 'Home', href: '/' },
+        { label: 'Tools', href: '/tools' },
+        { label: 'ROI Calculator' }
+      ]} />
+      <main className="mx-auto max-w-3xl px-6 py-8">
+        <h1 className="text-2xl font-bold text-plum mb-4">Investment ROI calculator</h1>
       <div className="rounded-xl border border-plum/10 bg-brandWhite p-4 space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <label className="text-sm">Price <input type="number" className="w-full rounded-lg border px-3 py-2" value={price} onChange={(e)=>setPrice(Number(e.target.value||0))} /></label>
@@ -56,7 +63,8 @@ export default function RoiPage(){
           <a className="rounded-lg border px-3 py-2" href="/tools/currency-risk">Assess FX impact</a>
         </div>
       </div>
-    </main>
+      </main>
+    </>
   )
 }
 

@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from 'react'
+import Breadcrumb from '@/components/Breadcrumb'
 import { useTranslations } from 'next-intl'
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
@@ -48,8 +49,14 @@ export default function VastuPage() {
   const level = score >= 80 ? t('levels.excellent') : score >= 60 ? t('levels.good') : score >= 40 ? t('levels.average') : t('levels.poor')
 
   return (
-    <main className="mx-auto max-w-3xl px-6 py-8">
-      <h1 className="text-2xl font-bold text-plum mb-4">{t('title')}</h1>
+    <>
+      <Breadcrumb items={[
+        { label: 'Home', href: '/' },
+        { label: 'Tools', href: '/tools' },
+        { label: 'Vastu Checker' }
+      ]} />
+      <main className="mx-auto max-w-3xl px-6 py-8">
+        <h1 className="text-2xl font-bold text-plum mb-4">{t('title')}</h1>
       <div className="rounded-xl border border-plum/10 bg-brandWhite p-4 space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <Field label={t('fields.entrance')}>
@@ -92,6 +99,7 @@ export default function VastuPage() {
           </div>
         )}
       </div>
-    </main>
+      </main>
+    </>
   )
 }

@@ -2,6 +2,7 @@
 
 import * as React from 'react'
 import Image from 'next/image'
+import Breadcrumb from '@/components/Breadcrumb'
 import { listSaved, removeItem } from '@/lib/saved'
 
 export default function SavedPage(){
@@ -11,8 +12,13 @@ export default function SavedPage(){
     setRows(listSaved())
   }
   return (
-    <main className="mx-auto max-w-5xl px-6 py-8">
-      <h1 className="text-2xl font-bold text-plum mb-4">Saved properties</h1>
+    <>
+      <Breadcrumb items={[
+        { label: 'Home', href: '/' },
+        { label: 'Saved Properties' }
+      ]} />
+      <main className="mx-auto max-w-5xl px-6 py-8">
+        <h1 className="text-2xl font-bold text-plum mb-4">Saved properties</h1>
       {rows.length === 0 ? (
         <div className="rounded-xl border border-plum/10 bg-brandWhite p-4">Nothing saved yet. Tap “Save” on recommendations or listings.</div>
       ) : (
@@ -38,6 +44,7 @@ export default function SavedPage(){
           ))}
         </div>
       )}
-    </main>
+      </main>
+    </>
   )
 }

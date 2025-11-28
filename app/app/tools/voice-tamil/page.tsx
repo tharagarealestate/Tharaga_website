@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from 'react'
+import Breadcrumb from '@/components/Breadcrumb'
 import { matchChennaiLocality, getCanonicalLocality } from '@/lib/tamil-locality-matcher'
 
 const SR = typeof window !== 'undefined' ? (window as any).webkitSpeechRecognition || (window as any).SpeechRecognition : undefined
@@ -39,15 +40,21 @@ export default function TamilVoiceSearchPage(){
   }
 
   const canonicalLocality = text ? getCanonicalLocality(text) : null
-  const searchUrl = canonicalLocality 
+  const searchUrl = canonicalLocality
     ? `/property-listing/?q=${encodeURIComponent(canonicalLocality)}&locality=${encodeURIComponent(canonicalLocality)}`
-    : text 
-      ? `/property-listing/?q=${encodeURIComponent(text)}` 
+    : text
+      ? `/property-listing/?q=${encodeURIComponent(text)}`
       : '/property-listing/'
 
   return (
-    <main className="mx-auto max-w-3xl px-6 py-8">
-      <h1 className="text-2xl font-bold text-fg mb-4">Tamil voice search</h1>
+    <>
+      <Breadcrumb items={[
+        { label: 'Home', href: '/' },
+        { label: 'Tools', href: '/tools' },
+        { label: 'Tamil Voice Search' }
+      ]} />
+      <main className="mx-auto max-w-3xl px-6 py-8">
+        <h1 className="text-2xl font-bold text-fg mb-4">Tamil voice search</h1>
       <div className="rounded-xl border border-border bg-canvas p-4 space-y-4">
         {!supported && <div className="text-sm text-fgMuted">Voice recognition is not supported in this browser.</div>}
         <div className="flex gap-3 items-center">
@@ -90,6 +97,7 @@ export default function TamilVoiceSearchPage(){
         
         <p className="text-xs text-fgMuted">Tamil-first voice search (Chennai). We set recognition language to ta-IN. You can refine the query after transcription.</p>
       </div>
-    </main>
+      </main>
+    </>
   )
 }

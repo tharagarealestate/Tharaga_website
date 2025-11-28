@@ -3,6 +3,7 @@ import { Metadata, ResolvingMetadata } from 'next'
 import { notFound } from 'next/navigation'
 import { Suspense } from 'react'
 import { MapPin, Bed, Maximize, Car, Building2, Compass, Calendar, Star, ShieldCheck } from 'lucide-react'
+import Breadcrumb from '@/components/Breadcrumb'
 import ClientGallery from '@/components/property/ClientGallery'
 import ClientEMICalculator from '@/components/property/ClientEMICalculator'
 import ClientExpandableText from '@/components/property/ClientExpandableText'
@@ -289,6 +290,11 @@ export default async function PropertyPage({ params }: { params: { id: string } 
 
   return (
     <div className="min-h-screen">
+      <Breadcrumb items={[
+        { label: 'Home', href: '/' },
+        { label: 'Properties', href: '/property-listing' },
+        { label: p.title || 'Property Details' }
+      ]} />
       <section className="w-full">
         <ClientGallery images={p.images} tourUrl={p.tourUrl} brochureUrl={p.brochureUrl} propertyId={p.id} />
       </section>

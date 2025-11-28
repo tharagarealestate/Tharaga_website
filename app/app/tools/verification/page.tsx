@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from 'react'
+import Breadcrumb from '@/components/Breadcrumb'
 import { verifyRera, verifyTitle, getFraudScore, getPredictiveAnalytics } from '@/lib/api'
 
 function Section({ title, children }: { title: string; children: React.ReactNode }){
@@ -46,8 +47,14 @@ export default function VerificationTools(){
   const onPredict = async ()=> setPred(await getPredictiveAnalytics({ city, locality, sqft, price_inr: price }))
 
   return (
-    <main className="mx-auto max-w-5xl px-6 py-8 space-y-6">
-      <h1 className="text-2xl font-bold text-plum">Verification & risk tools</h1>
+    <>
+      <Breadcrumb items={[
+        { label: 'Home', href: '/' },
+        { label: 'Tools', href: '/tools' },
+        { label: 'Verification Tools' }
+      ]} />
+      <main className="mx-auto max-w-5xl px-6 py-8 space-y-6">
+        <h1 className="text-2xl font-bold text-plum">Verification & risk tools</h1>
 
       <Section title="RERA verification">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
@@ -119,6 +126,7 @@ export default function VerificationTools(){
           </div>
         )}
       </Section>
-    </main>
+      </main>
+    </>
   )
 }

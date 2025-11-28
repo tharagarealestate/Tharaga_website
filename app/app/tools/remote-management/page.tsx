@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from 'react'
+import Breadcrumb from '@/components/Breadcrumb'
 
 function Card({ title, children, action }: { title: string; children: React.ReactNode; action?: React.ReactNode }){
   return (
@@ -20,8 +21,14 @@ export default function RemoteManagementPage(){
   const [notes, setNotes] = React.useState('')
 
   return (
-    <main className="mx-auto max-w-4xl px-6 py-8">
-      <h1 className="text-2xl font-bold text-plum mb-4">Remote property management</h1>
+    <>
+      <Breadcrumb items={[
+        { label: 'Home', href: '/' },
+        { label: 'Tools', href: '/tools' },
+        { label: 'Remote Management' }
+      ]} />
+      <main className="mx-auto max-w-4xl px-6 py-8">
+        <h1 className="text-2xl font-bold text-plum mb-4">Remote property management</h1>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <Card title="Schedule caretaker visit" action={<button className="rounded-lg border px-3 py-1 text-sm">Book</button>}>
           <div className="grid grid-cols-1 gap-2">
@@ -44,6 +51,7 @@ export default function RemoteManagementPage(){
           <div className="text-sm text-plum/70">Keep tenant details, reminders for rent and renewals.</div>
         </Card>
       </div>
-    </main>
+      </main>
+    </>
   )
 }

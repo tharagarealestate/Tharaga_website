@@ -3,6 +3,7 @@
 import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { getSupabase } from '@/lib/supabase';
+import Breadcrumb from '@/components/Breadcrumb';
 import PropertyListingSidebar from './components/PropertyListingSidebar';
 import PropertyListingContent from './components/PropertyListingContent';
 import MobileFilterModal from './components/MobileFilterModal';
@@ -331,19 +332,11 @@ function PropertyListingPageContent() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header - Buy/Rent/Commercial Tabs */}
-      <div className="bg-white border-b sticky top-0 z-40">
-        <div className="max-w-[1920px] mx-auto px-4 py-3">
-          <div className="flex items-center gap-6">
-            <h1 className="text-xl font-bold">Tharaga</h1>
-            <div className="flex gap-2">
-              <button className="px-4 py-2 rounded-lg bg-indigo-600 text-white">Buy</button>
-              <button className="px-4 py-2 rounded-lg hover:bg-gray-100">Rent</button>
-              <button className="px-4 py-2 rounded-lg hover:bg-gray-100">Commercial</button>
-            </div>
-          </div>
-        </div>
-      </div>
+      {/* Breadcrumb Navigation */}
+      <Breadcrumb items={[
+        { label: 'Home', href: '/' },
+        { label: 'Property Listing' }
+      ]} />
 
       {/* Main Layout: Sidebar + Content */}
       <div className="max-w-[1920px] mx-auto">

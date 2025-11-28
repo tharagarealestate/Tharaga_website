@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from 'react'
+import Breadcrumb from '@/components/Breadcrumb'
 import { useTranslations } from 'next-intl'
 
 const FX: Record<string, number> = { USD: 0.012, AED: 0.044, GBP: 0.0095, EUR: 0.011 }
@@ -51,8 +52,14 @@ export default function CurrencyRiskPage() {
   const sim = simulateVaR()
 
   return (
-    <main className="mx-auto max-w-3xl px-6 py-8">
-      <h1 className="text-2xl font-bold text-plum mb-4">{t('title')}</h1>
+    <>
+      <Breadcrumb items={[
+        { label: 'Home', href: '/' },
+        { label: 'Tools', href: '/tools' },
+        { label: 'Currency Risk' }
+      ]} />
+      <main className="mx-auto max-w-3xl px-6 py-8">
+        <h1 className="text-2xl font-bold text-plum mb-4">{t('title')}</h1>
       <div className="rounded-xl border border-plum/10 bg-brandWhite p-4 space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
@@ -92,7 +99,8 @@ export default function CurrencyRiskPage() {
         </div>
         <p className="text-xs text-plum/60">{t('disclaimer')}</p>
       </div>
-    </main>
+      </main>
+    </>
   )
 }
 

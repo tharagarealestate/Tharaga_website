@@ -13,10 +13,6 @@ export default function PricingPage() {
 
   return (
     <div className='min-h-screen bg-gradient-to-br from-primary-950 via-primary-900 to-primary-800 relative overflow-hidden'>
-      <Breadcrumb items={[
-        { label: 'Home', href: '/' },
-        { label: 'Pricing' }
-      ]} />
       {/* Animated Background Elements */}
       <div className='absolute inset-0 opacity-30'>
         <div className='absolute top-20 left-10 w-96 h-96 bg-gold-500 rounded-full blur-3xl animate-pulse-slow' />
@@ -27,8 +23,12 @@ export default function PricingPage() {
       </div>
 
       <div className='relative z-10'>
+        <Breadcrumb items={[
+          { label: 'Home', href: '/' },
+          { label: 'Pricing' }
+        ]} />
         {/* Hero Section */}
-        <section className='container mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-16'>
+        <section className='container mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-16'>
           <div className='text-center max-w-4xl mx-auto'>
             {/* Badge */}
             <div className='inline-flex items-center gap-2 px-4 py-2 bg-gold-500/20 backdrop-blur-sm border border-gold-500/30 rounded-full mb-6'>

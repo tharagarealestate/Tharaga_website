@@ -11,9 +11,9 @@ interface BreadcrumbProps {
 
 export default function Breadcrumb({ items }: BreadcrumbProps) {
   return (
-    <nav aria-label="Breadcrumb" style={{
+    <nav aria-label="Breadcrumb" className="container mx-auto px-4 sm:px-6 lg:px-8" style={{
       marginBottom: '24px',
-      paddingLeft: '4px',
+      paddingTop: '20px',
     }}>
       <ol style={{
         display: 'flex',
@@ -23,6 +23,7 @@ export default function Breadcrumb({ items }: BreadcrumbProps) {
         margin: 0,
         padding: 0,
         flexWrap: 'wrap',
+        maxWidth: '1280px',
       }}>
         {items.map((item, index) => (
           <li key={index} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
@@ -44,6 +45,7 @@ export default function Breadcrumb({ items }: BreadcrumbProps) {
                   transition: 'all 0.2s ease',
                   fontWeight: 500,
                   textShadow: '0 0 20px rgba(59, 130, 246, 0.3)',
+                  cursor: 'pointer',
                 }}
                 onMouseEnter={(e) => {
                   e.currentTarget.style.color = '#2563eb'

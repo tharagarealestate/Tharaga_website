@@ -1,343 +1,265 @@
-import { Metadata } from 'next'
+'use client'
+
 import Breadcrumb from '@/components/Breadcrumb'
-
-export const runtime = 'edge'
-
-export const metadata: Metadata = {
-  title: 'About Tharaga — AI‑Powered, Broker‑Free Real Estate',
-  description: 'Building the future of Tamil Nadu real estate—AI‑powered, transparent, and broker‑free.',
-}
+import { Check, Building2, Users, Shield, FileText, MessageSquare, BarChart3, Zap } from 'lucide-react'
 
 export default function AboutPage() {
   return (
-    <>
-      <Breadcrumb items={[
-        { label: 'Home', href: '/' },
-        { label: 'About' }
-      ]} />
-      <style dangerouslySetInnerHTML={{
-        __html: `
-          .about-container {
-            width: 100%;
-            max-width: 1180px;
-            margin: 0 auto;
-            padding: 24px;
-          }
-          .about-hero {
-            position: relative;
-            overflow: hidden;
-            isolation: isolate;
-            border-radius: 18px;
-            background: linear-gradient(180deg,#fff 0%,#fff9f7 100%);
-            box-shadow: 0 10px 35px rgba(110,13,37,.12);
-          }
-          .about-hero::after {
-            content: "";
-            position: absolute;
-            right: -120px;
-            top: -140px;
-            width: 340px;
-            height: 340px;
-            border-radius: 50%;
-            opacity: 0.24;
-            z-index: 0;
-            transform: translateZ(0);
-            background: radial-gradient(closest-side, rgba(110,13,37,.35), transparent 75%);
-          }
-          .about-hero::before {
-            content: "";
-            position: absolute;
-            inset: -1px;
-            z-index: 0;
-            pointer-events: none;
-            opacity: 0.45;
-            background:
-              radial-gradient(circle at 1px 1px, rgba(110,13,37,.12) 1px, transparent 1px) 0 0/22px 22px,
-              linear-gradient(180deg, rgba(110,13,37,.04), rgba(110,13,37,.02) 60%, transparent);
-            mask: linear-gradient(180deg, rgba(0,0,0,.9), rgba(0,0,0,.65) 55%, rgba(0,0,0,.15));
-          }
-          .about-hero__inner {
-            position: relative;
-            padding: 56px 28px 32px;
-          }
-          .about-eyebrow {
-            position: relative;
-            z-index: 1;
-            display: inline-block;
-            font-weight: 800;
-            letter-spacing: .09em;
-            text-transform: uppercase;
-            color: #6e0d25;
-            background: rgba(110,13,37,.08);
-            border: 1px solid rgba(110,13,37,.18);
-            padding: 6px 10px;
-            border-radius: 999px;
-            margin-bottom: 14px;
-          }
-          .about-hero h1 {
-            position: relative;
-            z-index: 1;
-            margin: 0 0 12px;
-            font-size: clamp(28px,4.2vw,46px);
-            line-height: 1.1;
-            font-weight: 800;
-          }
-          .about-sub {
-            position: relative;
-            z-index: 1;
-            margin: 0 0 16px;
-            color: #5b5f6a;
-            font-weight: 700;
-          }
-          .about-sub-tamil {
-            position: relative;
-            z-index: 1;
-            margin: 4px 0 12px;
-            color: #7a7f8a;
-            font-size: .98rem;
-            font-weight: 600;
-          }
-          .about-lead {
-            position: relative;
-            z-index: 1;
-            margin: 18px 0 20px;
-            font-size: clamp(14.5px,1.5vw,17px);
-            line-height: 1.7;
-            max-width: 900px;
-          }
-          .about-cta-row {
-            position: relative;
-            z-index: 1;
-            display: flex;
-            flex-wrap: wrap;
-            gap: 12px;
-            margin: 10px 0 12px;
-          }
-          .about-btn {
-            display: inline-flex;
-            align-items: center;
-            gap: 10px;
-            cursor: pointer;
-            border-radius: 12px;
-            padding: 12px 18px;
-            font-weight: 900;
-            letter-spacing: .01em;
-            transition: box-shadow .15s ease, transform .15s ease, filter .15s ease;
-            text-decoration: none;
-            user-select: none;
-          }
-          .about-btn-primary {
-            background: #6e0d25;
-            color: #fff;
-            border: 2px solid #6e0d25;
-          }
-          .about-btn-primary:hover {
-            filter: brightness(1.04);
-          }
-          .about-btn-secondary {
-            background: #fff;
-            color: #6e0d25;
-            border: 2px solid #6e0d25;
-          }
-          .about-btn-secondary:hover {
-            background: #fff6f6;
-          }
-          .about-proof {
-            position: relative;
-            z-index: 1;
-            display: flex;
-            flex-wrap: wrap;
-            gap: 14px;
-            margin: 14px 0 6px;
-          }
-          .about-proof__item {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            color: #0b5e43;
-            background: #e9fbf3;
-            border: 1px solid #d3f7e7;
-            border-radius: 999px;
-            padding: 7px 12px;
-            font-weight: 700;
-          }
-          .about-grid {
-            position: relative;
-            z-index: 1;
-            display: grid;
-            grid-template-columns: minmax(0,1.2fr) minmax(0,.8fr);
-            gap: 22px;
-            margin-top: 24px;
-            align-items: start;
-          }
-          .about-card {
-            position: relative;
-            background: #ffffff;
-            border: 1px solid #efe1e1;
-            border-radius: 16px;
-            padding: 18px 16px;
-            box-shadow: 0 6px 22px rgba(110,13,37,.09);
-          }
-          .about-card h3 {
-            margin: 0 0 8px;
-            font-size: 18px;
-          }
-          .about-quote {
-            margin: 0;
-            color: #3f3f46;
-            font-style: italic;
-          }
-          .about-muted {
-            color: #5b5f6a;
-          }
-          .about-roadmap {
-            display: flex;
-            gap: 12px;
-            overflow: auto;
-            padding: 10px 2px 2px;
-            margin-top: 14px;
-            scrollbar-width: thin;
-          }
-          .about-rm-step {
-            min-width: 220px;
-            background: linear-gradient(180deg,#fff,#fff7f5);
-            border: 1.5px solid #efe1e1;
-            border-radius: 14px;
-            padding: 12px 14px;
-          }
-          .about-rm-step b {
-            display: block;
-            font-size: 12px;
-            color: #6e0d25;
-            letter-spacing: .06em;
-            text-transform: uppercase;
-            margin-bottom: 6px;
-          }
-          .about-diff {
-            display: grid;
-            gap: 12px;
-          }
-          .about-chip {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 12px;
-            border: 1px dashed rgba(110,13,37,.3);
-            border-radius: 12px;
-            background: #fff;
-          }
-          .about-chip b {
-            font-weight: 900;
-          }
+    <div className='min-h-screen bg-gradient-to-br from-primary-950 via-primary-900 to-primary-800 relative overflow-hidden'>
+      {/* Animated Background Elements */}
+      <div className='absolute inset-0 opacity-30'>
+        <div className='absolute top-20 left-10 w-96 h-96 bg-gold-500 rounded-full blur-3xl animate-pulse-slow' />
+        <div
+          className='absolute bottom-20 right-10 w-[600px] h-[600px] bg-emerald-500 rounded-full blur-3xl animate-pulse-slow'
+          style={{ animationDelay: '1s' }}
+        />
+      </div>
 
-          @media (max-width: 980px) {
-            .about-grid {
-              grid-template-columns: minmax(0, 1fr);
-            }
-          }
-          @media (max-width: 560px) {
-            .about-hero__inner {
-              padding: 28px 16px;
-            }
-            .about-cta-row {
-              gap: 10px;
-            }
-            .about-proof {
-              gap: 10px;
-            }
-            .about-rm-step {
-              min-width: 200px;
-            }
-          }
-        `
-      }} />
+      <div className='relative z-10'>
+        <Breadcrumb items={[
+          { label: 'Home', href: '/' },
+          { label: 'About' }
+        ]} />
 
-      <main className="about-container">
-        <section className="about-hero" aria-labelledby="about-hero-title">
-          <div className="about-hero__inner">
-            <span className="about-eyebrow">
-              Tamil Nadu • Broker‑Free • AI‑Powered
-            </span>
+        {/* Hero Section */}
+        <section className='container mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-16'>
+          <div className='text-center max-w-4xl mx-auto'>
+            {/* Badge */}
+            <div className='inline-flex items-center gap-2 px-4 py-2 bg-gold-500/20 backdrop-blur-sm border border-gold-500/30 rounded-full mb-6'>
+              <span className='w-2 h-2 bg-gold-500 rounded-full animate-pulse' />
+              <span className='text-gold-300 text-sm font-medium'>
+                Tamil Nadu • Broker-Free • AI-Powered
+              </span>
+            </div>
 
-            <h1 id="about-hero-title">
-              Building the future of Tamil Nadu real estate—AI‑powered, transparent, and broker‑free.
+            {/* Headline */}
+            <h1 className='font-display text-5xl sm:text-6xl lg:text-7xl font-bold text-white mb-6'>
+              The Operating System for
+              <span className='text-gradient-gold block mt-2'>Tamil Nadu Real Estate</span>
             </h1>
 
-            <p className="about-sub">
-              Verified buyers. Verified builders. No noise.
+            {/* Subheadline */}
+            <p className='text-xl sm:text-2xl text-gray-300 leading-relaxed mb-8'>
+              Tharaga is a broker-free real estate platform that behaves like an operations layer for builders
+              <br className='hidden sm:block' />
+              and an assurance layer for buyers—not just a CRM or listing site.
             </p>
+          </div>
+        </section>
 
-            <p className="about-sub-tamil" lang="ta">
-              உண்மையான வீடு தேடுபவர்களையும், சரிபார்க்கப்பட்ட பில்டர்களையும் நேரடியாக இணைக்கும் — இடைத்தரகர் இல்லாத, தாரகாவின் நேர்மையான அனுபவம்.
-            </p>
+        {/* For Builders Section */}
+        <section className='container mx-auto px-4 sm:px-6 lg:px-8 pb-24'>
+          <div className='max-w-7xl mx-auto'>
+            <div className='text-center mb-12'>
+              <h2 className='font-display text-4xl sm:text-5xl font-bold text-white mb-4'>
+                For Builders: From Leads to Closings
+              </h2>
+              <p className='text-xl text-gray-300 max-w-3xl mx-auto'>
+                Tharaga plugs directly into a builder&apos;s day-to-day work
+              </p>
+            </div>
 
-            <p className="about-lead">
-              <strong>Tharaga</strong> exists because families and builders kept getting lost in broker chains, fake listings, and wasted site visits. Instead of dumping generic leads, we use <strong>AI buyer–property matching</strong>, <strong>predictive demand signals</strong>, and <strong>smart lead scoring</strong> to connect <strong>verified home seekers</strong> with <strong>verified builders</strong>—fast. Every project gets cinematic storytelling (reels, walkthroughs), organized legal folders, and <strong>WhatsApp‑first automation</strong> so conversations don&apos;t slip. For builders, that means fewer calls, more conversions, and control via a clean dashboard. For buyers, it means clarity, trust, and zero noise. <strong>Our vision is generational:</strong> by <strong>2035</strong>, every family in Tamil Nadu should know Tharaga as the most trusted name in homes—not just a portal, but a promise.
-            </p>
-
-            <nav className="about-cta-row" aria-label="Primary actions">
-              <a className="about-btn about-btn-primary" href="https://docs.google.com/forms/d/e/1FAIpQLScVrrMf7voKVXGz9d2giOje_p-nyt9yEdxJgWkVc0Mc1-PN1Q/viewform?usp=sharing" rel="noopener" aria-label="List my project on Tharaga via secure form">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 16V4m0 0 4 4m-4-4-4 4M4 16v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                List My Project
-              </a>
-              <a className="about-btn about-btn-secondary" href="https://tharaga.co.in/verified-property-listings" rel="noopener" aria-label="Explore verified homes on Tharaga">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M21 21l-4.3-4.3M10.5 18a7.5 7.5 0 1 1 0-15 7.5 7.5 0 0 1 0 15Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                Explore Verified Homes
-              </a>
-            </nav>
-
-            <div className="about-proof" role="list" aria-label="Trust badges">
-              <div className="about-proof__item" role="listitem">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 13l4 4L19 7" stroke="#0f9d70" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                OTP‑verified leads only
+            <div className='grid lg:grid-cols-3 gap-8'>
+              {/* Card 1: Serious Buyers */}
+              <div className='relative group backdrop-blur-xl bg-white/10 border border-white/20 rounded-3xl overflow-hidden transition-all duration-500 hover:shadow-2xl hover:-translate-y-2'>
+                <div className='absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-in-out pointer-events-none' />
+                <div className='relative p-8'>
+                  <div className='w-14 h-14 rounded-2xl bg-gradient-to-br from-gold-500/20 to-emerald-500/20 border border-gold-500/30 flex items-center justify-center mb-6'>
+                    <Shield className='w-7 h-7 text-gold-400' />
+                  </div>
+                  <h3 className='text-2xl font-bold text-white mb-4'>Serious buyers only</h3>
+                  <p className='text-gray-300 leading-relaxed mb-6'>
+                    Every inquiry is OTP-verified and filtered by budget, location, and intent before it reaches the builder. No raw lead dumps.
+                  </p>
+                  <div className='flex items-center gap-2 text-emerald-400'>
+                    <Check className='w-5 h-5' />
+                    <span className='text-sm font-semibold'>Verified & Filtered</span>
+                  </div>
+                </div>
               </div>
-              <div className="about-proof__item" role="listitem">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 13l4 4L19 7" stroke="#0f9d70" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                No brokerage, no middlemen
+
+              {/* Card 2: Operational Workflows */}
+              <div className='relative group backdrop-blur-xl bg-white/10 border-2 border-gold-500/50 rounded-3xl overflow-hidden transition-all duration-500 hover:shadow-2xl hover:-translate-y-2 bg-gradient-to-br from-gold-500/20 to-emerald-500/20 shadow-2xl shadow-gold-500/30'>
+                <div className='absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-in-out pointer-events-none' />
+                <div className='relative p-8'>
+                  <div className='w-14 h-14 rounded-2xl bg-gradient-to-br from-gold-500/30 to-emerald-500/30 border-2 border-gold-500/50 flex items-center justify-center mb-6'>
+                    <BarChart3 className='w-7 h-7 text-gold-300' />
+                  </div>
+                  <div className='inline-flex items-center gap-2 px-3 py-1 bg-gradient-to-r from-gold-600 to-gold-500 text-primary-950 text-xs font-bold rounded-full shadow-gold mb-4'>
+                    <Zap className='w-3 h-3' />
+                    OPERATIONAL EXCELLENCE
+                  </div>
+                  <h3 className='text-2xl font-bold text-white mb-4'>Operational workflows, not spreadsheets</h3>
+                  <p className='text-gray-300 leading-relaxed mb-6'>
+                    Site visits, follow-ups, WhatsApp conversations, and document sharing all run through Tharaga so teams execute the same way, every time.
+                  </p>
+                  <div className='flex items-center gap-2 text-emerald-400'>
+                    <Check className='w-5 h-5' />
+                    <span className='text-sm font-semibold'>Standardized Processes</span>
+                  </div>
+                </div>
               </div>
-              <div className="about-proof__item" role="listitem">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 13l4 4L19 7" stroke="#0f9d70" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                AI‑matched inquiries
-              </div>
-              <div className="about-proof__item" role="listitem">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 13l4 4L19 7" stroke="#0f9d70" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                Tamil‑Nadu focused
+
+              {/* Card 3: Legal & Trust */}
+              <div className='relative group backdrop-blur-xl bg-white/10 border-2 border-emerald-500/30 rounded-3xl overflow-hidden transition-all duration-500 hover:shadow-2xl hover:-translate-y-2'>
+                <div className='absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-in-out pointer-events-none' />
+                <div className='relative p-8'>
+                  <div className='w-14 h-14 rounded-2xl bg-gradient-to-br from-emerald-500/20 to-emerald-500/30 border-2 border-emerald-500/30 flex items-center justify-center mb-6'>
+                    <FileText className='w-7 h-7 text-emerald-400' />
+                  </div>
+                  <h3 className='text-2xl font-bold text-white mb-4'>Legal and trust built-in</h3>
+                  <p className='text-gray-300 leading-relaxed mb-6'>
+                    Properties can be paired with lawyer-verified document sets and clear checklists, turning a chaotic handover into a repeatable process.
+                  </p>
+                  <div className='flex items-center gap-2 text-emerald-400'>
+                    <Check className='w-5 h-5' />
+                    <span className='text-sm font-semibold'>Lawyer-Verified</span>
+                  </div>
+                </div>
               </div>
             </div>
 
-            <div className="about-grid" aria-label="Founder note and differentiators">
-              <article className="about-card" aria-labelledby="founder-note-title">
-                <h3 id="founder-note-title">Why We Started Tharaga</h3>
-                <p className="about-quote">
-                  &quot;We built Tharaga because our own families struggled with noise and mistrust. Real estate should feel premium—and honest.&quot;
+            <div className='mt-12 max-w-4xl mx-auto'>
+              <div className='backdrop-blur-xl bg-white/10 border border-white/20 rounded-3xl p-8'>
+                <p className='text-lg text-gray-300 leading-relaxed text-center'>
+                  Instead of running 10 disconnected tools, a builder runs Tharaga as the single system that standardizes how projects are launched, marketed, and closed.
                 </p>
-                <p className="about-muted" style={{ marginTop: '8px' }}>Built by creators and operators—focused on clarity and conversion.</p>
-                <div className="about-roadmap" aria-label="Roadmap">
-                  <div className="about-rm-step"><b>2025</b> Statewide AI matching</div>
-                  <div className="about-rm-step"><b>2027</b> Predictive locality insights</div>
-                  <div className="about-rm-step"><b>2030</b> End‑to‑end digital closing</div>
-                  <div className="about-rm-step"><b>2035</b> Tharaga in every TN household</div>
-                </div>
-              </article>
-
-              <aside className="about-card about-diff" aria-label="Why we're different">
-                <div className="about-chip">
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 20V4m0 0 4 4m-4-4-4 4" stroke="#6e0d25" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                  <div><b>AI over Ads</b><br /><span className="about-muted">Matches that convert, not mass leads.</span></div>
-                </div>
-                <div className="about-chip">
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M3 12l2-2 4 4L21 4" stroke="#6e0d25" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                  <div><b>Storytelling that sells</b><br /><span className="about-muted">Cinematic reels + legal clarity.</span></div>
-                </div>
-                <div className="about-chip">
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 8v8m-4-4h8" stroke="#6e0d25" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                  <div><b>TN‑first, always</b><br /><span className="about-muted">Built for local realities & trust.</span></div>
-                </div>
-              </aside>
+              </div>
             </div>
           </div>
         </section>
-      </main>
-    </>
+
+        {/* For Buyers Section */}
+        <section className='container mx-auto px-4 sm:px-6 lg:px-8 pb-24'>
+          <div className='max-w-7xl mx-auto'>
+            <div className='text-center mb-12'>
+              <h2 className='font-display text-4xl sm:text-5xl font-bold text-white mb-4'>
+                For Buyers: Confidence Instead of Confusion
+              </h2>
+            </div>
+
+            <div className='grid lg:grid-cols-3 gap-8'>
+              {/* Card 1: Verified Projects */}
+              <div className='relative group backdrop-blur-xl bg-white/10 border border-white/20 rounded-3xl overflow-hidden transition-all duration-500 hover:shadow-2xl hover:-translate-y-2'>
+                <div className='absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-in-out pointer-events-none' />
+                <div className='relative p-8'>
+                  <div className='w-14 h-14 rounded-2xl bg-gradient-to-br from-gold-500/20 to-emerald-500/20 border border-gold-500/30 flex items-center justify-center mb-6'>
+                    <Shield className='w-7 h-7 text-gold-400' />
+                  </div>
+                  <h3 className='text-2xl font-bold text-white mb-4'>Verified projects and builders</h3>
+                  <p className='text-gray-300 leading-relaxed mb-6'>
+                    Profiles, documents, and project data are structured and surfaced so families can quickly understand where they&apos;re putting their life savings.
+                  </p>
+                  <div className='flex items-center gap-2 text-emerald-400'>
+                    <Check className='w-5 h-5' />
+                    <span className='text-sm font-semibold'>Transparent Data</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Card 2: Context Not Pressure */}
+              <div className='relative group backdrop-blur-xl bg-white/10 border-2 border-gold-500/50 rounded-3xl overflow-hidden transition-all duration-500 hover:shadow-2xl hover:-translate-y-2 bg-gradient-to-br from-gold-500/20 to-emerald-500/20 shadow-2xl shadow-gold-500/30'>
+                <div className='absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-in-out pointer-events-none' />
+                <div className='relative p-8'>
+                  <div className='w-14 h-14 rounded-2xl bg-gradient-to-br from-gold-500/30 to-emerald-500/30 border-2 border-gold-500/50 flex items-center justify-center mb-6'>
+                    <Users className='w-7 h-7 text-gold-300' />
+                  </div>
+                  <div className='inline-flex items-center gap-2 px-3 py-1 bg-gradient-to-r from-gold-600 to-gold-500 text-primary-950 text-xs font-bold rounded-full shadow-gold mb-4'>
+                    <Zap className='w-3 h-3' />
+                    BUYER FOCUSED
+                  </div>
+                  <h3 className='text-2xl font-bold text-white mb-4'>Context, not pressure</h3>
+                  <p className='text-gray-300 leading-relaxed mb-6'>
+                    Cinematic walkthroughs, locality insights, and finance helpers give buyers clarity before they ever speak to a sales person.
+                  </p>
+                  <div className='flex items-center gap-2 text-emerald-400'>
+                    <Check className='w-5 h-5' />
+                    <span className='text-sm font-semibold'>Informed Decisions</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Card 3: Direct Conversations */}
+              <div className='relative group backdrop-blur-xl bg-white/10 border-2 border-emerald-500/30 rounded-3xl overflow-hidden transition-all duration-500 hover:shadow-2xl hover:-translate-y-2'>
+                <div className='absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-in-out pointer-events-none' />
+                <div className='relative p-8'>
+                  <div className='w-14 h-14 rounded-2xl bg-gradient-to-br from-emerald-500/20 to-emerald-500/30 border-2 border-emerald-500/30 flex items-center justify-center mb-6'>
+                    <MessageSquare className='w-7 h-7 text-emerald-400' />
+                  </div>
+                  <h3 className='text-2xl font-bold text-white mb-4'>Direct, traceable conversations</h3>
+                  <p className='text-gray-300 leading-relaxed mb-6'>
+                    Buyers talk to builders over secure, logged channels so promises and pricing don&apos;t &quot;get lost&quot; in the broker chain.
+                  </p>
+                  <div className='flex items-center gap-2 text-emerald-400'>
+                    <Check className='w-5 h-5' />
+                    <span className='text-sm font-semibold'>Secure & Logged</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className='mt-12 max-w-4xl mx-auto'>
+              <div className='backdrop-blur-xl bg-white/10 border border-white/20 rounded-3xl p-8'>
+                <p className='text-lg text-gray-300 leading-relaxed text-center'>
+                  The result: fewer wasted visits, fewer surprises, and a home-buying journey that feels professional instead of chaotic.
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Why Tharaga Exists Section */}
+        <section className='container mx-auto px-4 sm:px-6 lg:px-8 pb-24'>
+          <div className='max-w-4xl mx-auto'>
+            <div className='backdrop-blur-xl bg-white/10 border-2 border-gold-500/30 rounded-3xl p-12 text-center'>
+              <h2 className='font-display text-4xl sm:text-5xl font-bold text-white mb-6'>
+                Why Tharaga Exists
+              </h2>
+              <p className='text-xl text-gray-300 leading-relaxed mb-8'>
+                Tharaga was started in Tamil Nadu after watching families and builders lose time, money, and trust in long broker chains and unstructured sales processes. The belief is simple:
+              </p>
+              <div className='max-w-2xl mx-auto'>
+                <div className='backdrop-blur-xl bg-gradient-to-br from-gold-500/20 to-emerald-500/20 border-2 border-gold-500/50 rounded-2xl p-8 mb-8'>
+                  <p className='text-2xl font-bold text-white leading-relaxed'>
+                    If the operations of real estate become transparent, standardized, and data-driven, trust will follow.
+                  </p>
+                </div>
+                <p className='text-lg text-gray-300 leading-relaxed'>
+                  By <strong className='text-gold-400'>2035</strong>, Tharaga aims to be the default operational layer for new-home sales in Tamil Nadu—where every serious project and every serious buyer eventually passes through the same reliable rails.
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Final CTA */}
+        <section className='container mx-auto px-4 sm:px-6 lg:px-8 pb-24'>
+          <div className='max-w-4xl mx-auto glass-card-dark p-12 rounded-3xl text-center border-2 border-gold-500/30'>
+            <h2 className='font-display text-4xl font-bold text-white mb-4'>
+              Ready to Transform Real Estate?
+            </h2>
+            <p className='text-xl text-gray-300 mb-8'>
+              Join builders and buyers who trust Tharaga for transparent, broker-free real estate operations.
+            </p>
+            <div className='flex flex-wrap gap-4 justify-center'>
+              <a
+                href='https://docs.google.com/forms/d/e/1FAIpQLScVrrMf7voKVXGz9d2giOje_p-nyt9yEdxJgWkVc0Mc1-PN1Q/viewform?usp=sharing'
+                className='btn-gold text-lg px-10 py-4 inline-flex items-center gap-2'
+              >
+                List My Project
+                <Building2 className='w-5 h-5' />
+              </a>
+              <a
+                href='https://tharaga.co.in/verified-property-listings'
+                className='px-10 py-4 inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm text-white border border-white/20 rounded-xl font-bold text-lg hover:bg-white/20 transition-all'
+              >
+                Explore Verified Homes
+                <Users className='w-5 h-5' />
+              </a>
+            </div>
+          </div>
+        </section>
+      </div>
+    </div>
   )
 }

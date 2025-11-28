@@ -22,25 +22,42 @@ export default function Page() {
   // Fetch user and set greeting
   useEffect(() => {
     const fetchUser = async () => {
-      const { data: { user }, error } = await supabase.auth.getUser()
+      try {
+        const { data: { user }, error } = await supabase.auth.getUser()
 
-      // Don't redirect - allow viewing dashboard even if not logged in
-      // Components will handle their own auth states
-      if (user) {
-        setUser(user)
+        if (error) {
+          console.error('Auth error:', error)
+          setLoading(false)
+          // Redirect to login on error
+          router.push('/login?next=/my-dashboard')
+          return
+        }
+
+        if (user) {
+          setUser(user)
+        } else {
+          // No user, redirect to login
+          setLoading(false)
+          router.push('/login?next=/my-dashboard')
+          return
+        }
+        
+        setLoading(false)
+
+        // Set time-based greeting
+        const hour = new Date().getHours()
+        if (hour < 12) setGreeting('Good morning')
+        else if (hour < 17) setGreeting('Good afternoon')
+        else setGreeting('Good evening')
+      } catch (err) {
+        console.error('Error fetching user:', err)
+        setLoading(false)
+        router.push('/login?next=/my-dashboard')
       }
-      
-      setLoading(false)
-
-      // Set time-based greeting
-      const hour = new Date().getHours()
-      if (hour < 12) setGreeting('Good morning')
-      else if (hour < 17) setGreeting('Good afternoon')
-      else setGreeting('Good evening')
     }
 
     fetchUser()
-  }, [supabase])
+  }, [supabase, router])
 
   // Get user's first name
   const getFirstName = () => {
@@ -65,15 +82,8 @@ export default function Page() {
       </div>
     )
   }
-
-  // Redirect to login if not authenticated
-  useEffect(() => {
-    if (!loading && !user) {
-      router.push('/login?next=/my-dashboard')
-    }
-  }, [loading, user, router])
   
-  // Show nothing while redirecting
+  // Show nothing while redirecting or if no user
   if (!user) {
     return null
   }

@@ -52,7 +52,7 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json();
-    const { plan = 'growth', annual = false, email, phone, customer = {}, notes = {} } = body;
+    const { plan = 'starter', annual = false, email, phone, customer = {}, notes = {} } = body;
 
     // Validate Razorpay credentials
     if (!process.env.RAZORPAY_KEY_ID || !process.env.RAZORPAY_KEY_SECRET) {
@@ -62,25 +62,36 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Get plan IDs from environment
-    const plan_growth_monthly = process.env.RZP_PLAN_GROWTH;
-    const plan_scale_monthly = process.env.RZP_PLAN_SCALE;
-    const plan_growth_annual = process.env.RZP_PLAN_GROWTH_ANNUAL;
-    const plan_scale_annual = process.env.RZP_PLAN_SCALE_ANNUAL;
+    // Get plan IDs from environment - New pricing structure (Starter, Professional, Enterprise)
+    const plan_starter_monthly = process.env.RZP_PLAN_STARTER_MONTHLY;
+    const plan_starter_annual = process.env.RZP_PLAN_STARTER_ANNUAL;
+    const plan_professional_monthly = process.env.RZP_PLAN_PROFESSIONAL_MONTHLY;
+    const plan_professional_annual = process.env.RZP_PLAN_PROFESSIONAL_ANNUAL;
+    const plan_enterprise_monthly = process.env.RZP_PLAN_ENTERPRISE_MONTHLY;
+    const plan_enterprise_annual = process.env.RZP_PLAN_ENTERPRISE_ANNUAL;
 
-    if (!plan_growth_monthly || !plan_scale_monthly) {
+    // Validate at least monthly plans are configured
+    if (!plan_starter_monthly || !plan_professional_monthly || !plan_enterprise_monthly) {
       return NextResponse.json(
-        { error: 'Razorpay plan IDs not configured' },
+        { error: 'Razorpay plan IDs not configured. Please set RZP_PLAN_STARTER_MONTHLY, RZP_PLAN_PROFESSIONAL_MONTHLY, and RZP_PLAN_ENTERPRISE_MONTHLY' },
         { status: 500 }
       );
     }
 
-    // Determine plan ID
+    // Determine plan ID based on tier and billing cycle
     const plan_id = (() => {
-      if (plan === 'scale') {
-        return annual ? (plan_scale_annual || plan_scale_monthly) : plan_scale_monthly;
+      if (plan === 'starter') {
+        return annual ? (plan_starter_annual || plan_starter_monthly) : plan_starter_monthly;
       }
-      return annual ? (plan_growth_annual || plan_growth_monthly) : plan_growth_monthly;
+      if (plan === 'professional' || plan === 'pro') {
+        return annual ? (plan_professional_annual || plan_professional_monthly) : plan_professional_monthly;
+      }
+      if (plan === 'enterprise') {
+        return annual ? (plan_enterprise_annual || plan_enterprise_monthly) : plan_enterprise_monthly;
+      }
+      // Fallback to professional if plan not recognized
+      console.warn(`Unknown plan "${plan}", defaulting to professional`);
+      return annual ? (plan_professional_annual || plan_professional_monthly) : plan_professional_monthly;
     })();
 
     // Create or get customer

@@ -12,42 +12,56 @@ interface BreadcrumbProps {
 export default function Breadcrumb({ items }: BreadcrumbProps) {
   return (
     <nav aria-label="Breadcrumb" style={{
-      marginBottom: '20px',
+      marginBottom: '24px',
+      paddingLeft: '4px',
     }}>
       <ol style={{
         display: 'flex',
         alignItems: 'center',
-        gap: '6px',
+        gap: '10px',
         listStyle: 'none',
         margin: 0,
         padding: 0,
         flexWrap: 'wrap',
       }}>
         {items.map((item, index) => (
-          <li key={index} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+          <li key={index} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             {index > 0 && (
-              <span style={{ color: '#cbd5e1', fontSize: '13px', userSelect: 'none' }}>/</span>
+              <span style={{
+                color: '#94a3b8',
+                fontSize: '14px',
+                userSelect: 'none',
+                fontWeight: 400,
+              }}>→</span>
             )}
             {item.href ? (
               <Link
                 href={item.href}
                 style={{
-                  color: '#64748b',
+                  color: '#3b82f6',
                   textDecoration: 'none',
-                  fontSize: '13px',
-                  transition: 'color 0.15s ease',
+                  fontSize: '14px',
+                  transition: 'all 0.2s ease',
                   fontWeight: 500,
+                  textShadow: '0 0 20px rgba(59, 130, 246, 0.3)',
                 }}
-                onMouseEnter={(e) => e.currentTarget.style.color = '#0f172a'}
-                onMouseLeave={(e) => e.currentTarget.style.color = '#64748b'}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.color = '#2563eb'
+                  e.currentTarget.style.textShadow = '0 0 25px rgba(37, 99, 235, 0.5)'
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.color = '#3b82f6'
+                  e.currentTarget.style.textShadow = '0 0 20px rgba(59, 130, 246, 0.3)'
+                }}
               >
                 {item.label}
               </Link>
             ) : (
               <span style={{
-                color: '#0f172a',
+                color: '#1e293b',
                 fontWeight: 600,
-                fontSize: '13px',
+                fontSize: '14px',
+                textShadow: '0 0 15px rgba(30, 41, 59, 0.15)',
               }}>
                 {item.label}
               </span>

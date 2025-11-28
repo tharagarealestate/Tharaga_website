@@ -12,50 +12,42 @@ interface BreadcrumbProps {
 export default function Breadcrumb({ items }: BreadcrumbProps) {
   return (
     <nav aria-label="Breadcrumb" style={{
-      padding: '16px 24px',
-      background: 'linear-gradient(135deg, rgba(255,255,255,0.85), rgba(248,250,252,0.90))',
-      backdropFilter: 'blur(20px)',
-      borderBottom: '1px solid rgba(226,232,240,0.6)',
-      position: 'sticky',
-      top: 0,
-      zIndex: 20,
+      marginBottom: '20px',
     }}>
       <ol style={{
         display: 'flex',
         alignItems: 'center',
-        gap: '8px',
+        gap: '6px',
         listStyle: 'none',
         margin: 0,
         padding: 0,
-        maxWidth: '1100px',
-        marginLeft: 'auto',
-        marginRight: 'auto',
+        flexWrap: 'wrap',
       }}>
         {items.map((item, index) => (
-          <li key={index} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <li key={index} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
             {index > 0 && (
-              <span style={{ color: '#94a3b8', fontSize: '14px' }}>→</span>
+              <span style={{ color: '#cbd5e1', fontSize: '13px', userSelect: 'none' }}>/</span>
             )}
             {item.href ? (
               <Link
                 href={item.href}
                 style={{
-                  color: '#1e40af',
+                  color: '#64748b',
                   textDecoration: 'none',
-                  fontWeight: 600,
-                  fontSize: '14px',
-                  transition: 'color 0.2s ease',
+                  fontSize: '13px',
+                  transition: 'color 0.15s ease',
+                  fontWeight: 500,
                 }}
-                onMouseEnter={(e) => e.currentTarget.style.textDecoration = 'underline'}
-                onMouseLeave={(e) => e.currentTarget.style.textDecoration = 'none'}
+                onMouseEnter={(e) => e.currentTarget.style.color = '#0f172a'}
+                onMouseLeave={(e) => e.currentTarget.style.color = '#64748b'}
               >
                 {item.label}
               </Link>
             ) : (
               <span style={{
-                color: '#334155',
-                fontWeight: 700,
-                fontSize: '14px',
+                color: '#0f172a',
+                fontWeight: 600,
+                fontSize: '13px',
               }}>
                 {item.label}
               </span>

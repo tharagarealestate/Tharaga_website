@@ -33,6 +33,7 @@ export default function RoiPage(){
     <main className="mx-auto max-w-3xl px-6 py-8">
       <Breadcrumb items={[
         { label: 'Home', href: '/' },
+        { label: 'Tools', href: '/tools' },
         { label: 'ROI Calculator' }
       ]} />
       <h1 className="text-2xl font-bold text-plum mb-4">Investment ROI calculator</h1>

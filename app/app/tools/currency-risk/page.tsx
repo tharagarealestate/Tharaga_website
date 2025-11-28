@@ -55,6 +55,7 @@ export default function CurrencyRiskPage() {
     <main className="mx-auto max-w-3xl px-6 py-8">
       <Breadcrumb items={[
         { label: 'Home', href: '/' },
+        { label: 'Tools', href: '/tools' },
         { label: 'Currency Risk' }
       ]} />
       <h1 className="text-2xl font-bold text-plum mb-4">{t('title')}</h1>

@@ -332,12 +332,6 @@ function PropertyListingPageContent() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Breadcrumb Navigation */}
-      <Breadcrumb items={[
-        { label: 'Home', href: '/' },
-        { label: 'Property Listing' }
-      ]} />
-
       {/* Main Layout: Sidebar + Content */}
       <div className="max-w-[1920px] mx-auto">
         <div className="flex">
@@ -353,6 +347,12 @@ function PropertyListingPageContent() {
 
           {/* RIGHT CONTENT AREA */}
           <main className="flex-1 min-w-0">
+            <div className="p-6">
+              <Breadcrumb items={[
+                { label: 'Home', href: '/' },
+                { label: 'Property Listing' }
+              ]} />
+            </div>
             <PropertyListingContent
               properties={properties}
               filters={filters}

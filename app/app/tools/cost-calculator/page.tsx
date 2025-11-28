@@ -40,14 +40,12 @@ export default function CostCalculatorPage() {
   const total = priceINR + stamp + reg + gst + fees.otherFeesINR
 
   return (
-    <>
+    <main className="mx-auto max-w-3xl px-6 py-8">
       <Breadcrumb items={[
         { label: 'Home', href: '/' },
-        { label: 'Tools', href: '/tools' },
         { label: 'Cost Calculator' }
       ]} />
-      <main className="mx-auto max-w-3xl px-6 py-8">
-        <h1 className="text-2xl font-bold text-fg mb-4">Cost calculator</h1>
+      <h1 className="text-2xl font-bold text-fg mb-4">Cost calculator</h1>
       <div className="rounded-xl border border-border bg-canvas p-4 space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
@@ -109,8 +107,7 @@ export default function CostCalculatorPage() {
           </div>
         </div>
       </div>
-      </main>
-    </>
+    </main>
   )
 }
 

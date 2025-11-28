@@ -289,7 +289,7 @@ export default async function PropertyPage({ params }: { params: { id: string } 
   const { property: p, builder, similar, reviews } = data
 
   return (
-    <div className="min-h-screen">
+    <main className="min-h-screen">
       <Breadcrumb items={[
         { label: 'Home', href: '/' },
         { label: 'Properties', href: '/property-listing' },
@@ -337,7 +337,7 @@ export default async function PropertyPage({ params }: { params: { id: string } 
       </div>
       <MobileBar p={p} />
       <EngagementTracker propertyId={p.id} />
-    </div>
+    </main>
   )
 }
 

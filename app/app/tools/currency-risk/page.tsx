@@ -52,14 +52,12 @@ export default function CurrencyRiskPage() {
   const sim = simulateVaR()
 
   return (
-    <>
+    <main className="mx-auto max-w-3xl px-6 py-8">
       <Breadcrumb items={[
         { label: 'Home', href: '/' },
-        { label: 'Tools', href: '/tools' },
         { label: 'Currency Risk' }
       ]} />
-      <main className="mx-auto max-w-3xl px-6 py-8">
-        <h1 className="text-2xl font-bold text-plum mb-4">{t('title')}</h1>
+      <h1 className="text-2xl font-bold text-plum mb-4">{t('title')}</h1>
       <div className="rounded-xl border border-plum/10 bg-brandWhite p-4 space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
@@ -74,11 +72,11 @@ export default function CurrencyRiskPage() {
           </div>
           <div>
             <label className="block text-sm mb-1">{t('fields.drift')}</label>
-            <input type="number" step="0.5" value={driftPct} onChange={(e)=>setDriftPct(Number(e.target.value||0))} className="w-full rounded-lg border px-3 py-2"/>
+            <input type="number" step="0.1" value={driftPct} onChange={(e)=>setDriftPct(Number(e.target.value||0))} className="w-full rounded-lg border px-3 py-2"/>
           </div>
           <div>
-            <label className="block text-sm mb-1">{t('fields.vol')}</label>
-            <input type="number" step="0.5" value={volPct} onChange={(e)=>setVolPct(Number(e.target.value||0))} className="w-full rounded-lg border px-3 py-2"/>
+            <label className="block text-sm mb-1">{t('fields.volatility')}</label>
+            <input type="number" step="0.1" value={volPct} onChange={(e)=>setVolPct(Number(e.target.value||0))} className="w-full rounded-lg border px-3 py-2"/>
           </div>
           <div>
             <label className="block text-sm mb-1">{t('fields.horizon')}</label>
@@ -86,10 +84,10 @@ export default function CurrencyRiskPage() {
           </div>
           <div>
             <label className="block text-sm mb-1">{t('fields.paths')}</label>
-            <input type="number" value={paths} onChange={(e)=>setPaths(Math.max(50, Number(e.target.value||0)))} className="w-full rounded-lg border px-3 py-2"/>
+            <input type="number" value={paths} onChange={(e)=>setPaths(Number(e.target.value||0))} className="w-full rounded-lg border px-3 py-2"/>
           </div>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
           <Card label={t('cards.current')} value={fmt(now, fx)} />
           <Card label={t('cards.best')} value={fmt(best, fx)} />
           <Card label={t('cards.worst')} value={fmt(worst, fx)} />
@@ -99,8 +97,7 @@ export default function CurrencyRiskPage() {
         </div>
         <p className="text-xs text-plum/60">{t('disclaimer')}</p>
       </div>
-      </main>
-    </>
+    </main>
   )
 }
 

@@ -47,14 +47,12 @@ export default function TamilVoiceSearchPage(){
       : '/property-listing/'
 
   return (
-    <>
+    <main className="mx-auto max-w-3xl px-6 py-8">
       <Breadcrumb items={[
         { label: 'Home', href: '/' },
-        { label: 'Tools', href: '/tools' },
         { label: 'Tamil Voice Search' }
       ]} />
-      <main className="mx-auto max-w-3xl px-6 py-8">
-        <h1 className="text-2xl font-bold text-fg mb-4">Tamil voice search</h1>
+      <h1 className="text-2xl font-bold text-fg mb-4">Tamil voice search</h1>
       <div className="rounded-xl border border-border bg-canvas p-4 space-y-4">
         {!supported && <div className="text-sm text-fgMuted">Voice recognition is not supported in this browser.</div>}
         <div className="flex gap-3 items-center">
@@ -97,7 +95,6 @@ export default function TamilVoiceSearchPage(){
         
         <p className="text-xs text-fgMuted">Tamil-first voice search (Chennai). We set recognition language to ta-IN. You can refine the query after transcription.</p>
       </div>
-      </main>
-    </>
+    </main>
   )
 }

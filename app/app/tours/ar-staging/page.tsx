@@ -10,14 +10,13 @@ export default function ArStagingPage(){
   React.useEffect(()=>{ setSupported(!!(navigator as any)?.xr || /Android|iPhone/.test(navigator.userAgent)) },[])
 
   return (
-    <>
+    <main className="mx-auto max-w-3xl px-6 py-8">
       <Breadcrumb items={[
         { label: 'Home', href: '/' },
         { label: 'AR/VR Tours', href: '/tours' },
         { label: 'AR Furniture Staging' }
       ]} />
-      <main className="mx-auto max-w-3xl px-6 py-8">
-        <h1 className="text-2xl font-bold text-plum mb-2">AR furniture staging</h1>
+      <h1 className="text-2xl font-bold text-plum mb-2">AR furniture staging</h1>
       <div className="rounded-xl border border-plum/10 bg-brandWhite p-4 space-y-3">
         <p className="text-sm text-plum/70">Place sample furniture in your room using your phone camera.</p>
         {!supported && <div className="text-sm text-plum/70">This browser may not support WebXR/AR. Try on a modern mobile device.</div>}
@@ -27,7 +26,6 @@ export default function ArStagingPage(){
         </div>
         <p className="text-xs text-plum/60">On iOS, USDZ will open in AR Quick Look. On Android, install Scene Viewer compatible app.</p>
       </div>
-      </main>
-    </>
+    </main>
   )
 }

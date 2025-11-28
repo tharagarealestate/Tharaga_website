@@ -22,14 +22,13 @@ export default function Microsite({ params }: { params: { id: string }}){
 
   if (!data) return (<main className="mx-auto max-w-5xl px-6 py-8">Loading…</main>)
   return (
-    <>
+    <main className="mx-auto max-w-5xl px-6 py-8 space-y-4">
       <Breadcrumb items={[
         { label: 'Home', href: '/' },
         { label: 'Builder Microsite' },
         { label: data.title || 'Property' }
       ]} />
-      <main className="mx-auto max-w-5xl px-6 py-8 space-y-4">
-        <h1 className="text-2xl font-bold">{data.title}</h1>
+      <h1 className="text-2xl font-bold">{data.title}</h1>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
         <div className="md:col-span-2 space-y-3">
           {Array.isArray(data.images) && data.images.length>0 && (
@@ -61,7 +60,6 @@ export default function Microsite({ params }: { params: { id: string }}){
           </FeatureGate>
         </div>
       </div>
-      </main>
-    </>
+    </main>
   )
 }

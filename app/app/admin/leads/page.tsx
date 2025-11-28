@@ -20,14 +20,13 @@ export default function AdminLeadsPage(){
   useEffect(()=>{ load() },[])
 
   return (
-    <>
+    <main className="mx-auto max-w-5xl px-6 py-8">
       <Breadcrumb items={[
         { label: 'Home', href: '/' },
         { label: 'Admin', href: '/admin' },
         { label: 'Leads' }
       ]} />
-      <main className="mx-auto max-w-5xl px-6 py-8">
-        <h1 className="text-2xl font-bold text-plum mb-2">Admin · Leads</h1>
+      <h1 className="text-2xl font-bold text-plum mb-2">Admin · Leads</h1>
       {msg && <div className="mb-4 rounded-lg border border-plum/10 bg-white p-3 text-sm text-plum/80">{msg}</div>}
       {busy && <div className="text-sm text-plum/70">Loading…</div>}
       <div className="overflow-auto rounded-lg border border-plum/10 bg-white">
@@ -60,8 +59,7 @@ export default function AdminLeadsPage(){
           </tbody>
         </table>
       </div>
-      </main>
-    </>
+    </main>
   )
 }
 

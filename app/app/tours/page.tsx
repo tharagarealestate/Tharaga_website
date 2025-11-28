@@ -30,13 +30,12 @@ export default function ToursPage(){
   const safe = sanitizeTour(raw)
   const [mode, setMode] = React.useState<'normal'|'day'|'night'|'monsoon'>('normal')
   return (
-    <>
+    <main className="mx-auto max-w-4xl px-6 py-8">
       <Breadcrumb items={[
         { label: 'Home', href: '/' },
         { label: 'AR/VR Tours' }
       ]} />
-      <main className="mx-auto max-w-4xl px-6 py-8">
-        <h1 className="text-2xl font-bold text-plum mb-4">AR/VR property tours</h1>
+      <h1 className="text-2xl font-bold text-plum mb-4">AR/VR property tours</h1>
       <div className="rounded-xl border border-plum/10 bg-brandWhite p-4 space-y-4">
         <div>
           <label className="block text-sm mb-1">360/3D tour URL (Matterport, Kuula, or compatible)</label>
@@ -62,7 +61,6 @@ export default function ToursPage(){
           <a className="rounded-lg border px-3 py-2" href="/tours/hotspots">360 hotspots</a>
         </div>
       </div>
-      </main>
-    </>
+    </main>
   )
 }

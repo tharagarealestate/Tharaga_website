@@ -28,14 +28,13 @@ export default function AdminSettingsPage(){
   }
 
   return (
-    <>
+    <main className="mx-auto max-w-4xl px-6 py-8">
       <Breadcrumb items={[
         { label: 'Home', href: '/' },
         { label: 'Admin', href: '/admin' },
         { label: 'Settings' }
       ]} />
-      <main className="mx-auto max-w-4xl px-6 py-8">
-        <h1 className="text-2xl font-bold text-deepBlue mb-2">Admin · Builder settings</h1>
+      <h1 className="text-2xl font-bold text-deepBlue mb-2">Admin · Builder settings</h1>
       {msg && <div className="mb-4 rounded-lg border border-deepBlue/10 bg-white p-3 text-sm text-deepBlue/80">{msg}</div>}
       {busy && <div className="text-sm text-deepBlue/70">Working…</div>}
       <div className="space-y-3">
@@ -51,8 +50,7 @@ export default function AdminSettingsPage(){
         ))}
         {(!rows.length && !busy) && <div className="text-sm text-deepBlue/70">No builders yet.</div>}
       </div>
-      </main>
-    </>
+    </main>
   )
 }
 

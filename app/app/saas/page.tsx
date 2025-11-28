@@ -11,13 +11,12 @@ const HowItWorksAnimatedSection = dynamic(
 
 export default function SaaSHome(){
   return (
-    <>
+    <main className="mx-auto max-w-5xl px-6 py-8">
       <Breadcrumb items={[
         { label: 'Home', href: '/' },
         { label: 'Builder SaaS' }
       ]} />
-      <main className="mx-auto max-w-5xl px-6 py-8">
-        <h1 className="text-2xl font-bold mb-2">Builder SaaS</h1>
+      <h1 className="text-2xl font-bold mb-2">Builder SaaS</h1>
       <p className="text-fgMuted">Start your 14‑day Growth trial. Add a project, capture leads, and publish a microsite.</p>
       <div className="mt-4 flex gap-3">
         <a className="underline" href="/saas/pricing">See pricing</a>
@@ -28,7 +27,6 @@ export default function SaaSHome(){
       <div className="mt-8" />
       {/* Animated How It Works section (builder onboarding) */}
       <HowItWorksAnimatedSection />
-      </main>
-    </>
+    </main>
   )
 }

@@ -50,20 +50,23 @@ export default function Breadcrumb({ items }: BreadcrumbProps) {
                 onMouseEnter={(e) => {
                   e.currentTarget.style.color = '#2563eb'
                   e.currentTarget.style.textShadow = '0 0 25px rgba(37, 99, 235, 0.5)'
+                  e.currentTarget.style.textDecoration = 'underline'
                 }}
                 onMouseLeave={(e) => {
                   e.currentTarget.style.color = '#3b82f6'
                   e.currentTarget.style.textShadow = '0 0 20px rgba(59, 130, 246, 0.3)'
+                  e.currentTarget.style.textDecoration = 'none'
                 }}
               >
                 {item.label}
               </Link>
             ) : (
               <span style={{
-                color: '#1e293b',
+                color: '#e5e7eb',
                 fontWeight: 600,
                 fontSize: '14px',
-                textShadow: '0 0 15px rgba(30, 41, 59, 0.15)',
+                textShadow: 'none',
+                opacity: 0.9,
               }}>
                 {item.label}
               </span>

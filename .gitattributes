@@ -1,26 +1,7 @@
-# Force LF line endings for ALL text files - prevents CRLF conversion on Windows
-* text=auto eol=lf
+# Completely disable line ending normalization - treat all files as binary for line endings
+* -text
 
-# Explicitly enforce LF for common file types
-*.md text eol=lf
-*.ts text eol=lf
-*.tsx text eol=lf
-*.js text eol=lf
-*.jsx text eol=lf
-*.json text eol=lf
-*.yml text eol=lf
-*.yaml text eol=lf
-*.sql text eol=lf
-*.py text eol=lf
-*.mjs text eol=lf
-*.css text eol=lf
-*.html text eol=lf
-*.txt text eol=lf
-*.sh text eol=lf
-*.yml text eol=lf
-*.yaml text eol=lf
-
-# Denote all files that are truly binary and should not be modified.
+# Mark actual binary files
 *.png binary
 *.jpg binary
 *.jpeg binary
@@ -32,6 +13,6 @@
 *.ttf binary
 *.eot binary
 *.svg binary
-
-
-
+*.zip binary
+*.tar binary
+*.gz binary

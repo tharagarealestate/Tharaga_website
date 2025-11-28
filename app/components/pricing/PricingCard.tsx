@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { Check, X, Sparkles, Crown } from 'lucide-react'
 import { PRICING_CONFIG } from '@/lib/pricing-config'
 
-type PlanType = typeof PRICING_CONFIG.builder.free | typeof PRICING_CONFIG.builder.pro | typeof PRICING_CONFIG.builder.enterprise | typeof PRICING_CONFIG.buyer.free | typeof PRICING_CONFIG.buyer.premium | typeof PRICING_CONFIG.buyer.vip
+type PlanType = typeof PRICING_CONFIG.builder.starter | typeof PRICING_CONFIG.builder.pro | typeof PRICING_CONFIG.builder.enterprise | typeof PRICING_CONFIG.buyer.free | typeof PRICING_CONFIG.buyer.premium | typeof PRICING_CONFIG.buyer.vip
 
 interface PricingCardProps {
   plan: PlanType
@@ -12,32 +12,26 @@ interface PricingCardProps {
   badge?: string
 }
 
-export default function PricingCard({ 
-  plan, 
+export default function PricingCard({
+  plan,
   variant = 'glass',
-  badge 
+  badge
 }: PricingCardProps) {
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly')
-  const [pricingModel, setPricingModel] = useState<'subscription' | 'hybrid'>('subscription') // For Pro plan
-  
+
   const isHighlighted = variant === 'highlighted'
   const isPremium = variant === 'premium'
-  
+
   // Get price based on selections
-  let priceConfig = (plan as any).price
-  if ((plan as any).id === 'builder_pro' && (plan as any).models) {
-    priceConfig = pricingModel === 'hybrid' 
-      ? (plan as any).models.hybrid.price 
-      : (plan as any).models.subscription.price
-  }
-  
+  const priceConfig = (plan as any).price
+
   const price = billingCycle === 'monthly' ? priceConfig.monthly : priceConfig.yearly
   const displayPrice = billingCycle === 'monthly' ? priceConfig.display : priceConfig.displayYearly
-  
+
   // Calculate savings for yearly
   const monthlyTotal = priceConfig.monthly * 12
   const savings = monthlyTotal - priceConfig.yearly
-  
+
   return (
     <div className={`
       relative group
@@ -48,8 +42,8 @@ export default function PricingCard({
         relative h-full
         rounded-3xl overflow-hidden
         transition-all duration-500
-        ${isHighlighted 
-          ? 'bg-gradient-to-br from-gold-500/20 to-emerald-500/20 border-2 border-gold-500/50 shadow-2xl shadow-gold-500/30' 
+        ${isHighlighted
+          ? 'bg-gradient-to-br from-gold-500/20 to-emerald-500/20 border-2 border-gold-500/50 shadow-2xl shadow-gold-500/30'
           : isPremium
           ? 'backdrop-blur-xl bg-white/10 border-2 border-emerald-500/30'
           : 'backdrop-blur-xl bg-white/10 border border-white/20'
@@ -58,7 +52,7 @@ export default function PricingCard({
       `}>
         {/* Shimmer Effect on Hover */}
         <div className='absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-in-out pointer-events-none' />
-        
+
         <div className='relative p-8'>
           {/* Plan Name with Badge */}
           <div className='mb-6'>
@@ -80,39 +74,8 @@ export default function PricingCard({
             </div>
             <p className='text-gray-400'>{(plan as any).tagline}</p>
           </div>
-          
-          {/* Pricing Model Selector (Pro Plan Only) */}
-          {(plan as any).id === 'builder_pro' && (plan as any).models && (
-            <div className='mb-6 space-y-2'>
-              <button
-                onClick={() => setPricingModel('subscription')}
-                className={`w-full p-3 rounded-xl text-left transition-all ${
-                  pricingModel === 'subscription'
-                    ? 'bg-gold-500/20 border-2 border-gold-500 text-white'
-                    : 'bg-white/5 border border-white/10 text-gray-400 hover:bg-white/10'
-                }`}
-              >
-                <div className='font-semibold'>Subscription Only</div>
-                <div className='text-sm'>₹4,999/month • Zero commission</div>
-              </button>
-              
-              <button
-                onClick={() => setPricingModel('hybrid')}
-                className={`w-full p-3 rounded-xl text-left transition-all ${
-                  pricingModel === 'hybrid'
-                    ? 'bg-gold-500/20 border-2 border-gold-500 text-white'
-                    : 'bg-white/5 border border-white/10 text-gray-400 hover:bg-white/10'
-                }`}
-              >
-                <div className='font-semibold flex items-center gap-2'>
-                  Hybrid Model
-                  <span className='px-2 py-0.5 bg-emerald-500 text-white text-xs rounded-full'>Save 40%</span>
-                </div>
-                <div className='text-sm'>₹2,999/month + 10% commission</div>
-              </button>
-            </div>
-          )}
-          
+
+
           {/* Billing Cycle Toggle */}
           {price !== 0 && priceConfig.yearly && (
             <div className='mb-6 inline-flex items-center gap-2 p-1 bg-white/10 backdrop-blur-sm rounded-full'>
@@ -143,7 +106,7 @@ export default function PricingCard({
               </button>
             </div>
           )}
-          
+
           {/* Price Display */}
           <div className='mb-8'>
             {price === 0 ? (
@@ -171,7 +134,7 @@ export default function PricingCard({
                 )}
               </div>
             )}
-            
+
             {/* Commission Info */}
             {(plan as any).commission && (plan as any).commission.rate > 0 && (
               <div className='mt-4 p-3 bg-amber-500/10 border border-amber-500/30 rounded-lg'>
@@ -184,7 +147,7 @@ export default function PricingCard({
               </div>
             )}
           </div>
-          
+
           {/* CTA Button */}
           <button className={`
             w-full py-4 rounded-xl font-bold text-lg mb-8
@@ -198,11 +161,11 @@ export default function PricingCard({
           `}>
             {price === 0 ? 'Start Free' : (plan as any).id === 'builder_enterprise' ? 'Contact Sales' : 'Get Started'}
           </button>
-          
+
           {/* Features List */}
           <div className='space-y-4'>
             <div className='text-white font-semibold mb-3'>What&rsquo;s included:</div>
-            
+
             {(plan as any).features.included.map((feature: string, index: number) => (
               <div key={index} className='flex items-start gap-3'>
                 <div className='flex-shrink-0 w-5 h-5 rounded-full bg-emerald-500/20 flex items-center justify-center mt-0.5'>
@@ -211,7 +174,7 @@ export default function PricingCard({
                 <div className='text-gray-300 text-sm leading-relaxed'>{feature}</div>
               </div>
             ))}
-            
+
             {(plan as any).features.notIncluded && (plan as any).features.notIncluded.length > 0 && (
               <>
                 <div className='border-t border-white/10 my-4' />

@@ -6,92 +6,79 @@
 export const PRICING_CONFIG = {
   // BUILDER PLANS
   builder: {
-    free: {
-      id: 'builder_free',
-      name: 'Free',
-      displayName: 'Builder Free',
-      tagline: 'Perfect for getting started',
+    starter: {
+      id: 'builder_starter',
+      name: 'Starter',
+      displayName: 'Builder Starter',
+      tagline: 'Perfect for emerging builders',
       price: {
-        monthly: 0,
-        yearly: 0,
-        display: '₹0',
-        badge: 'Forever Free'
+        monthly: 999,
+        yearly: 9990, // 17% discount (₹11,988 - ₹1,998 = ₹9,990)
+        yearlyDiscount: 17,
+        display: '₹999/month',
+        displayYearly: '₹9,990/year (Save ₹1,998)',
+        perDay: '₹33/day'
       },
       commission: {
-        rate: 12.5, // 12.5%
-        description: 'Pay 12.5% only on successful deals'
+        rate: 0,
+        description: 'Zero commission on deals'
       },
       features: {
         included: [
-          'Up to 5 property listings',
-          'Basic lead scoring (1-10)',
+          'Up to 3 property listings',
+          'Basic lead scoring',
           'Basic analytics dashboard',
+          'Email notifications',
           'Community support',
-          '20 leads per month',
           'Mobile app access',
-          'Email notifications'
+          'Up to 50 leads per month'
         ],
         notIncluded: [
           'Advanced AI analytics',
           'Priority support',
           'API access',
           'Team collaboration',
-          'Custom branding'
+          'Custom branding',
+          'Lawyer-verified documents',
+          'WhatsApp support'
         ]
       },
       limits: {
         projects: 1,
-        propertiesPerProject: 5,
-        leadsPerMonth: 20,
+        propertiesPerProject: 3,
+        leadsPerMonth: 50,
         teamMembers: 1,
         featuredListings: 0
       }
     },
     pro: {
       id: 'builder_pro',
-      name: 'Pro',
-      displayName: 'Builder Pro',
-      tagline: 'For growing businesses',
-      badge: 'Most Popular',
-      models: {
-        subscription: {
-          price: {
-            monthly: 4999,
-            yearly: 49990, // 17% discount
-            yearlyDiscount: 17,
-            display: '₹4,999/month',
-            displayYearly: '₹49,990/year (Save ₹9,998)',
-            perDay: '₹166/day'
-          },
-          commission: {
-            rate: 0,
-            description: 'Zero commission on deals'
-          }
-        },
-        hybrid: {
-          price: {
-            monthly: 2999,
-            yearly: 29990,
-            yearlyDiscount: 17,
-            display: '₹2,999/month + 10% commission',
-            displayYearly: '₹29,990/year + 10% commission'
-          },
-          commission: {
-            rate: 10.0, // 10% (promotional)
-            description: 'Lower subscription + 10% on deals'
-          }
-        }
+      name: 'Professional',
+      displayName: 'Builder Professional',
+      tagline: 'For active builders (2-4 deals/year)',
+      badge: 'MOST POPULAR',
+      price: {
+        monthly: 2999,
+        yearly: 29990, // 17% discount (₹35,988 - ₹5,998 = ₹29,990)
+        yearlyDiscount: 17,
+        display: '₹2,999/month',
+        displayYearly: '₹29,990/year (Save ₹5,998)',
+        perDay: '₹100/day'
+      },
+      commission: {
+        rate: 0,
+        description: 'Zero commission on deals'
       },
       features: {
         included: [
-          'Up to 50 property listings',
+          'Up to 10 property listings',
+          '10,000+ AI-scored verified buyers',
           'Advanced AI lead scoring',
-          'Advanced analytics + forecasting',
+          'Lawyer-verified documents',
+          'Advanced analytics dashboard',
+          'WhatsApp support',
           'Priority support (4-hour response)',
           'Unlimited leads',
-          'API access',
-          '5 team members',
-          '3 featured listings/month',
           'CRM integration',
           'Automated follow-ups',
           'Bulk upload properties',
@@ -105,10 +92,10 @@ export const PRICING_CONFIG = {
         ]
       },
       limits: {
-        projects: 10,
-        propertiesPerProject: 50,
+        projects: 5,
+        propertiesPerProject: 10,
         leadsPerMonth: null, // Unlimited
-        teamMembers: 5,
+        teamMembers: 3,
         featuredListings: 3
       }
     },
@@ -116,15 +103,15 @@ export const PRICING_CONFIG = {
       id: 'builder_enterprise',
       name: 'Enterprise',
       displayName: 'Builder Enterprise',
-      tagline: 'For large organizations',
+      tagline: 'For large builders (10+ deals/year)',
       badge: 'Premium',
       price: {
-        monthly: 14999,
-        yearly: 149990, // 17% discount
+        monthly: 5999,
+        yearly: 59990, // 17% discount (₹71,988 - ₹11,998 = ₹59,990)
         yearlyDiscount: 17,
-        display: '₹14,999/month',
-        displayYearly: '₹1,49,990/year (Save ₹29,998)',
-        perDay: '₹500/day',
+        display: '₹5,999/month',
+        displayYearly: '₹59,990/year (Save ₹11,998)',
+        perDay: '₹200/day',
         custom: 'Custom pricing available for 100+ properties'
       },
       commission: {
@@ -134,6 +121,7 @@ export const PRICING_CONFIG = {
       features: {
         included: [
           'Unlimited property listings',
+          'Unlimited AI-scored verified buyers',
           'AI-powered predictive analytics',
           'Custom analytics dashboards',
           'Dedicated account manager',
@@ -415,9 +403,9 @@ export const REVENUE_PROJECTIONS = {
       },
       assumptions: {
         builders: {
-          free: 500, // 500 free users
-          pro: 150, // 150 pro users (₹4,999 avg)
-          enterprise: 10 // 10 enterprise users
+          starter: 500, // 500 starter users (₹999/month)
+          pro: 150, // 150 pro users (₹2,999/month)
+          enterprise: 10 // 10 enterprise users (₹5,999/month)
         },
         buyers: {
           free: 5000,
@@ -430,7 +418,7 @@ export const REVENUE_PROJECTIONS = {
       totalRevenue: 35000000, // ₹3.5 Cr
       assumptions: {
         builders: {
-          free: 1000,
+          starter: 1000,
           pro: 300,
           enterprise: 25
         }
@@ -440,7 +428,7 @@ export const REVENUE_PROJECTIONS = {
       totalRevenue: 12000000, // ₹1.2 Cr
       assumptions: {
         builders: {
-          free: 300,
+          starter: 300,
           pro: 80,
           enterprise: 5
         }
@@ -472,7 +460,7 @@ export function calculateGST(amount: number): { subtotal: number; gst: number; t
 }
 
 // Type definitions for better TypeScript support
-export type BuilderPlan = 'builder_free' | 'builder_pro' | 'builder_enterprise'
+export type BuilderPlan = 'builder_starter' | 'builder_pro' | 'builder_enterprise'
 export type BuyerPlan = 'buyer_free' | 'buyer_premium' | 'buyer_vip'
 export type PricingModel = 'subscription' | 'commission' | 'hybrid'
 export type DocumentType = 'rera_certificate' | 'title_deed' | 'sale_agreement' | 'encumbrance_certificate' | 'property_tax_receipt' | 'building_approval'
@@ -482,7 +470,7 @@ export type AffiliateType = 'bank_loan' | 'insurance' | 'interior_design' | 'leg
 // Helper to get plan by ID
 export function getBuilderPlan(planId: BuilderPlan) {
   const plans = PRICING_CONFIG.builder
-  if (planId === 'builder_free') return plans.free
+  if (planId === 'builder_starter') return plans.starter
   if (planId === 'builder_pro') return plans.pro
   if (planId === 'builder_enterprise') return plans.enterprise
   return null

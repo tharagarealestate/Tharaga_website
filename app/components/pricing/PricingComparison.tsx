@@ -8,22 +8,25 @@ interface PricingComparisonProps {
 }
 
 export default function PricingComparison({ activeTab }: PricingComparisonProps) {
-  const plans = activeTab === 'builder' 
-    ? [PRICING_CONFIG.builder.free, PRICING_CONFIG.builder.pro, PRICING_CONFIG.builder.enterprise]
+  const plans = activeTab === 'builder'
+    ? [PRICING_CONFIG.builder.starter, PRICING_CONFIG.builder.pro, PRICING_CONFIG.builder.enterprise]
     : [PRICING_CONFIG.buyer.free, PRICING_CONFIG.buyer.premium, PRICING_CONFIG.buyer.vip]
 
-  const features = activeTab === 'builder' 
+  const features = activeTab === 'builder'
     ? [
-        { name: 'Property Listings', free: '5', pro: '50', enterprise: 'Unlimited' },
-        { name: 'Lead Scoring', free: 'Basic', pro: 'Advanced AI', enterprise: 'AI-Powered' },
-        { name: 'Analytics', free: 'Basic', pro: 'Advanced', enterprise: 'Custom' },
-        { name: 'Support', free: 'Community', pro: 'Priority (4hr)', enterprise: 'Dedicated Manager' },
-        { name: 'API Access', free: false, pro: true, enterprise: true },
-        { name: 'Team Members', free: '1', pro: '5', enterprise: 'Unlimited' },
-        { name: 'Featured Listings', free: '0', pro: '3/month', enterprise: '10/month' },
-        { name: 'Custom Branding', free: false, pro: false, enterprise: true },
-        { name: 'White Label', free: false, pro: false, enterprise: true },
-        { name: 'SLA Guarantee', free: false, pro: false, enterprise: '99.9%' },
+        { name: 'Property Listings', starter: '3', pro: '10', enterprise: 'Unlimited' },
+        { name: 'AI-Scored Verified Buyers', starter: '50/month', pro: '10,000+', enterprise: 'Unlimited' },
+        { name: 'Lead Scoring', starter: 'Basic', pro: 'Advanced AI', enterprise: 'AI-Powered' },
+        { name: 'Lawyer-Verified Documents', starter: false, pro: true, enterprise: true },
+        { name: 'Analytics', starter: 'Basic', pro: 'Advanced', enterprise: 'Custom' },
+        { name: 'Support', starter: 'Community', pro: 'Priority (4hr)', enterprise: 'Dedicated Manager' },
+        { name: 'WhatsApp Support', starter: false, pro: true, enterprise: true },
+        { name: 'API Access', starter: false, pro: true, enterprise: true },
+        { name: 'Team Members', starter: '1', pro: '3', enterprise: 'Unlimited' },
+        { name: 'Featured Listings', starter: '0', pro: '3/month', enterprise: '10/month' },
+        { name: 'Custom Branding', starter: false, pro: false, enterprise: true },
+        { name: 'White Label', starter: false, pro: false, enterprise: true },
+        { name: 'SLA Guarantee', starter: false, pro: false, enterprise: '99.9%' },
       ]
     : [
         { name: 'Property Search', free: 'Unlimited', premium: 'Unlimited', vip: 'Unlimited' },
@@ -56,7 +59,7 @@ export default function PricingComparison({ activeTab }: PricingComparisonProps)
               <tr className='border-b border-white/10'>
                 <th className='text-left p-6 text-white font-semibold'>Features</th>
                 {plans.map((plan, index) => (
-                  <th 
+                  <th
                     key={index}
                     className={`text-center p-6 text-white font-bold ${
                       index === 1 ? 'bg-gold-500/20' : ''
@@ -72,7 +75,7 @@ export default function PricingComparison({ activeTab }: PricingComparisonProps)
             </thead>
             <tbody>
               {features.map((feature, featureIndex) => (
-                <tr 
+                <tr
                   key={featureIndex}
                   className='border-b border-white/5 hover:bg-white/5 transition-colors'
                 >
@@ -80,16 +83,16 @@ export default function PricingComparison({ activeTab }: PricingComparisonProps)
                     {feature.name}
                   </td>
                   {plans.map((plan, planIndex) => {
-                    const planKey = activeTab === 'builder' 
-                      ? planIndex === 0 ? 'free' : planIndex === 1 ? 'pro' : 'enterprise'
+                    const planKey = activeTab === 'builder'
+                      ? planIndex === 0 ? 'starter' : planIndex === 1 ? 'pro' : 'enterprise'
                       : planIndex === 0 ? 'free' : planIndex === 1 ? 'premium' : 'vip'
-                    
+
                     const value = (feature as any)[planKey]
                     const hasFeature = value === true || (typeof value === 'string' && value !== '0' && value !== 'false')
                     const isUnlimited = value === 'Unlimited' || value === 'unlimited'
-                    
+
                     return (
-                      <td 
+                      <td
                         key={planIndex}
                         className={`text-center p-6 ${
                           planIndex === 1 ? 'bg-gold-500/10' : ''

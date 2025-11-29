@@ -229,14 +229,33 @@
     }
   }
 
-  // Check if needs onboarding
+  // Check if needs onboarding - always check database
   async function needsOnboarding() {
-    if (!roleState.initialized) await fetchUserRoles();
-    return roleState.roles.length === 0;
+    // Always fetch fresh roles from database to ensure accuracy
+    await fetchUserRoles();
+    const hasRoles = roleState.roles.length > 0;
+    
+    // Also check if user is already on a dashboard page
+    const currentPath = window.location.pathname;
+    const isOnDashboard = currentPath === '/my-dashboard' || currentPath === '/builder';
+    
+    // Don't show modal if user has roles OR is already on dashboard
+    if (hasRoles || isOnDashboard) {
+      return false;
+    }
+    
+    return true;
   }
 
   // Show role selection modal (with duplicate prevention)
-  function showRoleSelectionModal() {
+  async function showRoleSelectionModal() {
+    // Check if user actually needs onboarding (has no roles)
+    const needsOnboardingCheck = await needsOnboarding();
+    if (!needsOnboardingCheck) {
+      console.log('[role-v2] User already has roles, skipping modal');
+      return;
+    }
+
     // Prevent duplicates
     if (roleState.initializingModal || roleState.hasShownOnboarding) {
       console.log('[role-v2] Modal already shown or showing');
@@ -450,13 +469,16 @@
     }, 100);
   }
 
-  // Handle role selection (NO auto-redirect, just add role)
+  // Handle role selection - redirect to dashboard after selection
   async function handleRoleSelection(role, data = {}) {
     try {
       console.log('[role-v2] Handling role selection:', role);
 
       // Add role with instant feedback
       await addRole(role, data);
+
+      // Refresh roles to get updated state
+      await fetchUserRoles();
 
       // Close modal with animation
       const modal = document.getElementById('thg-role-onboarding');
@@ -465,11 +487,31 @@
         setTimeout(() => modal.remove(), 300);
       }
 
-      // Show success notification
-      const roleLabel = role === 'buyer' ? 'Buyer' : 'Builder';
-      showNotification(`✅ ${roleLabel} role added! Check Portal menu for dashboard access.`);
+      // Mark onboarding as complete
+      roleState.hasShownOnboarding = true;
+      roleState.initializingModal = false;
 
-      // NO REDIRECT - just stay on current page
+      // Redirect to appropriate dashboard based on selected role
+      const currentPath = window.location.pathname;
+      let redirectPath = '/';
+
+      if (role === 'buyer') {
+        redirectPath = '/my-dashboard';
+      } else if (role === 'builder') {
+        redirectPath = '/builder';
+      }
+
+      // Only redirect if not already on the target dashboard
+      if (currentPath !== redirectPath) {
+        console.log('[role-v2] Redirecting to dashboard:', redirectPath);
+        // Small delay to let modal close animation finish
+        setTimeout(() => {
+          window.location.href = redirectPath;
+        }, 400);
+      } else {
+        // Already on dashboard, just show success
+        showNotification(`✅ ${role === 'buyer' ? 'Buyer' : 'Builder'} role added! Welcome to your dashboard.`);
+      }
 
     } catch (error) {
       showNotification(`Error: ${error.message}`, 'error');
@@ -1123,7 +1165,7 @@
     console.log('[role-v2] Initializing for user:', user.email);
 
     try {
-      // Fetch roles
+      // Fetch roles from database
       await fetchUserRoles();
 
       // Build menu
@@ -1131,13 +1173,33 @@
         buildEnhancedMenu(ui);
       }
 
-      // Check if needs onboarding (ONCE)
-      if (await needsOnboarding()) {
-        console.log('[role-v2] User needs onboarding');
-        setTimeout(() => showRoleSelectionModal(), 400);
-      } else {
-        console.log('[role-v2] User has roles:', roleState.roles);
+      // Check if needs onboarding - only show once, only if user has no roles
+      const currentPath = window.location.pathname;
+      const isOnDashboard = currentPath === '/my-dashboard' || currentPath === '/builder';
+      
+      // Don't show modal if:
+      // 1. User already has roles
+      // 2. User is on a dashboard page
+      // 3. Modal was already shown in this session
+      if (roleState.roles.length > 0) {
+        console.log('[role-v2] User has roles:', roleState.roles, '- skipping onboarding');
+        return;
       }
+
+      if (isOnDashboard) {
+        console.log('[role-v2] User on dashboard page - skipping onboarding modal');
+        return;
+      }
+
+      if (roleState.hasShownOnboarding) {
+        console.log('[role-v2] Onboarding already shown in this session - skipping');
+        return;
+      }
+
+      // Only show modal if user truly has no roles and is not on dashboard
+      console.log('[role-v2] User needs onboarding - showing modal once');
+      setTimeout(() => showRoleSelectionModal(), 400);
+      
     } catch (error) {
       console.error('[role-v2] Init error:', error);
     }

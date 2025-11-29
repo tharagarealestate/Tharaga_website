@@ -4,11 +4,16 @@ import { getSupabase } from '@/lib/supabase'
 
 export async function GET(req: NextRequest) {
   try {
-    const url = new URL(req.url)
-    // TODO: derive from auth/session; use demo for now
-    const builderId = url.searchParams.get('builder_id') || 'demo-builder'
-
     const supabase = getSupabase()
+    
+    // Get authenticated user - NO DEMO FALLBACK
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    if (authError || !user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+    
+    // Use real authenticated user ID as builder_id
+    const builderId = user.id
     const { data, error } = await supabase
       .from('properties')
       .select('id,title,city,locality,price_inr,images,bedrooms,sqft,listed_at,listing_status')

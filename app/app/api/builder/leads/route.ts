@@ -12,8 +12,14 @@ export async function GET(req: NextRequest) {
 
   const supabase = getSupabase()
 
-  // In a real app, derive builder_id from session/user
-  const builderId = url.searchParams.get('builder_id') || 'demo-builder'
+  // Get authenticated user - NO DEMO FALLBACK
+  const { data: { user }, error: authError } = await supabase.auth.getUser()
+  if (authError || !user) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+  
+  // Use real authenticated user ID as builder_id
+  const builderId = user.id
 
   let fromDate: string | null = null
   const now = new Date()

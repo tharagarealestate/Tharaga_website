@@ -35,7 +35,7 @@ export default function TrialDashboardPage() {
     return diff < 0 ? 0 : diff
   }, [trialEndsAt])
 
-  // Auth/builder derivation (best-effort)
+  // Auth/builder derivation - REAL USER ONLY, NO DEMO FALLBACK
   useEffect(() => {
     let mounted = true
     ;(async () => {
@@ -43,11 +43,17 @@ export default function TrialDashboardPage() {
         const { data } = await supabase.auth.getUser()
         const uid = data?.user?.id || null
         if (!mounted) return
-        // In this app, builder_id may be same as user id or mapped; fallback to demo
-        setBuilderId(uid || 'demo-builder')
+        // Only set builderId if we have a real authenticated user
+        if (uid) {
+          setBuilderId(uid)
+        } else {
+          // No user = no data, don't use demo fallback
+          setBuilderId(null)
+        }
       } catch {
         if (!mounted) return
-        setBuilderId('demo-builder')
+        // Error = no data, don't use demo fallback
+        setBuilderId(null)
       }
     })()
     return () => { mounted = false }

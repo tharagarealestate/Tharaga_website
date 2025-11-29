@@ -28,15 +28,15 @@ export default function Page() {
         if (error) {
           console.error('Auth error:', error)
           setLoading(false)
-          // Redirect to login on error
-          router.push('/login?next=/my-dashboard')
+          // On error, send back to homepage (auth handled by modal there)
+          router.push('/')
           return
         }
 
         if (!user) {
-          // No user, redirect to login
+          // No user, send back to homepage where CTA opens login modal
           setLoading(false)
-          router.push('/login?next=/my-dashboard')
+          router.push('/')
           return
         }
 
@@ -49,7 +49,7 @@ export default function Page() {
         if (rolesError) {
           console.error('Error fetching roles:', rolesError)
           setLoading(false)
-          router.push('/login?next=/my-dashboard')
+          router.push('/')
           return
         }
 
@@ -59,8 +59,8 @@ export default function Page() {
         if (!hasAccess) {
           console.warn('User does not have buyer role. Roles:', roles)
           setLoading(false)
-          // Redirect to home with message
-          router.push('/?error=access_denied')
+          // Redirect to home; portal/menu will show appropriate dashboards
+          router.push('/')
           return
         }
 
@@ -75,7 +75,7 @@ export default function Page() {
       } catch (err) {
         console.error('Error fetching user:', err)
         setLoading(false)
-        router.push('/login?next=/my-dashboard')
+        router.push('/')
       }
     }
 

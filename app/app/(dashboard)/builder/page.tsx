@@ -19,13 +19,15 @@ export default function BuilderOverviewPage() {
         if (error) {
           console.error('Auth error:', error)
           setLoading(false)
-          router.push('/login?next=/builder')
+          // On error, send back to homepage (auth handled by modal there)
+          router.push('/')
           return
         }
 
         if (!user) {
           setLoading(false)
-          router.push('/login?next=/builder')
+          // No user, send back to homepage where CTA opens login modal
+          router.push('/')
           return
         }
 
@@ -38,7 +40,7 @@ export default function BuilderOverviewPage() {
         if (rolesError) {
           console.error('Error fetching roles:', rolesError)
           setLoading(false)
-          router.push('/login?next=/builder')
+          router.push('/')
           return
         }
 
@@ -48,7 +50,7 @@ export default function BuilderOverviewPage() {
         if (!hasAccess) {
           console.warn('User does not have builder role. Roles:', roles)
           setLoading(false)
-          router.push('/?error=access_denied')
+          router.push('/')
           return
         }
 
@@ -57,7 +59,7 @@ export default function BuilderOverviewPage() {
       } catch (err) {
         console.error('Error fetching user:', err)
         setLoading(false)
-        router.push('/login?next=/builder')
+        router.push('/')
       }
     }
 

@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { getSupabase } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
+import { UnifiedDashboard } from './_components/UnifiedDashboard'
 
 export default function BuilderOverviewPage() {
   const [user, setUser] = useState<any>(null)
@@ -19,14 +20,12 @@ export default function BuilderOverviewPage() {
         if (error) {
           console.error('Auth error:', error)
           setLoading(false)
-          // On error, send back to homepage (auth handled by modal there)
           router.push('/')
           return
         }
 
         if (!user) {
           setLoading(false)
-          // No user, send back to homepage where CTA opens login modal
           router.push('/')
           return
         }
@@ -81,10 +80,5 @@ export default function BuilderOverviewPage() {
     return null
   }
 
-  return (
-    <div className="space-y-4">
-      <h2 className="text-xl font-semibold text-gray-900">Overview</h2>
-      <p className="text-gray-600">Welcome to the Builder Dashboard. Use the sidebar to navigate.</p>
-    </div>
-  )
+  return <UnifiedDashboard />
 }

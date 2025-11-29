@@ -17,7 +17,7 @@ export default function BuilderDashboardLayout({ children }: { children: ReactNo
 
   return (
     <ReactQueryProvider>
-      <div className="min-h-screen bg-slate-50 flex flex-col">
+      <div className="min-h-screen flex flex-col relative overflow-hidden">
         {/* Premium minimal header */}
         <BuilderHeader />
 
@@ -31,29 +31,29 @@ export default function BuilderDashboardLayout({ children }: { children: ReactNo
         <ContextMenu />
 
         {/* Main shell: sidebar + content */}
-        <div className="flex-1 flex">
+        <div className="flex-1 flex relative">
           {/* Desktop sidebar (collapsible) */}
           <Sidebar />
 
           {/* Mobile: hamburger + breadcrumb + content */}
-          <div className="flex-1 flex flex-col min-w-0">
+          <div className="flex-1 flex flex-col min-w-0 relative">
             {/* Mobile header with hamburger below global header */}
-            <div className="lg:hidden border-b border-slate-200 bg-white px-4 py-3 flex items-center justify-between">
+            <div className="lg:hidden border-b border-white/10 bg-white/[0.03] backdrop-blur-[16px] px-4 py-3 flex items-center justify-between">
               <button
                 aria-label="Open menu"
-                className="p-2 rounded-md border border-slate-300 bg-white"
+                className="p-2 rounded-md border border-white/10 bg-white/[0.05] backdrop-blur-sm"
                 onClick={() => setOpen(true)}
               >
-                <Menu className="w-5 h-5" />
+                <Menu className="w-5 h-5 text-white" />
               </button>
-              <div className="text-sm font-semibold text-slate-900">Builder Dashboard</div>
+              <div className="text-sm font-semibold text-white">Builder Dashboard</div>
               <div className="w-9" />
             </div>
 
             {/* Off-canvas mobile sidebar */}
             {open && (
               <div className="fixed inset-0 z-50 lg:hidden">
-                <div className="absolute inset-0 bg-slate-900/60" onClick={() => setOpen(false)} />
+                <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setOpen(false)} />
                 <div className="absolute left-0 top-0 h-full w-72 max-w-[80%] bg-[#0F111C] shadow-2xl transform transition-transform duration-300 translate-x-0">
                   <Sidebar />
                 </div>
@@ -61,7 +61,7 @@ export default function BuilderDashboardLayout({ children }: { children: ReactNo
             )}
 
             {/* Breadcrumb Navigation */}
-            <div className="border-b border-slate-200 bg-white/80 backdrop-blur">
+            <div className="border-b border-white/10 bg-white/[0.03] backdrop-blur-[16px]">
               <Breadcrumb
                 items={[
                   { label: 'Home', href: '/' },
@@ -70,8 +70,8 @@ export default function BuilderDashboardLayout({ children }: { children: ReactNo
               />
             </div>
 
-            {/* Page Content */}
-            <main className="flex-1 overflow-y-auto px-4 py-6 lg:px-8 lg:py-8 bg-slate-50">
+            {/* Page Content - No background, let unified dashboard handle it */}
+            <main className="flex-1 overflow-y-auto relative">
               {children}
             </main>
           </div>

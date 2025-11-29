@@ -1,8 +1,9 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { Search } from "lucide-react"
+import { Search, HelpCircle } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { usePathname } from "next/navigation"
 
 interface SubscriptionData {
   tier: "trial" | "pro" | "enterprise" | "trial_expired" | string
@@ -81,8 +82,20 @@ export function BuilderHeader() {
         </div>
       </div>
 
-      {/* Right: Trial + Profile placeholder */}
-      <div className="flex items-center gap-4">
+          {/* Right: Help + Trial + Profile */}
+          <div className="flex items-center gap-3">
+            {/* Help Button - Opens AI Assistant */}
+            <button
+              onClick={() => {
+                // Trigger AI assistant open (we'll use a custom event)
+                window.dispatchEvent(new CustomEvent('open-ai-assistant'))
+              }}
+              className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-medium transition-colors"
+              title="Get help with AI Assistant"
+            >
+              <HelpCircle className="w-4 h-4" />
+              <span className="hidden md:inline">Help</span>
+            </button>
         {subscription && subscription.tier === 'trial' && (
           <div className={cn(
             "hidden sm:flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-medium transition-all cursor-pointer hover:scale-105",

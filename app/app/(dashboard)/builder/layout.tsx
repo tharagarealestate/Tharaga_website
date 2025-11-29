@@ -10,6 +10,7 @@ import { BuilderHeader } from './_components/BuilderHeader'
 import { WorkflowTabs } from './_components/WorkflowTabs'
 import { ContextMenu } from './_components/ContextMenu'
 import { TrialUpgradeBanner } from './_components/TrialUpgradeBanner'
+import { AIAssistant } from './_components/AIAssistant'
 
 export default function BuilderDashboardLayout({ children }: { children: ReactNode }) {
   const [open, setOpen] = useState(false)
@@ -75,6 +76,9 @@ export default function BuilderDashboardLayout({ children }: { children: ReactNo
             </main>
           </div>
         </div>
+        
+        {/* AI Assistant - Available everywhere */}
+        <AIAssistant />
       </div>
     </ReactQueryProvider>
   )

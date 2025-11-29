@@ -1,4 +1,6 @@
-import React from 'react'
+'use client'
+
+import React, { useState, FormEvent } from 'react'
 import Link from 'next/link'
 import { 
   Facebook, 
@@ -10,12 +12,53 @@ import {
   MapPin,
   ArrowRight,
   Shield,
-  Globe
+  Globe,
+  MessageCircle
 } from 'lucide-react'
 import { GlassContainer } from '@/components/ui/GlassContainer'
 
 export function Footer() {
   const currentYear = new Date().getFullYear()
+  const [email, setEmail] = useState('')
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [subscribeMessage, setSubscribeMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null)
+
+  const handleNewsletterSubmit = async (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    if (!email || !email.includes('@')) {
+      setSubscribeMessage({ type: 'error', text: 'Please enter a valid email address' })
+      return
+    }
+
+    setIsSubmitting(true)
+    setSubscribeMessage(null)
+
+    try {
+      const response = await fetch('/api/newsletter/subscribe', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, source: 'footer' })
+      })
+
+      const data = await response.json()
+
+      if (data.ok) {
+        setSubscribeMessage({ 
+          type: 'success', 
+          text: data.already_subscribed 
+            ? 'You are already subscribed!'
+            : 'Successfully subscribed! Check your inbox soon.' 
+        })
+        setEmail('')
+      } else {
+        setSubscribeMessage({ type: 'error', text: data.error || 'Failed to subscribe. Please try again.' })
+      }
+    } catch (error) {
+      setSubscribeMessage({ type: 'error', text: 'Network error. Please try again.' })
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
 
   return (
     <footer className="relative bg-gradient-to-b from-section-dark-from to-black text-white pt-20 pb-8">
@@ -28,20 +71,30 @@ export function Footer() {
           <p className="text-white/70 mb-8 max-w-2xl mx-auto">
             Get weekly property insights, market trends, and exclusive deals delivered to your inbox
           </p>
-          <form className="flex flex-col sm:flex-row gap-4 max-w-md mx-auto">
+          <form onSubmit={handleNewsletterSubmit} className="flex flex-col sm:flex-row gap-4 max-w-md mx-auto">
             <input
               type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
               placeholder="Enter your email"
-              className="flex-1 px-6 py-4 rounded-xl bg-white/10 border border-white/20 backdrop-blur-sm text-white placeholder:text-white/50 focus:outline-none focus:ring-2 focus:ring-yellow-500/50"
+              disabled={isSubmitting}
+              className="flex-1 px-6 py-4 rounded-xl bg-white/10 border border-white/20 backdrop-blur-sm text-white placeholder:text-white/50 focus:outline-none focus:ring-2 focus:ring-yellow-500/50 disabled:opacity-50 disabled:cursor-not-allowed"
+              required
             />
             <button
               type="submit"
-              className="px-8 py-4 bg-gradient-to-r from-yellow-500 to-orange-500 rounded-xl font-semibold hover:shadow-lg transition-all duration-300 flex items-center justify-center gap-2 group"
+              disabled={isSubmitting}
+              className="px-8 py-4 bg-gradient-to-r from-yellow-500 to-orange-500 rounded-xl font-semibold hover:shadow-lg transition-all duration-300 flex items-center justify-center gap-2 group disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Subscribe
+              {isSubmitting ? 'Subscribing...' : 'Subscribe'}
               <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
             </button>
           </form>
+          {subscribeMessage && (
+            <p className={`mt-4 text-sm ${subscribeMessage.type === 'success' ? 'text-green-400' : 'text-red-400'}`}>
+              {subscribeMessage.text}
+            </p>
+          )}
         </GlassContainer>
       </div>
 
@@ -74,10 +127,29 @@ export function Footer() {
             {/* Social Links */}
             <div className="flex gap-4">
               <a
+                href="https://www.instagram.com/tharaga.co.in?igsh=amY2M3BwNHVoNGV5&utm_source=qr"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-10 h-10 rounded-lg bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors border border-white/20"
+                aria-label="Follow us on Instagram"
+              >
+                <Instagram className="w-5 h-5" />
+              </a>
+              <a
+                href="https://wa.me/message/YFS5HON7VE4KC1"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-10 h-10 rounded-lg bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors border border-white/20"
+                aria-label="Chat with us on WhatsApp"
+              >
+                <MessageCircle className="w-5 h-5" />
+              </a>
+              <a
                 href="https://facebook.com/tharaga"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="w-10 h-10 rounded-lg bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors border border-white/20"
+                aria-label="Follow us on Facebook"
               >
                 <Facebook className="w-5 h-5" />
               </a>
@@ -86,22 +158,16 @@ export function Footer() {
                 target="_blank"
                 rel="noopener noreferrer"
                 className="w-10 h-10 rounded-lg bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors border border-white/20"
+                aria-label="Follow us on Twitter"
               >
                 <Twitter className="w-5 h-5" />
-              </a>
-              <a
-                href="https://instagram.com/tharaga"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="w-10 h-10 rounded-lg bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors border border-white/20"
-              >
-                <Instagram className="w-5 h-5" />
               </a>
               <a
                 href="https://linkedin.com/company/tharaga"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="w-10 h-10 rounded-lg bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors border border-white/20"
+                aria-label="Follow us on LinkedIn"
               >
                 <Linkedin className="w-5 h-5" />
               </a>
@@ -150,18 +216,8 @@ export function Footer() {
                 </Link>
               </li>
               <li>
-                <Link href="/careers" className="text-white/70 hover:text-white transition-colors">
-                  Careers
-                </Link>
-              </li>
-              <li>
                 <Link href="/blog" className="text-white/70 hover:text-white transition-colors">
                   Blog
-                </Link>
-              </li>
-              <li>
-                <Link href="/press" className="text-white/70 hover:text-white transition-colors">
-                  Press Kit
                 </Link>
               </li>
               <li>

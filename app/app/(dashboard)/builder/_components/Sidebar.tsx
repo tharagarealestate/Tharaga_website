@@ -328,17 +328,20 @@ export function Sidebar() {
         })}
       </nav>
 
-      {/* Bottom link */}
+      {/* Bottom link - AI Assistant */}
       <div className="px-2 py-3 border-t border-white/10">
-        <Link
-          href="/builder/help"
-          className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-gray-400 hover:bg-white/5 hover:text-white transition-all"
+        <button
+          onClick={() => {
+            window.dispatchEvent(new CustomEvent('open-ai-assistant'))
+          }}
+          className="w-full flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-gray-400 hover:bg-white/5 hover:text-white transition-all"
+          title="Open AI Assistant (Press ? for help)"
         >
           <HelpCircle className="w-5 h-5 shrink-0" />
           <span className="opacity-0 group-hover/sidebar:opacity-100 transition-opacity duration-200">
             Help &amp; Support
           </span>
-        </Link>
+        </button>
       </div>
     </aside>
   )

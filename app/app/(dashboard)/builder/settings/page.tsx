@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { User, Building2, Bell, CreditCard, Shield, Users, Palette, Zap, CheckCircle2, AlertCircle, X } from 'lucide-react'
+import { FloatingLabelInput, FloatingLabelTextarea } from '@/components/ui/FloatingLabelInput'
 
 export default function BuilderSettingsPage() {
   const router = useRouter()
@@ -121,81 +122,92 @@ export default function BuilderSettingsPage() {
   }, [activeTab])
 
   return (
-    <div className='min-h-screen bg-gradient-to-br from-gray-50 to-gray-100'>
-      {/* Glass Header - positioned below static header */}
-      <div className='bg-white/70 backdrop-blur-xl border-b border-gray-200/50 sticky top-[60px] z-30'>
-        <div className='max-w-7xl mx-auto px-6 py-6'>
-          <h1 className='text-3xl font-bold bg-gradient-to-r from-primary-900 to-primary-700 bg-clip-text text-transparent'>
-            Settings
-          </h1>
-          <p className='text-gray-600 mt-1'>Manage your account and preferences</p>
-        </div>
+    <div className='min-h-screen bg-gradient-to-br from-primary-950 via-primary-900 to-primary-800 relative overflow-hidden'>
+      {/* Animated Background Elements */}
+      <div className='absolute inset-0 opacity-20'>
+        <div className='absolute top-20 left-10 w-96 h-96 bg-gold-500 rounded-full blur-3xl animate-pulse-slow' />
+        <div
+          className='absolute bottom-20 right-10 w-[600px] h-[600px] bg-emerald-500 rounded-full blur-3xl animate-pulse-slow'
+          style={{ animationDelay: '1s' }}
+        />
       </div>
 
-      <div className='max-w-7xl mx-auto px-6 py-8'>
-        <div className='grid lg:grid-cols-4 gap-8'>
-          {/* Sidebar */}
-          <div className='lg:col-span-1'>
-            <nav className='bg-white/70 backdrop-blur-xl border border-gray-200/50 rounded-2xl p-2 space-y-1'>
-              {tabs.map((tab) => {
-                const Icon = tab.icon
-                return (
-                  <button
-                    key={tab.id}
-                    onClick={() => setActiveTab(tab.id)}
-                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-all duration-200 ${
-                      activeTab === tab.id
-                        ? 'bg-gradient-to-r from-gold-600 to-gold-500 text-white shadow-lg'
-                        : 'text-gray-700 hover:bg-gray-100'
-                    }`}
-                  >
-                    <Icon className='w-5 h-5' />
-                    <span className='font-medium'>{tab.label}</span>
-                  </button>
-                )
-              })}
-            </nav>
+      <div className='relative z-10'>
+        {/* Premium Glass Header */}
+        <div className='bg-white/10 backdrop-blur-xl border-b border-white/20 sticky top-[60px] z-30'>
+          <div className='max-w-7xl mx-auto px-6 py-6'>
+            <h1 className='text-3xl font-bold text-white'>
+              Settings
+            </h1>
+            <p className='text-gray-300 mt-1'>Manage your account and preferences</p>
           </div>
+        </div>
 
-          {/* Content Area */}
-          <div className='lg:col-span-3'>
-            {/* Calendar Status Message */}
-            {calendarMessage && (
-              <div
-                className={`mb-6 p-4 rounded-xl border flex items-center justify-between ${
-                  calendarMessage.type === 'success'
-                    ? 'bg-emerald-50 border-emerald-200 text-emerald-800'
-                    : 'bg-rose-50 border-rose-200 text-rose-800'
-                }`}
-              >
-                <div className='flex items-center gap-3'>
-                  {calendarMessage.type === 'success' ? (
-                    <CheckCircle2 className='w-5 h-5 text-emerald-600' />
-                  ) : (
-                    <AlertCircle className='w-5 h-5 text-rose-600' />
-                  )}
-                  <p className='font-medium'>{calendarMessage.message}</p>
-                </div>
-                <button
-                  onClick={() => setCalendarMessage(null)}
-                  className='text-gray-400 hover:text-gray-600 transition-colors'
+        <div className='max-w-7xl mx-auto px-6 py-8'>
+          <div className='grid lg:grid-cols-4 gap-8'>
+            {/* Premium Sidebar */}
+            <div className='lg:col-span-1'>
+              <nav className='backdrop-blur-xl bg-white/10 border border-white/20 rounded-2xl p-2 space-y-1'>
+                {tabs.map((tab) => {
+                  const Icon = tab.icon
+                  return (
+                    <button
+                      key={tab.id}
+                      onClick={() => setActiveTab(tab.id)}
+                      className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-all duration-200 ${
+                        activeTab === tab.id
+                          ? 'bg-gradient-to-r from-gold-600 to-gold-500 text-primary-950 shadow-lg shadow-gold-500/30'
+                          : 'text-gray-300 hover:bg-white/10 hover:text-white'
+                      }`}
+                    >
+                      <Icon className='w-5 h-5' />
+                      <span className='font-medium'>{tab.label}</span>
+                    </button>
+                  )
+                })}
+              </nav>
+            </div>
+
+            {/* Content Area */}
+            <div className='lg:col-span-3'>
+              {/* Status Message */}
+              {calendarMessage && (
+                <div
+                  className={`mb-6 p-4 rounded-xl border backdrop-blur-md flex items-center justify-between ${
+                    calendarMessage.type === 'success'
+                      ? 'bg-emerald-500/20 border-emerald-400/50 text-emerald-100'
+                      : 'bg-rose-500/20 border-rose-400/50 text-rose-100'
+                  }`}
                 >
-                  <X className='w-5 h-5' />
-                </button>
-              </div>
-            )}
-
-            <div className='bg-white/70 backdrop-blur-xl border border-gray-200/50 rounded-2xl p-8'>
-              {activeTab === 'profile' && <ProfileSettings />}
-              {activeTab === 'company' && <CompanySettings />}
-              {activeTab === 'notifications' && <NotificationSettings />}
-              {activeTab === 'billing' && <BillingSettings />}
-              {activeTab === 'security' && <SecuritySettings />}
-              {activeTab === 'team' && <TeamSettings />}
-              {activeTab === 'preferences' && <PreferenceSettings />}
-              {activeTab === 'integrations' && (
-                <IntegrationSettings calendarStatus={calendarStatus} onStatusChange={fetchCalendarStatus} />
+                  <div className='flex items-center gap-3'>
+                    {calendarMessage.type === 'success' ? (
+                      <CheckCircle2 className='w-5 h-5 text-emerald-300' />
+                    ) : (
+                      <AlertCircle className='w-5 h-5 text-rose-300' />
+                    )}
+                    <p className='font-medium'>{calendarMessage.message}</p>
+                  </div>
+                  <button
+                    onClick={() => setCalendarMessage(null)}
+                    className='text-gray-400 hover:text-white transition-colors'
+                  >
+                    <X className='w-5 h-5' />
+                  </button>
+                </div>
               )}
+
+              <div className='backdrop-blur-xl bg-white/10 border border-white/20 rounded-2xl p-8'>
+                {activeTab === 'profile' && <ProfileSettings />}
+                {activeTab === 'company' && <CompanySettings />}
+                {activeTab === 'notifications' && <NotificationSettings />}
+                {activeTab === 'billing' && <BillingSettings />}
+                {activeTab === 'security' && <SecuritySettings />}
+                {activeTab === 'team' && <TeamSettings />}
+                {activeTab === 'preferences' && <PreferenceSettings />}
+                {activeTab === 'integrations' && (
+                  <IntegrationSettings calendarStatus={calendarStatus} onStatusChange={fetchCalendarStatus} />
+                )}
+              </div>
             </div>
           </div>
         </div>
@@ -208,8 +220,8 @@ function ProfileSettings() {
   return (
     <div className='space-y-6'>
       <div>
-        <h2 className='text-2xl font-bold text-gray-900 mb-2'>Profile Information</h2>
-        <p className='text-gray-600'>Update your personal details and how others see you</p>
+        <h2 className='text-2xl font-bold text-white mb-2'>Profile Information</h2>
+        <p className='text-gray-300'>Update your personal details and how others see you</p>
       </div>
 
       {/* Profile Photo */}
@@ -224,8 +236,8 @@ function ProfileSettings() {
         </div>
 
         <div>
-          <h3 className='font-semibold text-gray-900 mb-1'>Profile Photo</h3>
-          <p className='text-sm text-gray-600 mb-3'>This will be displayed on your profile</p>
+          <h3 className='font-semibold text-white mb-1'>Profile Photo</h3>
+          <p className='text-sm text-gray-300 mb-3'>This will be displayed on your profile</p>
           <div className='flex gap-2'>
             <button className='px-4 py-2 bg-gradient-to-r from-gold-600 to-gold-500 text-white font-medium rounded-lg text-sm hover:shadow-lg hover:-translate-y-1 transition-all'>
               Upload New
@@ -237,50 +249,37 @@ function ProfileSettings() {
         </div>
       </div>
 
-      {/* Form Fields */}
+      {/* Form Fields with Floating Labels */}
       <div className='grid grid-cols-2 gap-6'>
-        <div>
-          <label className='block text-sm font-medium text-gray-700 mb-2'>First Name</label>
-          <input
-            type='text'
-            defaultValue='Rajesh'
-            className='w-full px-4 py-3 bg-white/60 backdrop-blur-md border border-gray-300/50 rounded-xl focus:ring-2 focus:ring-gold-500/50 focus:border-gold-500'
-          />
-        </div>
-
-        <div>
-          <label className='block text-sm font-medium text-gray-700 mb-2'>Last Name</label>
-          <input
-            type='text'
-            defaultValue='Kumar'
-            className='w-full px-4 py-3 bg-white/60 backdrop-blur-md border border-gray-300/50 rounded-xl focus:ring-2 focus:ring-gold-500/50 focus:border-gold-500'
-          />
-        </div>
-
+        <FloatingLabelInput
+          type='text'
+          label='First Name'
+          defaultValue='Rajesh'
+        />
+        <FloatingLabelInput
+          type='text'
+          label='Last Name'
+          defaultValue='Kumar'
+        />
         <div className='col-span-2'>
-          <label className='block text-sm font-medium text-gray-700 mb-2'>Email Address</label>
-          <input
+          <FloatingLabelInput
             type='email'
+            label='Email Address'
             defaultValue='rajesh@skylinebuilders.com'
-            className='w-full px-4 py-3 bg-white/60 backdrop-blur-md border border-gray-300/50 rounded-xl focus:ring-2 focus:ring-gold-500/50 focus:border-gold-500'
           />
         </div>
-
         <div className='col-span-2'>
-          <label className='block text-sm font-medium text-gray-700 mb-2'>Phone Number</label>
-          <input
+          <FloatingLabelInput
             type='tel'
+            label='Phone Number'
             defaultValue='+91 98765 43210'
-            className='w-full px-4 py-3 bg-white/60 backdrop-blur-md border border-gray-300/50 rounded-xl focus:ring-2 focus:ring-gold-500/50 focus:border-gold-500'
           />
         </div>
-
         <div className='col-span-2'>
-          <label className='block text-sm font-medium text-gray-700 mb-2'>Bio</label>
-          <textarea
+          <FloatingLabelTextarea
             rows={4}
+            label='Bio'
             defaultValue='Founder & CEO of Skyline Builders. 15+ years in real estate development.'
-            className='w-full px-4 py-3 bg-white/60 backdrop-blur-md border border-gray-300/50 rounded-xl focus:ring-2 focus:ring-gold-500/50 focus:border-gold-500'
           />
         </div>
       </div>
@@ -299,8 +298,8 @@ function CompanySettings() {
   return (
     <div className='space-y-6'>
       <div>
-        <h2 className='text-2xl font-bold text-gray-900 mb-2'>Company Information</h2>
-        <p className='text-gray-600'>Manage your company profile and business details</p>
+        <h2 className='text-2xl font-bold text-white mb-2'>Company Information</h2>
+        <p className='text-gray-300'>Manage your company profile and business details</p>
       </div>
 
       {/* Company Logo */}
@@ -315,8 +314,8 @@ function CompanySettings() {
         </div>
 
         <div>
-          <h3 className='font-semibold text-gray-900 mb-1'>Company Logo</h3>
-          <p className='text-sm text-gray-600 mb-3'>Upload your company logo</p>
+          <h3 className='font-semibold text-white mb-1'>Company Logo</h3>
+          <p className='text-sm text-gray-300 mb-3'>Upload your company logo</p>
           <div className='flex gap-2'>
             <button className='px-4 py-2 bg-gradient-to-r from-gold-600 to-gold-500 text-white font-medium rounded-lg text-sm hover:shadow-lg hover:-translate-y-1 transition-all'>
               Upload Logo
@@ -328,68 +327,47 @@ function CompanySettings() {
         </div>
       </div>
 
-      {/* Form Fields */}
+      {/* Form Fields with Floating Labels */}
       <div className='grid grid-cols-2 gap-6'>
         <div className='col-span-2'>
-          <label className='block text-sm font-medium text-gray-700 mb-2'>Company Name</label>
-          <input
+          <FloatingLabelInput
             type='text'
+            label='Company Name'
             defaultValue='Skyline Builders'
-            className='w-full px-4 py-3 bg-white/60 backdrop-blur-md border border-gray-300/50 rounded-xl focus:ring-2 focus:ring-gold-500/50 focus:border-gold-500'
           />
         </div>
-
-        <div>
-          <label className='block text-sm font-medium text-gray-700 mb-2'>Registration Number</label>
-          <input
-            type='text'
-            defaultValue='U45200MH2010PTC123456'
-            className='w-full px-4 py-3 bg-white/60 backdrop-blur-md border border-gray-300/50 rounded-xl focus:ring-2 focus:ring-gold-500/50 focus:border-gold-500'
-          />
-        </div>
-
-        <div>
-          <label className='block text-sm font-medium text-gray-700 mb-2'>RERA Number</label>
-          <input
-            type='text'
-            defaultValue='MHMRE-123456'
-            className='w-full px-4 py-3 bg-white/60 backdrop-blur-md border border-gray-300/50 rounded-xl focus:ring-2 focus:ring-gold-500/50 focus:border-gold-500'
-          />
-        </div>
-
+        <FloatingLabelInput
+          type='text'
+          label='Registration Number'
+          defaultValue='U45200MH2010PTC123456'
+        />
+        <FloatingLabelInput
+          type='text'
+          label='RERA Number'
+          defaultValue='MHMRE-123456'
+        />
         <div className='col-span-2'>
-          <label className='block text-sm font-medium text-gray-700 mb-2'>Company Address</label>
-          <textarea
+          <FloatingLabelTextarea
             rows={3}
+            label='Company Address'
             defaultValue='123 Business Park, Anna Nagar, Chennai - 600040'
-            className='w-full px-4 py-3 bg-white/60 backdrop-blur-md border border-gray-300/50 rounded-xl focus:ring-2 focus:ring-gold-500/50 focus:border-gold-500'
           />
         </div>
-
-        <div>
-          <label className='block text-sm font-medium text-gray-700 mb-2'>Website</label>
-          <input
-            type='url'
-            defaultValue='https://skylinebuilders.com'
-            className='w-full px-4 py-3 bg-white/60 backdrop-blur-md border border-gray-300/50 rounded-xl focus:ring-2 focus:ring-gold-500/50 focus:border-gold-500'
-          />
-        </div>
-
-        <div>
-          <label className='block text-sm font-medium text-gray-700 mb-2'>Phone Number</label>
-          <input
-            type='tel'
-            defaultValue='+91 22 1234 5678'
-            className='w-full px-4 py-3 bg-white/60 backdrop-blur-md border border-gray-300/50 rounded-xl focus:ring-2 focus:ring-gold-500/50 focus:border-gold-500'
-          />
-        </div>
-
+        <FloatingLabelInput
+          type='url'
+          label='Website'
+          defaultValue='https://skylinebuilders.com'
+        />
+        <FloatingLabelInput
+          type='tel'
+          label='Phone Number'
+          defaultValue='+91 22 1234 5678'
+        />
         <div className='col-span-2'>
-          <label className='block text-sm font-medium text-gray-700 mb-2'>About Company</label>
-          <textarea
+          <FloatingLabelTextarea
             rows={4}
+            label='About Company'
             defaultValue='Skyline Builders is a leading real estate development company with over 15 years of experience in creating premium residential and commercial spaces in Chennai.'
-            className='w-full px-4 py-3 bg-white/60 backdrop-blur-md border border-gray-300/50 rounded-xl focus:ring-2 focus:ring-gold-500/50 focus:border-gold-500'
           />
         </div>
       </div>
@@ -473,8 +451,8 @@ function NotificationSettings() {
       </div>
 
       {/* SMS Notifications */}
-      <div className='bg-white/60 backdrop-blur-md border border-gray-300/50 rounded-xl p-6'>
-        <h3 className='text-lg font-bold text-gray-900 mb-4 flex items-center gap-2'>
+      <div className='bg-white/10 backdrop-blur-md border border-white/20 rounded-xl p-6'>
+        <h3 className='text-lg font-bold text-white mb-4 flex items-center gap-2'>
           <div className='w-2 h-2 rounded-full bg-gradient-to-r from-primary-600 to-primary-500'></div>
           SMS Notifications
         </h3>
@@ -482,8 +460,8 @@ function NotificationSettings() {
           {Object.entries(notifications.sms).map(([key, value]) => (
             <div key={key} className='flex items-center justify-between'>
               <div>
-                <div className='font-medium text-gray-900 capitalize'>{key.replace('_', ' ')}</div>
-                <div className='text-sm text-gray-600'>Receive SMS notifications for {key}</div>
+                <div className='font-medium text-white capitalize'>{key.replace('_', ' ')}</div>
+                <div className='text-sm text-gray-300'>Receive SMS notifications for {key}</div>
               </div>
                             <button
                 onClick={() => toggleNotification('sms', key)}
@@ -501,8 +479,8 @@ function NotificationSettings() {
       </div>
 
       {/* Push Notifications */}
-      <div className='bg-white/60 backdrop-blur-md border border-gray-300/50 rounded-xl p-6'>
-        <h3 className='text-lg font-bold text-gray-900 mb-4 flex items-center gap-2'>
+      <div className='bg-white/10 backdrop-blur-md border border-white/20 rounded-xl p-6'>
+        <h3 className='text-lg font-bold text-white mb-4 flex items-center gap-2'>
           <div className='w-2 h-2 rounded-full bg-gradient-to-r from-emerald-600 to-emerald-500'></div>
           Push Notifications
         </h3>
@@ -510,8 +488,8 @@ function NotificationSettings() {
           {Object.entries(notifications.push).map(([key, value]) => (
             <div key={key} className='flex items-center justify-between'>
               <div>
-                <div className='font-medium text-gray-900 capitalize'>{key.replace('_', ' ')}</div>
-                <div className='text-sm text-gray-600'>Receive push notifications for {key}</div>
+                <div className='font-medium text-white capitalize'>{key.replace('_', ' ')}</div>
+                <div className='text-sm text-gray-300'>Receive push notifications for {key}</div>
               </div>
                             <button
                 onClick={() => toggleNotification('push', key)}
@@ -650,18 +628,21 @@ function SecuritySettings() {
       <div className='bg-white/60 backdrop-blur-md border border-gray-300/50 rounded-xl p-6'>
         <h3 className='text-lg font-bold text-gray-900 mb-4'>Change Password</h3>
         <div className='space-y-4'>
-          <div>
-            <label className='block text-sm font-medium text-gray-700 mb-2'>Current Password</label>
-            <input type='password' className='w-full px-4 py-3 bg-white/60 backdrop-blur-md border border-gray-300/50 rounded-xl focus:ring-2 focus:ring-gold-500/50 focus:border-gold-500' />
-          </div>
-          <div>
-            <label className='block text-sm font-medium text-gray-700 mb-2'>New Password</label>
-            <input type='password' className='w-full px-4 py-3 bg-white/60 backdrop-blur-md border border-gray-300/50 rounded-xl focus:ring-2 focus:ring-gold-500/50 focus:border-gold-500' />
-          </div>
-          <div>
-            <label className='block text-sm font-medium text-gray-700 mb-2'>Confirm New Password</label>
-            <input type='password' className='w-full px-4 py-3 bg-white/60 backdrop-blur-md border border-gray-300/50 rounded-xl focus:ring-2 focus:ring-gold-500/50 focus:border-gold-500' />
-          </div>
+          <FloatingLabelInput
+            type='password'
+            label='Current Password'
+            helperText='Enter your current password to verify your identity'
+          />
+          <FloatingLabelInput
+            type='password'
+            label='New Password'
+            helperText='Must be at least 8 characters with letters and numbers'
+          />
+          <FloatingLabelInput
+            type='password'
+            label='Confirm New Password'
+            helperText='Re-enter your new password to confirm'
+          />
           <button className='px-6 py-2 bg-gradient-to-r from-gold-600 to-gold-500 text-white font-medium rounded-lg hover:shadow-lg hover:-translate-y-1 transition-all'>
             Update Password
           </button>
@@ -977,10 +958,10 @@ function IntegrationSettings({
         const data = await response.json()
         if (data.success) {
           setZohoStatus({
-            connected: data.connected,
-            account_name: data.account_name,
-            last_sync_at: data.last_sync_at,
-            total_synced: data.total_synced,
+            connected: data.connected || false,
+            account_name: data.account?.name || data.account_name || null,
+            last_sync_at: data.sync?.last_sync || data.last_sync_at || null,
+            total_synced: data.statistics?.total_syncs || data.total_synced || 0,
           })
         } else {
           setZohoStatus({ connected: false })
@@ -1107,7 +1088,7 @@ function IntegrationSettings({
                   <p className='text-sm text-gray-600 mt-1'>{integration.desc}</p>
                   {/* Calendar Status Info */}
                   {integration.name === 'Google Calendar' && integration.calendarStatus?.connected && (
-                    <div className='mt-2 text-xs text-gray-500'>
+                    <div className='mt-2 text-xs text-gray-400'>
                       {integration.calendarStatus.calendar_name && (
                         <div>Calendar: {integration.calendarStatus.calendar_name}</div>
                       )}
@@ -1118,7 +1099,7 @@ function IntegrationSettings({
                   )}
                   {/* Zoho Status Info */}
                   {integration.name === 'Zoho CRM' && integration.zohoStatus?.connected && (
-                    <div className='mt-2 text-xs text-gray-500'>
+                    <div className='mt-2 text-xs text-gray-400'>
                       {integration.zohoStatus.account_name && (
                         <div>Account: {integration.zohoStatus.account_name}</div>
                       )}
@@ -1134,8 +1115,8 @@ function IntegrationSettings({
               <span
                 className={`px-3 py-1 text-xs font-medium rounded-full ${
                   integration.status === 'connected'
-                    ? 'bg-emerald-100 text-emerald-700'
-                    : 'bg-gray-100 text-gray-700'
+                    ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-400/30'
+                    : 'bg-white/10 text-gray-300 border border-white/20'
                 }`}
               >
                 {integration.status === 'connected' ? 'Connected' : 'Available'}
@@ -1147,13 +1128,13 @@ function IntegrationSettings({
                       <button
                         onClick={handleCalendarSync}
                         disabled={syncing}
-                        className='px-3 py-2 text-xs font-medium text-gray-700 hover:bg-gray-100 rounded-lg transition-all disabled:opacity-50'
+                        className='px-3 py-2 text-xs font-medium text-white hover:bg-white/10 rounded-lg transition-all disabled:opacity-50 border border-white/20'
                       >
                         {syncing ? 'Syncing...' : 'Sync'}
                       </button>
                       <Link
                         href={integration.href as '/' | '/builder/settings' | '/builder/settings/calendar' | '/builder/messaging' | '/builder/settings/zoho'}
-                        className='px-4 py-2 text-sm font-medium rounded-lg transition-all bg-gray-100 text-gray-700 hover:bg-gray-200'
+                        className='px-4 py-2 text-sm font-medium rounded-lg transition-all bg-white/10 text-white hover:bg-white/20 border border-white/20'
                       >
                         Manage
                       </Link>
@@ -1162,7 +1143,7 @@ function IntegrationSettings({
                     <button
                       onClick={handleCalendarConnect}
                       disabled={connecting}
-                      className='px-4 py-2 text-sm font-medium rounded-lg transition-all bg-gradient-to-r from-gold-600 to-gold-500 text-white hover:shadow-lg hover:-translate-y-1 disabled:opacity-50'
+                      className='px-4 py-2 text-sm font-medium rounded-lg transition-all bg-gradient-to-r from-gold-600 to-gold-500 text-primary-950 hover:shadow-lg hover:shadow-gold-500/30 hover:-translate-y-1 disabled:opacity-50'
                     >
                       {connecting ? 'Connecting...' : 'Connect'}
                     </button>
@@ -1173,8 +1154,8 @@ function IntegrationSettings({
                   href={integration.href as '/' | '/builder/settings' | '/builder/settings/calendar' | '/builder/messaging' | '/builder/settings/zoho'}
                   className={`px-4 py-2 text-sm font-medium rounded-lg transition-all ${
                     integration.status === 'connected'
-                      ? 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                      : 'bg-gradient-to-r from-gold-600 to-gold-500 text-white hover:shadow-lg hover:-translate-y-1'
+                      ? 'bg-white/10 text-white hover:bg-white/20 border border-white/20'
+                      : 'bg-gradient-to-r from-gold-600 to-gold-500 text-primary-950 hover:shadow-lg hover:shadow-gold-500/30 hover:-translate-y-1'
                   }`}
                 >
                   {integration.status === 'connected' ? 'Manage' : 'Connect'}
@@ -1184,16 +1165,16 @@ function IntegrationSettings({
           </div>
         ))}
       </div>
-      <div className='bg-white/60 backdrop-blur-md border border-gray-300/50 rounded-xl p-6'>
-        <h3 className='text-lg font-bold text-gray-900 mb-4'>API Access</h3>
-        <p className='text-sm text-gray-600 mb-4'>
+      <div className='bg-white/10 backdrop-blur-md border border-white/20 rounded-xl p-6'>
+        <h3 className='text-lg font-bold text-white mb-4'>API Access</h3>
+        <p className='text-sm text-gray-300 mb-4'>
           Use our REST API to integrate Tharaga with your custom applications
         </p>
         <div className='flex gap-3'>
-          <button className='px-6 py-2 bg-gradient-to-r from-gold-600 to-gold-500 text-white font-medium rounded-lg hover:shadow-lg hover:-translate-y-1 transition-all'>
+          <button className='px-6 py-2 bg-gradient-to-r from-gold-600 to-gold-500 text-primary-950 font-medium rounded-lg hover:shadow-lg hover:shadow-gold-500/30 hover:-translate-y-1 transition-all'>
             View API Docs
           </button>
-          <button className='px-6 py-2 bg-gray-100 text-gray-700 font-medium rounded-lg hover:bg-gray-200 transition-all'>
+          <button className='px-6 py-2 bg-white/10 text-white font-medium rounded-lg hover:bg-white/20 border border-white/20 transition-all'>
             Generate API Key
           </button>
         </div>

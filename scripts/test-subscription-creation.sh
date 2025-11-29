@@ -99,3 +99,4 @@ echo ""
 echo -e "${BLUE}📋 Test Summary${NC}"
 echo -e "All subscription creation tests completed."
 
+

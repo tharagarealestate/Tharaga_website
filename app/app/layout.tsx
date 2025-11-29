@@ -398,32 +398,61 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   function closeMenu(ui){ ui.menu.setAttribute('aria-hidden','true'); ui.btn.setAttribute('aria-expanded','false'); }
   function toggleMenu(ui){ const isHidden = ui.menu.getAttribute('aria-hidden') === 'true'; if (isHidden) openMenu(ui); else closeMenu(ui); }
 
-  // Open auth in hosted page (new window) instead of redirecting
+  // Use iframe modal from auth-gate.js if available, otherwise fallback to new window
   function openAuthModal(ui, opts){
     const next = opts?.next || location.pathname + location.search;
+    // Prefer iframe modal from auth-gate.js
+    if (window.authGate && typeof window.authGate.openLoginModal === 'function') {
+      try {
+        window.authGate.openLoginModal({ next });
+        return;
+      } catch(e) {
+        console.warn('[thg-auth] auth-gate modal failed, using fallback:', e);
+      }
+    }
+    // Fallback to new window if auth-gate not available
     const base = window.DURABLE_AUTH_URL || 'https://auth.tharaga.co.in/login_signup_glassdrop/';
     const url = new URL(base);
     url.searchParams.set('next', next);
-    // Open in new window instead of redirecting
     window.open(url.toString(), 'tharaga-auth', 'width=480,height=640,scrollbars=yes,resizable=yes');
   }
-  function closeAuthModal(ui){ /* No-op - modal removed */ }
+  function closeAuthModal(ui){ 
+    // Use auth-gate close if available
+    if (window.authGate && typeof window.authGate.closeLoginModal === 'function') {
+      try {
+        window.authGate.closeLoginModal();
+        return;
+      } catch(e) {}
+    }
+  }
 
-  // Override window.authGate.openLoginModal and __thgOpenAuthModal to open hosted auth page
-  window.authGate.openLoginModal = function(opts) {
-    const next = opts?.next || location.pathname + location.search;
-    const base = window.DURABLE_AUTH_URL || 'https://auth.tharaga.co.in/login_signup_glassdrop/';
-    const url = new URL(base);
-    url.searchParams.set('next', next);
-    window.open(url.toString(), 'tharaga-auth', 'width=480,height=640,scrollbars=yes,resizable=yes');
-  };
-  window.__thgOpenAuthModal = function(opts) {
-    const next = opts?.next || location.pathname + location.search;
-    const base = window.DURABLE_AUTH_URL || 'https://auth.tharaga.co.in/login_signup_glassdrop/';
-    const url = new URL(base);
-    url.searchParams.set('next', next);
-    window.open(url.toString(), 'tharaga-auth', 'width=480,height=640,scrollbars=yes,resizable=yes');
-  };
+  // Don't override auth-gate functions - let them handle the modal
+  // Only set fallback if auth-gate is not available
+  if (!window.authGate || typeof window.authGate.openLoginModal !== 'function') {
+    window.authGate = window.authGate || {};
+    window.authGate.openLoginModal = function(opts) {
+      const next = opts?.next || location.pathname + location.search;
+      const base = window.DURABLE_AUTH_URL || 'https://auth.tharaga.co.in/login_signup_glassdrop/';
+      const url = new URL(base);
+      url.searchParams.set('next', next);
+      window.open(url.toString(), 'tharaga-auth', 'width=480,height=640,scrollbars=yes,resizable=yes');
+    };
+  }
+  
+  // Set __thgOpenAuthModal as alias to auth-gate if available
+  if (window.authGate && typeof window.authGate.openLoginModal === 'function') {
+    window.__thgOpenAuthModal = function(opts) {
+      window.authGate.openLoginModal(opts);
+    };
+  } else if (!window.__thgOpenAuthModal) {
+    window.__thgOpenAuthModal = function(opts) {
+      const next = opts?.next || location.pathname + location.search;
+      const base = window.DURABLE_AUTH_URL || 'https://auth.tharaga.co.in/login_signup_glassdrop/';
+      const url = new URL(base);
+      url.searchParams.set('next', next);
+      window.open(url.toString(), 'tharaga-auth', 'width=480,height=640,scrollbars=yes,resizable=yes');
+    };
+  }
   function openConfirm(ui){ ui.confirmEl.setAttribute('aria-hidden','false'); }
   // Broadcast current auth state (email only) to child iframes, sibling tabs, and embedded forms
   function broadcastAuth(user){

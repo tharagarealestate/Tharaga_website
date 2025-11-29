@@ -19,7 +19,7 @@ export default function Page() {
   const supabase = getSupabase()
   const router = useRouter()
 
-  // Fetch user and set greeting
+  // Fetch user, check roles, and set greeting
   useEffect(() => {
     const fetchUser = async () => {
       try {
@@ -33,15 +33,38 @@ export default function Page() {
           return
         }
 
-        if (user) {
-          setUser(user)
-        } else {
+        if (!user) {
           // No user, redirect to login
           setLoading(false)
           router.push('/login?next=/my-dashboard')
           return
         }
-        
+
+        // Check user roles - buyer dashboard requires 'buyer' or 'admin' role
+        const { data: rolesData, error: rolesError } = await supabase
+          .from('user_roles')
+          .select('role')
+          .eq('user_id', user.id)
+
+        if (rolesError) {
+          console.error('Error fetching roles:', rolesError)
+          setLoading(false)
+          router.push('/login?next=/my-dashboard')
+          return
+        }
+
+        const roles = (rolesData || []).map(r => r.role)
+        const hasAccess = roles.includes('buyer') || roles.includes('admin')
+
+        if (!hasAccess) {
+          console.warn('User does not have buyer role. Roles:', roles)
+          setLoading(false)
+          // Redirect to home with message
+          router.push('/?error=access_denied')
+          return
+        }
+
+        setUser(user)
         setLoading(false)
 
         // Set time-based greeting

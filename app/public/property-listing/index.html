@@ -1,0 +1,209 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Tharaga — Verified Properties in Tamil Nadu</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@400;600;700;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./styles.css">
+  <script src="./config.js"></script>
+  <script type="module" src="./listings.js"></script>
+  <script type="module" src="/js/fragment-handle.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
+</head>
+<body>
+  <!-- Main wrapper - Exact from pricing page -->
+  <div class="pricing-page-wrapper">
+    <!-- Animated Background Elements - Exact from pricing page -->
+    <div class="bg-blobs-container">
+      <div class="bg-blob-gold"></div>
+      <div class="bg-blob-emerald"></div>
+    </div>
+    
+    <!-- Content wrapper - relative z-10 -->
+    <div class="content-wrapper">
+      <!-- Hero Section - Exact from pricing page structure -->
+      <section class="hero-section">
+        <div class="hero-content">
+          <!-- Badge - Exact from pricing page -->
+          <div class="hero-badge">
+            <span class="hero-badge-dot"></span>
+            <span class="hero-badge-text">AI-matched homes, verified by Tharaga</span>
+          </div>
+          
+          <!-- Headline - Professional size -->
+          <h1 class="hero-title">
+            Discover Premium Homes
+          </h1>
+        </div>
+      </section>
+      
+      <!-- Main Content: Filters + Listings -->
+      <main class="main-content">
+        <!-- LEFT: Filters Sidebar - Glass Card -->
+        <section class="filter-sidebar">
+          <!-- Property Type Pills -->
+          <div class="filter-pill-row">
+            <button class="filter-pill active" data-type="buy">Buy</button>
+            <button class="filter-pill" data-type="rent">Rent</button>
+            <button class="filter-pill" data-type="commercial">Commercial</button>
+          </div>
+
+          <div class="top-row">
+            <div class="search-box">
+              <div class="search-input-wrapper">
+                <input id="q" class="input search-large" placeholder="Search by city, locality, project, landmark…">
+                <button id="nlQuick" class="btn secondary" type="button" title="Natural language">✨ Quick</button>
+              </div>
+              <small class="search-hint">Try: 3BHK near metro under 1Cr in Adyar</small>
+            </div>
+
+            <div>
+              <label>City</label>
+              <select id="city" multiple></select>
+            </div>
+
+            <div class="price-box">
+              <label>Price (₹)</label>
+              <div class="price-range" data-min="0" data-max="20000000" data-step="100000" data-gap="200000">
+                <div class="slider-track">
+                  <div class="range-progress"></div>
+                </div>
+                <input type="range" id="priceMinSlider" aria-label="Minimum price">
+                <input type="range" id="priceMaxSlider" aria-label="Maximum price">
+              </div>
+              <div class="price-values">
+                <span id="minPriceValue">₹0</span>
+                <span>–</span>
+                <span id="maxPriceValue">₹2Cr</span>
+              </div>
+              <input type="number" id="minPrice" hidden>
+              <input type="number" id="maxPrice" hidden>
+            </div>
+          </div>
+
+          <div class="filter-grid">
+            <div>
+              <label>Locality</label>
+              <select id="locality" multiple>
+                <option value="All" selected>All</option>
+              </select>
+            </div>
+
+            <div>
+              <label>Sort</label>
+              <select id="sort">
+                <option value="relevance">AI Relevance</option>
+                <option value="newest">Newest</option>
+                <option value="priceLow">Price: Low → High</option>
+                <option value="priceHigh">Price: High → Low</option>
+                <option value="areaHigh">Area: High → Low</option>
+              </select>
+            </div>
+
+            <div>
+              <label>Type</label>
+              <select id="ptype">
+                <option value="">Any</option>
+                <option>Apartment</option>
+                <option>Villa</option>
+                <option>Plot</option>
+                <option>Independent House</option>
+              </select>
+            </div>
+
+            <div>
+              <label>BHK</label>
+              <select id="bhk">
+                <option value="">Any</option>
+                <option>1</option>
+                <option>2</option>
+                <option>3</option>
+                <option>4</option>
+                <option>5</option>
+              </select>
+            </div>
+
+            <div>
+              <label>Furnished</label>
+              <select id="furnished">
+                <option value="">Any</option>
+                <option>Semi Furnished</option>
+                <option>Unfurnished</option>
+                <option>Fully Furnished</option>
+              </select>
+            </div>
+
+            <div>
+              <label>Facing</label>
+              <select id="facing">
+                <option value="">Any</option>
+                <option>East</option>
+                <option>West</option>
+                <option>North</option>
+                <option>South</option>
+              </select>
+            </div>
+
+            <div>
+              <label>Area (sqft)</label>
+              <div class="grid-2">
+                <input id="minArea" class="input" type="number" placeholder="Min">
+                <input id="maxArea" class="input" type="number" placeholder="Max">
+              </div>
+            </div>
+
+            <div>
+              <label>Amenities</label>
+              <input id="amenity" class="input" placeholder="Gym, Lift, Parking…">
+            </div>
+
+            <div>
+              <label for="wantMetro">Near Metro</label>
+              <div class="row metro-control">
+                <input id="wantMetro" type="checkbox" />
+                <span class="metro-label">walk ≤</span>
+                <input id="maxWalk" type="number" min="1" value="10" class="metro-input">
+                <span class="metro-label">minutes</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="filter-actions">
+            <button id="reset" class="btn secondary">Reset</button>
+          </div>
+        </section>
+
+        <!-- RIGHT: Listing Content Area -->
+        <section class="listings-content">
+          <section class="filter-toolbar">
+            <div class="row" id="presetChips"></div>
+            <div class="row toolbar-row">
+              <div id="recentChips" class="row"></div>
+              <div class="row">
+                <button id="saveSearch" class="btn ghost">Save search</button>
+              </div>
+            </div>
+          </section>
+
+          <section id="stats" class="row stats-row">
+            <div class="tag" id="count">0 results</div>
+            <div class="row" id="activeFilters"></div>
+          </section>
+
+          <div id="resultNotice" class="result-notice" aria-live="polite" role="status" hidden></div>
+          <section id="results" class="results-grid"></section>
+          <div id="pager" class="pager"></div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <footer class="footer">© Tharaga — Safe, Transparent, Verified</footer>
+  <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+  <button id="newResultsPill" class="pill-floating" type="button" hidden>New results</button>
+</body>
+</html>

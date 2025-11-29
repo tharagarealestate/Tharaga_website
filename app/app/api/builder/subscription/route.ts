@@ -42,10 +42,12 @@ export async function GET(_req: NextRequest) {
 
     // Derive days remaining
     let days_remaining = 0
+    let is_trial_expired = false
     if (sub?.trial_expires_at) {
       const now = Date.now()
       const exp = new Date(sub.trial_expires_at).getTime()
       days_remaining = Math.max(0, Math.ceil((exp - now) / (1000 * 60 * 60 * 24)))
+      is_trial_expired = days_remaining === 0 && (sub?.tier === 'trial' || !sub?.tier)
     }
 
     // Optionally compute trial leads used from leads table
@@ -59,12 +61,17 @@ export async function GET(_req: NextRequest) {
       trial_leads_used = count || 0
     } catch {}
 
+    // Determine final tier and status
+    const final_tier = (sub?.tier && sub.tier !== 'trial') ? sub.tier : (is_trial_expired ? 'trial_expired' : 'trial')
+    const final_status = is_trial_expired ? 'expired' : (sub?.status || 'active')
+
     return NextResponse.json({
-      tier: sub?.tier || 'trial',
-      status: sub?.status || 'active',
+      tier: final_tier,
+      status: final_status,
       days_remaining,
       trial_leads_used,
       builder_name, // Unique builder name for dashboard personalization
+      is_trial_expired, // Flag for frontend to show upgrade prompts
     })
   } catch {
     return NextResponse.json({ tier: 'trial', trial_leads_used: 0, days_remaining: 14, builder_name: null }, { status: 200 })

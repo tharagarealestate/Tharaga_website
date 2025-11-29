@@ -65,14 +65,14 @@ export default function TrialDashboardPage() {
     let cancelled = false
 
     ;(async () => {
-      // Trial meta: ends at date
+      // Trial meta: ends at date - Use builder_subscriptions table (consistent with subscription API)
       try {
         const { data } = await supabase
-          .from('orgs')
-          .select('trial_ends_at')
-          .eq('id', builderId)
+          .from('builder_subscriptions')
+          .select('trial_expires_at')
+          .eq('builder_id', builderId)
           .maybeSingle()
-        if (!cancelled) setTrialEndsAt(data?.trial_ends_at ? new Date(data.trial_ends_at) : null)
+        if (!cancelled) setTrialEndsAt(data?.trial_expires_at ? new Date(data.trial_expires_at) : null)
       } catch {}
 
       // Checklist

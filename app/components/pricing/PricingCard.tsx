@@ -149,7 +149,82 @@ export default function PricingCard({
           </div>
 
           {/* CTA Button */}
-          <button className={`
+          <button 
+            onClick={async () => {
+              if (price === 0) {
+                // Free plan - redirect to signup
+                window.location.href = '/trial-signup'
+                return
+              }
+              if ((plan as any).id === 'builder_enterprise') {
+                // Enterprise - contact sales
+                window.location.href = 'mailto:sales@tharaga.co.in?subject=Enterprise Plan Inquiry'
+                return
+              }
+              
+              // Paid plan - create Razorpay subscription
+              try {
+                const planId = (plan as any).id
+                const planName = planId.includes('starter') ? 'starter' : planId.includes('professional') || planId.includes('pro') ? 'professional' : 'enterprise'
+                
+                const response = await fetch('/api/rzp/create-subscription', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    plan: planName,
+                    annual: billingCycle === 'yearly',
+                    notes: { source: 'pricing_page' }
+                  })
+                })
+                
+                const data = await response.json()
+                
+                if (!data.id) {
+                  alert('Unable to start checkout. Please try again.')
+                  return
+                }
+                
+                // Load Razorpay script if not loaded
+                if (!(window as any).Razorpay) {
+                  const script = document.createElement('script')
+                  script.src = 'https://checkout.razorpay.com/v1/checkout.js'
+                  script.onload = () => openRazorpayCheckout(data)
+                  document.body.appendChild(script)
+                } else {
+                  openRazorpayCheckout(data)
+                }
+                
+                function openRazorpayCheckout(subData: any) {
+                  const options = {
+                    key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || (window as any).RAZORPAY_KEY_ID,
+                    subscription_id: subData.id,
+                    name: 'Tharaga',
+                    description: `${(plan as any).displayName} - ${billingCycle === 'monthly' ? 'Monthly' : 'Annual'}`,
+                    prefill: {
+                      email: (window as any).__thgUserEmail || '',
+                    },
+                    theme: {
+                      color: '#D4AF37'
+                    },
+                    handler: function () {
+                      window.location.href = '/pricing?success=1'
+                    },
+                    modal: {
+                      ondismiss: function() {
+                        window.location.href = '/pricing?canceled=1'
+                      }
+                    }
+                  }
+                  
+                  const rzp = new (window as any).Razorpay(options)
+                  rzp.open()
+                }
+              } catch (error) {
+                console.error('Payment error:', error)
+                alert('Unable to start checkout. Please try again.')
+              }
+            }}
+            className={`
             w-full py-4 rounded-xl font-bold text-lg mb-8
             transition-all duration-300
             ${isHighlighted

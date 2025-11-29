@@ -7,9 +7,11 @@ import { cn } from '@/lib/utils'
 import { LayoutDashboard, Users, Building2, DollarSign, MessageSquare, Settings, Lock, HelpCircle, Building, Clock, BarChart3 } from 'lucide-react'
 
 interface SubscriptionData {
-  tier: 'trial' | 'pro' | 'enterprise' | string
+  tier: 'trial' | 'pro' | 'enterprise' | 'trial_expired' | string
   trial_leads_used?: number
   days_remaining?: number
+  is_trial_expired?: boolean
+  status?: string
 }
 
 interface LeadCountData {
@@ -199,7 +201,7 @@ export function Sidebar() {
     { href: '/builder/settings', label: 'Settings', icon: Settings, requiresPro: false },
   ], [leadCount, isLoadingCount])
 
-  const isTrial = subscription?.tier === 'trial'
+  const isTrial = subscription?.tier === 'trial' || subscription?.tier === 'trial_expired' || subscription?.is_trial_expired
 
   return (
     <aside className="group/sidebar relative h-[calc(100vh-60px)] sticky top-[60px] hidden lg:flex flex-col text-white bg-[#0F111C] shadow-2xl w-[60px] hover:w-[230px] transition-[width] duration-300 ease-out">
@@ -215,7 +217,10 @@ export function Sidebar() {
       </div>
 
       {isTrial && (
-        <div className="mx-3 mt-3 p-3 rounded-xl bg-gold-500/15 backdrop-blur-sm border border-gold-500/30">
+        <Link 
+          href="/pricing"
+          className="mx-3 mt-3 p-3 rounded-xl bg-gold-500/15 backdrop-blur-sm border border-gold-500/30 hover:bg-gold-500/20 transition-colors cursor-pointer"
+        >
           <div className="flex items-center gap-2 mb-1">
             <Clock className="w-3.5 h-3.5 text-gold-300" />
             <span className="text-[11px] font-semibold text-gold-100">Trial Active</span>
@@ -226,10 +231,19 @@ export function Sidebar() {
               style={{ width: `${(((subscription?.trial_leads_used ?? 0) / 10) * 100).toFixed(0)}%` }}
             />
           </div>
-          <div className="mt-1 text-[11px] text-gray-300">
-            {subscription?.days_remaining ?? 0} days left
+          <div className="mt-1 flex items-center justify-between">
+            <span className="text-[11px] text-gray-300">
+              {subscription?.days_remaining === 0 
+                ? 'Expired - Upgrade' 
+                : subscription?.days_remaining && subscription.days_remaining <= 3
+                ? `⚠️ ${subscription.days_remaining} day${subscription.days_remaining === 1 ? '' : 's'} left`
+                : `${subscription?.days_remaining ?? 0} days left`}
+            </span>
+            {(subscription?.days_remaining === 0 || (subscription?.days_remaining ?? 14) <= 3) && (
+              <span className="text-[10px] text-gold-300 font-semibold">Upgrade →</span>
+            )}
           </div>
-        </div>
+        </Link>
       )}
 
       {/* Navigation */}

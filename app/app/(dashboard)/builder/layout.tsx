@@ -9,6 +9,7 @@ import Breadcrumb from '@/components/Breadcrumb'
 import { BuilderHeader } from './_components/BuilderHeader'
 import { WorkflowTabs } from './_components/WorkflowTabs'
 import { ContextMenu } from './_components/ContextMenu'
+import { TrialUpgradeBanner } from './_components/TrialUpgradeBanner'
 
 export default function BuilderDashboardLayout({ children }: { children: ReactNode }) {
   const [open, setOpen] = useState(false)
@@ -18,6 +19,9 @@ export default function BuilderDashboardLayout({ children }: { children: ReactNo
       <div className="min-h-screen bg-slate-50 flex flex-col">
         {/* Premium minimal header */}
         <BuilderHeader />
+
+        {/* Trial upgrade banner (shown when trial ending/expired) */}
+        <TrialUpgradeBanner />
 
         {/* Workflow tabs (Attract → Qualify → Move → Close → Operate) */}
         <WorkflowTabs />

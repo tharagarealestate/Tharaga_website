@@ -2,11 +2,14 @@
 
 import { useEffect, useState } from "react"
 import { Search } from "lucide-react"
+import { cn } from "@/lib/utils"
 
 interface SubscriptionData {
-  tier: "trial" | "pro" | "enterprise" | string
+  tier: "trial" | "pro" | "enterprise" | "trial_expired" | string
   days_remaining?: number
   builder_name?: string | null
+  is_trial_expired?: boolean
+  status?: string
 }
 
 export function BuilderHeader() {
@@ -80,11 +83,25 @@ export function BuilderHeader() {
 
       {/* Right: Trial + Profile placeholder */}
       <div className="flex items-center gap-4">
-        {subscription && (
-          <div className="hidden sm:flex items-center gap-2 rounded-full bg-amber-50 border border-amber-200 px-3 py-1 text-xs font-medium text-amber-800">
+        {subscription && subscription.tier === 'trial' && (
+          <div className={cn(
+            "hidden sm:flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-medium transition-all cursor-pointer hover:scale-105",
+            (subscription.days_remaining ?? 0) === 0 
+              ? "bg-red-50 border-red-300 text-red-800" 
+              : (subscription.days_remaining ?? 0) <= 3
+              ? "bg-orange-50 border-orange-300 text-orange-800 animate-pulse"
+              : "bg-amber-50 border-amber-200 text-amber-800"
+          )}
+          onClick={() => window.location.href = '/pricing'}
+          title="Click to upgrade"
+          >
             <span>Trial</span>
-            <span className="h-1 w-1 rounded-full bg-amber-500" />
-            <span>{subscription.days_remaining ?? 0} days left</span>
+            <span className="h-1 w-1 rounded-full bg-current" />
+            <span>
+              {(subscription.days_remaining ?? 0) === 0 
+                ? 'Expired - Upgrade Now' 
+                : `${subscription.days_remaining} day${subscription.days_remaining === 1 ? '' : 's'} left`}
+            </span>
           </div>
         )}
         <div className="flex items-center gap-2">

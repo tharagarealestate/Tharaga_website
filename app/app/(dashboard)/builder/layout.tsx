@@ -38,7 +38,7 @@ export default function BuilderDashboardLayout({ children }: { children: ReactNo
           {/* Mobile: hamburger + breadcrumb + content */}
           <div className="flex-1 flex flex-col min-w-0 relative">
             {/* Mobile header with hamburger below global header */}
-            <div className="lg:hidden border-b border-white/10 bg-white/[0.03] backdrop-blur-[16px] px-4 py-3 flex items-center justify-between" style={{ paddingTop: 'max(12px, env(safe-area-inset-top))' }}>
+            <div className="lg:hidden border-b border-white/10 bg-white/[0.03] backdrop-blur-[16px] px-4 py-3 flex items-center justify-between safe-area-top">
               <button
                 aria-label="Open menu"
                 className="p-2 rounded-md border border-white/10 bg-white/[0.05] backdrop-blur-sm min-h-[44px] min-w-[44px] flex items-center justify-center touch-manipulation"

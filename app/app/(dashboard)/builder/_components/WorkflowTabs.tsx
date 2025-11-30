@@ -19,6 +19,10 @@ const WORKFLOW_CONFIG: {
 ]
 
 function getActiveWorkflow(pathname: string): WorkflowKey {
+  // Check most specific routes first to avoid multiple tabs being active
+  if (pathname.startsWith("/builder/leads/pipeline")) {
+    return "move"
+  }
   if (pathname.startsWith("/builder/properties") || pathname.startsWith("/builder/ai-content")) {
     return "attract"
   }
@@ -64,8 +68,8 @@ export function WorkflowTabs() {
               )}
             >
               <span className="text-sm sm:text-base md:text-lg">{tab.icon}</span>
-              <span className="hidden xs:inline">{tab.label}</span>
-              <span className="xs:hidden text-[10px]">{tab.label.slice(0, 3)}</span>
+              <span className="hidden sm:inline">{tab.label}</span>
+              <span className="sm:hidden text-[10px]">{tab.label.slice(0, 3)}</span>
             </button>
           )
         })}

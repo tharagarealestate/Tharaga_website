@@ -3,6 +3,39 @@
    Add this to your globals.css or import separately
    ============================================ */
 
+/* Safe area inset utility classes for JavaScript components */
+.safe-area-top {
+  padding-top: max(12px, env(safe-area-inset-top));
+}
+
+.safe-area-bottom {
+  padding-bottom: max(8px, env(safe-area-inset-bottom));
+}
+
+.safe-area-left {
+  padding-left: max(16px, env(safe-area-inset-left));
+}
+
+.safe-area-right {
+  padding-right: max(16px, env(safe-area-inset-right));
+}
+
+.safe-area-x {
+  padding-left: max(16px, env(safe-area-inset-left));
+  padding-right: max(16px, env(safe-area-inset-right));
+}
+
+.safe-area-y {
+  padding-top: max(12px, env(safe-area-inset-top));
+  padding-bottom: max(8px, env(safe-area-inset-bottom));
+}
+
+/* AI Assistant positioning with safe areas */
+.ai-assistant-mobile {
+  right: max(16px, env(safe-area-inset-right));
+  bottom: calc(80px + env(safe-area-inset-bottom));
+}
+
 /* PROMPT 1: Typography & Spacing Foundation */
 @layer base {
   :root {

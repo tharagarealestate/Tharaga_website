@@ -14,10 +14,20 @@ const tabs = [
 export default function MobileBottomNav() {
   const pathname = usePathname()
   return (
-    <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-gray-200 shadow-lg" style={{ paddingBottom: 'max(8px, env(safe-area-inset-bottom))' }}>
+    <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-gray-200 shadow-lg safe-area-bottom">
       <ul className="grid grid-cols-5">
         {tabs.map(({ href, icon: Icon, label }) => {
-          const active = pathname === href || (href !== '/' && pathname.startsWith(href))
+          // Check exact match first, then check if pathname starts with href
+          // But prioritize more specific routes (e.g., /builder/leads/pipeline over /builder/leads)
+          const exactMatch = pathname === href
+          const startsWithMatch = href !== '/' && pathname.startsWith(href)
+          // For nested routes, only match if no more specific route matches
+          const moreSpecificMatch = tabs.some(t => 
+            t.href !== href && 
+            t.href.startsWith(href) && 
+            pathname.startsWith(t.href)
+          )
+          const active = exactMatch || (startsWithMatch && !moreSpecificMatch)
           return (
             <li key={href} className="text-center">
               <Link 

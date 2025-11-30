@@ -1,4 +1,4 @@
-const CACHE_NAME = 'thg-v2';
+const CACHE_NAME = 'thg-v3';
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
@@ -24,6 +24,30 @@ self.addEventListener('activate', (event) => {
 
 self.addEventListener('fetch', (event) => {
   const { request } = event;
+  const url = new URL(request.url);
+
+  // Don't intercept requests to external CDNs and APIs - let them bypass the service worker
+  const externalDomains = [
+    'cdn.jsdelivr.net',
+    'unpkg.com',
+    'fonts.googleapis.com',
+    'fonts.gstatic.com',
+    'www.gstatic.com',
+    'www.google.com',
+    'accounts.google.com',
+    'supabase.co',
+    'i.pravatar.cc',
+    'r2cdn.perplexity.ai',
+    'stripe.com',
+    'razorpay.com',
+    'api.tharaga.co.in'
+  ];
+
+  if (externalDomains.some(domain => url.hostname.includes(domain))) {
+    // Let browser handle these requests directly, bypass service worker
+    return;
+  }
+
   // Network-first for API; cache-first for static and pages
   if (request.url.includes('/api/')) {
     event.respondWith(
@@ -76,4 +100,28 @@ self.addEventListener('message', (event) => {
       )
     }
   } catch(_){}
+})
+
+// Web Push: receive and display notifications
+self.addEventListener('push', (event) => {
+  try {
+    const data = event.data ? event.data.json() : {}
+    const title = data.title || 'Notification'
+    const message = data.message || ''
+    const options = {
+      body: message,
+      icon: '/property-listing/noimg.svg',
+      badge: '/property-listing/noimg.svg',
+      data: { url: data.url || '/' }
+    }
+    event.waitUntil(self.registration.showNotification(title, options))
+  } catch (_) {}
+})
+
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close()
+  const url = event.notification && event.notification.data && event.notification.data.url ? event.notification.data.url : '/'
+  event.waitUntil(
+    clients.openWindow(url)
+  )
 })

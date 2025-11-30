@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from 'react'
+import Breadcrumb from '@/components/Breadcrumb'
 
 export default function EnvironmentIntelPage(){
   const [coords, setCoords] = React.useState<{lat:number;lng:number}|null>(null)
@@ -24,6 +25,10 @@ export default function EnvironmentIntelPage(){
 
   return (
     <main className="mx-auto max-w-3xl px-6 py-8">
+      <Breadcrumb items={[
+        { label: 'Home', href: '/' },
+        { label: 'Environment Intelligence' }
+      ]} />
       <h1 className="text-2xl font-bold text-plum mb-4">Environment intelligence</h1>
       <div className="rounded-xl border border-plum/10 bg-brandWhite p-4 space-y-4">
         <div className="flex gap-2">

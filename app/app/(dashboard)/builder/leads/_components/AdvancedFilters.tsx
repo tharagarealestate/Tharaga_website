@@ -341,7 +341,7 @@ export default function AdvancedFilters() {
                     <div className="space-y-5">
                       <div>
                         <p className="mb-2 text-sm font-medium text-blue-100/80">Quick ranges</p>
-                        <div className="grid grid-cols-2 gap-2 md:grid-cols-3">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
                           {DATE_RANGE_OPTIONS.map((range) => (
                             <button
                               key={range.value}
@@ -664,7 +664,7 @@ export default function AdvancedFilters() {
                         </select>
                       </div>
 
-                      <div className="grid grid-cols-2 gap-2">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                         <button
                           onClick={() => updateFilter('sort_order', 'desc')}
                           className={`rounded-lg border px-3 py-2 text-sm font-medium transition ${

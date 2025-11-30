@@ -204,7 +204,7 @@ export function Sidebar() {
   const isTrial = subscription?.tier === 'trial' || subscription?.tier === 'trial_expired' || subscription?.is_trial_expired
 
   return (
-    <aside className="group/sidebar relative h-[calc(100vh-60px)] sticky top-[60px] hidden lg:flex flex-col text-white bg-[#0F111C] shadow-2xl w-[60px] hover:w-[230px] transition-[width] duration-300 ease-out">
+    <aside className="group/sidebar relative h-[calc(100vh-60px)] sticky top-[60px] hidden lg:flex flex-col text-white bg-[#0F111C] shadow-2xl w-[60px] hover:w-[230px] transition-[width] duration-300 ease-out overflow-hidden">
       {/* Logo + trial badge condensed */}
       <div className="flex items-center gap-3 px-3 py-4 border-b border-white/10">
         <div className="w-9 h-9 bg-gold-500 rounded-xl flex items-center justify-center">

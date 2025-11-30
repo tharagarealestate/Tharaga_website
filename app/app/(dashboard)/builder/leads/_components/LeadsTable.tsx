@@ -139,8 +139,8 @@ export function LeadsTable({ leads = [] as Lead[], selectedLeads = [], onSelecti
   })
 
   return (
-    <div className="overflow-auto rounded-xl border border-gray-200 bg-white">
-      <table className="min-w-full text-sm">
+    <div className="overflow-x-auto rounded-xl border border-gray-200 bg-white -mx-4 sm:mx-0" style={{ WebkitOverflowScrolling: 'touch' }}>
+      <table className="min-w-full text-sm" style={{ minWidth: '640px' }}>
         <thead className="bg-gray-50 text-gray-700">
           {table.getHeaderGroups().map(hg => (
             <tr key={hg.id}>

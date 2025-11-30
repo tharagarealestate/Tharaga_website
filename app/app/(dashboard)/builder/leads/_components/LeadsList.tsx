@@ -671,7 +671,7 @@ export function LeadsList({ onSelectLead, initialFilters, showInlineFilters = tr
                       )}
                     </div>
 
-                    <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
                       <div>
                         <span className="text-gray-400">Budget:</span>
                         <span className="text-white ml-2 font-medium">

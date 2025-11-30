@@ -455,7 +455,12 @@ What specific question can I answer for you?`
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
             transition={{ type: "spring", damping: 25, stiffness: 300 }}
-            className="fixed bottom-24 right-6 z-50 w-[420px] h-[600px] max-h-[85vh] flex flex-col rounded-2xl overflow-hidden shadow-2xl border border-white/20 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 backdrop-blur-xl"
+            className="fixed bottom-24 right-6 z-50 w-[calc(100vw-32px)] sm:w-[420px] h-[600px] max-h-[85vh] flex flex-col rounded-2xl overflow-hidden shadow-2xl border border-white/20 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 backdrop-blur-xl"
+            style={{ 
+              right: 'max(16px, env(safe-area-inset-right))',
+              bottom: 'calc(80px + env(safe-area-inset-bottom))',
+              maxWidth: '420px'
+            }}
           >
             {/* Header */}
             <div className="bg-gradient-to-r from-gold-600 to-gold-500 px-6 py-4 flex items-center justify-between">

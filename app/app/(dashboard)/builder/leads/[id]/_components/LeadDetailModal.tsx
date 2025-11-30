@@ -667,7 +667,7 @@ function OverviewTab({ lead, categoryStyle }: { lead: LeadDetail; categoryStyle:
           </div>
         </motion.div>
 
-        <div className="lg:col-span-2 grid grid-cols-2 gap-4">
+        <div className="lg:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-4">
           <QuickStatCard
             icon={<Eye className="w-5 h-5" />}
             label="Property Views"
@@ -1064,7 +1064,7 @@ function PropertiesTab({ properties }: { properties: LeadDetail['viewed_properti
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -20 }}
-      className="grid grid-cols-1 md:grid-cols-2 gap-6"
+      className="grid grid-cols-1 sm:grid-cols-2 gap-6"
     >
       {properties.map((property, index) => (
         <motion.div
@@ -1088,7 +1088,7 @@ function PropertiesTab({ properties }: { properties: LeadDetail['viewed_properti
             </span>
           </div>
 
-          <div className="grid grid-cols-2 gap-4 mb-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
             <div>
               <p className="text-xs text-slate-400 mb-1">Views</p>
               <p className="text-lg font-semibold text-white">{property.view_count}</p>

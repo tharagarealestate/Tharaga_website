@@ -298,7 +298,7 @@ export default async function PropertyPage({ params }: { params: { id: string } 
       <section className="w-full">
         <ClientGallery images={p.images} tourUrl={p.tourUrl} brochureUrl={p.brochureUrl} propertyId={p.id} />
       </section>
-      <div className="mx-auto max-w-7xl px-4 py-6 grid grid-cols-1 lg:grid-cols-10 gap-6">
+      <div className="mx-auto max-w-7xl px-3 sm:px-4 py-4 sm:py-6 grid grid-cols-1 lg:grid-cols-10 gap-4 sm:gap-6" style={{ paddingLeft: 'max(12px, env(safe-area-inset-left))', paddingRight: 'max(12px, env(safe-area-inset-right))' }}>
         <div className="lg:col-span-7">
           <Overview p={p} />
           <div className="mt-6">

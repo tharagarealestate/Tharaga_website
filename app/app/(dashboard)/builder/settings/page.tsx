@@ -250,7 +250,7 @@ function ProfileSettings() {
       </div>
 
       {/* Form Fields with Floating Labels */}
-      <div className='grid grid-cols-2 gap-6'>
+      <div className='grid grid-cols-1 sm:grid-cols-2 gap-6'>
         <FloatingLabelInput
           type='text'
           label='First Name'
@@ -328,7 +328,7 @@ function CompanySettings() {
       </div>
 
       {/* Form Fields with Floating Labels */}
-      <div className='grid grid-cols-2 gap-6'>
+      <div className='grid grid-cols-1 sm:grid-cols-2 gap-6'>
         <div className='col-span-2'>
           <FloatingLabelInput
             type='text'
@@ -536,7 +536,7 @@ function BillingSettings() {
               Upgrade
             </button>
           </div>
-          <div className='grid grid-cols-3 gap-6 pt-6 border-t border-white/20'>
+          <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 pt-6 border-t border-white/20'>
             <div>
               <div className='text-2xl font-bold'>₹4,999</div>
               <div className='text-sm opacity-75'>per month</div>
@@ -723,7 +723,7 @@ function TeamSettings() {
           + Invite Member
         </button>
       </div>
-      <div className='grid grid-cols-3 gap-4'>
+      <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4'>
         <div className='bg-gradient-to-br from-gold-600/10 to-gold-500/5 backdrop-blur-md border border-gold-500/20 rounded-xl p-4'>
           <div className='text-2xl font-bold text-gray-900'>4</div>
           <div className='text-sm text-gray-600'>Total Members</div>
@@ -848,7 +848,7 @@ function PreferenceSettings() {
       </div>
       <div className='bg-white/60 backdrop-blur-md border border-gray-300/50 rounded-xl p-6'>
         <h3 className='text-lg font-bold text-gray-900 mb-4'>Language & Region</h3>
-        <div className='grid grid-cols-2 gap-6'>
+        <div className='grid grid-cols-1 sm:grid-cols-2 gap-6'>
           <div>
             <label className='block text-sm font-medium text-gray-700 mb-2'>Language</label>
             <select

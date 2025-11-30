@@ -54,7 +54,7 @@ export function BuilderHeader() {
   }, [])
 
   return (
-    <header className="h-[60px] border-b border-slate-200 bg-white/80 backdrop-blur-md flex items-center px-4 lg:px-8 justify-between">
+    <header className="h-[60px] border-b border-slate-200 bg-white/80 backdrop-blur-md flex items-center px-4 lg:px-8 justify-between overflow-hidden" style={{ paddingLeft: 'max(16px, env(safe-area-inset-left))', paddingRight: 'max(16px, env(safe-area-inset-right))' }}>
       {/* Left: Logo */}
       <div className="flex items-center gap-2">
         <div className="h-9 w-9 rounded-xl bg-primary-900 flex items-center justify-center shadow-sm">

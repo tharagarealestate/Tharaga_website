@@ -1,4 +1,5 @@
 import './globals.css'
+import './mobile-responsive.css'
 import type { Metadata } from 'next'
 import Script from 'next/script'
 import { Playfair_Display, Plus_Jakarta_Sans, Manrope } from 'next/font/google'

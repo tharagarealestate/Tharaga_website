@@ -100,28 +100,28 @@ export default function TopNav() {
   }
 
   return (
-    <div className="sticky top-[60px] z-40 border-b border-gray-300 bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/75">
-      <div className="mx-auto flex items-center gap-3 px-4 py-2">
-        <Link href="/" className="shrink-0 font-semibold text-gray-900">Tharaga</Link>
-        <form onSubmit={handleSearchSubmit} className="flex-1 md:w-2/5">
+    <div className="sticky top-[60px] z-40 border-b border-gray-300 bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/75" style={{ paddingLeft: 'max(16px, env(safe-area-inset-left))', paddingRight: 'max(16px, env(safe-area-inset-right))' }}>
+      <div className="mx-auto flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-2">
+        <Link href="/" className="shrink-0 font-semibold text-gray-900 text-sm sm:text-base">Tharaga</Link>
+        <form onSubmit={handleSearchSubmit} className="flex-1 min-w-0 md:w-2/5">
           <input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search properties, locations, specs..."
-            className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-primary-600 focus:outline-none"
+            placeholder="Search properties..."
+            className="w-full rounded-md border border-gray-300 bg-white px-2 sm:px-3 py-2 text-xs sm:text-sm shadow-sm focus:border-primary-600 focus:outline-none min-h-[44px]"
             aria-label="Search"
           />
         </form>
-        <div className="ml-auto flex items-center gap-2">
-          <Link href="/saved" className="relative inline-flex items-center justify-center rounded-md border border-gray-300 bg-white px-2.5 py-2 text-gray-700 hover:bg-gray-50">
-            <Heart className="h-5 w-5 text-gold-500" />
+        <div className="ml-auto flex items-center gap-1 sm:gap-2 shrink-0">
+          <Link href="/saved" className="relative inline-flex items-center justify-center rounded-md border border-gray-300 bg-white px-2 sm:px-2.5 py-2 text-gray-700 hover:bg-gray-50 min-h-[44px] min-w-[44px]">
+            <Heart className="h-4 w-4 sm:h-5 sm:w-5 text-gold-500" />
             {savedCount > 0 && (
               <span className="absolute -top-1 -right-1 min-w-[1.1rem] rounded-full bg-primary-600 px-1.5 text-center text-[10px] leading-4 text-white">{savedCount}</span>
             )}
             <span className="sr-only">Saved</span>
           </Link>
-          <Link href="#" className="relative inline-flex items-center justify-center rounded-md border border-gray-300 bg-white px-2.5 py-2 text-gray-700 hover:bg-gray-50">
-            <CalendarDays className="h-5 w-5" />
+          <Link href="#" className="relative inline-flex items-center justify-center rounded-md border border-gray-300 bg-white px-2 sm:px-2.5 py-2 text-gray-700 hover:bg-gray-50 min-h-[44px] min-w-[44px]">
+            <CalendarDays className="h-4 w-4 sm:h-5 sm:w-5" />
             {visitsCount > 0 && (
               <span className="absolute -top-1 -right-1 min-w-[1.1rem] rounded-full bg-primary-600 px-1.5 text-center text-[10px] leading-4 text-white">{visitsCount}</span>
             )}
@@ -131,7 +131,7 @@ export default function TopNav() {
           <div className="relative">
             <button
               onClick={() => setMenuOpen((v) => !v)}
-              className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50"
+              className="inline-flex h-[44px] w-[44px] items-center justify-center rounded-full border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 touch-manipulation"
               aria-haspopup="menu"
               aria-expanded={menuOpen}
             >

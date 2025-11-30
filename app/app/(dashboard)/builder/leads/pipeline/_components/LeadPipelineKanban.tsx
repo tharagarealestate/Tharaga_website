@@ -598,7 +598,7 @@ export default function LeadPipelineKanban() {
         onDragStart={handleDragStart}
         onDragEnd={handleDragEnd}
       >
-        <div className="flex gap-4 overflow-x-auto pb-4">
+        <div className="flex gap-4 overflow-x-auto pb-4" style={{ WebkitOverflowScrolling: 'touch', scrollSnapType: 'x mandatory' }}>
           {visibleStages.map((stage) => {
             const stageLeads = getFilteredLeads(leads[stage.id]);
             const stageStats = stats?.stages[stage.id];

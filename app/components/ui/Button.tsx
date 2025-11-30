@@ -20,8 +20,8 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(function 
     danger: 'bg-dangerEmphasis text-onEmphasis border-border hover:brightness-110',
   }
   const sizes: Record<string, string> = {
-    sm: 'text-xs px-2.5 py-1.5',
-    md: 'text-sm px-3 py-2',
+    sm: 'text-xs px-2.5 py-1.5 min-h-[44px] min-w-[44px]',
+    md: 'text-sm px-3 py-2 min-h-[44px] min-w-[44px]',
   }
   return (
     <button ref={ref} className={clsx(base, variants[variant], sizes[size], className)} {...props} />

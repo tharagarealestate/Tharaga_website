@@ -177,7 +177,7 @@ export function ExportModal({ filters, onClose }: ExportModalProps) {
           {/* Format Selection */}
           <div>
             <label className="block text-sm font-medium mb-3">Export Format</label>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <button
                 type="button"
                 onClick={() => setFormat('csv')}

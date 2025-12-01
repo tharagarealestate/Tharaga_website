@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useMemo } from 'react'
+import { useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { 
   Users, Building2, MessageSquare, Settings, 
@@ -411,7 +411,6 @@ export function UnifiedDashboard({ onNavigate }: UnifiedDashboardProps) {
             </div>
           </div>
         </section>
-        </div>
       </div>
     </div>
   )

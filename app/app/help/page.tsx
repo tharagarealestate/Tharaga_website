@@ -176,14 +176,14 @@ export default function HelpCenterPage() {
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <a
-                href="mailto:support@tharaga.co.in"
+                href="mailto:tharagarealestate@gmail.com"
                 className="flex items-center justify-center gap-2 px-6 py-3 bg-gold-500 hover:bg-gold-600 rounded-xl font-semibold transition-colors"
               >
                 <Mail className="w-5 h-5" />
                 Email Support
               </a>
               <a
-                href="tel:+919876543210"
+                href="tel:+918870980839"
                 className="flex items-center justify-center gap-2 px-6 py-3 bg-white/10 hover:bg-white/20 border border-white/20 rounded-xl font-semibold transition-colors"
               >
                 <Phone className="w-5 h-5" />

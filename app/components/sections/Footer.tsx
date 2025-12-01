@@ -16,6 +16,7 @@ import {
   MessageCircle
 } from 'lucide-react'
 import { GlassContainer } from '@/components/ui/GlassContainer'
+import { CONTACT_INFO } from '@/lib/contact-info'
 
 export function Footer() {
   const currentYear = new Date().getFullYear()
@@ -264,8 +265,8 @@ export function Footer() {
             </div>
             <div>
               <p className="font-semibold mb-1">Email</p>
-              <a href="mailto:hello@tharaga.co.in" className="text-white/70 hover:text-white transition-colors">
-                hello@tharaga.co.in
+              <a href={`mailto:${CONTACT_INFO.email}`} className="text-white/70 hover:text-white transition-colors">
+                {CONTACT_INFO.email}
               </a>
             </div>
           </div>
@@ -276,8 +277,8 @@ export function Footer() {
             </div>
             <div>
               <p className="font-semibold mb-1">Phone</p>
-              <a href="tel:+919876543210" className="text-white/70 hover:text-white transition-colors">
-                +91 98765 43210
+              <a href={`tel:${CONTACT_INFO.phoneTel}`} className="text-white/70 hover:text-white transition-colors">
+                {CONTACT_INFO.phone}
               </a>
             </div>
           </div>
@@ -289,7 +290,7 @@ export function Footer() {
             <div>
               <p className="font-semibold mb-1">Address</p>
               <p className="text-white/70">
-                Chennai, Tamil Nadu, India
+                {CONTACT_INFO.address}
               </p>
             </div>
           </div>

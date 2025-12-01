@@ -195,9 +195,9 @@ export default function TermsOfServicePage() {
                 For questions about these Terms, contact us:
               </p>
               <div className="space-y-2">
-                <p><strong>Email:</strong> <a href="mailto:legal@tharaga.co.in" className="text-gold-400 hover:text-gold-300 underline">legal@tharaga.co.in</a></p>
+                <p><strong>Email:</strong> <a href="mailto:tharagarealestate@gmail.com" className="text-gold-400 hover:text-gold-300 underline">tharagarealestate@gmail.com</a></p>
                 <p><strong>Address:</strong> Chennai, Tamil Nadu, India</p>
-                <p><strong>Phone:</strong> <a href="tel:+919876543210" className="text-gold-400 hover:text-gold-300 underline">+91 98765 43210</a></p>
+                <p><strong>Phone:</strong> <a href="tel:+918870980839" className="text-gold-400 hover:text-gold-300 underline">+91 88709 80839</a></p>
               </div>
             </section>
 

@@ -143,7 +143,7 @@ export default function PrivacyPolicyPage() {
                 <li><strong>Withdraw Consent:</strong> Revoke consent for data processing where applicable</li>
               </ul>
               <p className="leading-relaxed mt-4">
-                To exercise these rights, contact us at <a href="mailto:privacy@tharaga.co.in" className="text-gold-400 hover:text-gold-300 underline">privacy@tharaga.co.in</a>
+                To exercise these rights, contact us at <a href="mailto:tharagarealestate@gmail.com" className="text-gold-400 hover:text-gold-300 underline">tharagarealestate@gmail.com</a>
               </p>
             </section>
 
@@ -181,9 +181,9 @@ export default function PrivacyPolicyPage() {
                 For privacy-related questions or concerns, contact us:
               </p>
               <div className="mt-4 space-y-2">
-                <p><strong>Email:</strong> <a href="mailto:privacy@tharaga.co.in" className="text-gold-400 hover:text-gold-300 underline">privacy@tharaga.co.in</a></p>
+                <p><strong>Email:</strong> <a href="mailto:tharagarealestate@gmail.com" className="text-gold-400 hover:text-gold-300 underline">tharagarealestate@gmail.com</a></p>
                 <p><strong>Address:</strong> Chennai, Tamil Nadu, India</p>
-                <p><strong>Phone:</strong> <a href="tel:+919876543210" className="text-gold-400 hover:text-gold-300 underline">+91 98765 43210</a></p>
+                <p><strong>Phone:</strong> <a href="tel:+918870980839" className="text-gold-400 hover:text-gold-300 underline">+91 88709 80839</a></p>
               </div>
             </section>
 

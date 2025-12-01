@@ -120,8 +120,8 @@ export default function RefundPolicyPage() {
               </p>
               <ul className="list-disc list-inside space-y-2 ml-4">
                 <li>Through your Builder Dashboard → Settings → Billing</li>
-                <li>By emailing <a href="mailto:billing@tharaga.co.in" className="text-gold-400 hover:text-gold-300 underline">billing@tharaga.co.in</a></li>
-                <li>By calling our support team at <a href="tel:+919876543210" className="text-gold-400 hover:text-gold-300 underline">+91 98765 43210</a></li>
+                <li>By emailing <a href="mailto:tharagarealestate@gmail.com" className="text-gold-400 hover:text-gold-300 underline">tharagarealestate@gmail.com</a></li>
+                <li>By calling our support team at <a href="tel:+918870980839" className="text-gold-400 hover:text-gold-300 underline">+91 88709 80839</a></li>
               </ul>
 
               <h3 className="text-xl font-semibold text-white mt-6 mb-3">5.2 Cancellation Effective Date</h3>
@@ -137,7 +137,7 @@ export default function RefundPolicyPage() {
               <h2 className="text-2xl font-bold text-white mb-4">6. Refund Process</h2>
               <h3 className="text-xl font-semibold text-white mt-6 mb-3">6.1 Request Submission</h3>
               <ol className="list-decimal list-inside space-y-2 ml-4">
-                <li>Submit refund request via email to <a href="mailto:billing@tharaga.co.in" className="text-gold-400 hover:text-gold-300 underline">billing@tharaga.co.in</a> or through support</li>
+                <li>Submit refund request via email to <a href="mailto:tharagarealestate@gmail.com" className="text-gold-400 hover:text-gold-300 underline">tharagarealestate@gmail.com</a> or through support</li>
                 <li>Include your account email, subscription plan, and reason for refund</li>
                 <li>Our team will review within 2 business days</li>
                 <li>Approved refunds are processed within 7-10 business days</li>
@@ -201,8 +201,8 @@ export default function RefundPolicyPage() {
                 For refund requests or billing inquiries:
               </p>
               <div className="space-y-2">
-                <p><strong>Email:</strong> <a href="mailto:billing@tharaga.co.in" className="text-gold-400 hover:text-gold-300 underline">billing@tharaga.co.in</a></p>
-                <p><strong>Phone:</strong> <a href="tel:+919876543210" className="text-gold-400 hover:text-gold-300 underline">+91 98765 43210</a> (Mon-Fri, 10 AM - 6 PM IST)</p>
+                <p><strong>Email:</strong> <a href="mailto:tharagarealestate@gmail.com" className="text-gold-400 hover:text-gold-300 underline">tharagarealestate@gmail.com</a></p>
+                <p><strong>Phone:</strong> <a href="tel:+918870980839" className="text-gold-400 hover:text-gold-300 underline">+91 88709 80839</a> (Mon-Fri, 10 AM - 6 PM IST)</p>
                 <p><strong>Address:</strong> Chennai, Tamil Nadu, India</p>
                 <p><strong>Response Time:</strong> 2 business days</p>
               </div>
@@ -218,7 +218,7 @@ export default function RefundPolicyPage() {
             <div className="mt-12 pt-8 border-t border-white/20 bg-yellow-500/10 rounded-xl p-6">
               <p className="text-white font-semibold mb-2">💡 Need Help?</p>
               <p className="text-white/90 text-sm">
-                Our support team is here to help! Contact us at <a href="mailto:support@tharaga.co.in" className="text-gold-400 hover:text-gold-300 underline">support@tharaga.co.in</a> or visit our <Link href="/help" className="text-gold-400 hover:text-gold-300 underline">Help Center</Link> for more information.
+                Our support team is here to help! Contact us at <a href="mailto:tharagarealestate@gmail.com" className="text-gold-400 hover:text-gold-300 underline">tharagarealestate@gmail.com</a> or visit our <Link href="/help" className="text-gold-400 hover:text-gold-300 underline">Help Center</Link> for more information.
               </p>
             </div>
 

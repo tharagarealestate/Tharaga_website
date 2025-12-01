@@ -176,10 +176,118 @@ export async function generateBuilderInsights(builderId: string): Promise<void> 
   }
 
   // Insight 2: Optimal price point
-  // This would analyze successful deals to find optimal price
-  // For now, placeholder
+  const { data: successfulDeals } = await supabase
+    .from('contracts')
+    .select('contract_price, property_details')
+    .eq('builder_id', builderId)
+    .eq('status', 'executed')
+    .gte('created_at', lastMonth.toISOString())
+    .lte('created_at', now.toISOString());
+
+  if (successfulDeals && successfulDeals.length > 0) {
+    const prices = successfulDeals.map(d => d.contract_price || 0).filter(p => p > 0);
+    if (prices.length > 0) {
+      const avgPrice = prices.reduce((sum, p) => sum + p, 0) / prices.length;
+      const minPrice = Math.min(...prices);
+      const maxPrice = Math.max(...prices);
+      
+      await supabase
+        .from('builder_insights')
+        .insert([{
+          builder_id: builderId,
+          insight_type: 'optimal_price',
+          insight_title: 'Optimal Price Range Identified',
+          insight_description: `Your successful deals average ₹${avgPrice.toLocaleString('en-IN')}. Price range: ₹${minPrice.toLocaleString('en-IN')} - ₹${maxPrice.toLocaleString('en-IN')}`,
+          insight_data: { 
+            averagePrice: avgPrice,
+            minPrice,
+            maxPrice,
+            dealCount: prices.length
+          },
+          insight_recommendation: 'Price properties within this range for higher conversion rates.',
+          potential_impact: 'medium',
+          estimated_improvement: 3.0
+        }]);
+    }
+  }
 
   // Insight 3: Best timing
-  // Analyze when leads respond best
+  const { data: journeyInteractions } = await supabase
+    .from('buyer_journey')
+    .select('created_at, last_engagement_at, has_responded, emails_opened, emails_clicked')
+    .eq('builder_id', builderId)
+    .gte('created_at', lastMonth.toISOString())
+    .lte('created_at', now.toISOString())
+    .not('last_engagement_at', 'is', null);
+
+  if (journeyInteractions && journeyInteractions.length > 0) {
+    // Analyze engagement by hour of day
+    const engagementByHour: Record<number, number> = {};
+    
+    journeyInteractions.forEach(journey => {
+      if (journey.last_engagement_at) {
+        const hour = new Date(journey.last_engagement_at).getHours();
+        engagementByHour[hour] = (engagementByHour[hour] || 0) + 1;
+      }
+    });
+    
+    const bestHour = Object.entries(engagementByHour)
+      .sort(([, a], [, b]) => b - a)[0]?.[0];
+    
+    if (bestHour) {
+      await supabase
+        .from('builder_insights')
+        .insert([{
+          builder_id: builderId,
+          insight_type: 'optimal_timing',
+          insight_title: 'Best Time to Contact Leads',
+          insight_description: `Leads are most responsive at ${bestHour}:00 hours. Schedule your follow-ups during this time.`,
+          insight_data: { 
+            bestHour: parseInt(bestHour),
+            engagementByHour
+          },
+          insight_recommendation: 'Send emails and make calls during peak engagement hours for better response rates.',
+          potential_impact: 'medium',
+          estimated_improvement: 2.5
+        }]);
+    }
+  }
+
+  // Insight 4: Stage conversion bottlenecks
+  const stageBottlenecks: string[] = [];
+  
+  if (analytics.contactRate < 50) {
+    stageBottlenecks.push('lead_contact');
+  }
+  if (analytics.viewingRate < 30) {
+    stageBottlenecks.push('viewing_scheduling');
+  }
+  if (analytics.negotiationRate < 40) {
+    stageBottlenecks.push('negotiation');
+  }
+  if (analytics.contractRate < 60) {
+    stageBottlenecks.push('contract_signing');
+  }
+  
+  if (stageBottlenecks.length > 0) {
+    await supabase
+      .from('builder_insights')
+      .insert([{
+        builder_id: builderId,
+        insight_type: 'conversion_bottleneck',
+        insight_title: 'Conversion Bottlenecks Detected',
+        insight_description: `Your conversion is dropping at: ${stageBottlenecks.join(', ')}. Focus on improving these stages.`,
+        insight_data: { 
+          bottlenecks: stageBottlenecks,
+          contactRate: analytics.contactRate,
+          viewingRate: analytics.viewingRate,
+          negotiationRate: analytics.negotiationRate,
+          contractRate: analytics.contractRate
+        },
+        insight_recommendation: 'Use communication suggestions and automation to improve conversion at these stages.',
+        potential_impact: 'high',
+        estimated_improvement: 5.0
+      }]);
+  }
 }
 

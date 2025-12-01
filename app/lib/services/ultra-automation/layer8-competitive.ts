@@ -37,16 +37,23 @@ export async function analyzeCompetitivePosition(
     throw new Error('Property not found');
   }
 
-  // Find similar properties (competitors)
+  // Find similar properties (competitors) - real-time from database
+  const propertyPrice = property.price_inr || 0;
+  const priceRangeMin = propertyPrice * 0.7; // 30% below
+  const priceRangeMax = propertyPrice * 1.3; // 30% above
+  
   const { data: competitors } = await supabase
     .from('properties')
     .select('*')
     .eq('city', property.city)
     .eq('property_type', property.property_type)
     .neq('id', propertyId)
-    .gte('price_inr', (property.price_inr || 0) * 0.8)
-    .lte('price_inr', (property.price_inr || 0) * 1.2)
-    .limit(10);
+    .neq('builder_id', property.builder_id) // Different builder = competitor
+    .eq('listing_status', 'active') // Only active listings
+    .gte('price_inr', priceRangeMin)
+    .lte('price_inr', priceRangeMax)
+    .order('price_inr', { ascending: true })
+    .limit(20); // Get more for better analysis
 
   if (!competitors || competitors.length === 0) {
     return [];
@@ -57,23 +64,33 @@ export async function analyzeCompetitivePosition(
   for (const competitor of competitors) {
     const comparison = compareProperties(property, competitor);
     
+    // Get competitor builder name
+    const { getBuilderInfo } = await import('./helpers');
+    const competitorBuilder = await getBuilderInfo(competitor.builder_id);
+    const competitorName = competitorBuilder?.name || competitorBuilder?.companyName || 'Competitor';
+    
+    // Get property URL
+    const propertyUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'https://tharaga.co.in'}/properties/${competitor.id}`;
+    
     // Save competitor analysis
     await supabase
       .from('competitor_properties')
       .upsert([{
         property_id: propertyId,
-        competitor_name: competitor.builder_id, // Would be builder name
-        competitor_property_url: '', // Would be property URL
+        competitor_property_id: competitor.id,
+        competitor_name: competitorName,
+        competitor_property_url: propertyUrl,
         competitor_price: competitor.price_inr,
         competitor_location: competitor.locality || competitor.city,
         price_difference: comparison.priceComparison.difference,
         price_difference_percent: comparison.priceComparison.differencePercent,
-        amenities_comparison: comparison.amenitiesComparison,
+        amenities_comparison: compareAmenities(property, competitor),
         advantages: comparison.advantages,
         disadvantages: comparison.disadvantages,
-        market_position: determineMarketPosition(comparison)
+        market_position: determineMarketPosition(comparison),
+        analyzed_at: new Date().toISOString()
       }], {
-        onConflict: 'property_id,competitor_name'
+        onConflict: 'property_id,competitor_property_id'
       });
 
     advantages.push(comparison);
@@ -156,6 +173,31 @@ function determineMarketPosition(comparison: CompetitiveAdvantage): string {
   } else {
     return 'worse';
   }
+}
+
+/**
+ * Compare amenities between properties
+ */
+function compareAmenities(ourProperty: any, competitor: any): any {
+  const ourAmenities = Array.isArray(ourProperty.amenities) 
+    ? ourProperty.amenities 
+    : (ourProperty.amenities ? JSON.parse(ourProperty.amenities) : []);
+  const competitorAmenities = Array.isArray(competitor.amenities)
+    ? competitor.amenities
+    : (competitor.amenities ? JSON.parse(competitor.amenities) : []);
+  
+  const ourUnique = ourAmenities.filter((a: string) => !competitorAmenities.includes(a));
+  const competitorUnique = competitorAmenities.filter((a: string) => !ourAmenities.includes(a));
+  const common = ourAmenities.filter((a: string) => competitorAmenities.includes(a));
+  
+  return {
+    ourUnique,
+    competitorUnique,
+    common,
+    ourCount: ourAmenities.length,
+    competitorCount: competitorAmenities.length,
+    advantage: ourAmenities.length > competitorAmenities.length
+  };
 }
 
 /**

@@ -97,26 +97,33 @@ export async function sendJourneyEmail(
     .eq('builder_id', journey.builder_id)
     .single();
 
+  // Get builder info
+  const { getBuilderInfo } = await import('./helpers');
+  const builderInfo = await getBuilderInfo(journey.builder_id);
+
   const template = await getEmailTemplate(subscription?.tier || 'starter');
 
-  if (template) {
+  if (template && builderInfo) {
+    const lead = (journey as any).lead;
+    const property = (journey as any).property;
+    
     // Send email
     const emailResult = await sendBuilderEmail({
       propertyId: journey.property_id,
       builderId: journey.builder_id,
-      builderName: 'Builder', // Get from profiles
-      builderEmail: (journey as any).lead?.lead_buyer_email || '',
-      propertyName: (journey as any).property?.property_name || 'Property',
+      builderName: builderInfo.name,
+      builderEmail: builderInfo.email,
+      propertyName: property?.property_name || property?.title || 'Property',
       leadCount: 1,
       qualityLeads: 1,
       highQualityLeads: 1,
       mediumQualityLeads: 0,
       leads: [{
-        name: (journey as any).lead?.lead_buyer_name || 'Buyer',
-        email: (journey as any).lead?.lead_buyer_email || '',
-        phone: (journey as any).lead?.lead_buyer_phone || '',
-        timeline: (journey as any).lead?.timeline || '3months',
-        score: (journey as any).lead?.lead_quality_score || 50
+        name: lead?.lead_buyer_name || 'Buyer',
+        email: lead?.lead_buyer_email || '',
+        phone: lead?.lead_buyer_phone || '',
+        timeline: lead?.timeline || '3months',
+        score: lead?.lead_quality_score || lead?.quality_score || 50
       }]
     }, template);
 
@@ -198,10 +205,152 @@ async function sendDefaultJourneyEmail(
   stage: string,
   emailNumber: number
 ): Promise<boolean> {
-  // Default email templates would be implemented here
-  // For now, return false to indicate template needed
-  console.warn(`[Buyer Journey] No template found for stage: ${stage}, email: ${emailNumber}`);
-  return false;
+  const supabase = getSupabase();
+  const lead = (journey as any).lead;
+  const property = (journey as any).property;
+  
+  if (!lead?.lead_buyer_email) {
+    console.warn(`[Buyer Journey] No buyer email found for journey ${journey.id}`);
+    return false;
+  }
+
+  // Get default email templates from database or use built-in templates
+  const defaultTemplates = getDefaultEmailTemplates(stage, emailNumber);
+  
+  if (!defaultTemplates) {
+    console.warn(`[Buyer Journey] No default template found for stage: ${stage}, email: ${emailNumber}`);
+    return false;
+  }
+
+  // Personalize template
+  const personalizedSubject = personalizeTemplate(defaultTemplates.subject, journey);
+  const personalizedHtml = personalizeTemplate(defaultTemplates.html, journey);
+
+  try {
+    const { resendClient } = await import('@/lib/integrations/email/resendClient');
+    
+    const result = await resendClient.sendEmail({
+      to: lead.lead_buyer_email,
+      subject: personalizedSubject,
+      html: personalizedHtml,
+    });
+
+    if (result.success) {
+      // Log execution
+      await supabase
+        .from('email_sequence_executions')
+        .insert([{
+          journey_id: journey.id,
+          sequence_id: null,
+          email_number: emailNumber,
+          subject: personalizedSubject,
+          personalized_html: personalizedHtml,
+          sent_at: new Date().toISOString()
+        }]);
+
+      // Update journey
+      await supabase
+        .from('buyer_journey')
+        .update({
+          emails_sent: (journey.emails_sent || 0) + 1,
+          next_action_at: calculateNextActionTime(stage, emailNumber)
+        })
+        .eq('id', journey.id);
+
+      return true;
+    }
+
+    return false;
+  } catch (error) {
+    console.error('[Buyer Journey] Error sending default email:', error);
+    return false;
+  }
+}
+
+/**
+ * Get default email templates
+ */
+function getDefaultEmailTemplates(stage: string, emailNumber: number): { subject: string; html: string } | null {
+  const templates: Record<string, Record<number, { subject: string; html: string }>> = {
+    discovery: {
+      1: {
+        subject: 'Discover Your Dream Property: {{propertyName}}',
+        html: `
+          <h2>Discover Your Dream Property</h2>
+          <p>Hi {{buyerName}},</p>
+          <p>We found a property that matches your requirements perfectly!</p>
+          <p><strong>{{propertyName}}</strong> in {{propertyLocation}} is exactly what you're looking for.</p>
+          <p><strong>Price:</strong> {{propertyPrice}}</p>
+          <p><strong>Type:</strong> {{propertyType}}</p>
+          <p>Would you like to schedule a viewing? We're here to help you find your perfect home.</p>
+          <p>Best regards,<br>Tharaga Team</p>
+        `
+      },
+      2: {
+        subject: 'Still Interested in {{propertyName}}?',
+        html: `
+          <h2>Still Interested?</h2>
+          <p>Hi {{buyerName}},</p>
+          <p>We wanted to follow up on <strong>{{propertyName}}</strong>.</p>
+          <p>This property is generating a lot of interest. If you're still considering it, we'd love to show you around.</p>
+          <p>Schedule a viewing today and see why this property is perfect for you.</p>
+          <p>Best regards,<br>Tharaga Team</p>
+        `
+      }
+    },
+    social_proof: {
+      1: {
+        subject: 'See What Others Are Saying About {{propertyName}}',
+        html: `
+          <h2>What Others Are Saying</h2>
+          <p>Hi {{buyerName}},</p>
+          <p>Many buyers like you have already shown interest in <strong>{{propertyName}}</strong>.</p>
+          <p>This property is in high demand. Don't miss out on this opportunity!</p>
+          <p>Schedule your viewing today and join the satisfied buyers who found their dream property.</p>
+          <p>Best regards,<br>Tharaga Team</p>
+        `
+      }
+    },
+    urgency: {
+      1: {
+        subject: 'Limited Availability: {{propertyName}}',
+        html: `
+          <h2>Limited Availability</h2>
+          <p>Hi {{buyerName}},</p>
+          <p><strong>{{propertyName}}</strong> has limited units available.</p>
+          <p>Act now to secure your dream property before it's too late!</p>
+          <p>Contact us today to schedule a viewing and make this property yours.</p>
+          <p>Best regards,<br>Tharaga Team</p>
+        `
+      }
+    },
+    alternative: {
+      1: {
+        subject: 'Alternative Properties You Might Like',
+        html: `
+          <h2>Alternative Properties</h2>
+          <p>Hi {{buyerName}},</p>
+          <p>If <strong>{{propertyName}}</strong> isn't quite right, we have other properties that might be perfect for you.</p>
+          <p>Let us know what you're looking for, and we'll find the ideal property for your needs.</p>
+          <p>Best regards,<br>Tharaga Team</p>
+        `
+      }
+    },
+    builder_intro: {
+      1: {
+        subject: 'Meet the Builder: {{propertyName}}',
+        html: `
+          <h2>Meet the Builder</h2>
+          <p>Hi {{buyerName}},</p>
+          <p>We'd love to introduce you to the builder of <strong>{{propertyName}}</strong>.</p>
+          <p>Schedule a meeting to discuss your requirements and see how we can make this property perfect for you.</p>
+          <p>Best regards,<br>Tharaga Team</p>
+        `
+      }
+    }
+  };
+
+  return templates[stage]?.[emailNumber] || null;
 }
 
 /**

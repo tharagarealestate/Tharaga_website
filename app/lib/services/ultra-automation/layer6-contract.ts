@@ -78,7 +78,7 @@ export async function generateContract(
       contractPrice,
       paymentTerms: paymentTerms || getDefaultPaymentTerms(contractPrice),
       possessionDate: calculatePossessionDate(),
-      builderName: 'Builder' // Get from profiles
+      builderName: await getBuilderName(builderId) || 'Builder'
     }
   );
 
@@ -115,12 +115,42 @@ export async function generateContract(
     throw new Error(`Failed to create contract: ${error?.message}`);
   }
 
-  // TODO: Save contract HTML to storage and get URL
-  // For now, contract is stored in contract_data
+  // Save contract HTML to Supabase Storage and get URL
+  let contractUrl: string | undefined;
+  try {
+    const contractFileName = `contracts/${contract.id}/${contractNumber}.html`;
+    const { data: uploadData, error: uploadError } = await supabase.storage
+      .from('contracts')
+      .upload(contractFileName, contractHtml, {
+        contentType: 'text/html',
+        upsert: false,
+      });
+
+    if (!uploadError && uploadData) {
+      // Get public URL
+      const { data: urlData } = await supabase.storage
+        .from('contracts')
+        .getPublicUrl(contractFileName);
+
+      if (urlData?.publicUrl) {
+        contractUrl = urlData.publicUrl;
+        
+        // Update contract with URL
+        await supabase
+          .from('contracts')
+          .update({ contract_url: contractUrl })
+          .eq('id', contract.id);
+      }
+    }
+  } catch (error) {
+    console.error('[Layer 6] Error saving contract to storage:', error);
+    // Continue without storage URL - contract is still in contract_data
+  }
 
   return {
     contractId: contract.id,
     contractNumber,
+    contractUrl,
     status: 'draft'
   };
 }
@@ -215,6 +245,20 @@ function calculatePossessionDate(): Date {
 }
 
 /**
+ * Get builder name from profiles
+ */
+async function getBuilderName(builderId: string): Promise<string | null> {
+  try {
+    const { getBuilderInfo } = await import('./helpers');
+    const builderInfo = await getBuilderInfo(builderId);
+    return builderInfo?.name || builderInfo?.companyName || null;
+  } catch (error) {
+    console.error('[Layer 6] Error fetching builder name:', error);
+    return null;
+  }
+}
+
+/**
  * Send contract for signature
  */
 export async function sendContractForSignature(contractId: string): Promise<void> {
@@ -236,8 +280,62 @@ export async function sendContractForSignature(contractId: string): Promise<void
     .update({ status: 'sent' })
     .eq('id', contractId);
 
-  // TODO: Send contract via email with digital signature link
-  // For now, just update status
-  console.log(`[Layer 6] Contract ${contract.contract_number} sent to ${contract.buyer_email}`);
+  // Send contract via email with digital signature link
+  try {
+    const { resendClient } = await import('@/lib/integrations/email/resendClient');
+    
+    const contractUrl = contract.contract_url || 
+      (contract.contract_data as any)?.url || 
+      `${process.env.NEXT_PUBLIC_APP_URL || 'https://tharaga.co.in'}/contracts/${contract.id}`;
+    
+    const signatureUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'https://tharaga.co.in'}/contracts/${contract.id}/sign`;
+    
+    const emailSubject = `Property Sale Agreement - ${contract.contract_number}`;
+    const emailHtml = `
+      <h2>Property Sale Agreement</h2>
+      <p>Dear ${contract.buyer_name},</p>
+      <p>Please find attached your Property Sale Agreement for <strong>${(contract.property_details as any)?.name || 'Property'}</strong>.</p>
+      <p><strong>Contract Number:</strong> ${contract.contract_number}</p>
+      <p><strong>Contract Price:</strong> ₹${contract.contract_price?.toLocaleString('en-IN')}</p>
+      <p><strong>Property Location:</strong> ${(contract.property_details as any)?.location || 'N/A'}</p>
+      <p>Please review the contract and sign it digitally using the link below:</p>
+      <p><a href="${signatureUrl}" style="display: inline-block; padding: 12px 24px; background-color: #1e40af; color: white; text-decoration: none; border-radius: 6px; margin: 20px 0;">Sign Contract</a></p>
+      <p>You can also view the contract here: <a href="${contractUrl}">View Contract</a></p>
+      <p>If you have any questions, please don't hesitate to contact us.</p>
+      <p>Best regards,<br>Tharaga Team</p>
+    `;
+    
+    const result = await resendClient.sendEmail({
+      to: contract.buyer_email,
+      subject: emailSubject,
+      html: emailHtml,
+    });
+    
+    if (result.success) {
+      // Update contract with email sent status
+      await supabase
+        .from('contracts')
+        .update({
+          status: 'sent',
+          sent_at: new Date().toISOString(),
+          email_message_id: result.message_id
+        })
+        .eq('id', contractId);
+    } else {
+      throw new Error(result.error || 'Failed to send email');
+    }
+    
+  } catch (error) {
+    console.error(`[Layer 6] Error sending contract ${contract.contract_number}:`, error);
+    // Update status to indicate error
+    await supabase
+      .from('contracts')
+      .update({ 
+        status: 'draft',
+        error_message: error instanceof Error ? error.message : 'Failed to send contract'
+      })
+      .eq('id', contractId);
+    throw error;
+  }
 }
 

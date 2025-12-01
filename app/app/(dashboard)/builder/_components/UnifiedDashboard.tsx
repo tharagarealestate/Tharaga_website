@@ -389,7 +389,7 @@ export function UnifiedDashboard({ onNavigate }: UnifiedDashboardProps) {
               </div>
               <div>
                 <h2 className="text-xl font-bold text-white">Ultra Automation</h2>
-                <p className="text-sm text-gray-400">AI-powered automation active</p>
+                <p className="text-sm text-gray-300">AI-powered automation active</p>
               </div>
             </div>
             <div className="flex items-center gap-2">

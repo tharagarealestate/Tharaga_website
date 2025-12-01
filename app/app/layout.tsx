@@ -1786,7 +1786,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                  .text-gradient{ background:none !important; -webkit-background-clip:initial !important; background-clip:initial !important; color:#111 !important }
                  .ai-hero-figure{ margin:0; width:100%; display:grid; place-items:center; justify-self:center }
                  .ai-hero-art{ width:min(520px,95%); height:auto; opacity:.96; filter:drop-shadow(0 18px 40px rgba(30,64,175,.22)); display:block; margin:0 auto; transform:scaleX(-1); }
-                 .hero-premium{ min-height:100vh; padding-top:calc(72px + 32px) !important; padding-bottom:72px; color:#fff; background:#0f172a; overflow:hidden; position:relative; }
+                 .hero-premium{ min-height:100vh; padding-top:calc(72px + 32px) !important; padding-bottom:72px; color:#fff; background:transparent; overflow:hidden; position:relative; }
                  @media (max-width: 767px) {
                    .hero-premium{ padding-top:calc(72px + 24px) !important; }
                  }

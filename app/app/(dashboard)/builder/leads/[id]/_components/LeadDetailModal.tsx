@@ -23,6 +23,7 @@ import {
   AlertCircle,
   Plus,
   Download,
+  Sparkles,
 } from 'lucide-react';
 import {
   LineChart,
@@ -43,6 +44,7 @@ import {
 } from 'recharts';
 import { getSupabase } from '@/lib/supabase';
 import SmartScoreCard from '@/components/leads/SmartScoreCard';
+import { BuyerJourneyTimeline } from '../../_components/ultra-automation/components/BuyerJourneyTimeline';
 
 interface LeadDetail {
   id: string;
@@ -182,7 +184,7 @@ export function LeadDetailModal({ leadId, isOpen, onClose }: LeadDetailModalProp
   const [lead, setLead] = useState<LeadDetail | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'overview' | 'timeline' | 'properties' | 'analytics'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'timeline' | 'properties' | 'analytics' | 'buyer-journey'>('overview');
   const [isAddingInteraction, setIsAddingInteraction] = useState(false);
   const [interactionForm, setInteractionForm] = useState({
     type: 'phone_call',
@@ -550,6 +552,7 @@ export function LeadDetailModal({ leadId, isOpen, onClose }: LeadDetailModalProp
                     {[
                       { id: 'overview', label: 'Overview', icon: <Target className="w-4 h-4" /> },
                       { id: 'timeline', label: 'Timeline', icon: <Activity className="w-4 h-4" /> },
+                      { id: 'buyer-journey', label: 'Buyer Journey', icon: <Sparkles className="w-4 h-4" /> },
                       { id: 'properties', label: 'Properties', icon: <Home className="w-4 h-4" /> },
                       { id: 'analytics', label: 'Analytics', icon: <BarChart3 className="w-4 h-4" /> },
                     ].map((tab) => (
@@ -590,6 +593,12 @@ export function LeadDetailModal({ leadId, isOpen, onClose }: LeadDetailModalProp
                         setInteractionForm={setInteractionForm}
                         handleAddInteraction={handleAddInteraction}
                       />
+                    )}
+
+                    {activeTab === 'buyer-journey' && (
+                      <div className="py-4">
+                        <BuyerJourneyTimeline leadId={leadId} />
+                      </div>
                     )}
 
                     {activeTab === 'properties' && <PropertiesTab properties={lead.viewed_properties} />}

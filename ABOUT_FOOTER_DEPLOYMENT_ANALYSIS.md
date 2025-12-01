@@ -91,3 +91,5 @@ The homepage was intentionally removed to use a static `index.html` file instead
 - `f2090df` - About page fix
 - `161ef05` - **Homepage removed** (this is the problem!)
 
+
+

@@ -122,24 +122,44 @@ export default function BuilderSettingsPage() {
   }, [activeTab])
 
   return (
-    <div className='min-h-screen bg-gradient-to-br from-primary-950 via-primary-900 to-primary-800 relative overflow-hidden'>
-      {/* Animated Background Elements */}
-      <div className='absolute inset-0 opacity-20'>
-        <div className='absolute top-20 left-10 w-96 h-96 bg-gold-500 rounded-full blur-3xl animate-pulse-slow' />
-        <div
-          className='absolute bottom-20 right-10 w-[600px] h-[600px] bg-emerald-500 rounded-full blur-3xl animate-pulse-slow'
-          style={{ animationDelay: '1s' }}
+    <div className='min-h-screen relative overflow-hidden'>
+      {/* Premium glassmorphic background matching dashboard */}
+      <div className="fixed inset-0 -z-10">
+        {/* Layer 1: Base Gradient */}
+        <div className="absolute inset-0 bg-gradient-to-br from-[#0a1628] via-[#0d2847] to-[#071422]" />
+        
+        {/* Layer 2: Atmospheric Orbs */}
+        <div 
+          className="absolute top-20 left-10 w-[400px] h-[400px] bg-[#D4AF37] opacity-25 blur-[120px] rounded-full animate-pulse pointer-events-none" 
+          style={{ animationDuration: '8s' }} 
+        />
+        <div 
+          className="absolute bottom-20 right-10 w-[350px] h-[350px] bg-[#10B981] opacity-15 blur-[100px] rounded-full animate-pulse pointer-events-none" 
+          style={{ animationDuration: '12s', animationDelay: '1s' }} 
+        />
+        <div 
+          className="absolute top-40 right-20 w-[300px] h-[300px] bg-[#1e40af] opacity-20 blur-[80px] rounded-full animate-pulse pointer-events-none" 
+          style={{ animationDuration: '10s', animationDelay: '2s' }} 
+        />
+        
+        {/* Layer 3: Subtle Grid */}
+        <div 
+          className="absolute inset-0 opacity-[0.03] pointer-events-none" 
+          style={{
+            backgroundImage: 'radial-gradient(circle, white 1px, transparent 1px)',
+            backgroundSize: '40px 40px'
+          }} 
         />
       </div>
 
       <div className='relative z-10'>
         {/* Premium Glass Header */}
-        <div className='bg-white/10 backdrop-blur-xl border-b border-white/20 sticky top-[60px] z-30'>
+        <div className='bg-white/[0.03] backdrop-blur-[24px] border-b border-white/[0.06] sticky top-[72px] z-30'>
           <div className='max-w-7xl mx-auto px-6 py-6'>
             <h1 className='text-3xl font-bold text-white'>
               Settings
             </h1>
-            <p className='text-gray-300 mt-1'>Manage your account and preferences</p>
+            <p className='text-gray-400 mt-1'>Manage your account and preferences</p>
           </div>
         </div>
 
@@ -147,7 +167,7 @@ export default function BuilderSettingsPage() {
           <div className='grid lg:grid-cols-4 gap-8'>
             {/* Premium Sidebar */}
             <div className='lg:col-span-1'>
-              <nav className='backdrop-blur-xl bg-white/10 border border-white/20 rounded-2xl p-2 space-y-1'>
+              <nav className='bg-white/[0.03] backdrop-blur-[20px] border border-white/[0.08] rounded-2xl p-2 space-y-1 shadow-[0_8px_32px_rgba(0,0,0,0.3)]'>
                 {tabs.map((tab) => {
                   const Icon = tab.icon
                   return (
@@ -156,8 +176,8 @@ export default function BuilderSettingsPage() {
                       onClick={() => setActiveTab(tab.id)}
                       className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-all duration-200 ${
                         activeTab === tab.id
-                          ? 'bg-gradient-to-r from-gold-600 to-gold-500 text-primary-950 shadow-lg shadow-gold-500/30'
-                          : 'text-gray-300 hover:bg-white/10 hover:text-white'
+                          ? 'bg-gradient-to-r from-[rgba(212,175,55,0.15)] to-[rgba(212,175,55,0.05)] text-white border-l-3 border-[#D4AF37] shadow-[inset_0_0_20px_rgba(212,175,55,0.1)]'
+                          : 'text-gray-400 hover:bg-white/[0.04] hover:text-white'
                       }`}
                     >
                       <Icon className='w-5 h-5' />
@@ -196,7 +216,7 @@ export default function BuilderSettingsPage() {
                 </div>
               )}
 
-              <div className='backdrop-blur-xl bg-white/10 border border-white/20 rounded-2xl p-8'>
+              <div className='bg-white/[0.03] backdrop-blur-[20px] border border-white/[0.08] rounded-2xl p-8 shadow-[0_8px_32px_rgba(0,0,0,0.3)]'>
                 {activeTab === 'profile' && <ProfileSettings />}
                 {activeTab === 'company' && <CompanySettings />}
                 {activeTab === 'notifications' && <NotificationSettings />}
@@ -295,86 +315,175 @@ function ProfileSettings() {
 }
 
 function CompanySettings() {
-  return (
-    <div className='space-y-6'>
-      <div>
-        <h2 className='text-2xl font-bold text-white mb-2'>Company Information</h2>
-        <p className='text-gray-300'>Manage your company profile and business details</p>
-      </div>
+  const [companyName, setCompanyName] = useState('')
+  const [logoUrl, setLogoUrl] = useState<string | null>(null)
 
-      {/* Company Logo */}
-      <div className='flex items-center gap-6 pb-6 border-b border-gray-200'>
+  // Fetch company data
+  useEffect(() => {
+    async function fetchCompanyData() {
+      try {
+        const res = await fetch('/api/builder/company', { credentials: 'include' })
+        if (res.ok) {
+          const data = await res.json()
+          if (data.company) {
+            setCompanyName(data.company.name || '')
+            setLogoUrl(data.company.logo_url || null)
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching company data:', error)
+      }
+    }
+    fetchCompanyData()
+  }, [])
+
+  const handleSave = async () => {
+    try {
+      const res = await fetch('/api/builder/company', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ name: companyName }),
+      })
+      if (res.ok) {
+        // Show success message
+        alert('Company information saved successfully')
+      }
+    } catch (error) {
+      console.error('Error saving company data:', error)
+      alert('Failed to save company information')
+    }
+  }
+
+  return (
+    <div className='space-y-8'>
+      {/* Company Logo Section */}
+      <div className='flex items-start gap-6'>
         <div className='relative group'>
-          <div className='w-24 h-24 rounded-xl bg-gradient-to-br from-primary-700 to-primary-600 flex items-center justify-center text-white text-2xl font-bold'>
-            SB
-          </div>
-          <button className='absolute inset-0 rounded-xl bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-sm font-medium'>
+          {logoUrl ? (
+            <img 
+              src={logoUrl} 
+              alt="Company Logo" 
+              className='w-24 h-24 rounded-xl object-cover border-2 border-white/20'
+            />
+          ) : (
+            <div className='w-24 h-24 rounded-xl bg-gradient-to-br from-primary-700 to-primary-600 flex items-center justify-center text-white text-2xl font-bold border-2 border-white/20'>
+              {companyName ? companyName.substring(0, 2).toUpperCase() : 'SB'}
+            </div>
+          )}
+          <button 
+            onClick={() => {
+              const input = document.createElement('input')
+              input.type = 'file'
+              input.accept = 'image/*'
+              input.onchange = async (e) => {
+                const file = (e.target as HTMLInputElement).files?.[0]
+                if (file) {
+                  // Handle file upload
+                  const formData = new FormData()
+                  formData.append('logo', file)
+                  try {
+                    const res = await fetch('/api/builder/company/logo', {
+                      method: 'POST',
+                      credentials: 'include',
+                      body: formData,
+                    })
+                    if (res.ok) {
+                      const data = await res.json()
+                      setLogoUrl(data.logo_url)
+                    }
+                  } catch (error) {
+                    console.error('Error uploading logo:', error)
+                  }
+                }
+              }
+              input.click()
+            }}
+            className='absolute inset-0 rounded-xl bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-sm font-medium cursor-pointer'
+          >
             Change
           </button>
         </div>
 
-        <div>
-          <h3 className='font-semibold text-white mb-1'>Company Logo</h3>
-          <p className='text-sm text-gray-300 mb-3'>Upload your company logo</p>
-          <div className='flex gap-2'>
-            <button className='px-4 py-2 bg-gradient-to-r from-gold-600 to-gold-500 text-white font-medium rounded-lg text-sm hover:shadow-lg hover:-translate-y-1 transition-all'>
+        <div className='flex-1'>
+          <h3 className='font-semibold text-white mb-1 text-lg'>Company Logo</h3>
+          <p className='text-sm text-gray-400 mb-4'>Upload your company logo</p>
+          <div className='flex gap-3'>
+            <button 
+              onClick={() => {
+                const input = document.createElement('input')
+                input.type = 'file'
+                input.accept = 'image/*'
+                input.onchange = async (e) => {
+                  const file = (e.target as HTMLInputElement).files?.[0]
+                  if (file) {
+                    const formData = new FormData()
+                    formData.append('logo', file)
+                    try {
+                      const res = await fetch('/api/builder/company/logo', {
+                        method: 'POST',
+                        credentials: 'include',
+                        body: formData,
+                      })
+                      if (res.ok) {
+                        const data = await res.json()
+                        setLogoUrl(data.logo_url)
+                      }
+                    } catch (error) {
+                      console.error('Error uploading logo:', error)
+                    }
+                  }
+                }
+                input.click()
+              }}
+              className='px-4 py-2 bg-gradient-to-r from-gold-600 to-gold-500 text-white font-medium rounded-lg text-sm hover:shadow-lg hover:-translate-y-1 transition-all'
+            >
               Upload Logo
             </button>
-            <button className='px-4 py-2 bg-gray-100 text-gray-700 font-medium rounded-lg text-sm hover:bg-gray-200 transition-all'>
-              Remove
-            </button>
+            {logoUrl && (
+              <button 
+                onClick={async () => {
+                  try {
+                    const res = await fetch('/api/builder/company/logo', {
+                      method: 'DELETE',
+                      credentials: 'include',
+                    })
+                    if (res.ok) {
+                      setLogoUrl(null)
+                    }
+                  } catch (error) {
+                    console.error('Error removing logo:', error)
+                  }
+                }}
+                className='px-4 py-2 bg-white/10 backdrop-blur-md border border-white/20 text-white font-medium rounded-lg text-sm hover:bg-white/20 transition-all'
+              >
+                Remove
+              </button>
+            )}
           </div>
         </div>
       </div>
 
-      {/* Form Fields with Floating Labels */}
-      <div className='grid grid-cols-1 sm:grid-cols-2 gap-6'>
-        <div className='col-span-2'>
-          <FloatingLabelInput
-            type='text'
-            label='Company Name'
-            defaultValue='Skyline Builders'
-          />
-        </div>
-        <FloatingLabelInput
+      {/* Company Name Field Only */}
+      <div>
+        <label className='block text-sm font-medium text-gray-300 mb-2'>
+          Company Name
+        </label>
+        <input
           type='text'
-          label='Registration Number'
-          defaultValue='U45200MH2010PTC123456'
+          value={companyName}
+          onChange={(e) => setCompanyName(e.target.value)}
+          placeholder='Enter your company name'
+          className='w-full px-4 py-3 bg-white/[0.03] backdrop-blur-[12px] border border-white/[0.1] rounded-xl text-white placeholder:text-gray-500 focus:outline-none focus:border-[#D4AF37]/50 focus:ring-2 focus:ring-[#D4AF37]/20 transition-all'
         />
-        <FloatingLabelInput
-          type='text'
-          label='RERA Number'
-          defaultValue='MHMRE-123456'
-        />
-        <div className='col-span-2'>
-          <FloatingLabelTextarea
-            rows={3}
-            label='Company Address'
-            defaultValue='123 Business Park, Anna Nagar, Chennai - 600040'
-          />
-        </div>
-        <FloatingLabelInput
-          type='url'
-          label='Website'
-          defaultValue='https://skylinebuilders.com'
-        />
-        <FloatingLabelInput
-          type='tel'
-          label='Phone Number'
-          defaultValue='+91 22 1234 5678'
-        />
-        <div className='col-span-2'>
-          <FloatingLabelTextarea
-            rows={4}
-            label='About Company'
-            defaultValue='Skyline Builders is a leading real estate development company with over 15 years of experience in creating premium residential and commercial spaces in Chennai.'
-          />
-        </div>
       </div>
 
       {/* Save Button */}
-      <div className='flex justify-end pt-6 border-t border-gray-200'>
-        <button className='px-8 py-3 bg-gradient-to-r from-gold-600 to-gold-500 text-white font-semibold rounded-xl hover:shadow-lg hover:-translate-y-1 transition-all'>
+      <div className='flex justify-end pt-6 border-t border-white/10'>
+        <button 
+          onClick={handleSave}
+          className='px-8 py-3 bg-gradient-to-r from-gold-600 to-gold-500 text-white font-semibold rounded-xl hover:shadow-lg hover:-translate-y-1 transition-all'
+        >
           Save Changes
         </button>
       </div>
@@ -955,8 +1064,26 @@ function IntegrationSettings({
         const response = await fetch('/api/crm/zoho/status', {
           credentials: 'include',
         })
+        
+        // Check if response is ok
+        if (!response.ok) {
+          // If 401, it might be auth error or just not connected
+          if (response.status === 401) {
+            const errorData = await response.json().catch(() => ({ error: 'Unauthorized' }))
+            // Only set error if it's a real auth error (not just not connected)
+            if (errorData.error && errorData.error === 'Unauthorized' && errorData.success === false) {
+              // Real auth error - but don't show error in settings page, just set not connected
+              console.warn('Authentication error when fetching Zoho status')
+            }
+          }
+          setZohoStatus({ connected: false })
+          return
+        }
+
         const data = await response.json()
-        if (data.success) {
+        
+        // Check if request was successful (even if not connected)
+        if (data.success !== false) {
           setZohoStatus({
             connected: data.connected || false,
             account_name: data.account?.name || data.account_name || null,

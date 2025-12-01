@@ -125,9 +125,31 @@ export default function ZohoCRMPage() {
       const response = await fetch('/api/crm/zoho/status', {
         credentials: 'include',
       })
+      
+      // Check if response is ok
+      if (!response.ok) {
+        // If 401, check if it's auth error or just not connected
+        if (response.status === 401) {
+          const errorData = await response.json().catch(() => ({ error: 'Unauthorized' }))
+          // If it's a real auth error (user not logged in), show error
+          if (errorData.error && errorData.error === 'Unauthorized' && !errorData.success) {
+            setMessage({
+              type: 'error',
+              text: 'Unauthorized. Please log in.',
+            })
+            setStatus({ connected: false })
+            return
+          }
+        }
+        // For other errors, just set not connected
+        setStatus({ connected: false })
+        return
+      }
+
       const data = await response.json()
 
-      if (data.success) {
+      // Check if request was successful (even if not connected)
+      if (data.success !== false) {
         setStatus({
           connected: data.connected || false,
           active: data.active,
@@ -140,12 +162,24 @@ export default function ZohoCRMPage() {
           last_sync_at: data.sync?.last_sync || data.last_sync_at,
           total_synced: data.statistics?.mapped_records || data.total_synced,
         })
+        // Clear any previous error messages if status is successfully fetched
+        if (data.connected === false && !data.error) {
+          setMessage(null)
+        }
       } else {
+        // If success is false and there's an error, show it
+        if (data.error) {
+          setMessage({
+            type: 'error',
+            text: data.error === 'Unauthorized' ? 'Unauthorized. Please log in.' : data.error,
+          })
+        }
         setStatus({ connected: false })
       }
     } catch (error: any) {
       console.error('Error fetching status:', error)
       setStatus({ connected: false })
+      // Don't show error message for network errors, just silently fail
     } finally {
       setLoading(false)
     }

@@ -1,15 +1,37 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { getSupabase } from '@/lib/supabase'
-import { useRouter } from 'next/navigation'
-import { UnifiedDashboard } from './_components/UnifiedDashboard'
+import { UnifiedSinglePageDashboard } from './_components/UnifiedSinglePageDashboard'
 
-export default function BuilderOverviewPage() {
+function DashboardContent() {
   const [user, setUser] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const supabase = getSupabase()
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const [activeSection, setActiveSection] = useState<string>('overview')
+
+  // Get section from URL params or default to overview
+  useEffect(() => {
+    const section = searchParams.get('section') || 'overview'
+    if (section !== activeSection) {
+      setActiveSection(section)
+    }
+  }, [searchParams, activeSection])
+  
+  // Handle browser back/forward buttons
+  useEffect(() => {
+    const handlePopState = () => {
+      const urlParams = new URLSearchParams(window.location.search)
+      const section = urlParams.get('section') || 'overview'
+      setActiveSection(section)
+    }
+    
+    window.addEventListener('popstate', handlePopState)
+    return () => window.removeEventListener('popstate', handlePopState)
+  }, [])
 
   // Fetch user and check roles
   useEffect(() => {
@@ -30,7 +52,7 @@ export default function BuilderOverviewPage() {
           return
         }
 
-        // Check user roles - builder dashboard requires 'builder' or 'admin' role
+        // Check user roles
         const { data: rolesData, error: rolesError } = await supabase
           .from('user_roles')
           .select('role')
@@ -65,6 +87,15 @@ export default function BuilderOverviewPage() {
     fetchUser()
   }, [supabase, router])
 
+  // Handle section change
+  const handleSectionChange = (section: string) => {
+    setActiveSection(section)
+    // Update URL without page reload
+    const url = new URL(window.location.href)
+    url.searchParams.set('section', section)
+    window.history.pushState({}, '', url.toString())
+  }
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
@@ -80,5 +111,25 @@ export default function BuilderOverviewPage() {
     return null
   }
 
-  return <UnifiedDashboard />
+  return (
+    <UnifiedSinglePageDashboard 
+      activeSection={activeSection} 
+      onSectionChange={handleSectionChange}
+    />
+  )
+}
+
+export default function BuilderDashboardPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-12 h-12 border-2 border-[#D4AF37] border-t-transparent rounded-full animate-spin" />
+          <p className="text-gray-400">Loading...</p>
+        </div>
+      </div>
+    }>
+      <DashboardContent />
+    </Suspense>
+  )
 }

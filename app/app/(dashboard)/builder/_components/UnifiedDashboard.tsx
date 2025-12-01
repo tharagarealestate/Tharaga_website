@@ -7,9 +7,9 @@ import {
   TrendingUp, DollarSign, BarChart3, Zap,
   ArrowUpRight, ArrowDownRight, Phone, Mail,
   Search, Filter, Plus, MoreVertical,
-  Clock, MapPin, Star, Eye, MessageCircle
+  Clock, MapPin, Star, Eye, MessageCircle,
+  Sparkles, CheckCircle2, Calendar, FileText, Handshake, Activity
 } from 'lucide-react'
-import Link from 'next/link'
 import { cn } from '@/lib/utils'
 
 // Glass panel styles
@@ -62,8 +62,11 @@ async function fetchStats() {
   return data?.data || { total: 0, hot: 0, warm: 0 }
 }
 
-export function UnifiedDashboard() {
-  const [activeSection, setActiveSection] = useState<string | null>(null)
+interface UnifiedDashboardProps {
+  onNavigate?: (section: string) => void
+}
+
+export function UnifiedDashboard({ onNavigate }: UnifiedDashboardProps = {}) {
 
   // Fetch data
   const { data: leads = [], isLoading: leadsLoading } = useQuery({
@@ -105,25 +108,8 @@ export function UnifiedDashboard() {
   }, [leads, properties, stats])
 
   return (
-    <div className="relative min-h-screen">
-      {/* Layered Background System */}
-      <div className="fixed inset-0 -z-10">
-        {/* Layer 1: Base Gradient */}
-        <div className="absolute inset-0 bg-gradient-to-br from-[#0a1628] via-[#0d2847] to-[#071422]" />
-        
-        {/* Layer 2: Atmospheric Orbs */}
-        <div className="absolute top-20 left-10 w-[400px] h-[400px] bg-[#D4AF37] opacity-25 blur-[120px] rounded-full animate-pulse" style={{ animationDuration: '8s' }} />
-        <div className="absolute bottom-20 right-10 w-[350px] h-[350px] bg-[#10B981] opacity-15 blur-[100px] rounded-full animate-pulse" style={{ animationDuration: '12s', animationDelay: '1s' }} />
-        <div className="absolute top-40 right-20 w-[300px] h-[300px] bg-[#1e40af] opacity-20 blur-[80px] rounded-full animate-pulse" style={{ animationDuration: '10s', animationDelay: '2s' }} />
-        
-        {/* Layer 3: Subtle Grid */}
-        <div className="absolute inset-0 opacity-[0.03]" style={{
-          backgroundImage: 'radial-gradient(circle, white 1px, transparent 1px)',
-          backgroundSize: '40px 40px'
-        }} />
-      </div>
-
-      {/* Main Content */}
+    <div className="relative w-full">
+      {/* Main Content - Background is handled by layout */}
       <div className="relative z-10 px-6 py-8 space-y-6">
         {/* Welcome Section */}
         <div className={cn(glassPrimary, "p-8")}>
@@ -189,9 +175,12 @@ export function UnifiedDashboard() {
                   <p className="text-sm text-gray-400">{metrics.hotLeads} hot • {metrics.warmLeads} warm</p>
                 </div>
               </div>
-              <Link href="/builder/leads" className={cn(glassBadge, "text-gold-400 hover:text-gold-300")}>
-                View All <ArrowUpRight className="w-3 h-3 inline ml-1" />
-              </Link>
+              <button 
+                onClick={() => onNavigate?.('leads')}
+                className={cn(glassBadge, "text-gold-400 hover:text-gold-300 cursor-pointer flex items-center gap-1")}
+              >
+                View All <ArrowUpRight className="w-3 h-3" />
+              </button>
             </div>
 
             {leadsLoading ? (
@@ -208,7 +197,7 @@ export function UnifiedDashboard() {
             ) : (
               <div className="space-y-3">
                 {leads.slice(0, 5).map((lead) => (
-                  <LeadCard key={lead.id} lead={lead} />
+                  <LeadCard key={lead.id} lead={lead} onNavigate={onNavigate} />
                 ))}
               </div>
             )}
@@ -226,9 +215,12 @@ export function UnifiedDashboard() {
                   <p className="text-sm text-gray-400">{metrics.activeProperties} active listings</p>
                 </div>
               </div>
-              <Link href="/builder/properties" className={cn(glassBadge, "text-emerald-400 hover:text-emerald-300")}>
-                View All <ArrowUpRight className="w-3 h-3 inline ml-1" />
-              </Link>
+              <button 
+                onClick={() => onNavigate?.('properties')}
+                className={cn(glassBadge, "text-emerald-400 hover:text-emerald-300 cursor-pointer flex items-center gap-1")}
+              >
+                View All <ArrowUpRight className="w-3 h-3" />
+              </button>
             </div>
 
             {propertiesLoading ? (
@@ -241,14 +233,17 @@ export function UnifiedDashboard() {
               <div className="text-center py-12 text-gray-400">
                 <Building2 className="w-12 h-12 mx-auto mb-3 opacity-50" />
                 <p>No properties yet</p>
-                <Link href="/builder/properties" className="text-gold-400 hover:text-gold-300 mt-2 inline-block">
+                <button 
+                  onClick={() => onNavigate?.('properties')}
+                  className="text-gold-400 hover:text-gold-300 mt-2 inline-block cursor-pointer"
+                >
                   Add your first property →
-                </Link>
+                </button>
               </div>
             ) : (
               <div className="space-y-3">
                 {properties.slice(0, 5).map((property) => (
-                  <PropertyCard key={property.id} property={property} />
+                  <PropertyCard key={property.id} property={property} onNavigate={onNavigate} />
                 ))}
               </div>
             )}
@@ -266,9 +261,12 @@ export function UnifiedDashboard() {
                   <p className="text-sm text-gray-400">Send SMS and WhatsApp messages</p>
                 </div>
               </div>
-              <Link href="/builder/messaging" className={cn(glassBadge, "text-blue-400 hover:text-blue-300")}>
-                Open <ArrowUpRight className="w-3 h-3 inline ml-1" />
-              </Link>
+              <button 
+                onClick={() => onNavigate?.('client-outreach')}
+                className={cn(glassBadge, "text-blue-400 hover:text-blue-300 cursor-pointer flex items-center gap-1")}
+              >
+                Open <ArrowUpRight className="w-3 h-3" />
+              </button>
             </div>
 
             <div className="space-y-4">
@@ -323,14 +321,20 @@ export function UnifiedDashboard() {
             </div>
 
             <div className="grid grid-cols-2 gap-4 mb-4">
-              <Link href="/builder/analytics" className={cn(glassInteractive, "p-4 text-center")}>
+              <button 
+                onClick={() => onNavigate?.('behavior-analytics')}
+                className={cn(glassInteractive, "p-4 text-center w-full cursor-pointer")}
+              >
                 <BarChart3 className="w-6 h-6 text-gold-400 mx-auto mb-2" />
                 <div className="text-sm font-medium text-white">Analytics</div>
-              </Link>
-              <Link href="/builder/settings" className={cn(glassInteractive, "p-4 text-center")}>
+              </button>
+              <button 
+                onClick={() => onNavigate?.('settings')}
+                className={cn(glassInteractive, "p-4 text-center w-full cursor-pointer")}
+              >
                 <Settings className="w-6 h-6 text-gold-400 mx-auto mb-2" />
                 <div className="text-sm font-medium text-white">Settings</div>
-              </Link>
+              </button>
             </div>
 
             <div className={cn(glassSecondary, "p-4")}>
@@ -353,6 +357,60 @@ export function UnifiedDashboard() {
               </div>
             </div>
           </section>
+        </div>
+
+        {/* ULTRA AUTOMATION STATUS SECTION */}
+        <section className={cn(glassPrimary, "p-6 border border-gold-500/20")}>
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-gold-600 to-gold-500 flex items-center justify-center">
+                <Sparkles className="w-6 h-6 text-primary-950" />
+              </div>
+              <div>
+                <h2 className="text-xl font-bold text-white">Ultra Automation</h2>
+                <p className="text-sm text-gray-400">AI-powered automation active</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
+              <span className="text-xs text-emerald-400 font-medium">Active</span>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-4">
+            <div className={cn(glassSecondary, "p-3 text-center")}>
+              <CheckCircle2 className="w-5 h-5 text-emerald-400 mx-auto mb-1" />
+              <div className="text-xs text-gray-400">Lead Gen</div>
+            </div>
+            <div className={cn(glassSecondary, "p-3 text-center")}>
+              <CheckCircle2 className="w-5 h-5 text-emerald-400 mx-auto mb-1" />
+              <div className="text-xs text-gray-400">Journeys</div>
+            </div>
+            <div className={cn(glassSecondary, "p-3 text-center")}>
+              <CheckCircle2 className="w-5 h-5 text-emerald-400 mx-auto mb-1" />
+              <div className="text-xs text-gray-400">Viewings</div>
+            </div>
+            <div className={cn(glassSecondary, "p-3 text-center")}>
+              <CheckCircle2 className="w-5 h-5 text-emerald-400 mx-auto mb-1" />
+              <div className="text-xs text-gray-400">Contracts</div>
+            </div>
+            <div className={cn(glassSecondary, "p-3 text-center")}>
+              <CheckCircle2 className="w-5 h-5 text-emerald-400 mx-auto mb-1" />
+              <div className="text-xs text-gray-400">Analytics</div>
+            </div>
+          </div>
+
+          <div className={cn(glassSecondary, "p-4")}>
+            <p className="text-sm text-gray-300 mb-2">
+              All 10 automation layers are running automatically in the background. 
+              Access data via API endpoints or database queries.
+            </p>
+            <div className="flex items-center gap-2 text-xs text-gray-400">
+              <Activity className="w-3 h-3" />
+              <span>Processing leads, emails, viewings, and contracts automatically</span>
+            </div>
+          </div>
+        </section>
         </div>
       </div>
     </div>
@@ -403,15 +461,20 @@ function StatCard({
   )
 }
 
-function LeadCard({ lead }: { lead: Lead }) {
+function LeadCard({ lead, onNavigate }: { lead: Lead; onNavigate?: (section: string) => void }) {
   const score = lead.score || 0
   const isHot = score >= 80
   const isWarm = score >= 50 && score < 80
 
   return (
-    <Link 
-      href={`/builder/leads/${lead.id}`}
-      className={cn(glassSecondary, "p-4 block hover:bg-white/[0.04] transition-all group")}
+    <button
+      onClick={() => {
+        // Navigate to leads section first, then could open detail modal
+        onNavigate?.('leads')
+        // Could also dispatch event for lead detail modal
+        window.dispatchEvent(new CustomEvent('open-lead-detail', { detail: { leadId: lead.id } }))
+      }}
+      className={cn(glassSecondary, "p-4 block hover:bg-white/[0.04] transition-all group w-full text-left cursor-pointer")}
     >
       <div className="flex items-center gap-3">
         <div className="w-10 h-10 rounded-full bg-gradient-to-br from-gold-600 to-gold-500 flex items-center justify-center text-white font-semibold text-sm">
@@ -437,15 +500,19 @@ function LeadCard({ lead }: { lead: Lead }) {
           {lead.property_interest}
         </div>
       )}
-    </Link>
+    </button>
   )
 }
 
-function PropertyCard({ property }: { property: Property }) {
+function PropertyCard({ property, onNavigate }: { property: Property; onNavigate?: (section: string) => void }) {
   return (
-    <Link 
-      href={`/builder/properties/${property.id}`}
-      className={cn(glassSecondary, "p-4 block hover:bg-white/[0.04] transition-all group")}
+    <button
+      onClick={() => {
+        onNavigate?.('properties')
+        // Could dispatch event for property detail
+        window.dispatchEvent(new CustomEvent('open-property-detail', { detail: { propertyId: property.id } }))
+      }}
+      className={cn(glassSecondary, "p-4 block hover:bg-white/[0.04] transition-all group w-full text-left cursor-pointer")}
     >
       <div className="flex items-start justify-between gap-3">
         <div className="flex-1 min-w-0">
@@ -475,7 +542,7 @@ function PropertyCard({ property }: { property: Property }) {
           )}
         </div>
       </div>
-    </Link>
+    </button>
   )
 }
 

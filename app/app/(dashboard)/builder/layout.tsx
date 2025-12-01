@@ -10,7 +10,7 @@ export default function BuilderDashboardLayout({ children }: { children: ReactNo
   return (
     <ReactQueryProvider>
       <div className="min-h-screen flex flex-col relative overflow-hidden bg-gradient-to-br from-primary-950 via-primary-900 to-primary-800">
-        {/* Animated Background Elements - EXACT from pricing page */}
+        {/* Animated Background Elements - EXACT from pricing page with reduced glow */}
         <div className="absolute inset-0 opacity-20 pointer-events-none">
           <div className="absolute top-20 left-10 w-96 h-96 bg-gold-500 rounded-full blur-3xl animate-pulse-slow" />
           <div

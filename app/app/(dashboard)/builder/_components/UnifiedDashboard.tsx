@@ -195,9 +195,9 @@ export function UnifiedDashboard({ onNavigate }: UnifiedDashboardProps) {
                 ))}
               </div>
             ) : leads.length === 0 ? (
-              <div className="text-center py-12 text-gray-400">
-                <Users className="w-12 h-12 mx-auto mb-3 opacity-50" />
-                <p>No leads yet</p>
+              <div className="text-center py-12">
+                <Users className="w-12 h-12 mx-auto mb-3 opacity-50 text-white" />
+                <p className="text-white">No leads yet</p>
               </div>
             ) : (
               <div className="space-y-3">
@@ -239,12 +239,12 @@ export function UnifiedDashboard({ onNavigate }: UnifiedDashboardProps) {
                 ))}
               </div>
             ) : properties.length === 0 ? (
-              <div className="text-center py-12 text-gray-400">
-                <Building2 className="w-12 h-12 mx-auto mb-3 opacity-50" />
-                <p>No properties yet</p>
+              <div className="text-center py-12">
+                <Building2 className="w-12 h-12 mx-auto mb-3 opacity-50 text-white" />
+                <p className="text-white">No properties yet</p>
                 <button 
                   onClick={() => onNavigate?.('properties')}
-                  className="text-gold-400 hover:text-gold-300 mt-2 inline-block cursor-pointer"
+                  className="text-gold-400 hover:text-gold-300 mt-2 inline-block cursor-pointer font-medium"
                 >
                   Add your first property →
                 </button>

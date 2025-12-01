@@ -13,10 +13,10 @@ import {
 import { cn } from '@/lib/utils'
 
 // Glass panel styles - EXACT from pricing page
-const glassPrimary = "backdrop-blur-xl bg-white/10 border border-white/20 rounded-3xl shadow-lg transition-all duration-500"
+const glassPrimary = "relative group backdrop-blur-xl bg-white/10 border border-white/20 rounded-3xl shadow-lg transition-all duration-500 hover:shadow-2xl hover:-translate-y-2 overflow-hidden"
 const glassSecondary = "backdrop-blur-xl bg-white/10 border border-white/20 rounded-xl shadow-lg"
-const glassInteractive = "backdrop-blur-xl bg-white/10 border border-white/20 rounded-3xl transition-all duration-500 hover:shadow-2xl hover:-translate-y-2 hover:bg-white/[0.15]"
-const glassBadge = "backdrop-blur-sm bg-gold-500/20 border border-gold-500/30 rounded-full px-4 py-2 text-xs font-medium"
+const glassInteractive = "relative group backdrop-blur-xl bg-white/10 border border-white/20 rounded-3xl transition-all duration-500 hover:shadow-2xl hover:-translate-y-2 hover:bg-white/[0.15] overflow-hidden"
+const glassBadge = "backdrop-blur-sm bg-gold-500/20 border border-gold-500/30 rounded-full px-4 py-2 text-xs font-medium text-gold-300"
 
 interface Lead {
   id: string
@@ -113,12 +113,14 @@ export function UnifiedDashboard({ onNavigate }: UnifiedDashboardProps) {
       <div className="relative z-10 px-6 py-8 space-y-6">
         {/* Welcome Section */}
         <div className={cn(glassPrimary, "p-8")}>
-          <div className="flex items-center justify-between">
+          {/* Shimmer Effect on Hover - EXACT from pricing page */}
+          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-in-out pointer-events-none" />
+          <div className="relative flex items-center justify-between">
             <div>
               <h1 className="text-3xl font-bold text-white mb-2">
                 Welcome back! 👋
               </h1>
-              <p className="text-gray-300">Here's your portfolio at a glance</p>
+              <p className="text-xl text-gray-300 leading-relaxed">Here's your portfolio at a glance</p>
             </div>
             <div className="flex items-center gap-3">
               <button className={cn(glassInteractive, "px-6 py-3 text-white font-semibold")}>
@@ -165,16 +167,19 @@ export function UnifiedDashboard({ onNavigate }: UnifiedDashboardProps) {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* LEADS SECTION */}
           <section className={cn(glassPrimary, "p-6")}>
-            <div className="flex items-center justify-between mb-6">
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-gold-600 to-gold-500 flex items-center justify-center">
-                  <Users className="w-6 h-6 text-primary-950" />
+            {/* Shimmer Effect on Hover - EXACT from pricing page */}
+            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-in-out pointer-events-none" />
+            <div className="relative">
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-gold-600 to-gold-500 flex items-center justify-center">
+                    <Users className="w-6 h-6 text-primary-950" />
+                  </div>
+                  <div>
+                    <h2 className="text-xl font-bold text-white">Leads Management</h2>
+                    <p className="text-sm text-gray-300">{metrics.hotLeads} hot • {metrics.warmLeads} warm</p>
+                  </div>
                 </div>
-                <div>
-                  <h2 className="text-xl font-bold text-white">Leads Management</h2>
-                  <p className="text-sm text-gray-400">{metrics.hotLeads} hot • {metrics.warmLeads} warm</p>
-                </div>
-              </div>
               <button 
                 onClick={() => onNavigate?.('leads')}
                 className={cn(glassBadge, "text-gold-400 hover:text-gold-300 cursor-pointer flex items-center gap-1")}
@@ -201,20 +206,24 @@ export function UnifiedDashboard({ onNavigate }: UnifiedDashboardProps) {
                 ))}
               </div>
             )}
+            </div>
           </section>
 
           {/* PROPERTIES SECTION */}
           <section className={cn(glassPrimary, "p-6")}>
-            <div className="flex items-center justify-between mb-6">
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-600 to-emerald-500 flex items-center justify-center">
-                  <Building2 className="w-6 h-6 text-white" />
+            {/* Shimmer Effect on Hover - EXACT from pricing page */}
+            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-in-out pointer-events-none" />
+            <div className="relative">
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-600 to-emerald-500 flex items-center justify-center">
+                    <Building2 className="w-6 h-6 text-white" />
+                  </div>
+                  <div>
+                    <h2 className="text-xl font-bold text-white">My Properties</h2>
+                    <p className="text-sm text-gray-300">{metrics.activeProperties} active listings</p>
+                  </div>
                 </div>
-                <div>
-                  <h2 className="text-xl font-bold text-white">My Properties</h2>
-                  <p className="text-sm text-gray-400">{metrics.activeProperties} active listings</p>
-                </div>
-              </div>
               <button 
                 onClick={() => onNavigate?.('properties')}
                 className={cn(glassBadge, "text-emerald-400 hover:text-emerald-300 cursor-pointer flex items-center gap-1")}
@@ -247,20 +256,24 @@ export function UnifiedDashboard({ onNavigate }: UnifiedDashboardProps) {
                 ))}
               </div>
             )}
+            </div>
           </section>
 
           {/* CLIENT OUTREACH SECTION */}
           <section className={cn(glassPrimary, "p-6")}>
-            <div className="flex items-center justify-between mb-6">
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-600 to-blue-500 flex items-center justify-center">
-                  <MessageSquare className="w-6 h-6 text-white" />
+            {/* Shimmer Effect on Hover - EXACT from pricing page */}
+            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-in-out pointer-events-none" />
+            <div className="relative">
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-600 to-blue-500 flex items-center justify-center">
+                    <MessageSquare className="w-6 h-6 text-white" />
+                  </div>
+                  <div>
+                    <h2 className="text-xl font-bold text-white">Client Outreach</h2>
+                    <p className="text-sm text-gray-300">Send SMS and WhatsApp messages</p>
+                  </div>
                 </div>
-                <div>
-                  <h2 className="text-xl font-bold text-white">Client Outreach</h2>
-                  <p className="text-sm text-gray-400">Send SMS and WhatsApp messages</p>
-                </div>
-              </div>
               <button 
                 onClick={() => onNavigate?.('client-outreach')}
                 className={cn(glassBadge, "text-blue-400 hover:text-blue-300 cursor-pointer flex items-center gap-1")}
@@ -304,21 +317,25 @@ export function UnifiedDashboard({ onNavigate }: UnifiedDashboardProps) {
                 </div>
               </div>
             </div>
+            </div>
           </section>
 
           {/* ANALYTICS & SETTINGS SECTION */}
           <section className={cn(glassPrimary, "p-6")}>
-            <div className="flex items-center justify-between mb-6">
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-600 to-purple-500 flex items-center justify-center">
-                  <BarChart3 className="w-6 h-6 text-white" />
-                </div>
-                <div>
-                  <h2 className="text-xl font-bold text-white">Analytics & Settings</h2>
-                  <p className="text-sm text-gray-400">Performance insights</p>
+            {/* Shimmer Effect on Hover - EXACT from pricing page */}
+            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-in-out pointer-events-none" />
+            <div className="relative">
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-600 to-purple-500 flex items-center justify-center">
+                    <BarChart3 className="w-6 h-6 text-white" />
+                  </div>
+                  <div>
+                    <h2 className="text-xl font-bold text-white">Analytics & Settings</h2>
+                    <p className="text-sm text-gray-300">Performance insights</p>
+                  </div>
                 </div>
               </div>
-            </div>
 
             <div className="grid grid-cols-2 gap-4 mb-4">
               <button 
@@ -356,11 +373,15 @@ export function UnifiedDashboard({ onNavigate }: UnifiedDashboardProps) {
                 </div>
               </div>
             </div>
+            </div>
           </section>
         </div>
 
         {/* ULTRA AUTOMATION STATUS SECTION */}
         <section className={cn(glassPrimary, "p-6 border border-gold-500/20")}>
+          {/* Shimmer Effect on Hover - EXACT from pricing page */}
+          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-in-out pointer-events-none" />
+          <div className="relative">
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-3">
               <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-gold-600 to-gold-500 flex items-center justify-center">
@@ -410,6 +431,7 @@ export function UnifiedDashboard({ onNavigate }: UnifiedDashboardProps) {
               <span>Processing leads, emails, viewings, and contracts automatically</span>
             </div>
           </div>
+          </div>
         </section>
       </div>
     </div>
@@ -433,29 +455,33 @@ function StatCard({
 }) {
   return (
     <div className={cn(glassInteractive, "p-6")}>
-      <div className="flex items-start justify-between mb-4">
-        <div className="w-12 h-12 rounded-xl bg-white/10 backdrop-blur-sm flex items-center justify-center">
-          <Icon className="w-6 h-6 text-gold-400" />
-        </div>
-        {trend && (
-          <div className={cn(
-            "flex items-center gap-1 text-xs font-medium",
-            trend.positive ? "text-emerald-400" : "text-red-400"
-          )}>
-            {trend.positive ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
-            {Math.abs(trend.value)}%
+      {/* Shimmer Effect on Hover - EXACT from pricing page */}
+      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-in-out pointer-events-none" />
+      <div className="relative">
+        <div className="flex items-start justify-between mb-4">
+          <div className="w-12 h-12 rounded-xl bg-white/10 backdrop-blur-sm flex items-center justify-center">
+            <Icon className="w-6 h-6 text-gold-400" />
           </div>
+          {trend && (
+            <div className={cn(
+              "flex items-center gap-1 text-xs font-medium",
+              trend.positive ? "text-emerald-400" : "text-red-400"
+            )}>
+              {trend.positive ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
+              {Math.abs(trend.value)}%
+            </div>
+          )}
+        </div>
+        {loading ? (
+          <div className="h-8 bg-white/5 rounded animate-pulse" />
+        ) : (
+          <>
+            <div className="text-3xl font-bold text-white mb-1">{value}</div>
+            <div className="text-sm text-gray-300">{label}</div>
+            {subtitle && <div className="text-xs text-gray-400 mt-1">{subtitle}</div>}
+          </>
         )}
       </div>
-      {loading ? (
-        <div className="h-8 bg-white/5 rounded animate-pulse" />
-      ) : (
-        <>
-          <div className="text-3xl font-bold text-white mb-1">{value}</div>
-          <div className="text-sm text-gray-400">{label}</div>
-          {subtitle && <div className="text-xs text-gray-500 mt-1">{subtitle}</div>}
-        </>
-      )}
     </div>
   )
 }

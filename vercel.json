@@ -9,6 +9,10 @@
     {
       "path": "/api/newsletter/send-weekly",
       "schedule": "0 10 * * 1"
+    },
+    {
+      "path": "/api/cron/process-properties",
+      "schedule": "*/5 * * * *"
     }
   ]
 }

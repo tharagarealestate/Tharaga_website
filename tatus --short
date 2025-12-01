@@ -8,3 +8,45 @@
 [33m59758e0[m Final removal of [leadId] directory - route conflict resolved
 [33md35bfbd[m Force remove [leadId] directory from filesystem
 [33mfc34d0d[m Remove conflicting [leadId] directory from builder/leads
+[33mcommit e5e7ec601eb3429f85ae1471996b155ee8dcc977[m
+Author: nithishrex-tharaga <nithishrex@gmail.com>
+Date:   Mon Dec 1 06:28:01 2025 +0530
+
+    feat: Implement complete automated lead generation system
+    
+    - Add database schema for automated lead generation (migration 050)
+    - Implement AI-powered lead generation service using Claude API
+    - Add email service with Resend integration and tier-based templates
+    - Add SMS service with Twilio integration
+    - Create property processing service with full automation flow
+    - Add monitoring and health check services
+    - Create API endpoints for property upload, processing, and cron jobs
+    - Add comprehensive test script
+    - Update Vercel config with cron job for property processing
+    - Add complete documentation
+    
+    Features:
+    - Automatic lead generation based on subscription tier (50/200/500 leads)
+    - Tier-based email templates with personalization
+    - SMS notifications for Professional+ tiers
+    - Background job processing with retry mechanism
+    - Real-time monitoring and error tracking
+    - Complete test suite
+    
+    All components are production-ready and fully automated.
+
+ AUTOMATED_LEAD_GENERATION_SYSTEM.md                | 440 [32m+++++++++++++++[m
+ IMPLEMENTATION_COMPLETE.md                         | 317 [32m++++++++[m[31m---[m
+ app/app/api/cron/process-properties/route.ts       | 136 [32m+++++[m
+ app/app/api/monitoring/health/route.ts             |  25 [32m+[m
+ app/app/api/properties/process/route.ts            | 137 [32m+++++[m
+ app/app/api/properties/upload/route.ts             | 145 [32m+++++[m
+ app/lib/services/emailService.ts                   | 294 [32m++++++++++[m
+ app/lib/services/leadGeneration.ts                 | 308 [32m+++++++++++[m
+ app/lib/services/monitoring.ts                     | 284 [32m++++++++++[m
+ app/lib/services/propertyProcessor.ts              | 304 [32m++++++++++[m
+ app/lib/services/smsService.ts                     | 143 [32m+++++[m
+ scripts/test-automation-system.mjs                 | 246 [32m++++++++[m
+ .../050_automated_lead_generation_system.sql       | 616 [32m+++++++++++++++++++++[m
+ vercel.json                                        |   4 [32m+[m
+ 14 files changed, 3318 insertions(+), 81 deletions(-)

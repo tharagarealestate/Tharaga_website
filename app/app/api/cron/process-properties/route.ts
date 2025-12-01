@@ -7,7 +7,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getSupabase } from '@/lib/supabase';
 import { processProperty, updateProcessingJob } from '@/lib/services/propertyProcessor';
 
-export const runtime = 'edge';
+// Use Node.js runtime for Anthropic SDK, Twilio, and other Node.js-specific dependencies
+export const runtime = 'nodejs';
 export const maxDuration = 300; // 5 minutes
 
 /**

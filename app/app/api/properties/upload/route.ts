@@ -7,7 +7,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getSupabase } from '@/lib/supabase';
 import { createProcessingJob } from '@/lib/services/propertyProcessor';
 
-export const runtime = 'edge';
+// Use Node.js runtime since propertyProcessor module uses Node.js-specific dependencies
+export const runtime = 'nodejs';
 export const maxDuration = 60; // 1 minute for upload
 
 /**

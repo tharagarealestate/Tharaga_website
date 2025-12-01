@@ -66,7 +66,7 @@ interface UnifiedDashboardProps {
   onNavigate?: (section: string) => void
 }
 
-export function UnifiedDashboard({ onNavigate }: UnifiedDashboardProps = {}) {
+export function UnifiedDashboard({ onNavigate }: UnifiedDashboardProps) {
 
   // Fetch data
   const { data: leads = [], isLoading: leadsLoading } = useQuery({

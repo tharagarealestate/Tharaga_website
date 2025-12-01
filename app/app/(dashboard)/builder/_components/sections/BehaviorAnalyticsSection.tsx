@@ -7,7 +7,7 @@ interface BehaviorAnalyticsSectionProps {
   onNavigate?: (section: string) => void
 }
 
-const BehaviorTrackingPage = dynamic(() => import('../../../../behavior-tracking/page').then(mod => ({ default: mod.default })), {
+const BehaviorTrackingPage = dynamic(() => import('../../../behavior-tracking/page').then(mod => ({ default: mod.default })), {
   ssr: false,
   loading: () => <SectionLoader section="behavior-analytics" />
 })

@@ -44,7 +44,7 @@ import {
 } from 'recharts';
 import { getSupabase } from '@/lib/supabase';
 import SmartScoreCard from '@/components/leads/SmartScoreCard';
-import { BuyerJourneyTimeline } from '../../_components/ultra-automation/components/BuyerJourneyTimeline';
+import { BuyerJourneyTimeline } from '../../../_components/ultra-automation/components/BuyerJourneyTimeline';
 
 interface LeadDetail {
   id: string;

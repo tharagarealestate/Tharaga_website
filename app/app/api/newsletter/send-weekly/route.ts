@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { Resend } from 'resend'
 
+// Use Node.js runtime for resend and @react-email/render compatibility
+export const runtime = 'nodejs'
+
 /**
  * API Route to send weekly newsletter to all active subscribers
  * This endpoint will be called by a cron job weekly

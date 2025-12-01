@@ -3,6 +3,9 @@ import { createClient } from '@supabase/supabase-js'
 import axios from 'axios'
 import * as cheerio from 'cheerio'
 
+// Use Node.js runtime for cheerio and axios compatibility
+export const runtime = 'nodejs'
+
 /**
  * TOP-LEVEL REAL-TIME AUTOMATION - Chennai Market Insights Collector
  * Collects from 20+ Chennai-specific sources every hour

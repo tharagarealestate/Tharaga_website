@@ -10,9 +10,9 @@ export const metadata: Metadata = {
 
 export default function HomePage() {
   return (
-    <div className="homepage-header min-h-screen relative overflow-hidden bg-primary-950">
-      {/* Animated Background Elements - Matching builder dashboard */}
-      <div className="absolute inset-0 opacity-10 pointer-events-none">
+    <div className="homepage-header min-h-screen relative overflow-hidden bg-gradient-to-br from-primary-950 via-primary-900 to-primary-800">
+      {/* Animated Background Elements - EXACT from pricing page */}
+      <div className="absolute inset-0 opacity-30 pointer-events-none">
         <div className="absolute top-20 left-10 w-96 h-96 bg-gold-500 rounded-full blur-3xl animate-pulse-slow" />
         <div
           className="absolute bottom-20 right-10 w-[600px] h-[600px] bg-emerald-500 rounded-full blur-3xl animate-pulse-slow"

@@ -139,7 +139,17 @@ export default function BuilderPropertiesPage() {
   const activeFilterCount = filters.status.length + filters.city.length
 
   return (
-    <div className='min-h-screen bg-gradient-to-br from-gray-50 to-gray-100'>
+    <div className='min-h-screen bg-gradient-to-br from-primary-950 via-primary-900 to-primary-800 relative overflow-hidden'>
+      {/* Animated Background Elements - EXACT from pricing page */}
+      <div className='absolute inset-0 opacity-30'>
+        <div className='absolute top-20 left-10 w-96 h-96 bg-gold-500 rounded-full blur-3xl animate-pulse-slow' />
+        <div
+          className='absolute bottom-20 right-10 w-[600px] h-[600px] bg-emerald-500 rounded-full blur-3xl animate-pulse-slow'
+          style={{ animationDelay: '1s' }}
+        />
+      </div>
+      
+      <div className='relative z-10'>
       {/* Premium Glass Header - positioned below static header */}
       <div className='bg-white/70 backdrop-blur-xl border-b border-gray-200/50 sticky top-[60px] z-30'>
         <div className='max-w-7xl mx-auto px-6 py-6'>
@@ -690,6 +700,7 @@ function PropertyListItem({ property }: { property: Property }) {
             </Link>
           </div>
         </div>
+      </div>
       </div>
     </div>
   )

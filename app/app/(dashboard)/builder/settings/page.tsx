@@ -123,33 +123,19 @@ export default function BuilderSettingsPage() {
 
   return (
     <div className='min-h-screen relative overflow-hidden'>
-      {/* Premium glassmorphic background matching dashboard */}
+      {/* Premium glassmorphic background matching pricing page exactly */}
       <div className="fixed inset-0 -z-10">
-        {/* Layer 1: Base Gradient */}
-        <div className="absolute inset-0 bg-gradient-to-br from-[#0a1628] via-[#0d2847] to-[#071422]" />
+        {/* Base Gradient */}
+        <div className="absolute inset-0 bg-gradient-to-br from-primary-950 via-primary-900 to-primary-800" />
         
-        {/* Layer 2: Atmospheric Orbs */}
-        <div 
-          className="absolute top-20 left-10 w-[400px] h-[400px] bg-[#D4AF37] opacity-25 blur-[120px] rounded-full animate-pulse pointer-events-none" 
-          style={{ animationDuration: '8s' }} 
-        />
-        <div 
-          className="absolute bottom-20 right-10 w-[350px] h-[350px] bg-[#10B981] opacity-15 blur-[100px] rounded-full animate-pulse pointer-events-none" 
-          style={{ animationDuration: '12s', animationDelay: '1s' }} 
-        />
-        <div 
-          className="absolute top-40 right-20 w-[300px] h-[300px] bg-[#1e40af] opacity-20 blur-[80px] rounded-full animate-pulse pointer-events-none" 
-          style={{ animationDuration: '10s', animationDelay: '2s' }} 
-        />
-        
-        {/* Layer 3: Subtle Grid */}
-        <div 
-          className="absolute inset-0 opacity-[0.03] pointer-events-none" 
-          style={{
-            backgroundImage: 'radial-gradient(circle, white 1px, transparent 1px)',
-            backgroundSize: '40px 40px'
-          }} 
-        />
+        {/* Animated Background Elements - EXACT from pricing page */}
+        <div className="absolute inset-0 opacity-30">
+          <div className="absolute top-20 left-10 w-96 h-96 bg-gold-500 rounded-full blur-3xl animate-pulse-slow" />
+          <div
+            className="absolute bottom-20 right-10 w-[600px] h-[600px] bg-emerald-500 rounded-full blur-3xl animate-pulse-slow"
+            style={{ animationDelay: '1s' }}
+          />
+        </div>
       </div>
 
       <div className='relative z-10'>

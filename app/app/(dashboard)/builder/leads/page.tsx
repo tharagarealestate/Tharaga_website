@@ -20,14 +20,14 @@ export default function BuilderLeadsPage() {
   );
 
   return (
-    <div className="relative min-h-screen bg-gradient-to-br from-[#040b1d] via-[#06132d] to-[#0b1f3f] overflow-hidden">
-      <div className="pointer-events-none absolute inset-0 opacity-40">
-        <div className="absolute -top-24 -left-16 h-72 w-72 rounded-full bg-cyan-500/30 blur-3xl animate-pulse-slow" />
+    <div className="relative min-h-screen bg-gradient-to-br from-primary-950 via-primary-900 to-primary-800 overflow-hidden">
+      {/* Animated Background Elements - EXACT from pricing page */}
+      <div className="absolute inset-0 opacity-30">
+        <div className="absolute top-20 left-10 w-96 h-96 bg-gold-500 rounded-full blur-3xl animate-pulse-slow" />
         <div
-          className="absolute top-32 right-0 h-[520px] w-[520px] rounded-full bg-indigo-500/30 blur-3xl animate-pulse-slow"
-          style={{ animationDelay: '1.2s' }}
+          className="absolute bottom-20 right-10 w-[600px] h-[600px] bg-emerald-500 rounded-full blur-3xl animate-pulse-slow"
+          style={{ animationDelay: '1s' }}
         />
-        <div className="absolute inset-x-0 bottom-0 h-48 bg-gradient-to-t from-[#040b1d] via-transparent to-transparent" />
       </div>
 
       <div className="relative z-10 px-4 py-12 sm:px-6 lg:px-12">

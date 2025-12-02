@@ -83,8 +83,15 @@ export default function BuyerDashboardPage() {
   const savedCount = savedProperties.length;
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-gradient-to-br from-[#040b1d] via-[#06132d] to-[#0b1f3f] text-white">
-      <GradientBackdrop />
+    <div className="relative min-h-screen overflow-hidden bg-gradient-to-br from-primary-950 via-primary-900 to-primary-800 text-white">
+      {/* Animated Background Elements - EXACT from pricing page */}
+      <div className="absolute inset-0 opacity-30">
+        <div className="absolute top-20 left-10 w-96 h-96 bg-gold-500 rounded-full blur-3xl animate-pulse-slow" />
+        <div
+          className="absolute bottom-20 right-10 w-[600px] h-[600px] bg-emerald-500 rounded-full blur-3xl animate-pulse-slow"
+          style={{ animationDelay: '1s' }}
+        />
+      </div>
 
       <main className="relative z-10 mx-auto flex min-h-screen w-full max-w-7xl flex-col gap-12 px-5 pb-16 pt-12 sm:px-8 lg:px-12">
         <HeroSection greeting={greeting} name={userName} savedCount={savedCount} />

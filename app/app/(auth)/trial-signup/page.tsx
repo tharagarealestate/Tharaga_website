@@ -305,11 +305,14 @@ export default function TrialSignupPage() {
   }, [testimonials.length]);
 
   return (
-    <main className="min-h-screen bg-hero text-white">
-      {/* Decorative shapes */}
-      <div className="pointer-events-none absolute inset-0 overflow-hidden">
-        <div className="absolute -top-16 -right-24 h-[420px] w-[420px] rounded-full bg-gold-500/30 blur-3xl animate-pulse-slow" />
-        <div className="absolute -bottom-24 -left-24 h-[480px] w-[480px] rounded-full bg-primary-600/25 blur-3xl animate-pulse-slow-delay" />
+    <main className="min-h-screen bg-gradient-to-br from-primary-950 via-primary-900 to-primary-800 relative overflow-hidden text-white">
+      {/* Animated Background Elements - EXACT from pricing page */}
+      <div className="absolute inset-0 opacity-30">
+        <div className="absolute top-20 left-10 w-96 h-96 bg-gold-500 rounded-full blur-3xl animate-pulse-slow" />
+        <div
+          className="absolute bottom-20 right-10 w-[600px] h-[600px] bg-emerald-500 rounded-full blur-3xl animate-pulse-slow"
+          style={{ animationDelay: '1s' }}
+        />
       </div>
 
       <section className="relative z-10">

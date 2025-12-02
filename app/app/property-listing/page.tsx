@@ -331,9 +331,19 @@ function PropertyListingPageContent() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Main Layout: Sidebar + Content */}
-      <div className="max-w-[1920px] mx-auto">
+    <div className="min-h-screen bg-gradient-to-br from-primary-950 via-primary-900 to-primary-800 relative overflow-hidden">
+      {/* Animated Background Elements - EXACT from pricing page */}
+      <div className="absolute inset-0 opacity-30">
+        <div className="absolute top-20 left-10 w-96 h-96 bg-gold-500 rounded-full blur-3xl animate-pulse-slow" />
+        <div
+          className="absolute bottom-20 right-10 w-[600px] h-[600px] bg-emerald-500 rounded-full blur-3xl animate-pulse-slow"
+          style={{ animationDelay: '1s' }}
+        />
+      </div>
+
+      <div className="relative z-10">
+        {/* Main Layout: Sidebar + Content */}
+        <div className="max-w-[1920px] mx-auto">
         <div className="flex">
           {/* LEFT SIDEBAR - Desktop Only */}
           <aside className="hidden lg:block w-80 xl:w-96 bg-white border-r h-[calc(100vh-64px)] sticky top-16 overflow-y-auto">
@@ -365,17 +375,18 @@ function PropertyListingPageContent() {
             />
           </main>
         </div>
-      </div>
+        </div>
 
-      {/* MOBILE FILTER MODAL */}
-      <MobileFilterModal
-        isOpen={mobileFilterOpen}
-        onClose={() => setMobileFilterOpen(false)}
-        filters={filters}
-        updateFilters={updateFilters}
-        resetFilters={resetFilters}
-        propertiesCount={totalCount}
-      />
+        {/* MOBILE FILTER MODAL */}
+        <MobileFilterModal
+          isOpen={mobileFilterOpen}
+          onClose={() => setMobileFilterOpen(false)}
+          filters={filters}
+          updateFilters={updateFilters}
+          resetFilters={resetFilters}
+          propertiesCount={totalCount}
+        />
+      </div>
     </div>
   );
 }

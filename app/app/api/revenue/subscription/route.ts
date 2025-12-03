@@ -4,6 +4,8 @@ import { cookies } from 'next/headers';
 import { revenueService } from '@/lib/services/revenue';
 import { z } from 'zod';
 
+export const runtime = 'nodejs';
+
 const CreateSubscriptionSchema = z.object({
   planSlug: z.string(),
   billingCycle: z.enum(['monthly', 'yearly']),

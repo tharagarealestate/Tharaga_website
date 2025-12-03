@@ -703,7 +703,6 @@ function PropertyListItem({ property }: { property: Property }) {
           </div>
         </div>
       </div>
-      </div>
     </div>
   )
 }

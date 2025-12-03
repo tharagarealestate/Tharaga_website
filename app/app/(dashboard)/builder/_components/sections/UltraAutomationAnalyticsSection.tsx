@@ -41,6 +41,7 @@ import { SectionWrapper } from './SectionWrapper'
 import { useQuery } from '@tanstack/react-query'
 import { useDealLifecycles, useViewings, useNegotiations, useContracts } from '../ultra-automation/hooks/useUltraAutomationData'
 import { detectStallingDeals, calculateConversionFunnel, analyzeNegotiations, analyzeContracts } from '../ultra-automation/utils/dataProcessing'
+import { LoadingSpinner, GlassLoadingOverlay } from '@/components/ui/loading-spinner'
 
 const glassPrimary = 'bg-white/[0.03] backdrop-blur-[20px] border border-white/[0.08] rounded-2xl shadow-[0_8px_32px_rgba(0,0,0,0.3)]'
 const glassSecondary = 'bg-white/[0.02] backdrop-blur-[12px] border border-white/[0.05] rounded-xl'
@@ -167,10 +168,8 @@ export function UltraAutomationAnalyticsSection({ onNavigate }: UltraAutomationA
         </div>
 
         {isLoading ? (
-          <div className="space-y-4">
-            {[1, 2, 3].map((i) => (
-              <div key={i} className={glassPrimary + ' h-64 animate-pulse'} />
-            ))}
+          <div className="relative min-h-[400px]">
+            <GlassLoadingOverlay />
           </div>
         ) : (
           <>

@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { ArrowRight, Calendar, DollarSign, Globe, Mail, Phone, Users } from 'lucide-react'
 import { formatDistanceToNow } from 'date-fns'
+import { LoadingSpinner } from '@/components/ui/loading-spinner'
 
 export type Lead = {
   id: string
@@ -32,7 +33,10 @@ export type Lead = {
 
 export function LeadCardSkeleton() {
   return (
-    <div className="glass-card p-6 rounded-xl animate-pulse bg-white/60 border border-gray-200">
+    <div className="glass-card p-6 rounded-xl bg-white/60 border border-gray-200 relative">
+      <div className="absolute inset-0 flex items-center justify-center">
+        <LoadingSpinner size="md" variant="gold" />
+      </div>
       <div className="flex items-start justify-between mb-4">
         <div className="h-6 w-28 rounded-full bg-gray-200" />
         <div className="h-4 w-16 bg-gray-200 rounded" />

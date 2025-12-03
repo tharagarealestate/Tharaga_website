@@ -6,6 +6,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { Building2, Plus, Grid, List, Filter, Search, TrendingUp, Eye, MessageSquare, X, MapPin, Calendar, Edit2, BarChart3, ExternalLink } from 'lucide-react'
 import { formatCrores } from '@/lib/utils'
+import { LoadingSpinner, GlassLoadingOverlay } from '@/components/ui/loading-spinner'
 
 // Types
 type Property = {
@@ -708,10 +709,13 @@ function PropertyListItem({ property }: { property: Property }) {
 
 function PropertyCardSkeleton() {
   return (
-    <div className='bg-white/70 backdrop-blur-xl border border-gray-200/50 rounded-2xl overflow-hidden animate-pulse'>
+    <div className='bg-white/70 backdrop-blur-xl border border-gray-200/50 rounded-2xl overflow-hidden relative'>
       <div className='h-48 bg-gray-200' />
-      <div className='p-6'>
-        <div className='h-6 bg-gray-200 rounded mb-3' />
+      <div className='p-6 relative'>
+        <div className='absolute inset-0 flex items-center justify-center'>
+          <LoadingSpinner size="md" variant="gold" />
+        </div>
+        <div className='h-6 bg-gray-200 rounded mb-3 opacity-0' />
         <div className='h-4 bg-gray-200 rounded w-3/4 mb-4' />
         <div className='h-8 bg-gray-200 rounded mb-4' />
         <div className='h-4 bg-gray-200 rounded w-1/2 mb-4' />

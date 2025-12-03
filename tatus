@@ -595,4 +595,29 @@ war[1mdiff --git a/app/public/property-listing/styles.css b/app/public/property
 [32m+[m[32m}[m
 [32m+[m
 [32m+[m[32m.filter-sidebar:hover {[m
-[32m+[m[32m  background: rgb
+[32m+[m[32m  background: rgb[1mdiff --git a/app/app/layout.tsx b/app/app/layout.tsx[m
+[1mindex 0fbf36e..ee3a6cd 100644[m
+[1m--- a/app/app/layout.tsx[m
+[1m+++ b/app/app/layout.tsx[m
+[36m@@ -1786,7 +1786,7 @@[m [mexport default function RootLayout({ children }: { children: React.ReactNode })[m
+                  .text-gradient{ background:none !important; -webkit-background-clip:initial !important; background-clip:initial !important; color:#111 !important }[m
+                  .ai-hero-figure{ margin:0; width:100%; display:grid; place-items:center; justify-self:center }[m
+                  .ai-hero-art{ width:min(520px,95%); height:auto; opacity:.96; filter:drop-shadow(0 18px 40px rgba(30,64,175,.22)); display:block; margin:0 auto; transform:scaleX(-1); }[m
+[31m-                 .hero-premium{ min-height:100vh; padding-top:calc(72px + 32px) !important; padding-bottom:72px; color:#fff; background:#0f172a; overflow:hidden; position:relative; }[m
+[32m+[m[32m                 .hero-premium{ min-height:100vh; padding-top:calc(72px + 32px) !important; padding-bottom:72px; color:#fff; background:transparent; overflow:hidden; position:relative; }[m
+                  @media (max-width: 767px) {[m
+                    .hero-premium{ padding-top:calc(72px + 24px) !important; }[m
+                  }[m
+[1mdiff --git a/app/app/page.tsx b/app/app/page.tsx[m
+[1mindex 3b64ba2..fa50174 100644[m
+[1m--- a/app/app/page.tsx[m
+[1m+++ b/app/app/page.tsx[m
+[36m@@ -10,7 +10,7 @@[m [mexport const metadata: Metadata = {[m
+ [m
+ export default function HomePage() {[m
+   return ([m
+[31m-    <div className="homepage-header min-h-screen">[m
+[32m+[m[32m    <div className="homepage-header min-h-screen relative overflow-hidden bg-primary-950">[m
+       {/* Animated Background Elements - Matching builder dashboard */}[m
+       <div className="absolute inset-0 opacity-20 pointer-events-none">[m
+         <div className="absolute top-20 left-10 w-96 h-96 bg-gold-500 rounded-full blur-3xl animate-pulse-slow" />[m

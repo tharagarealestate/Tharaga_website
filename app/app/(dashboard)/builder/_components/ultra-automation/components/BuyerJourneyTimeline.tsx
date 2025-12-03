@@ -21,6 +21,7 @@ import {
 import { cn } from '@/lib/utils';
 import { useBuyerJourney } from '../hooks/useUltraAutomationData';
 import { formatSmartDate } from '../utils/dataProcessing';
+import { LoadingSpinner, GlassLoadingOverlay } from '@/components/ui/loading-spinner';
 
 const glassPrimary = 'bg-white/[0.03] backdrop-blur-[20px] border border-white/[0.08] rounded-2xl shadow-[0_8px_32px_rgba(0,0,0,0.3)]';
 const glassSecondary = 'bg-white/[0.02] backdrop-blur-[12px] border border-white/[0.05] rounded-xl';
@@ -139,7 +140,9 @@ export function BuyerJourneyTimeline({ leadId, journeyId }: BuyerJourneyTimeline
       <div className={glassPrimary + ' p-6'}>
         <div className="space-y-4">
           {[1, 2, 3].map((i) => (
-            <div key={i} className={glassSecondary + ' h-20 animate-pulse'} />
+            <div key={i} className={glassSecondary + ' h-20 relative'}>
+              <GlassLoadingOverlay />
+            </div>
           ))}
         </div>
       </div>

@@ -26,6 +26,7 @@ import {
   AlertCircle,
   XCircle,
 } from 'lucide-react';
+import { GlassLoadingOverlay } from '@/components/ui/loading-spinner';
 import {
   ResponsiveContainer,
   PieChart,
@@ -255,9 +256,8 @@ export default function AnalyticsDashboard({
     return (
       <div className="space-y-6 p-6">
         {[1, 2, 3, 4].map((i) => (
-          <div key={i} className="glass-card p-6 rounded-2xl animate-pulse">
-            <div className="h-8 bg-gray-200 rounded w-1/3 mb-4" />
-            <div className="h-64 bg-gray-200 rounded" />
+          <div key={i} className="glass-card p-6 rounded-2xl relative">
+            <GlassLoadingOverlay />
           </div>
         ))}
       </div>

@@ -8,6 +8,7 @@ import { Search, Filter, Download, Mail, Phone, TrendingUp, Clock, Star, AlertCi
 import { getSupabase } from '@/lib/supabase';
 import { useBehaviorTracking } from '@/hooks/useBehaviorTracking';
 import { useFilters, type FilterConfig } from '@/contexts/FilterContext';
+import { LoadingSpinner } from '@/components/ui/loading-spinner';
 
 export interface Lead {
   id: string;
@@ -595,8 +596,12 @@ export function LeadsList({ onSelectLead, initialFilters, showInlineFilters = tr
           {Array.from({ length: 5 }).map((_, index) => (
             <div
               key={index}
-              className="h-32 bg-gradient-to-br from-[#0A1628]/50 to-[#0F1B2D]/50 backdrop-blur-xl border border-blue-500/20 rounded-2xl animate-pulse"
-            />
+              className="relative h-32 bg-gradient-to-br from-[#0A1628]/50 to-[#0F1B2D]/50 backdrop-blur-xl border border-blue-500/20 rounded-2xl"
+            >
+              <div className="absolute inset-0 flex items-center justify-center">
+                <LoadingSpinner size="md" variant="sapphire" />
+              </div>
+            </div>
           ))}
         </div>
       ) : leads.length === 0 ? (

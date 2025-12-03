@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo } from 'react'
+import { useMemo, useEffect, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { 
   Users, Building2, MessageSquare, Settings, 
@@ -11,6 +11,8 @@ import {
   Sparkles, CheckCircle2, Calendar, FileText, Handshake, Activity
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { LoadingSpinner, GlassLoadingOverlay } from '@/components/ui/loading-spinner'
+import { getSupabase } from '@/lib/supabase'
 
 // Glass panel styles - EXACT from pricing page
 const glassPrimary = "relative group backdrop-blur-xl bg-white/10 border border-white/20 rounded-3xl shadow-lg transition-all duration-500 hover:shadow-2xl hover:-translate-y-2 overflow-hidden"
@@ -56,10 +58,19 @@ async function fetchProperties() {
 }
 
 async function fetchStats() {
-  const res = await fetch('/api/leads/count', { cache: 'no-store' })
-  if (!res.ok) return { total: 0, hot: 0, warm: 0 }
+  const res = await fetch('/api/builder/stats/realtime', { cache: 'no-store' })
+  if (!res.ok) return { total: 0, hot: 0, warm: 0, conversionRate: 0 }
   const data = await res.json()
-  return data?.data || { total: 0, hot: 0, warm: 0 }
+  return {
+    total: data.totalLeads || 0,
+    hot: data.hotLeads || 0,
+    warm: data.warmLeads || 0,
+    conversionRate: data.conversionRate || 0,
+    totalProperties: data.totalProperties || 0,
+    activeProperties: data.activeProperties || 0,
+    totalViews: data.totalViews || 0,
+    totalInquiries: data.totalInquiries || 0,
+  }
 }
 
 interface UnifiedDashboardProps {
@@ -67,8 +78,30 @@ interface UnifiedDashboardProps {
 }
 
 export function UnifiedDashboard({ onNavigate }: UnifiedDashboardProps) {
+  const [builderId, setBuilderId] = useState<string | null>(null)
+  const [userId, setUserId] = useState<string | null>(null)
+  const [previousStats, setPreviousStats] = useState({ total: 0, hot: 0, warm: 0, conversionRate: 0 })
 
-  // Fetch data
+  // Get user and builder ID
+  useEffect(() => {
+    const supabase = getSupabase()
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (user) {
+        setUserId(user.id)
+        // Get builder profile
+        supabase
+          .from('builder_profiles')
+          .select('id')
+          .eq('user_id', user.id)
+          .single()
+          .then(({ data }) => {
+            if (data) setBuilderId(data.id)
+          })
+      }
+    })
+  }, [])
+
+  // Fetch data with real-time updates
   const { data: leads = [], isLoading: leadsLoading } = useQuery({
     queryKey: ['unified-leads'],
     queryFn: fetchLeads,
@@ -81,19 +114,127 @@ export function UnifiedDashboard({ onNavigate }: UnifiedDashboardProps) {
     refetchInterval: 30000
   })
 
-  const { data: stats = { total: 0, hot: 0, warm: 0 }, isLoading: statsLoading } = useQuery({
+  const { data: stats = { total: 0, hot: 0, warm: 0, conversionRate: 0 }, isLoading: statsLoading } = useQuery({
     queryKey: ['unified-stats'],
     queryFn: fetchStats,
-    refetchInterval: 10000
+    refetchInterval: 5000 // Real-time updates every 5 seconds
   })
 
-  // Calculate metrics
+  // Real-time leads subscription - using Supabase realtime directly for better performance
+  const [realtimeLeads, setRealtimeLeads] = useState<any[]>([])
+  const [realtimeProperties, setRealtimeProperties] = useState<any[]>([])
+  
+  useEffect(() => {
+    if (!builderId) return
+
+    const supabase = getSupabase()
+    
+    // Subscribe to leads changes
+    const leadsChannel = supabase
+      .channel(`builder-leads-${builderId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'leads',
+          filter: `builder_id=eq.${builderId}`,
+        },
+        (payload: any) => {
+          if (payload.eventType === 'INSERT') {
+            setRealtimeLeads((prev) => [payload.new, ...prev])
+          } else if (payload.eventType === 'UPDATE') {
+            setRealtimeLeads((prev) =>
+              prev.map((l: any) => (l.id === payload.new.id ? payload.new : l))
+            )
+          } else if (payload.eventType === 'DELETE') {
+            setRealtimeLeads((prev) => prev.filter((l: any) => l.id !== payload.old.id))
+          }
+        }
+      )
+      .subscribe()
+
+    // Subscribe to properties changes
+    const propertiesChannel = supabase
+      .channel(`builder-properties-${builderId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'properties',
+          filter: `builder_id=eq.${builderId}`,
+        },
+        (payload: any) => {
+          if (payload.eventType === 'INSERT') {
+            setRealtimeProperties((prev) => [payload.new, ...prev])
+          } else if (payload.eventType === 'UPDATE') {
+            setRealtimeProperties((prev) =>
+              prev.map((p: any) => (p.id === payload.new.id ? payload.new : p))
+            )
+          } else if (payload.eventType === 'DELETE') {
+            setRealtimeProperties((prev) => prev.filter((p: any) => p.id !== payload.old.id))
+          }
+        }
+      )
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(leadsChannel)
+      supabase.removeChannel(propertiesChannel)
+    }
+  }, [builderId])
+
+  // Merge real-time data with fetched data
+  const mergedLeads = useMemo(() => {
+    // Real-time updates are handled by state, so we merge with initial fetch
+    if (realtimeLeads.length > 0) {
+      const leadMap = new Map(leads.map((l: any) => [l.id, l]))
+      realtimeLeads.forEach((lead: any) => {
+        leadMap.set(lead.id, lead)
+      })
+      return Array.from(leadMap.values())
+    }
+    return leads
+  }, [leads, realtimeLeads])
+
+  const mergedProperties = useMemo(() => {
+    // Real-time updates are handled by state, so we merge with initial fetch
+    if (realtimeProperties.length > 0) {
+      const propertyMap = new Map(properties.map((p: any) => [p.id, p]))
+      realtimeProperties.forEach((property: any) => {
+        propertyMap.set(property.id, property)
+      })
+      return Array.from(propertyMap.values())
+    }
+    return properties
+  }, [properties, realtimeProperties])
+
+  // Calculate metrics with real-time updates and trend calculation
   const metrics = useMemo(() => {
-    const totalProperties = properties.length
-    const activeProperties = properties.filter(p => p.status === 'active').length
-    const totalViews = properties.reduce((sum, p) => sum + (p.views || 0), 0)
-    const totalInquiries = properties.reduce((sum, p) => sum + (p.inquiries || 0), 0)
-    const conversionRate = totalViews > 0 ? ((totalInquiries / totalViews) * 100).toFixed(1) : '0'
+    // Use stats from API if available, otherwise calculate from merged data
+    const totalProperties = stats.totalProperties ?? mergedProperties.length
+    const activeProperties = stats.activeProperties ?? mergedProperties.filter((p: any) => p.status === 'active' || p.listing_status === 'active').length
+    const totalViews = stats.totalViews ?? mergedProperties.reduce((sum: number, p: any) => sum + (p.views || p.view_count || 0), 0)
+    const totalInquiries = stats.totalInquiries ?? mergedProperties.reduce((sum: number, p: any) => sum + (p.inquiries || p.inquiry_count || 0), 0)
+    const conversionRate = stats.conversionRate ?? (totalViews > 0 ? parseFloat(((totalInquiries / totalViews) * 100).toFixed(1)) : 0)
+    
+    // Calculate trends (compare with previous stats)
+    const leadTrend = previousStats.total > 0 
+      ? ((stats.total - previousStats.total) / previousStats.total) * 100 
+      : 0
+    
+    const conversionTrend = previousStats.conversionRate > 0
+      ? conversionRate - previousStats.conversionRate
+      : 0
+
+    // Update previous stats
+    setPreviousStats({
+      total: stats.total,
+      hot: stats.hot,
+      warm: stats.warm,
+      conversionRate
+    })
     
     return {
       totalLeads: stats.total,
@@ -103,9 +244,11 @@ export function UnifiedDashboard({ onNavigate }: UnifiedDashboardProps) {
       activeProperties,
       totalViews,
       totalInquiries,
-      conversionRate
+      conversionRate: conversionRate.toFixed(1),
+      leadTrend: Math.abs(leadTrend).toFixed(1),
+      conversionTrend: Math.abs(conversionTrend).toFixed(1),
     }
-  }, [leads, properties, stats])
+  }, [mergedLeads, mergedProperties, stats, previousStats])
 
   return (
     <div className="relative w-full">
@@ -137,7 +280,10 @@ export function UnifiedDashboard({ onNavigate }: UnifiedDashboardProps) {
             icon={Users}
             label="Total Leads"
             value={metrics.totalLeads}
-            trend={{ value: 12, positive: true }}
+            trend={{ 
+              value: parseFloat(metrics.leadTrend), 
+              positive: parseFloat(metrics.leadTrend) >= 0 
+            }}
             loading={statsLoading}
           />
           <StatCard
@@ -151,7 +297,10 @@ export function UnifiedDashboard({ onNavigate }: UnifiedDashboardProps) {
             icon={TrendingUp}
             label="Conversion Rate"
             value={`${metrics.conversionRate}%`}
-            trend={{ value: 5.2, positive: true }}
+            trend={{ 
+              value: parseFloat(metrics.conversionTrend), 
+              positive: parseFloat(metrics.conversionTrend) >= 0 
+            }}
             loading={statsLoading}
           />
           <StatCard
@@ -189,19 +338,17 @@ export function UnifiedDashboard({ onNavigate }: UnifiedDashboardProps) {
             </div>
 
             {leadsLoading ? (
-              <div className="space-y-3">
-                {[1, 2, 3].map(i => (
-                  <div key={i} className={cn(glassSecondary, "h-20 animate-pulse")} />
-                ))}
+              <div className="relative min-h-[200px]">
+                <GlassLoadingOverlay />
               </div>
-            ) : leads.length === 0 ? (
+            ) : mergedLeads.length === 0 ? (
               <div className="text-center py-12">
                 <Users className="w-12 h-12 mx-auto mb-3 opacity-50 text-white" />
                 <p className="text-white">No leads yet</p>
               </div>
             ) : (
               <div className="space-y-3">
-                {leads.slice(0, 5).map((lead) => (
+                {mergedLeads.slice(0, 5).map((lead: any) => (
                   <LeadCard key={lead.id} lead={lead} onNavigate={onNavigate} />
                 ))}
               </div>
@@ -233,12 +380,10 @@ export function UnifiedDashboard({ onNavigate }: UnifiedDashboardProps) {
             </div>
 
             {propertiesLoading ? (
-              <div className="space-y-3">
-                {[1, 2, 3].map(i => (
-                  <div key={i} className={cn(glassSecondary, "h-24 animate-pulse")} />
-                ))}
+              <div className="relative min-h-[200px]">
+                <GlassLoadingOverlay />
               </div>
-            ) : properties.length === 0 ? (
+            ) : mergedProperties.length === 0 ? (
               <div className="text-center py-12">
                 <Building2 className="w-12 h-12 mx-auto mb-3 opacity-50 text-white" />
                 <p className="text-white">No properties yet</p>
@@ -251,7 +396,7 @@ export function UnifiedDashboard({ onNavigate }: UnifiedDashboardProps) {
               </div>
             ) : (
               <div className="space-y-3">
-                {properties.slice(0, 5).map((property) => (
+                {mergedProperties.slice(0, 5).map((property: any) => (
                   <PropertyCard key={property.id} property={property} onNavigate={onNavigate} />
                 ))}
               </div>
@@ -393,7 +538,7 @@ export function UnifiedDashboard({ onNavigate }: UnifiedDashboardProps) {
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <div className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
+              <div className="h-2 w-2 rounded-full bg-emerald-400" />
               <span className="text-xs text-emerald-400 font-medium">Active</span>
             </div>
           </div>
@@ -473,7 +618,9 @@ function StatCard({
           )}
         </div>
         {loading ? (
-          <div className="h-8 bg-white/5 rounded animate-pulse" />
+          <div className="flex items-center justify-center h-12">
+            <LoadingSpinner size="md" variant="gold" />
+          </div>
         ) : (
           <>
             <div className="text-3xl font-bold text-white mb-1">{value}</div>

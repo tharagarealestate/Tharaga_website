@@ -16,8 +16,48 @@ const handleI18nRouting = createMiddleware({
   localePrefix: 'as-needed',
 })
 
+// Public routes that don't require authentication
+const PUBLIC_ROUTES = [
+  '/',
+  '/auth',
+  '/login',
+  '/signup',
+  '/properties',
+  '/pricing',
+  '/about',
+  '/contact',
+  '/privacy',
+  '/terms',
+  '/api/auth',
+  '/api/webhooks',
+  '/api/public',
+]
+
+// Role-based route configuration
+const ROLE_ROUTES: Record<string, string[]> = {
+  buyer: [
+    '/buyer',
+    '/my-dashboard',
+    '/saved',
+  ],
+  builder: [
+    '/builder',
+    '/builder/dashboard',
+    '/builder/properties',
+    '/builder/leads',
+    '/builder/analytics',
+  ],
+  admin: [
+    '/admin',
+    '/admin/dashboard',
+    '/admin/users',
+    '/admin/verify',
+  ],
+}
+
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl
+  const response = NextResponse.next()
 
   // 0) Homepage uses Next.js App Router (app/app/page.tsx)
   // Renders React components: Header, HeroSection, DashboardCTASection, FeaturesSection, Footer
@@ -39,20 +79,94 @@ export async function middleware(req: NextRequest) {
     return NextResponse.next()
   }
 
-  // 3) Homepage for explicit locale root -> serve Next.js homepage
-  // e.g. /en, /ta, /hi should show same homepage as /
-  // if (/^\/(en|ta|hi)\/?$/.test(pathname)) {
-  //   return NextResponse.rewrite(new URL('/index.html', req.url))
-  // }
+  // 3) Check if route is public
+  const isPublicRoute = PUBLIC_ROUTES.some(route => 
+    pathname === route || pathname.startsWith(`${route}/`)
+  )
 
-  // 4) next-intl locale routing (only for explicit locale-prefixed paths)
+  // 4) Role-based route protection (only for protected routes)
+  if (!isPublicRoute) {
+    try {
+      const supabase = createMiddlewareClient({ req, res: response })
+      const { data: { session } } = await supabase.auth.getSession()
+
+      // Redirect unauthenticated users to login
+      if (!session) {
+        const loginUrl = new URL('/login', req.url)
+        loginUrl.searchParams.set('redirect', pathname)
+        return NextResponse.redirect(loginUrl)
+      }
+
+      // Check role-based access for protected routes
+      for (const [role, routes] of Object.entries(ROLE_ROUTES)) {
+        const isRoleRoute = routes.some(route => 
+          pathname === route || pathname.startsWith(`${route}/`)
+        )
+
+        if (isRoleRoute) {
+          // Fetch user roles
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('role')
+            .eq('id', session.user.id)
+            .single()
+
+          const { data: userRoles } = await supabase
+            .from('user_roles')
+            .select('role')
+            .eq('user_id', session.user.id)
+
+          const roles = userRoles?.map(r => r.role) || []
+          const activeRole = profile?.role || roles[0] || 'buyer'
+
+          // Check if user has required role
+          if (!roles.includes(role) && role !== 'admin') {
+            // Redirect to appropriate dashboard
+            const redirectMap: Record<string, string> = {
+              buyer: '/my-dashboard',
+              builder: '/builder',
+              admin: '/admin',
+            }
+            return NextResponse.redirect(new URL(redirectMap[activeRole] || '/', req.url))
+          }
+
+          // Builder-specific checks
+          if (role === 'builder' && activeRole === 'builder') {
+            const { data: builderProfile } = await supabase
+              .from('builder_profiles')
+              .select('verification_status')
+              .eq('user_id', session.user.id)
+              .single()
+
+            // Allow access even if pending verification (for onboarding)
+            // Only block if explicitly rejected
+            if (builderProfile?.verification_status === 'rejected') {
+              return NextResponse.redirect(new URL('/builder/verification-required', req.url))
+            }
+          }
+
+          // Add user context to headers
+          response.headers.set('X-User-Id', session.user.id)
+          response.headers.set('X-User-Role', activeRole)
+          response.headers.set('X-User-Roles', roles.join(','))
+
+          break
+        }
+      }
+    } catch (error) {
+      console.error('Middleware error:', error)
+      // On error, allow through (fail open for now)
+    }
+  }
+
+  // 5) next-intl locale routing (only for explicit locale-prefixed paths)
   const first = pathname.split('/')[1]
   if (Array.from(locales).includes(first as any)) {
     return handleI18nRouting(req)
   }
 
-  // For all other paths, proceed without i18n handling
-  return NextResponse.next()
+  // For all other paths, proceed
+  return response
 }
 
 export const config = {
@@ -64,6 +178,10 @@ export const config = {
     '/app/:path*',
     '/admin',
     '/admin/:path*',
+    // Role-based routes
+    '/buyer/:path*',
+    '/builder/:path*',
+    '/my-dashboard/:path*',
     // Localized routes — handle only explicit locale prefixes (non-root)
     '/(en|ta|hi)/:path*',
   ],

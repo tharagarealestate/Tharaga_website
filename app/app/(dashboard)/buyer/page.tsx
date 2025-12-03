@@ -7,6 +7,7 @@ import {
   Bell,
   Bookmark,
   Calendar,
+  FileText,
   Heart,
   MapPin,
   Search,
@@ -160,6 +161,9 @@ function HeroSection({ greeting, name, savedCount }: { greeting: string; name: s
           <SecondaryActionButton href="/visits" icon={<Calendar className="h-4 w-4" />}>
             Plan a site visit
           </SecondaryActionButton>
+          <SecondaryActionButton href="/buyer/leads" icon={<FileText className="h-4 w-4" />}>
+            My Inquiries
+          </SecondaryActionButton>
         </div>
       </div>
 
@@ -214,6 +218,14 @@ function QuickActions({ savedCount }: { savedCount: number }) {
       description: 'Schedule and track appointments',
       value: 0,
       accent: 'from-sky-600/80 via-blue-500/60 to-cyan-500/80',
+    },
+    {
+      href: '/buyer/leads',
+      icon: <FileText className="h-5 w-5 text-purple-200" />,
+      label: 'My Inquiries',
+      description: 'Track your property inquiries',
+      value: null,
+      accent: 'from-purple-500/80 via-indigo-500/60 to-blue-500/80',
     },
     {
       href: '/property-listing',

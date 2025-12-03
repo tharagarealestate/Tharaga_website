@@ -31,14 +31,15 @@ type FilterState = {
   search: string
 }
 
+// Fetch properties
+const fetchProperties = async () => {
+  const res = await fetch('/api/builder/properties', { next: { revalidate: 0 } as any })
+  if (!res.ok) throw new Error('Failed to load properties')
+  const data = await res.json()
+  return (data.items || []) as Property[]
+}
+
 export default function BuilderPropertiesPage() {
-  // Fetch properties
-  async function fetchProperties() {
-    const res = await fetch('/api/builder/properties', { next: { revalidate: 0 } as any })
-    if (!res.ok) throw new Error('Failed to load properties')
-    const data = await res.json()
-    return (data.items || []) as Property[]
-  }
   const [view, setView] = useState<'grid' | 'list'>('grid')
   const [filterOpen, setFilterOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')

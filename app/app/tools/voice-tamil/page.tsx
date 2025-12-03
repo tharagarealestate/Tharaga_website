@@ -107,5 +107,7 @@ export default function TamilVoiceSearchPage(){
         <p className="text-xs text-fgMuted">Tamil-first voice search (Chennai). We set recognition language to ta-IN. You can refine the query after transcription.</p>
       </div>
     </main>
+      </div>
+    </div>
   )
 }

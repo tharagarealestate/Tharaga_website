@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
 import { cookies } from 'next/headers';
 import { z } from 'zod';
+import * as crypto from 'crypto';
+
+export const runtime = 'nodejs';
 
 const CreateWebhookSchema = z.object({
   name: z.string().min(1).max(100),
@@ -104,7 +107,6 @@ export async function POST(request: NextRequest) {
     const data = validation.data;
 
     // Generate webhook secret
-    const crypto = require('crypto');
     const webhookSecret = `whsec_${crypto.randomBytes(32).toString('hex')}`;
 
     const { data: webhook, error } = await supabase

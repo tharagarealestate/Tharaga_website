@@ -1,15 +1,9 @@
-import * as React from 'react'
-import type { Metadata } from 'next'
+import type { ReactNode } from 'react'
 import { redirect } from 'next/navigation'
 import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
 import { cookies } from 'next/headers'
 
 export const runtime = 'nodejs'
-
-export const metadata: Metadata = {
-  title: 'My Dashboard | Tharaga',
-  description: 'Your personalized property dashboard with AI-powered recommendations',
-}
 
 /**
  * Server-side role check for buyer dashboard
@@ -23,7 +17,7 @@ async function checkBuyerRole() {
   const { data: { user }, error: authError } = await supabase.auth.getUser()
   
   if (authError || !user) {
-    redirect('/login?redirect=/my-dashboard')
+    redirect('/login?redirect=/buyer')
   }
 
   // Check if user has buyer role in user_roles table
@@ -42,13 +36,10 @@ async function checkBuyerRole() {
   return { user, hasBuyerRole: true }
 }
 
-export default async function MyDashboardLayout({ children }: { children: React.ReactNode }) {
+export default async function BuyerDashboardLayout({ children }: { children: ReactNode }) {
   // Server-side role verification
   await checkBuyerRole()
 
-  return (
-    <>
-      {children}
-    </>
-  )
+  return <>{children}</>
 }
+

@@ -8,6 +8,8 @@ import { TrialUpgradeBanner } from './_components/TrialUpgradeBanner'
 import { AIAssistant } from './_components/AIAssistant'
 import { KeyboardShortcutsHelp } from './_components/KeyboardShortcutsHelp'
 
+export const runtime = 'nodejs'
+
 /**
  * Server-side role check for builder dashboard
  * Verifies user has 'builder' role in user_roles table

@@ -71,13 +71,8 @@ export async function middleware(req: NextRequest) {
     return NextResponse.redirect(dest, { status: 308 })
   }
 
-  // 2) Admin route protection
-  // SKIP /admin - it's a standalone HTML served by Netlify redirect (netlify.toml line 55-58)
-  // The admin panel has its own authentication in admin/index.html
-  if (pathname === '/admin' || pathname.startsWith('/admin/')) {
-    // Let Netlify handle /admin routing - don't intercept
-    return NextResponse.next()
-  }
+  // 2) Admin route protection - handled by Next.js layout with server-side auth
+  // Admin routes are now handled by Next.js, not Netlify redirects
 
   // 3) Check if route is public
   const isPublicRoute = PUBLIC_ROUTES.some(route => 

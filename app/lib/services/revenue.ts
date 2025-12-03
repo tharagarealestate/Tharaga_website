@@ -1,5 +1,3 @@
-'use server';
-
 import { createClient } from '@supabase/supabase-js';
 import Razorpay from 'razorpay';
 import * as crypto from 'crypto';

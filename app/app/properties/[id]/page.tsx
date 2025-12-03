@@ -259,16 +259,49 @@ export async function generateMetadata(
   const data = await fetchProperty(params.id)
   if (!data?.property) return {}
   const p = data.property
-  const title = `${p.title || 'Property'} - ${p.bedrooms || '3'} BHK in ${p.locality || p.city || ''} | Tharaga`
-  const desc = (p.description || '').slice(0, 160)
-  const ogImage = p.images?.[0] || ''
+  
+  // Build rich title and description
+  const bedrooms = p.bedrooms ? `${p.bedrooms} BHK` : 'Property'
+  const location = p.locality ? `${p.locality}, ${p.city || ''}` : p.city || ''
+  const title = `${p.title || 'Property'} - ${bedrooms} in ${location} | Tharaga`
+  const description = p.description 
+    ? `${p.description.slice(0, 120)}...` 
+    : `${bedrooms} in ${location}${p.priceDisplay ? ` - ${p.priceDisplay}` : ''}. ${p.propertyType || 'Property'} with modern amenities.`
+  
+  // Get primary image (first image or fallback)
+  const primaryImage = p.images?.[0] || ''
+  const ogImageUrl = primaryImage || 'https://tharaga.co.in/og-default.jpg'
+  
+  // Build property URL
+  const propertyUrl = `https://tharaga.co.in/properties/${params.id}`
+  
+  // Build rich description with key details
+  const richDescription = `${bedrooms} in ${location}${p.priceDisplay ? ` - ${p.priceDisplay}` : ''}${p.sqft ? ` (${p.sqft} sqft)` : ''}. ${p.description ? p.description.slice(0, 100) : 'Premium property with modern amenities'}.`
+
   return {
     title,
-    description: desc,
+    description: description,
     openGraph: {
-      title,
-      description: desc,
-      images: ogImage ? [{ url: ogImage }] : undefined,
+      title: p.title || title,
+      description: richDescription,
+      images: [{
+        url: ogImageUrl,
+        width: 1200,
+        height: 630,
+        alt: p.title || 'Property Image',
+      }],
+      url: propertyUrl,
+      type: 'website',
+      siteName: 'Tharaga Real Estate',
+      locale: 'en_IN',
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: p.title || title,
+      description: richDescription,
+      images: [ogImageUrl],
+      creator: '@tharaga',
+      site: '@tharaga',
     },
     other: {
       'script:ld+json': JSON.stringify({
@@ -276,8 +309,20 @@ export async function generateMetadata(
         '@type': 'RealEstateListing',
         name: p.title,
         price: p.priceDisplay,
-        address: `${p.locality || ''}, ${p.city || ''}`.trim(),
+        priceCurrency: 'INR',
+        address: {
+          '@type': 'PostalAddress',
+          addressLocality: p.locality || p.city || '',
+          addressRegion: p.city || '',
+          addressCountry: 'IN',
+        },
         numberOfRooms: p.bedrooms || 3,
+        floorSize: p.sqft ? {
+          '@type': 'QuantitativeValue',
+          value: p.sqft,
+          unitCode: 'SQM',
+        } : undefined,
+        image: p.images || [],
       }),
     },
   }

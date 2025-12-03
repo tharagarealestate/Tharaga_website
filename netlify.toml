@@ -49,13 +49,12 @@
 
 # Removed /pricing redirect - Next.js App Router handles both /pricing and /pricing/ naturally
 
-## Admin Panel - Commented out to allow Next.js route at app/app/(dashboard)/admin/page.tsx
-## If you need the static HTML version, remove the Next.js route instead
-# [[redirects]]
-#   from = "/admin"
-#   to = "/admin/index.html"
-#   status = 200
-#   force = true
+## Admin Panel - Serve standalone HTML (must be before Next.js catch-all)
+[[redirects]]
+  from = "/admin"
+  to = "/admin/index.html"
+  status = 200
+  force = true
 
 # Listings API
 [[redirects]]

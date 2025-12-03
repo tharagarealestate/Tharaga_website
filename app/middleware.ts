@@ -72,8 +72,12 @@ export async function middleware(req: NextRequest) {
   }
 
   // 2) Admin route protection
-  // Admin routes are now handled by Next.js at app/app/(dashboard)/admin/page.tsx
-  // Middleware will handle authentication and role checking below
+  // SKIP /admin - it's a standalone HTML served by Netlify redirect (netlify.toml line 55-58)
+  // The admin panel has its own authentication in admin/index.html
+  if (pathname === '/admin' || pathname.startsWith('/admin/')) {
+    // Let Netlify handle /admin routing - don't intercept
+    return NextResponse.next()
+  }
 
   // 3) Check if route is public
   const isPublicRoute = PUBLIC_ROUTES.some(route => 

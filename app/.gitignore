@@ -1,1 +1,8 @@
 .vercel
+.env
+.env.local
+.env.production
+.env.development
+.env*.local
+*.log
+.DS_Store

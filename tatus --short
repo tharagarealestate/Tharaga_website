@@ -50,3 +50,55 @@ Date:   Mon Dec 1 06:28:01 2025 +0530
  .../050_automated_lead_generation_system.sql       | 616 [32m+++++++++++++++++++++[m
  vercel.json                                        |   4 [32m+[m
  14 files changed, 3318 insertions(+), 81 deletions(-)
+[1mdiff --git a/app/app/(dashboard)/admin/layout.tsx b/app/app/(dashboard)/admin/layout.tsx[m
+[1mindex 221996b..9f5c652 100644[m
+[1m--- a/app/app/(dashboard)/admin/layout.tsx[m
+[1m+++ b/app/app/(dashboard)/admin/layout.tsx[m
+[36m@@ -1,7 +1,46 @@[m
+ import type { ReactNode } from 'react'[m
+[32m+[m[32mimport { redirect } from 'next/navigation'[m
+[32m+[m[32mimport { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'[m
+[32m+[m[32mimport { cookies } from 'next/headers'[m
+ import { ReactQueryProvider } from '@/components/providers/ReactQueryProvider'[m
+ [m
+[31m-export default function AdminDashboardLayout({ children }: { children: ReactNode }) {[m
+[32m+[m[32mexport const runtime = 'nodejs'[m
+[32m+[m
+[32m+[m[32m/**[m
+[32m+[m[32m * Server-side role check for admin dashboard[m
+[32m+[m[32m * Verifies user has 'admin' role in user_roles table[m
+[32m+[m[32m * Returns 403 Forbidden if role check fails[m
+[32m+[m[32m */[m
+[32m+[m[32masync function checkAdminRole() {[m
+[32m+[m[32m  const supabase = createRouteHandlerClient({ cookies })[m
+[32m+[m[41m  [m
+[32m+[m[32m  // Get authenticated user[m
+[32m+[m[32m  const { data: { user }, error: authError } = await supabase.auth.getUser()[m
+[32m+[m[41m  [m
+[32m+[m[32m  if (authError || !user) {[m
+[32m+[m[32m    redirect('/login?redirect=/admin')[m
+[32m+[m[32m  }[m
+[32m+[m
+[32m+[m[32m  // Check if user has admin role in user_roles table[m
+[32m+[m[32m  const { data: userRoles } = await supabase[m
+[32m+[m[32m    .from('user_roles')[m
+[32m+[m[32m    .select('role, is_primary')[m
+[32m+[m[32m    .eq('user_id', user.id)[m
+[32m+[m[32m    .eq('role', 'admin')[m
+[32m+[m[32m    .single()[m
+[32m+[m
+[32m+[m[32m  if (!userRoles) {[m
+[32m+[m[32m    // User doesn't have admin role - redirect to home with error[m
+[32m+[m[32m    redirect('/?error=unauthorized&message=You need admin role to access this page')[m
+[32m+[m[32m  }[m
+[32m+[m
+[32m+[m[32m  return { user, hasAdminRole: true }[m
+[32m+[m[32m}[m
+[32m+[m
+[32m+[m[32mexport default async function AdminDashboardLayout({ children }: { children: ReactNode }) {[m
+[32m+[m[32m  // Server-side role verification[m
+[32m+[m[32m  await checkAdminRole()[m
+[32m+[m
+   return ([m
+     <ReactQueryProvider>[m
+       <div className="min-h-screen bg-gray-950 text-gray-100 overflow-x-hidden">[m

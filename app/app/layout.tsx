@@ -8,7 +8,29 @@ export const runtime = 'edge'
 
 export const metadata: Metadata = {
   title: 'Tharaga — Premium Real Estate',
-  description: 'AI-powered real estate assistant',
+  description: 'AI-powered real estate assistant. Find your dream home or list properties with verified builders and buyers.',
+  openGraph: {
+    title: 'Tharaga — Premium Real Estate',
+    description: 'AI-powered real estate assistant. Find your dream home or list properties with verified builders and buyers.',
+    images: [{
+      url: 'https://tharaga.co.in/og-default.jpg',
+      width: 1200,
+      height: 630,
+      alt: 'Tharaga Real Estate',
+    }],
+    url: 'https://tharaga.co.in',
+    type: 'website',
+    siteName: 'Tharaga Real Estate',
+    locale: 'en_IN',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Tharaga — Premium Real Estate',
+    description: 'AI-powered real estate assistant. Find your dream home or list properties.',
+    images: ['https://tharaga.co.in/og-default.jpg'],
+    creator: '@tharaga',
+    site: '@tharaga',
+  },
 }
 
 import { AppI18nProvider } from '@/components/providers/AppI18nProvider'
@@ -17,6 +39,7 @@ import MobileBottomNav from '@/components/MobileBottomNav'
 import { PrefetchRoutes } from '@/components/providers/PrefetchRoutes'
 import { HeaderLinkInterceptor } from '@/components/HeaderLinkInterceptor'
 import { NotificationProvider } from '@/contexts/NotificationContext'
+import { CookieConsent } from '@/components/CookieConsent'
 
 const playfair = Playfair_Display({
   subsets: ['latin'],
@@ -2254,6 +2277,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           })();
         `}} />
         <MobileBottomNav />
+        <CookieConsent />
       </body>
     </html>
   )

@@ -4,8 +4,6 @@ import { redirect } from 'next/navigation'
 import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
 import { cookies } from 'next/headers'
 
-export const runtime = 'nodejs'
-
 export const metadata: Metadata = {
   title: 'My Dashboard | Tharaga',
   description: 'Your personalized property dashboard with AI-powered recommendations',

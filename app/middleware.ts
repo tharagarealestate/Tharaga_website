@@ -72,12 +72,8 @@ export async function middleware(req: NextRequest) {
   }
 
   // 2) Admin route protection
-  // SKIP /admin - it's a standalone HTML served by Netlify redirect (netlify.toml line 55-58)
-  // The admin panel has its own authentication in admin/index.html
-  if (pathname === '/admin' || pathname.startsWith('/admin/')) {
-    // Let Netlify handle /admin routing - don't intercept
-    return NextResponse.next()
-  }
+  // Admin routes are now handled by Next.js at app/app/(dashboard)/admin/page.tsx
+  // Middleware will handle authentication and role checking below
 
   // 3) Check if route is public
   const isPublicRoute = PUBLIC_ROUTES.some(route => 
@@ -98,40 +94,33 @@ export async function middleware(req: NextRequest) {
       }
 
       // Check role-based access for protected routes
-      for (const [role, routes] of Object.entries(ROLE_ROUTES)) {
+      for (const [requiredRole, routes] of Object.entries(ROLE_ROUTES)) {
         const isRoleRoute = routes.some(route => 
           pathname === route || pathname.startsWith(`${route}/`)
         )
 
         if (isRoleRoute) {
-          // Fetch user roles
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('role')
-            .eq('id', session.user.id)
-            .single()
-
+          // Fetch user roles from user_roles table (primary source of truth)
           const { data: userRoles } = await supabase
             .from('user_roles')
-            .select('role')
+            .select('role, is_primary')
             .eq('user_id', session.user.id)
 
           const roles = userRoles?.map(r => r.role) || []
-          const activeRole = profile?.role || roles[0] || 'buyer'
+          const primaryRoleData = userRoles?.find(r => r.is_primary)
+          const primaryRole = primaryRoleData?.role || roles[0] || null
 
-          // Check if user has required role
-          if (!roles.includes(role) && role !== 'admin') {
-            // Redirect to appropriate dashboard
-            const redirectMap: Record<string, string> = {
-              buyer: '/my-dashboard',
-              builder: '/builder',
-              admin: '/admin',
-            }
-            return NextResponse.redirect(new URL(redirectMap[activeRole] || '/', req.url))
+          // Check if user has required role in user_roles table
+          if (!roles.includes(requiredRole) && requiredRole !== 'admin') {
+            // User doesn't have the required role - redirect to home with error
+            const homeUrl = new URL('/', req.url)
+            homeUrl.searchParams.set('error', 'unauthorized')
+            homeUrl.searchParams.set('message', `You need ${requiredRole} role to access this page`)
+            return NextResponse.redirect(homeUrl, { status: 403 })
           }
 
           // Builder-specific checks
-          if (role === 'builder' && activeRole === 'builder') {
+          if (requiredRole === 'builder') {
             const { data: builderProfile } = await supabase
               .from('builder_profiles')
               .select('verification_status')
@@ -147,7 +136,7 @@ export async function middleware(req: NextRequest) {
 
           // Add user context to headers
           response.headers.set('X-User-Id', session.user.id)
-          response.headers.set('X-User-Role', activeRole)
+          response.headers.set('X-User-Role', primaryRole || '')
           response.headers.set('X-User-Roles', roles.join(','))
 
           break
@@ -178,10 +167,12 @@ export const config = {
     '/app/:path*',
     '/admin',
     '/admin/:path*',
-    // Role-based routes
+    // Role-based routes - protect all builder and buyer dashboard routes
     '/buyer/:path*',
     '/builder/:path*',
+    '/builder',
     '/my-dashboard/:path*',
+    '/my-dashboard',
     // Localized routes — handle only explicit locale prefixes (non-root)
     '/(en|ta|hi)/:path*',
   ],

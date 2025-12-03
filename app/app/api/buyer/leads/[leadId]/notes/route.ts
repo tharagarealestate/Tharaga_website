@@ -4,6 +4,8 @@ import { cookies } from 'next/headers';
 import { buyerLeadTrackingService } from '@/lib/services/buyer-lead-tracking';
 import { z } from 'zod';
 
+export const runtime = 'nodejs';
+
 const UpdateNotesSchema = z.object({
   notes: z.string().max(5000),
 });

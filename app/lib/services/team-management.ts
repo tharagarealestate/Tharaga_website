@@ -1,5 +1,7 @@
+'use server';
+
 import { createClient } from '@supabase/supabase-js';
-import crypto from 'crypto';
+import * as crypto from 'crypto';
 
 export type TeamRole = 'owner' | 'admin' | 'manager' | 'sales' | 'member';
 export type Permission =

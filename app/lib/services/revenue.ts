@@ -1,6 +1,8 @@
+'use server';
+
 import { createClient } from '@supabase/supabase-js';
 import Razorpay from 'razorpay';
-import crypto from 'crypto';
+import * as crypto from 'crypto';
 
 interface SubscriptionPlan {
   id: string;

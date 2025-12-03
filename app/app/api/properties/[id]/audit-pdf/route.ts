@@ -83,9 +83,16 @@ export async function POST(
     const fileName = `audit-${propertyId}-${Date.now()}.pdf`
     const filePath = `property-audits/${fileName}`
 
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
+    const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_ROLE;
+
+    if (!supabaseUrl || !supabaseKey) {
+      throw new Error('Supabase URL and service role key are required');
+    }
+
     const supabaseStorage = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!,
+      supabaseUrl,
+      supabaseKey,
       {
         auth: {
           autoRefreshToken: false,

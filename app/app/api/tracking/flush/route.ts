@@ -5,6 +5,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 
+export const runtime = 'nodejs';
+
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
@@ -18,9 +20,16 @@ export async function POST(request: NextRequest) {
     }
 
     // Server-side Supabase client (use service role key)
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
+    const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_ROLE;
+
+    if (!supabaseUrl || !supabaseKey) {
+      throw new Error('Supabase URL and service role key are required');
+    }
+
     const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!, // Server-side only
+      supabaseUrl,
+      supabaseKey, // Server-side only
       {
         auth: {
           autoRefreshToken: false,

@@ -12,10 +12,14 @@ export class SitemapGenerator {
   private baseUrl: string;
 
   constructor() {
-    this.supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
-    );
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
+    const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_ROLE;
+
+    if (!supabaseUrl || !supabaseKey) {
+      throw new Error('Supabase URL and service role key are required');
+    }
+
+    this.supabase = createClient(supabaseUrl, supabaseKey);
     this.baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://tharaga.co.in';
   }
 

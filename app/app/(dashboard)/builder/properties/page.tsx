@@ -322,6 +322,7 @@ export default function BuilderPropertiesPage() {
             </div>
           </div>
         </div>
+        </div>
       </div>
       )}
 

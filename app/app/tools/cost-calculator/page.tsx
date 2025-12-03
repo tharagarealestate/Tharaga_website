@@ -119,7 +119,9 @@ export default function CostCalculatorPage() {
           </div>
         </div>
       </div>
-    </main>
+        </main>
+      </div>
+    </div>
   )
 }
 

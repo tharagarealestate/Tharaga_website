@@ -42,13 +42,25 @@ function DashboardContent() {
         if (error) {
           console.error('Auth error:', error)
           setLoading(false)
-          router.push('/')
+          // Open auth modal instead of redirecting
+          const next = window.location.pathname + window.location.search
+          if ((window as any).authGate && typeof (window as any).authGate.openLoginModal === 'function') {
+            ;(window as any).authGate.openLoginModal({ next })
+          } else if (typeof (window as any).__thgOpenAuthModal === 'function') {
+            ;(window as any).__thgOpenAuthModal({ next })
+          }
           return
         }
 
         if (!user) {
           setLoading(false)
-          router.push('/')
+          // Open auth modal instead of redirecting
+          const next = window.location.pathname + window.location.search
+          if ((window as any).authGate && typeof (window as any).authGate.openLoginModal === 'function') {
+            ;(window as any).authGate.openLoginModal({ next })
+          } else if (typeof (window as any).__thgOpenAuthModal === 'function') {
+            ;(window as any).__thgOpenAuthModal({ next })
+          }
           return
         }
 
@@ -61,7 +73,13 @@ function DashboardContent() {
         if (rolesError) {
           console.error('Error fetching roles:', rolesError)
           setLoading(false)
-          router.push('/')
+          // Open auth modal instead of redirecting
+          const next = window.location.pathname + window.location.search
+          if ((window as any).authGate && typeof (window as any).authGate.openLoginModal === 'function') {
+            ;(window as any).authGate.openLoginModal({ next })
+          } else if (typeof (window as any).__thgOpenAuthModal === 'function') {
+            ;(window as any).__thgOpenAuthModal({ next })
+          }
           return
         }
 
@@ -71,7 +89,8 @@ function DashboardContent() {
         if (!hasAccess) {
           console.warn('User does not have builder role. Roles:', roles)
           setLoading(false)
-          router.push('/')
+          // Redirect to home with error message
+          router.push('/?error=unauthorized&message=You need builder role to access this page')
           return
         }
 

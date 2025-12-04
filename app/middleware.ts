@@ -85,11 +85,14 @@ export async function middleware(req: NextRequest) {
       const supabase = createMiddlewareClient({ req, res: response })
       const { data: { session } } = await supabase.auth.getSession()
 
-      // Redirect unauthenticated users to login
+      // If not authenticated, allow through - client-side will handle opening auth modal
+      // Don't redirect to /login - let the dashboard pages open the modal popup
       if (!session) {
-        const loginUrl = new URL('/login', req.url)
-        loginUrl.searchParams.set('redirect', pathname)
-        return NextResponse.redirect(loginUrl)
+        // Add header to indicate auth is required - client can use this to open modal
+        response.headers.set('X-Auth-Required', 'true')
+        response.headers.set('X-Auth-Redirect', pathname)
+        // Allow the request through - client-side code will handle opening modal
+        return response
       }
 
       // Check role-based access for protected routes

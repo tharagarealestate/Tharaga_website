@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback } from 'react';
+import { useCallback, Suspense } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
@@ -10,6 +10,14 @@ import { FilterCollections } from './_components/FilterCollections';
 import AdvancedFilters from './_components/AdvancedFilters';
 
 export default function BuilderLeadsPage() {
+  return (
+    <Suspense fallback={<div className='min-h-screen flex items-center justify-center'><div className='text-white'>Loading...</div></div>}>
+      <BuilderLeadsPageContent />
+    </Suspense>
+  )
+}
+
+function BuilderLeadsPageContent() {
   const router = useRouter();
 
   const handleSelectLead = useCallback(

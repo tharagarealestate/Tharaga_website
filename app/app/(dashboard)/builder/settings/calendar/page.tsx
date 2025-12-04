@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { Calendar, CheckCircle2, XCircle, RefreshCw, Link2, Clock, Loader2, AlertCircle } from 'lucide-react'
 import { useSearchParams, useRouter } from 'next/navigation'
 
@@ -12,6 +12,14 @@ interface CalendarStatus {
 }
 
 export default function CalendarSettingsPage() {
+  return (
+    <Suspense fallback={<div className='min-h-screen flex items-center justify-center'><div>Loading...</div></div>}>
+      <CalendarSettingsContent />
+    </Suspense>
+  )
+}
+
+function CalendarSettingsContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [status, setStatus] = useState<CalendarStatus>({ connected: false })

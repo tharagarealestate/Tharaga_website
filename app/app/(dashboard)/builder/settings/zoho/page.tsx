@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { 
   CheckCircle2, 
@@ -49,6 +49,14 @@ interface ZohoStatus {
 }
 
 export default function ZohoCRMPage() {
+  return (
+    <Suspense fallback={<div className='min-h-screen flex items-center justify-center'><div>Loading...</div></div>}>
+      <ZohoCRMPageContent />
+    </Suspense>
+  )
+}
+
+function ZohoCRMPageContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [status, setStatus] = useState<ZohoStatus | null>(null)

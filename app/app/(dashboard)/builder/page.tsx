@@ -71,17 +71,17 @@ function DashboardContent() {
             .select('role')
             .eq('user_id', user.id)
 
-          const timeoutPromise = new Promise((_, reject) => 
+          const timeoutPromise = new Promise<{ data: null; error: Error }>((_, reject) => 
             setTimeout(() => reject(new Error('Role check timeout')), 5000)
           )
 
-          const { data: rolesData, error: rolesError } = await Promise.race([
+          const result = await Promise.race([
             roleCheckPromise,
             timeoutPromise
-          ]) as any
+          ]) as { data: any[] | null; error: any }
 
-          if (rolesError) {
-            console.warn('Error fetching roles (allowing access):', rolesError)
+          if (result.error) {
+            console.warn('Error fetching roles (allowing access):', result.error)
             // If role check fails, allow access anyway (user is authenticated)
             // This prevents blocking legitimate users due to DB issues
             setUser(user)
@@ -89,7 +89,7 @@ function DashboardContent() {
             return
           }
 
-          const roles = (rolesData || []).map((r: any) => r.role)
+          const roles = (result.data || []).map((r: any) => r.role)
           const hasAccess = roles.includes('builder') || roles.includes('admin')
 
           if (!hasAccess) {

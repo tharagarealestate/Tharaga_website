@@ -64,24 +64,29 @@ function DashboardContent() {
           return
         }
 
-        // Check user roles with timeout
+        // Check user roles with timeout protection
+        let roleCheckCompleted = false
+        const roleCheckTimeout = setTimeout(() => {
+          if (!roleCheckCompleted) {
+            console.warn('Role check taking too long, allowing access')
+            roleCheckCompleted = true
+            setUser(user)
+            setLoading(false)
+          }
+        }, 5000)
+
         try {
-          const roleCheckPromise = supabase
+          const { data: rolesData, error: rolesError } = await supabase
             .from('user_roles')
             .select('role')
             .eq('user_id', user.id)
 
-          const timeoutPromise = new Promise<{ data: null; error: Error }>((_, reject) => 
-            setTimeout(() => reject(new Error('Role check timeout')), 5000)
-          )
+          clearTimeout(roleCheckTimeout)
+          
+          if (roleCheckCompleted) return // Already handled by timeout
 
-          const result = await Promise.race([
-            roleCheckPromise,
-            timeoutPromise
-          ]) as { data: any[] | null; error: any }
-
-          if (result.error) {
-            console.warn('Error fetching roles (allowing access):', result.error)
+          if (rolesError) {
+            console.warn('Error fetching roles (allowing access):', rolesError)
             // If role check fails, allow access anyway (user is authenticated)
             // This prevents blocking legitimate users due to DB issues
             setUser(user)
@@ -89,7 +94,7 @@ function DashboardContent() {
             return
           }
 
-          const roles = (result.data || []).map((r: any) => r.role)
+          const roles = (rolesData || []).map((r: any) => r.role)
           const hasAccess = roles.includes('builder') || roles.includes('admin')
 
           if (!hasAccess) {
@@ -100,13 +105,17 @@ function DashboardContent() {
             return
           }
 
+          roleCheckCompleted = true
           setUser(user)
           setLoading(false)
-        } catch (timeoutError) {
-          console.warn('Role check timeout (allowing access):', timeoutError)
-          // If timeout, allow access anyway (user is authenticated)
-          setUser(user)
-          setLoading(false)
+        } catch (err) {
+          clearTimeout(roleCheckTimeout)
+          if (!roleCheckCompleted) {
+            console.warn('Role check error (allowing access):', err)
+            // If error, allow access anyway (user is authenticated)
+            setUser(user)
+            setLoading(false)
+          }
         }
       } catch (err) {
         console.error('Error fetching user:', err)

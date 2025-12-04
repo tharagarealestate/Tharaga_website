@@ -1,10 +1,26 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, Suspense } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
-import Script from 'next/script'
 
 export default function LoginPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-950 via-primary-900 to-primary-800">
+        <div className="text-center">
+          <div className="mb-4">
+            <div className="inline-block w-12 h-12 border-4 border-white/20 border-t-white rounded-full animate-spin" />
+          </div>
+          <p className="text-white/80 text-lg">Loading...</p>
+        </div>
+      </div>
+    }>
+      <LoginPageContent />
+    </Suspense>
+  )
+}
+
+function LoginPageContent() {
   const searchParams = useSearchParams()
   const router = useRouter()
 

@@ -64,42 +64,60 @@ function DashboardContent() {
           return
         }
 
-        // Check user roles
-        const { data: rolesData, error: rolesError } = await supabase
-          .from('user_roles')
-          .select('role')
-          .eq('user_id', user.id)
+        // Check user roles with timeout
+        try {
+          const roleCheckPromise = supabase
+            .from('user_roles')
+            .select('role')
+            .eq('user_id', user.id)
 
-        if (rolesError) {
-          console.error('Error fetching roles:', rolesError)
-          setLoading(false)
-          // Open auth modal instead of redirecting
-          const next = window.location.pathname + window.location.search
-          if ((window as any).authGate && typeof (window as any).authGate.openLoginModal === 'function') {
-            ;(window as any).authGate.openLoginModal({ next })
-          } else if (typeof (window as any).__thgOpenAuthModal === 'function') {
-            ;(window as any).__thgOpenAuthModal({ next })
+          const timeoutPromise = new Promise((_, reject) => 
+            setTimeout(() => reject(new Error('Role check timeout')), 5000)
+          )
+
+          const { data: rolesData, error: rolesError } = await Promise.race([
+            roleCheckPromise,
+            timeoutPromise
+          ]) as any
+
+          if (rolesError) {
+            console.warn('Error fetching roles (allowing access):', rolesError)
+            // If role check fails, allow access anyway (user is authenticated)
+            // This prevents blocking legitimate users due to DB issues
+            setUser(user)
+            setLoading(false)
+            return
           }
-          return
-        }
 
-        const roles = (rolesData || []).map(r => r.role)
-        const hasAccess = roles.includes('builder') || roles.includes('admin')
+          const roles = (rolesData || []).map((r: any) => r.role)
+          const hasAccess = roles.includes('builder') || roles.includes('admin')
 
-        if (!hasAccess) {
-          console.warn('User does not have builder role. Roles:', roles)
+          if (!hasAccess) {
+            console.warn('User does not have builder role. Roles:', roles)
+            setLoading(false)
+            // Redirect to home with error message
+            router.push('/?error=unauthorized&message=You need builder role to access this page')
+            return
+          }
+
+          setUser(user)
           setLoading(false)
-          // Redirect to home with error message
-          router.push('/?error=unauthorized&message=You need builder role to access this page')
-          return
+        } catch (timeoutError) {
+          console.warn('Role check timeout (allowing access):', timeoutError)
+          // If timeout, allow access anyway (user is authenticated)
+          setUser(user)
+          setLoading(false)
         }
-
-        setUser(user)
-        setLoading(false)
       } catch (err) {
         console.error('Error fetching user:', err)
         setLoading(false)
-        router.push('/')
+        // Open auth modal instead of redirecting
+        const next = window.location.pathname + window.location.search
+        if ((window as any).authGate && typeof (window as any).authGate.openLoginModal === 'function') {
+          ;(window as any).authGate.openLoginModal({ next })
+        } else if (typeof (window as any).__thgOpenAuthModal === 'function') {
+          ;(window as any).__thgOpenAuthModal({ next })
+        }
       }
     }
 

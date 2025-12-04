@@ -30,8 +30,8 @@ export default function Page() {
           setLoading(false)
           // Open auth modal instead of redirecting
           const next = window.location.pathname + window.location.search
-          if (window.authGate && typeof window.authGate.openLoginModal === 'function') {
-            window.authGate.openLoginModal({ next })
+          if ((window as any).authGate && typeof (window as any).authGate.openLoginModal === 'function') {
+            ;(window as any).authGate.openLoginModal({ next })
           } else if (typeof (window as any).__thgOpenAuthModal === 'function') {
             ;(window as any).__thgOpenAuthModal({ next })
           }
@@ -42,8 +42,8 @@ export default function Page() {
           setLoading(false)
           // Open auth modal instead of redirecting
           const next = window.location.pathname + window.location.search
-          if (window.authGate && typeof window.authGate.openLoginModal === 'function') {
-            window.authGate.openLoginModal({ next })
+          if ((window as any).authGate && typeof (window as any).authGate.openLoginModal === 'function') {
+            ;(window as any).authGate.openLoginModal({ next })
           } else if (typeof (window as any).__thgOpenAuthModal === 'function') {
             ;(window as any).__thgOpenAuthModal({ next })
           }
@@ -61,8 +61,8 @@ export default function Page() {
           setLoading(false)
           // Open auth modal instead of redirecting
           const next = window.location.pathname + window.location.search
-          if (window.authGate && typeof window.authGate.openLoginModal === 'function') {
-            window.authGate.openLoginModal({ next })
+          if ((window as any).authGate && typeof (window as any).authGate.openLoginModal === 'function') {
+            ;(window as any).authGate.openLoginModal({ next })
           } else if (typeof (window as any).__thgOpenAuthModal === 'function') {
             ;(window as any).__thgOpenAuthModal({ next })
           }

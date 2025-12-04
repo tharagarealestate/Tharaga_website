@@ -1,7 +1,4 @@
 import type { ReactNode } from 'react'
-import { redirect } from 'next/navigation'
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
-import { cookies } from 'next/headers'
 import { ReactQueryProvider } from '@/components/providers/ReactQueryProvider'
 import { BuilderTopNav } from './_components/BuilderTopNav'
 import { TrialUpgradeBanner } from './_components/TrialUpgradeBanner'
@@ -10,40 +7,8 @@ import { KeyboardShortcutsHelp } from './_components/KeyboardShortcutsHelp'
 
 export const runtime = 'nodejs'
 
-/**
- * Server-side role check for builder dashboard
- * Verifies user has 'builder' role in user_roles table
- * Returns 403 Forbidden if role check fails
- */
-async function checkBuilderRole() {
-  const supabase = createRouteHandlerClient({ cookies })
-  
-  // Get authenticated user
-  const { data: { user }, error: authError } = await supabase.auth.getUser()
-  
-  if (authError || !user) {
-    redirect('/login?redirect=/builder')
-  }
-
-  // Check if user has builder role in user_roles table
-  const { data: userRoles } = await supabase
-    .from('user_roles')
-    .select('role, is_primary')
-    .eq('user_id', user.id)
-    .eq('role', 'builder')
-    .single()
-
-  if (!userRoles) {
-    // User doesn't have builder role - redirect to home with error
-    redirect('/?error=unauthorized&message=You need builder role to access this page')
-  }
-
-  return { user, hasBuilderRole: true }
-}
-
-export default async function BuilderDashboardLayout({ children }: { children: ReactNode }) {
-  // Server-side role verification
-  await checkBuilderRole()
+export default function BuilderDashboardLayout({ children }: { children: ReactNode }) {
+  // Authentication handled by middleware - no server-side redirects needed
 
   return (
     <ReactQueryProvider>

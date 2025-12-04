@@ -128,9 +128,15 @@ export default function BuyerDashboardPage() {
     );
   }
 
-  // If no user, show nothing (auth modal should be open)
+  // If no user after loading, show message (auth modal should be opening)
   if (!user) {
-    return null;
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-primary-950 via-primary-900 to-primary-800">
+        <div className="flex flex-col items-center gap-4">
+          <p className="text-white/80 text-lg">Please log in to access your dashboard...</p>
+        </div>
+      </div>
+    );
   }
 
   return (

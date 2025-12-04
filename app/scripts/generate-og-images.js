@@ -202,3 +202,5 @@ console.log('\nOr use a tool like puppeteer to automate:');
 console.log('  npm install puppeteer');
 console.log('  node scripts/generate-og-images-puppeteer.js');
 
+
+

@@ -155,3 +155,5 @@ The buyer role:
 **Status**: ✅ Both roles fully implemented
 **Issue**: Summary was misleading, not the implementation
 
+
+

@@ -36,6 +36,8 @@ export default function BuyerDashboardPage() {
   const [userName, setUserName] = useState('');
   const [recs, setRecs] = useState<RecommendationItem[]>([]);
   const [recError, setRecError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState<any>(null);
 
   const savedProperties = useMemo(() => listSaved(), []);
 
@@ -46,12 +48,43 @@ export default function BuyerDashboardPage() {
     else setGreeting('Good Evening');
 
     const supabase = getSupabase();
-    supabase.auth.getUser().then(({ data: { user } }) => {
+    
+    // Check authentication
+    supabase.auth.getUser().then(({ data: { user }, error }) => {
+      if (error) {
+        console.error('Auth error:', error);
+        setLoading(false);
+        // Open auth modal instead of redirecting
+        const next = window.location.pathname + window.location.search;
+        if ((window as any).authGate && typeof (window as any).authGate.openLoginModal === 'function') {
+          ;(window as any).authGate.openLoginModal({ next });
+        } else if (typeof (window as any).__thgOpenAuthModal === 'function') {
+          ;(window as any).__thgOpenAuthModal({ next });
+        }
+        return;
+      }
+
+      if (!user) {
+        setLoading(false);
+        // Open auth modal instead of redirecting
+        const next = window.location.pathname + window.location.search;
+        if ((window as any).authGate && typeof (window as any).authGate.openLoginModal === 'function') {
+          ;(window as any).authGate.openLoginModal({ next });
+        } else if (typeof (window as any).__thgOpenAuthModal === 'function') {
+          ;(window as any).__thgOpenAuthModal({ next });
+        }
+        return;
+      }
+
+      setUser(user);
+      
       if (user?.user_metadata?.full_name) {
         setUserName(user.user_metadata.full_name.split(' ')[0]);
       } else if (user?.email) {
         setUserName(user.email.split('@')[0]);
       }
+      
+      setLoading(false);
     });
 
     async function loadRecommendations() {
@@ -82,6 +115,23 @@ export default function BuyerDashboardPage() {
   }, []);
 
   const savedCount = savedProperties.length;
+
+  // Loading state
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-primary-950 via-primary-900 to-primary-800">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-12 h-12 border-2 border-[#D4AF37] border-t-transparent rounded-full animate-spin" />
+          <p className="text-white/80 text-lg">Loading your dashboard...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // If no user, show nothing (auth modal should be open)
+  if (!user) {
+    return null;
+  }
 
   return (
     <div className="relative min-h-screen overflow-hidden bg-gradient-to-br from-primary-950 via-primary-900 to-primary-800 text-white">

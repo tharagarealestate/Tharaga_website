@@ -51,37 +51,77 @@ export default function Page() {
         }
 
         // Check user roles - buyer dashboard requires 'buyer' or 'admin' role
-        const { data: rolesData, error: rolesError } = await supabase
-          .from('user_roles')
-          .select('role')
-          .eq('user_id', user.id)
-
-        if (rolesError) {
-          console.error('Error fetching roles:', rolesError)
-          setLoading(false)
-          // Open auth modal instead of redirecting
-          const next = window.location.pathname + window.location.search
-          if ((window as any).authGate && typeof (window as any).authGate.openLoginModal === 'function') {
-            ;(window as any).authGate.openLoginModal({ next })
-          } else if (typeof (window as any).__thgOpenAuthModal === 'function') {
-            ;(window as any).__thgOpenAuthModal({ next })
+        // Add timeout protection for role check
+        let roleCheckCompleted = false
+        const roleCheckTimeout = setTimeout(() => {
+          if (!roleCheckCompleted) {
+            console.warn('Role check taking too long, allowing access (middleware already verified)')
+            roleCheckCompleted = true
+            setUser(user)
+            setLoading(false)
           }
-          return
-        }
+        }, 5000)
 
-        const roles = (rolesData || []).map(r => r.role)
-        const hasAccess = roles.includes('buyer') || roles.includes('admin')
+        try {
+          // Try user_roles table first (primary source)
+          const { data: rolesData, error: rolesError } = await supabase
+            .from('user_roles')
+            .select('role')
+            .eq('user_id', user.id)
 
-        if (!hasAccess) {
-          console.warn('User does not have buyer role. Roles:', roles)
+          clearTimeout(roleCheckTimeout)
+          
+          if (roleCheckCompleted) return // Already handled by timeout
+
+          let roles: string[] = []
+          let hasAccess = false
+
+          if (rolesError || !rolesData || rolesData.length === 0) {
+            // Fallback: Check profiles table for backward compatibility
+            console.warn('user_roles check failed, checking profiles table:', rolesError)
+            const { data: profile } = await supabase
+              .from('profiles')
+              .select('role')
+              .eq('id', user.id)
+              .single()
+
+            if (profile?.role === 'buyer' || profile?.role === 'admin') {
+              hasAccess = true
+              roles = [profile.role]
+            } else {
+              // No roles found - redirect
+              console.warn('User does not have buyer role in user_roles or profiles')
+              roleCheckCompleted = true
+              setLoading(false)
+              router.push('/?error=unauthorized&message=You need buyer role to access this page')
+              return
+            }
+          } else {
+            roles = (rolesData || []).map(r => r.role)
+            hasAccess = roles.includes('buyer') || roles.includes('admin')
+          }
+
+          if (!hasAccess) {
+            console.warn('User does not have buyer role. Roles:', roles)
+            roleCheckCompleted = true
+            setLoading(false)
+            router.push('/?error=unauthorized&message=You need buyer role to access this page')
+            return
+          }
+
+          roleCheckCompleted = true
+          setUser(user)
           setLoading(false)
-          // Redirect to home with error message
-          router.push('/?error=unauthorized&message=You need buyer role to access this page')
-          return
+        } catch (err) {
+          clearTimeout(roleCheckTimeout)
+          if (!roleCheckCompleted) {
+            console.warn('Role check error (allowing access - middleware already verified):', err)
+            // If error, allow access anyway (middleware already checked)
+            roleCheckCompleted = true
+            setUser(user)
+            setLoading(false)
+          }
         }
-
-        setUser(user)
-        setLoading(false)
 
         // Set time-based greeting
         const hour = new Date().getHours()

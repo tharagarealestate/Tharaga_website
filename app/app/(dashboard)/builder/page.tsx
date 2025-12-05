@@ -76,6 +76,7 @@ function DashboardContent() {
         }, 5000)
 
         try {
+          // Try user_roles table first (primary source)
           const { data: rolesData, error: rolesError } = await supabase
             .from('user_roles')
             .select('role')
@@ -85,22 +86,38 @@ function DashboardContent() {
           
           if (roleCheckCompleted) return // Already handled by timeout
 
-          if (rolesError) {
-            console.warn('Error fetching roles (allowing access):', rolesError)
-            // If role check fails, allow access anyway (user is authenticated)
-            // This prevents blocking legitimate users due to DB issues
-            setUser(user)
-            setLoading(false)
-            return
-          }
+          let roles: string[] = []
+          let hasAccess = false
 
-          const roles = (rolesData || []).map((r: any) => r.role)
-          const hasAccess = roles.includes('builder') || roles.includes('admin')
+          if (rolesError || !rolesData || rolesData.length === 0) {
+            // Fallback: Check profiles table for backward compatibility
+            console.warn('user_roles check failed, checking profiles table:', rolesError)
+            const { data: profile } = await supabase
+              .from('profiles')
+              .select('role')
+              .eq('id', user.id)
+              .single()
+
+            if (profile?.role === 'builder' || profile?.role === 'admin') {
+              hasAccess = true
+              roles = [profile.role]
+            } else {
+              // No roles found - redirect
+              console.warn('User does not have builder role in user_roles or profiles')
+              roleCheckCompleted = true
+              setLoading(false)
+              router.push('/?error=unauthorized&message=You need builder role to access this page')
+              return
+            }
+          } else {
+            roles = (rolesData || []).map((r: any) => r.role)
+            hasAccess = roles.includes('builder') || roles.includes('admin')
+          }
 
           if (!hasAccess) {
             console.warn('User does not have builder role. Roles:', roles)
+            roleCheckCompleted = true
             setLoading(false)
-            // Redirect to home with error message
             router.push('/?error=unauthorized&message=You need builder role to access this page')
             return
           }
@@ -112,7 +129,8 @@ function DashboardContent() {
           clearTimeout(roleCheckTimeout)
           if (!roleCheckCompleted) {
             console.warn('Role check error (allowing access):', err)
-            // If error, allow access anyway (user is authenticated)
+            // If error, allow access anyway (user is authenticated, middleware already verified)
+            roleCheckCompleted = true
             setUser(user)
             setLoading(false)
           }

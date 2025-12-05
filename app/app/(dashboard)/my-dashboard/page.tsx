@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { motion } from 'framer-motion'
 import { getSupabase } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
@@ -18,15 +18,27 @@ export default function Page() {
   const [greeting, setGreeting] = useState('Hello')
   const supabase = getSupabase()
   const router = useRouter()
+  
+  // Use ref to prevent multiple simultaneous role checks
+  const roleCheckInProgress = useRef(false)
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null)
 
-  // Fetch user, check roles, and set greeting
+  // Fetch user, check roles, and set greeting - RUN ONCE on mount
   useEffect(() => {
+    // Prevent multiple simultaneous checks
+    if (roleCheckInProgress.current) {
+      return
+    }
+
     const fetchUser = async () => {
+      roleCheckInProgress.current = true
+      
       try {
         const { data: { user }, error } = await supabase.auth.getUser()
 
         if (error) {
           console.error('Auth error:', error)
+          roleCheckInProgress.current = false
           setLoading(false)
           // Open auth modal instead of redirecting
           const next = window.location.pathname + window.location.search
@@ -39,6 +51,7 @@ export default function Page() {
         }
 
         if (!user) {
+          roleCheckInProgress.current = false
           setLoading(false)
           // Open auth modal instead of redirecting
           const next = window.location.pathname + window.location.search
@@ -50,51 +63,74 @@ export default function Page() {
           return
         }
 
-        // Check user roles - buyer dashboard requires 'buyer' or 'admin' role
-        // Add timeout protection for role check
-        let roleCheckCompleted = false
-        const roleCheckTimeout = setTimeout(() => {
-          if (!roleCheckCompleted) {
-            console.warn('Role check taking too long, allowing access (middleware already verified)')
-            roleCheckCompleted = true
+        // Set timeout for role check (3 seconds - faster than before)
+        timeoutRef.current = setTimeout(() => {
+          if (roleCheckInProgress.current) {
+            console.warn('Role check timeout - allowing access (middleware already verified)')
+            roleCheckInProgress.current = false
             setUser(user)
             setLoading(false)
+            // Set greeting
+            const hour = new Date().getHours()
+            if (hour < 12) setGreeting('Good morning')
+            else if (hour < 17) setGreeting('Good afternoon')
+            else setGreeting('Good evening')
           }
-        }, 5000)
+        }, 3000)
 
         try {
-          // Try user_roles table first (primary source)
-          const { data: rolesData, error: rolesError } = await supabase
+          // Try user_roles table first (primary source) with timeout
+          const rolesPromise = supabase
             .from('user_roles')
             .select('role')
             .eq('user_id', user.id)
 
-          clearTimeout(roleCheckTimeout)
-          
-          if (roleCheckCompleted) return // Already handled by timeout
+          // Race between query and timeout
+          const rolesResult = await Promise.race([
+            rolesPromise,
+            new Promise<{ data: null; error: { message: 'timeout' } }>((resolve) => 
+              setTimeout(() => resolve({ data: null, error: { message: 'timeout' } }), 2500)
+            )
+          ])
 
+          // Clear timeout if query completed
+          if (timeoutRef.current) {
+            clearTimeout(timeoutRef.current)
+            timeoutRef.current = null
+          }
+
+          // If still in progress, process result
+          if (!roleCheckInProgress.current) return
+
+          const { data: rolesData, error: rolesError } = rolesResult
           let roles: string[] = []
           let hasAccess = false
 
           if (rolesError || !rolesData || rolesData.length === 0) {
             // Fallback: Check profiles table for backward compatibility
             console.warn('user_roles check failed, checking profiles table:', rolesError)
-            const { data: profile } = await supabase
-              .from('profiles')
-              .select('role')
-              .eq('id', user.id)
-              .single()
+            try {
+              const { data: profile } = await supabase
+                .from('profiles')
+                .select('role')
+                .eq('id', user.id)
+                .single()
 
-            if (profile?.role === 'buyer' || profile?.role === 'admin') {
+              if (profile?.role === 'buyer' || profile?.role === 'admin') {
+                hasAccess = true
+                roles = [profile.role]
+              } else {
+                // No roles found - redirect
+                console.warn('User does not have buyer role in user_roles or profiles')
+                roleCheckInProgress.current = false
+                setLoading(false)
+                router.push('/?error=unauthorized&message=You need buyer role to access this page')
+                return
+              }
+            } catch (profileErr) {
+              // Profile check failed - allow access (middleware already verified)
+              console.warn('Profile check failed, allowing access:', profileErr)
               hasAccess = true
-              roles = [profile.role]
-            } else {
-              // No roles found - redirect
-              console.warn('User does not have buyer role in user_roles or profiles')
-              roleCheckCompleted = true
-              setLoading(false)
-              router.push('/?error=unauthorized&message=You need buyer role to access this page')
-              return
             }
           } else {
             roles = (rolesData || []).map(r => r.role)
@@ -103,40 +139,66 @@ export default function Page() {
 
           if (!hasAccess) {
             console.warn('User does not have buyer role. Roles:', roles)
-            roleCheckCompleted = true
+            roleCheckInProgress.current = false
             setLoading(false)
             router.push('/?error=unauthorized&message=You need buyer role to access this page')
             return
           }
 
-          roleCheckCompleted = true
+          roleCheckInProgress.current = false
           setUser(user)
           setLoading(false)
+
+          // Set time-based greeting
+          const hour = new Date().getHours()
+          if (hour < 12) setGreeting('Good morning')
+          else if (hour < 17) setGreeting('Good afternoon')
+          else setGreeting('Good evening')
         } catch (err) {
-          clearTimeout(roleCheckTimeout)
-          if (!roleCheckCompleted) {
-            console.warn('Role check error (allowing access - middleware already verified):', err)
+          // Clear timeout on error
+          if (timeoutRef.current) {
+            clearTimeout(timeoutRef.current)
+            timeoutRef.current = null
+          }
+          
+          if (roleCheckInProgress.current) {
+            console.warn('Role check error (allowing access - middleware verified):', err)
             // If error, allow access anyway (middleware already checked)
-            roleCheckCompleted = true
+            roleCheckInProgress.current = false
             setUser(user)
             setLoading(false)
+            // Set greeting
+            const hour = new Date().getHours()
+            if (hour < 12) setGreeting('Good morning')
+            else if (hour < 17) setGreeting('Good afternoon')
+            else setGreeting('Good evening')
           }
         }
-
-        // Set time-based greeting
-        const hour = new Date().getHours()
-        if (hour < 12) setGreeting('Good morning')
-        else if (hour < 17) setGreeting('Good afternoon')
-        else setGreeting('Good evening')
       } catch (err) {
+        // Clear timeout on outer error
+        if (timeoutRef.current) {
+          clearTimeout(timeoutRef.current)
+          timeoutRef.current = null
+        }
+        
         console.error('Error fetching user:', err)
+        roleCheckInProgress.current = false
         setLoading(false)
         router.push('/')
       }
     }
 
     fetchUser()
-  }, [supabase, router])
+
+    // Cleanup function
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current)
+        timeoutRef.current = null
+      }
+      roleCheckInProgress.current = false
+    }
+  }, []) // Empty deps - run once on mount
 
   // Get user's first name
   const getFirstName = () => {

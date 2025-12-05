@@ -8,14 +8,12 @@ import { UnifiedSinglePageDashboard } from './_components/UnifiedSinglePageDashb
 function DashboardContent() {
   const [user, setUser] = useState<any>(null)
   const [loading, setLoading] = useState(true)
+  const [authModalReady, setAuthModalReady] = useState(false)
   const supabase = getSupabase()
   const router = useRouter()
   const searchParams = useSearchParams()
   const [activeSection, setActiveSection] = useState<string>('overview')
-  
-  // Use ref to prevent multiple simultaneous role checks
-  const roleCheckInProgress = useRef(false)
-  const timeoutRef = useRef<NodeJS.Timeout | null>(null)
+  const checkInProgress = useRef(false)
 
   // Get section from URL params or default to overview
   useEffect(() => {
@@ -37,34 +35,131 @@ function DashboardContent() {
     return () => window.removeEventListener('popstate', handlePopState)
   }, [])
 
-  // CRITICAL FIX: Render immediately, do checks in background
-  // Trust middleware - it already verified access
+  // Wait for auth modal system to be ready
   useEffect(() => {
-    if (roleCheckInProgress.current) return
-    roleCheckInProgress.current = true
+    const checkAuthModalReady = () => {
+      if (
+        (typeof (window as any).__thgOpenAuthModal === 'function') ||
+        ((window as any).authGate && typeof (window as any).authGate.openLoginModal === 'function')
+      ) {
+        setAuthModalReady(true)
+        return true
+      }
+      return false
+    }
 
-    // Immediately allow rendering - middleware already verified
-    setLoading(false)
-    setUser({ id: 'verified', email: 'user@tharaga.co.in' }) // Placeholder to allow render
+    // Check immediately
+    if (checkAuthModalReady()) {
+      return
+    }
 
-    // Get real user in background (non-blocking)
-    const fetchUser = async () => {
+    // Poll for auth modal to be ready (max 5 seconds)
+    let attempts = 0
+    const maxAttempts = 50 // 5 seconds at 100ms intervals
+    const interval = setInterval(() => {
+      attempts++
+      if (checkAuthModalReady() || attempts >= maxAttempts) {
+        clearInterval(interval)
+        if (attempts >= maxAttempts) {
+          console.warn('Auth modal system not ready after 5 seconds')
+          setAuthModalReady(true) // Allow to proceed anyway
+        }
+      }
+    }, 100)
+
+    return () => clearInterval(interval)
+  }, [])
+
+  // Check authentication and roles
+  useEffect(() => {
+    if (!authModalReady || checkInProgress.current) return
+    checkInProgress.current = true
+
+    const checkAuth = async () => {
       try {
-        const { data: { user }, error } = await supabase.auth.getUser()
-        if (!error && user) {
-          setUser(user) // Update with real user
+        // Check authentication
+        const { data: { user: authUser }, error: authError } = await supabase.auth.getUser()
+
+        if (authError || !authUser) {
+          console.log('User not authenticated, opening auth modal')
+          setLoading(false)
+          
+          // Wait a bit more for auth modal to be fully ready
+          await new Promise(resolve => setTimeout(resolve, 200))
+          
+          const next = window.location.pathname + window.location.search
+          if ((window as any).authGate && typeof (window as any).authGate.openLoginModal === 'function') {
+            (window as any).authGate.openLoginModal({ next })
+          } else if (typeof (window as any).__thgOpenAuthModal === 'function') {
+            (window as any).__thgOpenAuthModal({ next })
+          }
+          return
+        }
+
+        // Check user roles with timeout
+        let roleCheckCompleted = false
+        const roleCheckTimeout = setTimeout(() => {
+          if (!roleCheckCompleted) {
+            console.warn('Role check timeout, allowing access')
+            roleCheckCompleted = true
+            setUser(authUser)
+            setLoading(false)
+          }
+        }, 5000)
+
+        try {
+          const { data: rolesData, error: rolesError } = await supabase
+            .from('user_roles')
+            .select('role')
+            .eq('user_id', authUser.id)
+
+          clearTimeout(roleCheckTimeout)
+
+          if (roleCheckCompleted) return
+
+          if (rolesError) {
+            console.warn('Error fetching roles (allowing access):', rolesError)
+            setUser(authUser)
+            setLoading(false)
+            return
+          }
+
+          const roles = (rolesData || []).map((r: any) => r.role)
+          const hasAccess = roles.includes('builder') || roles.includes('admin')
+
+          if (!hasAccess) {
+            console.warn('User does not have builder role. Roles:', roles)
+            setLoading(false)
+            router.push('/?error=unauthorized&message=You need builder role to access this page')
+            return
+          }
+
+          roleCheckCompleted = true
+          setUser(authUser)
+          setLoading(false)
+        } catch (err) {
+          clearTimeout(roleCheckTimeout)
+          if (!roleCheckCompleted) {
+            console.warn('Role check error (allowing access):', err)
+            setUser(authUser)
+            setLoading(false)
+          }
         }
       } catch (err) {
-        // Silent fail - already rendered
+        console.error('Error checking auth:', err)
+        setLoading(false)
+        // Open auth modal on error
+        const next = window.location.pathname + window.location.search
+        if ((window as any).authGate && typeof (window as any).authGate.openLoginModal === 'function') {
+          (window as any).authGate.openLoginModal({ next })
+        } else if (typeof (window as any).__thgOpenAuthModal === 'function') {
+          (window as any).__thgOpenAuthModal({ next })
+        }
       }
     }
-    
-    fetchUser()
-    
-    return () => {
-      roleCheckInProgress.current = false
-    }
-  }, [])
+
+    checkAuth()
+  }, [authModalReady, supabase, router])
 
   // Handle section change
   const handleSectionChange = (section: string) => {
@@ -87,7 +182,13 @@ function DashboardContent() {
   }
 
   if (!user) {
-    return null
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="flex flex-col items-center gap-4">
+          <p className="text-gray-400">Please log in to access the builder dashboard.</p>
+        </div>
+      </div>
+    )
   }
 
   return (

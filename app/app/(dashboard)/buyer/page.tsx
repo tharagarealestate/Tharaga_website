@@ -1,6 +1,6 @@
- 'use client';
+'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, useRef } from 'react';
 import {
   ArrowRight,
   Award,
@@ -21,6 +21,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import dynamic from 'next/dynamic';
 import { Suspense } from 'react';
+import { useRouter } from 'next/navigation';
 
 import { getSupabase } from '@/lib/supabase';
 import { listSaved } from '@/lib/saved';
@@ -31,17 +32,59 @@ const RecommendationsCarousel = dynamic(
   { ssr: false }
 );
 
-export default function BuyerDashboardPage() {
+function BuyerDashboardContent() {
   const [greeting, setGreeting] = useState('');
   const [userName, setUserName] = useState('');
   const [recs, setRecs] = useState<RecommendationItem[]>([]);
   const [recError, setRecError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<any>(null);
+  const [authModalReady, setAuthModalReady] = useState(false);
+  const router = useRouter();
+  const checkInProgress = useRef(false);
 
   const savedProperties = useMemo(() => listSaved(), []);
 
+  // Wait for auth modal system to be ready
   useEffect(() => {
+    const checkAuthModalReady = () => {
+      if (
+        (typeof (window as any).__thgOpenAuthModal === 'function') ||
+        ((window as any).authGate && typeof (window as any).authGate.openLoginModal === 'function')
+      ) {
+        setAuthModalReady(true);
+        return true;
+      }
+      return false;
+    };
+
+    // Check immediately
+    if (checkAuthModalReady()) {
+      return;
+    }
+
+    // Poll for auth modal to be ready (max 5 seconds)
+    let attempts = 0;
+    const maxAttempts = 50; // 5 seconds at 100ms intervals
+    const interval = setInterval(() => {
+      attempts++;
+      if (checkAuthModalReady() || attempts >= maxAttempts) {
+        clearInterval(interval);
+        if (attempts >= maxAttempts) {
+          console.warn('Auth modal system not ready after 5 seconds');
+          setAuthModalReady(true); // Allow to proceed anyway
+        }
+      }
+    }, 100);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  // Check authentication and roles
+  useEffect(() => {
+    if (!authModalReady || checkInProgress.current) return;
+    checkInProgress.current = true;
+
     const hour = new Date().getHours();
     if (hour < 12) setGreeting('Good Morning');
     else if (hour < 18) setGreeting('Good Afternoon');
@@ -49,43 +92,115 @@ export default function BuyerDashboardPage() {
 
     const supabase = getSupabase();
     
-    // Check authentication
-    supabase.auth.getUser().then(({ data: { user }, error }) => {
-      if (error) {
-        console.error('Auth error:', error);
+    const checkAuth = async () => {
+      try {
+        // Check authentication
+        const { data: { user: authUser }, error: authError } = await supabase.auth.getUser();
+
+        if (authError || !authUser) {
+          console.log('User not authenticated, opening auth modal');
+          setLoading(false);
+          
+          // Wait a bit more for auth modal to be fully ready
+          await new Promise(resolve => setTimeout(resolve, 200));
+          
+          const next = window.location.pathname + window.location.search;
+          if ((window as any).authGate && typeof (window as any).authGate.openLoginModal === 'function') {
+            (window as any).authGate.openLoginModal({ next });
+          } else if (typeof (window as any).__thgOpenAuthModal === 'function') {
+            (window as any).__thgOpenAuthModal({ next });
+          }
+          return;
+        }
+
+        // Check user roles with timeout
+        let roleCheckCompleted = false;
+        const roleCheckTimeout = setTimeout(() => {
+          if (!roleCheckCompleted) {
+            console.warn('Buyer role check timeout, allowing access');
+            roleCheckCompleted = true;
+            setUser(authUser);
+            if (authUser?.user_metadata?.full_name) {
+              setUserName(authUser.user_metadata.full_name.split(' ')[0]);
+            } else if (authUser?.email) {
+              setUserName(authUser.email.split('@')[0]);
+            }
+            setLoading(false);
+          }
+        }, 5000);
+
+        try {
+          const { data: rolesData, error: rolesError } = await supabase
+            .from('user_roles')
+            .select('role')
+            .eq('user_id', authUser.id);
+
+          clearTimeout(roleCheckTimeout);
+
+          if (roleCheckCompleted) return;
+
+          if (rolesError) {
+            console.warn('Error fetching buyer roles (allowing access):', rolesError);
+            setUser(authUser);
+            if (authUser?.user_metadata?.full_name) {
+              setUserName(authUser.user_metadata.full_name.split(' ')[0]);
+            } else if (authUser?.email) {
+              setUserName(authUser.email.split('@')[0]);
+            }
+            setLoading(false);
+            return;
+          }
+
+          const roles = (rolesData || []).map((r: any) => r.role);
+          const hasAccess = roles.includes('buyer') || roles.includes('admin');
+
+          if (!hasAccess) {
+            console.warn('User does not have buyer role. Roles:', roles);
+            setLoading(false);
+            router.push('/?error=unauthorized&message=You need buyer role to access this page');
+            return;
+          }
+
+          roleCheckCompleted = true;
+          setUser(authUser);
+          if (authUser?.user_metadata?.full_name) {
+            setUserName(authUser.user_metadata.full_name.split(' ')[0]);
+          } else if (authUser?.email) {
+            setUserName(authUser.email.split('@')[0]);
+          }
+          setLoading(false);
+        } catch (err) {
+          clearTimeout(roleCheckTimeout);
+          if (!roleCheckCompleted) {
+            console.warn('Buyer role check error (allowing access):', err);
+            setUser(authUser);
+            if (authUser?.user_metadata?.full_name) {
+              setUserName(authUser.user_metadata.full_name.split(' ')[0]);
+            } else if (authUser?.email) {
+              setUserName(authUser.email.split('@')[0]);
+            }
+            setLoading(false);
+          }
+        }
+      } catch (err) {
+        console.error('Error checking auth:', err);
         setLoading(false);
-        // Open auth modal instead of redirecting
+        // Open auth modal on error
         const next = window.location.pathname + window.location.search;
         if ((window as any).authGate && typeof (window as any).authGate.openLoginModal === 'function') {
-          ;(window as any).authGate.openLoginModal({ next });
+          (window as any).authGate.openLoginModal({ next });
         } else if (typeof (window as any).__thgOpenAuthModal === 'function') {
-          ;(window as any).__thgOpenAuthModal({ next });
+          (window as any).__thgOpenAuthModal({ next });
         }
-        return;
       }
+    };
 
-      if (!user) {
-        setLoading(false);
-        // Open auth modal instead of redirecting
-        const next = window.location.pathname + window.location.search;
-        if ((window as any).authGate && typeof (window as any).authGate.openLoginModal === 'function') {
-          ;(window as any).authGate.openLoginModal({ next });
-        } else if (typeof (window as any).__thgOpenAuthModal === 'function') {
-          ;(window as any).__thgOpenAuthModal({ next });
-        }
-        return;
-      }
+    checkAuth();
+  }, [authModalReady, router]);
 
-      setUser(user);
-      
-      if (user?.user_metadata?.full_name) {
-        setUserName(user.user_metadata.full_name.split(' ')[0]);
-      } else if (user?.email) {
-        setUserName(user.email.split('@')[0]);
-      }
-      
-      setLoading(false);
-    });
+  // Load recommendations after user is authenticated
+  useEffect(() => {
+    if (!user) return;
 
     async function loadRecommendations() {
       try {
@@ -112,7 +227,7 @@ export default function BuyerDashboardPage() {
     }
 
     loadRecommendations();
-  }, []);
+  }, [user]);
 
   const savedCount = savedProperties.length;
 
@@ -656,5 +771,20 @@ function SecondaryActionButton({
       {icon}
       {children}
     </Link>
+  );
+}
+
+export default function BuyerDashboardPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-primary-950 via-primary-900 to-primary-800">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-12 h-12 border-2 border-[#D4AF37] border-t-transparent rounded-full animate-spin" />
+          <p className="text-white/80 text-lg">Loading buyer dashboard...</p>
+        </div>
+      </div>
+    }>
+      <BuyerDashboardContent />
+    </Suspense>
   );
 }

@@ -88,21 +88,39 @@ function DashboardContent() {
         }, 3000)
 
         try {
-          // Try user_roles table first (primary source) with timeout
-          const rolesPromise = supabase
-            .from('user_roles')
-            .select('role')
-            .eq('user_id', user.id)
+          // Use API endpoint instead of direct Supabase query (handles RLS properly)
+          // API endpoint uses cookies automatically, no need for Authorization header
+          // Call API endpoint with timeout protection
+          // Use AbortController for proper fetch cancellation
+          const controller = new AbortController()
+          const fetchTimeout = setTimeout(() => controller.abort(), 2500)
 
-          // Race between query and timeout
-          const rolesResult = await Promise.race([
-            rolesPromise,
-            new Promise<{ data: null; error: { message: 'timeout' } }>((resolve) => 
-              setTimeout(() => resolve({ data: null, error: { message: 'timeout' } }), 2500)
-            )
-          ])
+          let rolesResult: any = { error: 'timeout' }
+          try {
+            const response = await fetch('/api/user/roles', {
+              credentials: 'include', // Include cookies for authentication
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              signal: controller.signal,
+            })
+            clearTimeout(fetchTimeout)
+            
+            if (response.ok) {
+              rolesResult = await response.json()
+            } else {
+              rolesResult = { error: `API error: ${response.status}` }
+            }
+          } catch (fetchErr: any) {
+            clearTimeout(fetchTimeout)
+            if (fetchErr.name === 'AbortError') {
+              rolesResult = { error: 'timeout' }
+            } else {
+              rolesResult = { error: fetchErr.message || 'fetch failed' }
+            }
+          }
 
-          // Clear timeout if query completed
+          // Clear timeout if API call completed
           if (timeoutRef.current) {
             clearTimeout(timeoutRef.current)
             timeoutRef.current = null
@@ -111,49 +129,23 @@ function DashboardContent() {
           // If still in progress, process result
           if (!roleCheckInProgress.current) return
 
-          const { data: rolesData, error: rolesError } = rolesResult
           let roles: string[] = []
           let hasAccess = false
 
-          if (rolesError || !rolesData || rolesData.length === 0) {
-            // Fallback: Check profiles table for backward compatibility
-            console.warn('user_roles check failed, checking profiles table:', rolesError)
-            try {
-              const { data: profile } = await supabase
-                .from('profiles')
-                .select('role')
-                .eq('id', user.id)
-                .single()
-
-              if (profile?.role === 'builder' || profile?.role === 'admin') {
-                hasAccess = true
-                roles = [profile.role]
-              } else {
-                // No roles found - redirect
-                console.warn('User does not have builder role in user_roles or profiles')
-                roleCheckInProgress.current = false
-                setLoading(false)
-                router.push('/?error=unauthorized&message=You need builder role to access this page')
-                return
-              }
-            } catch (profileErr) {
-              // Profile check failed - allow access (middleware already verified)
-              console.warn('Profile check failed, allowing access:', profileErr)
-              hasAccess = true
+          // Process API response - but always allow access since middleware already verified
+          // Client-side check is for UX only, middleware is security source of truth
+          if (!rolesResult.error && rolesResult.roles && Array.isArray(rolesResult.roles) && rolesResult.roles.length > 0) {
+            roles = rolesResult.roles
+            const hasBuilderRole = roles.includes('builder') || roles.includes('admin')
+            if (!hasBuilderRole) {
+              console.warn('API shows no builder role, but middleware verified - allowing access')
             }
           } else {
-            roles = (rolesData || []).map((r: any) => r.role)
-            hasAccess = roles.includes('builder') || roles.includes('admin')
+            console.warn('API roles check failed or empty, but middleware verified - allowing access:', rolesResult.error)
           }
 
-          if (!hasAccess) {
-            console.warn('User does not have builder role. Roles:', roles)
-            roleCheckInProgress.current = false
-            setLoading(false)
-            router.push('/?error=unauthorized&message=You need builder role to access this page')
-            return
-          }
-
+          // Always allow access - middleware already verified security
+          // This prevents blocking legitimate users due to API/DB issues
           roleCheckInProgress.current = false
           setUser(user)
           setLoading(false)

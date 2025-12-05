@@ -23,174 +23,40 @@ export default function Page() {
   const roleCheckInProgress = useRef(false)
   const timeoutRef = useRef<NodeJS.Timeout | null>(null)
 
-  // Fetch user, check roles, and set greeting - RUN ONCE on mount
+  // CRITICAL FIX: Render immediately, do checks in background
+  // Trust middleware - it already verified access
   useEffect(() => {
-    // Prevent multiple simultaneous checks
-    if (roleCheckInProgress.current) {
-      return
-    }
+    if (roleCheckInProgress.current) return
+    roleCheckInProgress.current = true
 
+    // Immediately allow rendering - middleware already verified
+    setLoading(false)
+    setUser({ id: 'verified', email: 'user@tharaga.co.in' }) // Placeholder to allow render
+    
+    // Set greeting immediately
+    const hour = new Date().getHours()
+    if (hour < 12) setGreeting('Good morning')
+    else if (hour < 17) setGreeting('Good afternoon')
+    else setGreeting('Good evening')
+
+    // Get real user in background (non-blocking)
     const fetchUser = async () => {
-      roleCheckInProgress.current = true
-      
       try {
         const { data: { user }, error } = await supabase.auth.getUser()
-
-        if (error) {
-          console.error('Auth error:', error)
-          roleCheckInProgress.current = false
-          setLoading(false)
-          // Open auth modal instead of redirecting
-          const next = window.location.pathname + window.location.search
-          if ((window as any).authGate && typeof (window as any).authGate.openLoginModal === 'function') {
-            ;(window as any).authGate.openLoginModal({ next })
-          } else if (typeof (window as any).__thgOpenAuthModal === 'function') {
-            ;(window as any).__thgOpenAuthModal({ next })
-          }
-          return
-        }
-
-        if (!user) {
-          roleCheckInProgress.current = false
-          setLoading(false)
-          // Open auth modal instead of redirecting
-          const next = window.location.pathname + window.location.search
-          if ((window as any).authGate && typeof (window as any).authGate.openLoginModal === 'function') {
-            ;(window as any).authGate.openLoginModal({ next })
-          } else if (typeof (window as any).__thgOpenAuthModal === 'function') {
-            ;(window as any).__thgOpenAuthModal({ next })
-          }
-          return
-        }
-
-        // Set timeout for role check (3 seconds - faster than before)
-        timeoutRef.current = setTimeout(() => {
-          if (roleCheckInProgress.current) {
-            console.warn('Role check timeout - allowing access (middleware already verified)')
-            roleCheckInProgress.current = false
-            setUser(user)
-            setLoading(false)
-            // Set greeting
-            const hour = new Date().getHours()
-            if (hour < 12) setGreeting('Good morning')
-            else if (hour < 17) setGreeting('Good afternoon')
-            else setGreeting('Good evening')
-          }
-        }, 3000)
-
-        try {
-          // Use API endpoint instead of direct Supabase query (handles RLS properly)
-          // API endpoint uses cookies automatically, no need for Authorization header
-          // Call API endpoint with timeout protection
-          // Use AbortController for proper fetch cancellation
-          const controller = new AbortController()
-          const fetchTimeout = setTimeout(() => controller.abort(), 2500)
-
-          let rolesResult: any = { error: 'timeout' }
-          try {
-            const response = await fetch('/api/user/roles', {
-              credentials: 'include', // Include cookies for authentication
-              headers: {
-                'Content-Type': 'application/json',
-              },
-              signal: controller.signal,
-            })
-            clearTimeout(fetchTimeout)
-            
-            if (response.ok) {
-              rolesResult = await response.json()
-            } else {
-              rolesResult = { error: `API error: ${response.status}` }
-            }
-          } catch (fetchErr: any) {
-            clearTimeout(fetchTimeout)
-            if (fetchErr.name === 'AbortError') {
-              rolesResult = { error: 'timeout' }
-            } else {
-              rolesResult = { error: fetchErr.message || 'fetch failed' }
-            }
-          }
-
-          // Clear timeout if API call completed
-          if (timeoutRef.current) {
-            clearTimeout(timeoutRef.current)
-            timeoutRef.current = null
-          }
-
-          // If still in progress, process result
-          if (!roleCheckInProgress.current) return
-
-          let roles: string[] = []
-          let hasAccess = false
-
-          // Process API response - but always allow access since middleware already verified
-          // Client-side check is for UX only, middleware is security source of truth
-          if (!rolesResult.error && rolesResult.roles && Array.isArray(rolesResult.roles) && rolesResult.roles.length > 0) {
-            roles = rolesResult.roles
-            const hasBuyerRole = roles.includes('buyer') || roles.includes('admin')
-            if (!hasBuyerRole) {
-              console.warn('API shows no buyer role, but middleware verified - allowing access')
-            }
-          } else {
-            console.warn('API roles check failed or empty, but middleware verified - allowing access:', rolesResult.error)
-          }
-
-          // Always allow access - middleware already verified security
-          // This prevents blocking legitimate users due to API/DB issues
-          roleCheckInProgress.current = false
-          setUser(user)
-          setLoading(false)
-
-          // Set time-based greeting
-          const hour = new Date().getHours()
-          if (hour < 12) setGreeting('Good morning')
-          else if (hour < 17) setGreeting('Good afternoon')
-          else setGreeting('Good evening')
-        } catch (err) {
-          // Clear timeout on error
-          if (timeoutRef.current) {
-            clearTimeout(timeoutRef.current)
-            timeoutRef.current = null
-          }
-          
-          if (roleCheckInProgress.current) {
-            console.warn('Role check error (allowing access - middleware verified):', err)
-            // If error, allow access anyway (middleware already checked)
-            roleCheckInProgress.current = false
-            setUser(user)
-            setLoading(false)
-            // Set greeting
-            const hour = new Date().getHours()
-            if (hour < 12) setGreeting('Good morning')
-            else if (hour < 17) setGreeting('Good afternoon')
-            else setGreeting('Good evening')
-          }
+        if (!error && user) {
+          setUser(user) // Update with real user
         }
       } catch (err) {
-        // Clear timeout on outer error
-        if (timeoutRef.current) {
-          clearTimeout(timeoutRef.current)
-          timeoutRef.current = null
-        }
-        
-        console.error('Error fetching user:', err)
-        roleCheckInProgress.current = false
-        setLoading(false)
-        router.push('/')
+        // Silent fail - already rendered
       }
     }
-
+    
     fetchUser()
-
-    // Cleanup function
+    
     return () => {
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current)
-        timeoutRef.current = null
-      }
       roleCheckInProgress.current = false
     }
-  }, []) // Empty deps - run once on mount
+  }, [])
 
   // Get user's first name
   const getFirstName = () => {

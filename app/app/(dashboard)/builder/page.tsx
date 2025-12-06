@@ -9,11 +9,28 @@ function DashboardContent() {
   const [user, setUser] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [authModalReady, setAuthModalReady] = useState(false)
-  const supabase = getSupabase()
+  const [error, setError] = useState<string | null>(null)
+  const [supabase, setSupabase] = useState<any>(null)
   const router = useRouter()
   const searchParams = useSearchParams()
   const [activeSection, setActiveSection] = useState<string>('overview')
   const checkInProgress = useRef(false)
+  const initAttempted = useRef(false)
+
+  // Initialize Supabase client with error handling
+  useEffect(() => {
+    if (initAttempted.current) return
+    initAttempted.current = true
+
+    try {
+      const client = getSupabase()
+      setSupabase(client)
+    } catch (err: any) {
+      console.error('Failed to initialize Supabase:', err)
+      setError(err?.message || 'Failed to initialize database connection')
+      setLoading(false)
+    }
+  }, [])
 
   // Get section from URL params or default to overview
   useEffect(() => {
@@ -72,7 +89,7 @@ function DashboardContent() {
 
   // Check authentication and roles
   useEffect(() => {
-    if (!authModalReady || checkInProgress.current) return
+    if (!authModalReady || !supabase || checkInProgress.current) return
     checkInProgress.current = true
 
     const checkAuth = async () => {
@@ -160,6 +177,27 @@ function DashboardContent() {
 
     checkAuth()
   }, [authModalReady, supabase, router])
+
+  // Show error if Supabase failed to initialize
+  if (error) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="max-w-md mx-auto p-6 bg-red-900/20 border border-red-500 rounded-lg">
+          <h2 className="text-xl font-bold text-red-400 mb-4">Configuration Error</h2>
+          <p className="text-red-200 mb-4">{error}</p>
+          <p className="text-sm text-red-300">
+            Please check the browser console for more details. This usually means environment variables are not configured correctly.
+          </p>
+          <button
+            onClick={() => window.location.reload()}
+            className="mt-4 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded"
+          >
+            Reload Page
+          </button>
+        </div>
+      </div>
+    )
+  }
 
   // Handle section change
   const handleSectionChange = (section: string) => {

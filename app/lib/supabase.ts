@@ -16,9 +16,23 @@ export function getSupabase(): SupabaseClient {
     key = process.env.SUPABASE_SERVICE_ROLE || ''
   }
   if (!url || !key) {
-    throw new Error('Supabase env missing')
+    // Log the error for debugging but provide more context
+    const missingVars = [];
+    if (!url) missingVars.push('NEXT_PUBLIC_SUPABASE_URL');
+    if (!key) missingVars.push('NEXT_PUBLIC_SUPABASE_ANON_KEY');
+
+    console.error(`[Supabase Init Error] Missing environment variables: ${missingVars.join(', ')}`);
+    console.error('Available env vars:', {
+      hasNextPublicUrl: !!process.env.NEXT_PUBLIC_SUPABASE_URL,
+      hasNextPublicKey: !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+      hasUrl: !!process.env.SUPABASE_URL,
+      hasKey: !!process.env.SUPABASE_ANON_KEY,
+      isClient: typeof window !== 'undefined',
+    });
+
+    throw new Error(`Supabase initialization failed: Missing ${missingVars.join(', ')}`)
   }
-  
+
   const client = createClient(url, key, {
     auth: {
       persistSession: true,
@@ -27,11 +41,11 @@ export function getSupabase(): SupabaseClient {
       storage: typeof window !== 'undefined' ? window.localStorage : undefined,
     },
   })
-  
+
   // Cache client instance on client-side
   if (typeof window !== 'undefined') {
     clientInstance = client
   }
-  
+
   return client
 }

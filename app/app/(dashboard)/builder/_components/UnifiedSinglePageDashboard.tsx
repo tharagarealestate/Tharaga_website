@@ -28,6 +28,8 @@ interface UnifiedSinglePageDashboardProps {
 export function UnifiedSinglePageDashboard({ activeSection, onSectionChange }: UnifiedSinglePageDashboardProps) {
   // Listen for section changes from navigation
   useEffect(() => {
+    if (typeof window === 'undefined') return
+    
     const handleSectionChangeEvent = (event: CustomEvent<{ section: string }>) => {
       if (event.detail?.section && event.detail.section !== activeSection) {
         onSectionChange(event.detail.section)
@@ -44,6 +46,7 @@ export function UnifiedSinglePageDashboard({ activeSection, onSectionChange }: U
 
   // Scroll to top when section changes
   useEffect(() => {
+    if (typeof window === 'undefined') return
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }, [activeSection])
 
@@ -93,7 +96,9 @@ export function UnifiedSinglePageDashboard({ activeSection, onSectionChange }: U
             }}
             onAnimationStart={() => {
               // Ensure smooth scroll during transition
-              window.scrollTo({ top: 0, behavior: 'smooth' })
+              if (typeof window !== 'undefined') {
+                window.scrollTo({ top: 0, behavior: 'smooth' })
+              }
             }}
             className="w-full"
           >

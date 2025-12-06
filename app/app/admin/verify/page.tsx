@@ -1,5 +1,6 @@
 "use client"
 import { useEffect, useState } from 'react'
+import Breadcrumb from '@/components/Breadcrumb'
 
 type Row = { id: string, title: string, city: string, locality: string, listed_at: string }
 
@@ -38,6 +39,11 @@ export default function AdminVerifyPage(){
 
   return (
     <main className="mx-auto max-w-3xl px-6 py-8">
+      <Breadcrumb items={[
+        { label: 'Home', href: '/' },
+        { label: 'Admin', href: '/admin' },
+        { label: 'Verify Properties' }
+      ]} />
       <h1 className="text-2xl font-bold text-plum mb-2">Admin · Verify properties</h1>
       {msg && <div className="mb-4 rounded-lg border border-plum/10 bg-white p-3 text-sm text-plum/80">{msg}</div>}
       {busy && <div className="text-sm text-plum/70">Loading…</div>}

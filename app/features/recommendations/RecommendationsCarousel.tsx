@@ -95,7 +95,7 @@ function PropertyCard({ item, onLead }: { item: RecommendationItem; onLead: (pro
   return (
     <div
       ref={cardRef}
-      className="min-w-[280px] max-w-[320px] rounded-xl bg-canvas shadow-card border border-border overflow-hidden will-change-transform touch-pan-y"
+      className="min-w-full md:min-w-[280px] md:max-w-[320px] rounded-xl bg-canvas shadow-card border border-border overflow-hidden will-change-transform touch-pan-y snap-start"
       onPointerDown={(e)=>{ dragState.current = { x0: e.clientX, dragging: true } }}
       onPointerMove={(e)=>{
         if (!dragState.current.dragging || !cardRef.current) return
@@ -213,7 +213,7 @@ function ScrollableRow({ children }: { children: React.ReactNode }) {
         ref={ref}
         data-scroll-row
         tabIndex={0}
-        className="flex gap-4 overflow-x-auto pb-2 scroll-smooth focus:outline-none"
+        className="flex gap-4 overflow-x-auto pb-2 scroll-smooth focus:outline-none snap-x snap-mandatory"
       >
         {children}
       </div>

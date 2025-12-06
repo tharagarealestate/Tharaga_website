@@ -1,6 +1,8 @@
 "use client"
 
 import * as React from 'react'
+import Breadcrumb from '@/components/Breadcrumb'
+import { useTranslations } from 'next-intl'
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
@@ -12,6 +14,7 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 }
 
 export default function VastuPage() {
+  const t = useTranslations('vastu')
   const [entranceDir, setEntranceDir] = React.useState('East')
   const [kitchenDir, setKitchenDir] = React.useState('South-East')
   const [masterBedDir, setMasterBedDir] = React.useState('South-West')
@@ -43,53 +46,70 @@ export default function VastuPage() {
   if (toiletDir === 'North-East') { score -= 20; recommendations.push('Avoid toilet in North-East; consider relocation or ventilation fixes.') }
   if (sunlight !== 'Good') { score -= 10; recommendations.push('Improve natural light and cross-ventilation.') }
 
-  const level = score >= 80 ? 'Excellent' : score >= 60 ? 'Good' : score >= 40 ? 'Average' : 'Poor'
+  const level = score >= 80 ? t('levels.excellent') : score >= 60 ? t('levels.good') : score >= 40 ? t('levels.average') : t('levels.poor')
 
   return (
-    <main className="mx-auto max-w-3xl px-6 py-8">
-      <h1 className="text-2xl font-bold text-plum mb-4">Vastu compliance checker</h1>
+    <div className="min-h-screen bg-gradient-to-br from-primary-950 via-primary-900 to-primary-800 relative overflow-hidden">
+      {/* Animated Background Elements - EXACT from pricing page */}
+      <div className="absolute inset-0 opacity-30">
+        <div className="absolute top-20 left-10 w-96 h-96 bg-gold-500 rounded-full blur-3xl animate-pulse-slow" />
+        <div
+          className="absolute bottom-20 right-10 w-[600px] h-[600px] bg-emerald-500 rounded-full blur-3xl animate-pulse-slow"
+          style={{ animationDelay: '1s' }}
+        />
+      </div>
+
+      <div className="relative z-10">
+        <main className="mx-auto max-w-3xl px-6 py-8">
+      <Breadcrumb items={[
+        { label: 'Home', href: '/' },
+        { label: 'Vastu Checker' }
+      ]} />
+      <h1 className="text-2xl font-bold text-plum mb-4">{t('title')}</h1>
       <div className="rounded-xl border border-plum/10 bg-brandWhite p-4 space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <Field label="Entrance direction">
+          <Field label={t('fields.entrance')}>
             <select className="w-full rounded-lg border px-3 py-2" value={entranceDir} onChange={(e)=>setEntranceDir(e.target.value)}>
               {['East','North-East','North','West','South','South-West','North-West'].map(o => <option key={o} value={o}>{o}</option>)}
             </select>
           </Field>
-          <Field label="Kitchen direction">
+          <Field label={t('fields.kitchen')}>
             <select className="w-full rounded-lg border px-3 py-2" value={kitchenDir} onChange={(e)=>setKitchenDir(e.target.value)}>
               {['South-East','North-West','North','West','East','South','South-West'].map(o => <option key={o} value={o}>{o}</option>)}
             </select>
           </Field>
-          <Field label="Master bedroom">
+          <Field label={t('fields.master')}>
             <select className="w-full rounded-lg border px-3 py-2" value={masterBedDir} onChange={(e)=>setMasterBedDir(e.target.value)}>
               {['South-West','North-East','North-West','South-East'].map(o => <option key={o} value={o}>{o}</option>)}
             </select>
           </Field>
-          <Field label="Toilet location">
+          <Field label={t('fields.toilet')}>
             <select className="w-full rounded-lg border px-3 py-2" value={toiletDir} onChange={(e)=>setToiletDir(e.target.value)}>
               {['North-West','West','South','South-West','North-East'].map(o => <option key={o} value={o}>{o}</option>)}
             </select>
           </Field>
-          <Field label="Sunlight & ventilation">
+          <Field label={t('fields.sunVent')}>
             <select className="w-full rounded-lg border px-3 py-2" value={sunlight} onChange={(e)=>setSunlight(e.target.value)}>
               {['Good','Average','Poor'].map(o => <option key={o} value={o}>{o}</option>)}
             </select>
           </Field>
         </div>
         <div className="rounded-lg bg-plum/5 border border-plum/10 p-4">
-          <div className="text-sm text-plum/70">Compliance score</div>
+          <div className="text-sm text-plum/70">{t('scoreLabel')}</div>
           <div className="text-xl font-bold">{score}/100 · {level}</div>
-          <div className="text-xs text-plum/60">Detected facing: {facing}</div>
+          <div className="text-xs text-plum/60">{t('detectedFacing')}: {facing}</div>
         </div>
         {!!recommendations.length && (
           <div className="rounded-lg border border-plum/10 p-3">
-            <div className="font-semibold mb-2">Recommendations</div>
+            <div className="font-semibold mb-2">{t('reco')}</div>
             <ul className="list-disc pl-5 space-y-1">
               {recommendations.map((r,i)=>(<li key={i}>{r}</li>))}
             </ul>
           </div>
         )}
       </div>
-    </main>
+        </main>
+      </div>
+    </div>
   )
 }

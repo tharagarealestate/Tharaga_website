@@ -1,5 +1,6 @@
 "use client"
 import { useEffect, useState } from 'react'
+import Breadcrumb from '@/components/Breadcrumb'
 
 type Lead = { id: string, created_at: string, property_id: string, name: string, email: string, phone: string, message: string }
 
@@ -20,6 +21,11 @@ export default function AdminLeadsPage(){
 
   return (
     <main className="mx-auto max-w-5xl px-6 py-8">
+      <Breadcrumb items={[
+        { label: 'Home', href: '/' },
+        { label: 'Admin', href: '/admin' },
+        { label: 'Leads' }
+      ]} />
       <h1 className="text-2xl font-bold text-plum mb-2">Admin · Leads</h1>
       {msg && <div className="mb-4 rounded-lg border border-plum/10 bg-white p-3 text-sm text-plum/80">{msg}</div>}
       {busy && <div className="text-sm text-plum/70">Loading…</div>}

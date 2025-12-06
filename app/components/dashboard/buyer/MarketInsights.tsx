@@ -6,7 +6,7 @@ import {
   TrendingUp, TrendingDown, Minus, MapPin, BarChart3, Activity,
   Train, Building, Sparkles, ChevronRight, RefreshCw
 } from 'lucide-react';
-import { getSupabase } from '@/lib/supabase';
+import { useSupabase } from '@/contexts/SupabaseContext';
 
 interface MarketInsight {
   id: string;
@@ -36,7 +36,7 @@ export default function MarketInsights() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [selectedLocality, setSelectedLocality] = useState<string | null>(null);
-  const supabase = getSupabase();
+  const { supabase } = useSupabase();
 
   // Fetch insights based on user preferences
   const fetchInsights = useCallback(async (showRefresh = false) => {

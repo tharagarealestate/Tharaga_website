@@ -31,7 +31,8 @@
       "Bash(cp:*)",
       "Bash(git rebase:*)",
       "Bash(git checkout:*)",
-      "Bash(git config:*)"
+      "Bash(git config:*)",
+      "Bash(bash fix-buyer-components.sh:*)"
     ],
     "deny": [],
     "ask": []

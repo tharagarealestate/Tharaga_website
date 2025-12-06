@@ -2,35 +2,18 @@
 
 import { useState, useEffect, Suspense, useRef } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { getSupabase } from '@/lib/supabase'
+import { SupabaseProvider, useSupabase } from '@/contexts/SupabaseContext'
 import { UnifiedSinglePageDashboard } from './_components/UnifiedSinglePageDashboard'
 
 function DashboardContent() {
   const [user, setUser] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [authModalReady, setAuthModalReady] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [supabase, setSupabase] = useState<any>(null)
+  const { supabase, error, isLoading: supabaseLoading } = useSupabase()
   const router = useRouter()
   const searchParams = useSearchParams()
   const [activeSection, setActiveSection] = useState<string>('overview')
   const checkInProgress = useRef(false)
-  const initAttempted = useRef(false)
-
-  // Initialize Supabase client with error handling
-  useEffect(() => {
-    if (initAttempted.current) return
-    initAttempted.current = true
-
-    try {
-      const client = getSupabase()
-      setSupabase(client)
-    } catch (err: any) {
-      console.error('Failed to initialize Supabase:', err)
-      setError(err?.message || 'Failed to initialize database connection')
-      setLoading(false)
-    }
-  }, [])
 
   // Get section from URL params or default to overview
   useEffect(() => {
@@ -89,7 +72,7 @@ function DashboardContent() {
 
   // Check authentication and roles
   useEffect(() => {
-    if (!authModalReady || !supabase || checkInProgress.current) return
+    if (!authModalReady || !supabase || supabaseLoading || checkInProgress.current) return
     checkInProgress.current = true
 
     const checkAuth = async () => {
@@ -176,7 +159,7 @@ function DashboardContent() {
     }
 
     checkAuth()
-  }, [authModalReady, supabase, router])
+  }, [authModalReady, supabase, supabaseLoading, router])
 
   // Show error if Supabase failed to initialize
   if (error) {
@@ -239,15 +222,17 @@ function DashboardContent() {
 
 export default function BuilderDashboardPage() {
   return (
-    <Suspense fallback={
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="flex flex-col items-center gap-4">
-          <div className="w-12 h-12 border-2 border-[#D4AF37] border-t-transparent rounded-full animate-spin" />
-          <p className="text-gray-400">Loading...</p>
+    <SupabaseProvider>
+      <Suspense fallback={
+        <div className="flex items-center justify-center min-h-[60vh]">
+          <div className="flex flex-col items-center gap-4">
+            <div className="w-12 h-12 border-2 border-[#D4AF37] border-t-transparent rounded-full animate-spin" />
+            <p className="text-gray-400">Loading...</p>
+          </div>
         </div>
-      </div>
-    }>
-      <DashboardContent />
-    </Suspense>
+      }>
+        <DashboardContent />
+      </Suspense>
+    </SupabaseProvider>
   )
 }

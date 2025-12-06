@@ -2,8 +2,8 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { motion } from 'framer-motion'
-import { getSupabase } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
+import { SupabaseProvider, useSupabase } from '@/contexts/SupabaseContext'
 
 // Import all components
 import DashboardHeader from '@/components/dashboard/buyer/DashboardHeader'
@@ -12,38 +12,21 @@ import SavedProperties from '@/components/dashboard/buyer/SavedProperties'
 import DocumentVault from '@/components/dashboard/buyer/DocumentVault'
 import MarketInsights from '@/components/dashboard/buyer/MarketInsights'
 
-export default function Page() {
+function DashboardContent() {
   const [user, setUser] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [greeting, setGreeting] = useState('Hello')
-  const [error, setError] = useState<string | null>(null)
-  const [supabase, setSupabase] = useState<any>(null)
   const router = useRouter()
+  const { supabase, error, isLoading: supabaseLoading } = useSupabase()
 
   // Use ref to prevent multiple simultaneous role checks
   const roleCheckInProgress = useRef(false)
   const timeoutRef = useRef<NodeJS.Timeout | null>(null)
-  const initAttempted = useRef(false)
-
-  // Initialize Supabase client with error handling
-  useEffect(() => {
-    if (initAttempted.current) return
-    initAttempted.current = true
-
-    try {
-      const client = getSupabase()
-      setSupabase(client)
-    } catch (err: any) {
-      console.error('Failed to initialize Supabase:', err)
-      setError(err?.message || 'Failed to initialize database connection')
-      setLoading(false)
-    }
-  }, [])
 
   // CRITICAL FIX: Render immediately, do checks in background
   // Trust middleware - it already verified access
   useEffect(() => {
-    if (roleCheckInProgress.current || !supabase) return
+    if (roleCheckInProgress.current || !supabase || supabaseLoading) return
     roleCheckInProgress.current = true
 
     // Immediately allow rendering - middleware already verified
@@ -73,7 +56,7 @@ export default function Page() {
     return () => {
       roleCheckInProgress.current = false
     }
-  }, [supabase])
+  }, [supabase, supabaseLoading])
 
   // Get user's first name
   const getFirstName = () => {
@@ -232,5 +215,13 @@ export default function Page() {
         }
       `}</style>
     </div>
+  );
+}
+
+export default function Page() {
+  return (
+    <SupabaseProvider>
+      <DashboardContent />
+    </SupabaseProvider>
   );
 }

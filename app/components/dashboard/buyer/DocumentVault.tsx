@@ -8,7 +8,7 @@ import {
   Image as ImageIcon, FileSpreadsheet, Plus, X,
   ShieldCheck, Fingerprint, Key
 } from 'lucide-react';
-import { getSupabase } from '@/lib/supabase';
+import { useSupabase } from '@/contexts/SupabaseContext';
 import { formatDistanceToNow } from 'date-fns';
 
 interface Document {
@@ -43,7 +43,7 @@ export default function DocumentVault() {
   const [selectedType, setSelectedType] = useState<string>('');
   const [dragActive, setDragActive] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const supabase = getSupabase();
+  const { supabase } = useSupabase();
 
   // Fetch documents
   const fetchDocuments = useCallback(async () => {

@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Bell, X, Check, ChevronRight, TrendingDown, TrendingUp, Home, Calendar, FileCheck } from 'lucide-react';
-import { getSupabase } from '@/lib/supabase';
+import { useSupabase } from '@/contexts/SupabaseContext';
 import { formatDistanceToNow } from 'date-fns';
 
 interface Notification {
@@ -23,7 +23,7 @@ export default function DashboardHeader() {
   const [unreadCount, setUnreadCount] = useState(0);
   const [isOpen, setIsOpen] = useState(false);
   const panelRef = useRef<HTMLDivElement>(null);
-  const supabase = getSupabase();
+  const { supabase } = useSupabase();
 
   // Fetch notifications on mount
   useEffect(() => {

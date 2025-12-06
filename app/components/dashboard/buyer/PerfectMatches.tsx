@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Sparkles, Heart, MapPin, ArrowRight, RefreshCw } from 'lucide-react';
-import { getSupabase } from '@/lib/supabase';
+import { useSupabase } from '@/contexts/SupabaseContext';
 import Image from 'next/image';
 import Link from 'next/link';
 
@@ -42,7 +42,7 @@ export default function PerfectMatches() {
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [hoveredId, setHoveredId] = useState<string | null>(null);
-  const supabase = getSupabase();
+  const { supabase } = useSupabase();
 
   // Fetch recommendations
   const fetchRecommendations = useCallback(async (showRefresh = false) => {

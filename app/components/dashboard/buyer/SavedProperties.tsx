@@ -7,7 +7,7 @@ import {
   TrendingDown, TrendingUp, Minus, MapPin, MoreVertical, Star,
   X, Check, ArrowRight, Grid3X3, List
 } from 'lucide-react';
-import { getSupabase } from '@/lib/supabase';
+import { useSupabase } from '@/contexts/SupabaseContext';
 import Image from 'next/image';
 import Link from 'next/link';
 
@@ -52,7 +52,7 @@ export default function SavedProperties() {
   const [newFolderName, setNewFolderName] = useState('');
   const [editingNote, setEditingNote] = useState<string | null>(null);
   const [tempNote, setTempNote] = useState('');
-  const supabase = getSupabase();
+  const { supabase } = useSupabase();
 
   // Folder colors
   const FOLDER_COLORS = [

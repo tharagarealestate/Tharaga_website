@@ -66,6 +66,11 @@ export default function SavedProperties() {
 
   // Fetch saved properties
   const fetchSaved = useCallback(async () => {
+    if (!supabase) {
+      setLoading(false);
+      return;
+    }
+
     try {
       setLoading(true);
       const { data: { user } } = await supabase.auth.getUser();
@@ -123,6 +128,8 @@ export default function SavedProperties() {
 
   // Real-time subscription
   useEffect(() => {
+    if (!supabase) return;
+
     const channel = supabase
       .channel('favorites-changes')
       .on(

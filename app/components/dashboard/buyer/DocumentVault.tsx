@@ -47,6 +47,11 @@ export default function DocumentVault() {
 
   // Fetch documents
   const fetchDocuments = useCallback(async () => {
+    if (!supabase) {
+      setLoading(false);
+      return;
+    }
+
     try {
       setLoading(true);
       const { data: { user } } = await supabase.auth.getUser();

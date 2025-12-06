@@ -40,6 +40,11 @@ export default function MarketInsights() {
 
   // Fetch insights based on user preferences
   const fetchInsights = useCallback(async (showRefresh = false) => {
+    if (!supabase) {
+      setLoading(false);
+      return;
+    }
+
     try {
       if (showRefresh) setRefreshing(true);
       else setLoading(true);
@@ -89,6 +94,8 @@ export default function MarketInsights() {
 
   // Real-time subscription
   useEffect(() => {
+    if (!supabase) return;
+
     const channel = supabase
       .channel('market-updates')
       .on(

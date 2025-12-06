@@ -27,6 +27,8 @@ export default function DashboardHeader() {
 
   // Fetch notifications on mount
   useEffect(() => {
+    if (!supabase) return;
+
     const fetchNotifications = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
@@ -49,6 +51,8 @@ export default function DashboardHeader() {
 
   // Real-time subscription
   useEffect(() => {
+    if (!supabase) return;
+
     const channel = supabase
       .channel('notifications-realtime')
       .on(

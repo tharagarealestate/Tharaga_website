@@ -120,6 +120,8 @@ export default function PerfectMatches() {
 
   // Real-time subscription for new properties
   useEffect(() => {
+    if (!supabase) return;
+
     const channel = supabase
       .channel('new-properties')
       .on(

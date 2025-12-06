@@ -46,6 +46,12 @@ export default function PerfectMatches() {
 
   // Fetch recommendations
   const fetchRecommendations = useCallback(async (showRefresh = false) => {
+    if (!supabase) {
+      setError('Database connection not ready');
+      setLoading(false);
+      return;
+    }
+
     try {
       if (showRefresh) setRefreshing(true);
       else setLoading(true);

@@ -47,14 +47,16 @@ export function UnifiedSinglePageDashboard({ activeSection, onSectionChange }: U
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }, [activeSection])
 
-  // Sync with URL parameter on mount and when URL changes
+  // Sync with URL parameter on mount only (client-side)
   useEffect(() => {
+    if (typeof window === 'undefined') return
     const urlParams = new URLSearchParams(window.location.search)
     const sectionParam = urlParams.get('section') || 'overview'
     if (sectionParam !== activeSection) {
       onSectionChange(sectionParam)
     }
-  }, [])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []) // Only run once on mount
 
   const sectionComponents: Record<string, React.ComponentType<{ onNavigate?: (section: string) => void }>> = {
     overview: OverviewSection,

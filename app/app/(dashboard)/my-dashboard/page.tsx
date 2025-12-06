@@ -1,5 +1,8 @@
 'use client'
 
+// Force dynamic rendering to prevent static generation errors
+export const dynamic = 'force-dynamic'
+
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { getSupabase } from '@/lib/supabase'

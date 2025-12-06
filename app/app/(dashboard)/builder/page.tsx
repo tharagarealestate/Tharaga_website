@@ -1,13 +1,18 @@
 'use client'
 
+// Force dynamic rendering to prevent static generation errors
+export const dynamic = 'force-dynamic'
+
 import { useState, useEffect, Suspense } from 'react'
 import { UnifiedSinglePageDashboard } from './_components/UnifiedSinglePageDashboard'
 
 function DashboardContent() {
   const [activeSection, setActiveSection] = useState<string>('overview')
+  const [mounted, setMounted] = useState(false)
 
-  // Get section from URL params on mount
+  // Set mounted and initial section on client only
   useEffect(() => {
+    setMounted(true)
     if (typeof window !== 'undefined') {
       const urlParams = new URLSearchParams(window.location.search)
       const section = urlParams.get('section') || 'overview'
@@ -17,6 +22,8 @@ function DashboardContent() {
   
   // Handle browser back/forward buttons
   useEffect(() => {
+    if (!mounted || typeof window === 'undefined') return
+    
     const handlePopState = () => {
       const urlParams = new URLSearchParams(window.location.search)
       const section = urlParams.get('section') || 'overview'
@@ -25,15 +32,17 @@ function DashboardContent() {
     
     window.addEventListener('popstate', handlePopState)
     return () => window.removeEventListener('popstate', handlePopState)
-  }, [])
+  }, [mounted])
 
   // Handle section change
   const handleSectionChange = (section: string) => {
     setActiveSection(section)
     // Update URL without page reload
-    const url = new URL(window.location.href)
-    url.searchParams.set('section', section)
-    window.history.pushState({}, '', url.toString())
+    if (typeof window !== 'undefined') {
+      const url = new URL(window.location.href)
+      url.searchParams.set('section', section)
+      window.history.pushState({}, '', url.toString())
+    }
   }
 
   // Render immediately - middleware already verified access

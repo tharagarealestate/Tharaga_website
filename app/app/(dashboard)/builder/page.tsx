@@ -1,20 +1,12 @@
 'use client'
 
-import { useState, useEffect, Suspense, useRef } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
-import { getSupabase } from '@/lib/supabase'
+import { useState, useEffect, Suspense } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { UnifiedSinglePageDashboard } from './_components/UnifiedSinglePageDashboard'
 
 function DashboardContent() {
-  const [user, setUser] = useState<any>(null)
-  const [loading, setLoading] = useState(true)
-  const supabase = getSupabase()
-  const router = useRouter()
   const searchParams = useSearchParams()
   const [activeSection, setActiveSection] = useState<string>('overview')
-  
-  // Use ref to prevent multiple simultaneous role checks
-  const roleCheckInProgress = useRef(false)
 
   // Get section from URL params or default to overview
   useEffect(() => {
@@ -36,73 +28,6 @@ function DashboardContent() {
     return () => window.removeEventListener('popstate', handlePopState)
   }, [])
 
-  // Fetch user with timeout - RUN ONCE on mount
-  useEffect(() => {
-    // Prevent multiple simultaneous checks
-    if (roleCheckInProgress.current) {
-      return
-    }
-
-    roleCheckInProgress.current = true
-    
-    // Set timeout to prevent infinite loading
-    const timeoutId = setTimeout(() => {
-      if (loading) {
-        console.warn('Auth check timeout - rendering anyway (middleware verified)')
-        setLoading(false)
-        // Use placeholder user to allow rendering
-        setUser({ id: 'verified', email: 'user@tharaga.co.in' })
-        roleCheckInProgress.current = false
-      }
-    }, 2000) // 2 second timeout
-
-    const fetchUser = async () => {
-      try {
-        // Race auth call against timeout
-        const authPromise = supabase.auth.getUser()
-        const timeoutPromise = new Promise((resolve) => setTimeout(() => resolve(null), 1500))
-        
-        const result = await Promise.race([authPromise, timeoutPromise]) as any
-
-        clearTimeout(timeoutId)
-
-        if (result && result.data && result.data.user) {
-          // Success - got user
-          setUser(result.data.user)
-          setLoading(false)
-          roleCheckInProgress.current = false
-        } else if (result && result.error) {
-          // Auth error
-          console.warn('Auth error (rendering anyway):', result.error)
-          setLoading(false)
-          setUser({ id: 'verified', email: 'user@tharaga.co.in' })
-          roleCheckInProgress.current = false
-        } else {
-          // Timeout - render anyway
-          console.warn('Auth timeout - rendering anyway (middleware verified)')
-          setLoading(false)
-          setUser({ id: 'verified', email: 'user@tharaga.co.in' })
-          roleCheckInProgress.current = false
-        }
-      } catch (err) {
-        clearTimeout(timeoutId)
-        console.warn('Auth error (rendering anyway):', err)
-        setLoading(false)
-        // Render anyway - middleware already verified
-        setUser({ id: 'verified', email: 'user@tharaga.co.in' })
-        roleCheckInProgress.current = false
-      }
-    }
-
-    fetchUser()
-
-    // Cleanup function
-    return () => {
-      clearTimeout(timeoutId)
-      roleCheckInProgress.current = false
-    }
-  }, []) // Empty deps - run once on mount
-
   // Handle section change
   const handleSectionChange = (section: string) => {
     setActiveSection(section)
@@ -112,21 +37,7 @@ function DashboardContent() {
     window.history.pushState({}, '', url.toString())
   }
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="flex flex-col items-center gap-4">
-          <div className="w-12 h-12 border-2 border-[#D4AF37] border-t-transparent rounded-full animate-spin" />
-          <p className="text-gray-400">Loading your dashboard...</p>
-        </div>
-      </div>
-    )
-  }
-
-  if (!user) {
-    return null
-  }
-
+  // Render immediately - middleware already verified access
   return (
     <UnifiedSinglePageDashboard 
       activeSection={activeSection} 

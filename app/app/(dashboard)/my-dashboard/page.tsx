@@ -1,9 +1,8 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { getSupabase } from '@/lib/supabase'
-import { useRouter } from 'next/navigation'
 
 // Import all components
 import DashboardHeader from '@/components/dashboard/buyer/DashboardHeader'
@@ -14,129 +13,43 @@ import MarketInsights from '@/components/dashboard/buyer/MarketInsights'
 
 export default function Page() {
   const [user, setUser] = useState<any>(null)
-  const [loading, setLoading] = useState(true)
   const [greeting, setGreeting] = useState('Hello')
   const supabase = getSupabase()
-  const router = useRouter()
-  
-  // Use ref to prevent multiple simultaneous role checks
-  const roleCheckInProgress = useRef(false)
 
-  // Fetch user with timeout - RUN ONCE on mount
+  // Set greeting immediately
   useEffect(() => {
-    // Prevent multiple simultaneous checks
-    if (roleCheckInProgress.current) {
-      return
-    }
-
-    roleCheckInProgress.current = true
-
-    // Set greeting immediately
     const hour = new Date().getHours()
     if (hour < 12) setGreeting('Good morning')
     else if (hour < 17) setGreeting('Good afternoon')
     else setGreeting('Good evening')
-    
-    // Set timeout to prevent infinite loading
-    const timeoutId = setTimeout(() => {
-      if (loading) {
-        console.warn('Auth check timeout - rendering anyway (middleware verified)')
-        setLoading(false)
-        // Use placeholder user to allow rendering
-        setUser({ id: 'verified', email: 'user@tharaga.co.in' })
-        roleCheckInProgress.current = false
-      }
-    }, 2000) // 2 second timeout
+  }, [])
 
+  // Fetch user in background (non-blocking)
+  useEffect(() => {
     const fetchUser = async () => {
       try {
-        // Race auth call against timeout
-        const authPromise = supabase.auth.getUser()
-        const timeoutPromise = new Promise((resolve) => setTimeout(() => resolve(null), 1500))
-        
-        const result = await Promise.race([authPromise, timeoutPromise]) as any
-
-        clearTimeout(timeoutId)
-
-        if (result && result.data && result.data.user) {
-          // Success - got user
-          setUser(result.data.user)
-          setLoading(false)
-          roleCheckInProgress.current = false
-        } else if (result && result.error) {
-          // Auth error - render anyway
-          console.warn('Auth error (rendering anyway):', result.error)
-          setLoading(false)
-          setUser({ id: 'verified', email: 'user@tharaga.co.in' })
-          roleCheckInProgress.current = false
-        } else {
-          // Timeout - render anyway
-          console.warn('Auth timeout - rendering anyway (middleware verified)')
-          setLoading(false)
-          setUser({ id: 'verified', email: 'user@tharaga.co.in' })
-          roleCheckInProgress.current = false
+        const { data: { user }, error } = await supabase.auth.getUser()
+        if (!error && user) {
+          setUser(user)
         }
       } catch (err) {
-        clearTimeout(timeoutId)
-        console.warn('Auth error (rendering anyway):', err)
-        setLoading(false)
-        // Render anyway - middleware already verified
-        setUser({ id: 'verified', email: 'user@tharaga.co.in' })
-        roleCheckInProgress.current = false
+        // Silent fail
       }
     }
-
     fetchUser()
-
-    // Cleanup function
-    return () => {
-      clearTimeout(timeoutId)
-      roleCheckInProgress.current = false
-    }
-  }, []) // Empty deps - run once on mount
+  }, [])
 
   // Get user's first name
   const getFirstName = () => {
-    if (!user) return ''
+    if (!user) return 'there'
     const fullName = user.user_metadata?.full_name || user.email
     return fullName.split(' ')[0].split('@')[0]
   }
 
-  // Loading state
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-primary-950 via-primary-900 to-primary-800 relative overflow-hidden">
-        {/* Animated Background Elements - EXACT from pricing page */}
-        <div className="absolute inset-0 opacity-30">
-          <div className="absolute top-20 left-10 w-96 h-96 bg-gold-500 rounded-full blur-3xl animate-pulse-slow" />
-          <div
-            className="absolute bottom-20 right-10 w-[600px] h-[600px] bg-emerald-500 rounded-full blur-3xl animate-pulse-slow"
-            style={{ animationDelay: '1s' }}
-          />
-        </div>
-        
-        <div className="relative z-10">
-        <div className="container mx-auto px-4 py-8">
-          <div className="flex items-center justify-center min-h-[60vh]">
-            <div className="flex flex-col items-center gap-4">
-              <div className="w-12 h-12 border-2 border-[#D4AF37] border-t-transparent rounded-full animate-spin" />
-              <p className="text-gray-400">Loading your dashboard...</p>
-            </div>
-          </div>
-        </div>
-        </div>
-      </div>
-    )
-  }
-  
-  // Show nothing while redirecting or if no user
-  if (!user) {
-    return null
-  }
-
+  // Render immediately - middleware already verified access
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary-950 via-primary-900 to-primary-800 relative overflow-hidden">
-      {/* Animated Background Elements - EXACT from pricing page */}
+      {/* Animated Background Elements */}
       <div className="absolute inset-0 opacity-30">
         <div className="absolute top-20 left-10 w-96 h-96 bg-gold-500 rounded-full blur-3xl animate-pulse-slow" />
         <div
@@ -146,7 +59,7 @@ export default function Page() {
       </div>
       
       <div className="relative z-10">
-      {/* Notification Header - Fixed */}
+      {/* Notification Header */}
       <DashboardHeader />
 
       {/* Main Content */}

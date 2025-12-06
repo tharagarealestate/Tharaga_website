@@ -1,20 +1,19 @@
 'use client'
 
 import { useState, useEffect, Suspense } from 'react'
-import { useSearchParams } from 'next/navigation'
 import { UnifiedSinglePageDashboard } from './_components/UnifiedSinglePageDashboard'
 
 function DashboardContent() {
-  const searchParams = useSearchParams()
   const [activeSection, setActiveSection] = useState<string>('overview')
 
-  // Get section from URL params or default to overview
+  // Get section from URL params on mount
   useEffect(() => {
-    const section = searchParams.get('section') || 'overview'
-    if (section !== activeSection) {
+    if (typeof window !== 'undefined') {
+      const urlParams = new URLSearchParams(window.location.search)
+      const section = urlParams.get('section') || 'overview'
       setActiveSection(section)
     }
-  }, [searchParams, activeSection])
+  }, [])
   
   // Handle browser back/forward buttons
   useEffect(() => {

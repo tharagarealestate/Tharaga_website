@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, Suspense, useRef } from 'react'
+import { useState, useEffect, Suspense, useRef, useCallback } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { SupabaseProvider, useSupabase } from '@/contexts/SupabaseContext'
 import { UnifiedSinglePageDashboard } from './_components/UnifiedSinglePageDashboard'
@@ -70,99 +70,137 @@ function DashboardContent() {
     return () => clearInterval(interval)
   }, [])
 
-  // Check authentication and roles
+  // Check authentication and roles - use useCallback to avoid dependency issues
+  const checkAuthAndRoles = useCallback(async (authUser: any) => {
+    if (!supabase) return
+    
+    if (!authUser) {
+      console.log('User not authenticated, opening auth modal')
+      setLoading(false)
+      setUser(null)
+      
+      // Wait a bit more for auth modal to be fully ready
+      await new Promise(resolve => setTimeout(resolve, 300))
+      
+      const next = window.location.pathname + window.location.search
+      if ((window as any).authGate && typeof (window as any).authGate.openLoginModal === 'function') {
+        (window as any).authGate.openLoginModal({ next })
+      } else if (typeof (window as any).__thgOpenAuthModal === 'function') {
+        (window as any).__thgOpenAuthModal({ next })
+      }
+      return
+    }
+
+    // Check user roles with timeout
+    let roleCheckCompleted = false
+    const roleCheckTimeout = setTimeout(() => {
+      if (!roleCheckCompleted) {
+        console.warn('Role check timeout, allowing access')
+        roleCheckCompleted = true
+        setUser(authUser)
+        setLoading(false)
+      }
+    }, 5000)
+
+    try {
+      const { data: rolesData, error: rolesError } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', authUser.id)
+
+      clearTimeout(roleCheckTimeout)
+
+      if (roleCheckCompleted) return
+
+      if (rolesError) {
+        console.warn('Error fetching roles (allowing access):', rolesError)
+        setUser(authUser)
+        setLoading(false)
+        return
+      }
+
+      const roles = (rolesData || []).map((r: any) => r.role)
+      const hasAccess = roles.includes('builder') || roles.includes('admin')
+
+      if (!hasAccess) {
+        console.warn('User does not have builder role. Roles:', roles)
+        setLoading(false)
+        setUser(null)
+        router.push('/?error=unauthorized&message=You need builder role to access this page')
+        return
+      }
+
+      roleCheckCompleted = true
+      setUser(authUser)
+      setLoading(false)
+    } catch (err) {
+      clearTimeout(roleCheckTimeout)
+      if (!roleCheckCompleted) {
+        console.warn('Role check error (allowing access):', err)
+        setUser(authUser)
+        setLoading(false)
+      }
+    }
+  }, [supabase, router])
+
+  // Initial auth check
   useEffect(() => {
     if (!authModalReady || !supabase || supabaseLoading || checkInProgress.current) return
     checkInProgress.current = true
 
-    const checkAuth = async () => {
+    const performAuthCheck = async () => {
       try {
-        // Check authentication
         const { data: { user: authUser }, error: authError } = await supabase.auth.getUser()
-
-        if (authError || !authUser) {
-          console.log('User not authenticated, opening auth modal')
-          setLoading(false)
-          
-          // Wait a bit more for auth modal to be fully ready
-          await new Promise(resolve => setTimeout(resolve, 200))
-          
-          const next = window.location.pathname + window.location.search
-          if ((window as any).authGate && typeof (window as any).authGate.openLoginModal === 'function') {
-            (window as any).authGate.openLoginModal({ next })
-          } else if (typeof (window as any).__thgOpenAuthModal === 'function') {
-            (window as any).__thgOpenAuthModal({ next })
-          }
-          return
-        }
-
-        // Check user roles with timeout
-        let roleCheckCompleted = false
-        const roleCheckTimeout = setTimeout(() => {
-          if (!roleCheckCompleted) {
-            console.warn('Role check timeout, allowing access')
-            roleCheckCompleted = true
-            setUser(authUser)
-            setLoading(false)
-          }
-        }, 5000)
-
-        try {
-          const { data: rolesData, error: rolesError } = await supabase
-            .from('user_roles')
-            .select('role')
-            .eq('user_id', authUser.id)
-
-          clearTimeout(roleCheckTimeout)
-
-          if (roleCheckCompleted) return
-
-          if (rolesError) {
-            console.warn('Error fetching roles (allowing access):', rolesError)
-            setUser(authUser)
-            setLoading(false)
-            return
-          }
-
-          const roles = (rolesData || []).map((r: any) => r.role)
-          const hasAccess = roles.includes('builder') || roles.includes('admin')
-
-          if (!hasAccess) {
-            console.warn('User does not have builder role. Roles:', roles)
-            setLoading(false)
-            router.push('/?error=unauthorized&message=You need builder role to access this page')
-            return
-          }
-
-          roleCheckCompleted = true
-          setUser(authUser)
-          setLoading(false)
-        } catch (err) {
-          clearTimeout(roleCheckTimeout)
-          if (!roleCheckCompleted) {
-            console.warn('Role check error (allowing access):', err)
-            setUser(authUser)
-            setLoading(false)
-          }
+        
+        if (authError) {
+          console.error('Auth error:', authError)
+          await checkAuthAndRoles(null)
+        } else {
+          await checkAuthAndRoles(authUser)
         }
       } catch (err) {
         console.error('Error checking auth:', err)
+        await checkAuthAndRoles(null)
+      } finally {
+        checkInProgress.current = false
+      }
+    }
+
+    performAuthCheck()
+  }, [authModalReady, supabase, supabaseLoading, checkAuthAndRoles])
+
+  // Listen for auth state changes (user logs in/out after page load)
+  useEffect(() => {
+    if (!supabase) return
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log('[Builder Dashboard] Auth state changed:', event, session?.user?.email || 'none')
+      
+      // Reset checkInProgress to allow re-check
+      checkInProgress.current = false
+      
+      if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+        if (session?.user) {
+          setLoading(true)
+          await checkAuthAndRoles(session.user)
+        }
+      } else if (event === 'SIGNED_OUT') {
+        setUser(null)
         setLoading(false)
-        // Open auth modal on error
+        // Open auth modal
         const next = window.location.pathname + window.location.search
         if ((window as any).authGate && typeof (window as any).authGate.openLoginModal === 'function') {
           (window as any).authGate.openLoginModal({ next })
         } else if (typeof (window as any).__thgOpenAuthModal === 'function') {
           (window as any).__thgOpenAuthModal({ next })
         }
-      } finally {
-        // Reset checkInProgress to allow retry if needed
-        checkInProgress.current = false
       }
-    }
+    })
 
-    checkAuth()
-  }, [authModalReady, supabase, supabaseLoading, router])
+    return () => {
+      subscription.unsubscribe()
+    }
+  }, [supabase, checkAuthAndRoles])
 
   // Show error if Supabase failed to initialize
   if (error) {

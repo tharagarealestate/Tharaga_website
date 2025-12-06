@@ -1,19 +1,20 @@
 'use client'
 
-import { useState, useEffect, Suspense, useRef, useCallback } from 'react'
+import { useState, useEffect, Suspense, useRef } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { SupabaseProvider, useSupabase } from '@/contexts/SupabaseContext'
+import { getSupabase } from '@/lib/supabase'
 import { UnifiedSinglePageDashboard } from './_components/UnifiedSinglePageDashboard'
 
 function DashboardContent() {
   const [user, setUser] = useState<any>(null)
   const [loading, setLoading] = useState(true)
-  const [authModalReady, setAuthModalReady] = useState(false)
-  const { supabase, error, isLoading: supabaseLoading } = useSupabase()
+  const supabase = getSupabase()
   const router = useRouter()
   const searchParams = useSearchParams()
   const [activeSection, setActiveSection] = useState<string>('overview')
-  const checkInProgress = useRef(false)
+  
+  // Use ref to prevent multiple simultaneous role checks
+  const roleCheckInProgress = useRef(false)
 
   // Get section from URL params or default to overview
   useEffect(() => {
@@ -35,193 +36,58 @@ function DashboardContent() {
     return () => window.removeEventListener('popstate', handlePopState)
   }, [])
 
-  // Wait for auth modal system to be ready
+  // Fetch user and check roles - RUN ONCE on mount
   useEffect(() => {
-    const checkAuthModalReady = () => {
-      if (
-        (typeof (window as any).__thgOpenAuthModal === 'function') ||
-        ((window as any).authGate && typeof (window as any).authGate.openLoginModal === 'function')
-      ) {
-        setAuthModalReady(true)
-        return true
-      }
-      return false
-    }
-
-    // Check immediately
-    if (checkAuthModalReady()) {
+    // Prevent multiple simultaneous checks
+    if (roleCheckInProgress.current) {
       return
     }
 
-    // Poll for auth modal to be ready (max 5 seconds)
-    let attempts = 0
-    const maxAttempts = 50 // 5 seconds at 100ms intervals
-    const interval = setInterval(() => {
-      attempts++
-      if (checkAuthModalReady() || attempts >= maxAttempts) {
-        clearInterval(interval)
-        if (attempts >= maxAttempts) {
-          console.warn('Auth modal system not ready after 5 seconds')
-          setAuthModalReady(true) // Allow to proceed anyway
-        }
-      }
-    }, 100)
-
-    return () => clearInterval(interval)
-  }, [])
-
-  // Check authentication and roles - use useCallback to avoid dependency issues
-  const checkAuthAndRoles = useCallback(async (authUser: any) => {
-    if (!supabase) return
-    
-    if (!authUser) {
-      console.log('User not authenticated, opening auth modal')
-      setLoading(false)
-      setUser(null)
+    const fetchUser = async () => {
+      roleCheckInProgress.current = true
       
-      // Wait a bit more for auth modal to be fully ready
-      await new Promise(resolve => setTimeout(resolve, 300))
-      
-      const next = window.location.pathname + window.location.search
-      if ((window as any).authGate && typeof (window as any).authGate.openLoginModal === 'function') {
-        (window as any).authGate.openLoginModal({ next })
-      } else if (typeof (window as any).__thgOpenAuthModal === 'function') {
-        (window as any).__thgOpenAuthModal({ next })
-      }
-      return
-    }
-
-    // Check user roles with timeout
-    let roleCheckCompleted = false
-    const roleCheckTimeout = setTimeout(() => {
-      if (!roleCheckCompleted) {
-        console.warn('Role check timeout, allowing access')
-        roleCheckCompleted = true
-        setUser(authUser)
-        setLoading(false)
-      }
-    }, 5000)
-
-    try {
-      const { data: rolesData, error: rolesError } = await supabase
-        .from('user_roles')
-        .select('role')
-        .eq('user_id', authUser.id)
-
-      clearTimeout(roleCheckTimeout)
-
-      if (roleCheckCompleted) return
-
-      if (rolesError) {
-        console.warn('Error fetching roles (allowing access):', rolesError)
-        setUser(authUser)
-        setLoading(false)
-        return
-      }
-
-      const roles = (rolesData || []).map((r: any) => r.role)
-      const hasAccess = roles.includes('builder') || roles.includes('admin')
-
-      if (!hasAccess) {
-        console.warn('User does not have builder role. Roles:', roles)
-        setLoading(false)
-        setUser(null)
-        router.push('/?error=unauthorized&message=You need builder role to access this page')
-        return
-      }
-
-      roleCheckCompleted = true
-      setUser(authUser)
-      setLoading(false)
-    } catch (err) {
-      clearTimeout(roleCheckTimeout)
-      if (!roleCheckCompleted) {
-        console.warn('Role check error (allowing access):', err)
-        setUser(authUser)
-        setLoading(false)
-      }
-    }
-  }, [supabase, router])
-
-  // Initial auth check
-  useEffect(() => {
-    if (!authModalReady || !supabase || supabaseLoading || checkInProgress.current) return
-    checkInProgress.current = true
-
-    const performAuthCheck = async () => {
       try {
-        const { data: { user: authUser }, error: authError } = await supabase.auth.getUser()
-        
-        if (authError) {
-          console.error('Auth error:', authError)
-          await checkAuthAndRoles(null)
-        } else {
-          await checkAuthAndRoles(authUser)
+        const { data: { user }, error } = await supabase.auth.getUser()
+
+        if (error || !user) {
+          console.error('Auth error:', error)
+          roleCheckInProgress.current = false
+          setLoading(false)
+          // Open auth modal instead of redirecting
+          const next = window.location.pathname + window.location.search
+          if ((window as any).authGate && typeof (window as any).authGate.openLoginModal === 'function') {
+            ;(window as any).authGate.openLoginModal({ next })
+          } else if (typeof (window as any).__thgOpenAuthModal === 'function') {
+            ;(window as any).__thgOpenAuthModal({ next })
+          }
+          return
         }
-      } catch (err) {
-        console.error('Error checking auth:', err)
-        await checkAuthAndRoles(null)
-      } finally {
-        checkInProgress.current = false
-      }
-    }
 
-    performAuthCheck()
-  }, [authModalReady, supabase, supabaseLoading, checkAuthAndRoles])
-
-  // Listen for auth state changes (user logs in/out after page load)
-  useEffect(() => {
-    if (!supabase) return
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log('[Builder Dashboard] Auth state changed:', event, session?.user?.email || 'none')
-      
-      // Reset checkInProgress to allow re-check
-      checkInProgress.current = false
-      
-      if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
-        if (session?.user) {
-          setLoading(true)
-          await checkAuthAndRoles(session.user)
-        }
-      } else if (event === 'SIGNED_OUT') {
-        setUser(null)
+        // Set user immediately - middleware already verified access
+        setUser(user)
         setLoading(false)
-        // Open auth modal
+        roleCheckInProgress.current = false
+      } catch (err) {
+        console.error('Error fetching user:', err)
+        roleCheckInProgress.current = false
+        setLoading(false)
+        // Open auth modal instead of redirecting
         const next = window.location.pathname + window.location.search
         if ((window as any).authGate && typeof (window as any).authGate.openLoginModal === 'function') {
-          (window as any).authGate.openLoginModal({ next })
+          ;(window as any).authGate.openLoginModal({ next })
         } else if (typeof (window as any).__thgOpenAuthModal === 'function') {
-          (window as any).__thgOpenAuthModal({ next })
+          ;(window as any).__thgOpenAuthModal({ next })
         }
       }
-    })
-
-    return () => {
-      subscription.unsubscribe()
     }
-  }, [supabase, checkAuthAndRoles])
 
-  // Show error if Supabase failed to initialize
-  if (error) {
-    return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="max-w-md mx-auto p-6 bg-red-900/20 border border-red-500 rounded-lg">
-          <h2 className="text-xl font-bold text-red-400 mb-4">Configuration Error</h2>
-          <p className="text-red-200 mb-4">{error}</p>
-          <p className="text-sm text-red-300">
-            Please check the browser console for more details. This usually means environment variables are not configured correctly.
-          </p>
-          <button
-            onClick={() => window.location.reload()}
-            className="mt-4 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded"
-          >
-            Reload Page
-          </button>
-        </div>
-      </div>
-    )
-  }
+    fetchUser()
+
+    // Cleanup function
+    return () => {
+      roleCheckInProgress.current = false
+    }
+  }, []) // Empty deps - run once on mount
 
   // Handle section change
   const handleSectionChange = (section: string) => {
@@ -244,13 +110,7 @@ function DashboardContent() {
   }
 
   if (!user) {
-    return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="flex flex-col items-center gap-4">
-          <p className="text-gray-400">Please log in to access the builder dashboard.</p>
-        </div>
-      </div>
-    )
+    return null
   }
 
   return (
@@ -263,17 +123,15 @@ function DashboardContent() {
 
 export default function BuilderDashboardPage() {
   return (
-    <SupabaseProvider>
-      <Suspense fallback={
-        <div className="flex items-center justify-center min-h-[60vh]">
-          <div className="flex flex-col items-center gap-4">
-            <div className="w-12 h-12 border-2 border-[#D4AF37] border-t-transparent rounded-full animate-spin" />
-            <p className="text-gray-400">Loading...</p>
-          </div>
+    <Suspense fallback={
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-12 h-12 border-2 border-[#D4AF37] border-t-transparent rounded-full animate-spin" />
+          <p className="text-gray-400">Loading...</p>
         </div>
-      }>
-        <DashboardContent />
-      </Suspense>
-    </SupabaseProvider>
+      </div>
+    }>
+      <DashboardContent />
+    </Suspense>
   )
 }

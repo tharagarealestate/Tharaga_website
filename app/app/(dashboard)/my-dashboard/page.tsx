@@ -2,8 +2,8 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { motion } from 'framer-motion'
+import { getSupabase } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
-import { SupabaseProvider, useSupabase } from '@/contexts/SupabaseContext'
 
 // Import all components
 import DashboardHeader from '@/components/dashboard/buyer/DashboardHeader'
@@ -12,78 +12,69 @@ import SavedProperties from '@/components/dashboard/buyer/SavedProperties'
 import DocumentVault from '@/components/dashboard/buyer/DocumentVault'
 import MarketInsights from '@/components/dashboard/buyer/MarketInsights'
 
-function DashboardContent() {
+export default function Page() {
   const [user, setUser] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [greeting, setGreeting] = useState('Hello')
+  const supabase = getSupabase()
   const router = useRouter()
-  const { supabase, error, isLoading: supabaseLoading } = useSupabase()
-
+  
   // Use ref to prevent multiple simultaneous role checks
   const roleCheckInProgress = useRef(false)
-  const timeoutRef = useRef<NodeJS.Timeout | null>(null)
 
-  // CRITICAL FIX: Render immediately, do checks in background
-  // Trust middleware - it already verified access
+  // Fetch user and set greeting - RUN ONCE on mount
   useEffect(() => {
-    if (roleCheckInProgress.current || !supabase || supabaseLoading) return
-    roleCheckInProgress.current = true
+    // Prevent multiple simultaneous checks
+    if (roleCheckInProgress.current) {
+      return
+    }
 
-    // Immediately allow rendering - middleware already verified
-    setLoading(false)
-    setUser({ id: 'verified', email: 'user@tharaga.co.in' }) // Placeholder to allow render
-
-    // Set greeting immediately
-    const hour = new Date().getHours()
-    if (hour < 12) setGreeting('Good morning')
-    else if (hour < 17) setGreeting('Good afternoon')
-    else setGreeting('Good evening')
-
-    // Get real user in background (non-blocking)
     const fetchUser = async () => {
+      roleCheckInProgress.current = true
+      
       try {
         const { data: { user }, error } = await supabase.auth.getUser()
-        if (!error && user) {
-          setUser(user) // Update with real user
+
+        if (error || !user) {
+          console.error('Auth error:', error)
+          roleCheckInProgress.current = false
+          setLoading(false)
+          router.push('/')
+          return
         }
+
+        // Set user immediately - middleware already verified access
+        setUser(user)
+        setLoading(false)
+        
+        // Set time-based greeting
+        const hour = new Date().getHours()
+        if (hour < 12) setGreeting('Good morning')
+        else if (hour < 17) setGreeting('Good afternoon')
+        else setGreeting('Good evening')
+        
+        roleCheckInProgress.current = false
       } catch (err) {
-        // Silent fail - already rendered
+        console.error('Error fetching user:', err)
+        roleCheckInProgress.current = false
+        setLoading(false)
+        router.push('/')
       }
     }
 
     fetchUser()
 
+    // Cleanup function
     return () => {
       roleCheckInProgress.current = false
     }
-  }, [supabase, supabaseLoading])
+  }, []) // Empty deps - run once on mount
 
   // Get user's first name
   const getFirstName = () => {
     if (!user) return ''
     const fullName = user.user_metadata?.full_name || user.email
     return fullName.split(' ')[0].split('@')[0]
-  }
-
-  // Show error if Supabase failed to initialize
-  if (error) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-primary-950 via-primary-900 to-primary-800 flex items-center justify-center">
-        <div className="max-w-md mx-auto p-6 bg-red-900/20 border border-red-500 rounded-lg">
-          <h2 className="text-xl font-bold text-red-400 mb-4">Configuration Error</h2>
-          <p className="text-red-200 mb-4">{error}</p>
-          <p className="text-sm text-red-300">
-            Please check the browser console for more details. This usually means environment variables are not configured correctly.
-          </p>
-          <button
-            onClick={() => window.location.reload()}
-            className="mt-4 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded"
-          >
-            Reload Page
-          </button>
-        </div>
-      </div>
-    )
   }
 
   // Loading state
@@ -215,13 +206,5 @@ function DashboardContent() {
         }
       `}</style>
     </div>
-  );
-}
-
-export default function Page() {
-  return (
-    <SupabaseProvider>
-      <DashboardContent />
-    </SupabaseProvider>
   );
 }

@@ -23,7 +23,7 @@ import dynamic from 'next/dynamic';
 import { Suspense } from 'react';
 import { useRouter } from 'next/navigation';
 
-import { getSupabase } from '@/lib/supabase';
+import { SupabaseProvider, useSupabase } from '@/contexts/SupabaseContext';
 import { listSaved } from '@/lib/saved';
 import type { RecommendationItem } from '@/types/recommendations';
 
@@ -40,6 +40,7 @@ function BuyerDashboardContent() {
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<any>(null);
   const [authModalReady, setAuthModalReady] = useState(false);
+  const { supabase, error, isLoading: supabaseLoading } = useSupabase();
   const router = useRouter();
   const checkInProgress = useRef(false);
 
@@ -82,15 +83,13 @@ function BuyerDashboardContent() {
 
   // Check authentication and roles
   useEffect(() => {
-    if (!authModalReady || checkInProgress.current) return;
+    if (!authModalReady || !supabase || supabaseLoading || checkInProgress.current) return;
     checkInProgress.current = true;
 
     const hour = new Date().getHours();
     if (hour < 12) setGreeting('Good Morning');
     else if (hour < 18) setGreeting('Good Afternoon');
     else setGreeting('Good Evening');
-
-    const supabase = getSupabase();
     
     const checkAuth = async () => {
       try {
@@ -192,11 +191,35 @@ function BuyerDashboardContent() {
         } else if (typeof (window as any).__thgOpenAuthModal === 'function') {
           (window as any).__thgOpenAuthModal({ next });
         }
+      } finally {
+        // Reset checkInProgress to allow retry if needed
+        checkInProgress.current = false;
       }
     };
 
     checkAuth();
-  }, [authModalReady, router]);
+  }, [authModalReady, supabase, supabaseLoading, router]);
+
+  // Show error if Supabase failed to initialize
+  if (error) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-primary-950 via-primary-900 to-primary-800">
+        <div className="max-w-md mx-auto p-6 bg-red-900/20 border border-red-500 rounded-lg">
+          <h2 className="text-xl font-bold text-red-400 mb-4">Configuration Error</h2>
+          <p className="text-red-200 mb-4">{error}</p>
+          <p className="text-sm text-red-300">
+            Please check the browser console for more details. This usually means environment variables are not configured correctly.
+          </p>
+          <button
+            onClick={() => window.location.reload()}
+            className="mt-4 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded"
+          >
+            Reload Page
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   // Load recommendations after user is authenticated
   useEffect(() => {
@@ -776,15 +799,17 @@ function SecondaryActionButton({
 
 export default function BuyerDashboardPage() {
   return (
-    <Suspense fallback={
-      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-primary-950 via-primary-900 to-primary-800">
-        <div className="flex flex-col items-center gap-4">
-          <div className="w-12 h-12 border-2 border-[#D4AF37] border-t-transparent rounded-full animate-spin" />
-          <p className="text-white/80 text-lg">Loading buyer dashboard...</p>
+    <SupabaseProvider>
+      <Suspense fallback={
+        <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-primary-950 via-primary-900 to-primary-800">
+          <div className="flex flex-col items-center gap-4">
+            <div className="w-12 h-12 border-2 border-[#D4AF37] border-t-transparent rounded-full animate-spin" />
+            <p className="text-white/80 text-lg">Loading buyer dashboard...</p>
+          </div>
         </div>
-      </div>
-    }>
-      <BuyerDashboardContent />
-    </Suspense>
+      }>
+        <BuyerDashboardContent />
+      </Suspense>
+    </SupabaseProvider>
   );
 }

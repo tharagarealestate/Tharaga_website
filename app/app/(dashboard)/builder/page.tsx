@@ -155,6 +155,9 @@ function DashboardContent() {
         } else if (typeof (window as any).__thgOpenAuthModal === 'function') {
           (window as any).__thgOpenAuthModal({ next })
         }
+      } finally {
+        // Reset checkInProgress to allow retry if needed
+        checkInProgress.current = false
       }
     }
 

@@ -5,7 +5,7 @@ export const dynamic = 'force-dynamic'
 
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { getSupabase } from '@/lib/supabase'
+import { SupabaseProvider, useSupabase } from '@/contexts/SupabaseContext'
 
 // Import all components
 import DashboardHeader from '@/components/dashboard/buyer/DashboardHeader'
@@ -14,10 +14,10 @@ import SavedProperties from '@/components/dashboard/buyer/SavedProperties'
 import DocumentVault from '@/components/dashboard/buyer/DocumentVault'
 import MarketInsights from '@/components/dashboard/buyer/MarketInsights'
 
-export default function Page() {
+function DashboardContent() {
   const [user, setUser] = useState<any>(null)
   const [greeting, setGreeting] = useState('Hello')
-  const supabase = getSupabase()
+  const { supabase, isLoading, error } = useSupabase()
 
   // Set greeting immediately
   useEffect(() => {
@@ -29,6 +29,8 @@ export default function Page() {
 
   // Fetch user in background (non-blocking)
   useEffect(() => {
+    if (!supabase) return
+
     const fetchUser = async () => {
       try {
         const { data: { user }, error } = await supabase.auth.getUser()
@@ -40,13 +42,34 @@ export default function Page() {
       }
     }
     fetchUser()
-  }, [])
+  }, [supabase])
 
   // Get user's first name
   const getFirstName = () => {
     if (!user) return 'there'
     const fullName = user.user_metadata?.full_name || user.email
     return fullName.split(' ')[0].split('@')[0]
+  }
+
+  // Show error if Supabase failed to initialize
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-primary-950 via-primary-900 to-primary-800 flex items-center justify-center">
+        <div className="max-w-md mx-auto p-6 bg-red-900/20 border border-red-500 rounded-lg">
+          <h2 className="text-xl font-bold text-red-400 mb-4">Configuration Error</h2>
+          <p className="text-red-200 mb-4">{error}</p>
+          <p className="text-sm text-red-300">
+            Please check the browser console for more details.
+          </p>
+          <button
+            onClick={() => window.location.reload()}
+            className="mt-4 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded"
+          >
+            Reload Page
+          </button>
+        </div>
+      </div>
+    )
   }
 
   // Render immediately - middleware already verified access
@@ -60,7 +83,7 @@ export default function Page() {
           style={{ animationDelay: '1s' }}
         />
       </div>
-      
+
       <div className="relative z-10">
       {/* Notification Header */}
       <DashboardHeader />
@@ -147,5 +170,13 @@ export default function Page() {
         }
       `}</style>
     </div>
+  );
+}
+
+export default function Page() {
+  return (
+    <SupabaseProvider>
+      <DashboardContent />
+    </SupabaseProvider>
   );
 }

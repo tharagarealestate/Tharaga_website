@@ -3,68 +3,23 @@
 // Force dynamic rendering to prevent static generation errors
 export const dynamic = 'force-dynamic'
 
-import { useState, useEffect, Suspense } from 'react'
+import { Suspense } from 'react'
+import { SupabaseProvider } from '@/contexts/SupabaseContext'
 import { UnifiedSinglePageDashboard } from './_components/UnifiedSinglePageDashboard'
-
-function DashboardContent() {
-  const [activeSection, setActiveSection] = useState<string>('overview')
-  const [mounted, setMounted] = useState(false)
-
-  // Set mounted and initial section on client only
-  useEffect(() => {
-    setMounted(true)
-    if (typeof window !== 'undefined') {
-      const urlParams = new URLSearchParams(window.location.search)
-      const section = urlParams.get('section') || 'overview'
-      setActiveSection(section)
-    }
-  }, [])
-  
-  // Handle browser back/forward buttons
-  useEffect(() => {
-    if (!mounted || typeof window === 'undefined') return
-    
-    const handlePopState = () => {
-      const urlParams = new URLSearchParams(window.location.search)
-      const section = urlParams.get('section') || 'overview'
-      setActiveSection(section)
-    }
-    
-    window.addEventListener('popstate', handlePopState)
-    return () => window.removeEventListener('popstate', handlePopState)
-  }, [mounted])
-
-  // Handle section change
-  const handleSectionChange = (section: string) => {
-    setActiveSection(section)
-    // Update URL without page reload
-    if (typeof window !== 'undefined') {
-      const url = new URL(window.location.href)
-      url.searchParams.set('section', section)
-      window.history.pushState({}, '', url.toString())
-    }
-  }
-
-  // Render immediately - middleware already verified access
-  return (
-    <UnifiedSinglePageDashboard 
-      activeSection={activeSection} 
-      onSectionChange={handleSectionChange}
-    />
-  )
-}
 
 export default function BuilderDashboardPage() {
   return (
-    <Suspense fallback={
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="flex flex-col items-center gap-4">
-          <div className="w-12 h-12 border-2 border-[#D4AF37] border-t-transparent rounded-full animate-spin" />
-          <p className="text-gray-400">Loading...</p>
+    <SupabaseProvider>
+      <Suspense fallback={
+        <div className="flex items-center justify-center min-h-[60vh]">
+          <div className="flex flex-col items-center gap-4">
+            <div className="w-12 h-12 border-2 border-[#D4AF37] border-t-transparent rounded-full animate-spin" />
+            <p className="text-gray-400">Loading...</p>
+          </div>
         </div>
-      </div>
-    }>
-      <DashboardContent />
-    </Suspense>
+      }>
+        <UnifiedSinglePageDashboard />
+      </Suspense>
+    </SupabaseProvider>
   )
 }

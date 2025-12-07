@@ -34,17 +34,20 @@ interface TeamMember {
 }
 
 export class TeamManagementService {
-  private supabase: ReturnType<typeof createClient>;
+  private supabase: ReturnType<typeof createClient> | null = null;
 
-  constructor() {
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
-    const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_ROLE;
-    
-    if (!supabaseUrl || !supabaseKey) {
-      throw new Error('Supabase URL and service role key are required');
+  private getSupabase(): ReturnType<typeof createClient> {
+    if (!this.supabase) {
+      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
+      const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_ROLE;
+      
+      if (!supabaseUrl || !supabaseKey) {
+        throw new Error('Supabase URL and service role key are required');
+      }
+      
+      this.getSupabase() = createClient(supabaseUrl, supabaseKey);
     }
-    
-    this.supabase = createClient(supabaseUrl, supabaseKey);
+    return this.supabase;
   }
 
   /**
@@ -270,7 +273,30 @@ export class TeamManagementService {
   }
 }
 
-export const teamManagementService = new TeamManagementService();
+let teamManagementServiceInstance: TeamManagementService | null = null;
+
+export const teamManagementService = {
+  getInstance(): TeamManagementService {
+    if (!teamManagementServiceInstance) {
+      teamManagementServiceInstance = new TeamManagementService();
+    }
+    return teamManagementServiceInstance;
+  },
+  inviteTeamMember: (...args: Parameters<TeamManagementService['inviteTeamMember']>) =>
+    teamManagementService.getInstance().inviteTeamMember(...args),
+  acceptInvite: (...args: Parameters<TeamManagementService['acceptInvite']>) =>
+    teamManagementService.getInstance().acceptInvite(...args),
+  removeTeamMember: (...args: Parameters<TeamManagementService['removeTeamMember']>) =>
+    teamManagementService.getInstance().removeTeamMember(...args),
+  updateMemberRole: (...args: Parameters<TeamManagementService['updateMemberRole']>) =>
+    teamManagementService.getInstance().updateMemberRole(...args),
+  getTeamMembers: (...args: Parameters<TeamManagementService['getTeamMembers']>) =>
+    teamManagementService.getInstance().getTeamMembers(...args),
+  assignLead: (...args: Parameters<TeamManagementService['assignLead']>) =>
+    teamManagementService.getInstance().assignLead(...args),
+  logActivity: (...args: Parameters<TeamManagementService['logActivity']>) =>
+    teamManagementService.getInstance().logActivity(...args),
+};
 
 
 

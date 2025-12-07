@@ -20,17 +20,20 @@ interface WebhookEvent {
 }
 
 export class WebhookService {
-  private supabase: ReturnType<typeof createClient>;
+  private supabase: ReturnType<typeof createClient> | null = null;
 
-  constructor() {
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
-    const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_ROLE;
+  private getSupabase(): ReturnType<typeof createClient> {
+    if (!this.supabase) {
+      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
+      const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_ROLE;
 
-    if (!supabaseUrl || !supabaseKey) {
-      throw new Error('Supabase URL and service role key are required');
+      if (!supabaseUrl || !supabaseKey) {
+        throw new Error('Supabase URL and service role key are required');
+      }
+
+      this.supabase = createClient(supabaseUrl, supabaseKey);
     }
-
-    this.supabase = createClient(supabaseUrl, supabaseKey);
+    return this.supabase;
   }
 
   /**
@@ -44,7 +47,7 @@ export class WebhookService {
   ): Promise<void> {
     // Get all active endpoints subscribed to this event
     // Using existing schema: allowed_events is an array
-    const { data: endpoints } = await this.supabase
+    const { data: endpoints } = await this.getSupabase()
       .from('webhook_endpoints')
       .select('*')
       .eq('builder_id', builderId)
@@ -77,7 +80,7 @@ export class WebhookService {
    */
   private async queueDelivery(endpoint: any, event: WebhookEvent): Promise<void> {
     // Using existing schema: webhook_id instead of endpoint_id
-    await this.supabase.from('webhook_deliveries').insert({
+    await this.getSupabase().from('webhook_deliveries').insert({
       webhook_id: endpoint.id,
       event_type: event.type,
       payload: event,
@@ -123,7 +126,7 @@ export class WebhookService {
       const duration = Date.now() - startTime;
 
       // Update delivery record (using existing schema)
-      await this.supabase
+      await this.getSupabase()
         .from('webhook_deliveries')
         .update({
           status: response.ok ? 'delivered' : 'failed',
@@ -137,7 +140,7 @@ export class WebhookService {
         .eq('event_type', event.type);
 
       // Update endpoint stats (using existing schema)
-      await this.supabase
+      await this.getSupabase()
         .from('webhook_endpoints')
         .update({
           total_requests: (endpoint.total_requests || 0) + 1,
@@ -155,7 +158,7 @@ export class WebhookService {
       const duration = Date.now() - startTime;
 
       // Update delivery record with error (using existing schema)
-      await this.supabase
+      await this.getSupabase()
         .from('webhook_deliveries')
         .update({
           status: 'failed',
@@ -167,7 +170,7 @@ export class WebhookService {
         .eq('event_type', event.type);
 
       // Update endpoint stats (using existing schema)
-      await this.supabase
+      await this.getSupabase()
         .from('webhook_endpoints')
         .update({
           total_requests: (endpoint.total_requests || 0) + 1,
@@ -273,7 +276,7 @@ export class WebhookService {
     responseTime?: number;
     error?: string;
   }> {
-    const { data: endpoint } = await this.supabase
+    const { data: endpoint } = await this.getSupabase()
       .from('webhook_endpoints')
       .select('*')
       .eq('id', endpointId)
@@ -327,6 +330,19 @@ export class WebhookService {
   }
 }
 
-// Export singleton
-export const webhookService = new WebhookService();
+// Export lazy singleton
+let webhookServiceInstance: WebhookService | null = null;
+
+export const webhookService = {
+  getInstance(): WebhookService {
+    if (!webhookServiceInstance) {
+      webhookServiceInstance = new WebhookService();
+    }
+    return webhookServiceInstance;
+  },
+  triggerEvent: (...args: Parameters<WebhookService['triggerEvent']>) =>
+    webhookService.getInstance().triggerEvent(...args),
+  testEndpoint: (...args: Parameters<WebhookService['testEndpoint']>) =>
+    webhookService.getInstance().testEndpoint(...args),
+};
 

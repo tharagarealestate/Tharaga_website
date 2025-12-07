@@ -36,27 +36,35 @@ interface Subscription {
 }
 
 export class RevenueService {
-  private supabase: ReturnType<typeof createClient>;
-  private razorpay: Razorpay;
+  private supabase: ReturnType<typeof createClient> | null = null;
+  private razorpay: Razorpay | null = null;
 
-  constructor() {
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
-    const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_ROLE;
-    
-    if (!supabaseUrl || !supabaseKey) {
-      throw new Error('Supabase URL and service role key are required');
+  private getSupabase(): ReturnType<typeof createClient> {
+    if (!this.supabase) {
+      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
+      const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_ROLE;
+      
+      if (!supabaseUrl || !supabaseKey) {
+        throw new Error('Supabase URL and service role key are required');
+      }
+      
+      this.supabase = createClient(supabaseUrl, supabaseKey);
     }
-    
-    this.supabase = createClient(supabaseUrl, supabaseKey);
+    return this.supabase;
+  }
 
-    this.razorpay = new Razorpay({
-      key_id: process.env.RAZORPAY_KEY_ID!,
-      key_secret: process.env.RAZORPAY_KEY_SECRET!,
-    });
+  private getRazorpay(): Razorpay {
+    if (!this.razorpay) {
+      this.razorpay = new Razorpay({
+        key_id: process.env.RAZORPAY_KEY_ID!,
+        key_secret: process.env.RAZORPAY_KEY_SECRET!,
+      });
+    }
+    return this.razorpay;
   }
 
   async getPlans(): Promise<SubscriptionPlan[]> {
-    const { data, error } = await this.supabase
+    const { data, error } = await this.getSupabase()
       .from('subscription_plans')
       .select('*')
       .eq('is_active', true)
@@ -67,7 +75,7 @@ export class RevenueService {
   }
 
   async getSubscription(builderId: string): Promise<Subscription | null> {
-    const { data, error } = await this.supabase
+    const { data, error } = await this.getSupabase()
       .from('builder_subscriptions')
       .select('*, plan:subscription_plans(*)')
       .eq('builder_id', builderId)
@@ -116,7 +124,7 @@ export class RevenueService {
   }
 
   async incrementPropertyUsage(builderId: string): Promise<void> {
-    const { data } = await this.supabase
+    const { data } = await this.getSupabase()
       .from('builder_subscriptions')
       .select('id, properties_used')
       .eq('builder_id', builderId)
@@ -124,7 +132,7 @@ export class RevenueService {
       .maybeSingle();
 
     if (data) {
-      await this.supabase
+      await this.getSupabase()
         .from('builder_subscriptions')
         .update({ properties_used: (data.properties_used || 0) + 1 })
         .eq('id', data.id);
@@ -132,7 +140,7 @@ export class RevenueService {
   }
 
   async incrementLeadUsage(builderId: string): Promise<void> {
-    const { data } = await this.supabase
+    const { data } = await this.getSupabase()
       .from('builder_subscriptions')
       .select('id, leads_used_this_month')
       .eq('builder_id', builderId)
@@ -140,7 +148,7 @@ export class RevenueService {
       .maybeSingle();
 
     if (data) {
-      await this.supabase
+      await this.getSupabase()
         .from('builder_subscriptions')
         .update({
           leads_used_this_month: (data.leads_used_this_month || 0) + 1,
@@ -159,7 +167,7 @@ export class RevenueService {
     razorpaySubscriptionId: string;
     shortUrl: string;
   }> {
-    const { data: plan, error: planError } = await this.supabase
+    const { data: plan, error: planError } = await this.getSupabase()
       .from('subscription_plans')
       .select('*')
       .eq('slug', planSlug)
@@ -167,7 +175,7 @@ export class RevenueService {
 
     if (planError || !plan) throw new Error('Plan not found');
 
-    const { data: builder, error: builderError } = await this.supabase
+    const { data: builder, error: builderError } = await this.getSupabase()
       .from('builder_profiles')
       .select('id, company_name')
       .eq('id', builderId)
@@ -195,14 +203,14 @@ export class RevenueService {
 
     const razorpayPlan = await this.getOrCreateRazorpayPlan(plan, billingCycle);
 
-    const razorpaySubscription = await this.razorpay.subscriptions.create({
+    const razorpaySubscription = await this.getRazorpay().subscriptions.create({
       plan_id: razorpayPlan.id,
       total_count: billingCycle === 'yearly' ? 1 : 12,
       quantity: 1,
       customer_notify: 1,
     });
 
-    const { data: subscription, error } = await this.supabase
+    const { data: subscription, error } = await this.getSupabase()
       .from('builder_subscriptions')
       .insert({
         builder_id: builderId,
@@ -262,7 +270,7 @@ export class RevenueService {
   private async handleSubscriptionActivated(
     razorpaySubscription: any
   ): Promise<void> {
-    const { data } = await this.supabase
+    const { data } = await this.getSupabase()
       .from('builder_subscriptions')
       .select('id, builder_id, plan_id')
       .eq('razorpay_subscription_id', razorpaySubscription.id)
@@ -273,7 +281,7 @@ export class RevenueService {
     const now = new Date();
     const periodEnd = new Date(razorpaySubscription.current_end * 1000);
 
-    await this.supabase
+    await this.getSupabase()
       .from('builder_subscriptions')
       .update({
         status: 'active',
@@ -288,7 +296,7 @@ export class RevenueService {
     razorpaySubscription: any,
     payment: any
   ): Promise<void> {
-    const { data } = await this.supabase
+    const { data } = await this.getSupabase()
       .from('builder_subscriptions')
       .select('id, builder_id')
       .eq('razorpay_subscription_id', razorpaySubscription.id)
@@ -296,7 +304,7 @@ export class RevenueService {
 
     if (!data) return;
 
-    await this.supabase.from('payment_transactions').insert({
+    await this.getSupabase().from('payment_transactions').insert({
       builder_id: data.builder_id,
       subscription_id: data.id,
       transaction_type: 'subscription',
@@ -315,7 +323,7 @@ export class RevenueService {
   private async handleSubscriptionCancelled(
     razorpaySubscription: any
   ): Promise<void> {
-    const { data } = await this.supabase
+    const { data } = await this.getSupabase()
       .from('builder_subscriptions')
       .select('id')
       .eq('razorpay_subscription_id', razorpaySubscription.id)
@@ -323,7 +331,7 @@ export class RevenueService {
 
     if (!data) return;
 
-    await this.supabase
+    await this.getSupabase()
       .from('builder_subscriptions')
       .update({
         status: 'cancelled',
@@ -334,7 +342,7 @@ export class RevenueService {
   }
 
   private async handlePaymentFailed(payment: any): Promise<void> {
-    await this.supabase.from('payment_transactions').insert({
+    await this.getSupabase().from('payment_transactions').insert({
       transaction_type: 'subscription',
       amount: payment.amount,
       currency: payment.currency,
@@ -353,7 +361,7 @@ export class RevenueService {
     amount: number,
     planId: string
   ): Promise<{ discountAmount: number } | null> {
-    const { data: coupon } = await this.supabase
+    const { data: coupon } = await this.getSupabase()
       .from('coupons')
       .select('*')
       .eq('code', code.toUpperCase())
@@ -401,14 +409,14 @@ export class RevenueService {
         : plan.price_monthly;
     const period = billingCycle === 'yearly' ? 'yearly' : 'monthly';
 
-    const plans = await this.razorpay.plans.all();
+    const plans = await this.getRazorpay().plans.all();
     const existing = plans.items.find(
       (p: any) => p.item.name === planName && p.item.amount === amount
     );
 
     if (existing) return existing;
 
-    return await this.razorpay.plans.create({
+    return await this.getRazorpay().plans.create({
       period,
       interval: 1,
       item: {
@@ -458,7 +466,30 @@ export class RevenueService {
   }
 }
 
-export const revenueService = new RevenueService();
+let revenueServiceInstance: RevenueService | null = null;
+
+export const revenueService = {
+  getInstance(): RevenueService {
+    if (!revenueServiceInstance) {
+      revenueServiceInstance = new RevenueService();
+    }
+    return revenueServiceInstance;
+  },
+  getPlans: (...args: Parameters<RevenueService['getPlans']>) =>
+    revenueService.getInstance().getPlans(...args),
+  getSubscription: (...args: Parameters<RevenueService['getSubscription']>) =>
+    revenueService.getInstance().getSubscription(...args),
+  checkUsageLimits: (...args: Parameters<RevenueService['checkUsageLimits']>) =>
+    revenueService.getInstance().checkUsageLimits(...args),
+  incrementPropertyUsage: (...args: Parameters<RevenueService['incrementPropertyUsage']>) =>
+    revenueService.getInstance().incrementPropertyUsage(...args),
+  incrementLeadUsage: (...args: Parameters<RevenueService['incrementLeadUsage']>) =>
+    revenueService.getInstance().incrementLeadUsage(...args),
+  createSubscription: (...args: Parameters<RevenueService['createSubscription']>) =>
+    revenueService.getInstance().createSubscription(...args),
+  handleWebhook: (...args: Parameters<RevenueService['handleWebhook']>) =>
+    revenueService.getInstance().handleWebhook(...args),
+};
 
 
 

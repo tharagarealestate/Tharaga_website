@@ -8,30 +8,40 @@ interface SitemapUrl {
 }
 
 export class SitemapGenerator {
-  private supabase: ReturnType<typeof createClient>;
-  private baseUrl: string;
+  private supabase: ReturnType<typeof createClient> | null = null;
+  private baseUrl: string | null = null;
 
-  constructor() {
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
-    const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_ROLE;
+  private getSupabase(): ReturnType<typeof createClient> {
+    if (!this.supabase) {
+      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
+      const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_ROLE;
 
-    if (!supabaseUrl || !supabaseKey) {
-      throw new Error('Supabase URL and service role key are required');
+      if (!supabaseUrl || !supabaseKey) {
+        throw new Error('Supabase URL and service role key are required');
+      }
+
+      this.supabase = createClient(supabaseUrl, supabaseKey);
     }
+    return this.supabase;
+  }
 
-    this.supabase = createClient(supabaseUrl, supabaseKey);
-    this.baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://tharaga.co.in';
+  private getBaseUrl(): string {
+    if (!this.baseUrl) {
+      this.baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://tharaga.co.in';
+    }
+    return this.baseUrl;
   }
 
   /**
    * Generate main sitemap index
    */
   async generateSitemapIndex(): Promise<string> {
+    const baseUrl = this.getBaseUrl();
     const sitemaps = [
-      { loc: `${this.baseUrl}/sitemap-static.xml`, lastmod: new Date().toISOString() },
-      { loc: `${this.baseUrl}/sitemap-properties.xml`, lastmod: new Date().toISOString() },
-      { loc: `${this.baseUrl}/sitemap-builders.xml`, lastmod: new Date().toISOString() },
-      { loc: `${this.baseUrl}/sitemap-localities.xml`, lastmod: new Date().toISOString() },
+      { loc: `${baseUrl}/sitemap-static.xml`, lastmod: new Date().toISOString() },
+      { loc: `${baseUrl}/sitemap-properties.xml`, lastmod: new Date().toISOString() },
+      { loc: `${baseUrl}/sitemap-builders.xml`, lastmod: new Date().toISOString() },
+      { loc: `${baseUrl}/sitemap-localities.xml`, lastmod: new Date().toISOString() },
     ];
 
     return `<?xml version="1.0" encoding="UTF-8"?>
@@ -47,15 +57,16 @@ ${sitemaps.map((s) => `  <sitemap>
    * Generate static pages sitemap
    */
   async generateStaticSitemap(): Promise<string> {
+    const baseUrl = this.getBaseUrl();
     const staticUrls: SitemapUrl[] = [
-      { loc: this.baseUrl, changefreq: 'daily', priority: 1.0 },
-      { loc: `${this.baseUrl}/properties`, changefreq: 'hourly', priority: 0.9 },
-      { loc: `${this.baseUrl}/builders`, changefreq: 'daily', priority: 0.8 },
-      { loc: `${this.baseUrl}/pricing`, changefreq: 'weekly', priority: 0.7 },
-      { loc: `${this.baseUrl}/about`, changefreq: 'monthly', priority: 0.5 },
-      { loc: `${this.baseUrl}/contact`, changefreq: 'monthly', priority: 0.5 },
-      { loc: `${this.baseUrl}/privacy`, changefreq: 'yearly', priority: 0.3 },
-      { loc: `${this.baseUrl}/terms`, changefreq: 'yearly', priority: 0.3 },
+      { loc: baseUrl, changefreq: 'daily', priority: 1.0 },
+      { loc: `${baseUrl}/properties`, changefreq: 'hourly', priority: 0.9 },
+      { loc: `${baseUrl}/builders`, changefreq: 'daily', priority: 0.8 },
+      { loc: `${baseUrl}/pricing`, changefreq: 'weekly', priority: 0.7 },
+      { loc: `${baseUrl}/about`, changefreq: 'monthly', priority: 0.5 },
+      { loc: `${baseUrl}/contact`, changefreq: 'monthly', priority: 0.5 },
+      { loc: `${baseUrl}/privacy`, changefreq: 'yearly', priority: 0.3 },
+      { loc: `${baseUrl}/terms`, changefreq: 'yearly', priority: 0.3 },
     ];
 
     return this.buildSitemap(staticUrls);
@@ -65,7 +76,8 @@ ${sitemaps.map((s) => `  <sitemap>
    * Generate properties sitemap
    */
   async generatePropertiesSitemap(): Promise<string> {
-    const { data: properties } = await this.supabase
+    const baseUrl = this.getBaseUrl();
+    const { data: properties } = await this.getSupabase()
       .from('properties')
       .select('slug, updated_at')
       .eq('listing_status', 'active')
@@ -73,7 +85,7 @@ ${sitemaps.map((s) => `  <sitemap>
       .limit(10000);
 
     const urls: SitemapUrl[] = (properties || []).map((p) => ({
-      loc: `${this.baseUrl}/properties/${p.slug || p.id}`,
+      loc: `${baseUrl}/properties/${p.slug || p.id}`,
       lastmod: p.updated_at,
       changefreq: 'weekly' as const,
       priority: 0.8,
@@ -86,7 +98,8 @@ ${sitemaps.map((s) => `  <sitemap>
    * Generate builders sitemap
    */
   async generateBuildersSitemap(): Promise<string> {
-    const { data: builders } = await this.supabase
+    const baseUrl = this.getBaseUrl();
+    const { data: builders } = await this.getSupabase()
       .from('builder_profiles')
       .select('id, updated_at')
       .eq('is_verified', true)
@@ -94,7 +107,7 @@ ${sitemaps.map((s) => `  <sitemap>
       .limit(5000);
 
     const urls: SitemapUrl[] = (builders || []).map((b) => ({
-      loc: `${this.baseUrl}/builders/${b.id}`,
+      loc: `${baseUrl}/builders/${b.id}`,
       lastmod: b.updated_at,
       changefreq: 'weekly' as const,
       priority: 0.7,
@@ -107,7 +120,8 @@ ${sitemaps.map((s) => `  <sitemap>
    * Generate localities sitemap
    */
   async generateLocalitiesSitemap(): Promise<string> {
-    const { data: localities } = await this.supabase
+    const baseUrl = this.getBaseUrl();
+    const { data: localities } = await this.getSupabase()
       .from('properties')
       .select('city, locality')
       .eq('listing_status', 'active');
@@ -128,7 +142,7 @@ ${sitemaps.map((s) => `  <sitemap>
     for (const [city, localitySet] of uniqueLocalities) {
       // City page
       urls.push({
-        loc: `${this.baseUrl}/properties/${this.slugify(city)}`,
+        loc: `${baseUrl}/properties/${this.slugify(city)}`,
         changefreq: 'daily',
         priority: 0.8,
       });
@@ -136,7 +150,7 @@ ${sitemaps.map((s) => `  <sitemap>
       // Locality pages
       for (const locality of localitySet) {
         urls.push({
-          loc: `${this.baseUrl}/properties/${this.slugify(city)}/${this.slugify(locality)}`,
+          loc: `${baseUrl}/properties/${this.slugify(city)}/${this.slugify(locality)}`,
           changefreq: 'daily',
           priority: 0.7,
         });
@@ -176,8 +190,22 @@ ${urls
   }
 }
 
-// Export singleton
-export const sitemapGenerator = new SitemapGenerator();
+// Export lazy singleton
+let sitemapGeneratorInstance: SitemapGenerator | null = null;
+
+export const sitemapGenerator = {
+  getInstance(): SitemapGenerator {
+    if (!sitemapGeneratorInstance) {
+      sitemapGeneratorInstance = new SitemapGenerator();
+    }
+    return sitemapGeneratorInstance;
+  },
+  generateSitemapIndex: () => sitemapGenerator.getInstance().generateSitemapIndex(),
+  generateStaticSitemap: () => sitemapGenerator.getInstance().generateStaticSitemap(),
+  generatePropertiesSitemap: () => sitemapGenerator.getInstance().generatePropertiesSitemap(),
+  generateBuildersSitemap: () => sitemapGenerator.getInstance().generateBuildersSitemap(),
+  generateLocalitiesSitemap: () => sitemapGenerator.getInstance().generateLocalitiesSitemap(),
+};
 
 
 

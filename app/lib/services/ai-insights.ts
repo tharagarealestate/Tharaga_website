@@ -35,17 +35,20 @@ interface LeadPrediction {
 }
 
 export class AIInsightsService {
-  private supabase: ReturnType<typeof createClient>;
+  private supabase: ReturnType<typeof createClient> | null = null;
 
-  constructor() {
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
-    const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_ROLE;
-    
-    if (!supabaseUrl || !supabaseKey) {
-      throw new Error('Supabase URL and service role key are required');
+  private getSupabase(): ReturnType<typeof createClient> {
+    if (!this.supabase) {
+      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
+      const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_ROLE;
+      
+      if (!supabaseUrl || !supabaseKey) {
+        throw new Error('Supabase URL and service role key are required');
+      }
+      
+      this.supabase = createClient(supabaseUrl, supabaseKey);
     }
-    
-    this.supabase = createClient(supabaseUrl, supabaseKey);
+    return this.supabase;
   }
 
   /**
@@ -61,7 +64,7 @@ export class AIInsightsService {
   ): Promise<Insight[]> {
     const { category, priority, limit = 10 } = options;
 
-    let query = this.supabase
+    let query = this.getSupabase()
       .from('ai_insights')
       .select('*')
       .eq('builder_id', builderId)
@@ -83,7 +86,7 @@ export class AIInsightsService {
    * Predict lead score and persist prediction
    */
   async predictLeadScore(leadId: number): Promise<LeadPrediction> {
-    const { data: lead, error } = await this.supabase
+    const { data: lead, error } = await this.getSupabase()
       .from('leads')
       .select('*')
       .eq('id', leadId)
@@ -122,7 +125,7 @@ export class AIInsightsService {
       recommendedFollowUpDate,
     };
 
-    await this.supabase.from('lead_predictions').upsert({
+    await this.getSupabase().from('lead_predictions').upsert({
       lead_id: leadId,
       conversion_probability: prediction.conversionProbability,
       predicted_close_date: prediction.predictedCloseDate,
@@ -139,7 +142,7 @@ export class AIInsightsService {
     });
 
     // keep compatibility with existing smartscore_v2
-    await this.supabase
+    await this.getSupabase()
       .from('leads')
       .update({ smartscore_v2: prediction.conversionProbability })
       .eq('id', leadId);
@@ -280,7 +283,22 @@ export class AIInsightsService {
   }
 }
 
-export const aiInsightsService = new AIInsightsService();
+let aiInsightsServiceInstance: AIInsightsService | null = null;
+
+export const aiInsightsService = {
+  getInstance(): AIInsightsService {
+    if (!aiInsightsServiceInstance) {
+      aiInsightsServiceInstance = new AIInsightsService();
+    }
+    return aiInsightsServiceInstance;
+  },
+  getInsights: (...args: Parameters<AIInsightsService['getInsights']>) =>
+    aiInsightsService.getInstance().getInsights(...args),
+  predictLeadScore: (...args: Parameters<AIInsightsService['predictLeadScore']>) =>
+    aiInsightsService.getInstance().predictLeadScore(...args),
+  generateInsight: (...args: Parameters<AIInsightsService['generateInsight']>) =>
+    aiInsightsService.getInstance().generateInsight(...args),
+};
 
 
 

@@ -419,7 +419,30 @@ export class BuyerLeadTrackingService {
   }
 }
 
-export const buyerLeadTrackingService = new BuyerLeadTrackingService();
+let buyerLeadTrackingServiceInstance: BuyerLeadTrackingService | null = null;
+
+export const buyerLeadTrackingService = {
+  getInstance(): BuyerLeadTrackingService {
+    if (!buyerLeadTrackingServiceInstance) {
+      buyerLeadTrackingServiceInstance = new BuyerLeadTrackingService();
+    }
+    return buyerLeadTrackingServiceInstance;
+  },
+  getBuyerLeads: (...args: Parameters<BuyerLeadTrackingService['getBuyerLeads']>) =>
+    buyerLeadTrackingService.getInstance().getBuyerLeads(...args),
+  getLeadDetails: (...args: Parameters<BuyerLeadTrackingService['getLeadDetails']>) =>
+    buyerLeadTrackingService.getInstance().getLeadDetails(...args),
+  getLeadActivities: (...args: Parameters<BuyerLeadTrackingService['getLeadActivities']>) =>
+    buyerLeadTrackingService.getInstance().getLeadActivities(...args),
+  toggleFavorite: (...args: Parameters<BuyerLeadTrackingService['toggleFavorite']>) =>
+    buyerLeadTrackingService.getInstance().toggleFavorite(...args),
+  updateNotes: (...args: Parameters<BuyerLeadTrackingService['updateNotes']>) =>
+    buyerLeadTrackingService.getInstance().updateNotes(...args),
+  getBuyerLeadStats: (...args: Parameters<BuyerLeadTrackingService['getBuyerLeadStats']>) =>
+    buyerLeadTrackingService.getInstance().getBuyerLeadStats(...args),
+  updateFromBuilderAction: (...args: Parameters<BuyerLeadTrackingService['updateFromBuilderAction']>) =>
+    buyerLeadTrackingService.getInstance().updateFromBuilderAction(...args),
+};
 
 
 

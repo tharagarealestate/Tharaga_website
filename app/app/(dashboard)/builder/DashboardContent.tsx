@@ -6,9 +6,7 @@ import { getSupabase } from '@/lib/supabase'
 import { UnifiedSinglePageDashboard } from './_components/UnifiedSinglePageDashboard'
 
 export default function DashboardContent() {
-  const [user, setUser] = useState<any>(null)
-  const [loading, setLoading] = useState(true)
-  const router = useRouter()
+  const [user, setUser] = useState<any>({ id: 'verified', email: 'user@tharaga.co.in' })
   const [activeSection, setActiveSection] = useState<string>('overview')
 
   // Get section from URL params or default to overview
@@ -34,51 +32,34 @@ export default function DashboardContent() {
     return () => window.removeEventListener('popstate', handlePopState)
   }, [])
 
-  // Fetch user with timeout - middleware already verified access
+  // Fetch user in background - non-blocking, middleware already verified access
   useEffect(() => {
     let mounted = true
-    let timeoutId: ReturnType<typeof setTimeout> | undefined
 
     const fetchUser = async () => {
       try {
+        // Small delay to ensure Supabase is ready
+        await new Promise(resolve => setTimeout(resolve, 100))
+        
+        if (!mounted) return
+        
         const supabase = getSupabase()
         
-        // Set timeout to prevent infinite loading (3 seconds)
-        timeoutId = setTimeout(() => {
-          if (mounted) {
-            console.warn('Auth check timeout - rendering dashboard anyway (middleware verified)')
-            setUser({ id: 'verified', email: 'user@tharaga.co.in' })
-            setLoading(false)
-          }
-        }, 3000)
-
-        // Try to get user, but don't block rendering
+        // Try to get user with short timeout
         const authPromise = supabase.auth.getUser()
         const result = await Promise.race([
           authPromise,
-          new Promise((resolve) => setTimeout(() => resolve(null), 2500))
+          new Promise((resolve) => setTimeout(() => resolve(null), 1000))
         ]) as any
 
-        clearTimeout(timeoutId)
+        if (!mounted) return
 
         if (result && result.data && result.data.user) {
-          if (mounted) {
-            setUser(result.data.user)
-            setLoading(false)
-          }
-        } else {
-          if (mounted) {
-            setUser({ id: 'verified', email: 'user@tharaga.co.in' })
-            setLoading(false)
-          }
+          setUser(result.data.user)
         }
       } catch (err) {
-        clearTimeout(timeoutId)
-        console.warn('Auth check error - rendering dashboard anyway:', err)
-        if (mounted) {
-          setUser({ id: 'verified', email: 'user@tharaga.co.in' })
-          setLoading(false)
-        }
+        // Silently fail - user already set to verified placeholder
+        console.warn('Auth check error - using verified placeholder:', err)
       }
     }
 
@@ -86,7 +67,6 @@ export default function DashboardContent() {
 
     return () => {
       mounted = false
-      if (timeoutId) clearTimeout(timeoutId)
     }
   }, [])
 
@@ -98,17 +78,7 @@ export default function DashboardContent() {
     window.history.pushState({}, '', url.toString())
   }
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="flex flex-col items-center gap-4">
-          <div className="w-12 h-12 border-2 border-[#D4AF37] border-t-transparent rounded-full animate-spin" />
-          <p className="text-gray-400">Loading your dashboard...</p>
-        </div>
-      </div>
-    )
-  }
-
+  // Always render dashboard - never show loading state
   return (
     <UnifiedSinglePageDashboard 
       activeSection={activeSection} 

@@ -6,6 +6,9 @@ import { TrialUpgradeBanner } from './_components/TrialUpgradeBanner'
 import { AIAssistant } from './_components/AIAssistant'
 import { KeyboardShortcutsHelp } from './_components/KeyboardShortcutsHelp'
 
+// Force dynamic rendering to prevent streaming issues
+export const dynamic = 'force-dynamic'
+
 export default function BuilderDashboardLayout({ children }: { children: ReactNode }) {
 
   return (

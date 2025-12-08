@@ -4,7 +4,7 @@ import type { Metadata } from 'next'
 import Script from 'next/script'
 import { Playfair_Display, Plus_Jakarta_Sans, Manrope } from 'next/font/google'
 
-export const runtime = 'nodejs'
+export const runtime = 'edge'
 
 export const metadata: Metadata = {
   title: 'Tharaga — Premium Real Estate',

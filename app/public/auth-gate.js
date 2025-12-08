@@ -35,60 +35,67 @@
   if (window.__authGateInjected) return;
   window.__authGateInjected = true;
 
-  // ------- DOM: overlay, frame, controls -------
-  const overlay = document.createElement('div');
-  overlay.id = 'authGateModal';
-  overlay.setAttribute('aria-hidden', 'true');
+  // Wait for DOM to be ready before manipulating it
+  function initAuthGate() {
+    if (!document.head || !document.body) {
+      setTimeout(initAuthGate, 50);
+      return;
+    }
 
-  overlay.innerHTML = `
-    <div class="authgate-backdrop" part="backdrop" aria-hidden="true">
-      <div class="authgate-dialog" role="dialog" aria-modal="true" aria-label="Login / Signup">
-        <button class="authgate-close" aria-label="Close login modal" title="Close">✕</button>
-        <div class="authgate-frame-wrap">
-          <iframe id="authGateIframe" src="about:blank" frameborder="0" allow="clipboard-read; clipboard-write"></iframe>
+    // ------- DOM: overlay, frame, controls -------
+    const overlay = document.createElement('div');
+    overlay.id = 'authGateModal';
+    overlay.setAttribute('aria-hidden', 'true');
+
+    overlay.innerHTML = `
+      <div class="authgate-backdrop" part="backdrop" aria-hidden="true">
+        <div class="authgate-dialog" role="dialog" aria-modal="true" aria-label="Login / Signup">
+          <button class="authgate-close" aria-label="Close login modal" title="Close">✕</button>
+          <div class="authgate-frame-wrap">
+            <iframe id="authGateIframe" src="about:blank" frameborder="0" allow="clipboard-read; clipboard-write"></iframe>
+          </div>
         </div>
       </div>
-    </div>
-  `;
+    `;
 
-  const style = document.createElement('style');
-  style.textContent = `
-    /* Use fixed positioning so the overlay always covers the entire viewport
-       regardless of ancestor positioning/overflow/transform contexts. */
-    #authGateModal { position: fixed; inset: 0; left: 0; width: 100vw; height: 100vh; display: none; z-index: 2147483646; }
-    #authGateModal .authgate-backdrop { display:flex; align-items:center; justify-content:center; inset:0;
-      background: rgba(0, 0, 0, 0.75); backdrop-filter: blur(10px); }
-    #authGateModal .authgate-dialog { position: relative; width: 90%; max-width: 480px; max-height: 90vh;
-      background: linear-gradient(180deg, #1a1a1a 0%, #0d0d0d 100%);
-      border-radius: 20px; border: 1px solid rgba(255, 255, 255, 0.1);
-      box-shadow: 0 30px 60px rgba(0, 0, 0, 0.6); overflow: hidden; }
-    #authGateModal .authgate-close { position: absolute; top: 16px; right: 16px; width: 36px; height: 36px;
-      border: none; background: rgba(255, 255, 255, 0.1); color: rgba(255, 255, 255, 0.8);
-      font-size: 24px; line-height: 1; cursor: pointer; border-radius: 8px;
-      transition: all 0.2s ease; z-index: 10; display: flex; align-items: center; justify-content: center; padding: 0; }
-    #authGateModal .authgate-close:hover { background: rgba(255, 255, 255, 0.2); color: #fff; transform: scale(1.05); }
-    #authGateModal .authgate-frame-wrap { position: relative; width: 100%; height: 640px; overflow: hidden; }
-    #authGateModal #authGateIframe { width: 100%; height: 100%; border: none; }
-  `;
-  document.head.appendChild(style);
-  document.body.appendChild(overlay);
+    const style = document.createElement('style');
+    style.textContent = `
+      /* Use fixed positioning so the overlay always covers the entire viewport
+         regardless of ancestor positioning/overflow/transform contexts. */
+      #authGateModal { position: fixed; inset: 0; left: 0; width: 100vw; height: 100vh; display: none; z-index: 2147483646; }
+      #authGateModal .authgate-backdrop { display:flex; align-items:center; justify-content:center; inset:0;
+        background: rgba(0, 0, 0, 0.75); backdrop-filter: blur(10px); }
+      #authGateModal .authgate-dialog { position: relative; width: 90%; max-width: 480px; max-height: 90vh;
+        background: linear-gradient(180deg, #1a1a1a 0%, #0d0d0d 100%);
+        border-radius: 20px; border: 1px solid rgba(255, 255, 255, 0.1);
+        box-shadow: 0 30px 60px rgba(0, 0, 0, 0.6); overflow: hidden; }
+      #authGateModal .authgate-close { position: absolute; top: 16px; right: 16px; width: 36px; height: 36px;
+        border: none; background: rgba(255, 255, 255, 0.1); color: rgba(255, 255, 255, 0.8);
+        font-size: 24px; line-height: 1; cursor: pointer; border-radius: 8px;
+        transition: all 0.2s ease; z-index: 10; display: flex; align-items: center; justify-content: center; padding: 0; }
+      #authGateModal .authgate-close:hover { background: rgba(255, 255, 255, 0.2); color: #fff; transform: scale(1.05); }
+      #authGateModal .authgate-frame-wrap { position: relative; width: 100%; height: 640px; overflow: hidden; }
+      #authGateModal #authGateIframe { width: 100%; height: 100%; border: none; }
+    `;
+    document.head.appendChild(style);
+    document.body.appendChild(overlay);
 
-  const dialog = overlay.querySelector('.authgate-dialog');
-  const iframe = overlay.querySelector('#authGateIframe');
-  const closeBtn = overlay.querySelector('.authgate-close');
-  const modal = overlay.querySelector('.authgate-backdrop');
-  let lastFocused = null;
-  let signInPromise = null;
-  let signInResolve = null;
-  let signInReject = null;
-  const successBanner = document.createElement('div');
-  successBanner.style.cssText = 'position:fixed;top:20px;right:20px;background:#10b981;color:#fff;padding:12px 24px;border-radius:8px;z-index:2147483647;box-shadow:0 4px 12px rgba(0,0,0,0.3);display:none;';
-  const successText = document.createElement('span');
-  successText.textContent = '✓ Signed in successfully';
-  successBanner.appendChild(successText);
-  document.body.appendChild(successBanner);
+    const dialog = overlay.querySelector('.authgate-dialog');
+    const iframe = overlay.querySelector('#authGateIframe');
+    const closeBtn = overlay.querySelector('.authgate-close');
+    const modal = overlay.querySelector('.authgate-backdrop');
+    let lastFocused = null;
+    let signInPromise = null;
+    let signInResolve = null;
+    let signInReject = null;
+    const successBanner = document.createElement('div');
+    successBanner.style.cssText = 'position:fixed;top:20px;right:20px;background:#10b981;color:#fff;padding:12px 24px;border-radius:8px;z-index:2147483647;box-shadow:0 4px 12px rgba(0,0,0,0.3);display:none;';
+    const successText = document.createElement('span');
+    successText.textContent = '✓ Signed in successfully';
+    successBanner.appendChild(successText);
+    document.body.appendChild(successBanner);
 
-  function isAllowedOrigin(origin) {
+    function isAllowedOrigin(origin) {
     return ALLOWED_IFRAME_ORIGINS.indexOf(origin) !== -1;
   }
 

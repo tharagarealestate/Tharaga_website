@@ -19,6 +19,10 @@ const nextConfig = {
   reactStrictMode: true,
   experimental: {
     typedRoutes: true,
+    // Disable streaming for better compatibility
+    serverActions: {
+      bodySizeLimit: '2mb',
+    },
   },
   webpack: (config) => {
     // Ensure '@' alias resolves to the app directory during bundling (Netlify/Linux envs)

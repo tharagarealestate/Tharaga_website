@@ -2,6 +2,9 @@
 
 import dynamic from 'next/dynamic'
 
+// Force dynamic rendering to prevent streaming issues
+export const dynamic = 'force-dynamic'
+
 // Dynamically import the dashboard content with SSR disabled
 const DashboardContent = dynamic(() => import('./DashboardContent'), {
   ssr: false,

@@ -96,10 +96,10 @@
     document.body.appendChild(successBanner);
 
     function isAllowedOrigin(origin) {
-    return ALLOWED_IFRAME_ORIGINS.indexOf(origin) !== -1;
-  }
+      return ALLOWED_IFRAME_ORIGINS.indexOf(origin) !== -1;
+    }
 
-  function trapFocus(e) {
+    function trapFocus(e) {
     if (e.key !== 'Tab') return;
     const focusable = dialog.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
     if (!focusable.length) return;
@@ -116,9 +116,9 @@
         first.focus();
       }
     }
-  }
+    }
 
-  function openLoginModal(opts = {}) {
+    function openLoginModal(opts = {}) {
     const { next = null, waitForSignIn = false } = opts;
     try {
       // Generate a one-time state for cross-browser handoff
@@ -181,10 +181,10 @@
       }
       return signInPromise;
     }
-    return Promise.resolve(true);
-  }
+      return Promise.resolve(true);
+    }
 
-  function closeLoginModal() {
+    function closeLoginModal() {
     try { iframe.src = 'about:blank'; } catch (e) {}
     overlay.style.display = 'none';
     overlay.setAttribute('aria-hidden', 'true');
@@ -196,18 +196,18 @@
       signInReject(new Error('Login modal closed'));
       signInPromise = null; signInResolve = null; signInReject = null;
     }
-    if (successBanner) { try { successBanner.hidden = true; } catch(_) {} }
-  }
+      if (successBanner) { try { successBanner.hidden = true; } catch(_) {} }
+    }
 
-  function onKeyDown(e) {
+    function onKeyDown(e) {
     if (e.key === 'Escape') {
       closeLoginModal();
       postMessageToIframe({ type: 'parent_closed' });
     }
-  }
+    }
 
-  function postMessageToIframe(msg) {
-  try {
+    function postMessageToIframe(msg) {
+      try {
     const src = iframe && iframe.src ? iframe.src : '';
     if (!src) return;
     const url = new URL(src, location.href);
@@ -216,11 +216,11 @@
       iframe.contentWindow.postMessage(msg, origin);
     }
   } catch (e) {
-    console.warn('auth-gate: postMessageToIframe failed', e);
-  }
-}
+        console.warn('auth-gate: postMessageToIframe failed', e);
+      }
+    }
 
-  async function attachAuthGate(selector, actionFn) {
+    async function attachAuthGate(selector, actionFn) {
     const nodes = (typeof selector === 'string') ? document.querySelectorAll(selector)
       : (selector instanceof Element ? [selector] : selector);
 
@@ -255,13 +255,13 @@
         openLoginModal({ next: next });
       }, { passive: false });
     });
-  }
+    }
 
-  if (closeBtn) closeBtn.addEventListener('click', closeLoginModal);
-  if (modal) modal.addEventListener('click', (ev) => { /* backdrop click disabled */ });
+    if (closeBtn) closeBtn.addEventListener('click', closeLoginModal);
+    if (modal) modal.addEventListener('click', (ev) => { /* backdrop click disabled */ });
 
-  // Message receiver: only accept from configured origins
-  window.addEventListener('message', (ev) => {
+    // Message receiver: only accept from configured origins
+    window.addEventListener('message', (ev) => {
     const origin = ev.origin;
     if (!isAllowedOrigin(origin)) return;
     const msg = ev.data || {};
@@ -318,10 +318,10 @@
         try { closeLoginModal(); } catch (_) {}
         return;
       }  
-  }); // <-- THIS closes the message handler (was missing previously)
+    }); // <-- THIS closes the message handler (was missing previously)
 
-  // Role-based redirect function
-  async function redirectBasedOnRole(requestedUrl, user) {
+    // Role-based redirect function
+    async function redirectBasedOnRole(requestedUrl, user) {
     if (!user || !user.id) {
       console.warn('[auth-gate] No user provided for role-based redirect');
       return;
@@ -389,33 +389,41 @@
         location.href = requestedUrl;
       }
     }
-  }
+    }
 
-  // Expose API
-  window.authGate = {
+    // Expose API
+    window.authGate = {
     openLoginModal: (opts) => openLoginModal(opts || {}),
     closeLoginModal,
     attachAuthGate
   };
 
-  function showParentSuccess(email) {
-    try {
-      if (!successBanner || !successText) return;
-      successText.textContent = email ? `✓ Signed in as ${email}` : '✓ Signed in successfully';
-      successBanner.style.display = 'block';
-      successBanner.hidden = false;
-      setTimeout(() => {
-        try {
-          successBanner.style.display = 'none';
-          successBanner.hidden = true;
-        } catch(_) {}
-      }, 3000);
-    } catch(_) {}
+    function showParentSuccess(email) {
+      try {
+        if (!successBanner || !successText) return;
+        successText.textContent = email ? `✓ Signed in as ${email}` : '✓ Signed in successfully';
+        successBanner.style.display = 'block';
+        successBanner.hidden = false;
+        setTimeout(() => {
+          try {
+            successBanner.style.display = 'none';
+            successBanner.hidden = true;
+          } catch(_) {}
+        }, 3000);
+      } catch(_) {}
+    }
+
+    // Also expose as __thgOpenAuthModal for backward compatibility
+    window.__thgOpenAuthModal = (opts) => openLoginModal(opts || {});
+
+    console.log('[auth-gate] Initialized');
   }
 
-  // Also expose as __thgOpenAuthModal for backward compatibility
-  window.__thgOpenAuthModal = (opts) => openLoginModal(opts || {});
-
-  console.log('[auth-gate] Initialized');
+  // Call initAuthGate when DOM is ready
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initAuthGate);
+  } else {
+    initAuthGate();
+  }
 })();
 

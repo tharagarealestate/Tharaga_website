@@ -161,15 +161,10 @@ function DashboardContentInner() {
   }
 
   return (
-    <>
-      <Suspense fallback={null}>
-        <SearchParamsHandler onSectionChange={setActiveSection} />
-      </Suspense>
-      <UnifiedSinglePageDashboard 
-        activeSection={activeSection} 
-        onSectionChange={handleSectionChange}
-      />
-    </>
+    <UnifiedSinglePageDashboard 
+      activeSection={activeSection} 
+      onSectionChange={handleSectionChange}
+    />
   )
 }
 

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useRouter } from 'next/navigation'
 import { getSupabase } from '@/lib/supabase'
 import { UnifiedSinglePageDashboard } from './_components/UnifiedSinglePageDashboard'
 
@@ -9,16 +9,18 @@ export default function DashboardContent() {
   const [user, setUser] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const router = useRouter()
-  const searchParams = useSearchParams()
   const [activeSection, setActiveSection] = useState<string>('overview')
 
   // Get section from URL params or default to overview
   useEffect(() => {
-    const section = searchParams.get('section') || 'overview'
-    if (section !== activeSection) {
-      setActiveSection(section)
+    if (typeof window !== 'undefined') {
+      const urlParams = new URLSearchParams(window.location.search)
+      const section = urlParams.get('section') || 'overview'
+      if (section !== activeSection) {
+        setActiveSection(section)
+      }
     }
-  }, [searchParams, activeSection])
+  }, [activeSection])
   
   // Handle browser back/forward buttons
   useEffect(() => {

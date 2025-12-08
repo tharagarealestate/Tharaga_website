@@ -19,11 +19,12 @@ const nextConfig = {
   reactStrictMode: true,
   experimental: {
     typedRoutes: true,
-    // Disable streaming for better compatibility
     serverActions: {
       bodySizeLimit: '2mb',
     },
   },
+  // Disable streaming to prevent React error 423
+  output: 'standalone',
   webpack: (config) => {
     // Ensure '@' alias resolves to the app directory during bundling (Netlify/Linux envs)
     config.resolve = config.resolve || {}

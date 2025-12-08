@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useEffect, Suspense } from 'react'
-import { motion } from 'framer-motion'
 import { getSupabase } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
 
@@ -137,61 +136,41 @@ function DashboardContent() {
       {/* Main Content */}
       <div className="container mx-auto px-4 py-8 pt-20">
         {/* Welcome Section */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mb-8"
-        >
+        <div className="mb-8">
           <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">
             {greeting}, <span className="text-gradient-gold">{getFirstName()}</span>
           </h1>
           <p className="text-gray-400">
             Welcome back to your personalized property dashboard
           </p>
-        </motion.div>
+        </div>
 
         {/* Dashboard Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Main Column - 2/3 width */}
           <div className="lg:col-span-2 space-y-8">
             {/* Perfect Matches Section */}
-            <motion.section
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1 }}
-            >
+            <section>
               <PerfectMatches />
-            </motion.section>
+            </section>
 
             {/* Saved Properties Section */}
-            <motion.section
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-            >
+            <section>
               <SavedProperties />
-            </motion.section>
+            </section>
           </div>
 
           {/* Sidebar - 1/3 width */}
           <div className="space-y-6">
             {/* Document Vault */}
-            <motion.section
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3 }}
-            >
+            <section>
               <DocumentVault />
-            </motion.section>
+            </section>
 
             {/* Market Insights */}
-            <motion.section
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.4 }}
-            >
+            <section>
               <MarketInsights />
-            </motion.section>
+            </section>
           </div>
         </div>
       </div>

@@ -12,8 +12,9 @@ const SavedProperties = dynamic(() => import('@/components/dashboard/buyer/Saved
 const DocumentVault = dynamic(() => import('@/components/dashboard/buyer/DocumentVault'), { ssr: false })
 const MarketInsights = dynamic(() => import('@/components/dashboard/buyer/MarketInsights'), { ssr: false })
 
-// Import motion separately (it's safe for SSR)
-import { motion } from 'framer-motion'
+// Dynamically import motion to prevent SSR issues
+const MotionDiv = dynamic(() => import('framer-motion').then(mod => ({ default: mod.motion.div })), { ssr: false })
+const MotionSection = dynamic(() => import('framer-motion').then(mod => ({ default: mod.motion.section })), { ssr: false })
 
 function DashboardContentInner() {
   const [user, setUser] = useState<any>(null)

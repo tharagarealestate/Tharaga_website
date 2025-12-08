@@ -1,16 +1,19 @@
 'use client'
 
 import { useState, useEffect, useRef, Suspense } from 'react'
-import { motion } from 'framer-motion'
+import dynamic from 'next/dynamic'
 import { getSupabase } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
 
-// Import all components
-import DashboardHeader from '@/components/dashboard/buyer/DashboardHeader'
-import PerfectMatches from '@/components/dashboard/buyer/PerfectMatches'
-import SavedProperties from '@/components/dashboard/buyer/SavedProperties'
-import DocumentVault from '@/components/dashboard/buyer/DocumentVault'
-import MarketInsights from '@/components/dashboard/buyer/MarketInsights'
+// Dynamically import components to prevent SSR issues
+const DashboardHeader = dynamic(() => import('@/components/dashboard/buyer/DashboardHeader'), { ssr: false })
+const PerfectMatches = dynamic(() => import('@/components/dashboard/buyer/PerfectMatches'), { ssr: false })
+const SavedProperties = dynamic(() => import('@/components/dashboard/buyer/SavedProperties'), { ssr: false })
+const DocumentVault = dynamic(() => import('@/components/dashboard/buyer/DocumentVault'), { ssr: false })
+const MarketInsights = dynamic(() => import('@/components/dashboard/buyer/MarketInsights'), { ssr: false })
+
+// Import motion separately (it's safe for SSR)
+import { motion } from 'framer-motion'
 
 function DashboardContentInner() {
   const [user, setUser] = useState<any>(null)

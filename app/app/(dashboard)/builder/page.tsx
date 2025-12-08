@@ -2,8 +2,21 @@
 
 import { useState, useEffect, Suspense, useRef } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
+import dynamic from 'next/dynamic'
 import { getSupabase } from '@/lib/supabase'
-import { UnifiedSinglePageDashboard } from './_components/UnifiedSinglePageDashboard'
+
+// Dynamically import to prevent SSR issues
+const UnifiedSinglePageDashboard = dynamic(
+  () => import('./_components/UnifiedSinglePageDashboard').then(mod => ({ default: mod.UnifiedSinglePageDashboard })),
+  { ssr: false, loading: () => (
+    <div className="flex items-center justify-center min-h-[60vh]">
+      <div className="flex flex-col items-center gap-4">
+        <div className="w-12 h-12 border-2 border-[#D4AF37] border-t-transparent rounded-full animate-spin" />
+        <p className="text-gray-400">Loading dashboard...</p>
+      </div>
+    </div>
+  )}
+)
 
 function DashboardContentInner() {
   const [user, setUser] = useState<any>(null)

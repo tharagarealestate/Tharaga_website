@@ -29,7 +29,7 @@ function DashboardContent() {
   // Fetch user with timeout - middleware already verified access
   useEffect(() => {
     let mounted = true
-    let timeoutId: NodeJS.Timeout
+    let timeoutId: ReturnType<typeof setTimeout> | undefined
 
     const fetchUser = async () => {
       try {

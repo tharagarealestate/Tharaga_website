@@ -173,21 +173,32 @@ function DashboardContentInner() {
   )
 }
 
-function DashboardContent() {
-  return (
-    <Suspense fallback={
+// Client-only wrapper to prevent SSR streaming issues
+function ClientOnlyWrapper({ children }: { children: React.ReactNode }) {
+  const [isClient, setIsClient] = useState(false)
+  
+  useEffect(() => {
+    setIsClient(true)
+  }, [])
+  
+  if (!isClient) {
+    return (
       <div className="flex items-center justify-center min-h-[60vh]">
         <div className="flex flex-col items-center gap-4">
           <div className="w-12 h-12 border-2 border-[#D4AF37] border-t-transparent rounded-full animate-spin" />
           <p className="text-gray-400">Loading...</p>
         </div>
       </div>
-    }>
-      <DashboardContentInner />
-    </Suspense>
-  )
+    )
+  }
+  
+  return <>{children}</>
 }
 
 export default function BuilderDashboardPage() {
-  return <DashboardContent />
+  return (
+    <ClientOnlyWrapper>
+      <DashboardContentInner />
+    </ClientOnlyWrapper>
+  )
 }

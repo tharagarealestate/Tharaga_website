@@ -18,11 +18,22 @@ const UnifiedSinglePageDashboard = dynamic(
   )}
 )
 
+// Separate component for useSearchParams to ensure proper Suspense boundary
+function SearchParamsHandler({ onSectionChange }: { onSectionChange: (section: string) => void }) {
+  const searchParams = useSearchParams()
+  
+  useEffect(() => {
+    const section = searchParams?.get('section') || 'overview'
+    onSectionChange(section)
+  }, [searchParams, onSectionChange])
+  
+  return null
+}
+
 function DashboardContentInner() {
   const [user, setUser] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const router = useRouter()
-  const searchParams = useSearchParams()
   const [activeSection, setActiveSection] = useState<string>('overview')
   
   // Initialize Supabase only on client side to avoid SSR issues
@@ -31,14 +42,6 @@ function DashboardContentInner() {
   // Use ref to prevent multiple simultaneous role checks
   const roleCheckInProgress = useRef(false)
 
-  // Get section from URL params or default to overview
-  useEffect(() => {
-    const section = searchParams.get('section') || 'overview'
-    if (section !== activeSection) {
-      setActiveSection(section)
-    }
-  }, [searchParams, activeSection])
-  
   // Handle browser back/forward buttons
   useEffect(() => {
     const handlePopState = () => {
@@ -160,10 +163,15 @@ function DashboardContentInner() {
   }
 
   return (
-    <UnifiedSinglePageDashboard 
-      activeSection={activeSection} 
-      onSectionChange={handleSectionChange}
-    />
+    <>
+      <Suspense fallback={null}>
+        <SearchParamsHandler onSectionChange={setActiveSection} />
+      </Suspense>
+      <UnifiedSinglePageDashboard 
+        activeSection={activeSection} 
+        onSectionChange={handleSectionChange}
+      />
+    </>
   )
 }
 

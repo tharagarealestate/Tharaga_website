@@ -16,8 +16,10 @@ export default function Page() {
   const [user, setUser] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [greeting, setGreeting] = useState('Hello')
-  const supabase = getSupabase()
   const router = useRouter()
+  
+  // Initialize Supabase only on client side to avoid SSR issues
+  const supabase = typeof window !== 'undefined' ? getSupabase() : null
   
   // Use ref to prevent multiple simultaneous role checks
   const roleCheckInProgress = useRef(false)
@@ -49,6 +51,14 @@ export default function Page() {
     }, 2000) // 2 second timeout
 
     const fetchUser = async () => {
+      if (!supabase) {
+        console.warn('Supabase not available - rendering anyway')
+        setLoading(false)
+        setUser({ id: 'verified', email: 'user@tharaga.co.in' })
+        roleCheckInProgress.current = false
+        return
+      }
+      
       try {
         // Race auth call against timeout
         const authPromise = supabase.auth.getUser()

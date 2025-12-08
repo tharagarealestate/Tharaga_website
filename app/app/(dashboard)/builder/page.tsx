@@ -18,18 +18,6 @@ const UnifiedSinglePageDashboard = dynamic(
   )}
 )
 
-// Separate component for useSearchParams to ensure proper Suspense boundary
-function SearchParamsHandler({ onSectionChange }: { onSectionChange: (section: string) => void }) {
-  const searchParams = useSearchParams()
-  
-  useEffect(() => {
-    const section = searchParams?.get('section') || 'overview'
-    onSectionChange(section)
-  }, [searchParams, onSectionChange])
-  
-  return null
-}
-
 function DashboardContentInner() {
   const [user, setUser] = useState<any>(null)
   const [loading, setLoading] = useState(true)
@@ -41,6 +29,16 @@ function DashboardContentInner() {
   
   // Use ref to prevent multiple simultaneous role checks
   const roleCheckInProgress = useRef(false)
+
+  // Get section from URL params - use window.location to avoid useSearchParams streaming issues
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const urlParams = new URLSearchParams(window.location.search)
+    const section = urlParams.get('section') || 'overview'
+    if (section !== activeSection) {
+      setActiveSection(section)
+    }
+  }, [activeSection])
 
   // Handle browser back/forward buttons
   useEffect(() => {

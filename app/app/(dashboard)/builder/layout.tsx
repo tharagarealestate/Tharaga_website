@@ -8,6 +8,8 @@ import { KeyboardShortcutsHelp } from './_components/KeyboardShortcutsHelp'
 export const runtime = 'nodejs'
 // Force dynamic rendering to prevent static generation errors
 export const dynamic = 'force-dynamic'
+// Disable streaming to prevent React error 423
+export const revalidate = 0
 
 export default function BuilderDashboardLayout({ children }: { children: ReactNode }) {
   // Authentication handled by middleware - no server-side redirects needed

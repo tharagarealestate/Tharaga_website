@@ -5,22 +5,12 @@ import { getSupabase } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
 import { ClientOnly } from '@/components/ClientOnly'
 
-// Dynamically import components to prevent SSR issues
-let DashboardHeader: any = null
-let PerfectMatches: any = null
-let SavedProperties: any = null
-let DocumentVault: any = null
-let MarketInsights: any = null
-
-if (typeof window !== 'undefined') {
-  Promise.all([
-    import('@/components/dashboard/buyer/DashboardHeader').then(m => { DashboardHeader = m.default }),
-    import('@/components/dashboard/buyer/PerfectMatches').then(m => { PerfectMatches = m.default }),
-    import('@/components/dashboard/buyer/SavedProperties').then(m => { SavedProperties = m.default }),
-    import('@/components/dashboard/buyer/DocumentVault').then(m => { DocumentVault = m.default }),
-    import('@/components/dashboard/buyer/MarketInsights').then(m => { MarketInsights = m.default }),
-  ]).catch(console.error)
-}
+// Import all components
+import DashboardHeader from '@/components/dashboard/buyer/DashboardHeader'
+import PerfectMatches from '@/components/dashboard/buyer/PerfectMatches'
+import SavedProperties from '@/components/dashboard/buyer/SavedProperties'
+import DocumentVault from '@/components/dashboard/buyer/DocumentVault'
+import MarketInsights from '@/components/dashboard/buyer/MarketInsights'
 
 export default function DashboardContent() {
   const [user, setUser] = useState<any>({ id: 'verified', email: 'user@tharaga.co.in' })
@@ -88,8 +78,8 @@ export default function DashboardContent() {
     return fullName.split(' ')[0].split('@')[0]
   }
 
-  // Don't render until mounted and components are loaded
-  if (!mounted || !DashboardHeader || !PerfectMatches || !SavedProperties || !DocumentVault || !MarketInsights) {
+  // Don't render until mounted
+  if (!mounted) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-primary-950 via-primary-900 to-primary-800 relative overflow-hidden">
         <div className="absolute inset-0 opacity-30">

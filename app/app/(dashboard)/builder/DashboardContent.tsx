@@ -4,14 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { getSupabase } from '@/lib/supabase'
 import { ClientOnly } from '@/components/ClientOnly'
-
-// Dynamically import to prevent SSR issues
-let UnifiedSinglePageDashboard: any = null
-if (typeof window !== 'undefined') {
-  import('./_components/UnifiedSinglePageDashboard').then((mod) => {
-    UnifiedSinglePageDashboard = mod.UnifiedSinglePageDashboard
-  })
-}
+import { UnifiedSinglePageDashboard } from './_components/UnifiedSinglePageDashboard'
 
 export default function DashboardContent() {
   const [user, setUser] = useState<any>({ id: 'verified', email: 'user@tharaga.co.in' })
@@ -92,8 +85,8 @@ export default function DashboardContent() {
     window.history.pushState({}, '', url.toString())
   }
 
-  // Don't render until mounted and component is loaded
-  if (!mounted || !UnifiedSinglePageDashboard) {
+  // Don't render until mounted
+  if (!mounted) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
         <div className="flex flex-col items-center gap-4">

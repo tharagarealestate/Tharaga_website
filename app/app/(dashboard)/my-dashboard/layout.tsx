@@ -2,6 +2,7 @@ import * as React from 'react'
 import type { Metadata } from 'next'
 
 export const runtime = 'nodejs'
+export const dynamic = 'force-dynamic'
 
 export const metadata: Metadata = {
   title: 'My Dashboard | Tharaga',

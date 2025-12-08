@@ -3,6 +3,8 @@ import type { Metadata } from 'next'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
+// Disable streaming to prevent React error 423
+export const dynamicParams = true
 
 export const metadata: Metadata = {
   title: 'My Dashboard | Tharaga',

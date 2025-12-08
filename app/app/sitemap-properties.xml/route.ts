@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { sitemapGenerator } from '@/lib/seo/sitemap-generator';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET() {
   try {
     const sitemap = await sitemapGenerator.generatePropertiesSitemap();

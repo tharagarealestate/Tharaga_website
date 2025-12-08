@@ -22,7 +22,8 @@ function DashboardContent() {
     if (section !== activeSection) {
       setActiveSection(section)
     }
-  }, [searchParams, activeSection])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams])
 
   // Handle browser back/forward buttons
   useEffect(() => {

@@ -145,7 +145,7 @@ function DashboardContent() {
   )
 }
 
-export default function BuilderDashboardPage() {
+function DashboardContent() {
   return (
     <Suspense fallback={
       <div className="flex items-center justify-center min-h-[60vh]">
@@ -155,7 +155,11 @@ export default function BuilderDashboardPage() {
         </div>
       </div>
     }>
-      <DashboardContent />
+      <DashboardContentInner />
     </Suspense>
   )
+}
+
+export default function BuilderDashboardPage() {
+  return <DashboardContent />
 }

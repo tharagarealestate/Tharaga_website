@@ -1,111 +1,86 @@
 'use client'
 
-import { useState, useEffect, useRef, Suspense } from 'react'
-import dynamic from 'next/dynamic'
+import { useState, useEffect } from 'react'
+import { motion } from 'framer-motion'
 import { getSupabase } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
 
-// Dynamically import components to prevent SSR issues
-const DashboardHeader = dynamic(() => import('@/components/dashboard/buyer/DashboardHeader'), { ssr: false })
-const PerfectMatches = dynamic(() => import('@/components/dashboard/buyer/PerfectMatches'), { ssr: false })
-const SavedProperties = dynamic(() => import('@/components/dashboard/buyer/SavedProperties'), { ssr: false })
-const DocumentVault = dynamic(() => import('@/components/dashboard/buyer/DocumentVault'), { ssr: false })
-const MarketInsights = dynamic(() => import('@/components/dashboard/buyer/MarketInsights'), { ssr: false })
+// Import all components
+import DashboardHeader from '@/components/dashboard/buyer/DashboardHeader'
+import PerfectMatches from '@/components/dashboard/buyer/PerfectMatches'
+import SavedProperties from '@/components/dashboard/buyer/SavedProperties'
+import DocumentVault from '@/components/dashboard/buyer/DocumentVault'
+import MarketInsights from '@/components/dashboard/buyer/MarketInsights'
 
-// Removed framer-motion to prevent SSR streaming issues
-
-function DashboardContentInner() {
+export default function Page() {
   const [user, setUser] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [greeting, setGreeting] = useState('Hello')
+  const supabase = getSupabase()
   const router = useRouter()
-  
-  // Initialize Supabase only on client side to avoid SSR issues
-  const supabase = typeof window !== 'undefined' ? getSupabase() : null
-  
-  // Use ref to prevent multiple simultaneous role checks
-  const roleCheckInProgress = useRef(false)
 
-  // Fetch user with timeout - RUN ONCE on mount
+  // Fetch user, check roles, and set greeting
   useEffect(() => {
-    // Prevent multiple simultaneous checks
-    if (roleCheckInProgress.current) {
-      return
-    }
-
-    roleCheckInProgress.current = true
-
-    // Set greeting immediately
-    const hour = new Date().getHours()
-    if (hour < 12) setGreeting('Good morning')
-    else if (hour < 17) setGreeting('Good afternoon')
-    else setGreeting('Good evening')
-    
-    // Set timeout to prevent infinite loading
-    const timeoutId = setTimeout(() => {
-      if (loading) {
-        console.warn('Auth check timeout - rendering anyway (middleware verified)')
-        setLoading(false)
-        // Use placeholder user to allow rendering
-        setUser({ id: 'verified', email: 'user@tharaga.co.in' })
-        roleCheckInProgress.current = false
-      }
-    }, 2000) // 2 second timeout
-
     const fetchUser = async () => {
-      if (!supabase) {
-        console.warn('Supabase not available - rendering anyway')
-        setLoading(false)
-        setUser({ id: 'verified', email: 'user@tharaga.co.in' })
-        roleCheckInProgress.current = false
-        return
-      }
-      
       try {
-        // Race auth call against timeout
-        const authPromise = supabase.auth.getUser()
-        const timeoutPromise = new Promise((resolve) => setTimeout(() => resolve(null), 1500))
-        
-        const result = await Promise.race([authPromise, timeoutPromise]) as any
+        const { data: { user }, error } = await supabase.auth.getUser()
 
-        clearTimeout(timeoutId)
-
-        if (result && result.data && result.data.user) {
-          // Success - got user
-          setUser(result.data.user)
+        if (error) {
+          console.error('Auth error:', error)
           setLoading(false)
-          roleCheckInProgress.current = false
-        } else if (result && result.error) {
-          // Auth error - render anyway
-          console.warn('Auth error (rendering anyway):', result.error)
-          setLoading(false)
-          setUser({ id: 'verified', email: 'user@tharaga.co.in' })
-          roleCheckInProgress.current = false
-        } else {
-          // Timeout - render anyway
-          console.warn('Auth timeout - rendering anyway (middleware verified)')
-          setLoading(false)
-          setUser({ id: 'verified', email: 'user@tharaga.co.in' })
-          roleCheckInProgress.current = false
+          // On error, send back to homepage (auth handled by modal there)
+          router.push('/')
+          return
         }
-      } catch (err) {
-        clearTimeout(timeoutId)
-        console.warn('Auth error (rendering anyway):', err)
+
+        if (!user) {
+          // No user, send back to homepage where CTA opens login modal
+          setLoading(false)
+          router.push('/')
+          return
+        }
+
+        // Check user roles - buyer dashboard requires 'buyer' or 'admin' role
+        const { data: rolesData, error: rolesError } = await supabase
+          .from('user_roles')
+          .select('role')
+          .eq('user_id', user.id)
+
+        if (rolesError) {
+          console.error('Error fetching roles:', rolesError)
+          setLoading(false)
+          router.push('/')
+          return
+        }
+
+        const roles = (rolesData || []).map(r => r.role)
+        const hasAccess = roles.includes('buyer') || roles.includes('admin')
+
+        if (!hasAccess) {
+          console.warn('User does not have buyer role. Roles:', roles)
+          setLoading(false)
+          // Redirect to home; portal/menu will show appropriate dashboards
+          router.push('/')
+          return
+        }
+
+        setUser(user)
         setLoading(false)
-        // Render anyway - middleware already verified
-        setUser({ id: 'verified', email: 'user@tharaga.co.in' })
-        roleCheckInProgress.current = false
+
+        // Set time-based greeting
+        const hour = new Date().getHours()
+        if (hour < 12) setGreeting('Good morning')
+        else if (hour < 17) setGreeting('Good afternoon')
+        else setGreeting('Good evening')
+      } catch (err) {
+        console.error('Error fetching user:', err)
+        setLoading(false)
+        router.push('/')
       }
     }
 
     fetchUser()
-
-    // Cleanup function
-    return () => {
-      clearTimeout(timeoutId)
-      roleCheckInProgress.current = false
-    }
-  }, []) // Empty deps - run once on mount
+  }, [supabase, router])
 
   // Get user's first name
   const getFirstName = () => {
@@ -141,30 +116,9 @@ function DashboardContentInner() {
     )
   }
   
-  // Always render - user will be set by timeout or auth
-  // Don't return null as it prevents rendering
+  // Show nothing while redirecting or if no user
   if (!user) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-primary-950 via-primary-900 to-primary-800 relative overflow-hidden">
-        <div className="absolute inset-0 opacity-30">
-          <div className="absolute top-20 left-10 w-96 h-96 bg-gold-500 rounded-full blur-3xl animate-pulse-slow" />
-          <div
-            className="absolute bottom-20 right-10 w-[600px] h-[600px] bg-emerald-500 rounded-full blur-3xl animate-pulse-slow"
-            style={{ animationDelay: '1s' }}
-          />
-        </div>
-        <div className="relative z-10">
-          <div className="container mx-auto px-4 py-8">
-            <div className="flex items-center justify-center min-h-[60vh]">
-              <div className="flex flex-col items-center gap-4">
-                <div className="w-12 h-12 border-2 border-[#D4AF37] border-t-transparent rounded-full animate-spin" />
-                <p className="text-gray-400">Initializing dashboard...</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    )
+    return null
   }
 
   return (
@@ -185,41 +139,61 @@ function DashboardContentInner() {
       {/* Main Content */}
       <div className="container mx-auto px-4 py-8 pt-20">
         {/* Welcome Section */}
-        <div className="mb-8">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-8"
+        >
           <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">
             {greeting}, <span className="text-gradient-gold">{getFirstName()}</span>
           </h1>
           <p className="text-gray-400">
             Welcome back to your personalized property dashboard
           </p>
-        </div>
+        </motion.div>
 
         {/* Dashboard Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Main Column - 2/3 width */}
           <div className="lg:col-span-2 space-y-8">
             {/* Perfect Matches Section */}
-            <section>
+            <motion.section
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1 }}
+            >
               <PerfectMatches />
-            </section>
+            </motion.section>
 
             {/* Saved Properties Section */}
-            <section>
+            <motion.section
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+            >
               <SavedProperties />
-            </section>
+            </motion.section>
           </div>
 
           {/* Sidebar - 1/3 width */}
           <div className="space-y-6">
             {/* Document Vault */}
-            <section>
+            <motion.section
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 }}
+            >
               <DocumentVault />
-            </section>
+            </motion.section>
 
             {/* Market Insights */}
-            <section>
+            <motion.section
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.4 }}
+            >
               <MarketInsights />
-            </section>
+            </motion.section>
           </div>
         </div>
       </div>
@@ -245,47 +219,4 @@ function DashboardContentInner() {
       `}</style>
     </div>
   );
-}
-
-// Client-only wrapper to prevent SSR streaming issues
-function ClientOnlyWrapper({ children }: { children: React.ReactNode }) {
-  const [isClient, setIsClient] = useState(false)
-  
-  useEffect(() => {
-    setIsClient(true)
-  }, [])
-  
-  if (!isClient) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-primary-950 via-primary-900 to-primary-800 relative overflow-hidden">
-        <div className="absolute inset-0 opacity-30">
-          <div className="absolute top-20 left-10 w-96 h-96 bg-gold-500 rounded-full blur-3xl animate-pulse-slow" />
-          <div
-            className="absolute bottom-20 right-10 w-[600px] h-[600px] bg-emerald-500 rounded-full blur-3xl animate-pulse-slow"
-            style={{ animationDelay: '1s' }}
-          />
-        </div>
-        <div className="relative z-10">
-          <div className="container mx-auto px-4 py-8">
-            <div className="flex items-center justify-center min-h-[60vh]">
-              <div className="flex flex-col items-center gap-4">
-                <div className="w-12 h-12 border-2 border-[#D4AF37] border-t-transparent rounded-full animate-spin" />
-                <p className="text-gray-400">Loading your dashboard...</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    )
-  }
-  
-  return <>{children}</>
-}
-
-export default function MyDashboardPage() {
-  return (
-    <ClientOnlyWrapper>
-      <DashboardContentInner />
-    </ClientOnlyWrapper>
-  )
 }

@@ -1,45 +1,26 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
-import { useRouter } from 'next/navigation'
-import dynamic from 'next/dynamic'
+import { useState, useEffect, Suspense } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { getSupabase } from '@/lib/supabase'
+import { UnifiedSinglePageDashboard } from './_components/UnifiedSinglePageDashboard'
 
-// Dynamically import to prevent SSR issues
-const UnifiedSinglePageDashboard = dynamic(
-  () => import('./_components/UnifiedSinglePageDashboard').then(mod => ({ default: mod.UnifiedSinglePageDashboard })),
-  { ssr: false, loading: () => (
-    <div className="flex items-center justify-center min-h-[60vh]">
-      <div className="flex flex-col items-center gap-4">
-        <div className="w-12 h-12 border-2 border-[#D4AF37] border-t-transparent rounded-full animate-spin" />
-        <p className="text-gray-400">Loading dashboard...</p>
-      </div>
-    </div>
-  )}
-)
-
-function DashboardContentInner() {
+function DashboardContent() {
   const [user, setUser] = useState<any>(null)
   const [loading, setLoading] = useState(true)
+  const supabase = getSupabase()
   const router = useRouter()
+  const searchParams = useSearchParams()
   const [activeSection, setActiveSection] = useState<string>('overview')
-  
-  // Initialize Supabase only on client side to avoid SSR issues
-  const supabase = typeof window !== 'undefined' ? getSupabase() : null
-  
-  // Use ref to prevent multiple simultaneous role checks
-  const roleCheckInProgress = useRef(false)
 
-  // Get section from URL params - use window.location to avoid useSearchParams streaming issues
+  // Get section from URL params or default to overview
   useEffect(() => {
-    if (typeof window === 'undefined') return
-    const urlParams = new URLSearchParams(window.location.search)
-    const section = urlParams.get('section') || 'overview'
+    const section = searchParams.get('section') || 'overview'
     if (section !== activeSection) {
       setActiveSection(section)
     }
-  }, [activeSection])
-
+  }, [searchParams, activeSection])
+  
   // Handle browser back/forward buttons
   useEffect(() => {
     const handlePopState = () => {
@@ -52,80 +33,59 @@ function DashboardContentInner() {
     return () => window.removeEventListener('popstate', handlePopState)
   }, [])
 
-  // Fetch user with timeout - RUN ONCE on mount
+  // Fetch user and check roles
   useEffect(() => {
-    // Prevent multiple simultaneous checks
-    if (roleCheckInProgress.current) {
-      return
-    }
-
-    roleCheckInProgress.current = true
-    
-    // Set timeout to prevent infinite loading
-    const timeoutId = setTimeout(() => {
-      if (loading) {
-        console.warn('Auth check timeout - rendering anyway (middleware verified)')
-        setLoading(false)
-        // Use placeholder user to allow rendering
-        setUser({ id: 'verified', email: 'user@tharaga.co.in' })
-        roleCheckInProgress.current = false
-      }
-    }, 2000) // 2 second timeout
-
     const fetchUser = async () => {
-      if (!supabase) {
-        console.warn('Supabase not available - rendering anyway')
-        setLoading(false)
-        setUser({ id: 'verified', email: 'user@tharaga.co.in' })
-        roleCheckInProgress.current = false
-        return
-      }
-      
       try {
-        // Race auth call against timeout
-        const authPromise = supabase.auth.getUser()
-        const timeoutPromise = new Promise((resolve) => setTimeout(() => resolve(null), 1500))
-        
-        const result = await Promise.race([authPromise, timeoutPromise]) as any
+        const { data: { user }, error } = await supabase.auth.getUser()
 
-        clearTimeout(timeoutId)
-
-        if (result && result.data && result.data.user) {
-          // Success - got user
-          setUser(result.data.user)
+        if (error) {
+          console.error('Auth error:', error)
           setLoading(false)
-          roleCheckInProgress.current = false
-        } else if (result && result.error) {
-          // Auth error
-          console.warn('Auth error (rendering anyway):', result.error)
-          setLoading(false)
-          setUser({ id: 'verified', email: 'user@tharaga.co.in' })
-          roleCheckInProgress.current = false
-        } else {
-          // Timeout - render anyway
-          console.warn('Auth timeout - rendering anyway (middleware verified)')
-          setLoading(false)
-          setUser({ id: 'verified', email: 'user@tharaga.co.in' })
-          roleCheckInProgress.current = false
+          router.push('/')
+          return
         }
-      } catch (err) {
-        clearTimeout(timeoutId)
-        console.warn('Auth error (rendering anyway):', err)
+
+        if (!user) {
+          setLoading(false)
+          router.push('/')
+          return
+        }
+
+        // Check user roles
+        const { data: rolesData, error: rolesError } = await supabase
+          .from('user_roles')
+          .select('role')
+          .eq('user_id', user.id)
+
+        if (rolesError) {
+          console.error('Error fetching roles:', rolesError)
+          setLoading(false)
+          router.push('/')
+          return
+        }
+
+        const roles = (rolesData || []).map(r => r.role)
+        const hasAccess = roles.includes('builder') || roles.includes('admin')
+
+        if (!hasAccess) {
+          console.warn('User does not have builder role. Roles:', roles)
+          setLoading(false)
+          router.push('/')
+          return
+        }
+
+        setUser(user)
         setLoading(false)
-        // Render anyway - middleware already verified
-        setUser({ id: 'verified', email: 'user@tharaga.co.in' })
-        roleCheckInProgress.current = false
+      } catch (err) {
+        console.error('Error fetching user:', err)
+        setLoading(false)
+        router.push('/')
       }
     }
 
     fetchUser()
-
-    // Cleanup function
-    return () => {
-      clearTimeout(timeoutId)
-      roleCheckInProgress.current = false
-    }
-  }, []) // Empty deps - run once on mount
+  }, [supabase, router])
 
   // Handle section change
   const handleSectionChange = (section: string) => {
@@ -147,17 +107,8 @@ function DashboardContentInner() {
     )
   }
 
-  // Always render - user will be set by timeout or auth
-  // Don't return null as it prevents rendering
   if (!user) {
-    return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="flex flex-col items-center gap-4">
-          <div className="w-12 h-12 border-2 border-[#D4AF37] border-t-transparent rounded-full animate-spin" />
-          <p className="text-gray-400">Initializing dashboard...</p>
-        </div>
-      </div>
-    )
+    return null
   }
 
   return (
@@ -168,32 +119,17 @@ function DashboardContentInner() {
   )
 }
 
-// Client-only wrapper to prevent SSR streaming issues
-function ClientOnlyWrapper({ children }: { children: React.ReactNode }) {
-  const [isClient, setIsClient] = useState(false)
-  
-  useEffect(() => {
-    setIsClient(true)
-  }, [])
-  
-  if (!isClient) {
-    return (
+export default function BuilderDashboardPage() {
+  return (
+    <Suspense fallback={
       <div className="flex items-center justify-center min-h-[60vh]">
         <div className="flex flex-col items-center gap-4">
           <div className="w-12 h-12 border-2 border-[#D4AF37] border-t-transparent rounded-full animate-spin" />
           <p className="text-gray-400">Loading...</p>
         </div>
       </div>
-    )
-  }
-  
-  return <>{children}</>
-}
-
-export default function BuilderDashboardPage() {
-  return (
-    <ClientOnlyWrapper>
-      <DashboardContentInner />
-    </ClientOnlyWrapper>
+    }>
+      <DashboardContent />
+    </Suspense>
   )
 }

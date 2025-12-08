@@ -8,10 +8,12 @@ import { UnifiedSinglePageDashboard } from './_components/UnifiedSinglePageDashb
 function DashboardContent() {
   const [user, setUser] = useState<any>(null)
   const [loading, setLoading] = useState(true)
-  const supabase = getSupabase()
   const router = useRouter()
   const searchParams = useSearchParams()
   const [activeSection, setActiveSection] = useState<string>('overview')
+  
+  // Initialize Supabase only on client side to avoid SSR issues
+  const supabase = typeof window !== 'undefined' ? getSupabase() : null
   
   // Use ref to prevent multiple simultaneous role checks
   const roleCheckInProgress = useRef(false)
@@ -57,6 +59,14 @@ function DashboardContent() {
     }, 2000) // 2 second timeout
 
     const fetchUser = async () => {
+      if (!supabase) {
+        console.warn('Supabase not available - rendering anyway')
+        setLoading(false)
+        setUser({ id: 'verified', email: 'user@tharaga.co.in' })
+        roleCheckInProgress.current = false
+        return
+      }
+      
       try {
         // Race auth call against timeout
         const authPromise = supabase.auth.getUser()

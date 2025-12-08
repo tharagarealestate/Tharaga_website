@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, Suspense } from 'react'
 import { motion } from 'framer-motion'
 import { getSupabase } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
@@ -12,7 +12,7 @@ import SavedProperties from '@/components/dashboard/buyer/SavedProperties'
 import DocumentVault from '@/components/dashboard/buyer/DocumentVault'
 import MarketInsights from '@/components/dashboard/buyer/MarketInsights'
 
-export default function Page() {
+function Page() {
   const [user, setUser] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [greeting, setGreeting] = useState('Hello')

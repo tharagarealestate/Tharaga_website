@@ -3,22 +3,36 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { getSupabase } from '@/lib/supabase'
-import { UnifiedSinglePageDashboard } from './_components/UnifiedSinglePageDashboard'
+import { ClientOnly } from '@/components/ClientOnly'
+
+// Dynamically import to prevent SSR issues
+let UnifiedSinglePageDashboard: any = null
+if (typeof window !== 'undefined') {
+  import('./_components/UnifiedSinglePageDashboard').then((mod) => {
+    UnifiedSinglePageDashboard = mod.UnifiedSinglePageDashboard
+  })
+}
 
 export default function DashboardContent() {
   const [user, setUser] = useState<any>({ id: 'verified', email: 'user@tharaga.co.in' })
   const [activeSection, setActiveSection] = useState<string>('overview')
+  const [mounted, setMounted] = useState(false)
+
+  // Ensure component only renders on client
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   // Get section from URL params or default to overview
   useEffect(() => {
-    if (typeof window !== 'undefined') {
+    if (typeof window !== 'undefined' && mounted) {
       const urlParams = new URLSearchParams(window.location.search)
       const section = urlParams.get('section') || 'overview'
       if (section !== activeSection) {
         setActiveSection(section)
       }
     }
-  }, [activeSection])
+  }, [activeSection, mounted])
   
   // Handle browser back/forward buttons
   useEffect(() => {
@@ -78,12 +92,26 @@ export default function DashboardContent() {
     window.history.pushState({}, '', url.toString())
   }
 
+  // Don't render until mounted and component is loaded
+  if (!mounted || !UnifiedSinglePageDashboard) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-12 h-12 border-2 border-[#D4AF37] border-t-transparent rounded-full animate-spin" />
+          <p className="text-gray-400">Loading your dashboard...</p>
+        </div>
+      </div>
+    )
+  }
+
   // Always render dashboard - never show loading state
   return (
-    <UnifiedSinglePageDashboard 
-      activeSection={activeSection} 
-      onSectionChange={handleSectionChange}
-    />
+    <ClientOnly>
+      <UnifiedSinglePageDashboard 
+        activeSection={activeSection} 
+        onSectionChange={handleSectionChange}
+      />
+    </ClientOnly>
   )
 }
 

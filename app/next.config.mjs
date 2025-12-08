@@ -22,6 +22,8 @@ const nextConfig = {
     serverActions: {
       bodySizeLimit: '2mb',
     },
+    // Disable streaming for dashboard routes to prevent React error #423
+    serverComponentsExternalPackages: ['framer-motion'],
   },
   webpack: (config) => {
     // Ensure '@' alias resolves to the app directory during bundling (Netlify/Linux envs)

@@ -2,8 +2,25 @@
 
 import { useState, useEffect, useMemo, Suspense } from 'react'
 import type React from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
 import { cn } from '@/lib/utils'
+
+// Conditionally import framer-motion only on client
+let motion: any = null
+let AnimatePresence: any = null
+
+if (typeof window !== 'undefined') {
+  try {
+    const framerMotion = require('framer-motion')
+    motion = framerMotion.motion
+    AnimatePresence = framerMotion.AnimatePresence
+  } catch (e) {
+    console.warn('framer-motion not available, using fallback')
+  }
+}
+
+// Fallback component when framer-motion is not available
+const MotionDiv = ({ children, className, ...props }: any) => <div className={className} {...props}>{children}</div>
+const FallbackAnimatePresence = ({ children }: any) => <>{children}</>
 
 // Import section components
 import { OverviewSection } from './sections/OverviewSection'
@@ -73,33 +90,36 @@ export function UnifiedSinglePageDashboard({ activeSection, onSectionChange }: U
 
   const ActiveComponent = sectionComponents[activeSection] || OverviewSection
 
+  const MotionComponent = motion || MotionDiv
+  const AnimatePresenceComponent = AnimatePresence || FallbackAnimatePresence
+
   return (
     <div className="relative w-full">
       {/* Background is handled by layout.tsx - no duplicate background here */}
 
       {/* Main Content Area with Smooth Transitions */}
       <div className="relative z-10 px-4 sm:px-6 lg:px-8 py-6 lg:py-8">
-        <AnimatePresence mode="wait">
-          <motion.div
+        <AnimatePresenceComponent mode="wait">
+          <MotionComponent
             key={activeSection}
-            initial={{ opacity: 0, y: 20, scale: 0.98 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -20, scale: 0.98 }}
-            transition={{
+            initial={motion ? { opacity: 0, y: 20, scale: 0.98 } : undefined}
+            animate={motion ? { opacity: 1, y: 0, scale: 1 } : undefined}
+            exit={motion ? { opacity: 0, y: -20, scale: 0.98 } : undefined}
+            transition={motion ? {
               duration: 0.35,
               ease: [0.4, 0, 0.2, 1], // Custom cubic-bezier for smooth feel
-            }}
-            onAnimationStart={() => {
+            } : undefined}
+            onAnimationStart={motion ? () => {
               // Ensure smooth scroll during transition
               window.scrollTo({ top: 0, behavior: 'smooth' })
-            }}
+            } : undefined}
             className="w-full"
           >
             <Suspense fallback={<SectionLoader section={activeSection} />}>
               <ActiveComponent onNavigate={(section: string) => onSectionChange(section)} />
             </Suspense>
-          </motion.div>
-        </AnimatePresence>
+          </MotionComponent>
+        </AnimatePresenceComponent>
       </div>
     </div>
   )

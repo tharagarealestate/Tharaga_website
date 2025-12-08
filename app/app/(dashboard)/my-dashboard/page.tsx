@@ -1,9 +1,5 @@
 'use client'
 
-// Disable SSR for this page to prevent React error 423
-export const dynamic = 'force-dynamic'
-export const runtime = 'nodejs'
-
 import { useState, useEffect, useRef, Suspense } from 'react'
 import dynamic from 'next/dynamic'
 import { getSupabase } from '@/lib/supabase'

@@ -7,6 +7,8 @@ import fs from 'node:fs'
 import path from 'node:path'
 
 function main() {
+  // When run from netlify.toml: "cd app && node ../scripts/ensure-next-public-env.mjs"
+  // process.cwd() is already 'app', so we're in the right directory
   const appDir = path.resolve(process.cwd())
   // Always write to current working directory (the Next.js app root)
   const envFile = path.join(appDir, '.env.production')
@@ -24,7 +26,14 @@ function main() {
   }
 
   if (!fallbackUrl || !fallbackAnon) {
-    console.log('[ensure-env] Missing SUPABASE_URL or SUPABASE_ANON_KEY; cannot generate NEXT_PUBLIC_*')
+    console.warn('[ensure-env] Missing SUPABASE_URL or SUPABASE_ANON_KEY; cannot generate NEXT_PUBLIC_*')
+    console.warn('[ensure-env] Available env vars:', {
+      hasNextPublicUrl: !!currentNextPublicUrl,
+      hasNextPublicAnon: !!currentNextPublicAnon,
+      hasSupabaseUrl: !!fallbackUrl,
+      hasSupabaseAnon: !!fallbackAnon
+    })
+    // Don't fail the build - let Next.js handle missing env vars
     return
   }
 

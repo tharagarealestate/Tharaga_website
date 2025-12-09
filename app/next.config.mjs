@@ -25,13 +25,15 @@ const nextConfig = {
     // Disable streaming for dashboard routes to prevent React error #423
     serverComponentsExternalPackages: ['framer-motion'],
   },
-  webpack: (config) => {
+  webpack: (config, { isServer }) => {
     // Ensure '@' alias resolves to the app directory during bundling (Netlify/Linux envs)
     config.resolve = config.resolve || {}
     config.resolve.alias = config.resolve.alias || {}
     if (!config.resolve.alias['@']) {
       config.resolve.alias['@'] = path.resolve(__dirname)
     }
+    // Fix for Netlify: ensure proper module resolution
+    config.resolve.modules = ['node_modules', path.resolve(__dirname, 'node_modules')]
     return config
   },
   compiler: {

@@ -1,7 +1,7 @@
 'use client'
 
-import { useState, useEffect, Suspense, useRef } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useState, useEffect, useRef } from 'react'
+import { useRouter } from 'next/navigation'
 import { getSupabase } from '@/lib/supabase'
 import { UnifiedSinglePageDashboard } from './_components/UnifiedSinglePageDashboard'
 
@@ -10,7 +10,6 @@ function DashboardContent() {
   const [loading, setLoading] = useState(true)
   const supabase = getSupabase()
   const router = useRouter()
-  const searchParams = useSearchParams()
   const [activeSection, setActiveSection] = useState<string>('overview')
 
   // Use ref to prevent multiple simultaneous role checks
@@ -18,12 +17,14 @@ function DashboardContent() {
 
   // Get section from URL params or default to overview
   useEffect(() => {
-    const section = searchParams.get('section') || 'overview'
-    if (section !== activeSection) {
-      setActiveSection(section)
+    if (typeof window !== 'undefined') {
+      const urlParams = new URLSearchParams(window.location.search)
+      const section = urlParams.get('section') || 'overview'
+      if (section !== activeSection) {
+        setActiveSection(section)
+      }
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchParams])
+  }, [activeSection])
 
   // Handle browser back/forward buttons
   useEffect(() => {
@@ -137,16 +138,5 @@ function DashboardContent() {
 }
 
 export default function BuilderDashboardPage() {
-  return (
-    <Suspense fallback={
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="flex flex-col items-center gap-4">
-          <div className="w-12 h-12 border-2 border-[#D4AF37] border-t-transparent rounded-full animate-spin" />
-          <p className="text-gray-400">Loading...</p>
-        </div>
-      </div>
-    }>
-      <DashboardContent />
-    </Suspense>
-  )
+  return <DashboardContent />
 }

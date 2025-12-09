@@ -47,15 +47,17 @@ function DashboardContent() {
 
     roleCheckInProgress.current = true
 
-    // Set timeout to prevent infinite loading
+    // Set timeout to prevent infinite loading - use functional update to avoid stale closure
     const timeoutId = setTimeout(() => {
-      if (loading) {
-        console.warn('Auth check timeout - rendering anyway (middleware verified)')
-        setLoading(false)
-        // Use placeholder user to allow rendering
-        setUser({ id: 'verified', email: 'user@tharaga.co.in' })
-        roleCheckInProgress.current = false
-      }
+      setLoading((currentLoading) => {
+        if (currentLoading) {
+          console.warn('Auth check timeout - rendering anyway (middleware verified)')
+          setUser({ id: 'verified', email: 'user@tharaga.co.in' })
+          roleCheckInProgress.current = false
+          return false
+        }
+        return currentLoading
+      })
     }, 2000) // 2 second timeout
 
     const fetchUser = async () => {

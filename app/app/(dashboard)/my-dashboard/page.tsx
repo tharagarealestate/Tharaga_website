@@ -16,7 +16,6 @@ function DashboardContent() {
   const [user, setUser] = useState<any>({ id: 'verified', email: 'user@tharaga.co.in' })
   const [loading, setLoading] = useState(false)
   const [greeting, setGreeting] = useState('Hello')
-  const supabase = getSupabase()
   const router = useRouter()
 
   // Use ref to prevent multiple simultaneous role checks
@@ -24,12 +23,15 @@ function DashboardContent() {
 
   // Fetch user with timeout - RUN ONCE on mount
   useEffect(() => {
+    if (typeof window === 'undefined') return
+    
     // Prevent multiple simultaneous checks
     if (roleCheckInProgress.current) {
       return
     }
 
     roleCheckInProgress.current = true
+    const supabase = getSupabase() // Get supabase client only on client-side
 
     // Set greeting immediately
     const hour = new Date().getHours()

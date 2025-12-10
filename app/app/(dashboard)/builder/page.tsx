@@ -5,8 +5,6 @@ import { getSupabase } from '@/lib/supabase'
 import { UnifiedSinglePageDashboard } from './_components/UnifiedSinglePageDashboard'
 
 function DashboardContent() {
-  // Track if component is mounted (client-side only)
-  const [mounted, setMounted] = useState(false)
   // Initialize with placeholder user to prevent null return
   const [user, setUser] = useState<any>({ id: 'verified', email: 'user@tharaga.co.in' })
   const [loading, setLoading] = useState(false)
@@ -15,23 +13,18 @@ function DashboardContent() {
   // Use ref to prevent multiple simultaneous role checks
   const roleCheckInProgress = useRef(false)
 
-  // Mark as mounted on client-side only
+  // Get section from URL params or default to overview - run once on mount
   useEffect(() => {
-    setMounted(true)
-  }, [])
-
-  // Get section from URL params or default to overview - run once on mount (client-side only)
-  useEffect(() => {
-    if (!mounted || typeof window === 'undefined') return
+    if (typeof window === 'undefined') return
     
     const urlParams = new URLSearchParams(window.location.search)
     const section = urlParams.get('section') || 'overview'
     setActiveSection(section)
-  }, [mounted]) // Only run when mounted
+  }, []) // Run once on mount
 
-  // Handle browser back/forward buttons (client-side only)
+  // Handle browser back/forward buttons
   useEffect(() => {
-    if (!mounted || typeof window === 'undefined') return
+    if (typeof window === 'undefined') return
 
     const handlePopState = () => {
       const urlParams = new URLSearchParams(window.location.search)
@@ -41,11 +34,11 @@ function DashboardContent() {
 
     window.addEventListener('popstate', handlePopState)
     return () => window.removeEventListener('popstate', handlePopState)
-  }, [mounted])
+  }, [])
 
-  // Fetch user with timeout - RUN ONCE on mount (client-side only)
+  // Fetch user with timeout - RUN ONCE on mount
   useEffect(() => {
-    if (!mounted || typeof window === 'undefined') return
+    if (typeof window === 'undefined') return
     
     // Prevent multiple simultaneous checks
     if (roleCheckInProgress.current) {
@@ -113,7 +106,7 @@ function DashboardContent() {
       clearTimeout(timeoutId)
       roleCheckInProgress.current = false
     }
-  }, [mounted]) // Only run when mounted
+  }, []) // Run once on mount
 
   // Handle section change - memoized to prevent unnecessary re-renders
   const handleSectionChange = useCallback((section: string) => {
@@ -126,19 +119,7 @@ function DashboardContent() {
     }
   }, [])
 
-  // Don't render until mounted (prevents SSR issues)
-  if (!mounted) {
-    return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="flex flex-col items-center gap-4">
-          <div className="w-12 h-12 border-2 border-[#D4AF37] border-t-transparent rounded-full animate-spin" />
-          <p className="text-gray-400">Loading...</p>
-        </div>
-      </div>
-    )
-  }
-
-  // Always render dashboard - never return null
+  // Always render dashboard immediately - never return null
   return (
     <UnifiedSinglePageDashboard
       activeSection={activeSection}

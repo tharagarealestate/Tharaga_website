@@ -111,6 +111,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             .thg-auth-menu{ right:8px; }
           }
         ` }} />
+        {/* Hide default auth button on pages with custom SiteHeader */}
+        <style dangerouslySetInnerHTML={{ __html: `
+          /* Hide auth button when SiteHeader is present (homepage and main site pages) */
+          body:has(header .site-header-present) .thg-auth-wrap,
+          .homepage-header .thg-auth-wrap {
+            display: none !important;
+          }
+        ` }} />
         {/* Auth system - directly embedded from snippets/index.html */}
         <Script id="auth-system" strategy="beforeInteractive">
           {`

@@ -51,36 +51,43 @@ function BuyerDashboardContent() {
     else setGreeting('Good Evening');
   }, []);
 
-  // Simple one-time auth check - trust middleware protection
+  // CRITICAL: Auth check with GUARANTEED timeout - ALWAYS fires
   useEffect(() => {
-    const supabase = getSupabase()
-
-    // Simple auth fetch with 3s timeout fallback
+    // ALWAYS set timeout FIRST - this MUST fire no matter what happens
     const timeoutId = setTimeout(() => {
-      console.warn('[Buyer] Auth timeout (3s) - rendering with placeholder (middleware verified)')
+      console.warn('[Buyer] Auth timeout (2s) - rendering (middleware verified)')
       setUser({ id: 'verified', email: 'buyer@tharaga.co.in' })
       setUserName('Buyer')
       setLoading(false)
-    }, 3000)
+    }, 2000)
 
+    // Try to initialize Supabase - if it fails, timeout will handle it
+    let supabase: any
+    try {
+      supabase = getSupabase()
+    } catch (err) {
+      console.error('[Buyer] Supabase init failed:', err)
+      // Timeout will fire and render anyway
+      return () => clearTimeout(timeoutId)
+    }
+
+    // Try auth check - if it fails or hangs, timeout will fire
     supabase.auth.getUser()
-      .then(({ data, error }) => {
+      .then(({ data, error }: any) => {
         clearTimeout(timeoutId)
         if (data?.user) {
           setUser(data.user)
           const name = data.user.user_metadata?.full_name || data.user.email || 'Buyer'
           setUserName(name.split(' ')[0].split('@')[0])
         } else {
-          // Middleware already verified access, safe to render
           setUser({ id: 'verified', email: 'buyer@tharaga.co.in' })
           setUserName('Buyer')
         }
         setLoading(false)
       })
-      .catch((err) => {
+      .catch((err: any) => {
         clearTimeout(timeoutId)
         console.error('[Buyer] Auth error:', err)
-        // Middleware already verified, safe to render
         setUser({ id: 'verified', email: 'buyer@tharaga.co.in' })
         setUserName('Buyer')
         setLoading(false)

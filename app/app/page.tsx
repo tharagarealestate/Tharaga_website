@@ -1,4 +1,5 @@
 import { Footer } from '@/components/sections/Footer'
+import SiteHeader from '@/components/SiteHeader'
 import { Metadata } from 'next'
 import Link from 'next/link'
 
@@ -11,6 +12,7 @@ export const metadata: Metadata = {
 export default function HomePage() {
   return (
     <div className="homepage-header min-h-screen bg-gradient-to-br from-primary-950 via-primary-900 to-primary-800 relative overflow-hidden">
+      <SiteHeader />
       {/* Animated Background Elements - EXACT from pricing page */}
       <div className="absolute inset-0 opacity-30">
         <div className="absolute top-20 left-10 w-96 h-96 bg-gold-500 rounded-full blur-3xl animate-pulse-slow" />

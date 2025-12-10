@@ -9,36 +9,47 @@ export default function BuilderDashboardClient() {
   const [loading, setLoading] = useState(true)
   const [activeSection, setActiveSection] = useState<string>('overview')
 
-  // Simple one-time auth check - trust middleware protection
+  // CRITICAL: Auth check with GUARANTEED timeout - ALWAYS fires
   useEffect(() => {
-    const supabase = getSupabase()
-
-    // Get URL section
-    const urlParams = new URLSearchParams(window.location.search)
-    setActiveSection(urlParams.get('section') || 'overview')
-
-    // Simple auth fetch with 3s timeout fallback
+    // ALWAYS set timeout FIRST - this MUST fire no matter what happens
     const timeoutId = setTimeout(() => {
-      console.warn('[Builder] Auth timeout (3s) - rendering with placeholder (middleware verified)')
+      console.warn('[Builder] Auth timeout (2s) - rendering (middleware verified)')
       setUser({ id: 'verified', email: 'builder@tharaga.co.in' })
       setLoading(false)
-    }, 3000)
+    }, 2000)
 
+    // Get URL section safely
+    try {
+      const urlParams = new URLSearchParams(window.location.search)
+      setActiveSection(urlParams.get('section') || 'overview')
+    } catch (e) {
+      console.warn('[Builder] URL parse error:', e)
+    }
+
+    // Try to initialize Supabase - if it fails, timeout will handle it
+    let supabase: any
+    try {
+      supabase = getSupabase()
+    } catch (err) {
+      console.error('[Builder] Supabase init failed:', err)
+      // Timeout will fire and render anyway
+      return () => clearTimeout(timeoutId)
+    }
+
+    // Try auth check - if it fails or hangs, timeout will fire
     supabase.auth.getUser()
-      .then(({ data, error }) => {
+      .then(({ data, error }: any) => {
         clearTimeout(timeoutId)
         if (data?.user) {
           setUser(data.user)
         } else {
-          // Middleware already verified access, safe to render
           setUser({ id: 'verified', email: 'builder@tharaga.co.in' })
         }
         setLoading(false)
       })
-      .catch((err) => {
+      .catch((err: any) => {
         clearTimeout(timeoutId)
         console.error('[Builder] Auth error:', err)
-        // Middleware already verified, safe to render
         setUser({ id: 'verified', email: 'builder@tharaga.co.in' })
         setLoading(false)
       })
@@ -49,8 +60,12 @@ export default function BuilderDashboardClient() {
   // Handle browser navigation
   useEffect(() => {
     const handlePopState = () => {
-      const urlParams = new URLSearchParams(window.location.search)
-      setActiveSection(urlParams.get('section') || 'overview')
+      try {
+        const urlParams = new URLSearchParams(window.location.search)
+        setActiveSection(urlParams.get('section') || 'overview')
+      } catch (e) {
+        console.warn('[Builder] PopState URL parse error:', e)
+      }
     }
     window.addEventListener('popstate', handlePopState)
     return () => window.removeEventListener('popstate', handlePopState)
@@ -59,9 +74,13 @@ export default function BuilderDashboardClient() {
   // Handle section change
   const handleSectionChange = (section: string) => {
     setActiveSection(section)
-    const url = new URL(window.location.href)
-    url.searchParams.set('section', section)
-    window.history.pushState({}, '', url.toString())
+    try {
+      const url = new URL(window.location.href)
+      url.searchParams.set('section', section)
+      window.history.pushState({}, '', url.toString())
+    } catch (e) {
+      console.warn('[Builder] Section change URL error:', e)
+    }
   }
 
   if (loading) {
@@ -83,4 +102,3 @@ export default function BuilderDashboardClient() {
     />
   )
 }
-

@@ -4,11 +4,6 @@ import { useState, useEffect, useRef, Suspense } from 'react'
 import { getSupabase } from '@/lib/supabase'
 import { UnifiedSinglePageDashboard } from './_components/UnifiedSinglePageDashboard'
 
-// Prevent static generation - this page must be rendered dynamically
-export const dynamic = 'force-dynamic'
-export const revalidate = 0
-export const dynamicParams = true
-
 function DashboardContent() {
   // Initialize with placeholder user to prevent null return
   const [user, setUser] = useState<any>({ id: 'verified', email: 'user@tharaga.co.in' })

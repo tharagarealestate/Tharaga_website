@@ -4,8 +4,10 @@ import { useState, useEffect, useRef, Suspense } from 'react'
 import { getSupabase } from '@/lib/supabase'
 import { UnifiedSinglePageDashboard } from './_components/UnifiedSinglePageDashboard'
 
-// Force dynamic rendering to prevent static generation issues
+// Prevent static generation - this page must be rendered dynamically
 export const dynamic = 'force-dynamic'
+export const revalidate = 0
+export const dynamicParams = true
 
 function DashboardContent() {
   // Initialize with placeholder user to prevent null return
@@ -111,16 +113,22 @@ function DashboardContent() {
     }
   }, []) // Run once on mount
 
-  // Handle section change - simple function (no useCallback to avoid static gen issues)
-  const handleSectionChange = (section: string) => {
-    setActiveSection(section)
+  // Use ref to store the latest setActiveSection to avoid dependency issues
+  const setActiveSectionRef = useRef(setActiveSection)
+  setActiveSectionRef.current = setActiveSection
+
+  // Stable handler function that won't change between renders
+  const handleSectionChangeRef = useRef((section: string) => {
+    setActiveSectionRef.current(section)
     // Update URL without page reload
     if (typeof window !== 'undefined') {
       const url = new URL(window.location.href)
       url.searchParams.set('section', section)
       window.history.pushState({}, '', url.toString())
     }
-  }
+  })
+
+  const handleSectionChange = handleSectionChangeRef.current
 
   // Always render dashboard immediately - never return null
   return (

@@ -445,57 +445,112 @@ export function BuilderTopNav() {
       <header className="fixed top-0 left-0 right-0 z-50 lg:hidden">
         <div className="bg-[rgba(10,22,40,0.85)] backdrop-blur-[24px] border-b border-white/[0.06]">
           <div className="px-4 h-[60px] flex items-center justify-between">
+            {/* Left: Logo & Title (20% width equivalent) */}
             <div className="flex items-center gap-3 flex-1 min-w-0">
               <button
-                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                className="p-2 rounded-xl bg-white/[0.05] hover:bg-white/[0.08] text-white transition-all active:scale-95"
-                aria-label={mobileMenuOpen ? "Close menu" : "Open menu"}
+                onClick={() => handleSectionChange('overview')}
+                className="flex items-center gap-2 group"
               >
-                {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#D4AF37] to-[#F4D03F] flex items-center justify-center shadow-md">
+                  <span className="text-base font-bold text-[#0a1628]">T</span>
+                </div>
               </button>
               <h1 className="text-base font-semibold text-white truncate">{getPageTitle()}</h1>
             </div>
+
+            {/* Right: User Icon & Hamburger Menu (40% width equivalent) */}
             <div className="flex items-center gap-2">
+              {/* User Account Icon - Mobile Only */}
               <button
-                onClick={() => window.dispatchEvent(new CustomEvent('open-ai-assistant'))}
-                className="p-2 rounded-xl bg-white/[0.05] hover:bg-white/[0.08] text-white transition-all active:scale-95"
-                aria-label="Help"
+                onClick={() => window.dispatchEvent(new CustomEvent('open-user-profile'))}
+                className="flex items-center justify-center min-w-[44px] min-h-[44px] rounded-full transition-all duration-200 hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-[#0a1628]"
+                aria-label="User account"
               >
-                <HelpCircle className="w-5 h-5" />
+                <div className="w-6 h-6 rounded-full border-2 border-white flex items-center justify-center">
+                  <span className="text-xs font-semibold text-white">
+                    {(subscription?.builder_name || 'B').charAt(0).toUpperCase()}
+                  </span>
+                </div>
               </button>
-              <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-primary-900 to-primary-600 text-white flex items-center justify-center text-xs font-semibold">
-                {(subscription?.builder_name || 'B').charAt(0).toUpperCase()}
-              </div>
+
+              {/* Hamburger Menu Button */}
+              <button
+                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                className="flex items-center justify-center min-w-[44px] min-h-[44px] rounded-lg transition-all duration-200 hover:bg-white/5 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-[#0a1628]"
+                aria-label={mobileMenuOpen ? "Close menu" : "Open menu"}
+                aria-expanded={mobileMenuOpen}
+              >
+                <AnimatePresence mode="wait">
+                  {mobileMenuOpen ? (
+                    <motion.div
+                      key="close"
+                      initial={{ rotate: -90, opacity: 0 }}
+                      animate={{ rotate: 0, opacity: 1 }}
+                      exit={{ rotate: 90, opacity: 0 }}
+                      transition={{ duration: 0.2 }}
+                      className="flex items-center justify-center w-10 h-10 rounded-full bg-blue-600"
+                    >
+                      <X className="w-6 h-6 text-white" aria-hidden="true" />
+                    </motion.div>
+                  ) : (
+                    <motion.div
+                      key="menu"
+                      initial={{ rotate: 90, opacity: 0 }}
+                      animate={{ rotate: 0, opacity: 1 }}
+                      exit={{ rotate: -90, opacity: 0 }}
+                      transition={{ duration: 0.2 }}
+                    >
+                      <Menu className="w-6 h-6 text-[#D4AF37]" aria-hidden="true" />
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </button>
             </div>
           </div>
         </div>
 
-        {/* Mobile Menu Dropdown with Enhanced Animation */}
+        {/* Mobile Menu Overlay & Sidebar - Slides from RIGHT */}
         <AnimatePresence>
           {mobileMenuOpen && (
             <>
-              {/* Backdrop */}
+              {/* Backdrop - 70% opacity */}
               <motion.div
                 initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
+                animate={{ opacity: 0.7 }}
                 exit={{ opacity: 0 }}
-                transition={{ duration: 0.2 }}
-                className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 lg:hidden"
+                transition={{ duration: 0.3 }}
+                className="fixed inset-0 bg-black z-40 lg:hidden"
                 onClick={() => setMobileMenuOpen(false)}
+                aria-hidden="true"
               />
-              
-              {/* Menu Panel */}
+
+              {/* Menu Panel - Slides from RIGHT with 350ms ease-out */}
               <motion.div
-                initial={{ x: '-100%', opacity: 0 }}
-                animate={{ x: 0, opacity: 1 }}
-                exit={{ x: '-100%', opacity: 0 }}
-                transition={{ 
-                  type: "spring",
-                  damping: 25,
-                  stiffness: 200
+                initial={{ x: '100%' }}
+                animate={{ x: 0 }}
+                exit={{ x: '100%' }}
+                transition={{
+                  type: 'tween',
+                  duration: 0.35,
+                  ease: 'easeOut'
                 }}
-                className="fixed top-[60px] left-0 bottom-0 w-[85vw] max-w-[320px] bg-[rgba(10,22,40,0.98)] backdrop-blur-[24px] border-r border-white/[0.06] shadow-2xl z-50 overflow-y-auto"
+                className="fixed top-0 right-0 bottom-0 w-full bg-gradient-to-b from-[#0a1628] via-slate-900 to-[#0a1628] z-50 overflow-y-auto"
+                role="dialog"
+                aria-modal="true"
+                aria-label="Mobile navigation menu"
               >
+                {/* Menu Header */}
+                <div className="flex items-center justify-between h-16 px-4 border-b border-white/[0.06]">
+                  <span className="text-xl font-bold text-white">Menu</span>
+                  <button
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="flex items-center justify-center min-w-[44px] min-h-[44px] rounded-full transition-all duration-200 hover:bg-white/5"
+                    aria-label="Close menu"
+                  >
+                    <X className="w-6 h-6 text-white" aria-hidden="true" />
+                  </button>
+                </div>
+
                 <nav className="px-4 py-6 space-y-2">
                   {/* Search in Mobile Menu */}
                   <div className="mb-4">
@@ -505,13 +560,13 @@ export function BuilderTopNav() {
                         type="text"
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        placeholder="Search..."
+                        placeholder="Search workflows or properties..."
                         className="w-full pl-10 pr-4 py-2.5 bg-white/[0.03] backdrop-blur-[12px] border border-white/[0.1] rounded-xl text-white placeholder:text-gray-400 text-sm focus:outline-none focus:border-[#D4AF37]/50 focus:ring-2 focus:ring-[#D4AF37]/20 transition-all"
                       />
                     </div>
                   </div>
 
-                  {/* Navigation Items */}
+                  {/* Navigation Items - Staggered with 50ms delay */}
                   {navItems.map((item, index) => {
                     const active = isActive(item.section)
                     const Icon = item.icon
@@ -519,26 +574,23 @@ export function BuilderTopNav() {
                       <motion.button
                         key={item.section}
                         data-section={item.section}
-                        initial={{ opacity: 0, x: -20 }}
+                        initial={{ opacity: 0, x: 20 }}
                         animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: index * 0.05 }}
+                        transition={{ delay: index * 0.05, duration: 0.3 }}
                         onClick={() => {
                           handleSectionChange(item.section)
                           setMobileMenuOpen(false)
                         }}
                         className={cn(
-                          "w-full flex items-center gap-3 px-4 py-3.5 rounded-xl text-sm font-medium transition-all text-left active:scale-[0.98] group",
+                          "w-full flex items-center gap-3 px-4 py-3.5 rounded-xl text-base font-medium transition-all duration-200 text-left active:scale-[0.98] group hover:scale-[1.02] focus:outline-none focus:ring-2 focus:ring-blue-500",
                           active
                             ? "text-white bg-gradient-to-r from-[rgba(212,175,55,0.15)] to-[rgba(212,175,55,0.05)] border-l-3 border-[#D4AF37] shadow-[inset_0_0_20px_rgba(212,175,55,0.1)]"
-                            : "text-gray-400 hover:text-white hover:bg-white/[0.04]"
+                            : "text-gray-300 hover:text-white hover:bg-white/5"
                         )}
                         title={`${item.label} (Press ${index + 1})`}
                       >
-                        <Icon className={cn("w-5 h-5 shrink-0", active && "text-[#D4AF37]")} />
+                        <Icon className={cn("w-5 h-5 shrink-0", active ? "text-[#D4AF37]" : "text-gray-400")} />
                         <span className="flex-1">{item.label}</span>
-                        <span className="text-[10px] text-gray-500 group-hover:text-gray-400">
-                          {index + 1}
-                        </span>
                         {item.badge !== null && item.badge !== undefined && (
                           <span className="ml-auto px-2 py-0.5 bg-[#D4AF37]/20 text-[#D4AF37] text-xs font-bold rounded-full shrink-0">
                             {typeof item.badge === 'number' ? (item.badge > 99 ? '99+' : item.badge) : item.badge}
@@ -553,7 +605,7 @@ export function BuilderTopNav() {
                     <motion.div
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: navItems.length * 0.05 }}
+                      transition={{ delay: navItems.length * 0.05 + 0.1, duration: 0.3 }}
                       className="mt-6 p-4 bg-[#D4AF37]/10 backdrop-blur-[12px] border border-[#D4AF37]/20 rounded-xl"
                     >
                       <div className="flex items-center gap-2 mb-2">
@@ -561,8 +613,8 @@ export function BuilderTopNav() {
                         <span className="text-xs font-semibold text-[#D4AF37]">Trial Active</span>
                       </div>
                       <div className="text-xs text-gray-300 mb-2">
-                        {(subscription.days_remaining ?? 0) === 0 
-                          ? 'Expired - Upgrade Now' 
+                        {(subscription.days_remaining ?? 0) === 0
+                          ? 'Expired - Upgrade Now'
                           : `${subscription.days_remaining} day${subscription.days_remaining === 1 ? '' : 's'} left`}
                       </div>
                       <button
@@ -577,6 +629,30 @@ export function BuilderTopNav() {
                     </motion.div>
                   )}
                 </nav>
+
+                {/* Menu Footer */}
+                <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-white/[0.06] bg-[#0a1628]/50 backdrop-blur-sm">
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: navItems.length * 0.05 + 0.15, duration: 0.3 }}
+                    className="space-y-2"
+                  >
+                    <div className="flex items-center justify-between text-xs text-gray-400">
+                      <span>Builder: {subscription?.builder_name || 'Account'}</span>
+                      <button
+                        onClick={() => window.dispatchEvent(new CustomEvent('open-ai-assistant'))}
+                        className="flex items-center gap-1 text-[#D4AF37] hover:text-[#F4D03F] transition-colors"
+                      >
+                        <HelpCircle className="w-3 h-3" />
+                        <span>Help</span>
+                      </button>
+                    </div>
+                    <div className="text-center text-xs text-gray-500">
+                      &copy; {new Date().getFullYear()} THARAGA
+                    </div>
+                  </motion.div>
+                </div>
               </motion.div>
             </>
           )}

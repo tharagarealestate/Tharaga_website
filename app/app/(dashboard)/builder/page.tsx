@@ -1,8 +1,11 @@
 'use client'
 
-import { useState, useEffect, useRef, Suspense, useCallback } from 'react'
+import { useState, useEffect, useRef, Suspense } from 'react'
 import { getSupabase } from '@/lib/supabase'
 import { UnifiedSinglePageDashboard } from './_components/UnifiedSinglePageDashboard'
+
+// Force dynamic rendering to prevent static generation issues
+export const dynamic = 'force-dynamic'
 
 function DashboardContent() {
   // Initialize with placeholder user to prevent null return
@@ -108,8 +111,8 @@ function DashboardContent() {
     }
   }, []) // Run once on mount
 
-  // Handle section change - memoized to prevent unnecessary re-renders
-  const handleSectionChange = useCallback((section: string) => {
+  // Handle section change - simple function (no useCallback to avoid static gen issues)
+  const handleSectionChange = (section: string) => {
     setActiveSection(section)
     // Update URL without page reload
     if (typeof window !== 'undefined') {
@@ -117,7 +120,7 @@ function DashboardContent() {
       url.searchParams.set('section', section)
       window.history.pushState({}, '', url.toString())
     }
-  }, [])
+  }
 
   // Always render dashboard immediately - never return null
   return (

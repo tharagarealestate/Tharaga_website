@@ -1,9 +1,9 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Bell, X, Check, ChevronRight, TrendingDown, TrendingUp, Home, Calendar, FileCheck } from 'lucide-react';
-import { useSupabase } from '@/contexts/SupabaseContext';
+import { getSupabase } from '@/lib/supabase';
 import { formatDistanceToNow } from 'date-fns';
 
 interface Notification {
@@ -23,7 +23,7 @@ export default function DashboardHeader() {
   const [unreadCount, setUnreadCount] = useState(0);
   const [isOpen, setIsOpen] = useState(false);
   const panelRef = useRef<HTMLDivElement>(null);
-  const { supabase } = useSupabase();
+  const supabase = useMemo(() => getSupabase(), []);
 
   // Fetch notifications on mount
   useEffect(() => {

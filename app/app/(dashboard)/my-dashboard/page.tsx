@@ -12,92 +12,49 @@ import DocumentVault from '@/components/dashboard/buyer/DocumentVault'
 import MarketInsights from '@/components/dashboard/buyer/MarketInsights'
 
 function DashboardContent() {
-  // Initialize with placeholder user to prevent null return
-  const [user, setUser] = useState<any>({ id: 'verified', email: 'user@tharaga.co.in' })
-  const [loading, setLoading] = useState(false)
+  const [user, setUser] = useState<any>(null)
+  const [loading, setLoading] = useState(true)
   const [greeting, setGreeting] = useState('Hello')
   const router = useRouter()
 
-  // Use ref to prevent multiple simultaneous role checks
-  const roleCheckInProgress = useRef(false)
-
-  // Fetch user with timeout - RUN ONCE on mount
+  // Simple one-time auth check - trust middleware protection
   useEffect(() => {
-    if (typeof window === 'undefined') return
-    
-    // Prevent multiple simultaneous checks
-    if (roleCheckInProgress.current) {
-      return
-    }
+    const supabase = getSupabase()
 
-    roleCheckInProgress.current = true
-    const supabase = getSupabase() // Get supabase client only on client-side
-
-    // Set greeting immediately
+    // Set greeting based on time
     const hour = new Date().getHours()
     if (hour < 12) setGreeting('Good morning')
     else if (hour < 17) setGreeting('Good afternoon')
     else setGreeting('Good evening')
 
-    // Set timeout to prevent infinite loading - use functional update to avoid stale closure
+    // Simple auth fetch with 3s timeout fallback
     const timeoutId = setTimeout(() => {
-      setLoading((currentLoading) => {
-        if (currentLoading) {
-          console.warn('Auth check timeout - rendering anyway (middleware verified)')
-          setUser({ id: 'verified', email: 'user@tharaga.co.in' })
-          roleCheckInProgress.current = false
-          return false
-        }
-        return currentLoading
-      })
-    }, 2000) // 2 second timeout
+      console.warn('[My-Dashboard] Auth timeout (3s) - rendering with placeholder (middleware verified)')
+      setUser({ id: 'verified', email: 'user@tharaga.co.in' })
+      setLoading(false)
+    }, 3000)
 
-    const fetchUser = async () => {
-      try {
-        // Race auth call against timeout
-        const authPromise = supabase.auth.getUser()
-        const timeoutPromise = new Promise((resolve) => setTimeout(() => resolve(null), 1500))
-
-        const result = await Promise.race([authPromise, timeoutPromise]) as any
-
+    supabase.auth.getUser()
+      .then(({ data, error }) => {
         clearTimeout(timeoutId)
-
-        if (result && result.data && result.data.user) {
-          // Success - got user
-          setUser(result.data.user)
-          setLoading(false)
-          roleCheckInProgress.current = false
-        } else if (result && result.error) {
-          // Auth error - render anyway
-          console.warn('Auth error (rendering anyway):', result.error)
-          setLoading(false)
-          setUser({ id: 'verified', email: 'user@tharaga.co.in' })
-          roleCheckInProgress.current = false
+        if (data?.user) {
+          setUser(data.user)
         } else {
-          // Timeout - render anyway
-          console.warn('Auth timeout - rendering anyway (middleware verified)')
-          setLoading(false)
+          // Middleware already verified access, safe to render
           setUser({ id: 'verified', email: 'user@tharaga.co.in' })
-          roleCheckInProgress.current = false
         }
-      } catch (err) {
-        clearTimeout(timeoutId)
-        console.warn('Auth error (rendering anyway):', err)
         setLoading(false)
-        // Render anyway - middleware already verified
+      })
+      .catch((err) => {
+        clearTimeout(timeoutId)
+        console.error('[My-Dashboard] Auth error:', err)
+        // Middleware already verified, safe to render
         setUser({ id: 'verified', email: 'user@tharaga.co.in' })
-        roleCheckInProgress.current = false
-      }
-    }
+        setLoading(false)
+      })
 
-    fetchUser()
-
-    // Cleanup function
-    return () => {
-      clearTimeout(timeoutId)
-      roleCheckInProgress.current = false
-    }
-  }, []) // Empty deps - run once on mount
+    return () => clearTimeout(timeoutId)
+  }, [])
 
   // Get user's first name
   const getFirstName = () => {
@@ -106,7 +63,19 @@ function DashboardContent() {
     return fullName.split(' ')[0].split('@')[0]
   }
 
-  // Always render dashboard - never return null
+  // Loading state
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-primary-950 via-primary-900 to-primary-800">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-16 h-16 border-4 border-[#D4AF37] border-t-transparent rounded-full animate-spin" />
+          <p className="text-white/90 text-lg font-medium">Loading Dashboard...</p>
+          <p className="text-white/60 text-sm">Preparing your workspace</p>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary-950 via-primary-900 to-primary-800 relative overflow-hidden">
       {/* Animated Background Elements - EXACT from pricing page */}

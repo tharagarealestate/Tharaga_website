@@ -17,38 +17,45 @@ function DashboardContent() {
   const [greeting, setGreeting] = useState('Hello')
   const router = useRouter()
 
-  // Simple one-time auth check - trust middleware protection
+  // CRITICAL: Auth check with GUARANTEED timeout - ALWAYS fires
   useEffect(() => {
-    const supabase = getSupabase()
-
     // Set greeting based on time
     const hour = new Date().getHours()
     if (hour < 12) setGreeting('Good morning')
     else if (hour < 17) setGreeting('Good afternoon')
     else setGreeting('Good evening')
 
-    // Simple auth fetch with 3s timeout fallback
+    // ALWAYS set timeout FIRST - this MUST fire no matter what happens
     const timeoutId = setTimeout(() => {
-      console.warn('[My-Dashboard] Auth timeout (3s) - rendering with placeholder (middleware verified)')
+      console.warn('[My-Dashboard] Auth timeout (2s) - rendering (middleware verified)')
       setUser({ id: 'verified', email: 'user@tharaga.co.in' })
       setLoading(false)
-    }, 3000)
+    }, 2000)
 
+    // Try to initialize Supabase - if it fails, timeout will handle it
+    let supabase: any
+    try {
+      supabase = getSupabase()
+    } catch (err) {
+      console.error('[My-Dashboard] Supabase init failed:', err)
+      // Timeout will fire and render anyway
+      return () => clearTimeout(timeoutId)
+    }
+
+    // Try auth check - if it fails or hangs, timeout will fire
     supabase.auth.getUser()
-      .then(({ data, error }) => {
+      .then(({ data, error }: any) => {
         clearTimeout(timeoutId)
         if (data?.user) {
           setUser(data.user)
         } else {
-          // Middleware already verified access, safe to render
           setUser({ id: 'verified', email: 'user@tharaga.co.in' })
         }
         setLoading(false)
       })
-      .catch((err) => {
+      .catch((err: any) => {
         clearTimeout(timeoutId)
         console.error('[My-Dashboard] Auth error:', err)
-        // Middleware already verified, safe to render
         setUser({ id: 'verified', email: 'user@tharaga.co.in' })
         setLoading(false)
       })

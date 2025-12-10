@@ -36,6 +36,7 @@ export const metadata: Metadata = {
 import { AppI18nProvider } from '@/components/providers/AppI18nProvider'
 import { EntitlementsProvider } from '@/components/ui/FeatureGate'
 import MobileBottomNav from '@/components/MobileBottomNav'
+import { MobileSiteNav } from '@/components/MobileSiteNav'
 import { PrefetchRoutes } from '@/components/providers/PrefetchRoutes'
 import { HeaderLinkInterceptor } from '@/components/HeaderLinkInterceptor'
 import { NotificationProvider } from '@/contexts/NotificationContext'
@@ -109,14 +110,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             .thg-auth-wrap{ top:10px; right:10px; }
             .thg-auth-modal{ width:calc(100% - 16px); margin:0 8px; }
             .thg-auth-menu{ right:8px; }
-          }
-        ` }} />
-        {/* Hide default auth button on pages with custom SiteHeader */}
-        <style dangerouslySetInnerHTML={{ __html: `
-          /* Hide auth button when SiteHeader is present (homepage and main site pages) */
-          body:has(header .site-header-present) .thg-auth-wrap,
-          .homepage-header .thg-auth-wrap {
-            display: none !important;
           }
         ` }} />
         {/* Auth system - directly embedded from snippets/index.html */}
@@ -2284,6 +2277,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             }
           })();
         `}} />
+        <MobileSiteNav />
         <MobileBottomNav />
         <CookieConsent />
       </body>

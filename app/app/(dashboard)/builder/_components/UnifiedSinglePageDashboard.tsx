@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, Suspense } from 'react'
+import { useState, useEffect, useRef, Suspense } from 'react'
 import type React from 'react'
 import { cn } from '@/lib/utils'
 
@@ -27,11 +27,15 @@ interface UnifiedSinglePageDashboardProps {
 }
 
 export function UnifiedSinglePageDashboard({ activeSection, onSectionChange }: UnifiedSinglePageDashboardProps) {
+  // Use ref to store the latest onSectionChange to avoid dependency issues
+  const onSectionChangeRef = useRef(onSectionChange)
+  onSectionChangeRef.current = onSectionChange
+
   // Listen for section changes from navigation
   useEffect(() => {
     const handleSectionChangeEvent = (event: CustomEvent<{ section: string }>) => {
       if (event.detail?.section && event.detail.section !== activeSection) {
-        onSectionChange(event.detail.section)
+        onSectionChangeRef.current(event.detail.section)
         // Smooth scroll to top
         window.scrollTo({ top: 0, behavior: 'smooth' })
       }
@@ -41,7 +45,7 @@ export function UnifiedSinglePageDashboard({ activeSection, onSectionChange }: U
     return () => {
       window.removeEventListener('dashboard-section-change', handleSectionChangeEvent as EventListener)
     }
-  }, [activeSection, onSectionChange])
+  }, [activeSection]) // Only depend on activeSection, not onSectionChange
 
   // Scroll to top when section changes
   useEffect(() => {

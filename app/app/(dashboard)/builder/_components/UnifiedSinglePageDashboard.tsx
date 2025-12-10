@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useMemo, Suspense } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import type React from 'react'
 import { cn } from '@/lib/utils'
 
@@ -48,14 +48,8 @@ export function UnifiedSinglePageDashboard({ activeSection, onSectionChange }: U
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }, [activeSection])
 
-  // Sync with URL parameter on mount and when URL changes
-  useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.search)
-    const sectionParam = urlParams.get('section') || 'overview'
-    if (sectionParam !== activeSection) {
-      onSectionChange(sectionParam)
-    }
-  }, [])
+  // Sync with URL parameter on mount only - parent handles URL sync
+  // Removed to prevent conflicts with parent component's URL handling
 
   const sectionComponents: Record<string, React.ComponentType<{ onNavigate?: (section: string) => void }>> = {
     overview: OverviewSection,

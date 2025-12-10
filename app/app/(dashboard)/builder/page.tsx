@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef, Suspense } from 'react'
+import { useState, useEffect, useRef, Suspense, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { getSupabase } from '@/lib/supabase'
 import { UnifiedSinglePageDashboard } from './_components/UnifiedSinglePageDashboard'
@@ -16,16 +16,14 @@ function DashboardContent() {
   // Use ref to prevent multiple simultaneous role checks
   const roleCheckInProgress = useRef(false)
 
-  // Get section from URL params or default to overview
+  // Get section from URL params or default to overview - run once on mount
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const urlParams = new URLSearchParams(window.location.search)
       const section = urlParams.get('section') || 'overview'
-      if (section !== activeSection) {
-        setActiveSection(section)
-      }
+      setActiveSection(section)
     }
-  }, [activeSection])
+  }, []) // Empty deps - only run once on mount
 
   // Handle browser back/forward buttons
   useEffect(() => {
@@ -108,14 +106,16 @@ function DashboardContent() {
     }
   }, []) // Empty deps - run once on mount
 
-  // Handle section change
-  const handleSectionChange = (section: string) => {
+  // Handle section change - memoized to prevent unnecessary re-renders
+  const handleSectionChange = useCallback((section: string) => {
     setActiveSection(section)
     // Update URL without page reload
-    const url = new URL(window.location.href)
-    url.searchParams.set('section', section)
-    window.history.pushState({}, '', url.toString())
-  }
+    if (typeof window !== 'undefined') {
+      const url = new URL(window.location.href)
+      url.searchParams.set('section', section)
+      window.history.pushState({}, '', url.toString())
+    }
+  }, [])
 
   // Always render dashboard - never return null
   return (

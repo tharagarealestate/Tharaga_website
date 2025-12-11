@@ -672,18 +672,12 @@ function SecondaryActionButton({
   );
 }
 
+/**
+ * Buyer Dashboard - Direct Render (No Suspense Delay)
+ *
+ * CRITICAL: Removed Suspense wrapper to prevent blocking
+ * Component has guaranteed 2-second timeout built-in
+ */
 export default function BuyerDashboardPage() {
-  return (
-    <Suspense fallback={
-      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-primary-950 via-primary-900 to-primary-800">
-        <div className="flex flex-col items-center gap-4">
-          <div className="w-16 h-16 border-4 border-[#D4AF37] border-t-transparent rounded-full animate-spin" />
-          <p className="text-white/90 text-lg font-medium">Loading Buyer Dashboard...</p>
-          <p className="text-white/60 text-sm">Finding your perfect matches</p>
-        </div>
-      </div>
-    }>
-      <BuyerDashboardContent />
-    </Suspense>
-  );
+  return <BuyerDashboardContent />
 }

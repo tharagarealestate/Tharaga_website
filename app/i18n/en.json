@@ -69,6 +69,7 @@
         "currency": "Currency",
         "drift": "Annual drift ±%",
         "vol": "Annual vol %",
+        "volatility": "Annual vol %",
         "horizon": "Horizon (years)",
         "paths": "Paths"
       },

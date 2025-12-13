@@ -210,6 +210,21 @@ export function UnifiedDashboard({ onNavigate }: UnifiedDashboardProps) {
     return properties
   }, [properties, realtimeProperties])
 
+  // Update previous stats when stats change (separate from metrics calculation to prevent infinite loop)
+  useEffect(() => {
+    const totalProperties = stats.totalProperties ?? mergedProperties.length
+    const totalViews = stats.totalViews ?? mergedProperties.reduce((sum: number, p: any) => sum + (p.views || p.view_count || 0), 0)
+    const totalInquiries = stats.totalInquiries ?? mergedProperties.reduce((sum: number, p: any) => sum + (p.inquiries || p.inquiry_count || 0), 0)
+    const conversionRate = stats.conversionRate ?? (totalViews > 0 ? parseFloat(((totalInquiries / totalViews) * 100).toFixed(1)) : 0)
+    
+    setPreviousStats({
+      total: stats.total,
+      hot: stats.hot,
+      warm: stats.warm,
+      conversionRate
+    })
+  }, [stats.total, stats.hot, stats.warm, stats.conversionRate, stats.totalProperties, stats.totalViews, stats.totalInquiries, mergedProperties])
+
   // Calculate metrics with real-time updates and trend calculation
   const metrics = useMemo(() => {
     // Use stats from API if available, otherwise calculate from merged data
@@ -227,14 +242,6 @@ export function UnifiedDashboard({ onNavigate }: UnifiedDashboardProps) {
     const conversionTrend = previousStats.conversionRate > 0
       ? conversionRate - previousStats.conversionRate
       : 0
-
-    // Update previous stats
-    setPreviousStats({
-      total: stats.total,
-      hot: stats.hot,
-      warm: stats.warm,
-      conversionRate
-    })
     
     return {
       totalLeads: stats.total,

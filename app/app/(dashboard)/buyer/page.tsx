@@ -33,12 +33,11 @@ const RecommendationsCarousel = dynamic(
 );
 
 function BuyerDashboardContent() {
-  const [greeting, setGreeting] = useState('');
-  const [userName, setUserName] = useState('');
+  const [greeting, setGreeting] = useState('Good Evening');
+  const [userName, setUserName] = useState('Buyer');
   const [recs, setRecs] = useState<RecommendationItem[]>([]);
   const [recError, setRecError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<any>({ id: 'verified', email: 'buyer@tharaga.co.in' });
   const router = useRouter();
 
   const savedProperties = useMemo(() => listSaved(), []);
@@ -51,49 +50,28 @@ function BuyerDashboardContent() {
     else setGreeting('Good Evening');
   }, []);
 
-  // CRITICAL: Auth check with GUARANTEED timeout - ALWAYS fires
+  // Non-blocking auth check - render immediately like admin dashboard
   useEffect(() => {
-    // ALWAYS set timeout FIRST - this MUST fire no matter what happens
-    const timeoutId = setTimeout(() => {
-      console.warn('[Buyer] Auth timeout (2s) - rendering (middleware verified)')
-      setUser({ id: 'verified', email: 'buyer@tharaga.co.in' })
-      setUserName('Buyer')
-      setLoading(false)
-    }, 2000)
+    // Only run in browser (prevent SSR errors)
+    if (typeof window === 'undefined') return
 
-    // Try to initialize Supabase - if it fails, timeout will handle it
-    let supabase: any
+    // Try to initialize Supabase and get user - non-blocking
     try {
-      supabase = getSupabase()
+      const supabase = getSupabase()
+      supabase.auth.getUser()
+        .then(({ data, error }: any) => {
+          if (data?.user) {
+            setUser(data.user)
+            const name = data.user.user_metadata?.full_name || data.user.email || 'Buyer'
+            setUserName(name.split(' ')[0].split('@')[0])
+          }
+        })
+        .catch((err: any) => {
+          console.error('[Buyer] Auth error:', err)
+        })
     } catch (err) {
       console.error('[Buyer] Supabase init failed:', err)
-      // Timeout will fire and render anyway
-      return () => clearTimeout(timeoutId)
     }
-
-    // Try auth check - if it fails or hangs, timeout will fire
-    supabase.auth.getUser()
-      .then(({ data, error }: any) => {
-        clearTimeout(timeoutId)
-        if (data?.user) {
-          setUser(data.user)
-          const name = data.user.user_metadata?.full_name || data.user.email || 'Buyer'
-          setUserName(name.split(' ')[0].split('@')[0])
-        } else {
-          setUser({ id: 'verified', email: 'buyer@tharaga.co.in' })
-          setUserName('Buyer')
-        }
-        setLoading(false)
-      })
-      .catch((err: any) => {
-        clearTimeout(timeoutId)
-        console.error('[Buyer] Auth error:', err)
-        setUser({ id: 'verified', email: 'buyer@tharaga.co.in' })
-        setUserName('Buyer')
-        setLoading(false)
-      })
-
-    return () => clearTimeout(timeoutId)
   }, [])
 
   // Load recommendations after user is authenticated
@@ -129,29 +107,7 @@ function BuyerDashboardContent() {
 
   const savedCount = savedProperties.length;
 
-  // Loading state
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-primary-950 via-primary-900 to-primary-800">
-        <div className="flex flex-col items-center gap-4">
-          <div className="w-12 h-12 border-2 border-[#D4AF37] border-t-transparent rounded-full animate-spin" />
-          <p className="text-white/80 text-lg">Loading your dashboard...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // If no user after loading, show message (auth modal should be opening)
-  if (!user) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-primary-950 via-primary-900 to-primary-800">
-        <div className="flex flex-col items-center gap-4">
-          <p className="text-white/80 text-lg">Please log in to access your dashboard...</p>
-        </div>
-      </div>
-    );
-  }
-
+  // Render immediately - NO blocking loading state (matches admin dashboard pattern)
   return (
     <div className="relative min-h-screen overflow-hidden bg-gradient-to-br from-primary-950 via-primary-900 to-primary-800 text-white">
       {/* Animated Background Elements - EXACT from pricing page */}

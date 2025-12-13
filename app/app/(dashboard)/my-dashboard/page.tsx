@@ -11,54 +11,35 @@ import DocumentVault from '@/components/dashboard/buyer/DocumentVault'
 import MarketInsights from '@/components/dashboard/buyer/MarketInsights'
 
 function DashboardContent() {
-  const [user, setUser] = useState<any>(null)
-  const [loading, setLoading] = useState(true)
-  const [greeting, setGreeting] = useState('Hello')
+  const [user, setUser] = useState<any>({ id: 'verified', email: 'user@tharaga.co.in' })
+  const [greeting, setGreeting] = useState('Good evening')
 
-  // CRITICAL: Auth check with GUARANTEED timeout - ALWAYS fires
+  // Non-blocking auth check - render immediately like admin dashboard
   useEffect(() => {
+    // Only run in browser (prevent SSR errors)
+    if (typeof window === 'undefined') return
+
     // Set greeting based on time
     const hour = new Date().getHours()
     if (hour < 12) setGreeting('Good morning')
     else if (hour < 17) setGreeting('Good afternoon')
     else setGreeting('Good evening')
 
-    // ALWAYS set timeout FIRST - this MUST fire no matter what happens
-    const timeoutId = setTimeout(() => {
-      console.warn('[My-Dashboard] Auth timeout (2s) - rendering (middleware verified)')
-      setUser({ id: 'verified', email: 'user@tharaga.co.in' })
-      setLoading(false)
-    }, 2000)
-
-    // Try to initialize Supabase - if it fails, timeout will handle it
-    let supabase: any
+    // Try to initialize Supabase and get user - non-blocking
     try {
-      supabase = getSupabase()
+      const supabase = getSupabase()
+      supabase.auth.getUser()
+        .then(({ data, error }: any) => {
+          if (data?.user) {
+            setUser(data.user)
+          }
+        })
+        .catch((err: any) => {
+          console.error('[My-Dashboard] Auth error:', err)
+        })
     } catch (err) {
       console.error('[My-Dashboard] Supabase init failed:', err)
-      // Timeout will fire and render anyway
-      return () => clearTimeout(timeoutId)
     }
-
-    // Try auth check - if it fails or hangs, timeout will fire
-    supabase.auth.getUser()
-      .then(({ data, error }: any) => {
-        clearTimeout(timeoutId)
-        if (data?.user) {
-          setUser(data.user)
-        } else {
-          setUser({ id: 'verified', email: 'user@tharaga.co.in' })
-        }
-        setLoading(false)
-      })
-      .catch((err: any) => {
-        clearTimeout(timeoutId)
-        console.error('[My-Dashboard] Auth error:', err)
-        setUser({ id: 'verified', email: 'user@tharaga.co.in' })
-        setLoading(false)
-      })
-
-    return () => clearTimeout(timeoutId)
   }, [])
 
   // Get user's first name
@@ -68,19 +49,7 @@ function DashboardContent() {
     return fullName.split(' ')[0].split('@')[0]
   }
 
-  // Loading state
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-primary-950 via-primary-900 to-primary-800">
-        <div className="flex flex-col items-center gap-4">
-          <div className="w-16 h-16 border-4 border-[#D4AF37] border-t-transparent rounded-full animate-spin" />
-          <p className="text-white/90 text-lg font-medium">Loading Dashboard...</p>
-          <p className="text-white/60 text-sm">Preparing your workspace</p>
-        </div>
-      </div>
-    )
-  }
-
+  // Render immediately - NO blocking loading state (matches admin dashboard pattern)
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary-950 via-primary-900 to-primary-800 relative overflow-hidden">
       {/* Animated Background Elements - EXACT from pricing page */}

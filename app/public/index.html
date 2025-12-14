@@ -159,11 +159,22 @@
     /* Mobile: header inner needs relative positioning for dropdown */
     @media (max-width: 767px) {
       header.nav {
-        position: relative !important;
+        position: sticky !important;
+        top: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        transform: none !important;
+        will-change: auto !important;
       }
       
       header.nav .inner {
         position: relative;
+      }
+
+      /* Prevent header movement when menu opens */
+      header.nav:has(.mobile-menu-panel.is-open) {
+        position: sticky !important;
+        transform: none !important;
       }
     }
     /* Allow dropdowns to escape header container */
@@ -670,6 +681,7 @@
         transform: translateY(-50%);
         z-index: 10001;
         transition: all 0.2s ease;
+        will-change: transform;
       }
 
       header.nav .mobile-menu-toggle:focus {
@@ -735,6 +747,8 @@
         top: calc(100% + clamp(6px, 1.5vw, 8px));
         right: clamp(8px, 2.5vw, 12px);
         width: min(clamp(280px, 85vw, 320px), calc(100vw - clamp(16px, 4vw, 24px)));
+        max-height: calc(100vh - 120px);
+        overflow-y: auto;
         background: linear-gradient(180deg, #1e293b, #0f172a) !important;
         border: clamp(0.5px, 0.15vw, 1px) solid rgba(255, 255, 255, 0.1) !important;
         border-radius: clamp(12px, 3vw, 16px);
@@ -2855,7 +2869,22 @@
           overlay.classList.add('is-open');
           panel.classList.add('is-open');
           toggleBtn.setAttribute('aria-expanded', 'true');
+          
+          // Calculate scrollbar width to prevent layout shift
+          const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
+          document.body.style.paddingRight = scrollbarWidth + 'px';
           document.body.style.overflow = 'hidden';
+          
+          // Ensure header stays in place
+          const headerEl = document.querySelector('header.nav');
+          if (headerEl) {
+            headerEl.style.setProperty('position', 'sticky', 'important');
+            headerEl.style.setProperty('top', '0', 'important');
+            headerEl.style.setProperty('left', '0', 'important');
+            headerEl.style.setProperty('right', '0', 'important');
+            headerEl.style.setProperty('transform', 'none', 'important');
+          }
+          
           populateMobileMenu();
         }
 
@@ -2863,7 +2892,17 @@
           overlay.classList.remove('is-open');
           panel.classList.remove('is-open');
           toggleBtn.setAttribute('aria-expanded', 'false');
+          
+          // Restore body styles
           document.body.style.overflow = '';
+          document.body.style.paddingRight = '';
+          
+          // Ensure header stays in place
+          const headerEl = document.querySelector('header.nav');
+          if (headerEl) {
+            headerEl.style.setProperty('position', 'sticky', 'important');
+            headerEl.style.setProperty('transform', 'none', 'important');
+          }
         }
 
         // Mobile user icon button handler

@@ -375,7 +375,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         '</div>' +
         '<div class="thg-loading-bar" aria-hidden="true"></div>' +
         '<div class="thg-auth-body">' +
-        '<div class="thg-tagline">"Browse only approved builder projects — safe, transparent, and verified"</div>' +
         '<div class="thg-tabs" role="tablist" aria-label="Authentication method">' +
         '<button class="thg-tab" role="tab" id="thg-tab-signin" aria-controls="thg-panel-signin" aria-selected="true">Sign in</button>' +
         '<button class="thg-tab" role="tab" id="thg-tab-signup" aria-controls="thg-panel-signup" aria-selected="false">Create account</button>' +

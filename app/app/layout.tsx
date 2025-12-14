@@ -75,6 +75,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         </Script>
         {/* Load role manager system SYNCHRONOUSLY to ensure it's available before auth system */}
         <Script src="/role-manager-v2.js" strategy="beforeInteractive" />
+        {/* Load auth-gate.js for iframe login modal */}
+        <Script src="/auth-gate.js" strategy="beforeInteractive" />
         {/* PREVENT DARK DROPDOWN - Inject light theme styles BEFORE auth system */}
         {/* This prevents auth system's injectStyles() from injecting dark #0b0b0b styles */}
         <style id="thg-auth-styles" dangerouslySetInnerHTML={{ __html: `

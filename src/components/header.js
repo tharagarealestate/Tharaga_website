@@ -108,9 +108,27 @@
           e.preventDefault();
           e.stopPropagation();
           
-      // Redirect to login page instead of showing modal
-      const next = newLink.getAttribute('href') || '/';
-      window.location.href = '/login?next=' + encodeURIComponent(next);
+          // Open login modal instead of redirecting
+          const next = newLink.getAttribute('href') || '/';
+          try {
+            // Try auth-gate modal first (iframe-based)
+            if (window.authGate && typeof window.authGate.openLoginModal === 'function') {
+              window.authGate.openLoginModal({ next: next });
+              return;
+            }
+            // Fallback to __thgOpenAuthModal
+            if (typeof window.__thgOpenAuthModal === 'function') {
+              window.__thgOpenAuthModal({ next: next });
+              return;
+            }
+            // Last resort: redirect to login page
+            console.warn('[header] Login modal functions not available, redirecting to /login');
+            window.location.href = '/login?next=' + encodeURIComponent(next);
+          } catch(err) {
+            console.error('[header] Error opening login modal:', err);
+            // Fallback on error
+            window.location.href = '/login?next=' + encodeURIComponent(next);
+          }
         } else {
           // User is authenticated - allow navigation
           // Let link interceptor handle it

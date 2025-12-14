@@ -88,6 +88,7 @@
       transform: translateX(-50%) !important;
       width: min(1200px, calc(100% - 48px)) !important;
       max-width: 1400px !important;
+      position: relative;
       /* EXACT Builder Pro container styling from pricing page */
       background: rgba(255, 255, 255, 0.1) !important;
       backdrop-filter: blur(24px) !important;
@@ -862,7 +863,64 @@
         box-shadow: 0 0 0 2px #60a5fa;
       }
 
-      /* Mobile menu close button removed - using hamburger toggle instead */
+      /* Mobile menu back button - Home arrow */
+      header.nav .mobile-menu-back {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.75rem 1rem;
+        color: #ffffff;
+        font-size: 1rem;
+        font-weight: 600;
+        text-decoration: none;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        margin-bottom: 0.5rem;
+        transition: all 0.2s ease;
+        border-radius: 0.5rem;
+      }
+
+      header.nav .mobile-menu-back:hover {
+        background: rgba(255, 255, 255, 0.1);
+        transform: translateX(-4px);
+      }
+
+      header.nav .mobile-menu-back:active {
+        transform: translateX(-4px) scale(0.98);
+      }
+
+      header.nav .mobile-menu-back:focus {
+        outline: none;
+        box-shadow: 0 0 0 2px #60a5fa;
+      }
+
+      header.nav .mobile-menu-back svg {
+        width: 20px;
+        height: 20px;
+        color: #d4af37;
+      }
+
+      /* Mobile menu close button - BLUE CIRCLE */
+      header.nav .mobile-menu-close {
+        position: absolute;
+        top: 20px;
+        right: 20px;
+        width: 44px;
+        height: 44px;
+        background: #2563eb !important;
+        border: none !important;
+        border-radius: 50%;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #ffffff !important;
+        transition: all 0.2s ease;
+      }
+
+      header.nav .mobile-menu-close:hover {
+        background: #1d4ed8 !important;
+        transform: scale(1.05);
+      }
     }
 
     /* Desktop: vertically center the right-side auth/menu group within header */
@@ -2719,10 +2777,12 @@
             menuHTML += '<a href="/about/" class="mobile-menu-link">About</a>';
           }
 
-          const closeBtn = panel.querySelector('.mobile-menu-close');
-          const backButton = '<a href="/" class="mobile-menu-back" aria-label="Go to homepage"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg><span>Home</span></a>';
-          panel.innerHTML = (closeBtn ? closeBtn.outerHTML : '<button class="mobile-menu-close" aria-label="Close menu"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>') + backButton + menuHTML;
+          panel.innerHTML = menuHTML;
 
+          const newCloseBtn = panel.querySelector('.mobile-menu-close');
+          if (newCloseBtn) {
+            newCloseBtn.addEventListener('click', closeMenu);
+          }
 
           // Add dropdown toggle functionality
           const dropdowns = panel.querySelectorAll('.mobile-menu-dropdown');
@@ -2753,13 +2813,6 @@
             }
           });
 
-          // Add click listener to back button to close menu
-          const backBtn = panel.querySelector('.mobile-menu-back');
-          if (backBtn) {
-            backBtn.addEventListener('click', function() {
-              closeMenu();
-            });
-          }
 
           // Add click listeners to menu items to close menu (but not dropdown headers)
           const menuLinks = panel.querySelectorAll('.mobile-menu-link, .mobile-menu-dropdown-item');
@@ -2809,7 +2862,15 @@
           });
         }
 
-        toggleBtn.addEventListener('click', openMenu);
+        toggleBtn.addEventListener('click', function() {
+          const isOpen = panel.classList.contains('is-open');
+          if (isOpen) {
+            closeMenu();
+          } else {
+            openMenu();
+          }
+        });
+        
         overlay.addEventListener('click', closeMenu);
 
         document.addEventListener('keydown', function(e) {

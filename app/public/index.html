@@ -165,16 +165,21 @@
         right: 0 !important;
         transform: none !important;
         will-change: auto !important;
+        z-index: 9999;
       }
       
       header.nav .inner {
         position: relative;
       }
 
-      /* Prevent header movement when menu opens */
-      header.nav:has(.mobile-menu-panel.is-open) {
+      /* Prevent header movement when menu opens - lock position */
+      header.nav:has(.mobile-menu-panel.is-open),
+      header.nav.has-menu-open {
         position: sticky !important;
         transform: none !important;
+        left: 0 !important;
+        right: 0 !important;
+        top: 0 !important;
       }
     }
     /* Allow dropdowns to escape header container */
@@ -749,6 +754,8 @@
         width: min(clamp(280px, 85vw, 320px), calc(100vw - clamp(16px, 4vw, 24px)));
         max-height: calc(100vh - 120px);
         overflow-y: auto;
+        /* Ensure menu aligns with hamburger button */
+        transform-origin: top right;
         background: linear-gradient(180deg, #1e293b, #0f172a) !important;
         border: clamp(0.5px, 0.15vw, 1px) solid rgba(255, 255, 255, 0.1) !important;
         border-radius: clamp(12px, 3vw, 16px);
@@ -2875,14 +2882,17 @@
           document.body.style.paddingRight = scrollbarWidth + 'px';
           document.body.style.overflow = 'hidden';
           
-          // Ensure header stays in place
+          // Ensure header stays in place - lock all positioning
           const headerEl = document.querySelector('header.nav');
           if (headerEl) {
+            headerEl.classList.add('has-menu-open');
             headerEl.style.setProperty('position', 'sticky', 'important');
             headerEl.style.setProperty('top', '0', 'important');
             headerEl.style.setProperty('left', '0', 'important');
             headerEl.style.setProperty('right', '0', 'important');
             headerEl.style.setProperty('transform', 'none', 'important');
+            headerEl.style.setProperty('width', '100%', 'important');
+            headerEl.style.setProperty('max-width', '100%', 'important');
           }
           
           populateMobileMenu();
@@ -2897,11 +2907,14 @@
           document.body.style.overflow = '';
           document.body.style.paddingRight = '';
           
-          // Ensure header stays in place
+          // Ensure header stays in place - restore normal state
           const headerEl = document.querySelector('header.nav');
           if (headerEl) {
+            headerEl.classList.remove('has-menu-open');
             headerEl.style.setProperty('position', 'sticky', 'important');
             headerEl.style.setProperty('transform', 'none', 'important');
+            headerEl.style.removeProperty('width');
+            headerEl.style.removeProperty('max-width');
           }
         }
 

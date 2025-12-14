@@ -49,6 +49,7 @@ export default function PerfectMatches() {
     if (!supabase) {
       setError('Database connection not ready');
       setLoading(false);
+      setRefreshing(false);
       return;
     }
 
@@ -56,9 +57,11 @@ export default function PerfectMatches() {
       if (showRefresh) setRefreshing(true);
       else setLoading(true);
 
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      if (userError || !user) {
         setError('Please log in to see recommendations');
+        setLoading(false);
+        setRefreshing(false);
         return;
       }
 

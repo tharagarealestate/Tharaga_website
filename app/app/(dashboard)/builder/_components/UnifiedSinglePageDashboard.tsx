@@ -94,6 +94,7 @@ export function UnifiedSinglePageDashboard({ activeSection, onSectionChange }: U
             }}
             className="w-full"
           >
+            {/* Non-blocking Suspense - renders immediately with fallback */}
             <Suspense fallback={<SectionLoader section={activeSection} />}>
               <ActiveComponent onNavigate={(section: string) => onSectionChange(section)} />
             </Suspense>

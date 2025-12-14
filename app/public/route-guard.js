@@ -47,17 +47,12 @@
 
       const updatedState = window.thgRoleManager.getState();
 
-      // Check if user is logged in
+      // Check if user is logged in - NON-BLOCKING: just log, don't redirect
       if (!updatedState.user) {
-        console.log('[route-guard] User not logged in, opening login modal instead of redirecting');
-        // Open login modal instead of redirecting - this prevents loading issues
-        if (typeof window.__thgOpenAuthModal === 'function') {
-          window.__thgOpenAuthModal({ next: window.location.pathname });
-          return false; // Still return false to prevent navigation
-        }
-        // Fallback to redirect if modal not available
-        this.redirectWithMessage('/', 'Please login to access this page', 'error');
-        return false;
+        console.log('[route-guard] User not logged in (non-blocking - dashboard will show login prompt)');
+        // Don't block - let dashboard handle auth UI
+        // Only open modal if explicitly requested (not on page load)
+        return true; // Allow access, dashboard will show login prompt
       }
 
       // Check if user has no roles yet
@@ -71,17 +66,10 @@
       const hasRequiredRole = updatedState.roles.includes(routeConfig.requiredRole);
 
       if (!hasRequiredRole) {
-        console.log(`[route-guard] Access denied. Required: ${routeConfig.requiredRole}, User has: ${updatedState.roles.join(', ')}`);
-
-        // If user has other roles, suggest switching
-        if (updatedState.roles.length > 0) {
-          const availableRole = updatedState.roles[0];
-          const message = `${routeConfig.name} requires ${routeConfig.requiredRole} role. You're currently in ${updatedState.primaryRole} mode.`;
-          this.redirectWithMessage(routeConfig.fallback, message, 'error');
-        } else {
-          this.redirectWithMessage('/', 'You don\'t have permission to access this page', 'error');
-        }
-        return false;
+        console.warn(`[route-guard] Access warning: Required ${routeConfig.requiredRole}, User has: ${updatedState.roles.join(', ')} (non-blocking - dashboard will handle)`);
+        // NON-BLOCKING: Just log warning, don't redirect
+        // Dashboard will show appropriate UI for missing role
+        return true; // Allow access, dashboard will handle role UI
       }
 
       console.log('[route-guard] Access granted');
@@ -124,19 +112,24 @@
 
     // Initialize route guard
     async init() {
-      console.log('[route-guard] Initializing route protection');
+      console.log('[route-guard] Initializing route protection (non-blocking mode)');
 
-      // Check access on page load
-      await this.verifyAccess();
+      // NON-BLOCKING: Check access in background, don't block page load
+      // This allows dashboards to render immediately
+      this.verifyAccess().catch(err => {
+        console.warn('[route-guard] Access check failed (non-blocking):', err);
+      });
 
-      // Monitor for route changes (for SPAs)
+      // Monitor for route changes (for SPAs) - also non-blocking
       let lastPath = window.location.pathname;
       setInterval(() => {
         const currentPath = window.location.pathname;
         if (currentPath !== lastPath) {
           lastPath = currentPath;
-          console.log('[route-guard] Route changed, verifying access');
-          this.verifyAccess();
+          console.log('[route-guard] Route changed, verifying access (non-blocking)');
+          this.verifyAccess().catch(err => {
+            console.warn('[route-guard] Access check failed (non-blocking):', err);
+          });
         }
       }, 500);
 

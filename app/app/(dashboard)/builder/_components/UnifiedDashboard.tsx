@@ -82,42 +82,77 @@ export function UnifiedDashboard({ onNavigate }: UnifiedDashboardProps) {
   const [userId, setUserId] = useState<string | null>(null)
   const [previousStats, setPreviousStats] = useState({ total: 0, hot: 0, warm: 0, conversionRate: 0 })
 
-  // Get user and builder ID
+  // Get user and builder ID - non-blocking
   useEffect(() => {
-    const supabase = getSupabase()
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      if (user) {
+    let mounted = true
+    async function initAuth() {
+      try {
+        const supabase = getSupabase()
+        const { data: { user }, error: userError } = await supabase.auth.getUser()
+        if (!mounted) return
+        
+        if (userError || !user) {
+          console.log('[UnifiedDashboard] User not authenticated (non-blocking)')
+          return
+        }
+        
         setUserId(user.id)
-        // Get builder profile
-        supabase
+        // Get builder profile - non-blocking
+        const { data, error: profileError } = await supabase
           .from('builder_profiles')
           .select('id')
           .eq('user_id', user.id)
           .single()
-          .then(({ data }) => {
-            if (data) setBuilderId(data.id)
-          })
+        
+        if (!mounted) return
+        
+        if (profileError) {
+          console.warn('[UnifiedDashboard] Builder profile not found (non-blocking):', profileError)
+          return
+        }
+        
+        if (data) setBuilderId(data.id)
+      } catch (err) {
+        console.error('[UnifiedDashboard] Auth init error (non-blocking):', err)
       }
-    })
+    }
+    
+    initAuth()
+    return () => { mounted = false }
   }, [])
 
-  // Fetch data with real-time updates
-  const { data: leads = [], isLoading: leadsLoading } = useQuery({
+  // Fetch data with real-time updates - non-blocking with error handling
+  const { data: leads = [], isLoading: leadsLoading, error: leadsError } = useQuery({
     queryKey: ['unified-leads'],
     queryFn: fetchLeads,
-    refetchInterval: 15000
+    refetchInterval: 15000,
+    retry: 1,
+    retryDelay: 1000,
+    onError: (err) => {
+      console.warn('[UnifiedDashboard] Leads fetch error (non-blocking):', err)
+    }
   })
 
-  const { data: properties = [], isLoading: propertiesLoading } = useQuery({
+  const { data: properties = [], isLoading: propertiesLoading, error: propertiesError } = useQuery({
     queryKey: ['unified-properties'],
     queryFn: fetchProperties,
-    refetchInterval: 30000
+    refetchInterval: 30000,
+    retry: 1,
+    retryDelay: 1000,
+    onError: (err) => {
+      console.warn('[UnifiedDashboard] Properties fetch error (non-blocking):', err)
+    }
   })
 
-  const { data: stats = { total: 0, hot: 0, warm: 0, conversionRate: 0 }, isLoading: statsLoading } = useQuery({
+  const { data: stats = { total: 0, hot: 0, warm: 0, conversionRate: 0 }, isLoading: statsLoading, error: statsError } = useQuery({
     queryKey: ['unified-stats'],
     queryFn: fetchStats,
-    refetchInterval: 5000 // Real-time updates every 5 seconds
+    refetchInterval: 5000, // Real-time updates every 5 seconds
+    retry: 1,
+    retryDelay: 1000,
+    onError: (err) => {
+      console.warn('[UnifiedDashboard] Stats fetch error (non-blocking):', err)
+    }
   })
 
   // Real-time leads subscription - using Supabase realtime directly for better performance
@@ -127,27 +162,30 @@ export function UnifiedDashboard({ onNavigate }: UnifiedDashboardProps) {
   useEffect(() => {
     if (!builderId) return
 
-    const supabase = getSupabase()
-    
-    // Subscribe to leads changes
-    const leadsChannel = supabase
-      .channel(`builder-leads-${builderId}`)
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'leads',
-          filter: `builder_id=eq.${builderId}`,
-        },
-        (payload: any) => {
-          if (payload.eventType === 'INSERT') {
-            setRealtimeLeads((prev) => [payload.new, ...prev])
-          } else if (payload.eventType === 'UPDATE') {
-            setRealtimeLeads((prev) =>
-              prev.map((l: any) => (l.id === payload.new.id ? payload.new : l))
-            )
-          } else if (payload.eventType === 'DELETE') {
+    let mounted = true
+    try {
+      const supabase = getSupabase()
+      
+      // Subscribe to leads changes - non-blocking
+      const leadsChannel = supabase
+        .channel(`builder-leads-${builderId}`)
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'leads',
+            filter: `builder_id=eq.${builderId}`,
+          },
+          (payload: any) => {
+            if (!mounted) return
+            if (payload.eventType === 'INSERT') {
+              setRealtimeLeads((prev) => [payload.new, ...prev])
+            } else if (payload.eventType === 'UPDATE') {
+              setRealtimeLeads((prev) =>
+                prev.map((l: any) => (l.id === payload.new.id ? payload.new : l))
+              )
+            } else if (payload.eventType === 'DELETE') {
             setRealtimeLeads((prev) => prev.filter((l: any) => l.id !== payload.old.id))
           }
         }

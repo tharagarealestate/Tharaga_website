@@ -25,13 +25,20 @@ export default function DashboardHeader() {
   const panelRef = useRef<HTMLDivElement>(null);
   const supabase = useMemo(() => getSupabase(), []);
 
-  // Fetch notifications on mount
+  // Fetch notifications on mount - non-blocking
   useEffect(() => {
-    if (!supabase) return;
+    if (!supabase) {
+      console.warn('[DashboardHeader] Supabase not ready, skipping notifications');
+      return;
+    }
 
     const fetchNotifications = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+      try {
+        const { data: { user }, error: userError } = await supabase.auth.getUser();
+        if (userError || !user) {
+          console.log('[DashboardHeader] User not authenticated, skipping notifications');
+          return;
+        }
 
       const { data, error } = await supabase
         .from('notifications')
@@ -40,9 +47,13 @@ export default function DashboardHeader() {
         .order('created_at', { ascending: false })
         .limit(20);
 
-      if (data) {
-        setNotifications(data);
-        setUnreadCount(data.filter(n => !n.read).length);
+        if (data) {
+          setNotifications(data);
+          setUnreadCount(data.filter(n => !n.read).length);
+        }
+      } catch (err) {
+        console.error('[DashboardHeader] Error fetching notifications:', err);
+        // Non-blocking - just log error, don't break UI
       }
     };
 

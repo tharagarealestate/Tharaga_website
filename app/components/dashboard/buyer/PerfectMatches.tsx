@@ -42,10 +42,13 @@ export default function PerfectMatches() {
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [hoveredId, setHoveredId] = useState<string | null>(null);
-  const { supabase } = useSupabase();
+  const { supabase, isLoading: supabaseLoading } = useSupabase();
 
   // Fetch recommendations
   const fetchRecommendations = useCallback(async (showRefresh = false) => {
+    if (supabaseLoading) {
+      return; // Wait for Supabase to initialize
+    }
     if (!supabase) {
       setError('Database connection not ready');
       setLoading(false);
@@ -115,8 +118,10 @@ export default function PerfectMatches() {
   }, [supabase]);
 
   useEffect(() => {
-    fetchRecommendations();
-  }, [fetchRecommendations]);
+    if (!supabaseLoading) {
+      fetchRecommendations();
+    }
+  }, [fetchRecommendations, supabaseLoading]);
 
   // Real-time subscription for new properties
   useEffect(() => {

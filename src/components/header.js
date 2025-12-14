@@ -108,9 +108,22 @@
           e.preventDefault();
           e.stopPropagation();
           
-      // Redirect to login page instead of showing modal
-      const next = newLink.getAttribute('href') || '/';
-      window.location.href = '/login?next=' + encodeURIComponent(next);
+          // Open login modal instead of redirecting
+          const next = newLink.getAttribute('href') || '/';
+          try {
+            if (window.authGate && typeof window.authGate.openLoginModal === 'function') {
+              window.authGate.openLoginModal({ next: next });
+            } else if (typeof window.__thgOpenAuthModal === 'function') {
+              window.__thgOpenAuthModal({ next: next });
+            } else {
+              // Fallback: show login prompt modal
+              showLoginPrompt(portalType);
+            }
+          } catch(err) {
+            console.error('[tharaga-header] Error opening auth modal:', err);
+            // Fallback: show login prompt modal
+            showLoginPrompt(portalType);
+          }
         } else {
           // User is authenticated - allow navigation
           // Let link interceptor handle it
@@ -122,9 +135,8 @@
     interceptHeaderLinks();
   };
   
-  // showLoginPrompt function REMOVED - redirects to /login instead
-  // This function is no longer needed - portal links redirect directly
-  function showLoginPrompt_DISABLED(portalType) {
+  // Show login prompt modal for portal access
+  function showLoginPrompt(portalType) {
     const portalName = portalType === 'builder' ? 'Builder Dashboard' : 'Buyer Dashboard';
     const portalIcon = portalType === 'builder' ? '🏗️' : '🏠';
     const portalDesc = portalType === 'builder' 

@@ -36,10 +36,13 @@ export default function MarketInsights() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [selectedLocality, setSelectedLocality] = useState<string | null>(null);
-  const { supabase } = useSupabase();
+  const { supabase, isLoading: supabaseLoading } = useSupabase();
 
   // Fetch insights based on user preferences
   const fetchInsights = useCallback(async (showRefresh = false) => {
+    if (supabaseLoading) {
+      return; // Wait for Supabase to initialize
+    }
     if (!supabase) {
       setLoading(false);
       return;
@@ -86,11 +89,13 @@ export default function MarketInsights() {
       setLoading(false);
       setRefreshing(false);
     }
-  }, [supabase, selectedLocality]);
+  }, [supabase, supabaseLoading, selectedLocality]);
 
   useEffect(() => {
-    fetchInsights();
-  }, [fetchInsights]);
+    if (!supabaseLoading) {
+      fetchInsights();
+    }
+  }, [fetchInsights, supabaseLoading]);
 
   // Real-time subscription
   useEffect(() => {

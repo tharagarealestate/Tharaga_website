@@ -52,7 +52,7 @@ export default function SavedProperties() {
   const [newFolderName, setNewFolderName] = useState('');
   const [editingNote, setEditingNote] = useState<string | null>(null);
   const [tempNote, setTempNote] = useState('');
-  const { supabase } = useSupabase();
+  const { supabase, isLoading: supabaseLoading } = useSupabase();
 
   // Folder colors
   const FOLDER_COLORS = [
@@ -66,6 +66,9 @@ export default function SavedProperties() {
 
   // Fetch saved properties
   const fetchSaved = useCallback(async () => {
+    if (supabaseLoading) {
+      return; // Wait for Supabase to initialize
+    }
     if (!supabase) {
       setLoading(false);
       return;
@@ -120,11 +123,13 @@ export default function SavedProperties() {
     } finally {
       setLoading(false);
     }
-  }, [supabase]);
+  }, [supabase, supabaseLoading]);
 
   useEffect(() => {
-    fetchSaved();
-  }, [fetchSaved]);
+    if (!supabaseLoading) {
+      fetchSaved();
+    }
+  }, [fetchSaved, supabaseLoading]);
 
   // Real-time subscription
   useEffect(() => {

@@ -43,10 +43,13 @@ export default function DocumentVault() {
   const [selectedType, setSelectedType] = useState<string>('');
   const [dragActive, setDragActive] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const { supabase } = useSupabase();
+  const { supabase, isLoading: supabaseLoading } = useSupabase();
 
   // Fetch documents
   const fetchDocuments = useCallback(async () => {
+    if (supabaseLoading) {
+      return; // Wait for Supabase to initialize
+    }
     if (!supabase) {
       setLoading(false);
       return;
@@ -70,11 +73,13 @@ export default function DocumentVault() {
     } finally {
       setLoading(false);
     }
-  }, [supabase]);
+  }, [supabase, supabaseLoading]);
 
   useEffect(() => {
-    fetchDocuments();
-  }, [fetchDocuments]);
+    if (!supabaseLoading) {
+      fetchDocuments();
+    }
+  }, [fetchDocuments, supabaseLoading]);
 
   // Handle file upload
   const handleUpload = async (files: FileList | null) => {

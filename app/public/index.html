@@ -852,6 +852,42 @@
         box-shadow: 0 0 0 2px #60a5fa;
       }
 
+      /* Mobile menu back button - Home arrow */
+      header.nav .mobile-menu-back {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.75rem 1rem;
+        color: #ffffff;
+        font-size: 1rem;
+        font-weight: 600;
+        text-decoration: none;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        margin-bottom: 0.5rem;
+        transition: all 0.2s ease;
+        border-radius: 0.5rem;
+      }
+
+      header.nav .mobile-menu-back:hover {
+        background: rgba(255, 255, 255, 0.1);
+        transform: translateX(-4px);
+      }
+
+      header.nav .mobile-menu-back:active {
+        transform: translateX(-4px) scale(0.98);
+      }
+
+      header.nav .mobile-menu-back:focus {
+        outline: none;
+        box-shadow: 0 0 0 2px #60a5fa;
+      }
+
+      header.nav .mobile-menu-back svg {
+        width: 20px;
+        height: 20px;
+        color: #d4af37;
+      }
+
       /* Mobile menu close button - BLUE CIRCLE */
       header.nav .mobile-menu-close {
         position: absolute;

@@ -616,6 +616,8 @@
         z-index: 10001;
         color: #ffffff !important;
         transition: all 0.15s ease;
+        visibility: visible !important;
+        opacity: 1 !important;
       }
 
       header.nav .mobile-user-icon:hover {
@@ -649,6 +651,8 @@
         transform: translateY(-50%);
         z-index: 10001;
         transition: all 0.2s ease;
+        visibility: visible !important;
+        opacity: 1 !important;
       }
 
       header.nav .mobile-menu-toggle:focus {
@@ -808,6 +812,15 @@
       header.nav .mobile-menu-close:hover {
         background: #1d4ed8 !important;
         transform: scale(1.05);
+      }
+    }
+
+    /* Hide mobile buttons on desktop */
+    @media (min-width: 768px) {
+      header.nav .mobile-user-icon,
+      header.nav .mobile-menu-toggle {
+        display: none !important;
+        visibility: hidden !important;
       }
     }
 
@@ -1734,7 +1747,6 @@
       <button
         class="mobile-user-icon"
         aria-label="Sign in or view account"
-        style="display: none;"
       >
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path>
@@ -1747,7 +1759,6 @@
         aria-label="Toggle menu"
         aria-expanded="false"
         aria-controls="mobile-menu-panel"
-        style="display: none;"
       >
         <svg class="hamburger-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <line x1="3" y1="6" x2="21" y2="6"/>
@@ -2697,18 +2708,37 @@
         });
 
         function updateMobileMenuVisibility() {
-          if (window.innerWidth <= 767) {
+          const isMobile = window.innerWidth <= 767;
+          if (isMobile) {
+            // Show mobile buttons
             toggleBtn.style.display = 'flex';
-            if (userIconBtn) userIconBtn.style.display = 'flex';
+            toggleBtn.style.visibility = 'visible';
+            if (userIconBtn) {
+              userIconBtn.style.display = 'flex';
+              userIconBtn.style.visibility = 'visible';
+            }
           } else {
+            // Hide mobile buttons
             toggleBtn.style.display = 'none';
-            if (userIconBtn) userIconBtn.style.display = 'none';
+            toggleBtn.style.visibility = 'hidden';
+            if (userIconBtn) {
+              userIconBtn.style.display = 'none';
+              userIconBtn.style.visibility = 'hidden';
+            }
             closeMenu();
           }
         }
 
+        // Run immediately and on resize
         window.addEventListener('resize', updateMobileMenuVisibility);
-        updateMobileMenuVisibility();
+        // Use setTimeout to ensure DOM is ready
+        setTimeout(updateMobileMenuVisibility, 100);
+        // Also run on load
+        if (document.readyState === 'loading') {
+          document.addEventListener('DOMContentLoaded', updateMobileMenuVisibility);
+        } else {
+          updateMobileMenuVisibility();
+        }
       }
 
       // Initialize on DOM ready

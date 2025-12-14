@@ -578,10 +578,23 @@
 
       /* Hide desktop nav and auth button on mobile */
       header.nav nav.row {
-        display: none;
+        display: none !important;
+        visibility: hidden !important;
       }
 
       header.nav #site-header-auth-container {
+        display: none !important;
+        visibility: hidden !important;
+      }
+
+      /* Hide desktop auth wrap if it exists */
+      header.nav .thg-auth-wrap {
+        display: none !important;
+        visibility: hidden !important;
+      }
+
+      /* Hide about mobile link duplicate */
+      header.nav .about-mobile-link {
         display: none !important;
       }
 

@@ -9,6 +9,7 @@ export async function GET(req: NextRequest) {
   const scoreMax = Number(url.searchParams.get('scoreMax') || '10')
   const source = url.searchParams.get('source') || 'all'
   const dateRange = url.searchParams.get('dateRange') || '30days'
+  const limit = Number(url.searchParams.get('limit') || '0') // 0 = no limit, supports pagination
 
   const supabase = getSupabase()
 
@@ -42,6 +43,7 @@ export async function GET(req: NextRequest) {
   if (status !== 'all') query = query.eq('status', status)
   if (source !== 'all') query = query.eq('source', source)
   if (fromDate) query = query.gte('created_at', fromDate)
+  if (limit > 0) query = query.limit(limit) // Support pagination via limit parameter
 
   const { data, error } = await query
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })

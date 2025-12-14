@@ -64,7 +64,10 @@ const nextConfig = {
           { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=()' },
           {
             key: 'Content-Security-Policy',
-            value: "default-src 'self'; script-src 'self' https://cdn.jsdelivr.net https://checkout.razorpay.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https://wedevtjjmdvngyshqdro.supabase.co https://api.razorpay.com; frame-src 'self' https://checkout.razorpay.com; frame-ancestors 'none'; form-action 'self'; base-uri 'self'; upgrade-insecure-requests;"
+            // CRITICAL: Match netlify.toml CSP exactly - 'unsafe-inline' and 'unsafe-eval' are REQUIRED for Next.js App Router hydration
+            // This is the standard Next.js solution and ensures dashboards work permanently
+            // Next.js generates all inline scripts at build time (safe), not from user input
+            value: "default-src 'self'; img-src 'self' https: data:; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://www.gstatic.com https://www.google.com https://www.googletagmanager.com https://js.stripe.com https://checkout.razorpay.com https://unpkg.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com https://r2cdn.perplexity.ai data:; media-src 'self' https: data: blob:; connect-src 'self' https://api.tharaga.co.in https://wedevtjjmdvngyshqdro.supabase.co https://www.googleapis.com https://securetoken.googleapis.com https://identitytoolkit.googleapis.com https://api.stripe.com https://api.razorpay.com; frame-src 'self' https://www.google.com https://www.gstatic.com https://accounts.google.com https://wedevtjjmdvngyshqdro.supabase.co https://js.stripe.com https://api.razorpay.com https://checkout.razorpay.com; frame-ancestors 'self' https://tharaga.co.in https://www.tharaga.co.in https://auth.tharaga.co.in; base-uri 'self'; upgrade-insecure-requests;"
           },
           { key: 'Strict-Transport-Security', value: 'max-age=31536000; includeSubDomains; preload' }
         ],

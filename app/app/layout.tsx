@@ -73,6 +73,31 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <Script id="auth-config" strategy="beforeInteractive">
           {`window.AUTH_HIDE_HEADER=false;window.AUTH_OPEN_ON_LOAD=false;`}
         </Script>
+        {/* BLOCK auth-gate.js from initializing - must run BEFORE any auth-gate.js loads */}
+        <Script id="block-auth-gate" strategy="beforeInteractive">
+          {`
+          // Prevent auth-gate.js from creating nested containers
+          window.__authGateInjected = true; // Block auth-gate.js initialization
+          window.__blockAuthGate = true;
+          // Remove any existing authGateModal immediately
+          if (typeof document !== 'undefined') {
+            function removeAuthGateModal() {
+              const modal = document.getElementById('authGateModal');
+              if (modal) modal.remove();
+              const iframes = document.querySelectorAll('iframe[id*="authGate"], iframe[src*="login_signup_glassdrop"]');
+              iframes.forEach(function(iframe) { if (iframe.parentElement) iframe.parentElement.remove(); });
+              const nested = document.querySelectorAll('.authgate-backdrop, .authgate-dialog, .authgate-frame-wrap');
+              nested.forEach(function(el) { if (el.parentElement) el.parentElement.remove(); });
+            }
+            removeAuthGateModal();
+            if (document.readyState === 'loading') {
+              document.addEventListener('DOMContentLoaded', removeAuthGateModal);
+            }
+            // Continuously remove if auth-gate.js tries to create it
+            setInterval(removeAuthGateModal, 100);
+          }
+          `}
+        </Script>
         {/* Load role manager system SYNCHRONOUSLY to ensure it's available before auth system */}
         <Script src="/role-manager-v2.js" strategy="beforeInteractive" />
         {/* PREVENT DARK DROPDOWN - Inject light theme styles BEFORE auth system */}
@@ -769,7 +794,17 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       removeNestedContainers();
     });
     nestedObserver.observe(document.body, { childList: true, subtree: true });
-    setInterval(removeNestedContainers, 500);
+    setInterval(removeNestedContainers, 100);
+    
+    // Also remove portal login prompt if it appears
+    function removePortalPrompt() {
+      const portalPrompt = document.getElementById('thg-portal-login-prompt');
+      if (portalPrompt) {
+        portalPrompt.remove();
+        document.body.style.overflow = '';
+      }
+    }
+    setInterval(removePortalPrompt, 100);
     
     const ui = createUI();
     bindUI(ui);

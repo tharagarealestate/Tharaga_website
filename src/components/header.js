@@ -108,6 +108,16 @@
           e.preventDefault();
           e.stopPropagation();
           
+          // FORCE REMOVE any nested containers before opening modal
+          const authGateModal = document.getElementById('authGateModal');
+          if (authGateModal) authGateModal.remove();
+          const portalPrompt = document.getElementById('thg-portal-login-prompt');
+          if (portalPrompt) portalPrompt.remove();
+          const iframes = document.querySelectorAll('iframe[id*="authGate"], iframe[src*="login_signup_glassdrop"]');
+          iframes.forEach(function(iframe) { if (iframe.parentElement) iframe.parentElement.remove(); });
+          const nestedAuth = document.querySelectorAll('.authgate-backdrop, .authgate-dialog, .authgate-frame-wrap');
+          nestedAuth.forEach(function(el) { if (el.parentElement) el.parentElement.remove(); });
+          
           // Open login modal instead of redirecting
           const next = newLink.getAttribute('href') || '/';
           try {
@@ -123,6 +133,12 @@
             }
             // Last resort: wait a bit for modal to initialize, then try again
             setTimeout(function() {
+              // Remove nested containers again before retry
+              const authGateModal2 = document.getElementById('authGateModal');
+              if (authGateModal2) authGateModal2.remove();
+              const portalPrompt2 = document.getElementById('thg-portal-login-prompt');
+              if (portalPrompt2) portalPrompt2.remove();
+              
               if (typeof window.__thgOpenAuthModal === 'function') {
                 window.__thgOpenAuthModal({ next: next });
               } else if (window.authGate && typeof window.authGate.openLoginModal === 'function') {

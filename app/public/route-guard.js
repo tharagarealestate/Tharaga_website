@@ -49,16 +49,22 @@
 
       // Check if user is logged in
       if (!updatedState.user) {
-        console.log('[route-guard] User not logged in, redirecting to home');
+        console.log('[route-guard] User not logged in, opening login modal instead of redirecting');
+        // Open login modal instead of redirecting - this prevents loading issues
+        if (typeof window.__thgOpenAuthModal === 'function') {
+          window.__thgOpenAuthModal({ next: window.location.pathname });
+          return false; // Still return false to prevent navigation
+        }
+        // Fallback to redirect if modal not available
         this.redirectWithMessage('/', 'Please login to access this page', 'error');
         return false;
       }
 
       // Check if user has no roles yet
       if (!updatedState.roles || updatedState.roles.length === 0) {
-        console.log('[route-guard] User has no roles, redirecting to home');
-        this.redirectWithMessage('/', 'Please select a role to continue', 'error');
-        return false;
+        console.log('[route-guard] User has no roles, allowing access temporarily (user can add role)');
+        // Allow access temporarily - user can add role from dashboard
+        return true;
       }
 
       // Check if user has the required role

@@ -1,4 +1,4 @@
-﻿<!doctype html>
+<!doctype html>
 <html lang="en">
 <head>
   <meta charset="utf-8" />
@@ -568,7 +568,12 @@
 
       header.nav .inner {
         padding: 10px 16px !important;
-        padding-right: 50px !important;
+        padding-right: 120px !important;
+      }
+
+      /* Adjust brand name size for mobile */
+      header.nav .brand {
+        font-size: 20px !important;
       }
 
       /* Hide desktop nav and auth button on mobile */
@@ -604,6 +609,11 @@
         background: rgba(255, 255, 255, 0.1) !important;
       }
 
+      header.nav .mobile-user-icon:focus {
+        outline: none;
+        box-shadow: 0 0 0 2px #60a5fa;
+      }
+
       header.nav .mobile-user-icon svg {
         width: 24px;
         height: 24px;
@@ -628,12 +638,29 @@
         transition: all 0.2s ease;
       }
 
+      header.nav .mobile-menu-toggle:focus {
+        outline: none;
+        box-shadow: 0 0 0 2px #60a5fa;
+      }
+
       header.nav .mobile-menu-toggle .hamburger-icon {
+        width: 24px;
+        height: 24px;
+        viewBox: 0 0 24 24;
+        fill: none;
+        stroke: currentColor;
+        stroke-width: 2;
         color: #d4af37 !important;
         display: block;
       }
 
       header.nav .mobile-menu-toggle .close-icon {
+        width: 24px;
+        height: 24px;
+        viewBox: 0 0 24 24;
+        fill: none;
+        stroke: currentColor;
+        stroke-width: 2;
         color: #ffffff !important;
         display: none;
         position: absolute;
@@ -689,22 +716,62 @@
         transform: translateX(0);
       }
 
+      /* Menu item wrapper divs with initial hidden state */
+      header.nav .mobile-menu-panel > div {
+        opacity: 0;
+        transform: translateX(20px);
+        transition: opacity 0.3s ease-out, transform 0.3s ease-out;
+      }
+
+      /* Staggered animation delays */
+      header.nav .mobile-menu-panel.is-open > div:nth-child(1) {
+        transition-delay: 0s;
+      }
+
+      header.nav .mobile-menu-panel.is-open > div:nth-child(2) {
+        transition-delay: 0.05s;
+      }
+
+      header.nav .mobile-menu-panel.is-open > div:nth-child(3) {
+        transition-delay: 0.1s;
+      }
+
+      header.nav .mobile-menu-panel.is-open > div:nth-child(4) {
+        transition-delay: 0.15s;
+      }
+
+      header.nav .mobile-menu-panel.is-open > div:nth-child(5) {
+        transition-delay: 0.2s;
+      }
+
+      /* When panel is open, show all items */
+      header.nav .mobile-menu-panel.is-open > div {
+        opacity: 1;
+        transform: translateX(0);
+      }
+
+      /* Menu item links */
       header.nav .mobile-menu-panel a {
         display: block;
-        padding: 16px;
-        color: #ffffff !important;
+        padding: 0.75rem 1rem;
+        color: #ffffff;
+        font-size: 1.125rem;
         font-weight: 600;
-        font-size: 18px;
-        border-radius: 8px;
-        margin-bottom: 8px;
-        min-height: 44px;
-        display: flex;
-        align-items: center;
-        transition: background 0.15s ease;
+        border-radius: 0.5rem;
+        transition: all 0.15s;
       }
 
       header.nav .mobile-menu-panel a:hover {
-        background: rgba(255, 255, 255, 0.1) !important;
+        background: rgba(255, 255, 255, 0.1);
+      }
+
+      header.nav .mobile-menu-panel a:active {
+        transform: scale(0.98);
+      }
+
+      header.nav .mobile-menu-panel a:focus {
+        outline: none;
+        box-shadow: 0 0 0 2px #60a5fa;
       }
 
       /* Mobile menu close button - BLUE CIRCLE */
@@ -2538,41 +2605,20 @@
             if (item.tagName === 'A') {
               const href = item.getAttribute('href') || '#';
               const text = item.textContent.trim();
-              menuHTML += '<a href="' + href + '">' + text + '</a>';
+              menuHTML += '<div><a href="' + href + '">' + text + '</a></div>';
             } else if (item.tagName === 'DETAILS') {
               const summary = item.querySelector('summary');
               const menu = item.querySelector('.menu');
               if (summary && menu) {
-                menuHTML += '<div class="mobile-menu-group">';
-                menuHTML += '<div class="mobile-menu-title">' + summary.textContent.trim() + '</div>';
                 const links = menu.querySelectorAll('a');
                 links.forEach(function(link) {
                   const href = link.getAttribute('href') || '#';
                   const text = link.textContent.trim();
-                  menuHTML += '<a href="' + href + '" class="mobile-menu-item">' + text + '</a>';
+                  menuHTML += '<div><a href="' + href + '">' + text + '</a></div>';
                 });
-                menuHTML += '</div>';
               }
             }
           });
-
-          const authContainer = header.querySelector('#site-header-auth-container');
-          if (authContainer) {
-            const authLinks = authContainer.querySelectorAll('a, button');
-            if (authLinks.length > 0) {
-              menuHTML += '<div class="mobile-menu-divider"></div>';
-              authLinks.forEach(function(link) {
-                const href = link.getAttribute('href') || '#';
-                const text = link.textContent.trim();
-                const isButton = link.tagName === 'BUTTON';
-                if (isButton) {
-                  menuHTML += '<button class="mobile-menu-cta">' + text + '</button>';
-                } else {
-                  menuHTML += '<a href="' + href + '" class="mobile-menu-cta">' + text + '</a>';
-                }
-              });
-            }
-          }
 
           const closeBtn = panel.querySelector('.mobile-menu-close');
           panel.innerHTML = (closeBtn ? closeBtn.outerHTML : '<button class="mobile-menu-close" aria-label="Close menu"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>') + menuHTML;
@@ -2581,6 +2627,12 @@
           if (newCloseBtn) {
             newCloseBtn.addEventListener('click', closeMenu);
           }
+
+          // Add click listeners to menu items to close menu
+          const menuLinks = panel.querySelectorAll('a');
+          menuLinks.forEach(function(link) {
+            link.addEventListener('click', closeMenu);
+          });
         }
 
         function openMenu() {

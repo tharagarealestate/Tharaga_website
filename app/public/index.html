@@ -729,60 +729,123 @@
         transform: translateX(0);
       }
 
-      /* Menu item wrapper divs with initial hidden state */
-      header.nav .mobile-menu-panel > div {
+      /* Mobile menu dropdown accordion */
+      header.nav .mobile-menu-dropdown {
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        margin-bottom: 0;
+      }
+
+      header.nav .mobile-menu-dropdown:last-child {
+        border-bottom: none;
+      }
+
+      /* Dropdown header/button */
+      header.nav .mobile-menu-dropdown-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 1rem;
+        color: #ffffff;
+        font-size: 1.125rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        border-radius: 0.5rem;
+        margin-bottom: 0.25rem;
+      }
+
+      header.nav .mobile-menu-dropdown-header:hover {
+        background: rgba(255, 255, 255, 0.1);
+      }
+
+      header.nav .mobile-menu-dropdown-header:active {
+        transform: scale(0.98);
+      }
+
+      header.nav .mobile-menu-dropdown-header:focus {
+        outline: none;
+        box-shadow: 0 0 0 2px #60a5fa;
+      }
+
+      /* Arrow icon */
+      header.nav .mobile-menu-dropdown-arrow {
+        width: 20px;
+        height: 20px;
+        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        color: #d4af37;
+        flex-shrink: 0;
+      }
+
+      header.nav .mobile-menu-dropdown.is-open .mobile-menu-dropdown-arrow {
+        transform: rotate(180deg);
+      }
+
+      /* Dropdown content container */
+      header.nav .mobile-menu-dropdown-content {
+        max-height: 0;
+        overflow: hidden;
+        transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease-out, padding 0.3s ease;
         opacity: 0;
-        transform: translateX(20px);
-        transition: opacity 0.3s ease-out, transform 0.3s ease-out;
+        padding: 0 1rem;
       }
 
-      /* Staggered animation delays */
-      header.nav .mobile-menu-panel.is-open > div:nth-child(1) {
-        transition-delay: 0s;
-      }
-
-      header.nav .mobile-menu-panel.is-open > div:nth-child(2) {
-        transition-delay: 0.05s;
-      }
-
-      header.nav .mobile-menu-panel.is-open > div:nth-child(3) {
-        transition-delay: 0.1s;
-      }
-
-      header.nav .mobile-menu-panel.is-open > div:nth-child(4) {
-        transition-delay: 0.15s;
-      }
-
-      header.nav .mobile-menu-panel.is-open > div:nth-child(5) {
-        transition-delay: 0.2s;
-      }
-
-      /* When panel is open, show all items */
-      header.nav .mobile-menu-panel.is-open > div {
+      header.nav .mobile-menu-dropdown.is-open .mobile-menu-dropdown-content {
+        max-height: 500px;
         opacity: 1;
-        transform: translateX(0);
+        padding: 0.5rem 1rem 1rem;
       }
 
-      /* Menu item links */
-      header.nav .mobile-menu-panel a {
+      /* Dropdown menu items */
+      header.nav .mobile-menu-dropdown-item {
         display: block;
         padding: 0.75rem 1rem;
+        color: rgba(255, 255, 255, 0.9);
+        font-size: 1rem;
+        font-weight: 500;
+        border-radius: 0.5rem;
+        transition: all 0.2s ease;
+        margin-bottom: 0.25rem;
+        text-decoration: none;
+      }
+
+      header.nav .mobile-menu-dropdown-item:hover {
+        background: rgba(255, 255, 255, 0.1);
+        color: #ffffff;
+        transform: translateX(4px);
+      }
+
+      header.nav .mobile-menu-dropdown-item:active {
+        transform: translateX(4px) scale(0.98);
+      }
+
+      header.nav .mobile-menu-dropdown-item:focus {
+        outline: none;
+        box-shadow: 0 0 0 2px #60a5fa;
+      }
+
+      /* Regular menu links (Pricing, About) */
+      header.nav .mobile-menu-link {
+        display: block;
+        padding: 1rem;
         color: #ffffff;
         font-size: 1.125rem;
         font-weight: 600;
         border-radius: 0.5rem;
-        transition: all 0.15s;
+        transition: all 0.2s ease;
+        text-decoration: none;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
       }
 
-      header.nav .mobile-menu-panel a:hover {
+      header.nav .mobile-menu-link:hover {
         background: rgba(255, 255, 255, 0.1);
+        transform: translateX(4px);
       }
 
-      header.nav .mobile-menu-panel a:active {
-        transform: scale(0.98);
+      header.nav .mobile-menu-link:active {
+        transform: translateX(4px) scale(0.98);
       }
 
-      header.nav .mobile-menu-panel a:focus {
+      header.nav .mobile-menu-link:focus {
         outline: none;
         box-shadow: 0 0 0 2px #60a5fa;
       }
@@ -2611,27 +2674,59 @@
         function populateMobileMenu() {
           if (!desktopNav || !panel) return;
 
-          const menuItems = desktopNav.querySelectorAll('a, details');
           let menuHTML = '';
 
-          menuItems.forEach(function(item) {
-            if (item.tagName === 'A') {
-              const href = item.getAttribute('href') || '#';
-              const text = item.textContent.trim();
-              menuHTML += '<div><a href="' + href + '">' + text + '</a></div>';
-            } else if (item.tagName === 'DETAILS') {
-              const summary = item.querySelector('summary');
-              const menu = item.querySelector('.menu');
-              if (summary && menu) {
-                const links = menu.querySelectorAll('a');
-                links.forEach(function(link) {
-                  const href = link.getAttribute('href') || '#';
-                  const text = link.textContent.trim();
-                  menuHTML += '<div><a href="' + href + '">' + text + '</a></div>';
-                });
+          // Process navigation items
+          const menuGroup = desktopNav.querySelector('.menu-group');
+          if (menuGroup) {
+            const items = menuGroup.children;
+            
+            for (let i = 0; i < items.length; i++) {
+              const item = items[i];
+              
+              // Handle dropdowns (details elements)
+              if (item.tagName === 'DETAILS' && item.classList.contains('dropdown')) {
+                const summary = item.querySelector('summary');
+                const menu = item.querySelector('.menu');
+                
+                if (summary && menu) {
+                  const title = summary.textContent.trim();
+                  const links = menu.querySelectorAll('a:not(.show-mobile-only)');
+                  
+                  menuHTML += '<div class="mobile-menu-dropdown">';
+                  menuHTML += '<button class="mobile-menu-dropdown-header" aria-expanded="false">';
+                  menuHTML += '<span>' + title + '</span>';
+                  menuHTML += '<svg class="mobile-menu-dropdown-arrow" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">';
+                  menuHTML += '<polyline points="6 9 12 15 18 9"></polyline>';
+                  menuHTML += '</svg>';
+                  menuHTML += '</button>';
+                  menuHTML += '<div class="mobile-menu-dropdown-content">';
+                  
+                  links.forEach(function(link) {
+                    const href = link.getAttribute('href') || '#';
+                    const text = link.textContent.trim();
+                    menuHTML += '<a href="' + href + '" class="mobile-menu-dropdown-item">' + text + '</a>';
+                  });
+                  
+                  menuHTML += '</div>';
+                  menuHTML += '</div>';
+                }
+              }
+              
+              // Handle regular links (Pricing)
+              if (item.tagName === 'A' && !item.closest('details')) {
+                const href = item.getAttribute('href') || '#';
+                const text = item.textContent.trim();
+                menuHTML += '<a href="' + href + '" class="mobile-menu-link">' + text + '</a>';
               }
             }
-          });
+          }
+
+          // Add About link (from nav.row > a[href="/about/"])
+          const aboutLink = desktopNav.querySelector('a[href="/about/"]');
+          if (aboutLink) {
+            menuHTML += '<a href="/about/" class="mobile-menu-link">About</a>';
+          }
 
           const closeBtn = panel.querySelector('.mobile-menu-close');
           panel.innerHTML = (closeBtn ? closeBtn.outerHTML : '<button class="mobile-menu-close" aria-label="Close menu"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>') + menuHTML;
@@ -2641,10 +2736,41 @@
             newCloseBtn.addEventListener('click', closeMenu);
           }
 
-          // Add click listeners to menu items to close menu
-          const menuLinks = panel.querySelectorAll('a');
+          // Add dropdown toggle functionality
+          const dropdowns = panel.querySelectorAll('.mobile-menu-dropdown');
+          dropdowns.forEach(function(dropdown) {
+            const header = dropdown.querySelector('.mobile-menu-dropdown-header');
+            if (header) {
+              header.addEventListener('click', function(e) {
+                e.preventDefault();
+                const isOpen = dropdown.classList.contains('is-open');
+                
+                // Close all other dropdowns
+                dropdowns.forEach(function(otherDropdown) {
+                  if (otherDropdown !== dropdown) {
+                    otherDropdown.classList.remove('is-open');
+                    otherDropdown.querySelector('.mobile-menu-dropdown-header').setAttribute('aria-expanded', 'false');
+                  }
+                });
+                
+                // Toggle current dropdown
+                if (isOpen) {
+                  dropdown.classList.remove('is-open');
+                  header.setAttribute('aria-expanded', 'false');
+                } else {
+                  dropdown.classList.add('is-open');
+                  header.setAttribute('aria-expanded', 'true');
+                }
+              });
+            }
+          });
+
+          // Add click listeners to menu items to close menu (but not dropdown headers)
+          const menuLinks = panel.querySelectorAll('.mobile-menu-link, .mobile-menu-dropdown-item');
           menuLinks.forEach(function(link) {
-            link.addEventListener('click', closeMenu);
+            link.addEventListener('click', function() {
+              closeMenu();
+            });
           });
         }
 

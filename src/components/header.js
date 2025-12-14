@@ -111,19 +111,27 @@
           // Open login modal instead of redirecting
           const next = newLink.getAttribute('href') || '/';
           try {
-            // Try auth-gate modal first (iframe-based)
-            if (window.authGate && typeof window.authGate.openLoginModal === 'function') {
-              window.authGate.openLoginModal({ next: next });
-              return;
-            }
-            // Fallback to __thgOpenAuthModal
+            // Use inline modal via __thgOpenAuthModal (preferred)
             if (typeof window.__thgOpenAuthModal === 'function') {
               window.__thgOpenAuthModal({ next: next });
               return;
             }
-            // Last resort: redirect to login page
-            console.warn('[header] Login modal functions not available, redirecting to /login');
-            window.location.href = '/login?next=' + encodeURIComponent(next);
+            // Fallback to authGate.openLoginModal (which now uses inline modal)
+            if (window.authGate && typeof window.authGate.openLoginModal === 'function') {
+              window.authGate.openLoginModal({ next: next });
+              return;
+            }
+            // Last resort: wait a bit for modal to initialize, then try again
+            setTimeout(function() {
+              if (typeof window.__thgOpenAuthModal === 'function') {
+                window.__thgOpenAuthModal({ next: next });
+              } else if (window.authGate && typeof window.authGate.openLoginModal === 'function') {
+                window.authGate.openLoginModal({ next: next });
+              } else {
+                console.warn('[header] Login modal functions not available, redirecting to /login');
+                window.location.href = '/login?next=' + encodeURIComponent(next);
+              }
+            }, 500);
           } catch(err) {
             console.error('[header] Error opening login modal:', err);
             // Fallback on error

@@ -75,8 +75,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         </Script>
         {/* Load role manager system SYNCHRONOUSLY to ensure it's available before auth system */}
         <Script src="/role-manager-v2.js" strategy="beforeInteractive" />
-        {/* Load auth-gate.js for iframe login modal */}
-        <Script src="/auth-gate.js" strategy="beforeInteractive" />
         {/* PREVENT DARK DROPDOWN - Inject light theme styles BEFORE auth system */}
         {/* This prevents auth system's injectStyles() from injecting dark #0b0b0b styles */}
         <style id="thg-auth-styles" dangerouslySetInnerHTML={{ __html: `
@@ -366,8 +364,52 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     }
     btn.setAttribute('aria-controls','thg-auth-menu');
 
-    // MODAL REMOVED - Login/Signup now redirects to /login page
-    // No overlay/modal creation - completely removed
+    // Create inline login/signup modal overlay
+    let overlay = document.querySelector('.thg-auth-overlay');
+    if (!overlay){
+      overlay = createEl('div','thg-auth-overlay',{'aria-hidden':'true','aria-modal':'true','role':'dialog'});
+      overlay.innerHTML = '<div class="thg-auth-modal" role="document" aria-labelledby="thg-auth-title">' +
+        '<div class="thg-auth-header">' +
+        '<div class="thg-auth-title" id="thg-auth-title">Sign in</div>' +
+        '<button class="thg-auth-close" type="button" aria-label="Close">✕</button>' +
+        '</div>' +
+        '<div class="thg-loading-bar" aria-hidden="true"></div>' +
+        '<div class="thg-auth-body">' +
+        '<div class="thg-tagline">"Browse only approved builder projects — safe, transparent, and verified"</div>' +
+        '<div class="thg-tabs" role="tablist" aria-label="Authentication method">' +
+        '<button class="thg-tab" role="tab" id="thg-tab-signin" aria-controls="thg-panel-signin" aria-selected="true">Sign in</button>' +
+        '<button class="thg-tab" role="tab" id="thg-tab-signup" aria-controls="thg-panel-signup" aria-selected="false">Create account</button>' +
+        '</div>' +
+        '<div class="thg-error" role="alert"></div>' +
+        '<div id="thg-panel-signin" role="tabpanel" aria-labelledby="thg-tab-signin">' +
+        '<div class="thg-field"><label for="thg-si-email">Email</label><input id="thg-si-email" class="thg-input" type="email" autocomplete="email" placeholder="you@example.com" /></div>' +
+        '<div class="thg-field"><label for="thg-si-password">Password</label><input id="thg-si-password" class="thg-input" type="password" autocomplete="current-password" placeholder="Your password" /></div>' +
+        '<div class="thg-actions"><button class="thg-link" type="button" id="thg-forgot">Forgot password?</button><span class="thg-hint"></span></div>' +
+        '<button class="thg-btn-primary" type="button" id="thg-signin-btn">Sign in</button>' +
+        '<div class="thg-oauth"><button class="thg-oauth-btn google" type="button" data-provider="google"><svg class="g-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" aria-hidden="true"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.2 32.6 29 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 6 1.2 8.1 3.2l5.7-5.7C34.6 6.1 29.6 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20c10 0 19-7.3 19-20 0-1.3-.1-2.7-.4-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.5 16.6 18.9 14 24 14c3.1 0 6 1.2 8.1 3.2l5.7-5.7C34.6 6.1 29.6 4 24 4c-7.7 0-14.3 4.3-17.7 10.7z"/><path fill="#4CAF50" d="M24 44c5 0 9.6-1.9 13-5.1l-6-5.1C29.9 35.6 27.1 36 24 36c-5 0-9.3-3.4-10.8-8l-6.7 5.1C10 40.2 16.5 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-1.3 3.1-4.6 8-11.3 8-5 0-9.3-3.4-10.8-8l-6.7 5.1C10 40.2 16.5 44 24 44c10 0 19-7.3 19-20 0-1.3-.1-2.7-.4-3.5z"/></svg><span>Continue with Google</span></button></div>' +
+        '</div>' +
+        '<div id="thg-panel-signup" role="tabpanel" aria-labelledby="thg-tab-signup" hidden>' +
+        '<div class="thg-field"><label for="thg-su-name">Full name (optional)</label><input id="thg-su-name" class="thg-input" type="text" autocomplete="name" placeholder="Ada Lovelace" /></div>' +
+        '<div class="thg-field"><label for="thg-su-email">Email</label><input id="thg-su-email" class="thg-input" type="email" autocomplete="email" placeholder="you@example.com" /></div>' +
+        '<div class="thg-field"><label for="thg-su-password">Password</label><input id="thg-su-password" class="thg-input" type="password" autocomplete="new-password" placeholder="At least 8 characters" /></div>' +
+        '<div class="thg-actions"><span class="thg-hint">Use a strong password. You can add name later.</span></div>' +
+        '<button class="thg-btn-primary" type="button" id="thg-signup-btn">Create account</button>' +
+        '<div class="thg-oauth"><button class="thg-oauth-btn google" type="button" data-provider="google"><svg class="g-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" aria-hidden="true"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.2 32.6 29 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 6 1.2 8.1 3.2l5.7-5.7C34.6 6.1 29.6 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20c10 0 19-7.3 19-20 0-1.3-.1-2.7-.4-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.5 16.6 18.9 14 24 14c3.1 0 6 1.2 8.1 3.2l5.7-5.7C34.6 6.1 29.6 4 24 4c-7.7 0-14.3 4.3-17.7 10.7z"/><path fill="#4CAF50" d="M24 44c5 0 9.6-1.9 13-5.1l-6-5.1C29.9 35.6 27.1 36 24 36c-5 0-9.3-3.4-10.8-8l-6.7 5.1C10 40.2 16.5 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-1.3 3.1-4.6 8-11.3 8-5 0-9.3-3.4-10.8-8l-6.7 5.1C10 40.2 16.5 44 24 44c10 0 19-7.3 19-20 0-1.3-.1-2.7-.4-3.5z"/></svg><span>Sign up with Google</span></button></div>' +
+        '</div>' +
+        '<div id="thg-panel-reset" role="tabpanel" aria-labelledby="thg-tab-reset" hidden>' +
+        '<div class="thg-field"><label for="thg-rp-email">Email</label><input id="thg-rp-email" class="thg-input" type="email" autocomplete="email" placeholder="you@example.com" /></div>' +
+        '<div class="thg-actions"><span class="thg-hint">We\\'ll email a password reset link.</span></div>' +
+        '<button class="thg-btn-primary" type="button" id="thg-reset-btn">Send reset link</button>' +
+        '</div>' +
+        '<div id="thg-panel-update" role="tabpanel" aria-labelledby="thg-tab-update" hidden>' +
+        '<div class="thg-field"><label for="thg-up-password">New password</label><input id="thg-up-password" class="thg-input" type="password" autocomplete="new-password" placeholder="Enter a new password" /></div>' +
+        '<div class="thg-actions"><span class="thg-hint">You\\'re recovering your account.</span></div>' +
+        '<button class="thg-btn-primary" type="button" id="thg-update-btn">Update password</button>' +
+        '</div>' +
+        '</div>' +
+        '</div>';
+      document.body.appendChild(overlay);
+    }
 
     let confirmEl = document.querySelector('.thg-confirm');
     if (!confirmEl){
@@ -387,7 +429,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         if (wrap) wrap.style.display = 'none';
       }
     } catch(_){}
-    return { wrap, btn, menu, overlay: null, confirmEl };
+    return { wrap, btn, menu, overlay, confirmEl };
   }
 
   const state = { user: null, loading: true, nextUrl: null, supabaseReady: false, sub: null };
@@ -425,61 +467,59 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   function closeMenu(ui){ ui.menu.setAttribute('aria-hidden','true'); ui.btn.setAttribute('aria-expanded','false'); }
   function toggleMenu(ui){ const isHidden = ui.menu.getAttribute('aria-hidden') === 'true'; if (isHidden) openMenu(ui); else closeMenu(ui); }
 
-  // Use iframe modal from auth-gate.js if available, otherwise fallback to new window
+  function showError(uiOverlay, msg){ const el = uiOverlay.querySelector('.thg-error'); if (!el) return; el.textContent = msg; el.style.display = 'block'; }
+  function clearError(uiOverlay){ const el = uiOverlay.querySelector('.thg-error'); if (!el) return; el.textContent = ''; el.style.display = 'none'; }
+  function setModalLoading(uiOverlay, loading){ const bar = uiOverlay.querySelector('.thg-loading-bar'); if (!bar) return; if (loading){ bar.style.width = '75%'; } else { bar.style.width = '0'; } }
+  function showPanel(uiOverlay, id, title){ ['signin','signup','reset','update'].forEach(function(key){ const panel = uiOverlay.querySelector('#thg-panel-'+key); if (panel) panel.hidden = (key !== id); }); const tEl = uiOverlay.querySelector('#thg-auth-title'); if (tEl) tEl.textContent = title; clearError(uiOverlay); }
+  function validateEmail(email){ return /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email); }
+  
+  // Use inline modal instead of iframe
   function openAuthModal(ui, opts){
-    const next = opts?.next || location.pathname + location.search;
-    // Prefer iframe modal from auth-gate.js
-    if (window.authGate && typeof window.authGate.openLoginModal === 'function') {
-      try {
-        window.authGate.openLoginModal({ next });
-        return;
-      } catch(e) {
-        console.warn('[thg-auth] auth-gate modal failed, using fallback:', e);
-      }
-    }
-    // Fallback to new window if auth-gate not available
-    const base = window.DURABLE_AUTH_URL || 'https://auth.tharaga.co.in/login_signup_glassdrop/';
-    const url = new URL(base);
-    url.searchParams.set('next', next);
-    window.open(url.toString(), 'tharaga-auth', 'width=480,height=640,scrollbars=yes,resizable=yes');
+    if (!ui.overlay) return;
+    state.nextUrl = opts?.next || null;
+    ui.overlay.setAttribute('aria-hidden','false');
+    document.body.style.overflow = 'hidden';
+    showPanel(ui.overlay, 'signin', 'Sign in');
+    setTimeout(function(){ const el = ui.overlay.querySelector('#thg-si-email'); if (el) el.focus(); }, 0);
   }
   function closeAuthModal(ui){ 
-    // Use auth-gate close if available
-    if (window.authGate && typeof window.authGate.closeLoginModal === 'function') {
-      try {
-        window.authGate.closeLoginModal();
-        return;
-      } catch(e) {}
-    }
+    if (!ui.overlay) return;
+    ui.overlay.setAttribute('aria-hidden','true');
+    document.body.style.overflow = '';
   }
 
-  // Don't override auth-gate functions - let them handle the modal
-  // Only set fallback if auth-gate is not available
-  if (!window.authGate || typeof window.authGate.openLoginModal !== 'function') {
-    window.authGate = window.authGate || {};
-    window.authGate.openLoginModal = function(opts) {
-      const next = opts?.next || location.pathname + location.search;
-      const base = window.DURABLE_AUTH_URL || 'https://auth.tharaga.co.in/login_signup_glassdrop/';
-      const url = new URL(base);
-      url.searchParams.set('next', next);
-      window.open(url.toString(), 'tharaga-auth', 'width=480,height=640,scrollbars=yes,resizable=yes');
-    };
-  }
+  // Expose functions for external use (header.js, etc.)
+  window.authGate = window.authGate || {};
+  window.authGate.openLoginModal = function(opts) {
+    // Wait for UI to be ready
+    if (window.__thgAuthUI && window.__thgAuthUI.overlay) {
+      openAuthModal(window.__thgAuthUI, opts);
+    } else {
+      // Fallback: use __thgOpenAuthModal if available
+      if (typeof window.__thgOpenAuthModal === 'function') {
+        window.__thgOpenAuthModal(opts);
+      }
+    }
+  };
+  window.authGate.closeLoginModal = function() {
+    if (window.__thgAuthUI && window.__thgAuthUI.overlay) {
+      closeAuthModal(window.__thgAuthUI);
+    }
+  };
   
-  // Set __thgOpenAuthModal as alias to auth-gate if available
-  if (window.authGate && typeof window.authGate.openLoginModal === 'function') {
-    window.__thgOpenAuthModal = function(opts) {
-      window.authGate.openLoginModal(opts);
-    };
-  } else if (!window.__thgOpenAuthModal) {
-    window.__thgOpenAuthModal = function(opts) {
-      const next = opts?.next || location.pathname + location.search;
-      const base = window.DURABLE_AUTH_URL || 'https://auth.tharaga.co.in/login_signup_glassdrop/';
-      const url = new URL(base);
-      url.searchParams.set('next', next);
-      window.open(url.toString(), 'tharaga-auth', 'width=480,height=640,scrollbars=yes,resizable=yes');
-    };
-  }
+  // Set __thgOpenAuthModal to use inline modal
+  window.__thgOpenAuthModal = function(opts) {
+    if (window.__thgAuthUI && window.__thgAuthUI.overlay) {
+      openAuthModal(window.__thgAuthUI, opts);
+    } else {
+      // Fallback if UI not ready yet
+      setTimeout(function() {
+        if (window.__thgAuthUI && window.__thgAuthUI.overlay) {
+          openAuthModal(window.__thgAuthUI, opts);
+        }
+      }, 100);
+    }
+  };
   function openConfirm(ui){ ui.confirmEl.setAttribute('aria-hidden','false'); }
   // Broadcast current auth state (email only) to child iframes, sibling tabs, and embedded forms
   function broadcastAuth(user){
@@ -514,7 +554,50 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     ui.menu.addEventListener('click', function(e){ const item = e.target.closest('.thg-auth-item[role="menuitem"]'); if (!item) return; const act = item.getAttribute('data-action'); if (act === 'profile'){ closeMenu(ui); location.href = AUTH_NAV.profile; return; } if (act === 'dashboard'){ closeMenu(ui); location.href = AUTH_NAV.dashboard; return; } if (act === 'settings' && AUTH_NAV.settings){ closeMenu(ui); location.href = AUTH_NAV.settings; return; } if (act === 'logout'){ closeMenu(ui); openConfirm(ui); } });
     ui.menu.addEventListener('keydown', function(e){ if (e.key === 'Escape'){ e.preventDefault(); closeMenu(ui); ui.btn.focus(); return; } if (['ArrowDown','ArrowUp','Home','End'].indexOf(e.key) === -1) return; e.preventDefault(); const items = Array.prototype.slice.call(ui.menu.querySelectorAll('.thg-auth-item[role="menuitem"]')); const idx = items.indexOf(document.activeElement); if (!items.length) return; if (e.key === 'Home'){ items[0].focus(); return; } if (e.key === 'End'){ items[items.length - 1].focus(); return; } const next = e.key === 'ArrowDown' ? (idx + 1 + items.length) % items.length : (idx - 1 + items.length) % items.length; items[next].focus(); });
     document.addEventListener('click', function(e){ if (ui.menu.getAttribute('aria-hidden') === 'true') return; if (!ui.menu.contains(e.target) && e.target !== ui.btn && !ui.btn.contains(e.target)){ closeMenu(ui); } });
-    // MODAL UI REMOVED - All modal event listeners removed
+    
+    // Modal event handlers for inline login/signup modal
+    if (ui.overlay) {
+      const tabSignIn = ui.overlay.querySelector('#thg-tab-signin');
+      const tabSignUp = ui.overlay.querySelector('#thg-tab-signup');
+      function selectTab(which){ const a = which==='signin'; if (tabSignIn) tabSignIn.setAttribute('aria-selected', a ? 'true' : 'false'); if (tabSignUp) tabSignUp.setAttribute('aria-selected', a ? 'false' : 'true'); showPanel(ui.overlay, a ? 'signin' : 'signup', a ? 'Sign in' : 'Create account'); const first = ui.overlay.querySelector(a ? '#thg-si-email' : '#thg-su-name'); if (first) first.focus(); }
+      if (tabSignIn) tabSignIn.addEventListener('click', function(){ selectTab('signin'); });
+      if (tabSignUp) tabSignUp.addEventListener('click', function(){ selectTab('signup'); });
+      ui.overlay.addEventListener('click', function(e){ if (e.target === ui.overlay) closeAuthModal(ui); });
+      const closeBtn = ui.overlay.querySelector('.thg-auth-close');
+      if (closeBtn) closeBtn.addEventListener('click', function(){ closeAuthModal(ui); });
+      document.addEventListener('keydown', function(e){ if (e.key === 'Escape' && ui.overlay.getAttribute('aria-hidden') === 'false') closeAuthModal(ui); });
+      const forgotBtn = ui.overlay.querySelector('#thg-forgot');
+      if (forgotBtn) forgotBtn.addEventListener('click', function(){ showPanel(ui.overlay, 'reset', 'Reset password'); const el = ui.overlay.querySelector('#thg-rp-email'); const source = ui.overlay.querySelector('#thg-si-email'); if (source && el && source.value) el.value = source.value; if (el) el.focus(); });
+      
+      // Sign in handler
+      const signinBtn = ui.overlay.querySelector('#thg-signin-btn');
+      if (signinBtn) signinBtn.addEventListener('click', async function(){ if (!state.supabaseReady){ showError(ui.overlay, 'Authentication is not initialized.'); return; } const emailEl = ui.overlay.querySelector('#thg-si-email'); const passwordEl = ui.overlay.querySelector('#thg-si-password'); if (!emailEl || !passwordEl) return; const email = emailEl.value.trim(); const password = passwordEl.value; if (!validateEmail(email)) { showError(ui.overlay, 'Enter a valid email.'); return; } if (!password || password.length < 6) { showError(ui.overlay, 'Enter your password.'); return; } clearError(ui.overlay); setModalLoading(ui.overlay, true); try{ const { error } = await window.supabase.auth.signInWithPassword({ email, password }); if (error) { showError(ui.overlay, error.message || 'Failed to sign in.'); } } catch(ex){ showError(ui.overlay, 'Network error. Please try again.'); } finally { setModalLoading(ui.overlay, false); } });
+      
+      // Sign up handler
+      const signupBtn = ui.overlay.querySelector('#thg-signup-btn');
+      if (signupBtn) signupBtn.addEventListener('click', async function(){ if (!state.supabaseReady){ showError(ui.overlay, 'Authentication is not initialized.'); return; } const nameEl = ui.overlay.querySelector('#thg-su-name'); const emailEl = ui.overlay.querySelector('#thg-su-email'); const passwordEl = ui.overlay.querySelector('#thg-su-password'); if (!emailEl || !passwordEl) return; const name = nameEl ? nameEl.value.trim() : ''; const email = emailEl.value.trim(); const password = passwordEl.value; if (!validateEmail(email)) { showError(ui.overlay, 'Enter a valid email.'); return; } if (!password || password.length < 8) { showError(ui.overlay, 'Password must be at least 8 characters.'); return; } clearError(ui.overlay); setModalLoading(ui.overlay, true); try{ const { error } = await window.supabase.auth.signUp({ email, password, options: { data: name ? { full_name: name } : {} } }); if (error) { showError(ui.overlay, error.message || 'Failed to create account.'); } else { showError(ui.overlay, 'Check your email to verify your account.'); } } catch(ex){ showError(ui.overlay, 'Network error. Please try again.'); } finally { setModalLoading(ui.overlay, false); } });
+      
+      // OAuth handlers
+      async function ensureSupabaseReady(){
+        try {
+          if (window.supabase && window.supabase.auth) return true;
+          const mod = await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm');
+          const client = mod.createClient('https://wedevtjjmdvngyshqdro.supabase.co','eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndlZGV2dGpqbWR2bmd5c2hxZHJvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU0NzYwMzgsImV4cCI6MjA3MTA1MjAzOH0.Ex2c_sx358dFdygUGMVBohyTVto6fdEQ5nydDRh9m6M');
+          window.supabase = client;
+          return !!(window.supabase && window.supabase.auth);
+        } catch(_) { return false; }
+      }
+      ui.overlay.querySelectorAll('.thg-oauth-btn').forEach(function(btn){ btn.addEventListener('click', async function(){ const provider = btn.getAttribute('data-provider'); clearError(ui.overlay); setModalLoading(ui.overlay, true); try{ if (!(await ensureSupabaseReady())){ showError(ui.overlay, 'Authentication is loading. Please try again in a moment.'); setModalLoading(ui.overlay, false); return; } const redirectTo = location.origin + location.pathname + location.search; const { data, error } = await window.supabase.auth.signInWithOAuth({ provider, options: { redirectTo, queryParams: { prompt: 'select_account' } } }); if (error) { const msg = /provider is not enabled/i.test(error.message||'') ? 'Google sign-in is not available yet.' : (error.message || 'Could not start sign in.'); showError(ui.overlay, msg); setModalLoading(ui.overlay, false); return; } if (data && data.url){ location.href = data.url; } else { setModalLoading(ui.overlay, false); showError(ui.overlay, 'Could not start ' + provider + ' sign in.'); } } catch(ex){ showError(ui.overlay, 'Error: ' + (ex.message || 'Could not start sign in')); setModalLoading(ui.overlay, false); } }); });
+      
+      // Reset password handler
+      const resetBtn = ui.overlay.querySelector('#thg-reset-btn');
+      if (resetBtn) resetBtn.addEventListener('click', async function(){ if (!state.supabaseReady){ showError(ui.overlay, 'Authentication is not initialized.'); return; } const emailEl = ui.overlay.querySelector('#thg-rp-email'); if (!emailEl) return; const email = emailEl.value.trim(); if (!validateEmail(email)) { showError(ui.overlay, 'Enter a valid email.'); return; } clearError(ui.overlay); setModalLoading(ui.overlay, true); try{ const redirectTo = location.origin + location.pathname + location.search; const { error } = await window.supabase.auth.resetPasswordForEmail(email, { redirectTo }); if (error) { showError(ui.overlay, error.message || 'Failed to send reset link.'); } else { showError(ui.overlay, 'Reset link sent. Check your email.'); } } catch(ex){ showError(ui.overlay, 'Network error. Please try again.'); } finally { setModalLoading(ui.overlay, false); } });
+      
+      // Update password handler
+      const updateBtn = ui.overlay.querySelector('#thg-update-btn');
+      if (updateBtn) updateBtn.addEventListener('click', async function(){ if (!state.supabaseReady){ showError(ui.overlay, 'Authentication is not initialized.'); return; } const passwordEl = ui.overlay.querySelector('#thg-up-password'); if (!passwordEl) return; const password = passwordEl.value; if (!password || password.length < 8) { showError(ui.overlay, 'Password must be at least 8 characters.'); return; } clearError(ui.overlay); setModalLoading(ui.overlay, true); try{ const { error } = await window.supabase.auth.updateUser({ password }); if (error) { showError(ui.overlay, error.message || 'Failed to update password.'); } else { showPanel(ui.overlay, 'signin', 'Sign in'); showError(ui.overlay, 'Password updated. Please sign in.'); } } catch(ex){ showError(ui.overlay, 'Network error. Please try again.'); } finally { setModalLoading(ui.overlay, false); } });
+    }
+    
     ui.confirmEl.querySelector('.thg-confirm-cancel').addEventListener('click', function(){ closeConfirm(ui); });
     ui.confirmEl.addEventListener('click', function(e){ if (e.target === ui.confirmEl) closeConfirm(ui); });
     ui.confirmEl.querySelector('.thg-confirm-ok').addEventListener('click', async function(){
@@ -524,6 +607,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       closeConfirm(ui);
     });
     window.__thgOpenAuthModal = function(opts){ openAuthModal(ui, opts); };
+    // Expose UI globally for external access
+    window.__thgAuthUI = ui;
     // Expose a helper to programmatically open the auth modal (never toggles dropdown)
     window.authGate.triggerHeaderLogin = function(opts){
       try { openAuthModal(ui, opts||{ next: location.pathname + location.search }); }
@@ -606,12 +691,24 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           }
         }
 
-        if (event === 'PASSWORD_RECOVERY'){ window.location.href = '/login?recovery=1'; }
+        if (event === 'PASSWORD_RECOVERY'){ 
+          if (ui.overlay) {
+            ui.overlay.setAttribute('aria-hidden','false');
+            document.body.style.overflow = 'hidden';
+            showPanel(ui.overlay, 'update', 'Set new password');
+            setTimeout(function(){ const el = ui.overlay.querySelector('#thg-up-password'); if (el) el.focus(); }, 0);
+          } else {
+            window.location.href = '/login?recovery=1';
+          }
+        }
         if (state.user && state.user.email){
           if (state.nextUrl){
             const to = state.nextUrl;
             state.nextUrl = null;
+            try { closeAuthModal(ui); } catch(_){}
             location.href = to;
+          } else {
+            try { closeAuthModal(ui); } catch(_){}
           }
         } else {
           closeMenu(ui);
@@ -1752,37 +1849,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                    background: rgba(243, 205, 74, 0.08) !important;
                  }
                  
-                 /* FORCE HIDE ALL MODALS - Complete removal */
-                 .thg-auth-overlay,
-                 .thg-auth-overlay[aria-hidden="false"],
-                 .thg-auth-overlay[aria-hidden="true"] {
-                   display: none !important;
-                   visibility: hidden !important;
-                   opacity: 0 !important;
-                   pointer-events: none !important;
-                   z-index: -9999 !important;
-                 }
-                 .thg-auth-modal {
-                   display: none !important;
-                   visibility: hidden !important;
-                   opacity: 0 !important;
-                 }
-                 
-                 /* FORCE HIDE LOGOUT CONFIRMATION DIALOG - Complete removal */
-                 .thg-confirm,
-                 .thg-confirm[aria-hidden="false"],
-                 .thg-confirm[aria-hidden="true"] {
-                   display: none !important;
-                   visibility: hidden !important;
-                   opacity: 0 !important;
-                   pointer-events: none !important;
-                   z-index: -9999 !important;
-                 }
-                 .thg-confirm-card {
-                   display: none !important;
-                   visibility: hidden !important;
-                   opacity: 0 !important;
-                 }
+                 /* Inline login modal is now enabled - removed force hide rules */
 
                  /* Homepage-specific styles from index.html */
                  .pill { display:inline-flex; align-items:center; gap:8px; padding:6px 10px; border-radius:999px; background:#fff; border:1px solid #eee; font-size:12px; color:#111 }
@@ -2127,76 +2194,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           })();
         `}} />
         <HeaderLinkInterceptor />
-               {/* Ensure auth button is always visible - prevent hiding */}
-               {/* FORCE REMOVE ALL MODALS - Complete removal */}
+               {/* Ensure auth button is always visible */}
                <script dangerouslySetInnerHTML={{ __html: `
                  (function() {
                    'use strict';
-                   
-                   // REMOVE ALL MODALS AND CONFIRMATION DIALOGS IMMEDIATELY
-                   function removeAllModals() {
-                     // Remove all modal overlays
-                     const overlays = document.querySelectorAll('.thg-auth-overlay');
-                     overlays.forEach(function(overlay) {
-                       overlay.remove();
-                     });
-                     
-                     // Force hide any remaining modals
-                     const modals = document.querySelectorAll('.thg-auth-modal');
-                     modals.forEach(function(modal) {
-                       modal.style.display = 'none';
-                       modal.style.visibility = 'hidden';
-                       modal.style.opacity = '0';
-                       modal.remove();
-                     });
-                     
-                     // Remove logout confirmation dialogs
-                     const confirms = document.querySelectorAll('.thg-confirm');
-                     confirms.forEach(function(confirm) {
-                       confirm.style.display = 'none';
-                       confirm.style.visibility = 'hidden';
-                       confirm.style.opacity = '0';
-                       confirm.remove();
-                     });
-                     
-                     // Remove confirmation cards
-                     const confirmCards = document.querySelectorAll('.thg-confirm-card');
-                     confirmCards.forEach(function(card) {
-                       card.style.display = 'none';
-                       card.style.visibility = 'hidden';
-                       card.style.opacity = '0';
-                       card.remove();
-                     });
-                     
-                     // Remove any modal parent elements
-                     const modalParents = document.querySelectorAll('[class*="thg-auth-overlay"]');
-                     modalParents.forEach(function(el) {
-                       if (el.classList.contains('thg-auth-overlay')) {
-                         el.remove();
-                       }
-                     });
-                   }
-                   
-                   // Run immediately
-                   removeAllModals();
-                   
-                   // Run on DOM ready
-                   if (document.readyState === 'loading') {
-                     document.addEventListener('DOMContentLoaded', removeAllModals);
-                   }
-                   
-                   // Watch for new modals being added and remove them
-                   const modalObserver = new MutationObserver(function(mutations) {
-                     removeAllModals();
-                   });
-                   
-                   modalObserver.observe(document.body, {
-                     childList: true,
-                     subtree: true
-                   });
-                   
-                   // Run periodically to catch any modals
-                   setInterval(removeAllModals, 500);
                    
                    // Force auth container to be visible immediately
                    function forceAuthVisible() {

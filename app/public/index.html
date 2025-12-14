@@ -729,22 +729,25 @@
         transform: translateX(0);
       }
 
-      /* Mobile menu dropdown accordion */
+      /* Mobile menu dropdown accordion - center aligned */
       header.nav .mobile-menu-dropdown {
+        width: 100%;
         border-bottom: 1px solid rgba(255, 255, 255, 0.1);
         margin-bottom: 0;
+        text-align: center;
       }
 
       header.nav .mobile-menu-dropdown:last-child {
         border-bottom: none;
       }
 
-      /* Dropdown header/button - no white background */
+      /* Dropdown header/button - no white background, center aligned */
       header.nav .mobile-menu-dropdown-header {
         display: flex;
         align-items: center;
-        justify-content: space-between;
-        padding: 1rem;
+        justify-content: center;
+        gap: 0.5rem;
+        padding: 0.875rem 1rem;
         color: #ffffff;
         font-size: 1.125rem;
         font-weight: 600;
@@ -754,6 +757,7 @@
         margin-bottom: 0.25rem;
         background: transparent !important;
         border: none;
+        width: 100%;
       }
 
       header.nav .mobile-menu-dropdown-header:hover {
@@ -782,19 +786,23 @@
         transform: rotate(180deg);
       }
 
-      /* Dropdown content container */
+      /* Dropdown content container - center aligned */
       header.nav .mobile-menu-dropdown-content {
         max-height: 0;
         overflow: hidden;
         transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease-out, padding 0.3s ease;
         opacity: 0;
-        padding: 0 1rem;
+        padding: 0;
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
       }
 
       header.nav .mobile-menu-dropdown.is-open .mobile-menu-dropdown-content {
         max-height: 500px;
         opacity: 1;
-        padding: 0.5rem 1rem 1rem;
+        padding: 0.5rem 0 1rem;
       }
 
       /* Dropdown menu items */
@@ -825,10 +833,10 @@
         box-shadow: 0 0 0 2px #60a5fa;
       }
 
-      /* Regular menu links (Pricing, About) */
+      /* Regular menu links (Pricing, About) - center aligned */
       header.nav .mobile-menu-link {
         display: block;
-        padding: 1rem;
+        padding: 0.875rem 1rem;
         color: #ffffff;
         font-size: 1.125rem;
         font-weight: 600;
@@ -836,6 +844,8 @@
         transition: all 0.2s ease;
         text-decoration: none;
         border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        text-align: center;
+        width: 100%;
       }
 
       header.nav .mobile-menu-link:hover {
@@ -852,64 +862,7 @@
         box-shadow: 0 0 0 2px #60a5fa;
       }
 
-      /* Mobile menu back button - Home arrow */
-      header.nav .mobile-menu-back {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        padding: 0.75rem 1rem;
-        color: #ffffff;
-        font-size: 1rem;
-        font-weight: 600;
-        text-decoration: none;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-        margin-bottom: 0.5rem;
-        transition: all 0.2s ease;
-        border-radius: 0.5rem;
-      }
-
-      header.nav .mobile-menu-back:hover {
-        background: rgba(255, 255, 255, 0.1);
-        transform: translateX(-4px);
-      }
-
-      header.nav .mobile-menu-back:active {
-        transform: translateX(-4px) scale(0.98);
-      }
-
-      header.nav .mobile-menu-back:focus {
-        outline: none;
-        box-shadow: 0 0 0 2px #60a5fa;
-      }
-
-      header.nav .mobile-menu-back svg {
-        width: 20px;
-        height: 20px;
-        color: #d4af37;
-      }
-
-      /* Mobile menu close button - BLUE CIRCLE */
-      header.nav .mobile-menu-close {
-        position: absolute;
-        top: 20px;
-        right: 20px;
-        width: 44px;
-        height: 44px;
-        background: #2563eb !important;
-        border: none !important;
-        border-radius: 50%;
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: #ffffff !important;
-        transition: all 0.2s ease;
-      }
-
-      header.nav .mobile-menu-close:hover {
-        background: #1d4ed8 !important;
-        transform: scale(1.05);
-      }
+      /* Mobile menu close button removed - using hamburger toggle instead */
     }
 
     /* Desktop: vertically center the right-side auth/menu group within header */
@@ -2770,10 +2723,6 @@
           const backButton = '<a href="/" class="mobile-menu-back" aria-label="Go to homepage"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg><span>Home</span></a>';
           panel.innerHTML = (closeBtn ? closeBtn.outerHTML : '<button class="mobile-menu-close" aria-label="Close menu"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>') + backButton + menuHTML;
 
-          const newCloseBtn = panel.querySelector('.mobile-menu-close');
-          if (newCloseBtn) {
-            newCloseBtn.addEventListener('click', closeMenu);
-          }
 
           // Add dropdown toggle functionality
           const dropdowns = panel.querySelectorAll('.mobile-menu-dropdown');

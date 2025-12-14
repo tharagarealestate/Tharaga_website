@@ -719,25 +719,33 @@
         visibility: visible;
       }
 
-      /* Mobile menu panel - slides from RIGHT with 350ms */
+      /* Mobile menu panel - dropdown below header */
       header.nav .mobile-menu-panel {
-        position: fixed;
-        top: 0;
-        right: 0;
-        width: min(320px, 85vw);
-        height: 100vh;
+        position: absolute;
+        top: calc(100% + 8px);
+        right: 12px;
+        width: min(320px, calc(100vw - 24px));
         background: linear-gradient(180deg, #1e293b, #0f172a) !important;
-        border-left: 1px solid rgba(255, 255, 255, 0.1) !important;
-        padding: 80px 24px 24px;
-        transform: translateX(100%);
-        transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+        border: 1px solid rgba(255, 255, 255, 0.1) !important;
+        border-radius: 16px;
+        padding: 16px 12px;
+        transform: translateY(-10px) scale(0.95);
+        opacity: 0;
+        visibility: hidden;
+        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease, visibility 0.3s ease;
         z-index: 10001;
-        overflow-y: auto;
-        box-shadow: -8px 0 32px 0 rgba(0, 0, 0, 0.3) !important;
+        box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4) !important;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        min-width: 280px;
+        max-width: calc(100vw - 24px);
       }
 
       header.nav .mobile-menu-panel.is-open {
-        transform: translateX(0);
+        transform: translateY(0) scale(1);
+        opacity: 1;
+        visibility: visible;
       }
 
       /* Mobile menu dropdown accordion - center aligned */

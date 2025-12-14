@@ -476,6 +476,16 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   // Use inline modal instead of iframe
   function openAuthModal(ui, opts){
     if (!ui.overlay) return;
+    // FORCE REMOVE ALL NESTED CONTAINERS BEFORE OPENING MODAL
+    const authGateModal = document.getElementById('authGateModal');
+    if (authGateModal) authGateModal.remove();
+    const portalPrompt = document.getElementById('thg-portal-login-prompt');
+    if (portalPrompt) portalPrompt.remove();
+    const iframes = document.querySelectorAll('iframe[id*="authGate"], iframe[src*="login_signup_glassdrop"]');
+    iframes.forEach(function(iframe) { if (iframe.parentElement) iframe.parentElement.remove(); });
+    const nestedAuth = document.querySelectorAll('.authgate-backdrop, .authgate-dialog, .authgate-frame-wrap');
+    nestedAuth.forEach(function(el) { if (el.parentElement) el.parentElement.remove(); });
+    
     state.nextUrl = opts?.next || null;
     ui.overlay.setAttribute('aria-hidden','false');
     document.body.style.overflow = 'hidden';
@@ -723,6 +733,45 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   ready(function(){
     hideLegacyAuthLinks(document);
     injectStyles();
+    
+    // FORCE REMOVE ALL NESTED CONTAINERS AND IFRAME MODALS
+    function removeNestedContainers() {
+      // Remove auth-gate iframe modal completely
+      const authGateModal = document.getElementById('authGateModal');
+      if (authGateModal) {
+        authGateModal.remove();
+      }
+      // Remove portal login prompt nested container
+      const portalPrompt = document.getElementById('thg-portal-login-prompt');
+      if (portalPrompt) {
+        portalPrompt.remove();
+      }
+      // Remove any iframes from login_signup_glassdrop
+      const iframes = document.querySelectorAll('iframe[id*="authGate"], iframe[src*="login_signup_glassdrop"]');
+      iframes.forEach(function(iframe) {
+        if (iframe.parentElement) {
+          iframe.parentElement.remove();
+        }
+      });
+      // Remove any nested auth containers
+      const nestedAuth = document.querySelectorAll('.authgate-backdrop, .authgate-dialog, .authgate-frame-wrap');
+      nestedAuth.forEach(function(el) {
+        if (el.parentElement) {
+          el.parentElement.remove();
+        }
+      });
+    }
+    removeNestedContainers();
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', removeNestedContainers);
+    }
+    // Continuously monitor and remove nested containers
+    const nestedObserver = new MutationObserver(function(mutations) {
+      removeNestedContainers();
+    });
+    nestedObserver.observe(document.body, { childList: true, subtree: true });
+    setInterval(removeNestedContainers, 500);
+    
     const ui = createUI();
     bindUI(ui);
     // If there is no header on the host page, we use a fixed fallback button.

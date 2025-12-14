@@ -186,40 +186,50 @@ export function UnifiedDashboard({ onNavigate }: UnifiedDashboardProps) {
                 prev.map((l: any) => (l.id === payload.new.id ? payload.new : l))
               )
             } else if (payload.eventType === 'DELETE') {
-            setRealtimeLeads((prev) => prev.filter((l: any) => l.id !== payload.old.id))
+              setRealtimeLeads((prev) => prev.filter((l: any) => l.id !== payload.old.id))
+            }
           }
-        }
-      )
-      .subscribe()
+        )
+        .subscribe()
 
-    // Subscribe to properties changes
-    const propertiesChannel = supabase
-      .channel(`builder-properties-${builderId}`)
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'properties',
-          filter: `builder_id=eq.${builderId}`,
-        },
-        (payload: any) => {
-          if (payload.eventType === 'INSERT') {
-            setRealtimeProperties((prev) => [payload.new, ...prev])
-          } else if (payload.eventType === 'UPDATE') {
-            setRealtimeProperties((prev) =>
-              prev.map((p: any) => (p.id === payload.new.id ? payload.new : p))
-            )
-          } else if (payload.eventType === 'DELETE') {
-            setRealtimeProperties((prev) => prev.filter((p: any) => p.id !== payload.old.id))
+      // Subscribe to properties changes - non-blocking
+      const propertiesChannel = supabase
+        .channel(`builder-properties-${builderId}`)
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'properties',
+            filter: `builder_id=eq.${builderId}`,
+          },
+          (payload: any) => {
+            if (!mounted) return
+            if (payload.eventType === 'INSERT') {
+              setRealtimeProperties((prev) => [payload.new, ...prev])
+            } else if (payload.eventType === 'UPDATE') {
+              setRealtimeProperties((prev) =>
+                prev.map((p: any) => (p.id === payload.new.id ? payload.new : p))
+              )
+            } else if (payload.eventType === 'DELETE') {
+              setRealtimeProperties((prev) => prev.filter((p: any) => p.id !== payload.old.id))
+            }
           }
-        }
-      )
-      .subscribe()
+        )
+        .subscribe()
 
-    return () => {
-      supabase.removeChannel(leadsChannel)
-      supabase.removeChannel(propertiesChannel)
+      return () => {
+        mounted = false
+        try {
+          supabase.removeChannel(leadsChannel)
+          supabase.removeChannel(propertiesChannel)
+        } catch (err) {
+          console.warn('[UnifiedDashboard] Error cleaning up channels:', err)
+        }
+      }
+    } catch (err) {
+      console.error('[UnifiedDashboard] Realtime subscription error (non-blocking):', err)
+      return () => { mounted = false }
     }
   }, [builderId])
 

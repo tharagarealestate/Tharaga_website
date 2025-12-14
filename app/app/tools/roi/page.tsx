@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from 'react'
+import Breadcrumb from '@/components/Breadcrumb'
 
 function fmtINR(n: number){
   return new Intl.NumberFormat('en-IN', { style:'currency', currency:'INR', maximumFractionDigits:0 }).format(n)
@@ -29,7 +30,22 @@ export default function RoiPage(){
   const roi = Math.round(((totalInflow - totalOutflow) / totalOutflow) * 100)
 
   return (
-    <main className="mx-auto max-w-3xl px-6 py-8">
+    <div className="min-h-screen bg-gradient-to-br from-primary-950 via-primary-900 to-primary-800 relative overflow-hidden">
+      {/* Animated Background Elements - EXACT from pricing page */}
+      <div className="absolute inset-0 opacity-30">
+        <div className="absolute top-20 left-10 w-96 h-96 bg-gold-500 rounded-full blur-3xl animate-pulse-slow" />
+        <div
+          className="absolute bottom-20 right-10 w-[600px] h-[600px] bg-emerald-500 rounded-full blur-3xl animate-pulse-slow"
+          style={{ animationDelay: '1s' }}
+        />
+      </div>
+
+      <div className="relative z-10">
+        <main className="mx-auto max-w-3xl px-6 py-8">
+      <Breadcrumb items={[
+        { label: 'Home', href: '/' },
+        { label: 'ROI Calculator' }
+      ]} />
       <h1 className="text-2xl font-bold text-plum mb-4">Investment ROI calculator</h1>
       <div className="rounded-xl border border-plum/10 bg-brandWhite p-4 space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -56,7 +72,9 @@ export default function RoiPage(){
           <a className="rounded-lg border px-3 py-2" href="/tools/currency-risk">Assess FX impact</a>
         </div>
       </div>
-    </main>
+        </main>
+      </div>
+    </div>
   )
 }
 

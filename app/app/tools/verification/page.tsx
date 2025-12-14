@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from 'react'
+import Breadcrumb from '@/components/Breadcrumb'
 import { verifyRera, verifyTitle, getFraudScore, getPredictiveAnalytics } from '@/lib/api'
 
 function Section({ title, children }: { title: string; children: React.ReactNode }){
@@ -36,8 +37,8 @@ export default function VerificationTools(){
   const [fraud, setFraud] = React.useState<any>(null)
 
   // Predictive
-  const [city, setCity] = React.useState('Bengaluru')
-  const [locality, setLocality] = React.useState('Indiranagar')
+  const [city, setCity] = React.useState('Chennai')
+  const [locality, setLocality] = React.useState('Anna Nagar')
   const [pred, setPred] = React.useState<any>(null)
 
   const onRera = async ()=> setReraRes(await verifyRera({ rera_id: reraId, state: reraState, project_name: projectName, promoter_name: promoterName }))
@@ -46,7 +47,22 @@ export default function VerificationTools(){
   const onPredict = async ()=> setPred(await getPredictiveAnalytics({ city, locality, sqft, price_inr: price }))
 
   return (
-    <main className="mx-auto max-w-5xl px-6 py-8 space-y-6">
+    <div className="min-h-screen bg-gradient-to-br from-primary-950 via-primary-900 to-primary-800 relative overflow-hidden">
+      {/* Animated Background Elements - EXACT from pricing page */}
+      <div className="absolute inset-0 opacity-30">
+        <div className="absolute top-20 left-10 w-96 h-96 bg-gold-500 rounded-full blur-3xl animate-pulse-slow" />
+        <div
+          className="absolute bottom-20 right-10 w-[600px] h-[600px] bg-emerald-500 rounded-full blur-3xl animate-pulse-slow"
+          style={{ animationDelay: '1s' }}
+        />
+      </div>
+
+      <div className="relative z-10">
+        <main className="mx-auto max-w-5xl px-6 py-8 space-y-6">
+      <Breadcrumb items={[
+        { label: 'Home', href: '/' },
+        { label: 'Verification Tools' }
+      ]} />
       <h1 className="text-2xl font-bold text-plum">Verification & risk tools</h1>
 
       <Section title="RERA verification">
@@ -65,7 +81,7 @@ export default function VerificationTools(){
         )}
       </Section>
 
-      <Section title="Blockchain title verification">
+      <Section title="Document snapshot immutability (proof-of-snapshot)">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
           <input className="rounded-lg border px-3 py-2" placeholder="Property ID" value={propId} onChange={(e)=>setPropId(e.target.value)} />
           <input className="rounded-lg border px-3 py-2 font-mono" placeholder="Document hash (hex)" value={docHash} onChange={(e)=>setDocHash(e.target.value)} />
@@ -119,6 +135,8 @@ export default function VerificationTools(){
           </div>
         )}
       </Section>
-    </main>
+        </main>
+      </div>
+    </div>
   )
 }

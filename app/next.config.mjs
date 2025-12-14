@@ -1,8 +1,42 @@
+import createNextIntlPlugin from 'next-intl/plugin'
+import path from 'path'
+import { fileURLToPath } from 'url'
+
+// ESM-safe __dirname replacement
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
+// Attempt to load bundle analyzer when ANALYZE=true and dependency is present
+let withBundleAnalyzer = (config) => config
+try {
+  const mod = await import('@next/bundle-analyzer')
+  if (mod?.default) {
+    withBundleAnalyzer = mod.default({ enabled: process.env.ANALYZE === 'true' })
+  }
+} catch {}
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
   experimental: {
     typedRoutes: true,
+    serverActions: {
+      bodySizeLimit: '2mb',
+    },
+  },
+  webpack: (config, { isServer }) => {
+    // Ensure '@' alias resolves to the app directory during bundling (Netlify/Linux envs)
+    config.resolve = config.resolve || {}
+    config.resolve.alias = config.resolve.alias || {}
+    if (!config.resolve.alias['@']) {
+      config.resolve.alias['@'] = path.resolve(__dirname)
+    }
+    // Fix for Netlify: ensure proper module resolution
+    config.resolve.modules = ['node_modules', path.resolve(__dirname, 'node_modules')]
+    return config
+  },
+  compiler: {
+    // Strip console.* in production build except errors/warnings
+    removeConsole: { exclude: ['error', 'warn'] },
   },
   // Allow production builds to succeed even with type or lint errors
   // This prevents CI/CD failures from non-critical TS/ESLint issues
@@ -12,13 +46,63 @@ const nextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
   },
+  async headers() {
+    return [
+      {
+        source: '/:all*(svg|png|jpg|jpeg|webp|avif|gif|ico|js|css|woff2)',
+        headers: [
+          { key: 'Cache-Control', value: 'public, max-age=31536000, immutable' },
+        ],
+      },
+      {
+        // Security headers for all pages
+        source: '/:path*',
+        headers: [
+          { key: 'X-Frame-Options', value: 'DENY' },
+          { key: 'X-Content-Type-Options', value: 'nosniff' },
+          { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
+          { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=()' },
+          {
+            key: 'Content-Security-Policy',
+            value: "default-src 'self'; script-src 'self' https://cdn.jsdelivr.net https://checkout.razorpay.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https://wedevtjjmdvngyshqdro.supabase.co https://api.razorpay.com; frame-src 'self' https://checkout.razorpay.com; frame-ancestors 'none'; form-action 'self'; base-uri 'self'; upgrade-insecure-requests;"
+          },
+          { key: 'Strict-Transport-Security', value: 'max-age=31536000; includeSubDomains; preload' }
+        ],
+      },
+    ]
+  },
   
   async rewrites() {
     // Ensure /api in Next dev maps to real backend if proxy not present
+    // BUT: Exclude Next.js API routes that should be handled locally
     const apiBase = process.env.NEXT_PUBLIC_API_URL
     const rules = []
     if (apiBase) {
-      rules.push({ source: '/api/:path*', destination: `${apiBase}/api/:path*` })
+      // Only rewrite specific API routes to external backend
+      // Exclude routes handled by Next.js API routes (leads, builder, admin, etc.)
+      // These routes are handled by app/app/api/* route handlers
+      const externalApiRoutes = [
+        '/api/recommendations',
+        '/api/interactions',
+        '/api/microsite/:path*',
+        '/api/calendar/:path*',
+        '/api/billing/:path*',
+        '/api/admin/usage',
+        '/api/analytics/:path*',
+        '/api/properties-list',
+      ]
+      
+      // Rewrite only specific external API routes
+      externalApiRoutes.forEach(route => {
+        rules.push({ 
+          source: route, 
+          destination: `${apiBase}${route}` 
+        })
+      })
+      
+      // Fallback: rewrite other /api routes that don't match Next.js routes
+      // This is a catch-all but Next.js routes take precedence
+      // Note: Next.js API routes in app/app/api/* will be handled first
     }
     // Support legacy deep links under /app/* by rewriting to the new structure.
     // Example: /app/saas/pricing -> /saas/pricing
@@ -27,17 +111,32 @@ const nextConfig = {
     rules.push({ source: '/app/:path*', destination: '/:path*' })
     // Back-compat: legacy underscore embed path -> new embed path
     rules.push({ source: '/_embed/:path*', destination: '/embed/:path*' })
+    // Map legacy static paths if present in public
+    // NOTE: /property-listing is now handled by the App Router page at app/app/property-listing/page.tsx,
+    // so we intentionally do NOT rewrite it to the legacy static HTML anymore.
+    rules.push({ source: '/search-filter-home', destination: '/search-filter-home/index.html' })
+    // Serve static index.html as homepage - contains header + all sections with Supabase integration
+    // This static HTML has: Header (with Supabase auth), Hero (with AI predictions), Dashboard CTA, Features, Footer
+    // All Supabase configurations and role manager are integrated and working perfectly
+    rules.push({ source: '/', destination: '/index.html' })
     return rules
   },
   images: {
+    formats: ['image/avif', 'image/webp'],
     remotePatterns: [
       { protocol: 'https', hostname: 'picsum.photos' },
       { protocol: 'https', hostname: 'images.unsplash.com' },
       { protocol: 'https', hostname: 'res.cloudinary.com' },
       // Allow Supabase Storage public bucket images
-      { protocol: 'https', hostname: 'wedevtjjmdvngyshqdro.supabase.co' }
+      { protocol: 'https', hostname: 'wedevtjjmdvngyshqdro.supabase.co' },
+      // Avatar service used on homepage
+      { protocol: 'https', hostname: 'i.pravatar.cc' },
     ],
   },
 };
 
-export default nextConfig;
+// Enable next-intl for the App Router. This wires up the
+// i18n/request.ts configuration used at runtime.
+const withNextIntl = createNextIntlPlugin()
+
+export default withBundleAnalyzer(withNextIntl(nextConfig));

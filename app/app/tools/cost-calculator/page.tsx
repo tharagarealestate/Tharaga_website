@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from 'react'
+import Breadcrumb from '@/components/Breadcrumb'
 
 type Fees = {
   stampDutyPct: number
@@ -39,7 +40,23 @@ export default function CostCalculatorPage() {
   const total = priceINR + stamp + reg + gst + fees.otherFeesINR
 
   return (
-    <main className="mx-auto max-w-3xl px-6 py-8">
+    <div className="min-h-screen bg-gradient-to-br from-primary-950 via-primary-900 to-primary-800 relative overflow-hidden">
+      {/* Animated Background Elements - EXACT from pricing page */}
+      <div className="absolute inset-0 opacity-30">
+        <div className="absolute top-20 left-10 w-96 h-96 bg-gold-500 rounded-full blur-3xl animate-pulse-slow" />
+        <div
+          className="absolute bottom-20 right-10 w-[600px] h-[600px] bg-emerald-500 rounded-full blur-3xl animate-pulse-slow"
+          style={{ animationDelay: '1s' }}
+        />
+      </div>
+
+      <div className="relative z-10">
+        <main className="mx-auto max-w-3xl px-6 py-8">
+      <Breadcrumb items={[
+        { label: 'Home', href: '/' },
+        { label: 'Tools', href: '/tools' },
+        { label: 'Cost Calculator' }
+      ]} />
       <h1 className="text-2xl font-bold text-fg mb-4">Cost calculator</h1>
       <div className="rounded-xl border border-border bg-canvas p-4 space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -102,7 +119,9 @@ export default function CostCalculatorPage() {
           </div>
         </div>
       </div>
-    </main>
+        </main>
+      </div>
+    </div>
   )
 }
 

@@ -71,8 +71,16 @@
       pointer-events: none;
       z-index: 0;
       background:
-        radial-gradient(384px 384px at top 80px left 40px, rgba(212, 175, 55, 1), transparent),
+        /* Remove gold gradient from top left - only keep green gradient at bottom right */
         radial-gradient(600px 600px at bottom 80px right 40px, rgba(16, 185, 129, 1), transparent);
+    }
+    
+    /* Desktop only: Hide gold gradient behind header area */
+    @media (min-width: 768px) {
+      body::before {
+        /* Completely remove gold gradient on desktop */
+        background: radial-gradient(600px 600px at bottom 80px right 40px, rgba(16, 185, 129, 1), transparent);
+      }
     }
     /* Ensure all main sections appear above background */
     section, .hero-premium, .trial-cta, .value-prop {
@@ -82,7 +90,7 @@
     a { color:#0b63ff; text-decoration:none }
     a:hover { text-decoration:underline }
     header.nav {
-      position:fixed !important;
+      position: fixed !important;
       top: 16px !important;
       left: 50% !important;
       transform: translateX(-50%) !important;
@@ -92,22 +100,40 @@
       background: rgba(255, 255, 255, 0.1) !important;
       backdrop-filter: blur(24px) !important;
       -webkit-backdrop-filter: blur(24px) !important;
-      /* Gold border matching Builder Pro highlighted card */
-      border: 2px solid rgba(212, 175, 55, 0.5) !important;
+      /* Remove gold border - use subtle white border instead */
+      border: 1px solid rgba(255, 255, 255, 0.2) !important;
       border-radius: 24px !important;
-      box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15), 0 0 0 1px rgba(212, 175, 55, 0.3) !important;
+      box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15) !important;
       min-height: 72px !important;
       padding: 0 !important;
-      margin: 0 !important;
+      margin: 0 auto !important;
       z-index: 9999 !important;
-      transition: min-height 0.2s ease, padding 0.2s ease, top 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
-      position: relative;
+      transition: min-height 0.2s ease, padding 0.2s ease, top 0.2s ease, box-shadow 0.2s ease;
       overflow: visible !important;
-      cursor: pointer;
+      /* Make header static - no movement */
+      will-change: auto !important;
     }
-    header.nav:hover {
-      box-shadow: 0 12px 40px 0 rgba(31, 38, 135, 0.25), 0 0 0 1px rgba(212, 175, 55, 0.4) !important;
-      transform: translateX(-50%) translateY(-2px) !important;
+    
+    /* Desktop only: Ensure header is perfectly centered and static */
+    @media (min-width: 768px) {
+      header.nav {
+        position: fixed !important;
+        left: 50% !important;
+        transform: translateX(-50%) !important;
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+      }
+      
+      header.nav:hover {
+        box-shadow: 0 12px 40px 0 rgba(31, 38, 135, 0.25) !important;
+        /* Keep header static - no movement on hover */
+        transform: translateX(-50%) !important;
+      }
+      
+      header.nav.is-scrolled {
+        /* Keep header static when scrolled */
+        transform: translateX(-50%) !important;
+      }
     }
       /* Fallback for older browsers */
       @supports not (backdrop-filter: blur(24px)) {
@@ -137,6 +163,8 @@
     header.nav.is-scrolled {
       min-height: 56px !important;
       top: 8px !important;
+      /* Keep header centered when scrolled */
+      transform: translateX(-50%) !important;
     }
     /* Homepage header inner container - perfect alignment */
     header.nav .inner {

@@ -51,11 +51,19 @@
       --font-ui:'Manrope',Inter,system-ui,-apple-system,'Segoe UI',Roboto,Helvetica,Arial;
       --font-display:'Plus Jakarta Sans','Manrope',Inter,system-ui,-apple-system,'Segoe UI',Roboto,Helvetica,Arial;
     }
+    /* Reset html and body for perfect centering */
+    html {
+      margin: 0 !important;
+      padding: 0 !important;
+      width: 100% !important;
+      overflow-x: hidden;
+    }
     /* Dark premium background - matching pricing page exactly */
     body {
       font-family: var(--font-ui);
-      margin:0;
-      padding:0;
+      margin: 0 !important;
+      padding: 0 !important;
+      width: 100% !important;
       min-height: 100vh;
       background: linear-gradient(to bottom right, #0f172a, #1e293b, #1e3a8a);
       color:#fff;
@@ -2910,9 +2918,10 @@
           document.body.style.paddingRight = scrollbarWidth + 'px';
           document.body.style.overflow = 'hidden';
           
-          // Ensure header stays in place - lock all positioning
+          // Ensure header stays in place - lock all positioning (mobile only)
           const headerEl = document.querySelector('header.nav');
-          if (headerEl) {
+          if (headerEl && window.innerWidth <= 767) {
+            // Mobile: lock header in place
             headerEl.classList.add('has-menu-open');
             headerEl.style.setProperty('position', 'sticky', 'important');
             headerEl.style.setProperty('top', '0', 'important');
@@ -2935,12 +2944,26 @@
           document.body.style.overflow = '';
           document.body.style.paddingRight = '';
           
-          // Ensure header stays in place - restore normal state
+          // Ensure header stays in place - restore normal mobile state
           const headerEl = document.querySelector('header.nav');
-          if (headerEl) {
+          if (headerEl && window.innerWidth <= 767) {
+            // Mobile: restore proper sticky positioning
             headerEl.classList.remove('has-menu-open');
             headerEl.style.setProperty('position', 'sticky', 'important');
+            headerEl.style.setProperty('top', '0', 'important');
+            headerEl.style.setProperty('left', '0', 'important');
+            headerEl.style.setProperty('right', '0', 'important');
             headerEl.style.setProperty('transform', 'none', 'important');
+            headerEl.style.removeProperty('width');
+            headerEl.style.removeProperty('max-width');
+          } else if (headerEl) {
+            // Desktop: restore fixed positioning with centering
+            headerEl.classList.remove('has-menu-open');
+            headerEl.style.removeProperty('position');
+            headerEl.style.removeProperty('top');
+            headerEl.style.removeProperty('left');
+            headerEl.style.removeProperty('right');
+            headerEl.style.removeProperty('transform');
             headerEl.style.removeProperty('width');
             headerEl.style.removeProperty('max-width');
           }

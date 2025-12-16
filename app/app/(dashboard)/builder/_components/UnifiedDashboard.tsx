@@ -73,6 +73,18 @@ async function fetchStats() {
   }
 }
 
+async function fetchRevenue() {
+  try {
+    const res = await fetch('/api/builder/revenue', { cache: 'no-store' })
+    if (!res.ok) return null
+    const data = await res.json()
+    return data.success ? data.data : null
+  } catch (error) {
+    console.error('[UnifiedDashboard] Revenue fetch error:', error)
+    return null
+  }
+}
+
 interface UnifiedDashboardProps {
   onNavigate?: (section: string) => void
 }
@@ -152,6 +164,18 @@ export function UnifiedDashboard({ onNavigate }: UnifiedDashboardProps) {
     retryDelay: 1000,
     onError: (err) => {
       console.warn('[UnifiedDashboard] Stats fetch error (non-blocking):', err)
+    }
+  })
+
+  // Fetch revenue data - real-time
+  const { data: revenueData, isLoading: revenueLoading } = useQuery({
+    queryKey: ['unified-revenue'],
+    queryFn: fetchRevenue,
+    refetchInterval: 30000, // Update every 30 seconds
+    retry: 1,
+    retryDelay: 1000,
+    onError: (err) => {
+      console.warn('[UnifiedDashboard] Revenue fetch error (non-blocking):', err)
     }
   })
 
@@ -361,9 +385,15 @@ export function UnifiedDashboard({ onNavigate }: UnifiedDashboardProps) {
           <StatCard
             icon={DollarSign}
             label="This Month"
-            value="₹2.4Cr"
+            value={revenueData?.monthlyRevenue 
+              ? revenueData.monthlyRevenue >= 10000000 
+                ? `₹${(revenueData.monthlyRevenue / 10000000).toFixed(2)} Cr`
+                : revenueData.monthlyRevenue >= 100000
+                ? `₹${(revenueData.monthlyRevenue / 100000).toFixed(2)} L`
+                : `₹${(revenueData.monthlyRevenue / 1000).toFixed(1)}K`
+              : '₹0'}
             subtitle="Revenue"
-            loading={false}
+            loading={revenueLoading}
           />
         </div>
 

@@ -196,6 +196,95 @@ export async function POST(
         .update({ status: 'closed_won' })
         .eq('id', lead.id)
         .eq('builder_id', user.id);
+
+      // =============================================
+      // CREATE COMMISSION TRANSACTION FOR CLOSED DEAL
+      // =============================================
+      try {
+        // Get property price if property_id is provided
+        let dealValue = 0
+        if (validatedData.property_id) {
+          const { data: property } = await supabase
+            .from('properties')
+            .select('price')
+            .eq('id', validatedData.property_id)
+            .single()
+          
+          dealValue = property?.price || 0
+        }
+
+        // If no property price, use average property price or default
+        if (dealValue === 0) {
+          const { data: properties } = await supabase
+            .from('properties')
+            .select('price')
+            .eq('builder_id', user.id)
+            .not('price', 'is', null)
+          
+          if (properties && properties.length > 0) {
+            dealValue = properties.reduce((sum, p) => sum + (Number(p.price) || 0), 0) / properties.length
+          } else {
+            dealValue = 5000000 // Default ₹50L if no properties
+          }
+        }
+
+        // Only create commission if deal value is valid
+        if (dealValue > 0) {
+          // Create commission transaction directly
+          // Get user's subscription to determine commission rate
+          const { data: subscription } = await supabase
+            .from('user_subscriptions')
+            .select(`
+              pricing_plans (
+                plan_type
+              ),
+              pricing_model
+            `)
+            .eq('user_id', user.id)
+            .eq('status', 'active')
+            .single()
+
+          let commissionRate = 0.02 // Default 2%
+          if (subscription) {
+            const planType = (subscription.pricing_plans as any)?.plan_type
+            const pricingModel = subscription.pricing_model
+            
+            // Calculate commission based on plan
+            if (planType === 'builder_free') {
+              commissionRate = 0.125 // 12.5%
+            } else if (planType === 'builder_pro' && pricingModel === 'hybrid') {
+              commissionRate = 0.10 // 10%
+            } else if (planType === 'builder_enterprise' || 
+                       (planType === 'builder_pro' && pricingModel === 'subscription')) {
+              commissionRate = 0 // No commission for enterprise/subscription-only
+            }
+          }
+
+          const commissionAmount = Math.round(dealValue * commissionRate)
+
+          if (commissionAmount > 0) {
+            // Create commission transaction
+            const { error: commError } = await supabase
+              .from('commission_transactions')
+              .insert({
+                user_id: user.id,
+                lead_id: lead.id,
+                property_id: validatedData.property_id || null,
+                deal_value: dealValue,
+                commission_rate: commissionRate * 100, // Store as percentage
+                commission_amount: commissionAmount,
+                status: 'pending'
+              })
+
+            if (commError) {
+              console.error('[API/Interaction] Commission creation error:', commError)
+            }
+          }
+        }
+      } catch (commError) {
+        // Log but don't fail the interaction creation
+        console.error('[API/Interaction] Commission creation error (non-blocking):', commError)
+      }
     } else if (validatedData.outcome === 'lost' || validatedData.interaction_type === 'deal_lost') {
       await supabase
         .from('leads')

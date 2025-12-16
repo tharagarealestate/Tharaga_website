@@ -224,9 +224,10 @@ export function BuilderSidebar() {
       if (collapseTimeoutRef.current) {
         clearTimeout(collapseTimeoutRef.current)
       }
+      // Faster collapse delay like Supabase - 200ms instead of 300ms
       collapseTimeoutRef.current = setTimeout(() => {
         setIsExpanded(false)
-      }, 300)
+      }, 200)
     }
   }, [isPinned])
 
@@ -264,7 +265,12 @@ export function BuilderSidebar() {
   }, [isPinned])
 
   // Grouped navigation items - Smart grouping
-  const navGroups = useMemo<NavGroup[]>(() => [
+  // Uses section-based navigation for unified dashboard, route-based for standalone pages
+  const navGroups = useMemo<NavGroup[]>(() => {
+    // Helper function to create section-based navigation URLs
+    const createSectionUrl = (section: string) => `/builder?section=${section}`
+    
+    return [
     {
       items: [
         { href: '/builder', label: 'Overview', icon: LayoutDashboard, badge: null, requiresPro: false },
@@ -285,9 +291,9 @@ export function BuilderSidebar() {
           ]
         },
         { href: '/builder/leads/pipeline', label: 'Pipeline', icon: BarChart3, requiresPro: false },
-        { href: '/builder/viewings', label: 'Viewings', icon: Calendar, requiresPro: false },
-        { href: '/builder/negotiations', label: 'Negotiations', icon: Handshake, requiresPro: false },
-        { href: '/builder/contracts', label: 'Contracts', icon: FileText, requiresPro: false },
+        { href: createSectionUrl('viewings'), label: 'Viewings', icon: Calendar, requiresPro: false },
+        { href: createSectionUrl('negotiations'), label: 'Negotiations', icon: Handshake, requiresPro: false },
+        { href: createSectionUrl('contracts'), label: 'Contracts', icon: FileText, requiresPro: false },
       ]
     },
     {
@@ -301,7 +307,6 @@ export function BuilderSidebar() {
           submenu: [
             { href: '/builder/properties', label: 'Manage' },
             { href: '/builder/properties/performance', label: 'Performance' },
-            { href: '/builder/properties/insights', label: 'AI Insights' },
           ]
         },
       ]
@@ -326,8 +331,8 @@ export function BuilderSidebar() {
       items: [
         { href: '/behavior-tracking', label: 'Behavior Analytics', icon: BarChart3, requiresPro: false },
         { href: '/builder/analytics', label: 'Analytics', icon: TrendingUp, requiresPro: false },
-        { href: '/builder/deal-lifecycle', label: 'Deal Lifecycle', icon: Activity, requiresPro: false },
-        { href: '/builder/automation-analytics', label: 'Automation Analytics', icon: Sparkles, requiresPro: false },
+        { href: createSectionUrl('deal-lifecycle'), label: 'Deal Lifecycle', icon: Activity, requiresPro: false },
+        { href: createSectionUrl('ultra-automation-analytics'), label: 'Automation Analytics', icon: Sparkles, requiresPro: false },
       ]
     },
     {
@@ -351,7 +356,8 @@ export function BuilderSidebar() {
         { href: '/builder/settings', label: 'Settings', icon: Settings, requiresPro: false },
       ]
     },
-  ], [leadCount, isLoadingCount])
+    ]
+  }, [leadCount, isLoadingCount])
 
   const isTrial = subscription?.tier === 'trial' || subscription?.tier === 'trial_expired' || subscription?.is_trial_expired
 
@@ -393,13 +399,15 @@ export function BuilderSidebar() {
         {/* Header Section */}
         <div className="flex-shrink-0 px-4 py-4 border-b border-white/10">
           {/* Brand Logo */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 relative">
             <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-gold-500 to-gold-400 flex items-center justify-center shadow-lg shadow-gold-500/30 shrink-0">
               <Building className="w-5 h-5 text-primary-950" />
             </div>
             <div className={cn(
-              "flex flex-col leading-tight overflow-hidden transition-opacity duration-200",
-              isExpanded ? "opacity-100" : "opacity-0 w-0"
+              "flex flex-col leading-tight absolute left-[52px] transition-all duration-150 ease-out",
+              isExpanded 
+                ? "opacity-100 translate-x-0 pointer-events-auto" 
+                : "opacity-0 -translate-x-2 pointer-events-none w-0"
             )}>
               <span className="font-bold text-white text-sm whitespace-nowrap">THARAGA</span>
               <span className="text-gold-400 text-[10px] font-medium whitespace-nowrap">Builder Portal</span>
@@ -408,8 +416,10 @@ export function BuilderSidebar() {
 
           {/* Search Bar */}
           <div className={cn(
-            "mt-4 transition-all duration-200",
-            isExpanded ? "opacity-100" : "opacity-0 h-0 overflow-hidden"
+            "mt-4 transition-all duration-150 ease-out",
+            isExpanded 
+              ? "opacity-100 max-h-40 pointer-events-auto" 
+              : "opacity-0 max-h-0 overflow-hidden pointer-events-none"
           )}>
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
@@ -462,7 +472,17 @@ export function BuilderSidebar() {
 
               {/* Group Items */}
               {group.items.map((item) => {
-                const isActive = pathname === item.href || pathname.startsWith(item.href + '/')
+                // Check if active - handle both route-based and section-based navigation
+                const isRouteActive = pathname === item.href || pathname.startsWith(item.href + '/')
+                let isSectionActive = false
+                if (item.href.includes('?section=')) {
+                  const sectionParam = item.href.split('?section=')[1]?.split('&')[0]
+                  if (typeof window !== 'undefined') {
+                    const currentSection = new URLSearchParams(window.location.search).get('section')
+                    isSectionActive = currentSection === sectionParam && (pathname === '/builder' || pathname === '/builder/')
+                  }
+                }
+                const isActive = isRouteActive || isSectionActive
                 const isLocked = isTrial && !!item.requiresPro
                 const hasSubmenu = item.submenu && item.submenu.length > 0
                 const isSubmenuOpen = openSubmenus.has(item.href)
@@ -474,15 +494,15 @@ export function BuilderSidebar() {
                       onClick={(e) => {
                         if (isLocked) {
                           e.preventDefault()
+                          // Show upgrade prompt
+                          window.location.href = '/pricing'
                           return
                         }
-                        if (hasSubmenu && isExpanded) {
-                          e.preventDefault()
-                          toggleSubmenu(item.href)
-                        }
+                        // Don't prevent navigation - allow links to work normally
+                        // Submenu toggle is handled by the chevron button
                       }}
                       className={cn(
-                        "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-all duration-200 group relative",
+                        "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-colors duration-150 group relative",
                         "hover:bg-white/5",
                         isActive
                           ? "bg-gold-500/20 text-white border-l-3 border-gold-500"
@@ -492,11 +512,20 @@ export function BuilderSidebar() {
                       )}
                       title={!isExpanded ? item.label : undefined}
                     >
-                      <item.icon className={cn("w-5 h-5 shrink-0", isActive && "text-gold-400")} />
+                      <item.icon className={cn("w-5 h-5 shrink-0 transition-colors duration-150", isActive && "text-gold-400")} />
+                      
+                      {/* Label - positioned to prevent layout shift */}
+                      <span className={cn(
+                        "font-medium truncate transition-all duration-150 ease-out",
+                        isExpanded 
+                          ? "opacity-100 translate-x-0 ml-0 w-auto flex-1" 
+                          : "opacity-0 -translate-x-2 w-0 ml-0 absolute left-0 pointer-events-none"
+                      )}>
+                        {item.label}
+                      </span>
                       
                       {isExpanded && (
                         <>
-                          <span className="font-medium truncate flex-1">{item.label}</span>
                           
                           {item.badge !== null && item.badge !== undefined && (
                             <span 
@@ -518,23 +547,29 @@ export function BuilderSidebar() {
 
                           {hasSubmenu && (
                             <button
+                              type="button"
                               onClick={(e) => {
                                 e.preventDefault()
                                 e.stopPropagation()
                                 toggleSubmenu(item.href)
                               }}
-                              className="ml-auto p-0.5 hover:bg-white/5 rounded transition-colors"
+                              className="ml-auto p-0.5 hover:bg-white/5 rounded transition-colors shrink-0"
+                              aria-label={isSubmenuOpen ? "Collapse submenu" : "Expand submenu"}
+                              aria-expanded={isSubmenuOpen}
                             >
                               {isSubmenuOpen ? (
-                                <ChevronDown className="w-4 h-4 text-gray-400" />
+                                <ChevronDown className="w-4 h-4 text-gray-400 transition-transform duration-150" />
                               ) : (
-                                <ChevronRight className="w-4 h-4 text-gray-400" />
+                                <ChevronRight className="w-4 h-4 text-gray-400 transition-transform duration-150" />
                               )}
                             </button>
                           )}
 
                           {isLocked && (
-                            <Lock className="ml-auto w-4 h-4 text-gray-500" />
+                            <Lock 
+                              className="ml-auto w-4 h-4 text-gray-500 shrink-0" 
+                              title="Upgrade to Pro to access Revenue features"
+                            />
                           )}
                         </>
                       )}
@@ -545,28 +580,37 @@ export function BuilderSidebar() {
                       )}
                     </Link>
 
-                    {/* Submenu */}
-                    {hasSubmenu && isSubmenuOpen && isExpanded && (
-                      <div className="ml-4 mt-1 space-y-0.5 border-l border-white/10 pl-4">
-                        {item.submenu?.map((sub) => {
-                          const isSubActive = pathname === sub.href
-                          return (
-                            <Link
-                              key={sub.href}
-                              href={sub.href}
-                              className={cn(
-                                "block px-3 py-1.5 text-xs rounded-lg transition-colors",
-                                isSubActive
-                                  ? "text-gold-300 font-medium bg-white/5"
-                                  : "text-gray-400 hover:text-white hover:bg-white/5"
-                              )}
-                            >
-                              {sub.label}
-                            </Link>
-                          )
-                        })}
-                      </div>
-                    )}
+                    {/* Submenu - Smooth expand/collapse animation */}
+                    <div 
+                      className={cn(
+                        "overflow-hidden transition-all duration-150 ease-out",
+                        hasSubmenu && isSubmenuOpen && isExpanded
+                          ? "max-h-96 opacity-100"
+                          : "max-h-0 opacity-0"
+                      )}
+                    >
+                      {hasSubmenu && (
+                        <div className="ml-4 mt-1 space-y-0.5 border-l border-white/10 pl-4">
+                          {item.submenu?.map((sub) => {
+                            const isSubActive = pathname === sub.href
+                            return (
+                              <Link
+                                key={sub.href}
+                                href={sub.href}
+                                className={cn(
+                                  "block px-3 py-1.5 text-xs rounded-lg transition-colors duration-150",
+                                  isSubActive
+                                    ? "text-gold-300 font-medium bg-white/5"
+                                    : "text-gray-400 hover:text-white hover:bg-white/5"
+                                )}
+                              >
+                                {sub.label}
+                              </Link>
+                            )
+                          })}
+                        </div>
+                      )}
+                    </div>
                   </div>
                 )
               })}
@@ -715,7 +759,17 @@ export function BuilderSidebar() {
                     </div>
                   )}
                   {group.items.map((item) => {
-                    const isActive = pathname === item.href || pathname.startsWith(item.href + '/')
+                    // Check if active - handle both route-based and section-based navigation
+                    const isRouteActive = pathname === item.href || pathname.startsWith(item.href + '/')
+                    let isSectionActive = false
+                    if (item.href.includes('?section=')) {
+                      const sectionParam = item.href.split('?section=')[1]?.split('&')[0]
+                      if (typeof window !== 'undefined') {
+                        const currentSection = new URLSearchParams(window.location.search).get('section')
+                        isSectionActive = currentSection === sectionParam && (pathname === '/builder' || pathname === '/builder/')
+                      }
+                    }
+                    const isActive = isRouteActive || isSectionActive
                     const isLocked = isTrial && !!item.requiresPro
                     const hasSubmenu = item.submenu && item.submenu.length > 0
                     const isSubmenuOpen = openSubmenus.has(item.href)
@@ -729,12 +783,13 @@ export function BuilderSidebar() {
                               e.preventDefault()
                               return
                             }
-                            if (hasSubmenu) {
+                            // If clicking chevron button, only toggle submenu
+                            if ((e.target as HTMLElement).closest('button')) {
                               e.preventDefault()
-                              toggleSubmenu(item.href)
-                            } else {
-                              setMobileMenuOpen(false)
+                              return
                             }
+                            // Otherwise, navigate and close menu
+                            setMobileMenuOpen(false)
                           }}
                           className={cn(
                             "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-all",
@@ -752,39 +807,52 @@ export function BuilderSidebar() {
                           )}
                           {hasSubmenu && (
                             <button
+                              type="button"
                               onClick={(e) => {
                                 e.preventDefault()
                                 e.stopPropagation()
                                 toggleSubmenu(item.href)
                               }}
+                              className="shrink-0"
+                              aria-label={isSubmenuOpen ? "Collapse submenu" : "Expand submenu"}
                             >
                               {isSubmenuOpen ? (
-                                <ChevronDown className="w-4 h-4 text-gray-400" />
+                                <ChevronDown className="w-4 h-4 text-gray-400 transition-transform duration-150" />
                               ) : (
-                                <ChevronRight className="w-4 h-4 text-gray-400" />
+                                <ChevronRight className="w-4 h-4 text-gray-400 transition-transform duration-150" />
                               )}
                             </button>
                           )}
                         </Link>
-                        {hasSubmenu && isSubmenuOpen && (
-                          <div className="ml-4 mt-1 space-y-0.5 border-l border-white/10 pl-4">
-                            {item.submenu?.map((sub) => (
-                              <Link
-                                key={sub.href}
-                                href={sub.href}
-                                onClick={() => setMobileMenuOpen(false)}
-                                className={cn(
-                                  "block px-3 py-1.5 text-xs rounded-lg",
-                                  pathname === sub.href
-                                    ? "text-gold-300 font-medium bg-white/5"
-                                    : "text-gray-400 hover:text-white"
-                                )}
-                              >
-                                {sub.label}
-                              </Link>
-                            ))}
-                          </div>
-                        )}
+                        {/* Mobile Submenu - Smooth animation */}
+                        <div 
+                          className={cn(
+                            "overflow-hidden transition-all duration-150 ease-out",
+                            hasSubmenu && isSubmenuOpen
+                              ? "max-h-96 opacity-100"
+                              : "max-h-0 opacity-0"
+                          )}
+                        >
+                          {hasSubmenu && (
+                            <div className="ml-4 mt-1 space-y-0.5 border-l border-white/10 pl-4">
+                              {item.submenu?.map((sub) => (
+                                <Link
+                                  key={sub.href}
+                                  href={sub.href}
+                                  onClick={() => setMobileMenuOpen(false)}
+                                  className={cn(
+                                    "block px-3 py-1.5 text-xs rounded-lg transition-colors duration-150",
+                                    pathname === sub.href
+                                      ? "text-gold-300 font-medium bg-white/5"
+                                      : "text-gray-400 hover:text-white hover:bg-white/5"
+                                  )}
+                                >
+                                  {sub.label}
+                                </Link>
+                              ))}
+                            </div>
+                          )}
+                        </div>
                       </div>
                     )
                   })}
@@ -827,7 +895,7 @@ export function BuilderSidebar() {
         </>
       )}
 
-      {/* Set CSS variable for sidebar width */}
+      {/* Set CSS variable for sidebar width - Fast transition matching sidebar */}
       <style dangerouslySetInnerHTML={{
         __html: `
           :root {
@@ -836,7 +904,7 @@ export function BuilderSidebar() {
           @media (min-width: 1024px) {
             main.flex-1 {
               margin-left: var(--sidebar-width);
-              transition: margin-left 250ms ease-in-out;
+              transition: margin-left 150ms ease-out;
             }
           }
         `

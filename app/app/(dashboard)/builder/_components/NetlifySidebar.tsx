@@ -1,0 +1,846 @@
+"use client"
+
+import Link from 'next/link'
+import { usePathname } from 'next/navigation'
+import { useEffect, useMemo, useState, useRef, useCallback } from 'react'
+import { cn } from '@/lib/utils'
+import {
+  LayoutDashboard,
+  Users,
+  Building2,
+  DollarSign,
+  MessageSquare,
+  Settings,
+  Lock,
+  HelpCircle,
+  Building,
+  Clock,
+  BarChart3,
+  Search,
+  ChevronDown,
+  ChevronRight,
+  Calendar,
+  Handshake,
+  FileText,
+  Activity,
+  TrendingUp,
+  Menu,
+  X,
+  Sparkles
+} from 'lucide-react'
+
+interface SubscriptionData {
+  tier: 'trial' | 'pro' | 'enterprise' | 'trial_expired' | string
+  trial_leads_used?: number
+  days_remaining?: number
+  is_trial_expired?: boolean
+  builder_name?: string | null
+}
+
+interface LeadCountData {
+  total: number
+  hot: number
+  warm: number
+  pending_interactions: number
+}
+
+interface NavItem {
+  href: string
+  label: string
+  icon: React.ComponentType<{ className?: string }>
+  badge?: string | null | number
+  requiresPro?: boolean
+  submenu?: { href: string; label: string }[]
+}
+
+interface NavGroup {
+  label?: string
+  items: NavItem[]
+}
+
+export function NetlifySidebar() {
+  const pathname = usePathname()
+  const [subscription, setSubscription] = useState<SubscriptionData | null>(null)
+  const [leadCount, setLeadCount] = useState<LeadCountData | null>(null)
+  const [isLoadingCount, setIsLoadingCount] = useState(true)
+  const [badgeAnimation, setBadgeAnimation] = useState<'pulse' | 'bounce' | null>(null)
+  const [isExpanded, setIsExpanded] = useState(false)
+  const [isPinned, setIsPinned] = useState(false)
+  const [searchQuery, setSearchQuery] = useState('')
+  const [isSearchFocused, setIsSearchFocused] = useState(false)
+  const [openSubmenus, setOpenSubmenus] = useState<Set<string>>(new Set())
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const previousCountRef = useRef<number>(0)
+  const pollIntervalRef = useRef<NodeJS.Timeout | null>(null)
+  const sidebarRef = useRef<HTMLAsideElement>(null)
+  const collapseTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+
+  // Load sidebar state from localStorage
+  useEffect(() => {
+    const savedExpanded = localStorage.getItem('sidebar-expanded')
+    const savedPinned = localStorage.getItem('sidebar-pinned')
+    if (savedExpanded === 'true') setIsExpanded(true)
+    if (savedPinned === 'true') {
+      setIsPinned(true)
+      setIsExpanded(true)
+    }
+  }, [])
+
+  // Save sidebar state to localStorage
+  useEffect(() => {
+    localStorage.setItem('sidebar-expanded', String(isExpanded))
+    localStorage.setItem('sidebar-pinned', String(isPinned))
+  }, [isExpanded, isPinned])
+
+  // Fetch subscription data
+  useEffect(() => {
+    let cancelled = false
+    async function load() {
+      try {
+        const res = await fetch('/api/builder/subscription', { next: { revalidate: 0 } as any })
+        if (!res.ok) throw new Error('Failed')
+        const data = (await res.json()) as SubscriptionData
+        if (!cancelled) setSubscription(data)
+      } catch (_) {
+        if (!cancelled) setSubscription({ tier: 'trial', trial_leads_used: 0, days_remaining: 14 })
+      }
+    }
+    load()
+    return () => { cancelled = true }
+  }, [])
+
+  // Fetch lead count with real-time updates
+  useEffect(() => {
+    let cancelled = false
+    let retryCount = 0
+    const maxRetries = 3
+
+    async function fetchLeadCount() {
+      try {
+        const res = await fetch('/api/leads/count', { 
+          next: { revalidate: 0 } as any,
+          cache: 'no-store'
+        })
+        if (!res.ok) throw new Error('Failed to fetch')
+        const json = await res.json()
+        if (json.success && json.data && !cancelled) {
+          const newCount = json.data.total
+          const previousCount = previousCountRef.current
+          
+          if (previousCount > 0 && newCount > previousCount) {
+            setBadgeAnimation('pulse')
+            setTimeout(() => setBadgeAnimation(null), 1000)
+          } else if (previousCount > 0 && newCount !== previousCount) {
+            setBadgeAnimation('bounce')
+            setTimeout(() => setBadgeAnimation(null), 600)
+          }
+          
+          previousCountRef.current = newCount
+          setLeadCount(json.data)
+          setIsLoadingCount(false)
+          retryCount = 0
+        }
+      } catch (error) {
+        console.error('[Sidebar] Error fetching lead count:', error)
+        retryCount++
+        if (retryCount < maxRetries && !cancelled) {
+          setTimeout(() => fetchLeadCount(), Math.min(1000 * Math.pow(2, retryCount), 10000))
+        } else if (!cancelled) {
+          setIsLoadingCount(false)
+        }
+      }
+    }
+
+    fetchLeadCount()
+
+    const getPollInterval = () => {
+      if (document.hidden) return 30000
+      if (pathname.startsWith('/builder/leads')) return 5000
+      return 15000
+    }
+
+    const startPolling = () => {
+      if (pollIntervalRef.current) {
+        clearInterval(pollIntervalRef.current)
+      }
+      pollIntervalRef.current = setInterval(() => {
+        if (!cancelled && !document.hidden) {
+          fetchLeadCount()
+        }
+      }, getPollInterval())
+    }
+
+    startPolling()
+
+    const handleRefreshEvent = () => {
+      if (!cancelled) {
+        fetchLeadCount()
+      }
+    }
+
+    const handleVisibilityChange = () => {
+      if (!cancelled) {
+        startPolling()
+        if (!document.hidden) {
+          fetchLeadCount()
+        }
+      }
+    }
+
+    const handleFocus = () => {
+      if (!cancelled && !document.hidden) {
+        fetchLeadCount()
+      }
+    }
+
+    window.addEventListener('leadCountRefresh', handleRefreshEvent)
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+    window.addEventListener('focus', handleFocus)
+
+    return () => {
+      cancelled = true
+      if (pollIntervalRef.current) {
+        clearInterval(pollIntervalRef.current)
+      }
+      window.removeEventListener('leadCountRefresh', handleRefreshEvent)
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
+      window.removeEventListener('focus', handleFocus)
+    }
+  }, [pathname])
+
+  // Handle sidebar hover (auto-expand/collapse)
+  const handleMouseEnter = useCallback(() => {
+    if (collapseTimeoutRef.current) {
+      clearTimeout(collapseTimeoutRef.current)
+      collapseTimeoutRef.current = null
+    }
+    if (!isPinned) {
+      setIsExpanded(true)
+    }
+  }, [isPinned])
+
+  const handleMouseLeave = useCallback(() => {
+    if (!isPinned) {
+      if (collapseTimeoutRef.current) {
+        clearTimeout(collapseTimeoutRef.current)
+      }
+      collapseTimeoutRef.current = setTimeout(() => {
+        setIsExpanded(false)
+      }, 300)
+    }
+  }, [isPinned])
+
+  // Toggle submenu
+  const toggleSubmenu = useCallback((href: string) => {
+    setOpenSubmenus(prev => {
+      const next = new Set(prev)
+      if (next.has(href)) {
+        next.delete(href)
+      } else {
+        next.add(href)
+      }
+      return next
+    })
+  }, [])
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault()
+        const searchInput = document.getElementById('sidebar-search-input')
+        if (searchInput) {
+          (searchInput as HTMLInputElement).focus()
+        }
+      }
+      if ((e.metaKey || e.ctrlKey) && e.key === '[') {
+        e.preventDefault()
+        setIsPinned(!isPinned)
+        setIsExpanded(!isPinned)
+      }
+    }
+    window.addEventListener('keydown', handler)
+    return () => window.removeEventListener('keydown', handler)
+  }, [isPinned])
+
+  // Grouped navigation items - Smart grouping
+  const navGroups = useMemo<NavGroup[]>(() => [
+    {
+      items: [
+        { href: '/builder', label: 'Overview', icon: LayoutDashboard, badge: null, requiresPro: false },
+      ]
+    },
+    {
+      label: 'Sales & Leads',
+      items: [
+        { 
+          href: '/builder/leads', 
+          label: 'Leads', 
+          icon: Users, 
+          badge: isLoadingCount ? null : (leadCount?.total ?? 0), 
+          requiresPro: false,
+          submenu: [
+            { href: '/builder/leads', label: 'All Leads' },
+            { href: '/builder/leads/pipeline', label: 'Pipeline' },
+          ]
+        },
+        { href: '/builder/leads/pipeline', label: 'Pipeline', icon: BarChart3, requiresPro: false },
+        { href: '/builder/viewings', label: 'Viewings', icon: Calendar, requiresPro: false },
+        { href: '/builder/negotiations', label: 'Negotiations', icon: Handshake, requiresPro: false },
+        { href: '/builder/contracts', label: 'Contracts', icon: FileText, requiresPro: false },
+      ]
+    },
+    {
+      label: 'Properties',
+      items: [
+        { 
+          href: '/builder/properties', 
+          label: 'Properties', 
+          icon: Building2, 
+          requiresPro: false,
+          submenu: [
+            { href: '/builder/properties', label: 'Manage' },
+            { href: '/builder/properties/performance', label: 'Performance' },
+            { href: '/builder/properties/insights', label: 'AI Insights' },
+          ]
+        },
+      ]
+    },
+    {
+      label: 'Communication',
+      items: [
+        { 
+          href: '/builder/messaging', 
+          label: 'Client Outreach', 
+          icon: MessageSquare, 
+          requiresPro: false,
+          submenu: [
+            { href: '/builder/messaging', label: 'Send Messages' },
+            { href: '/builder/communications', label: 'Communications' },
+          ]
+        },
+      ]
+    },
+    {
+      label: 'Analytics & Insights',
+      items: [
+        { href: '/behavior-tracking', label: 'Behavior Analytics', icon: BarChart3, requiresPro: false },
+        { href: '/builder/analytics', label: 'Analytics', icon: TrendingUp, requiresPro: false },
+        { href: '/builder/deal-lifecycle', label: 'Deal Lifecycle', icon: Activity, requiresPro: false },
+        { href: '/builder/automation-analytics', label: 'Automation Analytics', icon: Sparkles, requiresPro: false },
+      ]
+    },
+    {
+      label: 'Business',
+      items: [
+        { 
+          href: '/builder/revenue', 
+          label: 'Revenue', 
+          icon: DollarSign, 
+          requiresPro: true,
+          submenu: [
+            { href: '/builder/revenue', label: 'Overview' },
+            { href: '/builder/revenue/payments', label: 'Payments' },
+            { href: '/builder/revenue/forecasting', label: 'Forecasting' },
+          ]
+        },
+      ]
+    },
+    {
+      items: [
+        { href: '/builder/settings', label: 'Settings', icon: Settings, requiresPro: false },
+      ]
+    },
+  ], [leadCount, isLoadingCount])
+
+  const isTrial = subscription?.tier === 'trial' || subscription?.tier === 'trial_expired' || subscription?.is_trial_expired
+
+  // Filter items based on search
+  const filteredGroups = useMemo(() => {
+    if (!searchQuery.trim()) return navGroups
+    
+    const query = searchQuery.toLowerCase()
+    return navGroups.map(group => ({
+      ...group,
+      items: group.items.filter(item => 
+        item.label.toLowerCase().includes(query) ||
+        item.submenu?.some(sub => sub.label.toLowerCase().includes(query))
+      )
+    })).filter(group => group.items.length > 0)
+  }, [navGroups, searchQuery])
+
+  const sidebarWidth = isExpanded ? 280 : 72
+
+  return (
+    <>
+      {/* Desktop Sidebar */}
+      <aside
+        ref={sidebarRef}
+        className={cn(
+          "fixed left-0 top-0 bottom-0 z-[1000]",
+          "flex flex-col",
+          "bg-gradient-to-b from-primary-950/95 via-primary-900/95 to-primary-950/95",
+          "backdrop-blur-xl border-r border-white/10",
+          "transition-all duration-[250ms] ease-in-out",
+          "overflow-hidden",
+          "hidden lg:flex"
+        )}
+        style={{ width: `${sidebarWidth}px` }}
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
+        aria-label="Main navigation sidebar"
+      >
+        {/* Header Section */}
+        <div className="flex-shrink-0 px-4 py-4 border-b border-white/10">
+          {/* Brand Logo */}
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-gold-500 to-gold-400 flex items-center justify-center shadow-lg shadow-gold-500/30 shrink-0">
+              <Building className="w-5 h-5 text-primary-950" />
+            </div>
+            <div className={cn(
+              "flex flex-col leading-tight overflow-hidden transition-opacity duration-200",
+              isExpanded ? "opacity-100" : "opacity-0 w-0"
+            )}>
+              <span className="font-bold text-white text-sm whitespace-nowrap">THARAGA</span>
+              <span className="text-gold-400 text-[10px] font-medium whitespace-nowrap">Builder Portal</span>
+            </div>
+          </div>
+
+          {/* Search Bar */}
+          <div className={cn(
+            "mt-4 transition-all duration-200",
+            isExpanded ? "opacity-100" : "opacity-0 h-0 overflow-hidden"
+          )}>
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+              <input
+                id="sidebar-search-input"
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onFocus={() => setIsSearchFocused(true)}
+                onBlur={() => setIsSearchFocused(false)}
+                placeholder="Search..."
+                className="w-full pl-10 pr-3 py-2 bg-white/5 backdrop-blur-sm border border-white/10 rounded-lg text-white placeholder:text-gray-400 text-sm focus:outline-none focus:border-gold-500/50 focus:ring-2 focus:ring-gold-500/20 transition-all"
+              />
+              <kbd className="absolute right-3 top-1/2 -translate-y-1/2 hidden xl:flex items-center gap-1 px-1.5 py-0.5 text-[10px] font-medium text-gray-400 bg-white/5 border border-white/10 rounded">
+                <span className="text-[8px]">⌘</span>K
+              </kbd>
+            </div>
+          </div>
+
+          {/* Collapsed Search Icon */}
+          {!isExpanded && (
+            <button
+              onClick={() => {
+                setIsExpanded(true)
+                setTimeout(() => {
+                  const searchInput = document.getElementById('sidebar-search-input')
+                  if (searchInput) {
+                    (searchInput as HTMLInputElement).focus()
+                  }
+                }, 250)
+              }}
+              className="mt-4 w-full flex items-center justify-center p-2 rounded-lg hover:bg-white/5 transition-colors"
+              aria-label="Search"
+            >
+              <Search className="w-5 h-5 text-gray-400" />
+            </button>
+          )}
+        </div>
+
+        {/* Main Navigation - Scrollable */}
+        <nav className="flex-1 overflow-y-auto overflow-x-hidden px-2 py-4 space-y-1 custom-scrollbar">
+          {filteredGroups.map((group, groupIndex) => (
+            <div key={groupIndex} className={cn("space-y-1", group.label && isExpanded && "mb-4")}>
+              {/* Group Label */}
+              {group.label && isExpanded && (
+                <div className="px-3 py-1.5 text-[10px] font-semibold text-gray-500 uppercase tracking-wider">
+                  {group.label}
+                </div>
+              )}
+
+              {/* Group Items */}
+              {group.items.map((item) => {
+                const isActive = pathname === item.href || pathname.startsWith(item.href + '/')
+                const isLocked = isTrial && !!item.requiresPro
+                const hasSubmenu = item.submenu && item.submenu.length > 0
+                const isSubmenuOpen = openSubmenus.has(item.href)
+
+                return (
+                  <div key={item.href}>
+                    <Link
+                      href={isLocked ? '#' : item.href}
+                      onClick={(e) => {
+                        if (isLocked) {
+                          e.preventDefault()
+                          return
+                        }
+                        if (hasSubmenu && isExpanded) {
+                          e.preventDefault()
+                          toggleSubmenu(item.href)
+                        }
+                      }}
+                      className={cn(
+                        "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-all duration-200 group relative",
+                        "hover:bg-white/5",
+                        isActive
+                          ? "bg-gold-500/20 text-white border-l-3 border-gold-500"
+                          : "text-gray-400 hover:text-white",
+                        isLocked && "opacity-50 cursor-not-allowed",
+                        !isExpanded && "justify-center"
+                      )}
+                      title={!isExpanded ? item.label : undefined}
+                    >
+                      <item.icon className={cn("w-5 h-5 shrink-0", isActive && "text-gold-400")} />
+                      
+                      {isExpanded && (
+                        <>
+                          <span className="font-medium truncate flex-1">{item.label}</span>
+                          
+                          {item.badge !== null && item.badge !== undefined && (
+                            <span 
+                              className={cn(
+                                "ml-auto px-2 py-0.5 text-white text-[10px] font-bold rounded-full transition-all duration-300",
+                                "bg-emerald-500",
+                                badgeAnimation === 'pulse' && "animate-pulse ring-2 ring-emerald-300",
+                                badgeAnimation === 'bounce' && "animate-bounce",
+                                isLoadingCount && "opacity-50"
+                              )}
+                            >
+                              {isLoadingCount ? (
+                                <span className="inline-block w-4 h-3 bg-white/30 rounded animate-pulse" />
+                              ) : (
+                                typeof item.badge === 'number' ? (item.badge > 99 ? '99+' : item.badge) : item.badge
+                              )}
+                            </span>
+                          )}
+
+                          {hasSubmenu && (
+                            <button
+                              onClick={(e) => {
+                                e.preventDefault()
+                                e.stopPropagation()
+                                toggleSubmenu(item.href)
+                              }}
+                              className="ml-auto p-0.5 hover:bg-white/5 rounded transition-colors"
+                            >
+                              {isSubmenuOpen ? (
+                                <ChevronDown className="w-4 h-4 text-gray-400" />
+                              ) : (
+                                <ChevronRight className="w-4 h-4 text-gray-400" />
+                              )}
+                            </button>
+                          )}
+
+                          {isLocked && (
+                            <Lock className="ml-auto w-4 h-4 text-gray-500" />
+                          )}
+                        </>
+                      )}
+
+                      {/* Badge in collapsed state */}
+                      {!isExpanded && item.badge !== null && item.badge !== undefined && (
+                        <span className="absolute top-1 right-1 w-2 h-2 bg-emerald-500 rounded-full" />
+                      )}
+                    </Link>
+
+                    {/* Submenu */}
+                    {hasSubmenu && isSubmenuOpen && isExpanded && (
+                      <div className="ml-4 mt-1 space-y-0.5 border-l border-white/10 pl-4">
+                        {item.submenu?.map((sub) => {
+                          const isSubActive = pathname === sub.href
+                          return (
+                            <Link
+                              key={sub.href}
+                              href={sub.href}
+                              className={cn(
+                                "block px-3 py-1.5 text-xs rounded-lg transition-colors",
+                                isSubActive
+                                  ? "text-gold-300 font-medium bg-white/5"
+                                  : "text-gray-400 hover:text-white hover:bg-white/5"
+                              )}
+                            >
+                              {sub.label}
+                            </Link>
+                          )
+                        })}
+                      </div>
+                    )}
+                  </div>
+                )
+              })}
+            </div>
+          ))}
+        </nav>
+
+        {/* Footer Section */}
+        <div className="flex-shrink-0 border-t border-white/10 px-4 py-4 space-y-3">
+          {/* Trial/Upgrade CTA */}
+          {isTrial && isExpanded && (
+            <Link
+              href="/pricing"
+              className="block p-3 rounded-xl bg-gold-500/15 backdrop-blur-sm border border-gold-500/30 hover:bg-gold-500/20 transition-colors"
+            >
+              <div className="flex items-center gap-2 mb-1">
+                <Clock className="w-3.5 h-3.5 text-gold-300" />
+                <span className="text-[11px] font-semibold text-gold-100">Trial Active</span>
+              </div>
+              <div className="text-[10px] text-gray-300">
+                {subscription?.days_remaining === 0
+                  ? 'Expired - Upgrade'
+                  : subscription?.days_remaining && subscription.days_remaining <= 3
+                  ? `⚠️ ${subscription.days_remaining} day${subscription.days_remaining === 1 ? '' : 's'} left`
+                  : `${subscription?.days_remaining ?? 0} days left`}
+              </div>
+            </Link>
+          )}
+
+          {/* Help & Support */}
+          <button
+            onClick={() => window.dispatchEvent(new CustomEvent('open-ai-assistant'))}
+            className={cn(
+              "w-full flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-gray-400 hover:bg-white/5 hover:text-white transition-all",
+              !isExpanded && "justify-center"
+            )}
+            title={!isExpanded ? "Help & Support" : undefined}
+          >
+            <HelpCircle className="w-5 h-5 shrink-0" />
+            {isExpanded && <span>Help & Support</span>}
+          </button>
+
+          {/* User Profile */}
+          <div className={cn(
+            "flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-white/5 transition-colors cursor-pointer",
+            !isExpanded && "justify-center"
+          )}>
+            <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-primary-600 to-primary-500 text-white flex items-center justify-center text-sm font-semibold shadow-lg shrink-0">
+              {(subscription?.builder_name || 'B').charAt(0).toUpperCase()}
+            </div>
+            {isExpanded && (
+              <div className="flex-1 min-w-0">
+                <div className="text-sm font-medium text-white truncate">
+                  {subscription?.builder_name || 'Builder'}
+                </div>
+                <div className="text-[10px] text-gray-400 truncate">My Account</div>
+              </div>
+            )}
+          </div>
+
+          {/* Pin/Unpin Toggle */}
+          {isExpanded && (
+            <button
+              onClick={() => {
+                setIsPinned(!isPinned)
+                if (!isPinned) {
+                  setIsExpanded(true)
+                }
+              }}
+              className="w-full px-3 py-2 text-xs text-gray-400 hover:text-white hover:bg-white/5 rounded-lg transition-colors text-left"
+            >
+              {isPinned ? 'Unpin Sidebar' : 'Pin Sidebar'}
+            </button>
+          )}
+        </div>
+      </aside>
+
+      {/* Mobile Menu Button */}
+      <button
+        onClick={() => setMobileMenuOpen(true)}
+        className="fixed top-4 left-4 z-[1001] lg:hidden p-2 rounded-lg bg-primary-900/90 backdrop-blur-sm border border-white/10 text-white"
+        aria-label="Open menu"
+      >
+        <Menu className="w-6 h-6" />
+      </button>
+
+      {/* Mobile Sidebar Overlay */}
+      {mobileMenuOpen && (
+        <>
+          <div
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[1000] lg:hidden"
+            onClick={() => setMobileMenuOpen(false)}
+          />
+          <aside
+            className={cn(
+              "fixed left-0 top-0 bottom-0 z-[1001]",
+              "w-[280px] flex flex-col",
+              "bg-gradient-to-b from-primary-950 via-primary-900 to-primary-950",
+              "backdrop-blur-xl border-r border-white/10",
+              "transform transition-transform duration-300 ease-out",
+              mobileMenuOpen ? "translate-x-0" : "-translate-x-full",
+              "lg:hidden"
+            )}
+          >
+            {/* Mobile Header */}
+            <div className="flex items-center justify-between px-4 py-4 border-b border-white/10">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-gold-500 to-gold-400 flex items-center justify-center">
+                  <Building className="w-5 h-5 text-primary-950" />
+                </div>
+                <div className="flex flex-col leading-tight">
+                  <span className="font-bold text-white text-sm">THARAGA</span>
+                  <span className="text-gold-400 text-[10px] font-medium">Builder Portal</span>
+                </div>
+              </div>
+              <button
+                onClick={() => setMobileMenuOpen(false)}
+                className="p-2 rounded-lg hover:bg-white/5 transition-colors"
+                aria-label="Close menu"
+              >
+                <X className="w-5 h-5 text-white" />
+              </button>
+            </div>
+
+            {/* Mobile Search */}
+            <div className="px-4 py-4 border-b border-white/10">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Search..."
+                  className="w-full pl-10 pr-3 py-2 bg-white/5 backdrop-blur-sm border border-white/10 rounded-lg text-white placeholder:text-gray-400 text-sm focus:outline-none focus:border-gold-500/50"
+                />
+              </div>
+            </div>
+
+            {/* Mobile Navigation - Same structure as desktop */}
+            <nav className="flex-1 overflow-y-auto px-2 py-4 space-y-1">
+              {filteredGroups.map((group, groupIndex) => (
+                <div key={groupIndex} className={cn("space-y-1", group.label && "mb-4")}>
+                  {group.label && (
+                    <div className="px-3 py-1.5 text-[10px] font-semibold text-gray-500 uppercase tracking-wider">
+                      {group.label}
+                    </div>
+                  )}
+                  {group.items.map((item) => {
+                    const isActive = pathname === item.href || pathname.startsWith(item.href + '/')
+                    const isLocked = isTrial && !!item.requiresPro
+                    const hasSubmenu = item.submenu && item.submenu.length > 0
+                    const isSubmenuOpen = openSubmenus.has(item.href)
+
+                    return (
+                      <div key={item.href}>
+                        <Link
+                          href={isLocked ? '#' : item.href}
+                          onClick={(e) => {
+                            if (isLocked) {
+                              e.preventDefault()
+                              return
+                            }
+                            if (hasSubmenu) {
+                              e.preventDefault()
+                              toggleSubmenu(item.href)
+                            } else {
+                              setMobileMenuOpen(false)
+                            }
+                          }}
+                          className={cn(
+                            "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-all",
+                            isActive
+                              ? "bg-gold-500/20 text-white border-l-3 border-gold-500"
+                              : "text-gray-400 hover:text-white hover:bg-white/5"
+                          )}
+                        >
+                          <item.icon className={cn("w-5 h-5 shrink-0", isActive && "text-gold-400")} />
+                          <span className="font-medium flex-1">{item.label}</span>
+                          {item.badge !== null && item.badge !== undefined && (
+                            <span className="px-2 py-0.5 bg-emerald-500 text-white text-[10px] font-bold rounded-full">
+                              {typeof item.badge === 'number' ? (item.badge > 99 ? '99+' : item.badge) : item.badge}
+                            </span>
+                          )}
+                          {hasSubmenu && (
+                            <button
+                              onClick={(e) => {
+                                e.preventDefault()
+                                e.stopPropagation()
+                                toggleSubmenu(item.href)
+                              }}
+                            >
+                              {isSubmenuOpen ? (
+                                <ChevronDown className="w-4 h-4 text-gray-400" />
+                              ) : (
+                                <ChevronRight className="w-4 h-4 text-gray-400" />
+                              )}
+                            </button>
+                          )}
+                        </Link>
+                        {hasSubmenu && isSubmenuOpen && (
+                          <div className="ml-4 mt-1 space-y-0.5 border-l border-white/10 pl-4">
+                            {item.submenu?.map((sub) => (
+                              <Link
+                                key={sub.href}
+                                href={sub.href}
+                                onClick={() => setMobileMenuOpen(false)}
+                                className={cn(
+                                  "block px-3 py-1.5 text-xs rounded-lg",
+                                  pathname === sub.href
+                                    ? "text-gold-300 font-medium bg-white/5"
+                                    : "text-gray-400 hover:text-white"
+                                )}
+                              >
+                                {sub.label}
+                              </Link>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    )
+                  })}
+                </div>
+              ))}
+            </nav>
+
+            {/* Mobile Footer */}
+            <div className="border-t border-white/10 px-4 py-4 space-y-3">
+              {isTrial && (
+                <Link
+                  href="/pricing"
+                  className="block p-3 rounded-xl bg-gold-500/15 border border-gold-500/30"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  <div className="flex items-center gap-2 mb-1">
+                    <Clock className="w-3.5 h-3.5 text-gold-300" />
+                    <span className="text-[11px] font-semibold text-gold-100">Trial Active</span>
+                  </div>
+                  <div className="text-[10px] text-gray-300">
+                    {subscription?.days_remaining === 0
+                      ? 'Expired - Upgrade'
+                      : `${subscription?.days_remaining ?? 0} days left`}
+                  </div>
+                </Link>
+              )}
+              <div className="flex items-center gap-3 px-3 py-2">
+                <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-primary-600 to-primary-500 text-white flex items-center justify-center text-sm font-semibold">
+                  {(subscription?.builder_name || 'B').charAt(0).toUpperCase()}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="text-sm font-medium text-white truncate">
+                    {subscription?.builder_name || 'Builder'}
+                  </div>
+                  <div className="text-[10px] text-gray-400">My Account</div>
+                </div>
+              </div>
+            </div>
+          </aside>
+        </>
+      )}
+
+      {/* Set CSS variable for sidebar width */}
+      <style dangerouslySetInnerHTML={{
+        __html: `
+          :root {
+            --sidebar-width: ${sidebarWidth}px;
+          }
+          @media (min-width: 1024px) {
+            main.flex-1 {
+              margin-left: var(--sidebar-width);
+              transition: margin-left 250ms ease-in-out;
+            }
+          }
+        `
+      }} />
+    </>
+  )
+}

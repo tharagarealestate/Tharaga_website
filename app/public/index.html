@@ -196,15 +196,15 @@
     @media (max-width: 767px) {
       header.nav {
         position: sticky !important;
-        top: 0 !important;
+        top: clamp(8px, 2vw, 12px) !important;
         left: 0 !important;
         right: 0 !important;
         transform: none !important;
         will-change: auto !important;
         z-index: 9999 !important;
-        width: 100% !important;
-        max-width: 100% !important;
-        margin: 0 !important;
+        width: calc(100% - clamp(16px, 4vw, 24px)) !important;
+        max-width: calc(100% - clamp(16px, 4vw, 24px)) !important;
+        margin: 0 auto !important;
         padding: 0 !important;
         /* Lock header position - never allow movement */
         box-sizing: border-box !important;
@@ -714,6 +714,8 @@
         z-index: 10001;
         color: #ffffff !important;
         transition: all 0.15s ease;
+        font-weight: 600;
+        font-size: clamp(16px, 4.5vw, 18px);
       }
 
       header.nav .mobile-user-icon:hover {
@@ -728,6 +730,24 @@
       header.nav .mobile-user-icon svg {
         width: 24px;
         height: 24px;
+        display: block;
+      }
+
+      /* Hide SVG when showing user initial */
+      header.nav .mobile-user-icon.has-initial svg {
+        display: none !important;
+      }
+
+      /* User initial display */
+      header.nav .mobile-user-icon .user-initial {
+        display: none;
+        font-weight: 600;
+        font-size: clamp(16px, 4.5vw, 18px);
+        line-height: 1;
+      }
+
+      header.nav .mobile-user-icon.has-initial .user-initial {
+        display: block;
       }
 
       /* Mobile hamburger button - responsive sizing and positioning */
@@ -1958,13 +1978,18 @@
       <button
         class="mobile-user-icon"
         aria-label="Sign in or view account"
+        aria-expanded="false"
+        aria-controls="mobile-user-dropdown"
         style="display: none;"
       >
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path>
           <circle cx="12" cy="7" r="4"></circle>
         </svg>
+        <span class="user-initial"></span>
       </button>
+      <!-- Mobile user dropdown panel -->
+      <div class="mobile-user-dropdown" id="mobile-user-dropdown" aria-label="User account menu" aria-hidden="true"></div>
       <!-- Mobile menu toggle button (hidden on desktop) -->
       <button
         class="mobile-menu-toggle"

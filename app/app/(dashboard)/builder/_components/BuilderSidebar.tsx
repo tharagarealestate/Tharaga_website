@@ -58,7 +58,7 @@ interface NavGroup {
   items: NavItem[]
 }
 
-export function NetlifySidebar() {
+export function BuilderSidebar() {
   const pathname = usePathname()
   const [subscription, setSubscription] = useState<SubscriptionData | null>(null)
   const [leadCount, setLeadCount] = useState<LeadCountData | null>(null)

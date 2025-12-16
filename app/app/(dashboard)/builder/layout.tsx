@@ -1,7 +1,7 @@
 "use client"
 import type { ReactNode } from 'react'
 import { ReactQueryProvider } from '@/components/providers/ReactQueryProvider'
-import { NetlifySidebar } from './_components/NetlifySidebar'
+import { BuilderSidebar } from './_components/BuilderSidebar'
 import { TrialUpgradeBanner } from './_components/TrialUpgradeBanner'
 import { AIAssistant } from './_components/AIAssistant'
 import { KeyboardShortcutsHelp } from './_components/KeyboardShortcutsHelp'
@@ -23,8 +23,8 @@ export default function BuilderDashboardLayout({ children }: { children: ReactNo
         {/* Trial upgrade banner */}
         <TrialUpgradeBanner />
 
-        {/* Netlify-style Sidebar */}
-        <NetlifySidebar />
+        {/* Sidebar */}
+        <BuilderSidebar />
 
         {/* Main Content Area - Adjusted for sidebar via CSS variable */}
         <main className="flex-1 relative z-10">

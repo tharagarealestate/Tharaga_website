@@ -3301,7 +3301,8 @@
 
         // Update mobile user icon to match desktop button
         function updateMobileUserIcon() {
-          if (!userIconBtn) return;
+          // Only update on mobile - never on desktop
+          if (!userIconBtn || window.innerWidth > 767) return;
           
           const authState = window.__thgAuthState;
           const user = authState && authState.user;
@@ -3325,7 +3326,8 @@
 
         // Build mobile dropdown menu using role manager (matches desktop)
         function buildMobileUserDropdown() {
-          if (!userDropdown) return;
+          // Only build on mobile - never on desktop
+          if (!userDropdown || window.innerWidth > 767) return;
           
           const authState = window.__thgAuthState;
           const user = authState && authState.user;
@@ -3557,6 +3559,9 @@
 
         // Update icon and dropdown when auth state changes
         function watchMobileAuthState() {
+          // Only watch on mobile - desktop has its own system
+          if (window.innerWidth > 767) return;
+          
           updateMobileUserIcon();
           buildMobileUserDropdown();
           

@@ -1,7 +1,7 @@
 "use client"
 
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import { useEffect, useMemo, useState, useRef, useCallback } from 'react'
 import { cn } from '@/lib/utils'
 import {
@@ -60,6 +60,30 @@ interface NavGroup {
 
 export function BuilderSidebar() {
   const pathname = usePathname()
+  const router = useRouter()
+  
+  // Map routes to unified dashboard sections
+  const routeToSectionMap: Record<string, string> = {
+    '/builder': 'overview',
+    '/builder/leads': 'leads',
+    '/builder/leads/pipeline': 'pipeline',
+    '/builder/properties': 'properties',
+    '/builder/messaging': 'client-outreach',
+    '/behavior-tracking': 'behavior-analytics',
+    '/builder/settings': 'settings',
+  }
+  
+  // Check if a route should use unified dashboard
+  const shouldUseUnifiedDashboard = (href: string): boolean => {
+    return href in routeToSectionMap || href.startsWith('/builder?section=')
+  }
+  
+  // Get unified dashboard URL for a route
+  const getUnifiedDashboardUrl = (href: string): string => {
+    if (href.startsWith('/builder?section=')) return href
+    const section = routeToSectionMap[href]
+    return section ? `/builder?section=${section}` : href
+  }
   const [subscription, setSubscription] = useState<SubscriptionData | null>(null)
   const [leadCount, setLeadCount] = useState<LeadCountData | null>(null)
   const [isLoadingCount, setIsLoadingCount] = useState(true)
@@ -475,7 +499,15 @@ export function BuilderSidebar() {
                 // Check if active - handle both route-based and section-based navigation
                 const isRouteActive = pathname === item.href || pathname.startsWith(item.href + '/')
                 let isSectionActive = false
-                if (item.href.includes('?section=')) {
+                
+                // Check if this item uses unified dashboard and is active via section param
+                if (shouldUseUnifiedDashboard(item.href)) {
+                  const section = routeToSectionMap[item.href]
+                  if (section && pathname === '/builder' && typeof window !== 'undefined') {
+                    const currentSection = new URLSearchParams(window.location.search).get('section')
+                    isSectionActive = currentSection === section
+                  }
+                } else if (item.href.includes('?section=')) {
                   const sectionParam = item.href.split('?section=')[1]?.split('&')[0]
                   if (typeof window !== 'undefined') {
                     const currentSection = new URLSearchParams(window.location.search).get('section')
@@ -498,7 +530,16 @@ export function BuilderSidebar() {
                           window.location.href = '/pricing'
                           return
                         }
-                        // Don't prevent navigation - allow links to work normally
+                        
+                        // If this route should use unified dashboard, intercept and redirect
+                        if (shouldUseUnifiedDashboard(item.href)) {
+                          e.preventDefault()
+                          const unifiedUrl = getUnifiedDashboardUrl(item.href)
+                          router.push(unifiedUrl)
+                          return
+                        }
+                        
+                        // For other routes, allow normal navigation
                         // Submenu toggle is handled by the chevron button
                       }}
                       className={cn(
@@ -592,11 +633,22 @@ export function BuilderSidebar() {
                       {hasSubmenu && (
                         <div className="ml-4 mt-1 space-y-0.5 border-l border-white/10 pl-4">
                           {item.submenu?.map((sub) => {
-                            const isSubActive = pathname === sub.href
+                            const isSubActive = pathname === sub.href || 
+                              (shouldUseUnifiedDashboard(sub.href) && 
+                               pathname === '/builder' && 
+                               new URLSearchParams(window.location.search).get('section') === routeToSectionMap[sub.href])
                             return (
                               <Link
                                 key={sub.href}
                                 href={sub.href}
+                                onClick={(e) => {
+                                  // If this submenu item should use unified dashboard, intercept
+                                  if (shouldUseUnifiedDashboard(sub.href)) {
+                                    e.preventDefault()
+                                    const unifiedUrl = getUnifiedDashboardUrl(sub.href)
+                                    router.push(unifiedUrl)
+                                  }
+                                }}
                                 className={cn(
                                   "block px-3 py-1.5 text-xs rounded-lg transition-colors duration-150",
                                   isSubActive
@@ -762,7 +814,15 @@ export function BuilderSidebar() {
                     // Check if active - handle both route-based and section-based navigation
                     const isRouteActive = pathname === item.href || pathname.startsWith(item.href + '/')
                     let isSectionActive = false
-                    if (item.href.includes('?section=')) {
+                    
+                    // Check if this item uses unified dashboard and is active via section param
+                    if (shouldUseUnifiedDashboard(item.href)) {
+                      const section = routeToSectionMap[item.href]
+                      if (section && pathname === '/builder' && typeof window !== 'undefined') {
+                        const currentSection = new URLSearchParams(window.location.search).get('section')
+                        isSectionActive = currentSection === section
+                      }
+                    } else if (item.href.includes('?section=')) {
                       const sectionParam = item.href.split('?section=')[1]?.split('&')[0]
                       if (typeof window !== 'undefined') {
                         const currentSection = new URLSearchParams(window.location.search).get('section')
@@ -781,6 +841,7 @@ export function BuilderSidebar() {
                           onClick={(e) => {
                             if (isLocked) {
                               e.preventDefault()
+                              window.location.href = '/pricing'
                               return
                             }
                             // If clicking chevron button, only toggle submenu
@@ -788,6 +849,16 @@ export function BuilderSidebar() {
                               e.preventDefault()
                               return
                             }
+                            
+                            // If this route should use unified dashboard, intercept and redirect
+                            if (shouldUseUnifiedDashboard(item.href)) {
+                              e.preventDefault()
+                              const unifiedUrl = getUnifiedDashboardUrl(item.href)
+                              router.push(unifiedUrl)
+                              setMobileMenuOpen(false)
+                              return
+                            }
+                            
                             // Otherwise, navigate and close menu
                             setMobileMenuOpen(false)
                           }}

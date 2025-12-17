@@ -297,24 +297,25 @@ export function BuilderSidebar() {
     return [
     {
       items: [
-        { href: '/builder', label: 'Overview', icon: LayoutDashboard, badge: null, requiresPro: false },
+        // Overview uses unified dashboard section
+        { href: createSectionUrl('overview'), label: 'Overview', icon: LayoutDashboard, badge: null, requiresPro: false },
       ]
     },
     {
       label: 'Sales & Leads',
       items: [
         { 
-          href: '/builder/leads', 
+          // Use unified single-page dashboard sections for leads
+          href: createSectionUrl('leads'), 
           label: 'Leads', 
           icon: Users, 
           badge: isLoadingCount ? null : (leadCount?.total ?? 0), 
           requiresPro: false,
           submenu: [
-            { href: '/builder/leads', label: 'All Leads' },
-            { href: '/builder/leads/pipeline', label: 'Pipeline' },
+            { href: createSectionUrl('leads'), label: 'All Leads' },
+            { href: createSectionUrl('pipeline'), label: 'Pipeline' },
           ]
         },
-        { href: '/builder/leads/pipeline', label: 'Pipeline', icon: BarChart3, requiresPro: false },
         { href: createSectionUrl('viewings'), label: 'Viewings', icon: Calendar, requiresPro: false },
         { href: createSectionUrl('negotiations'), label: 'Negotiations', icon: Handshake, requiresPro: false },
         { href: createSectionUrl('contracts'), label: 'Contracts', icon: FileText, requiresPro: false },
@@ -324,12 +325,13 @@ export function BuilderSidebar() {
       label: 'Properties',
       items: [
         { 
-          href: '/builder/properties', 
+          // Use unified section for properties
+          href: createSectionUrl('properties'), 
           label: 'Properties', 
           icon: Building2, 
           requiresPro: false,
           submenu: [
-            { href: '/builder/properties', label: 'Manage' },
+            { href: createSectionUrl('properties'), label: 'Manage' },
             { href: '/builder/properties/performance', label: 'Performance' },
           ]
         },
@@ -339,12 +341,13 @@ export function BuilderSidebar() {
       label: 'Communication',
       items: [
         { 
-          href: '/builder/messaging', 
+          // Unified section for client outreach
+          href: createSectionUrl('client-outreach'), 
           label: 'Client Outreach', 
           icon: MessageSquare, 
           requiresPro: false,
           submenu: [
-            { href: '/builder/messaging', label: 'Send Messages' },
+            { href: createSectionUrl('client-outreach'), label: 'Send Messages' },
             { href: '/builder/communications', label: 'Communications' },
           ]
         },
@@ -353,7 +356,8 @@ export function BuilderSidebar() {
     {
       label: 'Analytics & Insights',
       items: [
-        { href: '/behavior-tracking', label: 'Behavior Analytics', icon: BarChart3, requiresPro: false },
+        // Behavior analytics is part of unified dashboard
+        { href: createSectionUrl('behavior-analytics'), label: 'Behavior Analytics', icon: BarChart3, requiresPro: false },
         { href: '/builder/analytics', label: 'Analytics', icon: TrendingUp, requiresPro: false },
         { href: createSectionUrl('deal-lifecycle'), label: 'Deal Lifecycle', icon: Activity, requiresPro: false },
         { href: createSectionUrl('ultra-automation-analytics'), label: 'Automation Analytics', icon: Sparkles, requiresPro: false },
@@ -377,7 +381,9 @@ export function BuilderSidebar() {
     },
     {
       items: [
-        { href: '/builder/settings', label: 'Settings', icon: Settings, requiresPro: false },
+        // Settings section inside unified dashboard (quick access),
+        // detailed settings live in /builder/settings and subroutes
+        { href: createSectionUrl('settings'), label: 'Settings', icon: Settings, requiresPro: false },
       ]
     },
     ]

@@ -19,6 +19,7 @@ import {
 import { GlassCard } from '@/components/ui/glass-card';
 import { PremiumButton } from '@/components/ui/premium-button';
 import { cn } from '@/lib/utils';
+import { BuilderPageWrapper } from '../_components/BuilderPageWrapper';
 
 interface SubscriptionPlan {
   id: string;
@@ -126,22 +127,24 @@ export default function SubscriptionPage() {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-primary-950 via-primary-900 to-primary-800">
-        <div className="animate-spin h-8 w-8 border-2 border-[#D4AF37] border-t-transparent rounded-full" />
-      </div>
+      <BuilderPageWrapper
+        title="Subscription & Billing"
+        description="Choose the perfect plan for your business needs."
+      >
+        <div className="flex min-h-[300px] items-center justify-center">
+          <div className="animate-spin h-8 w-8 border-2 border-gold-500 border-t-transparent rounded-full" />
+        </div>
+      </BuilderPageWrapper>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-950 via-primary-900 to-primary-800 text-white">
-      <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
-        {/* Header */}
-        <div className="mb-12 text-center">
-          <h1 className="text-4xl font-bold text-white mb-4">Subscription & Billing</h1>
-          <p className="text-lg text-white/70">
-            Choose the perfect plan for your business needs
-          </p>
-        </div>
+    <BuilderPageWrapper
+      title="Subscription & Billing"
+      description="Manage your builder plan, usage limits, and billing details in one place."
+      noContainer
+    >
+      <div className="mx-auto max-w-7xl px-4 py-4 sm:px-0 text-white">
 
         {/* Current Subscription Status */}
         {subscription && subscription.plan && (
@@ -324,7 +327,7 @@ export default function SubscriptionPage() {
           </div>
         </GlassCard>
       </div>
-    </div>
+    </BuilderPageWrapper>
   );
 }
 

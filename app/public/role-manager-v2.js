@@ -523,6 +523,12 @@
     const userEmail = user.email || '';
     const isAdminOwner = userEmail === 'tharagarealestate@gmail.com';
 
+    // Check if this is desktop header menu (not mobile)
+    // Desktop menu is .thg-auth-menu inside header.nav
+    // Mobile has separate .mobile-user-dropdown
+    const isDesktopHeader = menu.closest && menu.closest('header.nav') && !menu.classList.contains('mobile-user-dropdown');
+    const isMobile = window.innerWidth <= 767;
+
     let menuHTML = `
       <div class="thg-auth-item is-header" aria-disabled="true">
         <span class="thg-initial-lg">${getInitials(user)}</span>
@@ -534,8 +540,9 @@
       <div class="thg-auth-sep"></div>
     `;
 
-    // Role switcher section - show for admin owner OR users with roles
-    if (roleState.roles.length > 0 || isAdminOwner) {
+    // Role switcher section - ONLY show on mobile, NOT in desktop header dropdown
+    // Desktop header dropdown should not show "YOUR ROLES" section to avoid clutter
+    if (!isDesktopHeader && (roleState.roles.length > 0 || isAdminOwner)) {
       menuHTML += '<div class="thg-role-section">';
       menuHTML += '<div class="thg-role-label">YOUR ROLES</div>';
 

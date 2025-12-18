@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { useEffect, useMemo, useState, useRef, useCallback } from 'react'
 import { cn } from '@/lib/utils'
+import { useTrialStatus } from './TrialStatusManager'
 import {
   LayoutDashboard,
   Users,
@@ -93,7 +94,6 @@ export function BuilderSidebar() {
     const section = routeToSectionMap[href]
     return section ? `/builder?section=${section}` : href
   }
-  const [subscription, setSubscription] = useState<SubscriptionData | null>(null)
   const [leadCount, setLeadCount] = useState<LeadCountData | null>(null)
   const [isLoadingCount, setIsLoadingCount] = useState(true)
   const [badgeAnimation, setBadgeAnimation] = useState<'pulse' | 'bounce' | null>(null)
@@ -107,6 +107,9 @@ export function BuilderSidebar() {
   const pollIntervalRef = useRef<NodeJS.Timeout | null>(null)
   const sidebarRef = useRef<HTMLAsideElement>(null)
   const collapseTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+  
+  // Use trial status manager for real subscription data
+  const trialStatus = useTrialStatus()
 
   // Load sidebar state from localStorage
   useEffect(() => {
@@ -125,22 +128,7 @@ export function BuilderSidebar() {
     localStorage.setItem('sidebar-pinned', String(isPinned))
   }, [isExpanded, isPinned])
 
-  // Fetch subscription data
-  useEffect(() => {
-    let cancelled = false
-    async function load() {
-      try {
-        const res = await fetch('/api/builder/subscription', { next: { revalidate: 0 } as any })
-        if (!res.ok) throw new Error('Failed')
-        const data = (await res.json()) as SubscriptionData
-        if (!cancelled) setSubscription(data)
-      } catch (_) {
-        if (!cancelled) setSubscription({ tier: 'trial', trial_leads_used: 0, days_remaining: 14 })
-      }
-    }
-    load()
-    return () => { cancelled = true }
-  }, [])
+  // Subscription data is now managed by TrialStatusManager
 
   // Fetch lead count with real-time updates
   useEffect(() => {
@@ -398,7 +386,7 @@ export function BuilderSidebar() {
     ]
   }, [leadCount, isLoadingCount])
 
-  const isTrial = subscription?.tier === 'trial' || subscription?.tier === 'trial_expired' || subscription?.is_trial_expired
+  const isTrial = trialStatus.isTrial
 
   // Filter items based on search
   const filteredGroups = useMemo(() => {
@@ -734,12 +722,12 @@ export function BuilderSidebar() {
             !isExpanded && "justify-center"
           )}>
             <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-primary-600 to-primary-500 text-white flex items-center justify-center text-sm font-semibold shadow-lg shrink-0">
-              {(subscription?.builder_name || 'B').charAt(0).toUpperCase()}
+              {(trialStatus.subscription?.builder_name || 'B').charAt(0).toUpperCase()}
             </div>
             {isExpanded && (
               <div className="flex-1 min-w-0">
                 <div className="text-sm font-medium text-white truncate">
-                  {subscription?.builder_name || 'Builder'}
+                  {trialStatus.subscription?.builder_name || 'Builder'}
                 </div>
                 <div className="text-[10px] text-gray-400 truncate">My Account</div>
               </div>
@@ -982,19 +970,19 @@ export function BuilderSidebar() {
                     <span className="text-[11px] font-semibold text-gold-100">Trial Active</span>
                   </div>
                   <div className="text-[10px] text-gray-300">
-                    {subscription?.days_remaining === 0
+                    {trialStatus.isExpired
                       ? 'Expired - Upgrade'
-                      : `${subscription?.days_remaining ?? 0} days left`}
+                      : trialStatus.formattedDaysLeft}
                   </div>
                 </Link>
               )}
               <div className="flex items-center gap-3 px-3 py-2">
                 <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-primary-600 to-primary-500 text-white flex items-center justify-center text-sm font-semibold">
-                  {(subscription?.builder_name || 'B').charAt(0).toUpperCase()}
+                  {(trialStatus.subscription?.builder_name || 'B').charAt(0).toUpperCase()}
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="text-sm font-medium text-white truncate">
-                    {subscription?.builder_name || 'Builder'}
+                    {trialStatus.subscription?.builder_name || 'Builder'}
                   </div>
                   <div className="text-[10px] text-gray-400">My Account</div>
                 </div>

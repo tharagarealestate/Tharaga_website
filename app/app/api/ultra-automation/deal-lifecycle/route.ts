@@ -5,6 +5,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { classifySupabaseError, type ClassifiedError } from '@/lib/error-handler';
 
 export const dynamic = 'force-dynamic';
 
@@ -14,7 +15,12 @@ export async function GET(request: NextRequest) {
     const { data: { user }, error: authError } = await supabase.auth.getUser();
 
     if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return NextResponse.json({ 
+        success: false,
+        error: 'Unauthorized',
+        errorType: 'AUTH_ERROR',
+        message: 'Please log in to continue.'
+      }, { status: 401 });
     }
 
     const searchParams = request.nextUrl.searchParams;
@@ -40,26 +46,41 @@ export async function GET(request: NextRequest) {
 
     const { data: lifecycles, error } = await query;
 
+    // Classify error if present
     if (error) {
       console.error('[Ultra Automation] Deal Lifecycle API Error:', error);
-      return NextResponse.json(
-        { error: 'Failed to fetch deal lifecycles' },
-        { status: 500 }
-      );
+      const classifiedError = classifySupabaseError(error, lifecycles);
+      
+      return NextResponse.json({
+        success: false,
+        error: classifiedError.message,
+        errorType: classifiedError.type,
+        message: classifiedError.userMessage,
+        retryable: classifiedError.retryable,
+        technicalDetails: classifiedError.technicalDetails,
+      }, { status: classifiedError.statusCode || 500 });
     }
+
+    // Check if data is empty (not an error, just no data)
+    const hasData = lifecycles && lifecycles.length > 0;
 
     // Fetch payment milestones
     const lifecycleIds = (lifecycles || []).map((l: any) => l.id);
     let milestones: any[] = [];
     
     if (lifecycleIds.length > 0) {
-      const { data: milestonesData } = await supabase
+      const { data: milestonesData, error: milestonesError } = await supabase
         .from('payment_milestones')
         .select('*')
         .in('lifecycle_id', lifecycleIds)
         .order('due_date', { ascending: true });
       
-      milestones = milestonesData || [];
+      if (milestonesError) {
+        console.warn('[Ultra Automation] Milestones fetch warning:', milestonesError);
+        // Don't fail the whole request if milestones fail
+      } else {
+        milestones = milestonesData || [];
+      }
     }
 
     return NextResponse.json({
@@ -68,14 +89,21 @@ export async function GET(request: NextRequest) {
         lifecycles: lifecycles || [],
         milestones,
       },
+      isEmpty: !hasData,
     });
 
-  } catch (error) {
+  } catch (error: any) {
     console.error('[Ultra Automation] Deal Lifecycle API Error:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    const classifiedError = classifySupabaseError(error);
+    
+    return NextResponse.json({
+      success: false,
+      error: classifiedError.message,
+      errorType: classifiedError.type,
+      message: classifiedError.userMessage,
+      retryable: classifiedError.retryable,
+      technicalDetails: classifiedError.technicalDetails,
+    }, { status: classifiedError.statusCode || 500 });
   }
 }
 

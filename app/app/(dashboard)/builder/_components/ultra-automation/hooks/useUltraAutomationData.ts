@@ -5,8 +5,17 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useCallback } from 'react';
+import { classifyHttpError, type ErrorType } from '@/lib/error-handler';
 
 const API_BASE = '/api/ultra-automation';
+
+export interface ApiError {
+  type: ErrorType;
+  message: string;
+  userMessage: string;
+  retryable: boolean;
+  technicalDetails?: string;
+}
 
 interface UseBuyerJourneyOptions {
   journeyId?: string;
@@ -54,29 +63,42 @@ export function useViewings(filters?: { status?: string; builder_id?: string }) 
   return useQuery({
     queryKey,
     queryFn: async () => {
-      try {
-        const params = new URLSearchParams();
-        if (filters?.status) params.set('status', filters.status);
-        if (filters?.builder_id) params.set('builder_id', filters.builder_id);
+      const params = new URLSearchParams();
+      if (filters?.status) params.set('status', filters.status);
+      if (filters?.builder_id) params.set('builder_id', filters.builder_id);
+      
+      const url = `${API_BASE}/viewings${params.toString() ? `?${params.toString()}` : ''}`;
+      const res = await fetch(url);
+      const data = await res.json();
+      
+      if (!res.ok || !data.success) {
+        const errorInfo = data.errorType 
+          ? { type: data.errorType, message: data.message || data.error, retryable: data.retryable !== false }
+          : classifyHttpError(res.status, data);
         
-        const url = `${API_BASE}/viewings${params.toString() ? `?${params.toString()}` : ''}`;
-        const res = await fetch(url);
+        const error: ApiError = {
+          type: errorInfo.type,
+          message: errorInfo.message,
+          userMessage: data.message || errorInfo.userMessage,
+          retryable: errorInfo.retryable,
+          technicalDetails: data.technicalDetails,
+        };
         
-        if (!res.ok) {
-          const errorData = await res.json().catch(() => ({}));
-          throw new Error(errorData.error || 'Failed to fetch viewings');
-        }
-        
-        const data = await res.json();
-        return data.data || { viewings: [], reminders: [] };
-      } catch (error) {
-        console.error('[useViewings] Error:', error);
-        return { viewings: [], reminders: [] };
+        throw error;
       }
+      
+      if (data.isEmpty || !data.data?.viewings?.length) {
+        return { viewings: [], reminders: [], isEmpty: true };
+      }
+      
+      return data.data || { viewings: [], reminders: [] };
     },
-    refetchInterval: 60000, // Refetch every minute
+    refetchInterval: 60000,
     staleTime: 30000,
-    retry: 2,
+    retry: (failureCount, error: any) => {
+      if (error?.retryable === false) return false;
+      return failureCount < 2;
+    },
     retryDelay: 1000,
   });
 }
@@ -126,29 +148,42 @@ export function useContracts(filters?: { status?: string; builder_id?: string })
   return useQuery({
     queryKey,
     queryFn: async () => {
-      try {
-        const params = new URLSearchParams();
-        if (filters?.status) params.set('status', filters.status);
-        if (filters?.builder_id) params.set('builder_id', filters.builder_id);
+      const params = new URLSearchParams();
+      if (filters?.status) params.set('status', filters.status);
+      if (filters?.builder_id) params.set('builder_id', filters.builder_id);
+      
+      const url = `${API_BASE}/contracts${params.toString() ? `?${params.toString()}` : ''}`;
+      const res = await fetch(url);
+      const data = await res.json();
+      
+      if (!res.ok || !data.success) {
+        const errorInfo = data.errorType 
+          ? { type: data.errorType, message: data.message || data.error, retryable: data.retryable !== false }
+          : classifyHttpError(res.status, data);
         
-        const url = `${API_BASE}/contracts${params.toString() ? `?${params.toString()}` : ''}`;
-        const res = await fetch(url);
+        const error: ApiError = {
+          type: errorInfo.type,
+          message: errorInfo.message,
+          userMessage: data.message || errorInfo.userMessage,
+          retryable: errorInfo.retryable,
+          technicalDetails: data.technicalDetails,
+        };
         
-        if (!res.ok) {
-          const errorData = await res.json().catch(() => ({}));
-          throw new Error(errorData.error || 'Failed to fetch contracts');
-        }
-        
-        const data = await res.json();
-        return data.data || [];
-      } catch (error) {
-        console.error('[useContracts] Error:', error);
-        return [];
+        throw error;
       }
+      
+      if (data.isEmpty || !Array.isArray(data.data) || data.data.length === 0) {
+        return { isEmpty: true, data: [] };
+      }
+      
+      return data.data || [];
     },
     refetchInterval: 60000,
     staleTime: 30000,
-    retry: 2,
+    retry: (failureCount, error: any) => {
+      if (error?.retryable === false) return false;
+      return failureCount < 2;
+    },
     retryDelay: 1000,
   });
 }
@@ -162,31 +197,45 @@ export function useDealLifecycles(filters?: { stage?: string; builder_id?: strin
   return useQuery({
     queryKey,
     queryFn: async () => {
-      try {
-        const params = new URLSearchParams();
-        if (filters?.stage) params.set('stage', filters.stage);
-        if (filters?.builder_id) params.set('builder_id', filters.builder_id);
+      const params = new URLSearchParams();
+      if (filters?.stage) params.set('stage', filters.stage);
+      if (filters?.builder_id) params.set('builder_id', filters.builder_id);
+      
+      const url = `${API_BASE}/deal-lifecycle${params.toString() ? `?${params.toString()}` : ''}`;
+      const res = await fetch(url);
+      const data = await res.json();
+      
+      if (!res.ok || !data.success) {
+        // Classify error from API response
+        const errorInfo = data.errorType 
+          ? { type: data.errorType, message: data.message || data.error, retryable: data.retryable !== false }
+          : classifyHttpError(res.status, data);
         
-        const url = `${API_BASE}/deal-lifecycle${params.toString() ? `?${params.toString()}` : ''}`;
-        const res = await fetch(url);
+        const error: ApiError = {
+          type: errorInfo.type,
+          message: errorInfo.message,
+          userMessage: data.message || errorInfo.userMessage,
+          retryable: errorInfo.retryable,
+          technicalDetails: data.technicalDetails,
+        };
         
-        if (!res.ok) {
-          const errorData = await res.json().catch(() => ({}));
-          throw new Error(errorData.error || 'Failed to fetch deal lifecycles');
-        }
-        
-        const data = await res.json();
-        // Handle both response formats
-        return data.data || { lifecycles: [], milestones: [] };
-      } catch (error) {
-        console.error('[useDealLifecycles] Error:', error);
-        // Return empty data structure instead of throwing
-        return { lifecycles: [], milestones: [] };
+        throw error;
       }
+      
+      // Check if empty data (not an error)
+      if (data.isEmpty || !data.data?.lifecycles?.length) {
+        return { lifecycles: [], milestones: [], isEmpty: true };
+      }
+      
+      return data.data || { lifecycles: [], milestones: [] };
     },
     refetchInterval: 60000,
     staleTime: 30000,
-    retry: 2,
+    retry: (failureCount, error: any) => {
+      // Only retry if error is retryable
+      if (error?.retryable === false) return false;
+      return failureCount < 2;
+    },
     retryDelay: 1000,
   });
 }

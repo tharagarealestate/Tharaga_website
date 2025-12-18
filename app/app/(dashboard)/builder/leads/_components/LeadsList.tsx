@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import type { ReactNode } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, Filter, Download, Mail, Phone, TrendingUp, Clock, Star, AlertCircle } from 'lucide-react';
+import { Search, Filter, Download, Mail, Phone, TrendingUp, Clock, Star, AlertCircle, Users } from 'lucide-react';
 
 import { getSupabase } from '@/lib/supabase';
 import { useBehaviorTracking } from '@/hooks/useBehaviorTracking';
@@ -188,6 +188,29 @@ export function LeadsList({ onSelectLead, initialFilters, showInlineFilters = tr
 
       const payload = await response.json();
       
+      // Check for API errors
+      if (!response.ok || !payload.success) {
+        const errorMessage = payload.message || payload.error || 'Failed to fetch leads';
+        const errorType = payload.errorType || 'UNKNOWN_ERROR';
+        
+        // Distinguish between no data and actual errors
+        if (errorType === 'NO_DATA' || payload.isEmpty) {
+          setLeads([]);
+          setStats({
+            total_leads: 0,
+            hot_leads: 0,
+            warm_leads: 0,
+            pending_interactions: 0,
+            average_score: 0,
+          });
+          setTotalPages(1);
+          setError(null); // No error, just empty
+          return;
+        }
+        
+        throw new Error(errorMessage);
+      }
+      
       // Handle both old and new API response formats
       const leadsData: Lead[] = Array.isArray(payload?.data?.leads) 
         ? payload.data.leads 
@@ -199,6 +222,21 @@ export function LeadsList({ onSelectLead, initialFilters, showInlineFilters = tr
       
       const pagination = payload?.data?.pagination || payload?.pagination || {};
       const statsData = payload?.data?.stats || payload?.stats || {};
+      
+      // Check if empty (not an error)
+      if (payload.isEmpty || leadsData.length === 0) {
+        setLeads([]);
+        setStats({
+          total_leads: 0,
+          hot_leads: 0,
+          warm_leads: 0,
+          pending_interactions: 0,
+          average_score: 0,
+        });
+        setTotalPages(1);
+        setError(null); // No error, just empty
+        return;
+      }
 
       setLeads(leadsData);
       setStats({
@@ -356,25 +394,34 @@ export function LeadsList({ onSelectLead, initialFilters, showInlineFilters = tr
     [onSelectLead, trackBehavior]
   );
 
+  // Show empty state if no error and no leads
+  if (!loading && !error && leads.length === 0 && stats.total_leads === 0) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="bg-blue-500/10 border border-blue-500/50 rounded-2xl p-8 text-center max-w-md backdrop-blur-xl">
+          <Users className="w-12 h-12 text-blue-400 mx-auto mb-4" />
+          <h3 className="text-xl font-semibold text-blue-100 mb-2">No Leads Yet</h3>
+          <p className="text-blue-200/70">
+            Leads will appear here once they are generated. Start by adding properties or connecting lead sources.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   if (error) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="bg-red-500/10 border border-red-500/50 rounded-2xl p-8 text-center max-w-md backdrop-blur-xl">
           <AlertCircle className="w-12 h-12 text-red-400 mx-auto mb-4" />
           <h3 className="text-xl font-semibold text-red-100 mb-2">Error Loading Leads</h3>
+          <p className="text-red-200/70 mb-4">{error}</p>
           <button
             onClick={() => {
               setError(null);
               fetchLeads();
             }}
-            className="mt-4 px-4 py-2 bg-gold-500/20 border border-gold-500/40 text-gold-400 rounded-lg hover:bg-gold-500/30 transition-colors"
-          >
-            Try Again
-          </button>
-          <p className="text-red-200/70 mb-4">{error}</p>
-          <button
-            onClick={() => fetchLeads()}
-            className="px-6 py-2 bg-red-500/20 hover:bg-red-500/30 border border-red-500/50 rounded-xl text-red-100 transition-all"
+            className="px-6 py-2 bg-gold-500/20 hover:bg-gold-500/30 border border-gold-500/50 rounded-xl text-gold-100 transition-all"
           >
             Try Again
           </button>

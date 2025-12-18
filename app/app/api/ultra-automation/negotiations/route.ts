@@ -5,6 +5,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { classifySupabaseError } from '@/lib/error-handler';
 
 export const dynamic = 'force-dynamic';
 
@@ -14,7 +15,12 @@ export async function GET(request: NextRequest) {
     const { data: { user }, error: authError } = await supabase.auth.getUser();
 
     if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return NextResponse.json({ 
+        success: false,
+        error: 'Unauthorized',
+        errorType: 'AUTH_ERROR',
+        message: 'Please log in to continue.'
+      }, { status: 401 });
     }
 
     const searchParams = request.nextUrl.searchParams;
@@ -42,24 +48,36 @@ export async function GET(request: NextRequest) {
 
     if (error) {
       console.error('[Ultra Automation] Negotiations API Error:', error);
-      return NextResponse.json(
-        { error: 'Failed to fetch negotiations' },
-        { status: 500 }
-      );
+      const classifiedError = classifySupabaseError(error, negotiations);
+      
+      return NextResponse.json({
+        success: false,
+        error: classifiedError.message,
+        errorType: classifiedError.type,
+        message: classifiedError.userMessage,
+        retryable: classifiedError.retryable,
+        technicalDetails: classifiedError.technicalDetails,
+      }, { status: classifiedError.statusCode || 500 });
     }
+
+    const hasData = negotiations && negotiations.length > 0;
 
     // Fetch price strategy insights
     const negotiationIds = (negotiations || []).map((n: any) => n.id);
     let insights: any[] = [];
     
     if (negotiationIds.length > 0) {
-      const { data: insightsData } = await supabase
+      const { data: insightsData, error: insightsError } = await supabase
         .from('price_strategy_insights')
         .select('*')
         .in('negotiation_id', negotiationIds)
         .order('created_at', { ascending: false });
       
-      insights = insightsData || [];
+      if (insightsError) {
+        console.warn('[Ultra Automation] Insights fetch warning:', insightsError);
+      } else {
+        insights = insightsData || [];
+      }
     }
 
     return NextResponse.json({
@@ -68,14 +86,21 @@ export async function GET(request: NextRequest) {
         negotiations: negotiations || [],
         insights,
       },
+      isEmpty: !hasData,
     });
 
-  } catch (error) {
+  } catch (error: any) {
     console.error('[Ultra Automation] Negotiations API Error:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    const classifiedError = classifySupabaseError(error);
+    
+    return NextResponse.json({
+      success: false,
+      error: classifiedError.message,
+      errorType: classifiedError.type,
+      message: classifiedError.userMessage,
+      retryable: classifiedError.retryable,
+      technicalDetails: classifiedError.technicalDetails,
+    }, { status: classifiedError.statusCode || 500 });
   }
 }
 

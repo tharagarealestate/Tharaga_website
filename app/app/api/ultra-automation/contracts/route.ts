@@ -5,6 +5,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { classifySupabaseError } from '@/lib/error-handler';
 
 export const dynamic = 'force-dynamic';
 
@@ -14,7 +15,12 @@ export async function GET(request: NextRequest) {
     const { data: { user }, error: authError } = await supabase.auth.getUser();
 
     if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return NextResponse.json({ 
+        success: false,
+        error: 'Unauthorized',
+        errorType: 'AUTH_ERROR',
+        message: 'Please log in to continue.'
+      }, { status: 401 });
     }
 
     const searchParams = request.nextUrl.searchParams;
@@ -42,23 +48,38 @@ export async function GET(request: NextRequest) {
 
     if (error) {
       console.error('[Ultra Automation] Contracts API Error:', error);
-      return NextResponse.json(
-        { error: 'Failed to fetch contracts' },
-        { status: 500 }
-      );
+      const classifiedError = classifySupabaseError(error, contracts);
+      
+      return NextResponse.json({
+        success: false,
+        error: classifiedError.message,
+        errorType: classifiedError.type,
+        message: classifiedError.userMessage,
+        retryable: classifiedError.retryable,
+        technicalDetails: classifiedError.technicalDetails,
+      }, { status: classifiedError.statusCode || 500 });
     }
+
+    const hasData = contracts && contracts.length > 0;
 
     return NextResponse.json({
       success: true,
       data: contracts || [],
+      isEmpty: !hasData,
     });
 
-  } catch (error) {
+  } catch (error: any) {
     console.error('[Ultra Automation] Contracts API Error:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    const classifiedError = classifySupabaseError(error);
+    
+    return NextResponse.json({
+      success: false,
+      error: classifiedError.message,
+      errorType: classifiedError.type,
+      message: classifiedError.userMessage,
+      retryable: classifiedError.retryable,
+      technicalDetails: classifiedError.technicalDetails,
+    }, { status: classifiedError.statusCode || 500 });
   }
 }
 

@@ -5,6 +5,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
 import { cookies } from 'next/headers';
+import { classifySupabaseError, classifyHttpError } from '@/lib/error-handler';
 
 // =============================================
 // TYPES
@@ -107,24 +108,39 @@ export async function GET(request: NextRequest) {
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     
     if (authError || !user) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
+      return NextResponse.json({
+        success: false,
+        error: 'Unauthorized',
+        errorType: 'AUTH_ERROR',
+        message: 'Please log in to continue.'
+      }, { status: 401 });
     }
     
     // Verify user is a builder
-    const { data: profile } = await supabase
+    const { data: profile, error: profileError } = await supabase
       .from('profiles')
       .select('role')
       .eq('id', user.id)
       .single();
     
+    if (profileError) {
+      const classifiedError = classifySupabaseError(profileError);
+      return NextResponse.json({
+        success: false,
+        error: classifiedError.message,
+        errorType: classifiedError.type,
+        message: classifiedError.userMessage,
+        retryable: classifiedError.retryable,
+      }, { status: classifiedError.statusCode || 500 });
+    }
+    
     if (profile?.role !== 'builder') {
-      return NextResponse.json(
-        { error: 'Forbidden - Builders only' },
-        { status: 403 }
-      );
+      return NextResponse.json({
+        success: false,
+        error: 'Forbidden',
+        errorType: 'AUTH_ERROR',
+        message: 'This feature is only available for builders.'
+      }, { status: 403 });
     }
     
     // =============================================
@@ -201,10 +217,16 @@ export async function GET(request: NextRequest) {
     
     if (leadsError) {
       console.error('[API/Leads] Query error:', leadsError);
-      return NextResponse.json(
-        { error: 'Failed to fetch leads' },
-        { status: 500 }
-      );
+      const classifiedError = classifySupabaseError(leadsError, leadsData);
+      
+      return NextResponse.json({
+        success: false,
+        error: classifiedError.message,
+        errorType: classifiedError.type,
+        message: classifiedError.userMessage,
+        retryable: classifiedError.retryable,
+        technicalDetails: classifiedError.technicalDetails,
+      }, { status: classifiedError.statusCode || 500 });
     }
     
     // =============================================
@@ -489,6 +511,8 @@ export async function GET(request: NextRequest) {
     // RETURN RESPONSE
     // =============================================
     
+    const hasData = paginatedLeads.length > 0;
+
     return NextResponse.json({
       success: true,
       data: {
@@ -504,13 +528,20 @@ export async function GET(request: NextRequest) {
         stats,
         filters_applied: query,
       },
+      isEmpty: !hasData,
     });
     
-  } catch (error) {
+  } catch (error: any) {
     console.error('[API/Leads] Server error:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    const classifiedError = classifySupabaseError(error);
+    
+    return NextResponse.json({
+      success: false,
+      error: classifiedError.message,
+      errorType: classifiedError.type,
+      message: classifiedError.userMessage,
+      retryable: classifiedError.retryable,
+      technicalDetails: classifiedError.technicalDetails,
+    }, { status: classifiedError.statusCode || 500 });
   }
 }

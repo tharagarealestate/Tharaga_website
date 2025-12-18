@@ -18,11 +18,14 @@ import {
   User,
   Building2,
   Filter,
+  FileQuestion,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useDealLifecycles } from '../hooks/useUltraAutomationData';
 import { detectStallingDeals, calculateConversionFunnel } from '../utils/dataProcessing';
 import { LoadingSpinner, GlassLoadingOverlay } from '@/components/ui/loading-spinner';
+import { ErrorDisplay } from '../../ErrorDisplay';
+import type { ApiError } from '../hooks/useUltraAutomationData';
 
 const glassPrimary = 'bg-white/[0.03] backdrop-blur-[20px] border border-white/[0.08] rounded-2xl shadow-[0_8px_32px_rgba(0,0,0,0.3)]';
 const glassSecondary = 'bg-white/[0.02] backdrop-blur-[12px] border border-white/[0.05] rounded-xl';
@@ -41,6 +44,7 @@ export function DealLifecycleTracker({ builderId }: DealLifecycleTrackerProps) {
 
   const lifecycles = data?.lifecycles || [];
   const milestones = data?.milestones || [];
+  const isEmpty = data?.isEmpty || false;
 
   // Analyze deals
   const stallingAnalysis = useMemo(() => {

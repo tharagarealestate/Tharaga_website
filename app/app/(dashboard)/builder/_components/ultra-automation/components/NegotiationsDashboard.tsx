@@ -24,6 +24,8 @@ import { cn } from '@/lib/utils';
 import { useNegotiations } from '../hooks/useUltraAutomationData';
 import { analyzeNegotiations, formatSmartDate } from '../utils/dataProcessing';
 import { LoadingSpinner, GlassLoadingOverlay } from '@/components/ui/loading-spinner';
+import { ErrorDisplay } from '../../ErrorDisplay';
+import type { ApiError } from '../hooks/useUltraAutomationData';
 
 const glassPrimary = 'bg-white/[0.03] backdrop-blur-[20px] border border-white/[0.08] rounded-2xl shadow-[0_8px_32px_rgba(0,0,0,0.3)]';
 const glassSecondary = 'bg-white/[0.02] backdrop-blur-[12px] border border-white/[0.05] rounded-xl';
@@ -42,6 +44,7 @@ export function NegotiationsDashboard({ builderId }: NegotiationsDashboardProps)
 
   const negotiations = data?.negotiations || [];
   const insights = data?.insights || [];
+  const isEmpty = data?.isEmpty || false;
 
   // Analyze negotiations
   const analysis = useMemo(() => {
@@ -62,18 +65,28 @@ export function NegotiationsDashboard({ builderId }: NegotiationsDashboardProps)
     );
   }
 
-  if (error) {
+  if (!isLoading && !error && isEmpty) {
     return (
       <div className={glassPrimary + ' p-6 text-center'}>
-        <AlertCircle className="w-12 h-12 text-red-400 mx-auto mb-3" />
-        <p className="text-gray-400 mb-4">Failed to load negotiations</p>
-        <button
-          onClick={() => window.location.reload()}
-          className="px-4 py-2 bg-gold-500/20 border border-gold-500/40 text-gold-400 rounded-lg hover:bg-gold-500/30 transition-colors"
-        >
-          Try Again
-        </button>
+        <Handshake className="w-12 h-12 text-blue-400 mx-auto mb-3" />
+        <h3 className="text-xl font-bold text-blue-400 mb-2">No Negotiations Yet</h3>
+        <p className="text-gray-400">
+          Negotiations will appear here once price discussions begin with leads.
+        </p>
       </div>
+    );
+  }
+
+  if (error) {
+    const apiError = error as ApiError;
+    return (
+      <ErrorDisplay
+        errorType={apiError.type || 'UNKNOWN_ERROR'}
+        message={apiError.userMessage || apiError.message}
+        technicalDetails={apiError.technicalDetails}
+        onRetry={() => window.location.reload()}
+        retryable={apiError.retryable !== false}
+      />
     );
   }
 

@@ -5,6 +5,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { classifySupabaseError } from '@/lib/error-handler';
 
 export const dynamic = 'force-dynamic';
 
@@ -14,7 +15,12 @@ export async function GET(request: NextRequest) {
     const { data: { user }, error: authError } = await supabase.auth.getUser();
 
     if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return NextResponse.json({ 
+        success: false,
+        error: 'Unauthorized',
+        errorType: 'AUTH_ERROR',
+        message: 'Please log in to continue.'
+      }, { status: 401 });
     }
 
     const searchParams = request.nextUrl.searchParams;
@@ -39,24 +45,36 @@ export async function GET(request: NextRequest) {
 
     if (error) {
       console.error('[Ultra Automation] Viewings API Error:', error);
-      return NextResponse.json(
-        { error: 'Failed to fetch viewings' },
-        { status: 500 }
-      );
+      const classifiedError = classifySupabaseError(error, viewings);
+      
+      return NextResponse.json({
+        success: false,
+        error: classifiedError.message,
+        errorType: classifiedError.type,
+        message: classifiedError.userMessage,
+        retryable: classifiedError.retryable,
+        technicalDetails: classifiedError.technicalDetails,
+      }, { status: classifiedError.statusCode || 500 });
     }
+
+    const hasData = viewings && viewings.length > 0;
 
     // Fetch reminders for each viewing
     const viewingIds = (viewings || []).map((v: any) => v.id);
     let reminders: any[] = [];
     
     if (viewingIds.length > 0) {
-      const { data: remindersData } = await supabase
+      const { data: remindersData, error: remindersError } = await supabase
         .from('viewing_reminders')
         .select('*')
         .in('viewing_id', viewingIds)
         .order('reminder_at', { ascending: true });
       
-      reminders = remindersData || [];
+      if (remindersError) {
+        console.warn('[Ultra Automation] Reminders fetch warning:', remindersError);
+      } else {
+        reminders = remindersData || [];
+      }
     }
 
     return NextResponse.json({
@@ -65,14 +83,21 @@ export async function GET(request: NextRequest) {
         viewings: viewings || [],
         reminders,
       },
+      isEmpty: !hasData,
     });
 
-  } catch (error) {
+  } catch (error: any) {
     console.error('[Ultra Automation] Viewings API Error:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    const classifiedError = classifySupabaseError(error);
+    
+    return NextResponse.json({
+      success: false,
+      error: classifiedError.message,
+      errorType: classifiedError.type,
+      message: classifiedError.userMessage,
+      retryable: classifiedError.retryable,
+      technicalDetails: classifiedError.technicalDetails,
+    }, { status: classifiedError.statusCode || 500 });
   }
 }
 

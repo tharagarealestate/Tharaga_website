@@ -62,7 +62,14 @@ export function UltraAutomationAnalyticsSection({ onNavigate }: UltraAutomationA
   const lifecycles = lifecycleData?.lifecycles || []
   const viewings = viewingsData?.viewings || []
   const negotiations = negotiationsData?.negotiations || []
-  const contracts = contractsData || []
+  const contracts = Array.isArray(contractsData) ? contractsData : []
+  
+  // Check for empty states
+  const isEmpty = 
+    (lifecycleData?.isEmpty || lifecycles.length === 0) &&
+    (viewingsData?.isEmpty || viewings.length === 0) &&
+    (negotiationsData?.isEmpty || negotiations.length === 0) &&
+    contracts.length === 0
 
   // Calculate analytics
   const analytics = useMemo(() => {
@@ -170,6 +177,14 @@ export function UltraAutomationAnalyticsSection({ onNavigate }: UltraAutomationA
         {isLoading ? (
           <div className="relative min-h-[400px]">
             <GlassLoadingOverlay />
+          </div>
+        ) : isEmpty ? (
+          <div className={glassPrimary + ' p-6 text-center'}>
+            <Activity className="w-12 h-12 text-blue-400 mx-auto mb-3" />
+            <h3 className="text-xl font-bold text-blue-400 mb-2">No Automation Data Yet</h3>
+            <p className="text-gray-400">
+              Automation analytics will appear here once you have deals, viewings, negotiations, or contracts.
+            </p>
           </div>
         ) : (
           <>

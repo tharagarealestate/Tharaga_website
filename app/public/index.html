@@ -89,6 +89,28 @@
         /* Completely remove gold gradient on desktop */
         background: radial-gradient(600px 600px at bottom 80px right 40px, rgba(16, 185, 129, 1), transparent);
       }
+      
+      /* Desktop: Completely hide mobile user dropdown - it should never appear on desktop */
+      header.nav .mobile-user-dropdown {
+        display: none !important;
+        visibility: hidden !important;
+        opacity: 0 !important;
+        pointer-events: none !important;
+        position: absolute !important;
+        left: -9999px !important;
+        width: 0 !important;
+        height: 0 !important;
+        overflow: hidden !important;
+        transform: none !important;
+      }
+      
+      /* Desktop: Also hide mobile user dropdown even when aria-hidden is false */
+      header.nav .mobile-user-dropdown[aria-hidden="false"] {
+        display: none !important;
+        visibility: hidden !important;
+        opacity: 0 !important;
+        pointer-events: none !important;
+      }
     }
     /* Ensure all main sections appear above background */
     section, .hero-premium, .trial-cta, .value-prop {
@@ -3587,24 +3609,47 @@
           }
         }
 
-        // Initialize
-        watchMobileAuthState();
-        
-        // Also update when auth UI is ready
-        if (window.__thgAuthUI) {
-          updateMobileUserIcon();
-          buildMobileUserDropdown();
+        // Initialize - only on mobile
+        if (window.innerWidth <= 767) {
+          watchMobileAuthState();
+          
+          // Also update when auth UI is ready
+          if (window.__thgAuthUI) {
+            updateMobileUserIcon();
+            buildMobileUserDropdown();
+          } else {
+            let checkCount = 0;
+            const checkAuthUI = setInterval(function() {
+              checkCount++;
+              if (window.__thgAuthUI || checkCount > 20) {
+                clearInterval(checkAuthUI);
+                if (window.innerWidth <= 767) {
+                  updateMobileUserIcon();
+                  buildMobileUserDropdown();
+                }
+              }
+            }, 200);
+          }
         } else {
-          let checkCount = 0;
-          const checkAuthUI = setInterval(function() {
-            checkCount++;
-            if (window.__thgAuthUI || checkCount > 20) {
-              clearInterval(checkAuthUI);
-              updateMobileUserIcon();
-              buildMobileUserDropdown();
-            }
-          }, 200);
+          // Desktop: Ensure mobile dropdown is completely hidden and empty
+          if (userDropdown) {
+            userDropdown.innerHTML = '';
+            userDropdown.setAttribute('aria-hidden', 'true');
+            userDropdown.style.display = 'none';
+          }
         }
+        
+        // Also handle window resize to clear dropdown if switching to desktop
+        window.addEventListener('resize', function() {
+          if (window.innerWidth > 767 && userDropdown) {
+            userDropdown.innerHTML = '';
+            userDropdown.setAttribute('aria-hidden', 'true');
+            userDropdown.style.display = 'none';
+            if (userIconBtn) {
+              userIconBtn.setAttribute('aria-expanded', 'false');
+            }
+          }
+        });
 
         toggleBtn.addEventListener('click', function() {
           const isOpen = panel.classList.contains('is-open');

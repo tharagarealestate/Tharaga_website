@@ -73,9 +73,18 @@ export function BuilderSidebar() {
     '/builder/settings': 'settings',
   }
   
+  // Extract section from URL (handles both /builder?section=X and direct section URLs)
+  const getSectionFromHref = (href: string): string | null => {
+    if (href.startsWith('/builder?section=')) {
+      const match = href.match(/[?&]section=([^&]+)/)
+      return match ? match[1] : null
+    }
+    return routeToSectionMap[href] || null
+  }
+  
   // Check if a route should use unified dashboard
   const shouldUseUnifiedDashboard = (href: string): boolean => {
-    return href in routeToSectionMap || href.startsWith('/builder?section=')
+    return href.startsWith('/builder?section=') || href in routeToSectionMap
   }
   
   // Get unified dashboard URL for a route
@@ -508,7 +517,7 @@ export function BuilderSidebar() {
                 
                 // Check if this item uses unified dashboard and is active via section param
                 if (shouldUseUnifiedDashboard(item.href)) {
-                  const section = routeToSectionMap[item.href]
+                  const section = getSectionFromHref(item.href)
                   if (section && pathname === '/builder' && typeof window !== 'undefined') {
                     const currentSection = new URLSearchParams(window.location.search).get('section')
                     isSectionActive = currentSection === section

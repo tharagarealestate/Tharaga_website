@@ -87,16 +87,21 @@ export default function BehaviorTrackingPage() {
     }
   }
 
+  // Check if we're in unified dashboard (no need for own background)
+  const isInUnifiedDashboard = typeof window !== 'undefined' && window.location.pathname === '/builder'
+  
   return (
-    <div className='min-h-screen bg-gradient-to-br from-primary-950 via-primary-900 to-primary-800 relative overflow-hidden'>
-      {/* Animated Background Elements - Same as pricing */}
-      <div className='absolute inset-0 opacity-30'>
-        <div className='absolute top-20 left-10 w-96 h-96 bg-gold-500 rounded-full blur-3xl animate-pulse-slow' />
-        <div
-          className='absolute bottom-20 right-10 w-[600px] h-[600px] bg-emerald-500 rounded-full blur-3xl animate-pulse-slow'
-          style={{ animationDelay: '1s' }}
-        />
-      </div>
+    <div className={isInUnifiedDashboard ? 'relative' : 'min-h-screen bg-gradient-to-br from-primary-950 via-primary-900 to-primary-800 relative overflow-hidden'}>
+      {/* Animated Background Elements - Only show if not in unified dashboard */}
+      {!isInUnifiedDashboard && (
+        <div className='absolute inset-0 opacity-30'>
+          <div className='absolute top-20 left-10 w-96 h-96 bg-gold-500 rounded-full blur-3xl animate-pulse-slow' />
+          <div
+            className='absolute bottom-20 right-10 w-[600px] h-[600px] bg-emerald-500 rounded-full blur-3xl animate-pulse-slow'
+            style={{ animationDelay: '1s' }}
+          />
+        </div>
+      )}
 
       <div className='relative z-10'>
         {/* Hero Section */}

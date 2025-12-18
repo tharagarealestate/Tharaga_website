@@ -182,13 +182,23 @@ export function LeadsList({ onSelectLead, initialFilters, showInlineFilters = tr
       });
 
       if (!response.ok) {
-        throw new Error('Failed to fetch leads');
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || 'Failed to fetch leads');
       }
 
       const payload = await response.json();
-      const leadsData: Lead[] = Array.isArray(payload?.data?.leads) ? payload.data.leads : [];
-      const pagination = payload?.data?.pagination || {};
-      const statsData = payload?.data?.stats || {};
+      
+      // Handle both old and new API response formats
+      const leadsData: Lead[] = Array.isArray(payload?.data?.leads) 
+        ? payload.data.leads 
+        : Array.isArray(payload?.leads)
+        ? payload.leads
+        : Array.isArray(payload?.data)
+        ? payload.data
+        : [];
+      
+      const pagination = payload?.data?.pagination || payload?.pagination || {};
+      const statsData = payload?.data?.stats || payload?.stats || {};
 
       setLeads(leadsData);
       setStats({
@@ -352,6 +362,15 @@ export function LeadsList({ onSelectLead, initialFilters, showInlineFilters = tr
         <div className="bg-red-500/10 border border-red-500/50 rounded-2xl p-8 text-center max-w-md backdrop-blur-xl">
           <AlertCircle className="w-12 h-12 text-red-400 mx-auto mb-4" />
           <h3 className="text-xl font-semibold text-red-100 mb-2">Error Loading Leads</h3>
+          <button
+            onClick={() => {
+              setError(null);
+              fetchLeads();
+            }}
+            className="mt-4 px-4 py-2 bg-gold-500/20 border border-gold-500/40 text-gold-400 rounded-lg hover:bg-gold-500/30 transition-colors"
+          >
+            Try Again
+          </button>
           <p className="text-red-200/70 mb-4">{error}</p>
           <button
             onClick={() => fetchLeads()}

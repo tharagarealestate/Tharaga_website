@@ -312,11 +312,11 @@ export async function POST(req: NextRequest) {
         }
       } catch (openaiError: any) {
         console.error('OpenAI API error:', openaiError.message)
-        // Fall through to fallback
+        // Fall through to fallback - don't throw error
       }
     }
 
-    // Fallback to intelligent pattern matching
+    // Fallback to intelligent pattern matching - always succeeds
     const fallbackResponse = generateFallbackResponse(message, currentPath)
     
     return NextResponse.json({
@@ -327,13 +327,16 @@ export async function POST(req: NextRequest) {
 
   } catch (error: any) {
     console.error('AI Chat API error:', error)
-    return NextResponse.json(
-      { 
-        error: error.message || 'Failed to process chat message',
-        success: false
-      },
-      { status: 500 }
+    // Always return a helpful response, never fail completely
+    const fallbackResponse = generateFallbackResponse(
+      typeof error === 'string' ? error : 'I encountered an issue, but I can still help!',
+      '/builder'
     )
+    return NextResponse.json({
+      success: true,
+      response: fallbackResponse,
+      model: 'fallback-error'
+    })
   }
 }
 

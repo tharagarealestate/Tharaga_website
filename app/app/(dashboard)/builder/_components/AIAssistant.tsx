@@ -192,7 +192,17 @@ export function AIAssistant() {
       })
 
       if (!response.ok) {
-        throw new Error('Failed to get AI response')
+        const errorData = await response.json().catch(() => ({}))
+        // Even if API fails, use fallback response
+        const fallbackResponse = generateAIResponse(userQuery, pathname || '')
+        const assistantResponse: Message = {
+          id: (Date.now() + 1).toString(),
+          role: 'assistant',
+          content: fallbackResponse,
+          timestamp: new Date()
+        }
+        setMessages(prev => [...prev, assistantResponse])
+        return
       }
 
       const data = await response.json()
@@ -200,19 +210,21 @@ export function AIAssistant() {
       const assistantResponse: Message = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
-        content: data.response || generateAIResponse(userQuery, pathname || ''),
+        content: data.response || data.error || generateAIResponse(userQuery, pathname || ''),
         timestamp: new Date()
       }
 
       setMessages(prev => [...prev, assistantResponse])
     } catch (error) {
-      const errorMessage: Message = {
+      // Always provide a helpful response, never show error
+      const fallbackResponse = generateAIResponse(userQuery, pathname || '')
+      const assistantResponse: Message = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
-        content: "I apologize, but I'm having trouble processing your request right now. Please try again in a moment, or contact support if the issue persists.",
+        content: fallbackResponse,
         timestamp: new Date()
       }
-      setMessages(prev => [...prev, errorMessage])
+      setMessages(prev => [...prev, assistantResponse])
     } finally {
       setIsLoading(false)
     }

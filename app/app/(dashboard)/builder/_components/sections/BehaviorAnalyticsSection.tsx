@@ -1,5 +1,6 @@
 "use client"
 
+import { SectionWrapper } from './SectionWrapper'
 import dynamic from 'next/dynamic'
 import { SectionLoader } from './SectionLoader'
 
@@ -14,9 +15,11 @@ const BehaviorTrackingPage = dynamic(() => import('../../../behavior-tracking/pa
 
 export function BehaviorAnalyticsSection({ onNavigate }: BehaviorAnalyticsSectionProps) {
   return (
-    <div className="w-full">
-      <BehaviorTrackingPage />
-    </div>
+    <SectionWrapper>
+      <div className="w-full max-w-7xl mx-auto space-y-6 py-6">
+        <BehaviorTrackingPage />
+      </div>
+    </SectionWrapper>
   )
 }
 

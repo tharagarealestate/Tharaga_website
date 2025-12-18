@@ -559,24 +559,30 @@ export function BuilderSidebar() {
                         // Submenu toggle is handled by the chevron button
                       }}
                       className={cn(
-                        "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-colors duration-150 group relative",
+                        "flex items-center rounded-lg px-3 py-2.5 text-sm transition-all duration-150 group relative",
                         "hover:bg-white/5",
                         isActive
                           ? "bg-gold-500/20 text-white border-l-3 border-gold-500"
                           : "text-gray-400 hover:text-white",
                         isLocked && "opacity-50 cursor-not-allowed",
-                        !isExpanded && "justify-center"
+                        isExpanded ? "gap-3" : "justify-center gap-0"
                       )}
                       title={!isExpanded ? item.label : undefined}
                     >
-                      <item.icon className={cn("w-5 h-5 shrink-0 transition-colors duration-150", isActive && "text-gold-400")} />
+                      {/* Icon container - stays in same position during expansion */}
+                      <div className={cn(
+                        "flex items-center justify-center shrink-0 transition-all duration-150",
+                        "w-5 h-5"
+                      )}>
+                        <item.icon className={cn("w-5 h-5 transition-colors duration-150", isActive && "text-gold-400")} />
+                      </div>
                       
-                      {/* Label - positioned to prevent layout shift */}
+                      {/* Label - fades in smoothly without affecting icon position */}
                       <span className={cn(
                         "font-medium truncate transition-all duration-150 ease-out",
                         isExpanded 
-                          ? "opacity-100 translate-x-0 ml-0 w-auto flex-1" 
-                          : "opacity-0 -translate-x-2 w-0 ml-0 absolute left-0 pointer-events-none"
+                          ? "opacity-100 translate-x-0 ml-0 w-auto flex-1 min-w-0" 
+                          : "opacity-0 -translate-x-2 w-0 ml-0 pointer-events-none"
                       )}>
                         {item.label}
                       </span>

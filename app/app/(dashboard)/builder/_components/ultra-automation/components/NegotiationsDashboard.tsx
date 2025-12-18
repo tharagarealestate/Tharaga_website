@@ -66,7 +66,13 @@ export function NegotiationsDashboard({ builderId }: NegotiationsDashboardProps)
     return (
       <div className={glassPrimary + ' p-6 text-center'}>
         <AlertCircle className="w-12 h-12 text-red-400 mx-auto mb-3" />
-        <p className="text-gray-400">Failed to load negotiations</p>
+        <p className="text-gray-400 mb-4">Failed to load negotiations</p>
+        <button
+          onClick={() => window.location.reload()}
+          className="px-4 py-2 bg-gold-500/20 border border-gold-500/40 text-gold-400 rounded-lg hover:bg-gold-500/30 transition-colors"
+        >
+          Try Again
+        </button>
       </div>
     );
   }

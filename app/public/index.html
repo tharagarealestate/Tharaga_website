@@ -9,6 +9,51 @@
   <script src="/js/analytics.js" defer></script>
   <script src="/js/home.js" defer></script>
   <script src="https://unpkg.com/lucide@latest" defer></script>
+  <!-- IMMEDIATE: Close all dropdowns on page load to prevent FOUC -->
+  <script>
+    (function() {
+      // Run immediately - before DOM is ready
+      function closeAllDropdowns() {
+        // Close Portal dropdown
+        var portalMenu = document.getElementById('portal-menu');
+        if (portalMenu) {
+          portalMenu.removeAttribute('open');
+        }
+        
+        // Close user auth dropdown
+        var authMenu = document.getElementById('thg-auth-menu');
+        if (authMenu) {
+          authMenu.setAttribute('aria-hidden', 'true');
+          authMenu.style.display = 'none';
+          authMenu.style.visibility = 'hidden';
+          authMenu.style.opacity = '0';
+        }
+        
+        // Close all details dropdowns
+        var allDetails = document.querySelectorAll('details.dropdown');
+        allDetails.forEach(function(details) {
+          details.removeAttribute('open');
+        });
+      }
+      
+      // Run immediately if DOM already exists
+      if (document.body) {
+        closeAllDropdowns();
+      }
+      
+      // Also run when DOM is ready
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', closeAllDropdowns, { once: true });
+      } else {
+        // DOM already ready, run immediately
+        setTimeout(closeAllDropdowns, 0);
+      }
+      
+      // Run again after a tiny delay to catch any late-rendering elements
+      setTimeout(closeAllDropdowns, 10);
+      setTimeout(closeAllDropdowns, 50);
+    })();
+  </script>
   <!-- Preload Supabase for auth -->
   <script>
     // Initialize Supabase early using script tag (works in all contexts)
@@ -402,6 +447,23 @@
       margin-left:4px;
     }
     details.dropdown[open] > summary::after{ transform:rotate(180deg) }
+    
+    /* Ensure dropdowns start closed on page load - prevent FOUC */
+    details.dropdown {
+      /* Force closed initially - JavaScript will handle opening */
+    }
+    details.dropdown:not([open]) .menu {
+      display: none !important;
+    }
+    /* Portal dropdown should never be open on initial load */
+    #portal-menu {
+      /* Ensure it starts closed */
+    }
+    #portal-menu:not([open]) .menu {
+      display: none !important;
+      visibility: hidden !important;
+      opacity: 0 !important;
+    }
     /* Dropdown menu: Non-transparent for perfect visibility - positioned outside container */
     details.dropdown .menu{
       position:absolute;
@@ -1615,9 +1677,9 @@
 @keyframes thgspin{ to{ transform:rotate(360deg); } }
 
 /* Account menu */
-.thg-auth-menu{ position:absolute;top:calc(100% + 10px);right:0;min-width:280px;background:rgba(255, 255, 255, 0.95) !important;backdrop-filter: blur(24px) !important;-webkit-backdrop-filter: blur(24px) !important;color:#111 !important; border:1px solid rgba(255,255,255,0.3) !important;border-radius:24px !important;padding:12px;box-shadow:0 8px 32px 0 rgba(31, 38, 135, 0.25) !important; visibility:hidden; opacity:0; transform:translateY(-6px) scale(.98); transform-origin:top right; pointer-events:none; transition:opacity .16s ease, transform .16s ease, visibility 0s linear .16s; z-index:${Z_BASE+1}; }
+.thg-auth-menu{ position:absolute;top:calc(100% + 10px);right:0;min-width:280px;background:rgba(255, 255, 255, 0.95) !important;backdrop-filter: blur(24px) !important;-webkit-backdrop-filter: blur(24px) !important;color:#111 !important; border:1px solid rgba(255,255,255,0.3) !important;border-radius:24px !important;padding:12px;box-shadow:0 8px 32px 0 rgba(31, 38, 135, 0.25) !important; visibility:hidden !important; opacity:0 !important; transform:translateY(-6px) scale(.98); transform-origin:top right; pointer-events:none !important; transition:opacity .16s ease, transform .16s ease, visibility 0s linear .16s; z-index:${Z_BASE+1}; display:none !important; }
 .thg-auth-menu::before{ content:""; position:absolute; top:0; left:0; right:0; height:2px; border-radius:24px 24px 0 0; background:linear-gradient(90deg, #d4af37, #1e40af); }
-.thg-auth-menu[aria-hidden="false"]{ visibility:visible; opacity:1; transform:translateY(0) scale(1); pointer-events:auto; transition:opacity .16s ease, transform .16s ease, visibility 0s linear 0s; }
+.thg-auth-menu[aria-hidden="false"]{ visibility:visible !important; opacity:1 !important; transform:translateY(0) scale(1); pointer-events:auto !important; transition:opacity .16s ease, transform .16s ease, visibility 0s linear 0s; display:block !important; }
 .thg-auth-item{ display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:8px;text-decoration:none;color:#111 !important;cursor:pointer; font-weight:600 !important; font-size:14px; transition: background .15s ease, transform .06s ease; margin-bottom:2px; }
 .thg-auth-item:last-child{ margin-bottom:0; }
 .thg-auth-item:hover{background:rgba(0,0,0,0.05) !important; transform:translateX(2px); }
@@ -1723,9 +1785,13 @@
         wrap.appendChild(btn);
       }
 
-      let menu = wrap.querySelector('.thg-auth-menu');
-      if (!menu){
-        menu = createEl('div', 'thg-auth-menu', { id:'thg-auth-menu', role:'menu', 'aria-hidden':'true' });
+    let menu = wrap.querySelector('.thg-auth-menu');
+    if (!menu){
+      menu = createEl('div', 'thg-auth-menu', { id:'thg-auth-menu', role:'menu', 'aria-hidden':'true' });
+      // CRITICAL: Ensure menu starts hidden to prevent FOUC
+      menu.style.display = 'none';
+      menu.style.visibility = 'hidden';
+      menu.style.opacity = '0';
         menu.innerHTML = '<div class="thg-auth-item is-header" aria-disabled="true">' +
           '<span class="thg-initial-lg">U</span>' +
           '<span class="thg-name-wrap">' +
@@ -3002,13 +3068,20 @@
         if (!state.initialized || !state.user || state.roles.length === 0) {
           // No roles yet, hide portal menu
           const portalMenu = document.getElementById('portal-menu');
-          if (portalMenu) portalMenu.style.display = 'none';
+          if (portalMenu) {
+            portalMenu.style.display = 'none';
+            portalMenu.removeAttribute('open'); // Ensure it's closed
+          }
           return;
         }
 
         // Show portal menu
         const portalMenu = document.getElementById('portal-menu');
-        if (portalMenu) portalMenu.style.display = '';
+        if (portalMenu) {
+          portalMenu.style.display = '';
+          // CRITICAL: Ensure dropdown is closed on initial load
+          portalMenu.removeAttribute('open');
+        }
 
         let menuHTML = '';
 

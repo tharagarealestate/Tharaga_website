@@ -520,7 +520,7 @@ export function UnifiedDashboard({ onNavigate }: UnifiedDashboardProps) {
                 </div>
               <button 
                 onClick={() => onNavigate?.('client-outreach')}
-                className={cn(glassBadge, "text-blue-400 hover:text-blue-300 cursor-pointer flex items-center gap-1")}
+                className={cn(builderGlassBadge, "text-blue-400 hover:text-blue-300 cursor-pointer flex items-center gap-1")}
               >
                 Open <ArrowUpRight className="w-3 h-3" />
               </button>
@@ -584,14 +584,14 @@ export function UnifiedDashboard({ onNavigate }: UnifiedDashboardProps) {
             <div className="grid grid-cols-2 gap-4 mb-4">
               <button 
                 onClick={() => onNavigate?.('behavior-analytics')}
-                className={cn(glassInteractive, "p-4 text-center w-full cursor-pointer")}
+                className={cn(builderGlassInteractive, "p-4 text-center w-full cursor-pointer")}
               >
                 <BarChart3 className="w-6 h-6 text-gold-400 mx-auto mb-2" />
                 <div className="text-sm font-medium text-white">Analytics</div>
               </button>
               <button 
                 onClick={() => onNavigate?.('settings')}
-                className={cn(glassInteractive, "p-4 text-center w-full cursor-pointer")}
+                className={cn(builderGlassInteractive, "p-4 text-center w-full cursor-pointer")}
               >
                 <Settings className="w-6 h-6 text-gold-400 mx-auto mb-2" />
                 <div className="text-sm font-medium text-white">Settings</div>
@@ -745,7 +745,7 @@ function LeadCard({ lead, onNavigate }: { lead: Lead; onNavigate?: (section: str
         // Could also dispatch event for lead detail modal
         window.dispatchEvent(new CustomEvent('open-lead-detail', { detail: { leadId: lead.id } }))
       }}
-      className={cn(glassSecondary, "p-4 block hover:bg-white/[0.04] transition-all group w-full text-left cursor-pointer")}
+      className={cn(builderGlassSecondary, "p-4 block hover:bg-white/[0.04] transition-all group w-full text-left cursor-pointer")}
     >
       <div className="flex items-center gap-3">
         <div className="w-10 h-10 rounded-full bg-gradient-to-br from-gold-600 to-gold-500 flex items-center justify-center text-white font-semibold text-sm">
@@ -783,7 +783,7 @@ function PropertyCard({ property, onNavigate }: { property: Property; onNavigate
         // Could dispatch event for property detail
         window.dispatchEvent(new CustomEvent('open-property-detail', { detail: { propertyId: property.id } }))
       }}
-      className={cn(glassSecondary, "p-4 block hover:bg-white/[0.04] transition-all group w-full text-left cursor-pointer")}
+      className={cn(builderGlassSecondary, "p-4 block hover:bg-white/[0.04] transition-all group w-full text-left cursor-pointer")}
     >
       <div className="flex items-start justify-between gap-3">
         <div className="flex-1 min-w-0">

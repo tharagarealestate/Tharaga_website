@@ -54,3 +54,4 @@ Before committing, verify:
 - [ ] Submenu items work (e.g., "All Leads", "Pipeline" under Leads)
 - [ ] Sidebar expands smoothly without text jumping
 - [ ] Mobile menu navigation works
+

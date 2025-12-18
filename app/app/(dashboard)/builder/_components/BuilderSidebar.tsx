@@ -683,23 +683,64 @@ export function BuilderSidebar() {
 
         {/* Footer Section */}
         <div className="flex-shrink-0 border-t border-white/10 px-4 py-4 space-y-3">
-          {/* Trial/Upgrade CTA */}
+          {/* Trial/Upgrade CTA - Fully Functional with Real Data */}
           {isTrial && isExpanded && (
             <Link
               href="/pricing"
-              className="block p-3 rounded-xl bg-gold-500/15 backdrop-blur-sm border border-gold-500/30 hover:bg-gold-500/20 transition-colors"
+              className={cn(
+                "block p-3 rounded-xl backdrop-blur-sm border transition-colors",
+                trialStatus.isExpired
+                  ? "bg-red-500/15 border-red-500/30 hover:bg-red-500/20"
+                  : trialStatus.isUrgent
+                  ? "bg-orange-500/15 border-orange-500/30 hover:bg-orange-500/20"
+                  : "bg-gold-500/15 border-gold-500/30 hover:bg-gold-500/20"
+              )}
             >
               <div className="flex items-center gap-2 mb-1">
-                <Clock className="w-3.5 h-3.5 text-gold-300" />
-                <span className="text-[11px] font-semibold text-gold-100">Trial Active</span>
+                <Clock className={cn(
+                  "w-3.5 h-3.5",
+                  trialStatus.isExpired ? "text-red-300" : trialStatus.isUrgent ? "text-orange-300" : "text-gold-300"
+                )} />
+                <span className={cn(
+                  "text-[11px] font-semibold",
+                  trialStatus.isExpired ? "text-red-100" : trialStatus.isUrgent ? "text-orange-100" : "text-gold-100"
+                )}>
+                  {trialStatus.isExpired ? "Trial Expired" : "Trial Active"}
+                </span>
               </div>
-              <div className="text-[10px] text-gray-300">
-                {subscription?.days_remaining === 0
-                  ? 'Expired - Upgrade'
-                  : subscription?.days_remaining && subscription.days_remaining <= 3
-                  ? `⚠️ ${subscription.days_remaining} day${subscription.days_remaining === 1 ? '' : 's'} left`
-                  : `${subscription?.days_remaining ?? 0} days left`}
+              {!trialStatus.isExpired && (
+                <div className="h-1.5 w-full rounded-full bg-primary-900 overflow-hidden mb-1">
+                  <div
+                    className={cn(
+                      "h-1.5 rounded-full transition-all duration-300",
+                      trialStatus.isUrgent ? "bg-orange-400" : "bg-gold-400"
+                    )}
+                    style={{ width: `${trialStatus.progressPercentage.toFixed(0)}%` }}
+                  />
+                </div>
+              )}
+              <div className={cn(
+                "text-[11px]",
+                trialStatus.isExpired 
+                  ? "text-red-400 font-semibold" 
+                  : trialStatus.isUrgent 
+                  ? "text-orange-400 font-medium" 
+                  : "text-gray-300"
+              )}>
+                {trialStatus.isExpired 
+                  ? 'Expired - Upgrade Now'
+                  : trialStatus.isUrgent
+                  ? `⚠️ ${trialStatus.formattedDaysLeft}`
+                  : trialStatus.formattedDaysLeft}
               </div>
+              {(trialStatus.isExpired || trialStatus.isUrgent) && (
+                <div className="mt-1 flex items-center justify-between">
+                  <span className="text-[10px] text-gray-400">
+                    {trialStatus.trialLeadsUsed}/{trialStatus.trialLeadsLimit} leads used
+                  </span>
+                  <span className="text-[10px] text-gold-300 font-semibold">Upgrade →</span>
+                </div>
+              )}
             </Link>
           )}
 

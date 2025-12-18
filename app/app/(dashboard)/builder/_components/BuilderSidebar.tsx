@@ -550,7 +550,8 @@ export function BuilderSidebar() {
                         if (shouldUseUnifiedDashboard(item.href)) {
                           e.preventDefault()
                           const unifiedUrl = getUnifiedDashboardUrl(item.href)
-                          router.push(unifiedUrl)
+                          // Use window.location for immediate navigation to ensure URL updates
+                          window.location.href = unifiedUrl
                           return
                         }
                         
@@ -651,7 +652,8 @@ export function BuilderSidebar() {
                             const isSubActive = pathname === sub.href || 
                               (shouldUseUnifiedDashboard(sub.href) && 
                                pathname === '/builder' && 
-                               new URLSearchParams(window.location.search).get('section') === routeToSectionMap[sub.href])
+                               typeof window !== 'undefined' &&
+                               new URLSearchParams(window.location.search).get('section') === getSectionFromHref(sub.href))
                             return (
                               <Link
                                 key={sub.href}
@@ -661,7 +663,7 @@ export function BuilderSidebar() {
                                   if (shouldUseUnifiedDashboard(sub.href)) {
                                     e.preventDefault()
                                     const unifiedUrl = getUnifiedDashboardUrl(sub.href)
-                                    router.push(unifiedUrl)
+                                    window.location.href = unifiedUrl
                                   }
                                 }}
                                 className={cn(
@@ -832,7 +834,7 @@ export function BuilderSidebar() {
                     
                     // Check if this item uses unified dashboard and is active via section param
                     if (shouldUseUnifiedDashboard(item.href)) {
-                      const section = routeToSectionMap[item.href]
+                      const section = getSectionFromHref(item.href)
                       if (section && pathname === '/builder' && typeof window !== 'undefined') {
                         const currentSection = new URLSearchParams(window.location.search).get('section')
                         isSectionActive = currentSection === section
@@ -869,8 +871,7 @@ export function BuilderSidebar() {
                             if (shouldUseUnifiedDashboard(item.href)) {
                               e.preventDefault()
                               const unifiedUrl = getUnifiedDashboardUrl(item.href)
-                              router.push(unifiedUrl)
-                              setMobileMenuOpen(false)
+                              window.location.href = unifiedUrl
                               return
                             }
                             
@@ -921,21 +922,37 @@ export function BuilderSidebar() {
                         >
                           {hasSubmenu && (
                             <div className="ml-4 mt-1 space-y-0.5 border-l border-white/10 pl-4">
-                              {item.submenu?.map((sub) => (
-                                <Link
-                                  key={sub.href}
-                                  href={sub.href}
-                                  onClick={() => setMobileMenuOpen(false)}
-                                  className={cn(
-                                    "block px-3 py-1.5 text-xs rounded-lg transition-colors duration-150",
-                                    pathname === sub.href
-                                      ? "text-gold-300 font-medium bg-white/5"
-                                      : "text-gray-400 hover:text-white hover:bg-white/5"
-                                  )}
-                                >
-                                  {sub.label}
-                                </Link>
-                              ))}
+                              {item.submenu?.map((sub) => {
+                                const isSubActive = pathname === sub.href || 
+                                  (shouldUseUnifiedDashboard(sub.href) && 
+                                   pathname === '/builder' && 
+                                   typeof window !== 'undefined' &&
+                                   new URLSearchParams(window.location.search).get('section') === getSectionFromHref(sub.href))
+                                return (
+                                  <Link
+                                    key={sub.href}
+                                    href={sub.href}
+                                    onClick={(e) => {
+                                      // If this submenu item should use unified dashboard, intercept
+                                      if (shouldUseUnifiedDashboard(sub.href)) {
+                                        e.preventDefault()
+                                        const unifiedUrl = getUnifiedDashboardUrl(sub.href)
+                                        window.location.href = unifiedUrl
+                                        return
+                                      }
+                                      setMobileMenuOpen(false)
+                                    }}
+                                    className={cn(
+                                      "block px-3 py-1.5 text-xs rounded-lg transition-colors duration-150",
+                                      isSubActive
+                                        ? "text-gold-300 font-medium bg-white/5"
+                                        : "text-gray-400 hover:text-white hover:bg-white/5"
+                                    )}
+                                  >
+                                    {sub.label}
+                                  </Link>
+                                )
+                              })}
                             </div>
                           )}
                         </div>

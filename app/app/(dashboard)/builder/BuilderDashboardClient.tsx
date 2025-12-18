@@ -8,7 +8,19 @@ import { UnifiedSinglePageDashboard } from './_components/UnifiedSinglePageDashb
 export default function BuilderDashboardClient() {
   const [user, setUser] = useState<any>({ id: 'verified', email: 'builder@tharaga.co.in' })
   const pathname = usePathname()
-  const [activeSection, setActiveSection] = useState<string>('overview')
+  
+  // Initialize activeSection from URL on mount
+  const getInitialSection = () => {
+    if (typeof window === 'undefined') return 'overview'
+    try {
+      const urlParams = new URLSearchParams(window.location.search)
+      return urlParams.get('section') || 'overview'
+    } catch (e) {
+      return 'overview'
+    }
+  }
+  
+  const [activeSection, setActiveSection] = useState<string>(getInitialSection)
 
   // Sync activeSection with URL parameter - reacts to all navigation changes
   useEffect(() => {
@@ -18,34 +30,35 @@ export default function BuilderDashboardClient() {
       try {
         const urlParams = new URLSearchParams(window.location.search)
         const section = urlParams.get('section') || 'overview'
-        if (section !== activeSection) {
-          setActiveSection(section)
-        }
+        setActiveSection((prev) => {
+          if (prev !== section) {
+            return section
+          }
+          return prev
+        })
       } catch (e) {
         console.warn('[Builder] URL parse error:', e)
       }
     }
     
-    // Initial read
+    // Initial read (in case URL changed before component mounted)
     updateSectionFromUrl()
     
-    // Listen for navigation events (Next.js router navigation)
-    const handleRouteChange = () => {
-      // Small delay to ensure URL is updated
-      setTimeout(updateSectionFromUrl, 0)
-    }
-    
     // Listen for popstate (browser back/forward)
-    window.addEventListener('popstate', handleRouteChange)
+    const handlePopState = () => {
+      updateSectionFromUrl()
+    }
+    window.addEventListener('popstate', handlePopState)
     
-    // Poll for URL changes (fallback for Next.js navigation)
-    const interval = setInterval(updateSectionFromUrl, 100)
+    // Poll for URL changes (catches all navigation including window.location.href)
+    // Reduced interval for faster response
+    const interval = setInterval(updateSectionFromUrl, 30)
     
     return () => {
-      window.removeEventListener('popstate', handleRouteChange)
+      window.removeEventListener('popstate', handlePopState)
       clearInterval(interval)
     }
-  }, [activeSection, pathname])
+  }, [pathname]) // Only depend on pathname, not activeSection to avoid loops
 
   // Non-blocking auth check - render immediately like admin dashboard
   useEffect(() => {

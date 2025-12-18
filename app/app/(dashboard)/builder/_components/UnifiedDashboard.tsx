@@ -13,12 +13,13 @@ import {
 import { cn } from '@/lib/utils'
 import { LoadingSpinner, GlassLoadingOverlay } from '@/components/ui/loading-spinner'
 import { getSupabase } from '@/lib/supabase'
-
-// Glass panel styles - EXACT from pricing page
-const glassPrimary = "relative group backdrop-blur-xl bg-white/10 border border-white/20 rounded-3xl shadow-lg transition-all duration-500 hover:shadow-2xl hover:-translate-y-2 overflow-hidden"
-const glassSecondary = "backdrop-blur-xl bg-white/10 border border-white/20 rounded-xl shadow-lg"
-const glassInteractive = "relative group backdrop-blur-xl bg-white/10 border border-white/20 rounded-3xl transition-all duration-500 hover:shadow-2xl hover:-translate-y-2 hover:bg-white/[0.15] overflow-hidden"
-const glassBadge = "backdrop-blur-sm bg-gold-500/20 border border-gold-500/30 rounded-full px-4 py-2 text-xs font-medium text-gold-300"
+import { useDemoMode, DEMO_DATA } from './DemoDataProvider'
+import {
+  builderGlassPrimary,
+  builderGlassSecondary,
+  builderGlassInteractive,
+  builderGlassBadge,
+} from './builderGlassStyles'
 
 interface Lead {
   id: string
@@ -90,12 +91,19 @@ interface UnifiedDashboardProps {
 }
 
 export function UnifiedDashboard({ onNavigate }: UnifiedDashboardProps) {
+  const { isDemoMode, builderId: demoBuilderId, userId: demoUserId } = useDemoMode()
   const [builderId, setBuilderId] = useState<string | null>(null)
   const [userId, setUserId] = useState<string | null>(null)
   const [previousStats, setPreviousStats] = useState({ total: 0, hot: 0, warm: 0, conversionRate: 0 })
 
-  // Get user and builder ID - non-blocking
+  // Get user and builder ID - non-blocking (skip if demo mode)
   useEffect(() => {
+    if (isDemoMode) {
+      setBuilderId(demoBuilderId)
+      setUserId(demoUserId)
+      return
+    }
+    
     let mounted = true
     async function initAuth() {
       try {
@@ -131,14 +139,20 @@ export function UnifiedDashboard({ onNavigate }: UnifiedDashboardProps) {
     
     initAuth()
     return () => { mounted = false }
-  }, [])
+  }, [isDemoMode, demoBuilderId, demoUserId])
 
   // Fetch data with real-time updates - non-blocking with error handling
   const { data: leads = [], isLoading: leadsLoading, error: leadsError } = useQuery({
-    queryKey: ['unified-leads'],
-    queryFn: fetchLeads,
-    refetchInterval: 15000,
-    retry: 1,
+    queryKey: ['unified-leads', isDemoMode],
+    queryFn: async () => {
+      if (isDemoMode) {
+        return DEMO_DATA.leads.leads
+      }
+      return fetchLeads()
+    },
+    refetchInterval: isDemoMode ? false : 15000,
+    staleTime: isDemoMode ? Infinity : 0,
+    retry: isDemoMode ? 0 : 1,
     retryDelay: 1000,
     onError: (err) => {
       console.warn('[UnifiedDashboard] Leads fetch error (non-blocking):', err)
@@ -334,7 +348,7 @@ export function UnifiedDashboard({ onNavigate }: UnifiedDashboardProps) {
       {/* Main Content - Background is handled by layout */}
       <div className="relative z-10 px-6 py-8 space-y-6">
         {/* Welcome Section */}
-        <div className={cn(glassPrimary, "p-8")}>
+        <div className={cn(builderGlassPrimary, "p-8")}>
           {/* Shimmer Effect on Hover - EXACT from pricing page */}
           <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-in-out pointer-events-none" />
           <div className="relative flex items-center justify-between">
@@ -400,7 +414,7 @@ export function UnifiedDashboard({ onNavigate }: UnifiedDashboardProps) {
         {/* Main Sections Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* LEADS SECTION */}
-          <section className={cn(glassPrimary, "p-6")}>
+          <section className={cn(builderGlassPrimary, "p-6")}>
             {/* Shimmer Effect on Hover - EXACT from pricing page */}
             <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-in-out pointer-events-none" />
             <div className="relative">
@@ -442,7 +456,7 @@ export function UnifiedDashboard({ onNavigate }: UnifiedDashboardProps) {
           </section>
 
           {/* PROPERTIES SECTION */}
-          <section className={cn(glassPrimary, "p-6")}>
+          <section className={cn(builderGlassPrimary, "p-6")}>
             {/* Shimmer Effect on Hover - EXACT from pricing page */}
             <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-in-out pointer-events-none" />
             <div className="relative">
@@ -490,7 +504,7 @@ export function UnifiedDashboard({ onNavigate }: UnifiedDashboardProps) {
           </section>
 
           {/* CLIENT OUTREACH SECTION */}
-          <section className={cn(glassPrimary, "p-6")}>
+          <section className={cn(builderGlassPrimary, "p-6")}>
             {/* Shimmer Effect on Hover - EXACT from pricing page */}
             <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-in-out pointer-events-none" />
             <div className="relative">
@@ -551,7 +565,7 @@ export function UnifiedDashboard({ onNavigate }: UnifiedDashboardProps) {
           </section>
 
           {/* ANALYTICS & SETTINGS SECTION */}
-          <section className={cn(glassPrimary, "p-6")}>
+          <section className={cn(builderGlassPrimary, "p-6")}>
             {/* Shimmer Effect on Hover - EXACT from pricing page */}
             <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-in-out pointer-events-none" />
             <div className="relative">
@@ -608,7 +622,7 @@ export function UnifiedDashboard({ onNavigate }: UnifiedDashboardProps) {
         </div>
 
         {/* ULTRA AUTOMATION STATUS SECTION */}
-        <section className={cn(glassPrimary, "p-6 border border-gold-500/20")}>
+        <section className={cn(builderGlassPrimary, "p-6 border border-gold-500/20")}>
           {/* Shimmer Effect on Hover - EXACT from pricing page */}
           <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-in-out pointer-events-none" />
           <div className="relative">
@@ -684,7 +698,7 @@ function StatCard({
   loading: boolean
 }) {
   return (
-    <div className={cn(glassInteractive, "p-6")}>
+    <div className={cn(builderGlassInteractive, "p-6")}>
       {/* Shimmer Effect on Hover - EXACT from pricing page */}
       <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-in-out pointer-events-none" />
       <div className="relative">

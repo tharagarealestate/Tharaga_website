@@ -28,9 +28,7 @@ import { filterAndSortViewings, formatSmartDate } from '../utils/dataProcessing'
 import { LoadingSpinner, GlassLoadingOverlay } from '@/components/ui/loading-spinner';
 import { ErrorDisplay } from '../../ErrorDisplay';
 import type { ApiError } from '../hooks/useUltraAutomationData';
-
-const glassPrimary = 'bg-white/[0.03] backdrop-blur-[20px] border border-white/[0.08] rounded-2xl shadow-[0_8px_32px_rgba(0,0,0,0.3)]';
-const glassSecondary = 'bg-white/[0.02] backdrop-blur-[12px] border border-white/[0.05] rounded-xl';
+import { builderGlassPanel, builderGlassSubPanel } from '../../builderGlassStyles';
 
 interface ViewingsCalendarProps {
   builderId?: string;
@@ -75,10 +73,10 @@ export function ViewingsCalendar({ builderId, initialFilter = 'all' }: ViewingsC
 
   if (isLoading) {
     return (
-      <div className={glassPrimary + ' p-6'}>
+      <div className={builderGlassPanel + ' p-6'}>
         <div className="space-y-4">
           {[1, 2, 3].map((i) => (
-            <div key={i} className={glassSecondary + ' h-32 relative'}>
+            <div key={i} className={builderGlassSubPanel + ' h-32 relative'}>
               <GlassLoadingOverlay />
             </div>
           ))}

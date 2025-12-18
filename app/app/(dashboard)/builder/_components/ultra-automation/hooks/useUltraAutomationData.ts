@@ -6,6 +6,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useCallback } from 'react';
 import { classifyHttpError, type ErrorType } from '@/lib/error-handler';
+import { useDemoMode, DEMO_DATA } from '../../DemoDataProvider';
 
 const API_BASE = '/api/ultra-automation';
 
@@ -58,11 +59,26 @@ export function useBuyerJourney({ journeyId, leadId, enabled = true }: UseBuyerJ
  * Fetch property viewings
  */
 export function useViewings(filters?: { status?: string; builder_id?: string }) {
-  const queryKey = ['ultra-automation', 'viewings', filters];
+  const { isDemoMode } = useDemoMode();
+  const queryKey = ['ultra-automation', 'viewings', filters, isDemoMode];
   
   return useQuery({
     queryKey,
     queryFn: async () => {
+      // Return demo data if in demo mode
+      if (isDemoMode) {
+        let viewings = DEMO_DATA.viewings.viewings;
+        const reminders = DEMO_DATA.viewings.reminders;
+        
+        // Apply status filter if provided
+        if (filters?.status && filters.status !== 'all') {
+          viewings = viewings.filter((v: any) => v.status === filters.status);
+        }
+        
+        return { viewings, reminders, isEmpty: false };
+      }
+      
+      // Real API call
       const params = new URLSearchParams();
       if (filters?.status) params.set('status', filters.status);
       if (filters?.builder_id) params.set('builder_id', filters.builder_id);
@@ -93,9 +109,10 @@ export function useViewings(filters?: { status?: string; builder_id?: string }) 
       
       return data.data || { viewings: [], reminders: [] };
     },
-    refetchInterval: 60000,
-    staleTime: 30000,
+    refetchInterval: isDemoMode ? false : 60000,
+    staleTime: isDemoMode ? Infinity : 30000,
     retry: (failureCount, error: any) => {
+      if (isDemoMode) return false;
       if (error?.retryable === false) return false;
       return failureCount < 2;
     },
@@ -107,34 +124,63 @@ export function useViewings(filters?: { status?: string; builder_id?: string }) 
  * Fetch negotiations
  */
 export function useNegotiations(filters?: { status?: string; builder_id?: string }) {
-  const queryKey = ['ultra-automation', 'negotiations', filters];
+  const { isDemoMode } = useDemoMode();
+  const queryKey = ['ultra-automation', 'negotiations', filters, isDemoMode];
   
   return useQuery({
     queryKey,
     queryFn: async () => {
-      try {
-        const params = new URLSearchParams();
-        if (filters?.status) params.set('status', filters.status);
-        if (filters?.builder_id) params.set('builder_id', filters.builder_id);
+      // Return demo data if in demo mode
+      if (isDemoMode) {
+        let negotiations = DEMO_DATA.negotiations.negotiations;
+        const insights = DEMO_DATA.negotiations.insights;
         
-        const url = `${API_BASE}/negotiations${params.toString() ? `?${params.toString()}` : ''}`;
-        const res = await fetch(url);
-        
-        if (!res.ok) {
-          const errorData = await res.json().catch(() => ({}));
-          throw new Error(errorData.error || 'Failed to fetch negotiations');
+        // Apply status filter if provided
+        if (filters?.status && filters.status !== 'all') {
+          negotiations = negotiations.filter((n: any) => n.status === filters.status);
         }
         
-        const data = await res.json();
-        return data.data || { negotiations: [] };
-      } catch (error) {
-        console.error('[useNegotiations] Error:', error);
-        return { negotiations: [] };
+        return { negotiations, insights, isEmpty: false };
       }
+      
+      // Real API call
+      const params = new URLSearchParams();
+      if (filters?.status) params.set('status', filters.status);
+      if (filters?.builder_id) params.set('builder_id', filters.builder_id);
+      
+      const url = `${API_BASE}/negotiations${params.toString() ? `?${params.toString()}` : ''}`;
+      const res = await fetch(url);
+      const data = await res.json();
+      
+      if (!res.ok || !data.success) {
+        const errorInfo = data.errorType 
+          ? { type: data.errorType, message: data.message || data.error, retryable: data.retryable !== false }
+          : classifyHttpError(res.status, data);
+        
+        const error: ApiError = {
+          type: errorInfo.type,
+          message: errorInfo.message,
+          userMessage: data.message || errorInfo.userMessage,
+          retryable: errorInfo.retryable,
+          technicalDetails: data.technicalDetails,
+        };
+        
+        throw error;
+      }
+      
+      if (data.isEmpty || !data.data?.negotiations?.length) {
+        return { negotiations: [], insights: [], isEmpty: true };
+      }
+      
+      return data.data || { negotiations: [], insights: [] };
     },
-    refetchInterval: 60000,
-    staleTime: 30000,
-    retry: 2,
+    refetchInterval: isDemoMode ? false : 60000,
+    staleTime: isDemoMode ? Infinity : 30000,
+    retry: (failureCount, error: any) => {
+      if (isDemoMode) return false;
+      if (error?.retryable === false) return false;
+      return failureCount < 2;
+    },
     retryDelay: 1000,
   });
 }
@@ -143,11 +189,25 @@ export function useNegotiations(filters?: { status?: string; builder_id?: string
  * Fetch contracts
  */
 export function useContracts(filters?: { status?: string; builder_id?: string }) {
-  const queryKey = ['ultra-automation', 'contracts', filters];
+  const { isDemoMode } = useDemoMode();
+  const queryKey = ['ultra-automation', 'contracts', filters, isDemoMode];
   
   return useQuery({
     queryKey,
     queryFn: async () => {
+      // Return demo data if in demo mode
+      if (isDemoMode) {
+        let contracts = DEMO_DATA.contracts;
+        
+        // Apply status filter if provided
+        if (filters?.status && filters.status !== 'all') {
+          contracts = contracts.filter((c: any) => c.status === filters.status);
+        }
+        
+        return contracts;
+      }
+      
+      // Real API call
       const params = new URLSearchParams();
       if (filters?.status) params.set('status', filters.status);
       if (filters?.builder_id) params.set('builder_id', filters.builder_id);
@@ -178,9 +238,10 @@ export function useContracts(filters?: { status?: string; builder_id?: string })
       
       return data.data || [];
     },
-    refetchInterval: 60000,
-    staleTime: 30000,
+    refetchInterval: isDemoMode ? false : 60000,
+    staleTime: isDemoMode ? Infinity : 30000,
     retry: (failureCount, error: any) => {
+      if (isDemoMode) return false;
       if (error?.retryable === false) return false;
       return failureCount < 2;
     },
@@ -192,11 +253,26 @@ export function useContracts(filters?: { status?: string; builder_id?: string })
  * Fetch deal lifecycles
  */
 export function useDealLifecycles(filters?: { stage?: string; builder_id?: string }) {
-  const queryKey = ['ultra-automation', 'deal-lifecycle', filters];
+  const { isDemoMode } = useDemoMode();
+  const queryKey = ['ultra-automation', 'deal-lifecycle', filters, isDemoMode];
   
   return useQuery({
     queryKey,
     queryFn: async () => {
+      // Return demo data if in demo mode
+      if (isDemoMode) {
+        let lifecycles = DEMO_DATA.dealLifecycles.lifecycles;
+        let milestones = DEMO_DATA.dealLifecycles.milestones;
+        
+        // Apply stage filter if provided
+        if (filters?.stage && filters.stage !== 'all') {
+          lifecycles = lifecycles.filter((l: any) => l.current_stage === filters.stage);
+        }
+        
+        return { lifecycles, milestones, isEmpty: false };
+      }
+      
+      // Real API call
       const params = new URLSearchParams();
       if (filters?.stage) params.set('stage', filters.stage);
       if (filters?.builder_id) params.set('builder_id', filters.builder_id);
@@ -229,9 +305,10 @@ export function useDealLifecycles(filters?: { stage?: string; builder_id?: strin
       
       return data.data || { lifecycles: [], milestones: [] };
     },
-    refetchInterval: 60000,
-    staleTime: 30000,
+    refetchInterval: isDemoMode ? false : 60000,
+    staleTime: isDemoMode ? Infinity : 30000,
     retry: (failureCount, error: any) => {
+      if (isDemoMode) return false;
       // Only retry if error is retryable
       if (error?.retryable === false) return false;
       return failureCount < 2;

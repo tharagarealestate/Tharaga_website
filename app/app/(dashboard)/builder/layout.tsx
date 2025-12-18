@@ -1,6 +1,7 @@
 "use client"
 import type { ReactNode } from 'react'
 import { ReactQueryProvider } from '@/components/providers/ReactQueryProvider'
+import { DemoDataProvider } from './_components/DemoDataProvider'
 import { BuilderSidebar } from './_components/BuilderSidebar'
 import { TrialUpgradeBanner } from './_components/TrialUpgradeBanner'
 import { AIAssistant } from './_components/AIAssistant'
@@ -10,7 +11,8 @@ export default function BuilderDashboardLayout({ children }: { children: ReactNo
 
   return (
     <ReactQueryProvider>
-      <div className="min-h-screen flex flex-col relative overflow-hidden bg-gradient-to-br from-primary-950 via-primary-900 to-primary-800">
+      <DemoDataProvider>
+        <div className="min-h-screen flex flex-col relative overflow-hidden bg-gradient-to-br from-primary-950 via-primary-900 to-primary-800">
         {/* Animated Background Elements - EXACT from pricing page */}
         <div className="absolute inset-0 opacity-30 pointer-events-none">
           <div className="absolute top-20 left-10 w-96 h-96 bg-gold-500 rounded-full blur-3xl animate-pulse-slow" />
@@ -38,7 +40,8 @@ export default function BuilderDashboardLayout({ children }: { children: ReactNo
         
         {/* Keyboard Shortcuts Help */}
         <KeyboardShortcutsHelp />
-      </div>
+        </div>
+      </DemoDataProvider>
     </ReactQueryProvider>
   )
 }

@@ -3,6 +3,7 @@
 import { AlertTriangle, RefreshCw, Lock, Database, WifiOff, FileQuestion } from 'lucide-react'
 import { type ErrorType } from '@/lib/error-handler'
 import { cn } from '@/lib/utils'
+import { builderGlassPanel } from './builderGlassStyles'
 
 interface ErrorDisplayProps {
   errorType: ErrorType
@@ -12,8 +13,6 @@ interface ErrorDisplayProps {
   retryable?: boolean
   className?: string
 }
-
-const glassPrimary = 'bg-white/[0.03] backdrop-blur-[20px] border border-white/[0.08] rounded-2xl shadow-[0_8px_32px_rgba(0,0,0,0.3)]'
 
 export function ErrorDisplay({ 
   errorType, 
@@ -77,7 +76,7 @@ export function ErrorDisplay({
   const Icon = config.icon
 
   return (
-    <div className={cn(glassPrimary, 'p-6 text-center', className)}>
+    <div className={cn(builderGlassPanel, 'p-6 text-center', className)}>
       <Icon className={cn('w-12 h-12 mx-auto mb-3', config.iconColor)} />
       <h3 className={cn('text-xl font-bold mb-2', config.iconColor)}>{config.title}</h3>
       <p className="text-gray-400 mb-4">{config.description}</p>

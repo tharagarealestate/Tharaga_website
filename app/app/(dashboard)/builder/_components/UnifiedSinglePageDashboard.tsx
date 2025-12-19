@@ -20,6 +20,7 @@ import { ContractsSection } from './sections/ContractsSection'
 import { DealLifecycleSection } from './sections/DealLifecycleSection'
 import { UltraAutomationAnalyticsSection } from './sections/UltraAutomationAnalyticsSection'
 import { SectionLoader } from './sections/SectionLoader'
+import { ErrorBoundary } from './ErrorBoundary'
 
 interface UnifiedSinglePageDashboardProps {
   activeSection: string
@@ -95,9 +96,11 @@ export function UnifiedSinglePageDashboard({ activeSection, onSectionChange }: U
             className="w-full"
           >
             {/* Non-blocking Suspense - renders immediately with fallback */}
-            <Suspense fallback={<SectionLoader section={activeSection} />}>
-              <ActiveComponent onNavigate={(section: string) => onSectionChange(section)} />
-            </Suspense>
+            <ErrorBoundary>
+              <Suspense fallback={<SectionLoader section={activeSection} />}>
+                <ActiveComponent onNavigate={(section: string) => onSectionChange(section)} />
+              </Suspense>
+            </ErrorBoundary>
           </motion.div>
         </AnimatePresence>
       </div>

@@ -2,12 +2,15 @@
 
 import { SectionWrapper } from './SectionWrapper'
 import { ContractsManager } from '../ultra-automation/components/ContractsManager'
+import { useDemoMode } from '../DemoDataProvider'
 
 interface ContractsSectionProps {
   onNavigate?: (section: string) => void
 }
 
 export function ContractsSection({ onNavigate }: ContractsSectionProps) {
+  const { builderId } = useDemoMode()
+  
   return (
     <SectionWrapper>
       <div className="w-full max-w-7xl mx-auto space-y-6 py-6">
@@ -19,7 +22,7 @@ export function ContractsSection({ onNavigate }: ContractsSectionProps) {
             Manage contracts, track signatures, and monitor contract status with automatic alerts.
           </p>
         </header>
-        <ContractsManager />
+        <ContractsManager builderId={builderId || undefined} />
       </div>
     </SectionWrapper>
   )

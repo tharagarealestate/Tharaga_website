@@ -2,12 +2,15 @@
 
 import { SectionWrapper } from './SectionWrapper'
 import { NegotiationsDashboard } from '../ultra-automation/components/NegotiationsDashboard'
+import { useDemoMode } from '../DemoDataProvider'
 
 interface NegotiationsSectionProps {
   onNavigate?: (section: string) => void
 }
 
 export function NegotiationsSection({ onNavigate }: NegotiationsSectionProps) {
+  const { builderId } = useDemoMode()
+  
   return (
     <SectionWrapper>
       <div className="w-full max-w-7xl mx-auto space-y-6 py-6">
@@ -19,7 +22,7 @@ export function NegotiationsSection({ onNavigate }: NegotiationsSectionProps) {
             Track price negotiations, analyze strategies, and get AI-powered recommendations for successful deals.
           </p>
         </header>
-        <NegotiationsDashboard />
+        <NegotiationsDashboard builderId={builderId || undefined} />
       </div>
     </SectionWrapper>
   )

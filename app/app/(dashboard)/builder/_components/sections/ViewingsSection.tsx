@@ -2,12 +2,15 @@
 
 import { SectionWrapper } from './SectionWrapper'
 import { ViewingsCalendar } from '../ultra-automation/components/ViewingsCalendar'
+import { useDemoMode } from '../DemoDataProvider'
 
 interface ViewingsSectionProps {
   onNavigate?: (section: string) => void
 }
 
 export function ViewingsSection({ onNavigate }: ViewingsSectionProps) {
+  const { builderId } = useDemoMode()
+  
   return (
     <SectionWrapper>
       <div className="w-full max-w-7xl mx-auto space-y-6 py-6">
@@ -19,7 +22,7 @@ export function ViewingsSection({ onNavigate }: ViewingsSectionProps) {
             Manage scheduled property viewings, track reminders, and monitor viewing completion status.
           </p>
         </header>
-        <ViewingsCalendar />
+        <ViewingsCalendar builderId={builderId || undefined} />
       </div>
     </SectionWrapper>
   )

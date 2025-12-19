@@ -169,8 +169,10 @@
     const userEmail = roleState.user?.email || window.__thgAuthState?.user?.email;
     const isAdminOwner = userEmail === 'tharagarealestate@gmail.com';
 
-    // Validate role exists (unless admin owner)
-    if (!isAdminOwner && !roleState.roles.includes(role)) {
+    // Validate role exists (unless admin owner switching to admin)
+    // Admin owner can switch to admin even if not in roles array (they have admin privilege)
+    const canSwitchToAdmin = isAdminOwner && role === 'admin';
+    if (!canSwitchToAdmin && !roleState.roles.includes(role)) {
       console.error('[role-v2] Invalid role:', role, 'User roles:', roleState.roles, 'User email:', userEmail);
       showNotification(`Error: You don't have the ${role} role`, 'error');
       return;
@@ -232,6 +234,17 @@
   // Check if needs onboarding
   async function needsOnboarding() {
     if (!roleState.initialized) await fetchUserRoles();
+    
+    // Admin owner with existing roles should skip onboarding
+    const userEmail = roleState.user?.email || window.__thgAuthState?.user?.email;
+    const isAdminOwner = userEmail === 'tharagarealestate@gmail.com';
+    
+    // If admin owner has any roles (including admin), skip onboarding
+    if (isAdminOwner && roleState.roles.length > 0) {
+      return false;
+    }
+    
+    // Regular users need onboarding if they have no roles
     return roleState.roles.length === 0;
   }
 
@@ -546,21 +559,42 @@
       menuHTML += '<div class="thg-role-section">';
       menuHTML += '<div class="thg-role-label">YOUR ROLES</div>';
 
-      // If admin owner and roles array is empty, show all role options
-      const rolesToShow = isAdminOwner && roleState.roles.length === 0
-        ? ['buyer', 'builder', 'admin']
-        : roleState.roles;
+      // Determine which roles to show
+      // For admin owner: show all roles they have (including admin if present)
+      // For regular users: show only buyer/builder (never show admin)
+      let rolesToShow = [];
+      
+      if (isAdminOwner) {
+        // Admin owner: show all roles including admin
+        rolesToShow = roleState.roles.length > 0 
+          ? roleState.roles 
+          : ['buyer', 'builder', 'admin']; // Fallback if no roles yet
+      } else {
+        // Regular users: filter out admin role - they should never see it
+        rolesToShow = roleState.roles.filter(r => r !== 'admin');
+      }
 
-      // Count displayable roles (buyer/builder only, exclude admin)
+      // Count displayable roles for "add role" button logic (buyer/builder only)
       const displayableRoles = rolesToShow.filter(r => r !== 'admin');
 
       rolesToShow.forEach(role => {
-        // Skip 'admin' role - it's not a mode, it's a privilege shown in Portal dropdown
-        if (role === 'admin') return;
+        // For non-admin users, skip admin role (should never reach here due to filter above, but safety check)
+        if (!isAdminOwner && role === 'admin') return;
 
         const isActive = role === roleState.primaryRole;
-        const icon = role === 'buyer' ? '🏠' : '🏗️';
-        const label = role === 'buyer' ? 'Buyer Mode' : 'Builder Mode';
+        let icon, label;
+        
+        if (role === 'admin') {
+          icon = '⚙️';
+          label = 'Admin Mode';
+        } else if (role === 'buyer') {
+          icon = '🏠';
+          label = 'Buyer Mode';
+        } else {
+          icon = '🏗️';
+          label = 'Builder Mode';
+        }
+        
         const badge = role === 'builder' && roleState.builderVerified ?
           '<span class="thg-role-badge verified">✓ Verified</span>' : '';
         const activeIndicator = isActive ? '<span class="thg-role-active">✓</span>' : '';

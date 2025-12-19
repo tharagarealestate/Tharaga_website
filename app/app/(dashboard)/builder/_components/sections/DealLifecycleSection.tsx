@@ -2,12 +2,15 @@
 
 import { SectionWrapper } from './SectionWrapper'
 import { DealLifecycleTracker } from '../ultra-automation/components/DealLifecycleTracker'
+import { useDemoMode } from '../DemoDataProvider'
 
 interface DealLifecycleSectionProps {
   onNavigate?: (section: string) => void
 }
 
 export function DealLifecycleSection({ onNavigate }: DealLifecycleSectionProps) {
+  const { builderId } = useDemoMode()
+  
   return (
     <SectionWrapper>
       <div className="w-full max-w-7xl mx-auto space-y-6 py-6">
@@ -19,7 +22,7 @@ export function DealLifecycleSection({ onNavigate }: DealLifecycleSectionProps) 
             Track deals through all stages, detect stalling, and optimize conversion with real-time analytics.
           </p>
         </header>
-        <DealLifecycleTracker />
+        <DealLifecycleTracker builderId={builderId || undefined} />
       </div>
     </SectionWrapper>
   )

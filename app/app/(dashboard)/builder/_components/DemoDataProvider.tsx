@@ -20,16 +20,24 @@ interface DemoDataContextType {
   userId: string | null
 }
 
-const DemoDataContext = createContext<DemoDataContextType>({
-  isDemoMode: true,
-  isAuthenticated: false,
-  isLoading: true,
-  builderId: null,
-  userId: null,
-})
+const DemoDataContext = createContext<DemoDataContextType | null>(null)
 
-export function useDemoMode() {
-  return useContext(DemoDataContext)
+export function useDemoMode(): DemoDataContextType {
+  const context = useContext(DemoDataContext)
+  
+  // Provide safe defaults if context is not available
+  if (!context) {
+    console.warn('[useDemoMode] DemoDataProvider context not found, using defaults')
+    return {
+      isDemoMode: false,
+      isAuthenticated: false,
+      isLoading: false,
+      builderId: null,
+      userId: null,
+    }
+  }
+  
+  return context
 }
 
 // Realistic demo data that matches real API responses
@@ -349,3 +357,5 @@ export function DemoDataProvider({ children }: DemoDataProviderProps) {
     </DemoDataContext.Provider>
   )
 }
+
+

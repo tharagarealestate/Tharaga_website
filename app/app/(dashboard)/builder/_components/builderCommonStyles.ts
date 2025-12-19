@@ -27,8 +27,6 @@ export const builderContentContainer =
  */
 export const builderSectionWrapper = 
   'bg-white/[0.03] backdrop-blur-[20px] border border-white/[0.08] rounded-2xl shadow-[0_8px_32px_rgba(0,0,0,0.3)] p-6'
-<<<<<<< HEAD
-=======
 
 /**
  * Page header container - For section headers
@@ -47,4 +45,3 @@ export const builderPageTitle =
  */
 export const builderPageDescription = 
   'mt-3 max-w-2xl text-base text-blue-100/80 sm:text-lg'
->>>>>>> 6ea032dba0a9adbd68fc37308bf15ab210292842

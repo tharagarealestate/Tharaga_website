@@ -19,7 +19,6 @@ export function SectionWrapper({ children }: { children: React.ReactNode }) {
         htmlEl.style.background = 'transparent'
       })
       
-<<<<<<< HEAD
       // Remove white backgrounds (but keep glassmorphic white/opacity backgrounds)
       const whiteBackgrounds = document.querySelectorAll('[class*="bg-white"]')
       whiteBackgrounds.forEach((el) => {
@@ -30,15 +29,6 @@ export function SectionWrapper({ children }: { children: React.ReactNode }) {
             !classes.includes('bg-white/') && 
             !classes.includes('bg-white-') &&
             !classes.includes('text-white')) {
-=======
-      // Remove white backgrounds
-      const whiteBackgrounds = document.querySelectorAll('[class*="bg-white"]:not([class*="bg-white/"]):not([class*="bg-white-"]):not([class*="text-white"])')
-      whiteBackgrounds.forEach((el) => {
-        const htmlEl = el as HTMLElement
-        if (htmlEl.classList.toString().includes('bg-white') && 
-            !htmlEl.classList.toString().includes('bg-white/') &&
-            !htmlEl.classList.toString().includes('bg-white-')) {
->>>>>>> 6ea032dba0a9adbd68fc37308bf15ab210292842
           htmlEl.style.background = 'transparent'
         }
       })

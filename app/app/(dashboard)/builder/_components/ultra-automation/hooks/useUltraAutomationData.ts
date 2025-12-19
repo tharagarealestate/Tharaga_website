@@ -133,16 +133,8 @@ export function useViewings(filters?: { status?: string; builder_id?: string }) 
  * Fetch negotiations
  */
 export function useNegotiations(filters?: { status?: string; builder_id?: string }) {
-  // Safe access to demo mode with fallback
-  let isDemoMode = false;
-  try {
-    const demoContext = useDemoMode();
-    isDemoMode = demoContext?.isDemoMode ?? false;
-  } catch (error) {
-    // Context not available - assume not in demo mode
-    console.warn('[useNegotiations] DemoDataProvider not available, using real data mode');
-  }
-  
+  // Safe access to demo mode - hook always returns safe defaults
+  const { isDemoMode } = useDemoMode();
   const queryKey = ['ultra-automation', 'negotiations', filters, isDemoMode];
   
   return useQuery({
@@ -207,16 +199,8 @@ export function useNegotiations(filters?: { status?: string; builder_id?: string
  * Fetch contracts
  */
 export function useContracts(filters?: { status?: string; builder_id?: string }) {
-  // Safe access to demo mode with fallback
-  let isDemoMode = false;
-  try {
-    const demoContext = useDemoMode();
-    isDemoMode = demoContext?.isDemoMode ?? false;
-  } catch (error) {
-    // Context not available - assume not in demo mode
-    console.warn('[useContracts] DemoDataProvider not available, using real data mode');
-  }
-  
+  // Safe access to demo mode - hook always returns safe defaults
+  const { isDemoMode } = useDemoMode();
   const queryKey = ['ultra-automation', 'contracts', filters, isDemoMode];
   
   return useQuery({
@@ -280,16 +264,8 @@ export function useContracts(filters?: { status?: string; builder_id?: string })
  * Fetch deal lifecycles
  */
 export function useDealLifecycles(filters?: { stage?: string; builder_id?: string }) {
-  // Safe access to demo mode with fallback
-  let isDemoMode = false;
-  try {
-    const demoContext = useDemoMode();
-    isDemoMode = demoContext?.isDemoMode ?? false;
-  } catch (error) {
-    // Context not available - assume not in demo mode
-    console.warn('[useDealLifecycles] DemoDataProvider not available, using real data mode');
-  }
-  
+  // Safe access to demo mode - hook always returns safe defaults
+  const { isDemoMode } = useDemoMode();
   const queryKey = ['ultra-automation', 'deal-lifecycle', filters, isDemoMode];
   
   return useQuery({

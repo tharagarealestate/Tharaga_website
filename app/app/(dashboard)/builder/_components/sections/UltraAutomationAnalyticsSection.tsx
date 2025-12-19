@@ -42,9 +42,7 @@ import { useQuery } from '@tanstack/react-query'
 import { useDealLifecycles, useViewings, useNegotiations, useContracts } from '../ultra-automation/hooks/useUltraAutomationData'
 import { detectStallingDeals, calculateConversionFunnel, analyzeNegotiations, analyzeContracts } from '../ultra-automation/utils/dataProcessing'
 import { LoadingSpinner, GlassLoadingOverlay } from '@/components/ui/loading-spinner'
-
-const glassPrimary = 'bg-white/[0.03] backdrop-blur-[20px] border border-white/[0.08] rounded-2xl shadow-[0_8px_32px_rgba(0,0,0,0.3)]'
-const glassSecondary = 'bg-white/[0.02] backdrop-blur-[12px] border border-white/[0.05] rounded-xl'
+import { builderGlassPanel, builderGlassSubPanel } from '../builderGlassStyles'
 
 interface UltraAutomationAnalyticsSectionProps {
   onNavigate?: (section: string) => void
@@ -155,7 +153,7 @@ export function UltraAutomationAnalyticsSection({ onNavigate }: UltraAutomationA
         </header>
 
         {/* Period Filter */}
-        <div className={glassPrimary + ' p-4'}>
+        <div className={builderGlassPanel + ' p-4'}>
           <div className="flex items-center gap-2">
             {(['7d', '30d', '90d', 'all'] as const).map((p) => (
               <button
@@ -179,7 +177,7 @@ export function UltraAutomationAnalyticsSection({ onNavigate }: UltraAutomationA
             <GlassLoadingOverlay />
           </div>
         ) : isEmpty ? (
-          <div className={glassPrimary + ' p-6 text-center'}>
+          <div className={builderGlassPanel + ' p-6 text-center'}>
             <Activity className="w-12 h-12 text-blue-400 mx-auto mb-3" />
             <h3 className="text-xl font-bold text-blue-400 mb-2">No Automation Data Yet</h3>
             <p className="text-gray-400">
@@ -222,7 +220,7 @@ export function UltraAutomationAnalyticsSection({ onNavigate }: UltraAutomationA
             </div>
 
             {/* Conversion Funnel */}
-            <div className={glassPrimary + ' p-6'}>
+            <div className={builderGlassPanel + ' p-6'}>
               <div className="flex items-center justify-between mb-6">
                 <div>
                   <h3 className="text-xl font-bold text-white mb-1">Conversion Funnel</h3>
@@ -281,7 +279,7 @@ export function UltraAutomationAnalyticsSection({ onNavigate }: UltraAutomationA
             </div>
 
             {/* Stage Time Analysis */}
-            <div className={glassPrimary + ' p-6'}>
+            <div className={builderGlassPanel + ' p-6'}>
               <h3 className="text-xl font-bold text-white mb-6">Average Time Per Stage</h3>
               <div className="h-80">
                 <ResponsiveContainer width="100%" height="100%">
@@ -323,7 +321,7 @@ export function UltraAutomationAnalyticsSection({ onNavigate }: UltraAutomationA
             {/* Negotiation & Contract Metrics */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {/* Negotiation Metrics */}
-              <div className={glassPrimary + ' p-6'}>
+              <div className={builderGlassPanel + ' p-6'}>
                 <h3 className="text-xl font-bold text-white mb-6">Negotiation Metrics</h3>
                 <div className="space-y-4">
                   <StatRow
@@ -348,7 +346,7 @@ export function UltraAutomationAnalyticsSection({ onNavigate }: UltraAutomationA
               </div>
 
               {/* Contract Metrics */}
-              <div className={glassPrimary + ' p-6'}>
+              <div className={builderGlassPanel + ' p-6'}>
                 <h3 className="text-xl font-bold text-white mb-6">Contract Metrics</h3>
                 <div className="space-y-4">
                   <StatRow
@@ -376,7 +374,7 @@ export function UltraAutomationAnalyticsSection({ onNavigate }: UltraAutomationA
 
             {/* Bottleneck Alerts */}
             {analytics.funnel.bottleneckStages.length > 0 && (
-              <div className={glassPrimary + ' p-6 border border-orange-500/30 bg-orange-500/5'}>
+              <div className={builderGlassPanel + ' p-6 border border-orange-500/30 bg-orange-500/5'}>
                 <div className="flex items-center gap-3 mb-4">
                   <AlertTriangle className="w-6 h-6 text-orange-400" />
                   <h3 className="text-xl font-bold text-orange-400">
@@ -426,7 +424,7 @@ function MetricCard({
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className={cn(glassPrimary, 'p-6', urgent && 'border-orange-500/30 bg-orange-500/5')}
+      className={cn(builderGlassPanel, 'p-6', urgent && 'border-orange-500/30 bg-orange-500/5')}
     >
       <div className="flex items-start justify-between mb-4">
         <Icon className={cn('w-6 h-6', color)} />
@@ -459,7 +457,7 @@ function StageCard({
   isBottleneck: boolean
 }) {
   return (
-    <div className={cn(glassSecondary, 'p-4 border', isBottleneck && 'border-orange-500/30 bg-orange-500/5')}>
+    <div className={cn(builderGlassSubPanel, 'p-4 border', isBottleneck && 'border-orange-500/30 bg-orange-500/5')}>
       <div className="flex items-center justify-between mb-2">
         <h4 className="font-semibold text-white">
           {stage.stage.replace(/_/g, ' ').toUpperCase()}

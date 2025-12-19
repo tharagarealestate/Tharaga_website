@@ -186,8 +186,9 @@ export function NegotiationsDashboard({ builderId }: NegotiationsDashboardProps)
 }
 
 function NegotiationCard({ negotiation }: { negotiation: any }) {
-  const askingPrice = negotiation.asking_price || 0;
-  const currentPrice = negotiation.current_price || 0;
+  // Support both asking_price and initial_price for backward compatibility
+  const askingPrice = negotiation.asking_price ?? negotiation.initial_price ?? 0;
+  const currentPrice = negotiation.current_price ?? 0;
   const gap = Math.abs(askingPrice - currentPrice);
   const gapPercent = askingPrice > 0 ? (gap / askingPrice) * 100 : 0;
   const isPriceUp = currentPrice > askingPrice;
@@ -202,7 +203,10 @@ function NegotiationCard({ negotiation }: { negotiation: any }) {
         <div className="flex-1">
           <div className="flex items-center gap-3 mb-2">
             <h5 className="font-semibold text-white">
-              {negotiation.journey?.lead?.lead_buyer_name || 'Unknown Lead'}
+              {negotiation.journey?.lead?.lead_buyer_name || 
+               negotiation.journey?.lead?.name || 
+               negotiation.journey?.lead?.email?.split('@')[0] || 
+               'Unknown Lead'}
             </h5>
             <span className={cn(
               'px-2 py-1 rounded text-xs font-medium',

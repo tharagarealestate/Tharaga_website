@@ -6,8 +6,7 @@ import { FilterProvider } from '@/contexts/FilterContext'
 import { FilterCollections } from '../../leads/_components/FilterCollections'
 import AdvancedFilters from '../../leads/_components/AdvancedFilters'
 import { cn } from '@/lib/utils'
-
-const glassPrimary = "bg-white/[0.03] backdrop-blur-[20px] border border-white/[0.08] rounded-2xl shadow-[0_8px_32px_rgba(0,0,0,0.3)]"
+import { builderGlassPanel } from '../builderGlassStyles'
 
 interface LeadsSectionProps {
   onNavigate?: (section: string) => void
@@ -50,7 +49,7 @@ export function LeadsSection({ onNavigate }: LeadsSectionProps) {
         </div>
       </header>
 
-      <section className={cn(glassPrimary, "p-6 sm:p-8")}>
+      <section className={cn(builderGlassPanel, "p-6 sm:p-8")}>
         <FilterProvider>
           <div className="space-y-10">
             <AdvancedFilters />

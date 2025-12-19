@@ -22,9 +22,7 @@ import { cn } from '@/lib/utils';
 import { useBuyerJourney } from '../hooks/useUltraAutomationData';
 import { formatSmartDate } from '../utils/dataProcessing';
 import { LoadingSpinner, GlassLoadingOverlay } from '@/components/ui/loading-spinner';
-
-const glassPrimary = 'bg-white/[0.03] backdrop-blur-[20px] border border-white/[0.08] rounded-2xl shadow-[0_8px_32px_rgba(0,0,0,0.3)]';
-const glassSecondary = 'bg-white/[0.02] backdrop-blur-[12px] border border-white/[0.05] rounded-xl';
+import { builderGlassPanel, builderGlassSubPanel } from '../../builderGlassStyles';
 
 interface BuyerJourneyTimelineProps {
   leadId?: string;
@@ -137,10 +135,10 @@ export function BuyerJourneyTimeline({ leadId, journeyId }: BuyerJourneyTimeline
 
   if (isLoading) {
     return (
-      <div className={glassPrimary + ' p-6'}>
+      <div className={builderGlassPanel + ' p-6'}>
         <div className="space-y-4">
           {[1, 2, 3].map((i) => (
-            <div key={i} className={glassSecondary + ' h-20 relative'}>
+            <div key={i} className={builderGlassSubPanel + ' h-20 relative'}>
               <GlassLoadingOverlay />
             </div>
           ))}
@@ -151,7 +149,7 @@ export function BuyerJourneyTimeline({ leadId, journeyId }: BuyerJourneyTimeline
 
   if (error || !journey) {
     return (
-      <div className={glassPrimary + ' p-6 text-center'}>
+      <div className={builderGlassPanel + ' p-6 text-center'}>
         <AlertCircle className="w-12 h-12 text-gray-400 mx-auto mb-3" />
         <p className="text-gray-400">
           {error ? 'Failed to load buyer journey' : 'No buyer journey found for this lead'}
@@ -249,7 +247,7 @@ export function BuyerJourneyTimeline({ leadId, journeyId }: BuyerJourneyTimeline
                   </div>
 
                   {/* Event Content */}
-                  <div className={cn(glassSecondary, 'flex-1 p-4')}>
+                  <div className={cn(builderGlassSubPanel, 'flex-1 p-4')}>
                     <div className="flex items-start justify-between mb-2">
                       <div>
                         <h5 className="text-sm font-semibold text-white">{event.title}</h5>

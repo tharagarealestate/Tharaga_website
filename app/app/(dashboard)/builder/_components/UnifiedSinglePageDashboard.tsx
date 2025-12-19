@@ -74,11 +74,11 @@ export function UnifiedSinglePageDashboard({ activeSection, onSectionChange }: U
   const ActiveComponent = sectionComponents[activeSection] || OverviewSection
 
   return (
-    <div className="relative w-full min-h-screen">
+    <div className="relative w-full min-h-screen bg-transparent">
       {/* Background is handled by layout.tsx - no duplicate background here */}
 
       {/* Main Content Area with Smooth Transitions */}
-      <div className="relative z-10 px-4 sm:px-6 lg:px-8 py-6 lg:py-8">
+      <div className="relative z-10 px-4 sm:px-6 lg:px-8 py-6 lg:py-8 bg-transparent">
         <AnimatePresence mode="wait">
           <motion.div
             key={activeSection}

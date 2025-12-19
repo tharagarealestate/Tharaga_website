@@ -35,19 +35,62 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Verify user has the target role
-    const { data: userRole } = await supabase
-      .from('user_roles')
-      .select('role, is_primary')
-      .eq('user_id', user.id)
-      .eq('role', role)
-      .single();
-
-    if (!userRole) {
+    // Check if admin owner (tharagarealestate@gmail.com) - allow admin role switching
+    const isAdminOwner = user.email === 'tharagarealestate@gmail.com';
+    
+    // For admin role, only allow if user is admin owner
+    if (role === 'admin' && !isAdminOwner) {
       return NextResponse.json(
-        { error: `You don't have access to the ${role} role` },
+        { error: 'Admin role is only available to admin owner' },
         { status: 403 }
       );
+    }
+    
+    // Verify user has the target role (or is admin owner switching to admin)
+    if (role === 'admin' && isAdminOwner) {
+      // Admin owner can switch to admin even if not in user_roles table
+      // Check if admin role exists, if not, create it
+      const { data: existingAdminRole } = await supabase
+        .from('user_roles')
+        .select('role, is_primary')
+        .eq('user_id', user.id)
+        .eq('role', 'admin')
+        .single();
+      
+      if (!existingAdminRole) {
+        // Create admin role for admin owner
+        const { error: createError } = await supabase
+          .from('user_roles')
+          .insert({
+            user_id: user.id,
+            role: 'admin',
+            is_primary: false, // Will be set to true below
+            verified: true,
+          });
+        
+        if (createError) {
+          console.error('Error creating admin role:', createError);
+          return NextResponse.json(
+            { error: 'Failed to create admin role' },
+            { status: 500 }
+          );
+        }
+      }
+    } else {
+      // For buyer/builder, verify user has the role
+      const { data: userRole } = await supabase
+        .from('user_roles')
+        .select('role, is_primary')
+        .eq('user_id', user.id)
+        .eq('role', role)
+        .single();
+
+      if (!userRole) {
+        return NextResponse.json(
+          { error: `You don't have access to the ${role} role` },
+          { status: 403 }
+        );
+      }
     }
 
     // Set all roles to is_primary: false first

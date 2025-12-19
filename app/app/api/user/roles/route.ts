@@ -41,7 +41,26 @@ export async function GET(request: NextRequest) {
     // Extract roles array and find primary role
     const roles = userRoles?.map(r => r.role) || [];
     const primaryRoleData = userRoles?.find(r => r.is_primary);
-    const primaryRole = primaryRoleData?.role || roles[0] || null;
+    let primaryRole = primaryRoleData?.role || roles[0] || null;
+    
+    // Special handling for admin owner (tharagarealestate@gmail.com)
+    // Admin owner always has admin access, even if not in user_roles table
+    const isAdminOwner = user.email === 'tharagarealestate@gmail.com';
+    
+    // If admin owner doesn't have admin in roles array, add it (they always have admin privilege)
+    if (isAdminOwner && !roles.includes('admin')) {
+      roles.push('admin');
+      // If no primary role is set, make admin the primary
+      if (!primaryRole) {
+        primaryRole = 'admin';
+      }
+    }
+    
+    // If admin owner has admin role but it's not primary, and they have no primary role,
+    // prioritize admin as primary
+    if (isAdminOwner && roles.includes('admin') && !primaryRoleData) {
+      primaryRole = 'admin';
+    }
 
     // Check builder verification status
     let builderVerified = false;

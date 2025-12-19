@@ -100,6 +100,18 @@
       roleState.builderVerified = data.builder_verified || false;
       roleState.hasBuilderProfile = data.has_builder_profile || false;
       roleState.hasBuyerProfile = data.has_buyer_profile || false;
+      
+      // CRITICAL: Ensure admin owner always has admin role in roles array
+      const userEmail = roleState.user?.email || '';
+      const isAdminOwner = userEmail === 'tharagarealestate@gmail.com';
+      if (isAdminOwner && !roleState.roles.includes('admin')) {
+        roleState.roles.push('admin');
+        // If no primary role, set admin as primary for admin owner
+        if (!roleState.primaryRole) {
+          roleState.primaryRole = 'admin';
+        }
+      }
+      
       roleState.initialized = true;
       roleState.loading = false;
 
@@ -107,6 +119,7 @@
         roles: roleState.roles,
         primary: roleState.primaryRole,
         userEmail: roleState.user?.email, // Log email for debugging
+        isAdminOwner: isAdminOwner,
       });
 
       // Dispatch event to notify portal menu and other listeners
@@ -201,20 +214,35 @@
       }
 
       // Show instant feedback
-      showNotification(`Switched to ${role === 'buyer' ? 'Buyer' : 'Builder'} Mode`);
+      const roleLabel = role === 'admin' ? 'Admin' : (role === 'buyer' ? 'Buyer' : 'Builder');
+      showNotification(`Switched to ${roleLabel} Mode`);
 
       // Emit role change event for route guard
       emitRoleChangeEvent();
 
-      // API call in background
+      // API call in background - refresh roles after successful switch
       apiCall('/api/user/switch-role', {
         method: 'POST',
         body: JSON.stringify({ role }),
+      }).then(() => {
+        // Refresh roles from server to ensure sync
+        fetchUserRoles(true).then(() => {
+          // Rebuild menu with fresh data
+          if (window.__thgUpdateMenu) {
+            window.__thgUpdateMenu();
+          }
+          if (window.__updatePortalMenu) {
+            window.__updatePortalMenu();
+          }
+        });
       }).catch(error => {
         // Rollback on failure
         roleState.primaryRole = oldRole;
         if (window.__thgUpdateMenu) {
           window.__thgUpdateMenu();
+        }
+        if (window.__updatePortalMenu) {
+          window.__updatePortalMenu();
         }
         showNotification(`Error: ${error.message}`, 'error');
       });
@@ -259,6 +287,15 @@
     const existing = document.getElementById('thg-role-onboarding');
     if (existing) {
       console.log('[role-v2] Modal already exists');
+      return;
+    }
+    
+    // Double-check: Admin owner with roles should never see onboarding
+    const userEmail = roleState.user?.email || window.__thgAuthState?.user?.email;
+    const isAdminOwner = userEmail === 'tharagarealestate@gmail.com';
+    if (isAdminOwner && roleState.roles.length > 0) {
+      console.log('[role-v2] Admin owner with roles - blocking onboarding modal');
+      roleState.hasShownOnboarding = true;
       return;
     }
 
@@ -481,6 +518,16 @@
       // Show success notification
       const roleLabel = role === 'buyer' ? 'Buyer' : 'Builder';
       showNotification(`✅ ${roleLabel} role added! Check Portal menu for dashboard access.`);
+
+      // Refresh roles and rebuild menus to show new role
+      fetchUserRoles(true).then(() => {
+        if (window.__thgUpdateMenu) {
+          window.__thgUpdateMenu();
+        }
+        if (window.__updatePortalMenu) {
+          window.__updatePortalMenu();
+        }
+      });
 
       // NO REDIRECT - just stay on current page
 
@@ -1172,16 +1219,83 @@
         buildEnhancedMenu(ui);
       }
 
-      // Check if needs onboarding (ONCE)
+      // Start real-time role monitoring
+      startRoleMonitoring();
+
+      // Check if needs onboarding (ONCE) - skip for admin owner with existing roles
+      const userEmail = user.email || '';
+      const isAdminOwner = userEmail === 'tharagarealestate@gmail.com';
+      
+      // Admin owner with roles should never see onboarding
+      if (isAdminOwner && roleState.roles.length > 0) {
+        console.log('[role-v2] Admin owner with roles - skipping onboarding');
+        return;
+      }
+      
       if (await needsOnboarding()) {
         console.log('[role-v2] User needs onboarding');
-        setTimeout(() => showRoleSelectionModal(), 400);
+        // Small delay to ensure UI is ready
+        setTimeout(() => {
+          // Double-check modal doesn't already exist and user still needs onboarding
+          if (!document.getElementById('thg-role-onboarding') && roleState.roles.length === 0) {
+            showRoleSelectionModal();
+          }
+        }, 400);
       } else {
         console.log('[role-v2] User has roles:', roleState.roles);
       }
     } catch (error) {
       console.error('[role-v2] Init error:', error);
     }
+  }
+  
+  // Real-time role monitoring - refresh roles periodically to catch external changes
+  function startRoleMonitoring() {
+    // Only monitor if user is authenticated
+    if (!roleState.user || !roleState.user.email) return;
+    
+    // Don't start multiple monitors
+    if (window.__thgRoleMonitorStarted) return;
+    window.__thgRoleMonitorStarted = true;
+    
+    console.log('[role-v2] Starting real-time role monitoring');
+    
+    // Refresh roles every 30 seconds to catch database changes
+    setInterval(() => {
+      if (roleState.user && roleState.user.email && roleState.initialized) {
+        const oldRoles = [...roleState.roles];
+        const oldPrimary = roleState.primaryRole;
+        
+        fetchUserRoles(true).then(() => {
+          // Check if roles or primary role changed
+          const rolesChanged = JSON.stringify(oldRoles.sort()) !== JSON.stringify(roleState.roles.sort());
+          const primaryChanged = oldPrimary !== roleState.primaryRole;
+          
+          if (rolesChanged || primaryChanged) {
+            console.log('[role-v2] Roles changed - updating UI', {
+              oldRoles,
+              newRoles: roleState.roles,
+              oldPrimary,
+              newPrimary: roleState.primaryRole
+            });
+            
+            // Rebuild menus if roles changed
+            if (window.__thgUpdateMenu) {
+              window.__thgUpdateMenu();
+            }
+            if (window.__updatePortalMenu) {
+              window.__updatePortalMenu();
+            }
+            
+            // Emit change event
+            emitRoleChangeEvent();
+          }
+        }).catch(err => {
+          // Silently fail - don't spam console
+          console.debug('[role-v2] Background role refresh failed:', err);
+        });
+      }
+    }, 30000); // 30 seconds
   }
 
   // Expose API
@@ -1194,6 +1308,7 @@
     init: initRoleManager,
     getState: () => ({ ...roleState }),
     buildMenu: buildEnhancedMenu,
+    refresh: () => fetchUserRoles(true), // Manual refresh function for testing
   };
 
   // Export update menu function

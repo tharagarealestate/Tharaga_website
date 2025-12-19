@@ -59,16 +59,8 @@ export function useBuyerJourney({ journeyId, leadId, enabled = true }: UseBuyerJ
  * Fetch property viewings
  */
 export function useViewings(filters?: { status?: string; builder_id?: string }) {
-  // Safe access to demo mode with fallback
-  let isDemoMode = false;
-  try {
-    const demoContext = useDemoMode();
-    isDemoMode = demoContext?.isDemoMode ?? false;
-  } catch (error) {
-    // Context not available - assume not in demo mode
-    console.warn('[useViewings] DemoDataProvider not available, using real data mode');
-  }
-  
+  // Safe access to demo mode - hook always returns safe defaults
+  const { isDemoMode } = useDemoMode();
   const queryKey = ['ultra-automation', 'viewings', filters, isDemoMode];
   
   return useQuery({

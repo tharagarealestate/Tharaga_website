@@ -5,7 +5,7 @@ import { NextRequest, NextResponse } from 'next/server';
 /**
  * POST /api/user/switch-role
  * Updates is_primary flag in user_roles
- * Accepts: { role: 'buyer' | 'builder' }
+ * Accepts: { role: 'buyer' | 'builder' | 'admin' (admin only for admin owner) }
  * Sets chosen role to is_primary: true, others to false
  * Also updates profiles table role field for backward compatibility
  * Format expected by role-manager-v2.js
@@ -15,17 +15,9 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { role } = body;
 
-    // Validate role
-    if (!role || !['buyer', 'builder'].includes(role)) {
-      return NextResponse.json(
-        { error: 'Invalid role. Must be "buyer" or "builder"' },
-        { status: 400 }
-      );
-    }
-
     const supabase = createRouteHandlerClient({ cookies });
     
-    // Get authenticated user
+    // Get authenticated user first
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     
     if (authError || !user) {
@@ -37,6 +29,16 @@ export async function POST(request: NextRequest) {
 
     // Check if admin owner (tharagarealestate@gmail.com) - allow admin role switching
     const isAdminOwner = user.email === 'tharagarealestate@gmail.com';
+    
+    // Validate role - allow admin for admin owner
+    const validRoles = isAdminOwner ? ['buyer', 'builder', 'admin'] : ['buyer', 'builder'];
+    
+    if (!role || !validRoles.includes(role)) {
+      return NextResponse.json(
+        { error: `Invalid role. Must be one of: ${validRoles.join(', ')}` },
+        { status: 400 }
+      );
+    }
     
     // For admin role, only allow if user is admin owner
     if (role === 'admin' && !isAdminOwner) {
@@ -148,6 +150,3 @@ export async function POST(request: NextRequest) {
     );
   }
 }
-
-
-

@@ -47,19 +47,23 @@ export async function GET(request: NextRequest) {
     // Admin owner always has admin access, even if not in user_roles table
     const isAdminOwner = user.email === 'tharagarealestate@gmail.com';
     
-    // If admin owner doesn't have admin in roles array, add it (they always have admin privilege)
-    if (isAdminOwner && !roles.includes('admin')) {
-      roles.push('admin');
-      // If no primary role is set, make admin the primary
-      if (!primaryRole) {
-        primaryRole = 'admin';
+    // CRITICAL: Admin owner ALWAYS has admin role and it should be PRIMARY
+    if (isAdminOwner) {
+      // Ensure admin role exists in roles array
+      if (!roles.includes('admin')) {
+        roles.push('admin');
       }
-    }
-    
-    // If admin owner has admin role but it's not primary, and they have no primary role,
-    // prioritize admin as primary
-    if (isAdminOwner && roles.includes('admin') && !primaryRoleData) {
+      
+      // ALWAYS prioritize admin as primary role for admin owner
+      // This ensures the tickmark shows on Admin Panel in Portal dropdown
+      // Even if buyer/builder is currently primary in database, admin takes precedence
       primaryRole = 'admin';
+      
+      console.log('[API] Admin owner detected - setting admin as primary role', {
+        email: user.email,
+        allRoles: roles,
+        primaryRole: primaryRole
+      });
     }
 
     // Check builder verification status

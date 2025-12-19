@@ -65,7 +65,7 @@ export function NegotiationsDashboard({ builderId }: NegotiationsDashboardProps)
 
   if (!isLoading && !error && isEmpty) {
     return (
-      <div className={glassPrimary + ' p-6 text-center'}>
+      <div className={builderGlassPanel + ' p-6 text-center'}>
         <Handshake className="w-12 h-12 text-blue-400 mx-auto mb-3" />
         <h3 className="text-xl font-bold text-blue-400 mb-2">No Negotiations Yet</h3>
         <p className="text-gray-400">
@@ -156,7 +156,7 @@ export function NegotiationsDashboard({ builderId }: NegotiationsDashboardProps)
       {/* Negotiations List */}
       <div className="space-y-4">
         {negotiations.length === 0 ? (
-          <div className={glassPrimary + ' p-12 text-center'}>
+          <div className={builderGlassPanel + ' p-12 text-center'}>
             <Handshake className="w-16 h-16 text-gray-400 mx-auto mb-4 opacity-50" />
             <p className="text-gray-400">No negotiations found</p>
           </div>

@@ -73,7 +73,7 @@ export function DealLifecycleTracker({ builderId }: DealLifecycleTrackerProps) {
 
   if (error) {
     return (
-      <div className={glassPrimary + ' p-6 text-center'}>
+      <div className={builderGlassPanel + ' p-6 text-center'}>
         <AlertTriangle className="w-12 h-12 text-red-400 mx-auto mb-3" />
         <p className="text-gray-400 mb-4">Failed to load deal lifecycles</p>
         <button
@@ -92,7 +92,7 @@ export function DealLifecycleTracker({ builderId }: DealLifecycleTrackerProps) {
   return (
     <div className="space-y-6">
       {/* Header with Alerts */}
-      <div className={glassPrimary + ' p-6'}>
+      <div className={builderGlassPanel + ' p-6'}>
         <div className="flex items-center justify-between mb-6">
           <div>
             <h3 className="text-xl font-bold text-white mb-1">Deal Lifecycle</h3>
@@ -175,7 +175,7 @@ export function DealLifecycleTracker({ builderId }: DealLifecycleTrackerProps) {
       {/* Deals List */}
       <div className="space-y-4">
         {lifecycles.length === 0 ? (
-          <div className={glassPrimary + ' p-12 text-center'}>
+          <div className={builderGlassPanel + ' p-12 text-center'}>
             <Activity className="w-16 h-16 text-gray-400 mx-auto mb-4 opacity-50" />
             <p className="text-gray-400">No deals found</p>
           </div>

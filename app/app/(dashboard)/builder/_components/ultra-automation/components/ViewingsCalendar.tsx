@@ -87,7 +87,7 @@ export function ViewingsCalendar({ builderId, initialFilter = 'all' }: ViewingsC
 
   if (!isLoading && !error && isEmpty) {
     return (
-      <div className={glassPrimary + ' p-6 text-center'}>
+      <div className={builderGlassPanel + ' p-6 text-center'}>
         <Calendar className="w-12 h-12 text-blue-400 mx-auto mb-3" />
         <h3 className="text-xl font-bold text-blue-400 mb-2">No Viewings Scheduled</h3>
         <p className="text-gray-400">
@@ -119,7 +119,7 @@ export function ViewingsCalendar({ builderId, initialFilter = 'all' }: ViewingsC
   return (
     <div className="space-y-6">
       {/* Header with Stats and Filters */}
-      <div className={glassPrimary + ' p-6'}>
+      <div className={builderGlassPanel + ' p-6'}>
         <div className="flex items-center justify-between mb-6">
           <div>
             <h3 className="text-xl font-bold text-white mb-1">Property Viewings</h3>
@@ -181,7 +181,7 @@ export function ViewingsCalendar({ builderId, initialFilter = 'all' }: ViewingsC
       {viewMode === 'list' ? (
         <div className="space-y-4">
           {processedViewings.length === 0 ? (
-            <div className={glassPrimary + ' p-12 text-center'}>
+            <div className={builderGlassPanel + ' p-12 text-center'}>
               <Calendar className="w-16 h-16 text-gray-400 mx-auto mb-4 opacity-50" />
               <p className="text-gray-400">No viewings found</p>
             </div>
@@ -192,7 +192,7 @@ export function ViewingsCalendar({ builderId, initialFilter = 'all' }: ViewingsC
           )}
         </div>
       ) : (
-        <div className={glassPrimary + ' p-6'}>
+        <div className={builderGlassPanel + ' p-6'}>
           <div className="space-y-6">
             {Object.entries(groupedByDate).map(([date, dateViewings]) => (
               <div key={date}>

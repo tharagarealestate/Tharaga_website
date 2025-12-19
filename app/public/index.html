@@ -3091,13 +3091,13 @@
         console.log('[Portal Menu] Updating for user:', state.user.email, 'isAdminOwner:', isAdminOwner, 'roles:', state.roles);
 
         // Show relevant dashboard(s) based on roles
-        // For admin owner, always show buyer dashboard
+        // For admin owner, always show buyer dashboard (but tickmark only if it's primary)
         if (state.roles.includes('buyer') || isAdminOwner) {
           const active = state.primaryRole === 'buyer' ? ' <span style="color:#10b981">✓</span>' : '';
           menuHTML += `<a href="/my-dashboard">🏠 Buyer Dashboard${active}</a>`;
         }
 
-        // For admin owner, always show builder dashboard
+        // For admin owner, always show builder dashboard (but tickmark only if it's primary)
         if (state.roles.includes('builder') || isAdminOwner) {
           const active = state.primaryRole === 'builder' ? ' <span style="color:#10b981">✓</span>' : '';
           const verified = state.builderVerified ? ' <span style="color:#10b981;font-size:11px">✓ Verified</span>' : '';
@@ -3106,12 +3106,16 @@
 
         // Show Admin Panel link ONLY if user has admin role (not for regular users)
         // Also check if admin owner (tharagarealestate@gmail.com) - they always have admin access
+        // CRITICAL: For admin owner, admin should always be primary, so tickmark should always show
         const userEmail = state.user?.email || '';
-        const isAdminOwner = userEmail === 'tharagarealestate@gmail.com';
-        const hasAdminRole = state.roles.includes('admin') || isAdminOwner;
+        const isAdminOwnerCheck = userEmail === 'tharagarealestate@gmail.com';
+        const hasAdminRole = state.roles.includes('admin') || isAdminOwnerCheck;
         
         if (hasAdminRole) {
-          const active = state.primaryRole === 'admin' ? ' <span style="color:#10b981">✓</span>' : '';
+          // For admin owner, admin is always primary, so tickmark should always show
+          // For regular admin users, show tickmark only if admin is primary
+          const shouldShowTick = isAdminOwnerCheck || state.primaryRole === 'admin';
+          const active = shouldShowTick ? ' <span style="color:#10b981">✓</span>' : '';
           menuHTML += `<a href="/admin" style="border-top:1px solid rgba(255,255,255,0.1);margin-top:8px;padding-top:8px;">⚙️ Admin Panel${active}</a>`;
         }
 

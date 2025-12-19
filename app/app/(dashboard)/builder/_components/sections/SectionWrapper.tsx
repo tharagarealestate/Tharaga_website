@@ -1,10 +1,11 @@
 "use client"
 
 import { useEffect } from 'react'
+import { builderPageBackground, builderContentContainer } from '../builderCommonStyles'
 
 /**
- * Wrapper component that removes background from child pages
- * when used within the unified dashboard
+ * Wrapper component that ensures consistent dark background
+ * across all builder dashboard sections (no white backgrounds)
  */
 export function SectionWrapper({ children }: { children: React.ReactNode }) {
   useEffect(() => {
@@ -16,6 +17,17 @@ export function SectionWrapper({ children }: { children: React.ReactNode }) {
         const htmlEl = el as HTMLElement
         htmlEl.classList.remove('min-h-screen')
         htmlEl.style.background = 'transparent'
+      })
+      
+      // Remove white backgrounds
+      const whiteBackgrounds = document.querySelectorAll('[class*="bg-white"]:not([class*="bg-white/"]):not([class*="bg-white-"]):not([class*="text-white"])')
+      whiteBackgrounds.forEach((el) => {
+        const htmlEl = el as HTMLElement
+        if (htmlEl.classList.toString().includes('bg-white') && 
+            !htmlEl.classList.toString().includes('bg-white/') &&
+            !htmlEl.classList.toString().includes('bg-white-')) {
+          htmlEl.style.background = 'transparent'
+        }
       })
     }
 
@@ -32,7 +44,13 @@ export function SectionWrapper({ children }: { children: React.ReactNode }) {
     }
   }, [])
 
-  return <div className="w-full">{children}</div>
+  return (
+    <div className={builderPageBackground}>
+      <div className={builderContentContainer}>
+        {children}
+      </div>
+    </div>
+  )
 }
 
 

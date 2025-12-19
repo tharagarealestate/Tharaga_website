@@ -402,20 +402,23 @@ export function BuilderSidebar() {
     })).filter(group => group.items.length > 0)
   }, [navGroups, searchQuery])
 
-  const sidebarWidth = isExpanded ? 280 : 72
+  // Reduced width for compact design - pricing card style
+  const sidebarWidth = isExpanded ? 240 : 64
 
   return (
     <>
-      {/* Desktop Sidebar */}
+      {/* Desktop Sidebar - Pricing Card Glassmorphic Style */}
       <aside
         ref={sidebarRef}
         className={cn(
-          "fixed left-0 top-0 bottom-0 z-[1000]",
+          "fixed left-0 top-0 bottom-0 z-[1000] group/sidebar",
           "flex flex-col",
-          "bg-gradient-to-b from-primary-950/95 via-primary-900/95 to-primary-950/95",
-          "backdrop-blur-xl border-r border-white/10",
+          "relative",
+          "backdrop-blur-xl bg-white/10 border-r border-white/20",
+          "rounded-r-3xl overflow-hidden",
           "transition-all duration-[250ms] ease-in-out",
-          "overflow-hidden",
+          "shadow-[0_8px_32px_rgba(0,0,0,0.3)]",
+          "hover:shadow-2xl",
           "hidden lg:flex"
         )}
         style={{ width: `${sidebarWidth}px` }}
@@ -423,6 +426,11 @@ export function BuilderSidebar() {
         onMouseLeave={handleMouseLeave}
         aria-label="Main navigation sidebar"
       >
+        {/* Shimmer Effect - Pricing Card Style */}
+        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover/sidebar:translate-x-full transition-transform duration-1000 ease-in-out pointer-events-none z-0" />
+        
+        {/* Content Container */}
+        <div className="relative z-10 flex flex-col h-full bg-gradient-to-b from-primary-950/80 via-primary-900/80 to-primary-950/80">
         {/* Header Section */}
         <div className="flex-shrink-0 px-4 py-4 border-b border-white/10">
           {/* Brand Logo */}
@@ -441,15 +449,15 @@ export function BuilderSidebar() {
             </div>
           </div>
 
-          {/* Search Bar */}
+          {/* Search Bar - Compact */}
           <div className={cn(
-            "mt-4 transition-all duration-150 ease-out",
+            "mt-3 transition-all duration-150 ease-out",
             isExpanded 
               ? "opacity-100 max-h-40 pointer-events-auto" 
               : "opacity-0 max-h-0 overflow-hidden pointer-events-none"
           )}>
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400 pointer-events-none" />
               <input
                 id="sidebar-search-input"
                 type="text"
@@ -458,10 +466,10 @@ export function BuilderSidebar() {
                 onFocus={() => setIsSearchFocused(true)}
                 onBlur={() => setIsSearchFocused(false)}
                 placeholder="Search..."
-                className="w-full pl-10 pr-3 py-2 bg-white/5 backdrop-blur-sm border border-white/10 rounded-lg text-white placeholder:text-gray-400 text-sm focus:outline-none focus:border-gold-500/50 focus:ring-2 focus:ring-gold-500/20 transition-all"
+                className="w-full pl-8 pr-2 py-1.5 bg-white/5 backdrop-blur-sm border border-white/10 rounded-lg text-white placeholder:text-gray-400 text-xs focus:outline-none focus:border-gold-500/50 focus:ring-1 focus:ring-gold-500/20 transition-all"
               />
-              <kbd className="absolute right-3 top-1/2 -translate-y-1/2 hidden xl:flex items-center gap-1 px-1.5 py-0.5 text-[10px] font-medium text-gray-400 bg-white/5 border border-white/10 rounded">
-                <span className="text-[8px]">⌘</span>K
+              <kbd className="absolute right-2 top-1/2 -translate-y-1/2 hidden xl:flex items-center gap-0.5 px-1 py-0.5 text-[9px] font-medium text-gray-400 bg-white/5 border border-white/10 rounded">
+                <span className="text-[7px]">⌘</span>K
               </kbd>
             </div>
           </div>
@@ -478,10 +486,10 @@ export function BuilderSidebar() {
                   }
                 }, 250)
               }}
-              className="mt-4 w-full flex items-center justify-center p-2 rounded-lg hover:bg-white/5 transition-colors"
+              className="mt-3 w-full flex items-center justify-center p-1.5 rounded-lg hover:bg-white/5 transition-colors"
               aria-label="Search"
             >
-              <Search className="w-5 h-5 text-gray-400" />
+              <Search className="w-4 h-4 text-gray-400" />
             </button>
           )}
         </div>
@@ -490,9 +498,9 @@ export function BuilderSidebar() {
         <nav className="flex-1 overflow-y-auto overflow-x-hidden px-2 py-4 space-y-1 custom-scrollbar">
           {filteredGroups.map((group, groupIndex) => (
             <div key={groupIndex} className={cn("space-y-1", group.label && isExpanded && "mb-4")}>
-              {/* Group Label */}
+              {/* Group Label - Compact */}
               {group.label && isExpanded && (
-                <div className="px-3 py-1.5 text-[10px] font-semibold text-gray-500 uppercase tracking-wider">
+                <div className="px-2 py-1 text-[9px] font-semibold text-gray-500 uppercase tracking-wider">
                   {group.label}
                 </div>
               )}
@@ -557,17 +565,17 @@ export function BuilderSidebar() {
                       )}
                       title={!isExpanded ? item.label : undefined}
                     >
-                      {/* Icon container - stays in same position during expansion */}
+                      {/* Icon container - Compact */}
                       <div className={cn(
                         "flex items-center justify-center shrink-0 transition-all duration-150",
-                        "w-5 h-5"
+                        "w-4 h-4"
                       )}>
-                        <item.icon className={cn("w-5 h-5 transition-colors duration-150", isActive && "text-gold-400")} />
+                        <item.icon className={cn("w-4 h-4 transition-colors duration-150", isActive && "text-gold-400")} />
                       </div>
                       
-                      {/* Label - fades in smoothly without affecting icon position */}
+                      {/* Label - Compact */}
                       <span className={cn(
-                        "font-medium truncate transition-all duration-150 ease-out",
+                        "font-medium truncate transition-all duration-150 ease-out text-xs",
                         isExpanded 
                           ? "opacity-100 translate-x-0 ml-0 w-auto flex-1 min-w-0" 
                           : "opacity-0 -translate-x-2 w-0 ml-0 pointer-events-none"
@@ -681,14 +689,14 @@ export function BuilderSidebar() {
           ))}
         </nav>
 
-        {/* Footer Section */}
-        <div className="flex-shrink-0 border-t border-white/10 px-4 py-4 space-y-3">
-          {/* Trial/Upgrade CTA - Fully Functional with Real Data */}
+        {/* Footer Section - Only Trial Banner (Removed Help & Support, User Profile, Pin Sidebar) */}
+        <div className="flex-shrink-0 border-t border-white/10 px-2 py-3">
+          {/* Trial/Upgrade CTA - Compact Design */}
           {isTrial && isExpanded && (
             <Link
               href="/pricing"
               className={cn(
-                "block p-3 rounded-xl backdrop-blur-sm border transition-colors",
+                "block p-2 rounded-lg backdrop-blur-sm border transition-colors",
                 trialStatus.isExpired
                   ? "bg-red-500/15 border-red-500/30 hover:bg-red-500/20"
                   : trialStatus.isUrgent
@@ -696,23 +704,23 @@ export function BuilderSidebar() {
                   : "bg-gold-500/15 border-gold-500/30 hover:bg-gold-500/20"
               )}
             >
-              <div className="flex items-center gap-2 mb-1">
+              <div className="flex items-center gap-1.5 mb-1">
                 <Clock className={cn(
-                  "w-3.5 h-3.5",
+                  "w-3 h-3",
                   trialStatus.isExpired ? "text-red-300" : trialStatus.isUrgent ? "text-orange-300" : "text-gold-300"
                 )} />
                 <span className={cn(
-                  "text-[11px] font-semibold",
+                  "text-[10px] font-semibold",
                   trialStatus.isExpired ? "text-red-100" : trialStatus.isUrgent ? "text-orange-100" : "text-gold-100"
                 )}>
                   {trialStatus.isExpired ? "Trial Expired" : "Trial Active"}
                 </span>
               </div>
               {!trialStatus.isExpired && (
-                <div className="h-1.5 w-full rounded-full bg-primary-900 overflow-hidden mb-1">
+                <div className="h-1 w-full rounded-full bg-primary-900 overflow-hidden mb-1">
                   <div
                     className={cn(
-                      "h-1.5 rounded-full transition-all duration-300",
+                      "h-1 rounded-full transition-all duration-300",
                       trialStatus.isUrgent ? "bg-orange-400" : "bg-gold-400"
                     )}
                     style={{ width: `${trialStatus.progressPercentage.toFixed(0)}%` }}
@@ -720,7 +728,7 @@ export function BuilderSidebar() {
                 </div>
               )}
               <div className={cn(
-                "text-[11px]",
+                "text-[10px]",
                 trialStatus.isExpired 
                   ? "text-red-400 font-semibold" 
                   : trialStatus.isUrgent 
@@ -728,67 +736,22 @@ export function BuilderSidebar() {
                   : "text-gray-300"
               )}>
                 {trialStatus.isExpired 
-                  ? 'Expired - Upgrade Now'
+                  ? 'Upgrade Now'
                   : trialStatus.isUrgent
                   ? `⚠️ ${trialStatus.formattedDaysLeft}`
                   : trialStatus.formattedDaysLeft}
               </div>
               {(trialStatus.isExpired || trialStatus.isUrgent) && (
                 <div className="mt-1 flex items-center justify-between">
-                  <span className="text-[10px] text-gray-400">
-                    {trialStatus.trialLeadsUsed}/{trialStatus.trialLeadsLimit} leads used
+                  <span className="text-[9px] text-gray-400">
+                    {trialStatus.trialLeadsUsed}/{trialStatus.trialLeadsLimit} leads
                   </span>
-                  <span className="text-[10px] text-gold-300 font-semibold">Upgrade →</span>
+                  <span className="text-[9px] text-gold-300 font-semibold">→</span>
                 </div>
               )}
             </Link>
           )}
-
-          {/* Help & Support */}
-          <button
-            onClick={() => window.dispatchEvent(new CustomEvent('open-ai-assistant'))}
-            className={cn(
-              "w-full flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-gray-400 hover:bg-white/5 hover:text-white transition-all",
-              !isExpanded && "justify-center"
-            )}
-            title={!isExpanded ? "Help & Support" : undefined}
-          >
-            <HelpCircle className="w-5 h-5 shrink-0" />
-            {isExpanded && <span>Help & Support</span>}
-          </button>
-
-          {/* User Profile */}
-          <div className={cn(
-            "flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-white/5 transition-colors cursor-pointer",
-            !isExpanded && "justify-center"
-          )}>
-            <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-primary-600 to-primary-500 text-white flex items-center justify-center text-sm font-semibold shadow-lg shrink-0">
-              {(trialStatus.subscription?.builder_name || 'B').charAt(0).toUpperCase()}
-            </div>
-            {isExpanded && (
-              <div className="flex-1 min-w-0">
-                <div className="text-sm font-medium text-white truncate">
-                  {trialStatus.subscription?.builder_name || 'Builder'}
-                </div>
-                <div className="text-[10px] text-gray-400 truncate">My Account</div>
-              </div>
-            )}
-          </div>
-
-          {/* Pin/Unpin Toggle */}
-          {isExpanded && (
-            <button
-              onClick={() => {
-                setIsPinned(!isPinned)
-                if (!isPinned) {
-                  setIsExpanded(true)
-                }
-              }}
-              className="w-full px-3 py-2 text-xs text-gray-400 hover:text-white hover:bg-white/5 rounded-lg transition-colors text-left"
-            >
-              {isPinned ? 'Unpin Sidebar' : 'Pin Sidebar'}
-            </button>
-          )}
+        </div>
         </div>
       </aside>
 

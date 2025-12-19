@@ -157,9 +157,13 @@ export function NegotiationsDashboard({ builderId }: NegotiationsDashboardProps)
             <h4 className="text-lg font-semibold text-white">AI Recommendations</h4>
           </div>
           <div className="space-y-3">
-            {analysis.recommendations.slice(0, 5).map((rec: any) => (
-              <RecommendationCard key={rec.negotiationId} recommendation={rec} />
-            ))}
+            {analysis.recommendations.slice(0, 5).map((rec: any) => {
+              if (!rec || !rec.negotiationId) {
+                console.warn('[NegotiationsDashboard] Invalid recommendation:', rec);
+                return null;
+              }
+              return <RecommendationCard key={rec.negotiationId} recommendation={rec} />;
+            }).filter(Boolean)}
           </div>
         </div>
       )}
@@ -222,7 +226,7 @@ function NegotiationCard({ negotiation }: { negotiation: any }) {
           {negotiation.journey?.property && (
             <div className="flex items-center gap-2 text-sm text-gray-400 mb-2">
               <Building2 className="w-4 h-4" />
-              <span>{negotiation.journey.property.title}</span>
+              <span>{negotiation.journey.property.title || 'Property'}</span>
             </div>
           )}
         </div>
@@ -307,15 +311,19 @@ function RecommendationCard({ recommendation }: {
     low: 'bg-blue-500/20 border-blue-500/30 text-blue-400',
   };
 
+  // Safe access to priority with fallback
+  const priority = recommendation?.priority || 'medium';
+  const safePriority = priority in priorityColors ? priority : 'medium';
+
   return (
-    <div className={cn(builderGlassSubPanel, 'p-4 border', priorityColors[recommendation.priority])}>
+    <div className={cn(builderGlassSubPanel, 'p-4 border', priorityColors[safePriority])}>
       <div className="flex items-start justify-between mb-2">
-        <h6 className="font-semibold text-white">{recommendation.recommendedAction}</h6>
-        <span className={cn('px-2 py-1 rounded text-xs font-medium', priorityColors[recommendation.priority])}>
-          {recommendation.priority.toUpperCase()}
+        <h6 className="font-semibold text-white">{recommendation?.recommendedAction || 'Recommendation'}</h6>
+        <span className={cn('px-2 py-1 rounded text-xs font-medium', priorityColors[safePriority])}>
+          {priority.toUpperCase()}
         </span>
       </div>
-      <p className="text-sm text-gray-300">{recommendation.reasoning}</p>
+      <p className="text-sm text-gray-300">{recommendation?.reasoning || ''}</p>
     </div>
   );
 }

@@ -410,13 +410,8 @@ export function BuilderSidebar() {
         
         {/* Content Container */}
         <div className="relative z-10 flex flex-col h-full bg-gradient-to-b from-primary-950/80 via-primary-900/80 to-primary-950/80">
-<<<<<<< HEAD
         {/* Header Section - Compact */}
         <div className="flex-shrink-0 px-3 py-3 border-b border-white/10">
-=======
-        {/* Header Section */}
-        <div className="flex-shrink-0 px-4 py-4 border-b border-white/10">
->>>>>>> 6ea032dba0a9adbd68fc37308bf15ab210292842
           {/* Brand Logo */}
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-gold-500 to-gold-400 flex items-center justify-center shadow-lg shadow-gold-500/30 shrink-0">

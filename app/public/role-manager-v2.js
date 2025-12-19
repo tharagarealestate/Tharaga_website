@@ -100,26 +100,6 @@
       roleState.builderVerified = data.builder_verified || false;
       roleState.hasBuilderProfile = data.has_builder_profile || false;
       roleState.hasBuyerProfile = data.has_buyer_profile || false;
-      
-      // CRITICAL: Ensure admin owner always has admin role in roles array and it's PRIMARY
-      const userEmail = roleState.user?.email || '';
-      const isAdminOwner = userEmail === 'tharagarealestate@gmail.com';
-      if (isAdminOwner) {
-        // Ensure admin role exists
-        if (!roleState.roles.includes('admin')) {
-          roleState.roles.push('admin');
-        }
-        // ALWAYS set admin as primary for admin owner (overrides any other primary role)
-        // This ensures tickmark shows correctly on Admin Panel in Portal dropdown
-        roleState.primaryRole = 'admin';
-        
-        console.log('[role-v2] Admin owner detected - forcing admin as primary', {
-          email: userEmail,
-          allRoles: roleState.roles,
-          primaryRole: roleState.primaryRole
-        });
-      }
-      
       roleState.initialized = true;
       roleState.loading = false;
 
@@ -127,7 +107,6 @@
         roles: roleState.roles,
         primary: roleState.primaryRole,
         userEmail: roleState.user?.email, // Log email for debugging
-        isAdminOwner: isAdminOwner,
       });
 
       // Dispatch event to notify portal menu and other listeners
@@ -190,10 +169,8 @@
     const userEmail = roleState.user?.email || window.__thgAuthState?.user?.email;
     const isAdminOwner = userEmail === 'tharagarealestate@gmail.com';
 
-    // Validate role exists (unless admin owner switching to admin)
-    // Admin owner can switch to admin even if not in roles array (they have admin privilege)
-    const canSwitchToAdmin = isAdminOwner && role === 'admin';
-    if (!canSwitchToAdmin && !roleState.roles.includes(role)) {
+    // Validate role exists (unless admin owner)
+    if (!isAdminOwner && !roleState.roles.includes(role)) {
       console.error('[role-v2] Invalid role:', role, 'User roles:', roleState.roles, 'User email:', userEmail);
       showNotification(`Error: You don't have the ${role} role`, 'error');
       return;
@@ -222,43 +199,20 @@
       }
 
       // Show instant feedback
-      const roleLabel = role === 'admin' ? 'Admin' : (role === 'buyer' ? 'Buyer' : 'Builder');
-      showNotification(`Switched to ${roleLabel} Mode`);
+      showNotification(`Switched to ${role === 'buyer' ? 'Buyer' : 'Builder'} Mode`);
 
       // Emit role change event for route guard
       emitRoleChangeEvent();
 
-      // API call in background - refresh roles after successful switch
+      // API call in background
       apiCall('/api/user/switch-role', {
         method: 'POST',
         body: JSON.stringify({ role }),
-      }).then(() => {
-        // Refresh roles from server to ensure sync
-        fetchUserRoles(true).then(() => {
-          // CRITICAL: For admin owner, ensure admin role is still available and can be switched back
-          const userEmail = roleState.user?.email || '';
-          const isAdminOwner = userEmail === 'tharagarealestate@gmail.com';
-          if (isAdminOwner && !roleState.roles.includes('admin')) {
-            roleState.roles.push('admin');
-            console.log('[role-v2] Admin owner - re-added admin role after switch');
-          }
-          
-          // Rebuild menu with fresh data
-          if (window.__thgUpdateMenu) {
-            window.__thgUpdateMenu();
-          }
-          if (window.__updatePortalMenu) {
-            window.__updatePortalMenu();
-          }
-        });
       }).catch(error => {
         // Rollback on failure
         roleState.primaryRole = oldRole;
         if (window.__thgUpdateMenu) {
           window.__thgUpdateMenu();
-        }
-        if (window.__updatePortalMenu) {
-          window.__updatePortalMenu();
         }
         showNotification(`Error: ${error.message}`, 'error');
       });
@@ -277,28 +231,8 @@
 
   // Check if needs onboarding
   async function needsOnboarding() {
-    if (!roleState.initialized) {
-      await fetchUserRoles();
-    }
-    
-    // Admin owner should NEVER see onboarding (they always have admin role)
-    const userEmail = roleState.user?.email || window.__thgAuthState?.user?.email || '';
-    const isAdminOwner = userEmail === 'tharagarealestate@gmail.com';
-    
-    if (isAdminOwner) {
-      console.log('[role-v2] Admin owner detected in needsOnboarding - returning false');
-      return false; // Admin owner never needs onboarding
-    }
-    
-    // Regular users need onboarding if they have no roles
-    const needsIt = roleState.roles.length === 0;
-    console.log('[role-v2] needsOnboarding check:', {
-      userEmail,
-      isAdminOwner,
-      rolesCount: roleState.roles.length,
-      needsIt
-    });
-    return needsIt;
+    if (!roleState.initialized) await fetchUserRoles();
+    return roleState.roles.length === 0;
   }
 
   // Show role selection modal (with duplicate prevention)
@@ -312,15 +246,6 @@
     const existing = document.getElementById('thg-role-onboarding');
     if (existing) {
       console.log('[role-v2] Modal already exists');
-      return;
-    }
-    
-    // Double-check: Admin owner should NEVER see onboarding (regardless of roles)
-    const userEmail = roleState.user?.email || window.__thgAuthState?.user?.email || '';
-    const isAdminOwner = userEmail === 'tharagarealestate@gmail.com';
-    if (isAdminOwner) {
-      console.log('[role-v2] Admin owner detected in showRoleSelectionModal - blocking onboarding modal');
-      roleState.hasShownOnboarding = true;
       return;
     }
 
@@ -544,16 +469,6 @@
       const roleLabel = role === 'buyer' ? 'Buyer' : 'Builder';
       showNotification(`✅ ${roleLabel} role added! Check Portal menu for dashboard access.`);
 
-      // Refresh roles and rebuild menus to show new role
-      fetchUserRoles(true).then(() => {
-        if (window.__thgUpdateMenu) {
-          window.__thgUpdateMenu();
-        }
-        if (window.__updatePortalMenu) {
-          window.__updatePortalMenu();
-        }
-      });
-
       // NO REDIRECT - just stay on current page
 
     } catch (error) {
@@ -608,12 +523,6 @@
     const userEmail = user.email || '';
     const isAdminOwner = userEmail === 'tharagarealestate@gmail.com';
 
-    // Check if this is desktop header menu (not mobile)
-    // Desktop menu is .thg-auth-menu inside header.nav
-    // Mobile has separate .mobile-user-dropdown
-    const isDesktopHeader = menu.closest && menu.closest('header.nav') && !menu.classList.contains('mobile-user-dropdown');
-    const isMobile = window.innerWidth <= 767;
-
     let menuHTML = `
       <div class="thg-auth-item is-header" aria-disabled="true">
         <span class="thg-initial-lg">${getInitials(user)}</span>
@@ -625,48 +534,26 @@
       <div class="thg-auth-sep"></div>
     `;
 
-    // Role switcher section - ONLY show on mobile, NOT in desktop header dropdown
-    // Desktop header dropdown should not show "YOUR ROLES" section to avoid clutter
-    if (!isDesktopHeader && (roleState.roles.length > 0 || isAdminOwner)) {
+    // Role switcher section - show for admin owner OR users with roles
+    if (roleState.roles.length > 0 || isAdminOwner) {
       menuHTML += '<div class="thg-role-section">';
       menuHTML += '<div class="thg-role-label">YOUR ROLES</div>';
 
-      // Determine which roles to show
-      // For admin owner: show all roles they have (including admin if present)
-      // For regular users: show only buyer/builder (never show admin)
-      let rolesToShow = [];
-      
-      if (isAdminOwner) {
-        // Admin owner: show all roles including admin
-        rolesToShow = roleState.roles.length > 0 
-          ? roleState.roles 
-          : ['buyer', 'builder', 'admin']; // Fallback if no roles yet
-      } else {
-        // Regular users: filter out admin role - they should never see it
-        rolesToShow = roleState.roles.filter(r => r !== 'admin');
-      }
+      // If admin owner and roles array is empty, show all role options
+      const rolesToShow = isAdminOwner && roleState.roles.length === 0
+        ? ['buyer', 'builder', 'admin']
+        : roleState.roles;
 
-      // Count displayable roles for "add role" button logic (buyer/builder only)
+      // Count displayable roles (buyer/builder only, exclude admin)
       const displayableRoles = rolesToShow.filter(r => r !== 'admin');
 
       rolesToShow.forEach(role => {
-        // For non-admin users, skip admin role (should never reach here due to filter above, but safety check)
-        if (!isAdminOwner && role === 'admin') return;
+        // Skip 'admin' role - it's not a mode, it's a privilege shown in Portal dropdown
+        if (role === 'admin') return;
 
         const isActive = role === roleState.primaryRole;
-        let icon, label;
-        
-        if (role === 'admin') {
-          icon = '⚙️';
-          label = 'Admin Mode';
-        } else if (role === 'buyer') {
-          icon = '🏠';
-          label = 'Buyer Mode';
-        } else {
-          icon = '🏗️';
-          label = 'Builder Mode';
-        }
-        
+        const icon = role === 'buyer' ? '🏠' : '🏗️';
+        const label = role === 'buyer' ? 'Buyer Mode' : 'Builder Mode';
         const badge = role === 'builder' && roleState.builderVerified ?
           '<span class="thg-role-badge verified">✓ Verified</span>' : '';
         const activeIndicator = isActive ? '<span class="thg-role-active">✓</span>' : '';
@@ -1244,131 +1131,16 @@
         buildEnhancedMenu(ui);
       }
 
-      // Start real-time role monitoring
-      startRoleMonitoring();
-
-      // Check if needs onboarding (ONCE) - skip for admin owner completely
-      const userEmail = user.email || '';
-      const isAdminOwner = userEmail === 'tharagarealestate@gmail.com';
-      
-      // Admin owner should NEVER see onboarding (they always have admin role)
-      if (isAdminOwner) {
-        console.log('[role-v2] Admin owner detected - skipping onboarding completely');
-        roleState.hasShownOnboarding = true; // Mark as shown to prevent any future popups
-        return;
-      }
-      
-      // For regular users, check if they need onboarding
+      // Check if needs onboarding (ONCE)
       if (await needsOnboarding()) {
-        console.log('[role-v2] User needs onboarding - showing role selection modal');
-        // Small delay to ensure UI is ready and page is fully loaded
-        setTimeout(() => {
-          // Triple-check: modal doesn't exist, user still needs onboarding, and not admin owner
-          const stillNeedsOnboarding = roleState.roles.length === 0 && !roleState.hasShownOnboarding;
-          const modalExists = document.getElementById('thg-role-onboarding');
-          const currentUserEmail = roleState.user?.email || window.__thgAuthState?.user?.email || '';
-          const stillAdminOwner = currentUserEmail === 'tharagarealestate@gmail.com';
-          
-          if (!modalExists && stillNeedsOnboarding && !stillAdminOwner) {
-            console.log('[role-v2] Conditions met - showing onboarding modal');
-            showRoleSelectionModal();
-          } else {
-            console.log('[role-v2] Onboarding skipped:', {
-              modalExists: !!modalExists,
-              stillNeedsOnboarding,
-              stillAdminOwner,
-              hasShownOnboarding: roleState.hasShownOnboarding
-            });
-          }
-        }, 800); // Increased delay to ensure page is fully loaded
+        console.log('[role-v2] User needs onboarding');
+        setTimeout(() => showRoleSelectionModal(), 400);
       } else {
-        console.log('[role-v2] User has roles - no onboarding needed:', roleState.roles);
+        console.log('[role-v2] User has roles:', roleState.roles);
       }
     } catch (error) {
       console.error('[role-v2] Init error:', error);
     }
-  }
-  
-  // Real-time role monitoring - refresh roles periodically to catch external changes
-  function startRoleMonitoring() {
-    // Only monitor if user is authenticated
-    if (!roleState.user || !roleState.user.email) {
-      // Wait a bit and retry if user not ready yet
-      setTimeout(() => {
-        if (roleState.user && roleState.user.email) {
-          startRoleMonitoring();
-        }
-      }, 2000);
-      return;
-    }
-    
-    // Don't start multiple monitors
-    if (window.__thgRoleMonitorStarted) return;
-    window.__thgRoleMonitorStarted = true;
-    
-    console.log('[role-v2] Starting real-time role monitoring for:', roleState.user.email);
-    
-    // Refresh roles every 15 seconds to catch database changes (more frequent for better UX)
-    const monitorInterval = setInterval(() => {
-      if (!roleState.user || !roleState.user.email || !roleState.initialized) {
-        // User logged out or not initialized, stop monitoring
-        clearInterval(monitorInterval);
-        window.__thgRoleMonitorStarted = false;
-        return;
-      }
-      
-      const oldRoles = [...roleState.roles].sort();
-      const oldPrimary = roleState.primaryRole;
-      const userEmail = roleState.user.email;
-      const isAdminOwner = userEmail === 'tharagarealestate@gmail.com';
-      
-      // For admin owner, always ensure admin is primary
-      if (isAdminOwner && oldPrimary !== 'admin') {
-        console.log('[role-v2] Admin owner detected - forcing admin as primary in real-time');
-        roleState.primaryRole = 'admin';
-        if (window.__thgUpdateMenu) window.__thgUpdateMenu();
-        if (window.__updatePortalMenu) window.__updatePortalMenu();
-        emitRoleChangeEvent();
-        return;
-      }
-      
-      fetchUserRoles(true).then(() => {
-        // Check if roles or primary role changed
-        const newRoles = [...roleState.roles].sort();
-        const rolesChanged = JSON.stringify(oldRoles) !== JSON.stringify(newRoles);
-        const primaryChanged = oldPrimary !== roleState.primaryRole;
-        
-        // For admin owner, always ensure admin is primary after fetch
-        if (isAdminOwner && roleState.primaryRole !== 'admin') {
-          roleState.primaryRole = 'admin';
-          console.log('[role-v2] Admin owner - corrected primary role to admin after fetch');
-        }
-        
-        if (rolesChanged || primaryChanged || (isAdminOwner && oldPrimary !== 'admin')) {
-          console.log('[role-v2] Roles changed - updating UI', {
-            oldRoles,
-            newRoles: roleState.roles,
-            oldPrimary,
-            newPrimary: roleState.primaryRole,
-            isAdminOwner
-          });
-          
-          // Rebuild menus if roles changed
-          if (window.__thgUpdateMenu) {
-            window.__thgUpdateMenu();
-          }
-          if (window.__updatePortalMenu) {
-            window.__updatePortalMenu();
-          }
-          
-          // Emit change event
-          emitRoleChangeEvent();
-        }
-      }).catch(err => {
-        // Silently fail - don't spam console
-        console.debug('[role-v2] Background role refresh failed:', err);
-      });
-    }, 15000); // 15 seconds - more frequent for better real-time feel
   }
 
   // Expose API
@@ -1381,7 +1153,6 @@
     init: initRoleManager,
     getState: () => ({ ...roleState }),
     buildMenu: buildEnhancedMenu,
-    refresh: () => fetchUserRoles(true), // Manual refresh function for testing
   };
 
   // Export update menu function

@@ -1,0 +1,933 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Login / Sign up • Tharaga</title>
+  <meta name="description" content="Secure login and signup for Tharaga partner portals and listings." />
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap">
+  <script type="module" src="/js/fragment-handle.js" defer></script>
+
+  <style>
+    :root{
+      /* Tharaga Brand Palette */
+      --bg:#0a0a0a;          /* Deep Obsidian Background */
+      --card:#151515;        /* Charcoal Card Surface */
+      --muted:#9ca3af;       /* Muted Platinum Gray */
+      --txt:#f5f5f5;         /* Platinum White Text */
+      --acc:#d4af37;         /* Regal Gold (primary accent) */
+      --acc2:#16a34a;        /* Emerald Green (secondary accent) */
+      --warn:#f59e0b;        /* Amber Gold (warnings, classy) */
+      --err:#dc2626;         /* Rich Crimson (errors) */
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial;
+      /*background:
+        radial-gradient(1200px 800px at 80% -10%,#1c1c1c 0%,transparent 60%),
+        radial-gradient(900px 700px at -10% 20%,#111111 0%,transparent 60%),
+        var(--bg);
+      color:var(--txt);*/
+    }
+    .container{min-height:100%;display:grid;grid-template-rows:auto 1fr auto}
+    header{
+      display:flex;align-items:center;justify-content:space-between;
+      padding:18px 20px;color:var(--txt);
+    }
+    header a, header button{color:var(--txt);text-decoration:none;font-weight:600;opacity:.85}
+    header a:hover{opacity:1;color:var(--acc)}
+    main{display:grid;place-items:center;padding:24px}
+    /* Removed page-wide backdrop/blur for embedded/standalone use */
+    body::before { content: none !important; display: none !important; }
+    .card{
+      width:420px;max-width:95vw;
+      background:linear-gradient(180deg,#1a1a1a,#0f0f0f);
+      backdrop-filter:saturate(180%) blur(10px);
+      border:1px solid rgba(212,175,55,.25); /* subtle gold tint */
+      border-radius:16px;
+      box-shadow:0 10px 40px rgba(0,0,0,.55);
+      padding:22px;
+      color:var(--txt);
+    }
+    h1{font-size:22px;margin:0 0 6px;color:var(--acc)}
+    p.muted{color:var(--muted);margin:0 0 16px;font-size:14px}
+    label{display:block;font-size:13px;margin:10px 0 6px;color:var(--txt)}
+    input{
+      position: relative;width:100%;padding:12px 12px;border-radius:10px;padding-right: 40px;;
+      border:1px solid #333333;
+      background:#1e1e1e;
+      color:var(--txt);
+      outline:none;
+    }
+    input:focus{
+      border-color:var(--acc);
+      box-shadow:0 0 0 3px rgba(212,175,55,.25);
+    }
+
+    /* wrapper around input + icon */
+.input-pill {
+  position: relative;   /* anchor for the absolute icon */
+  width: 100%;
+}
+
+/* make sure the input leaves room for the icon */
+.input-pill input {
+  width: 100%;
+  padding-right: 44px;  /* provide space so text doesn't overlap the eye */
+  box-sizing: border-box;
+}
+    .toggle-eye{position:absolute;top:50%;right:12px;transform:translateY(-50%);cursor:pointer;font-size:14px;opacity:.7;color:var(--muted)}
+    .toggle-eye:hover{opacity:1;color:var(--acc)}
+    .row{display:flex;gap:10px}
+    .btn{cursor:pointer;border:0;border-radius:10px;padding:12px 14px;font-weight:700;color:var(--txt)}
+    .btn-primary{background:linear-gradient(180deg,var(--acc),#b8860b);color:black}
+    .btn-ghost{background:transparent;border:1px solid #333333;color:var(--muted)}
+    .btn-danger{background:linear-gradient(180deg,var(--err),#7f1d1d);color:white}
+    .hint{font-size:12px;color:var(--muted);margin-top:8px}
+    .msg{margin-top:12px;font-size:14px}
+    .msg.ok{color:var(--acc2)}
+    .msg.err{color:#fca5a5}
+    .divider{height:1px;background:linear-gradient(90deg,transparent,#2d2d2d,transparent);margin:16px 0}
+    .pill{
+      display:inline-flex;align-items:center;gap:8px;
+      padding:8px 10px;
+      border:1px solid #333333;
+      border-radius:999px;
+      background:rgba(20,20,20,.6);
+      font-size:12px;
+      color:var(--muted)
+    }
+    footer{padding:18px 20px;color:var(--muted);font-size:12px;text-align:center}
+    .hidden{display:none !important}
+    .flex{display:flex;align-items:center;gap:10px}
+    .right{margin-left:auto}
+    .copy{cursor:pointer;font-size:12px;opacity:.8;color:var(--muted)}
+    .copy:hover{opacity:1;color:var(--acc)}
+    .small-link{font-size:12px;color:var(--acc2);text-decoration:none}
+    .small-link:hover{text-decoration:underline;color:var(--acc)}
+    .success-block{
+      background:#0f1f12;
+      border:1px solid #224422;
+      border-radius:12px;
+      padding:12px;
+      margin-top:12px;
+      color:var(--acc2)
+    }
+    /* Tabs */
+    .tabs{display:flex;gap:8px;margin:6px 0 14px}
+    .tab{flex:1;display:inline-flex;align-items:center;justify-content:center;gap:8px;border:1px solid #333333;border-radius:999px;padding:8px 10px;background:rgba(20,20,20,.6);font-weight:700;color:var(--muted);cursor:pointer}
+    .tab[aria-selected="true"]{color:#111;background:linear-gradient(180deg,var(--acc),#b8860b);border-color:rgba(212,175,55,.35)}
+    .tab[disabled]{opacity:.6;cursor:not-allowed}
+
+    /* OAuth pre-screen modal */
+    .precheck-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.4);display:none;align-items:center;justify-content:center;z-index:2147483647}
+    .precheck-backdrop[aria-hidden="false"]{display:flex}
+    .precheck-modal{width:min(520px,94vw);background:linear-gradient(180deg,#1a1a1a,#0f0f0f);border:1px solid rgba(212,175,55,.25);border-radius:14px;box-shadow:0 24px 80px rgba(0,0,0,.55);padding:16px;color:var(--txt);animation:popupSlide .28s ease-out}
+    .precheck-title{font-weight:800;margin:2px 0 8px;color:var(--acc);font-size:18px}
+    .precheck-body{color:var(--muted);font-size:14px;margin-bottom:10px}
+    .precheck-row{display:flex;gap:10px;margin-top:12px}
+    .precheck-input{flex:1;padding:10px;border-radius:10px;border:1px solid #333;background:#1e1e1e;color:var(--txt)}
+    .precheck-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:12px}
+    .btn-gold{background:linear-gradient(180deg,var(--acc),#b8860b);color:#111}
+    .btn-plain{background:transparent;border:1px solid #333;color:var(--muted)}
+    .precheck-msg{font-size:13px;margin-top:8px}
+
+    /* Remove fullscreen overlay background/effects */
+  
+
+    /* Center the card itself as a floating modal */
+    .auth-modal {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      animation: popupSlide 0.35s ease-out;
+      max-height: 95vh;
+      overflow-y: auto;
+      z-index: 2147483647;
+      box-shadow: 0 24px 80px rgba(0,0,0,.55), 0 4px 16px rgba(0,0,0,.35);
+    }
+
+    /* Sweet little animation */
+    @keyframes popupSlide {
+      0% { transform: translate(-50%, calc(-50% + 40px)) scale(0.96); opacity: 0; }
+      100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+    }
+
+   .close-btn {
+      position: absolute;
+      top: 10px;
+      right: 12px;
+      background: linear-gradient(180deg, var(--acc), #b8860b, #8b6508);
+      border: none;
+      font-size: 20px;
+      font-weight: bold;
+      color: #111; /* near-black for readability */
+      cursor: pointer;
+      z-index: 3;
+      padding: 6px 12px;
+      border-radius: 50%; /* circular button */
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+      transition: all 0.3s ease;
+    }
+
+  .close-btn:hover {
+    color: #fff; /* white icon on hover */
+    background: linear-gradient(180deg, #b8860b, #8b6508, #5a3a02);
+    transform: scale(1.1); /* subtle zoom */
+  }
+    
+</style>
+
+
+</head>
+
+<body>
+  
+    <main>
+    <section class="card auth-modal" aria-live="polite">
+      <!-- everything you already have inside main goes here -->
+      <h1>Sign in to continue</h1>
+        <p class="muted">"Browse only approved builder projects — safe, transparent, and verified"</p>
+
+        <div class="tabs" role="tablist" aria-label="Authentication">
+          <button id="tabSignIn" class="tab" role="tab" aria-selected="true" aria-controls="authForm">Sign In</button>
+          <button id="tabSignUp" class="tab" role="tab" aria-selected="false" aria-controls="signupForm">Create Account</button>
+        </div>
+
+        <!-- session-state area (hidden until logged in) -->
+        <div id="authed" class="hidden">
+          <div class="success-block">
+            <div class="flex">
+              <strong>You're signed in</strong>
+              <span id="userEmail" class="right"></span>
+            </div>
+            <div id="continueWrap" class="flex" style="margin-top:8px">
+              <button id="continueBtn" class="btn btn-primary">Continue</button>
+              <a id="viewHome" class="btn btn-ghost" href="/">Go Home</a>
+              <button id="signOutBtn" class="btn btn-danger right">Sign out</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- auth form (hidden if logged in) -->
+        <form id="authForm" role="tabpanel" aria-labelledby="tabSignIn" autocomplete="on">
+          <label for="email">Email</label>
+          <input id="email" name="email" type="email" placeholder="you@domain.com" autocomplete="email" required>
+
+          <div class="row">
+            <div style="flex:1">
+              <label for="password">Password</label>
+
+              <!-- NEW: input wrapper that becomes the positioning context -->
+              <div class="input-pill" style="position:relative;">
+                <input id="password" name="password" type="password" placeholder="••••••••" autocomplete="current-password">
+                <span id="toggleEye" class="toggle-eye" role="button" aria-label="Show password">👁</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="row" style="margin-top:12px">
+            <button id="pwdBtn" class="btn btn-primary" type="button">Sign in</button>
+          </div>
+
+          <div class="row" style="margin-top:10px">
+            <a id="forgotLink" class="small-link right" href="/Reset_password/">Forgot password?</a>
+          </div>
+
+          <div id="msg" class="msg" role="status"></div>
+        </form>
+
+        <div class="divider"></div>
+
+        <div class="hint">
+          Tip: If you reached this page after clicking a partner link, we'll return you there after sign-in.
+        </div>
+
+        <!-- sign-up form -->
+        <form id="signupForm" role="tabpanel" aria-labelledby="tabSignUp" class="hidden" autocomplete="on">
+          <label for="su_email">Email</label>
+          <input id="su_email" name="email" type="email" placeholder="you@domain.com" autocomplete="email" required>
+
+          <div class="row">
+            <div style="flex:1">
+              <label for="su_password">Password</label>
+              <div class="input-pill" style="position:relative;">
+                <input id="su_password" name="password" type="password" placeholder="At least 8 characters" autocomplete="new-password">
+                <span id="toggleEyeSu1" class="toggle-eye" role="button" aria-label="Show password">👁</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="row">
+            <div style="flex:1">
+              <label for="su_password2">Confirm Password</label>
+              <div class="input-pill" style="position:relative;">
+                <input id="su_password2" name="password2" type="password" placeholder="Repeat password" autocomplete="new-password">
+                <span id="toggleEyeSu2" class="toggle-eye" role="button" aria-label="Show password">👁</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="row" style="margin-top:12px">
+            <button id="createBtn" class="btn btn-primary" type="button">Create account</button>
+          </div>
+
+          <div id="su_msg" class="msg" role="status"></div>
+        </form>
+        
+        <!-- Social sign-in -->
+        <div class="row" style="margin-top:12px">
+          <button id="oauthGoogle" class="btn btn-ghost" type="button">Continue with Google</button>
+        </div>
+        <button class="close-btn" onclick="(window.self!==window.parent) ? window.parent.postMessage({type:'close_login_modal'}, '*') : window.history.back()">×</button>
+
+    </section>
+    </main>
+  
+  <!-- OAuth Pre-screen Modal -->
+  <div id="oauthPrecheck" class="precheck-backdrop" aria-hidden="true" role="dialog" aria-modal="true" aria-label="Confirm account creation">
+    <div class="precheck-modal">
+      <div class="precheck-title" id="precheckTitle">Continue with provider</div>
+      <div class="precheck-body" id="precheckBody">Enter your email to continue.</div>
+      <div class="precheck-row">
+        <input id="precheckEmail" class="precheck-input" type="email" placeholder="you@domain.com" autocomplete="email" />
+      </div>
+      <div class="precheck-msg" id="precheckMsg"></div>
+      <div class="precheck-actions">
+        <button id="precheckCancel" class="btn btn-plain" type="button">Cancel</button>
+        <button id="precheckPrimary" class="btn btn-primary btn-gold" type="button">Continue</button>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- Auth + Gate Logic -->
+  <script type="module">
+    //let hasRedirected = false;
+    // ========================= CONFIG =========================
+    const SUPABASE_URL = 'https://wedevtjjmdvngyshqdro.supabase.co'; // <-- REQUIRED
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndlZGV2dGpqbWR2bmd5c2hxZHJvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU0NzYwMzgsImV4cCI6MjA3MTA1MjAzOH0.Ex2c_sx358dFdygUGMVBohyTVto6fdEQ5nydDRh9m6M'; // <-- REQUIRED
+
+    const __qs = new URLSearchParams(location.search);
+    // Prefer current origin so the email redirect callback lands on the same origin (enables storage/postMessage)
+    const FALLBACK_PARENT_ORIGIN = location.origin;
+    const PARENT_ORIGIN = (__qs.get('parent_origin') || FALLBACK_PARENT_ORIGIN || location.origin).replace(/\/$/, '');
+    const HANDOFF_STATE = (__qs.get('state') || (function(){ try { return JSON.parse(localStorage.getItem('__tharaga_auth_state')||'null')?.state||null; } catch(_) { return null; } })());
+    //const POST_AUTH_CALLBACK = `https://auth.tharaga.co.in/login_signup_glassdrop/?post_auth=1&parent_origin=${encodeURIComponent(PARENT_ORIGIN)}`;
+    
+    // ========================= IMPORT =========================
+    import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+    const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true } });
+    const isIframe = window.self !== window.parent;
+    window.supabase = supabase; // expose for DevTools
+
+    // Magic-link is disabled. No redirect token handling is required.
+
+    // ---------- NEW: expired/invalid link UX + email remember ----------
+    (function handleExpiredAndPrefill(){
+      try {
+        const qp = new URLSearchParams(location.search);
+        const hp = new URLSearchParams((location.hash || '').replace(/^#/, ''));
+
+        const errorFromQuery = qp.get('error') || qp.get('error_code') || qp.get('error_description');
+        const errorFromHash = hp.get('error') || hp.get('error_code') || hp.get('error_description');
+        const errCode = qp.get('error_code') || hp.get('error_code') || '';
+        const err = qp.get('error') || hp.get('error') || '';
+        const errDesc = qp.get('error_description') || hp.get('error_description') || '';
+        const isExpired = qp.get('expired') === '1' || errCode === 'otp_expired';
+
+        if (isExpired || errorFromQuery || errorFromHash) {
+          // Hide the form and show a concise message
+          try { document.getElementById('authForm') ?. classList.add('hidden'); } catch(_) {}
+          try { document.getElementById('authed') ?. classList.add('hidden'); } catch(_) {}
+          const msg = (isExpired || errCode === 'otp_expired') ? 'Link expired. Returning to your page ... ' : (errDesc || 'There was a problem with the login link.');
+          try { setMsg(msg, false); } catch(_) {}
+
+          // Notify parent (modal) so it can close gracefully
+          try {
+            const payload = { type: 'tharaga_verify_failed', error: err || null, error_code: errCode || null, error_description: errDesc || null };
+            if (window.self !== window.parent) {
+              window.parent.postMessage(payload, '*');
+            }
+          } catch(_) {}
+
+          // If the error came from the hash fragment, clean it up once by moving it into a stable query param
+          if (errorFromHash) {
+            const cleanParams = new URLSearchParams(location.search);
+            cleanParams.set('post_auth', '1');
+            cleanParams.set('expired', '1');
+            const nextFromQS = qp.get('next');
+            if (nextFromQS) cleanParams.set('next', nextFromQS);
+            const parentOrigin = qp.get('parent_origin');
+            if (parentOrigin) cleanParams.set('parent_origin', parentOrigin);
+            const redirectSelf = location.pathname + '?' + cleanParams.toString();
+
+            setTimeout(() => {
+              try {
+                if (window.self !== window.parent) {
+                  window.parent.postMessage({ type: 'close_login_modal' }, '*');
+                } else {
+                  // Replace only if actually different (prevents loops)
+                  if ((location.pathname + location.search) !== redirectSelf) {
+                    try { history.replaceState(null, '', redirectSelf); } catch(_) {}
+                    location.replace(redirectSelf);
+                  }
+                }
+              } catch(_) {
+                try { window.close(); } catch(_) {}
+              }
+            }, 600);
+          } else {
+            // Query already reflects expired/error, do not navigate again; close modal or go back gracefully
+            setTimeout(() => {
+              try {
+                (window.self !== window.parent)
+                  ? window.parent.postMessage({ type: 'close_login_modal' }, '*')
+                  : window.history.back();
+              } catch(_) {
+                try { window.close(); } catch(_) {}
+              }
+            }, 900);
+          }
+        }
+
+        // Prefill last email if available
+        let lastEmail = null;
+        try { lastEmail = localStorage.getItem('__tharaga_last_email') || null; } catch(_) {}
+        if (!lastEmail) {
+          // Also check query param if provided by upstream
+          lastEmail = qp.get('email') || null;
+        }
+        if (lastEmail) {
+          try { document.getElementById('email').value = lastEmail; } catch(_) {}
+        }
+      } catch(_) {}
+    })();
+  
+
+
+    // ========================= UI HOOKS ========================
+    const yearEl = document.getElementById('year');
+    if (yearEl) yearEl.textContent = new Date().getFullYear();
+
+
+    const form = document.getElementById('authForm');
+    const authed = document.getElementById('authed');
+    const pwdBtn = document.getElementById('pwdBtn');
+    const signOutBtn = document.getElementById('signOutBtn');
+    const continueBtn = document.getElementById('continueBtn');
+    const emailEl = document.getElementById('email');
+    const pwdEl = document.getElementById('password');
+    const msgEl = document.getElementById('msg');
+    const userEmail = document.getElementById('userEmail');
+	const toggleEye=document.getElementById('toggleEye');
+    const oauthGoogle = document.getElementById('oauthGoogle');
+    // Tabs + Sign Up references
+    const signUpForm = document.getElementById('signupForm');
+    const tabSignIn = document.getElementById('tabSignIn');
+    const tabSignUp = document.getElementById('tabSignUp');
+    const suEmail = document.getElementById('su_email');
+    const suPwd1 = document.getElementById('su_password');
+    const suPwd2 = document.getElementById('su_password2');
+    const suMsg = document.getElementById('su_msg');
+    const createBtn = document.getElementById('createBtn');
+    const toggleEyeSu1 = document.getElementById('toggleEyeSu1');
+    const toggleEyeSu2 = document.getElementById('toggleEyeSu2');
+
+    // ========================= HELPERS =========================
+    const storage = {
+      get(){ try { return JSON.parse(localStorage.getItem('post_auth_target')||'null'); } catch { return null } },
+      set(v){ localStorage.setItem('post_auth_target', JSON.stringify(v)); },
+      clear(){ localStorage.removeItem('post_auth_target'); }
+    };
+
+    function setMsg(text, ok=false){
+      msgEl.textContent = text || '';
+      msgEl.className = 'msg' + (text? (ok? ' ok':' err') : '');
+    }
+    function setSuMsg(text, ok=false){
+      if (!suMsg) return;
+      suMsg.textContent = text || '';
+      suMsg.className = 'msg' + (text? (ok? ' ok':' err') : '');
+    }
+    function validateEmailFormat(v){
+      return /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v);
+    }
+    function mapAuthError(err){
+      const raw = (err?.message || '').toLowerCase();
+      if (raw.includes('invalid login credentials')) return 'Wrong email or password';
+      if (raw.includes('email not confirmed')) return 'Email not verified. Check your inbox.';
+      if (raw.includes('over quota') || raw.includes('rate limit')) return 'Too many attempts. Try again later.';
+      if (raw.includes('network') || raw.includes('fetch')) return 'Network error. Check your connection.';
+      return err?.message || 'Authentication failed';
+    }
+
+    function getNextFromQuery(){
+      const p = new URLSearchParams(location.search);
+      return p.get('next');
+    }
+
+    function isSafeRedirect(href) {
+      try {
+        const url = new URL(href, location.origin);
+        // allow only same-origin or explicitly allowed origins (extend array if needed)
+        return url.origin === location.origin;
+      } catch { return false; }
+    }
+
+    // Allow final redirects to either auth origin (this page) or the main site
+    function isAllowedFinalRedirect(href) {
+      try {
+        const url = new URL(href, location.origin);
+        return url.origin === location.origin || url.origin === 'https://tharaga.co.in';
+      } catch { return false; }
+    }
+
+    function ensurePendingTargetFromQuery(){
+      const next = new URLSearchParams(location.search).get('next');
+      if (!next || storage.get()) return;
+      try {
+        const url = new URL(next, location.origin); // handles relative or absolute
+        if (isSafeRedirect(url.href)) {
+          storage.set({ href: url.href, openInNewTab: false });
+        } else {
+          console.warn('Rejected unsafe next redirect:', url.href);
+        }
+      } catch (e) {
+        console.warn('Invalid next param', e);
+      }
+    }
+
+
+    function showAuthed(email){
+      userEmail.textContent = email ? `• ${email}` : '';
+      authed.classList.remove('hidden');
+      form.classList.add('hidden');
+      if (signUpForm) signUpForm.classList.add('hidden');
+    }
+    function showForm(){
+      authed.classList.add('hidden');
+      form.classList.remove('hidden');
+      if (signUpForm) signUpForm.classList.add('hidden');
+    }
+
+	// === Password eye toggle ===
+    toggleEye.addEventListener('click',()=>{
+      const t=pwdEl.type==='password'?'text':'password';
+      pwdEl.type=t;
+      toggleEye.textContent=t==='password'?'👁':'🙈';
+    });
+    toggleEye.addEventListener('keydown', e => {
+      if (e.key === 'Enter' || e.key === ' ') toggleEye.click();
+    });
+
+    // Signup eyes
+    if (toggleEyeSu1) toggleEyeSu1.addEventListener('click',()=>{
+      const t=suPwd1.type==='password'?'text':'password';
+      suPwd1.type=t; toggleEyeSu1.textContent=t==='password'?'👁':'🙈';
+    });
+    if (toggleEyeSu2) toggleEyeSu2.addEventListener('click',()=>{
+      const t=suPwd2.type==='password'?'text':'password';
+      suPwd2.type=t; toggleEyeSu2.textContent=t==='password'?'👁':'🙈';
+    });
+
+    function switchTab(tab){
+      const isSignIn = tab === 'signin';
+      if (tabSignIn) tabSignIn.setAttribute('aria-selected', isSignIn ? 'true' : 'false');
+      if (tabSignUp) tabSignUp.setAttribute('aria-selected', isSignIn ? 'false' : 'true');
+      form.classList.toggle('hidden', !isSignIn);
+      if (signUpForm) signUpForm.classList.toggle('hidden', isSignIn);
+      setMsg(''); setSuMsg('');
+      try { (isSignIn ? emailEl : suEmail).focus(); } catch(_) {}
+    }
+    if (tabSignIn) tabSignIn.addEventListener('click', ()=> switchTab('signin'));
+    if (tabSignUp) tabSignUp.addEventListener('click', ()=> switchTab('signup'));
+
+    // ========================= INIT ===========================
+    ensurePendingTargetFromQuery();
+
+    // When page loads, if already signed in and have pending target, continue.
+    (async function onInit(){
+  try {
+    const { data } = await supabase.auth.getSession();
+    const session = data?.session;
+    const pending = storage.get();
+
+    // If already signed in
+    if (session) {
+      showAuthed(session.user?.email);
+
+      const isPostAuth = new URLSearchParams(location.search).get('post_auth') === '1';
+if (isPostAuth) {
+  // Friendly confirmation for the tab that opened the magic link
+  setMsg('Thanks — you are signed in. Returning to the app…', true);
+
+  // Read any pending target (auth-gate stored this earlier)
+  const pending = storage.get();
+
+  // Build payload to signal other tabs / parent windows
+  const continuePayload = {
+    ts: Date.now(),
+    next: pending?.href || new URLSearchParams(location.search).get('next') || null,
+    user: session?.user ? { id: session.user.id, email: session.user.email } : null
+  };
+
+  // 1) Signal other tabs (auth-gate listens for this key)
+  try {
+    localStorage.setItem('__tharaga_magic_continue', JSON.stringify(continuePayload));
+    // Keep __tharaga_magic_confirmed for backward compatibility if you want
+    try { localStorage.setItem('__tharaga_magic_confirmed', JSON.stringify({ ts: Date.now() })); } catch (_) {}
+  } catch (e) {
+    console.warn('Could not write magic-continue to localStorage', e);
+  }
+
+  // 2) If embedded inside an iframe, also postMessage to parent (immediate)
+  try {
+    if (window.self !== window.parent) {
+      window.parent.postMessage({
+        type: 'signed_in',
+        user: continuePayload.user,
+        next: continuePayload.next
+      }, '*'); // parent origin check happens in auth-gate; keeping '*' here to be permissive
+    }
+  } catch (e) { /* ignore */ }
+
+  // If this page is embedded (iframe), let parent resume and keep this visible.
+  if (window.self !== window.parent) {
+    return;
+  }
+
+  // Standalone tab (opened from email): do NOT redirect away.
+  // Show a friendly confirmation and keep the page here.
+  setMsg('Email is verified. You can close this tab and return to the app.', true);
+  return;
+}
+
+      // No auto-redirect when an existing session is detected.
+      // Keep the confirmation UI like NoBroker/MagicBricks: user must choose Continue or Sign out.
+      setMsg('', true);
+      return;
+    }
+
+    // Not signed in
+    showForm();
+  } catch (e) {
+    console.error(e);
+    showForm();
+  }
+})();
+
+    // React to password sign-in/signup completions
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (session?.access_token) {
+        showAuthed(session.user?.email);
+        const pending = storage.get();
+        if (window.self !== window.parent) {
+          try {
+            // First transfer tokens so parent origin can set its own session
+            const tokenMsg = {
+              type: 'tharaga_token_transfer',
+              access_token: session.access_token,
+              refresh_token: session.refresh_token,
+              user: { id: session.user?.id || null, email: session.user?.email || null },
+              next: pending?.href || new URLSearchParams(location.search).get('next') || null
+            };
+            window.parent.postMessage(tokenMsg, PARENT_ORIGIN);
+          } catch(_) {}
+          try {
+            const msg = {
+              type: 'signed_in',
+              user: { id: session.user?.id, email: session.user?.email },
+              next: pending?.href || new URLSearchParams(location.search).get('next') || null
+            };
+            window.parent.postMessage(msg, PARENT_ORIGIN);
+          } catch(_) {}
+        }
+      }
+    });
+
+
+// unsubscribe on unload (optional, good practice)
+
+// React to magic-continue written by auth-email-landing (other tab)
+// No cross-tab magic-link syncing needed.
+
+
+window.addEventListener('beforeunload', () => subscription?.unsubscribe());
+
+// ========================= MAGIC LINK MESSAGE LISTENER =========================
+// This extended handler accepts:
+//  - old messages: 'supabase-login-complete' and 'signed_in' (keeps your original behaviour)
+//  - NEW: 'tharaga_token_transfer' used by fragment-handle on tharaga.co.in to hand tokens to this auth host
+// No cross-window messages are required other than our own post to parent after sign-in.
+
+
+    // ========================= ACTIONS ========================
+    // Magic-link disabled: no handler.
+
+
+    pwdBtn.addEventListener('click', async () => {
+      const email = emailEl.value.trim().toLowerCase();
+      const password = pwdEl.value;
+      if (!validateEmailFormat(email)) return setMsg('Enter a valid email');
+      if (!password) return setMsg('Enter your password');
+      setMsg('Signing in…', true);
+      pwdBtn.disabled = true;
+      try { localStorage.setItem('__tharaga_last_email', email); } catch(_){}
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) {
+        const m = mapAuthError(error);
+        setMsg(m);
+        if ((error.message||'').toLowerCase().includes('email not confirmed')) {
+          try { await supabase.auth.resend({ type:'signup', email }); } catch(_){}
+        }
+        pwdBtn.disabled = false;
+        return;
+      }
+      setMsg('Signed in ✓', true);
+      pwdBtn.disabled = false;
+      // If embedded, immediately notify parent
+      try {
+        if (window.self !== window.parent) {
+          const pending = storage.get();
+          try {
+            if (data?.session?.access_token && data?.session?.refresh_token) {
+              window.parent.postMessage({
+                type: 'tharaga_token_transfer',
+                access_token: data.session.access_token,
+                refresh_token: data.session.refresh_token,
+                user: { id: data?.user?.id || null, email },
+                next: pending?.href || null
+              }, PARENT_ORIGIN);
+            }
+          } catch(_) {}
+          window.parent.postMessage({ type: 'signed_in', user: { id: data?.user?.id || null, email }, next: pending?.href || null }, PARENT_ORIGIN);
+        }
+      } catch(_) {}
+    });
+
+    if (createBtn) createBtn.addEventListener('click', async () => {
+      const email = (suEmail?.value || '').trim().toLowerCase();
+      const p1 = suPwd1?.value || '', p2 = suPwd2?.value || '';
+      if (!validateEmailFormat(email)) return setSuMsg('Enter a valid email');
+      if (!p1 || p1.length < 8) return setSuMsg('Password must be at least 8 characters');
+      if (p1 !== p2) return setSuMsg('Passwords do not match');
+      setSuMsg('Creating account…', true);
+      createBtn.disabled = true;
+      try { localStorage.setItem('__tharaga_last_email', email); } catch(_){}
+      const { data, error } = await supabase.auth.signUp({ email, password: p1 });
+      if (error) { setSuMsg(error.message); createBtn.disabled = false; return; }
+      setSuMsg('Account created. Check your email to verify.', true);
+      createBtn.disabled = false;
+      // switch to sign-in
+      try { emailEl.value = email; } catch(_){}
+      if (typeof switchTab === 'function') switchTab('signin');
+    });
+
+    // ---- OAuth: Google / GitHub ----
+    async function startOAuth(provider){
+      try {
+        setMsg('Redirecting to ' + provider + '…', true);
+        const next = getNextFromQuery();
+        const RETURN_TO_PARENT = (__qs.get('return_to_parent') === '1');
+        const redirectTo = RETURN_TO_PARENT
+          ? `${PARENT_ORIGIN}/?${next ? `next=${encodeURIComponent(next)}&` : ''}post_auth=1`
+          : `${location.origin}${location.pathname}?post_auth=1&parent_origin=${encodeURIComponent(PARENT_ORIGIN)}${next ? `&next=${encodeURIComponent(next)}` : ''}`;
+        // Use skipBrowserRedirect to get the provider URL and then break out of iframe to top window
+        const { data, error } = await supabase.auth.signInWithOAuth({
+          provider,
+          options: { redirectTo, skipBrowserRedirect: true, queryParams: { prompt: 'select_account' } }
+        });
+        if (error || !data || !data.url) { setMsg('Could not start ' + provider + ' sign in.'); return; }
+        try { (window.top || window).location.href = data.url; } catch(_) { location.href = data.url; }
+      } catch (e) {
+        setMsg('Could not start ' + provider + ' sign in.');
+      }
+    }
+
+    async function checkEmailExists(email){
+      try {
+        const res = await fetch('/.netlify/functions/authCheckEmail', { method:'POST', headers:{ 'content-type':'application/json' }, body: JSON.stringify({ email }) });
+        if (!res.ok) return { exists: null };
+        return await res.json();
+      } catch (_) { return { exists: null }; }
+    }
+
+    (function setupOAuthPrecheck(){
+      const modal = document.getElementById('oauthPrecheck');
+      const title = document.getElementById('precheckTitle');
+      const body = document.getElementById('precheckBody');
+      const emailInput = document.getElementById('precheckEmail');
+      const msg = document.getElementById('precheckMsg');
+      const btnCancel = document.getElementById('precheckCancel');
+      const btnPrimary = document.getElementById('precheckPrimary');
+
+      let currentProvider = null;
+      let currentState = 'entry'; // 'entry' | 'consent'
+
+      function openModal(provider){
+        currentProvider = provider;
+        currentState = 'entry';
+        title.textContent = `Continue with ${provider.charAt(0).toUpperCase()+provider.slice(1)}`;
+        body.textContent = 'Enter your email so we can check if you already have an account.';
+        emailInput.value = (emailEl.value || '').trim();
+        msg.textContent = '';
+        btnPrimary.textContent = 'Check & Continue';
+        modal.setAttribute('aria-hidden','false');
+        modal.style.display = 'flex';
+        setTimeout(()=>{ try { emailInput.focus(); } catch(_){} }, 50);
+      }
+
+      function closeModal(){
+        modal.setAttribute('aria-hidden','true');
+        modal.style.display = 'none';
+        currentProvider = null;
+      }
+
+      async function handlePrimary(){
+        const email = (emailInput.value || '').trim().toLowerCase();
+        if (!email) { msg.textContent = 'Please enter your email.'; return; }
+        // remember email for convenience
+        try { localStorage.setItem('__tharaga_last_email', email); } catch(_){ }
+        if (currentState === 'entry'){
+          msg.textContent = 'Checking…';
+          const res = await checkEmailExists(email);
+          if (res.exists === true || res.exists === null) {
+            // proceed silently if user exists or unknown
+            try { emailEl.value = email; } catch(_){}
+            closeModal();
+            startOAuth(currentProvider);
+            return;
+          }
+          if (res.exists === false){
+            // show consent
+            currentState = 'consent';
+            title.textContent = 'Create a new account?';
+            body.textContent = `We couldn\'t find an account for ${email}. We can create one for you with ${currentProvider}.`;
+            msg.textContent = 'You can also use password sign up instead.';
+            btnPrimary.textContent = `Create with ${currentProvider}`;
+            return;
+          }
+        } else {
+          // consent state -> proceed to OAuth
+          try { emailEl.value = email; } catch(_){}
+          closeModal();
+          startOAuth(currentProvider);
+        }
+      }
+
+      btnCancel?.addEventListener('click', ()=>{
+        closeModal();
+        // offer password path by focusing email field on main form
+        try {
+          if (!emailEl.value) emailEl.value = emailInput.value;
+          emailEl.focus();
+        } catch(_){ }
+      });
+      btnPrimary?.addEventListener('click', handlePrimary);
+
+      oauthGoogle?.addEventListener('click', (e)=>{
+        e.preventDefault();
+        const current = (emailEl.value || '').trim();
+        if (current){
+          // direct precheck without modal
+          (async ()=>{
+            const r = await checkEmailExists(current);
+            if (r.exists === false){ openModal('google'); } else { startOAuth('google'); }
+          })();
+        } else {
+          openModal('google');
+        }
+      });
+      // GitHub removed
+    })();
+
+    // Auto-start OAuth if requested via query params (used by hosted fallback)
+    try {
+      const auto = __qs.get('auto');
+      const provider = (__qs.get('provider')||'').toLowerCase() || 'google';
+      if (auto && (provider === 'google')) {
+        setMsg('Redirecting to Google…', true);
+        // Give the module a tick to ensure supabase is ready
+        setTimeout(()=>{ startOAuth('google'); }, 0);
+      }
+    } catch(_) {}
+
+
+    signOutBtn?.addEventListener('click', async () => {
+      await supabase.auth.signOut();
+      storage.clear();
+      showForm();
+      setMsg('Signed out.', true);
+    });
+
+    continueBtn?.addEventListener('click', async () => {
+      const pending = storage.get();
+
+      try {
+        const payload = { ts: Date.now(), next: pending?.href || null };
+        localStorage.setItem('__tharaga_magic_continue', JSON.stringify(payload));
+        try { localStorage.setItem('__tharaga_magic_confirmed', JSON.stringify({ ts: Date.now() })); } catch(_) {}
+      } catch (e) { console.warn('Could not set magic continue', e); }
+
+      try {
+        if (window.self !== window.parent) {
+          window.parent.postMessage({ type: 'signed_in', user: null, next: pending?.href || null }, '*');
+          window.parent.postMessage({ type: 'close_login_modal' }, '*'); // add this line
+        }
+      } catch (e) { console.warn('postMessage failed', e); }
+
+      try {
+  (window.self !== window.parent)
+    ? window.parent.postMessage({ type: 'close_login_modal' }, '*')
+    : window.history.back();
+} catch(_) {}
+
+      setMsg('Signed in. You can now return to the page where you filled the form and click "Get My Property Matches" to continue.', true);
+      storage.clear();
+    });
+
+
+    // ========================= OPTIONAL: "Gate snippet" for other pages =========================
+    // Copy the function below into any page where you want to protect links/buttons.
+    // Example usage:
+    //   enableAuthGate({ selector: 'a', protectedDomains: PROTECTED_DOMAINS });
+    //   // to explicitly protect any element: add data-protected="true", data-open-new-tab="true"
+    
+    window.enableAuthGate = function enableAuthGate({ selector = 'a', protectedDomains = [] } = {}){
+      document.addEventListener('click', async (e) => {
+        const el = e.target.closest(selector);
+        if (!el) return;
+        const isExplicit = el.dataset?.protected === 'true';
+        const href = el.getAttribute?.('href');
+        const isButton = !href; // for buttons/CTAs
+        const openInNewTab = el.dataset?.openNewTab === 'true' || el.target === '_blank';
+
+        let needsProtect = isExplicit;
+        if (!needsProtect && href) {
+          try {
+            const url = new URL(href, location.href);
+            needsProtect = protectedDomains.some(d => url.hostname.includes(d));
+          } catch {}
+        }
+        if (!needsProtect) return;
+
+        // Check auth
+        const { data } = await supabase.auth.getSession();
+        if (data?.session) return; // already logged in, allow default
+
+        // Block and send to login page
+        e.preventDefault();
+        const target = href ? { href, openInNewTab } : { href: location.pathname + location.search + location.hash, openInNewTab:false };
+        localStorage.setItem('post_auth_target', JSON.stringify(target));
+        const url = `/login_signup_glassdrop?next=${encodeURIComponent(target.href)}&post_auth=1&parent_origin=${encodeURIComponent(location.origin)}`;
+        location.href = url;
+      }, true);
+    }
+  </script>
+</body>
+</html>

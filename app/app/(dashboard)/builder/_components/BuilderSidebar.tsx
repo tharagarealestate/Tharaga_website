@@ -97,7 +97,8 @@ export function BuilderSidebar() {
   const [leadCount, setLeadCount] = useState<LeadCountData | null>(null)
   const [isLoadingCount, setIsLoadingCount] = useState(true)
   const [badgeAnimation, setBadgeAnimation] = useState<'pulse' | 'bounce' | null>(null)
-  const [isExpanded, setIsExpanded] = useState(false)
+  // Sidebar is always expanded (static) - no collapse functionality
+  const [isExpanded, setIsExpanded] = useState(true)
   const [isPinned, setIsPinned] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [isSearchFocused, setIsSearchFocused] = useState(false)
@@ -229,28 +230,8 @@ export function BuilderSidebar() {
     }
   }, [pathname])
 
-  // Handle sidebar hover (auto-expand/collapse)
-  const handleMouseEnter = useCallback(() => {
-    if (collapseTimeoutRef.current) {
-      clearTimeout(collapseTimeoutRef.current)
-      collapseTimeoutRef.current = null
-    }
-    if (!isPinned) {
-      setIsExpanded(true)
-    }
-  }, [isPinned])
-
-  const handleMouseLeave = useCallback(() => {
-    if (!isPinned) {
-      if (collapseTimeoutRef.current) {
-        clearTimeout(collapseTimeoutRef.current)
-      }
-      // Faster collapse delay like Supabase - 200ms instead of 300ms
-      collapseTimeoutRef.current = setTimeout(() => {
-        setIsExpanded(false)
-      }, 200)
-    }
-  }, [isPinned])
+  // Sidebar is static - no hover expand/collapse functionality
+  // Removed handleMouseEnter and handleMouseLeave for static sidebar
 
   // Toggle submenu
   const toggleSubmenu = useCallback((href: string) => {
@@ -402,54 +383,50 @@ export function BuilderSidebar() {
     })).filter(group => group.items.length > 0)
   }, [navGroups, searchQuery])
 
-  const sidebarWidth = isExpanded ? 280 : 72
+  // Static sidebar - always expanded, width minimized to content
+  const sidebarWidth = 220 // Compact width optimized for content
 
   return (
     <>
-      {/* Desktop Sidebar */}
+      {/* Desktop Sidebar - Pricing Card Glassmorphic Style */}
       <aside
         ref={sidebarRef}
         className={cn(
-          "fixed left-0 top-0 bottom-0 z-[1000]",
+          "fixed left-0 top-0 bottom-0 z-[1000] group/sidebar",
           "flex flex-col",
-          "bg-gradient-to-b from-primary-950/95 via-primary-900/95 to-primary-950/95",
-          "backdrop-blur-xl border-r border-white/10",
+          "relative",
+          "backdrop-blur-xl bg-white/10 border-r border-white/20",
+          "rounded-r-3xl overflow-hidden",
+          "shadow-[0_8px_32px_rgba(0,0,0,0.3)]",
+          "hover:shadow-2xl",
           "transition-all duration-[250ms] ease-in-out",
-          "overflow-hidden",
           "hidden lg:flex"
         )}
         style={{ width: `${sidebarWidth}px` }}
-        onMouseEnter={handleMouseEnter}
-        onMouseLeave={handleMouseLeave}
         aria-label="Main navigation sidebar"
       >
-        {/* Header Section */}
-        <div className="flex-shrink-0 px-4 py-4 border-b border-white/10">
+        {/* Shimmer Effect - Pricing Card Style */}
+        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover/sidebar:translate-x-full transition-transform duration-1000 ease-in-out pointer-events-none z-0" />
+        
+        {/* Content Container */}
+        <div className="relative z-10 flex flex-col h-full bg-gradient-to-b from-primary-950/80 via-primary-900/80 to-primary-950/80">
+        {/* Header Section - Compact */}
+        <div className="flex-shrink-0 px-3 py-3 border-b border-white/10">
           {/* Brand Logo */}
-          <div className="flex items-center gap-3 relative">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-gold-500 to-gold-400 flex items-center justify-center shadow-lg shadow-gold-500/30 shrink-0">
-              <Building className="w-5 h-5 text-primary-950" />
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-gold-500 to-gold-400 flex items-center justify-center shadow-lg shadow-gold-500/30 shrink-0">
+              <Building className="w-4 h-4 text-primary-950" />
             </div>
-            <div className={cn(
-              "flex flex-col leading-tight absolute left-[52px] transition-all duration-150 ease-out",
-              isExpanded 
-                ? "opacity-100 translate-x-0 pointer-events-auto" 
-                : "opacity-0 -translate-x-2 pointer-events-none w-0"
-            )}>
-              <span className="font-bold text-white text-sm whitespace-nowrap">THARAGA</span>
-              <span className="text-gold-400 text-[10px] font-medium whitespace-nowrap">Builder Portal</span>
+            <div className="flex flex-col leading-tight">
+              <span className="font-bold text-white text-xs whitespace-nowrap">THARAGA</span>
+              <span className="text-gold-400 text-[9px] font-medium whitespace-nowrap">Builder Portal</span>
             </div>
           </div>
 
-          {/* Search Bar */}
-          <div className={cn(
-            "mt-4 transition-all duration-150 ease-out",
-            isExpanded 
-              ? "opacity-100 max-h-40 pointer-events-auto" 
-              : "opacity-0 max-h-0 overflow-hidden pointer-events-none"
-          )}>
+          {/* Search Bar - Always Visible (Static) */}
+          <div className="mt-3">
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400 pointer-events-none" />
               <input
                 id="sidebar-search-input"
                 type="text"
@@ -458,41 +435,22 @@ export function BuilderSidebar() {
                 onFocus={() => setIsSearchFocused(true)}
                 onBlur={() => setIsSearchFocused(false)}
                 placeholder="Search..."
-                className="w-full pl-10 pr-3 py-2 bg-white/5 backdrop-blur-sm border border-white/10 rounded-lg text-white placeholder:text-gray-400 text-sm focus:outline-none focus:border-gold-500/50 focus:ring-2 focus:ring-gold-500/20 transition-all"
+                className="w-full pl-8 pr-2 py-1.5 bg-white/5 backdrop-blur-sm border border-white/10 rounded-lg text-white placeholder:text-gray-400 text-xs focus:outline-none focus:border-gold-500/50 focus:ring-1 focus:ring-gold-500/20 transition-all"
               />
-              <kbd className="absolute right-3 top-1/2 -translate-y-1/2 hidden xl:flex items-center gap-1 px-1.5 py-0.5 text-[10px] font-medium text-gray-400 bg-white/5 border border-white/10 rounded">
-                <span className="text-[8px]">⌘</span>K
+              <kbd className="absolute right-2 top-1/2 -translate-y-1/2 hidden xl:flex items-center gap-0.5 px-1 py-0.5 text-[9px] font-medium text-gray-400 bg-white/5 border border-white/10 rounded">
+                <span className="text-[7px]">⌘</span>K
               </kbd>
             </div>
           </div>
-
-          {/* Collapsed Search Icon */}
-          {!isExpanded && (
-            <button
-              onClick={() => {
-                setIsExpanded(true)
-                setTimeout(() => {
-                  const searchInput = document.getElementById('sidebar-search-input')
-                  if (searchInput) {
-                    (searchInput as HTMLInputElement).focus()
-                  }
-                }, 250)
-              }}
-              className="mt-4 w-full flex items-center justify-center p-2 rounded-lg hover:bg-white/5 transition-colors"
-              aria-label="Search"
-            >
-              <Search className="w-5 h-5 text-gray-400" />
-            </button>
-          )}
         </div>
 
-        {/* Main Navigation - Scrollable */}
-        <nav className="flex-1 overflow-y-auto overflow-x-hidden px-2 py-4 space-y-1 custom-scrollbar">
+        {/* Main Navigation - Scrollable - Compact */}
+        <nav className="flex-1 overflow-y-auto overflow-x-hidden px-1.5 py-3 space-y-0.5 custom-scrollbar">
           {filteredGroups.map((group, groupIndex) => (
-            <div key={groupIndex} className={cn("space-y-1", group.label && isExpanded && "mb-4")}>
+            <div key={groupIndex} className={cn("space-y-0.5", group.label && "mb-3")}>
               {/* Group Label */}
-              {group.label && isExpanded && (
-                <div className="px-3 py-1.5 text-[10px] font-semibold text-gray-500 uppercase tracking-wider">
+              {group.label && (
+                <div className="px-2 py-1 text-[9px] font-semibold text-gray-500 uppercase tracking-wider">
                   {group.label}
                 </div>
               )}
@@ -547,87 +505,68 @@ export function BuilderSidebar() {
                         // Submenu toggle is handled by the chevron button
                       }}
                       className={cn(
-                        "flex items-center rounded-lg px-3 py-2.5 text-sm transition-all duration-150 group relative",
+                        "flex items-center rounded-lg px-2 py-2 text-xs transition-all duration-150 group relative",
                         "hover:bg-white/5",
                         isActive
-                          ? "bg-gold-500/20 text-white border-l-3 border-gold-500"
+                          ? "bg-gold-500/20 text-white border-l-2 border-gold-500"
                           : "text-gray-400 hover:text-white",
                         isLocked && "opacity-50 cursor-not-allowed",
-                        isExpanded ? "gap-3" : "justify-center gap-0"
+                        "gap-2"
                       )}
-                      title={!isExpanded ? item.label : undefined}
                     >
-                      {/* Icon container - stays in same position during expansion */}
-                      <div className={cn(
-                        "flex items-center justify-center shrink-0 transition-all duration-150",
-                        "w-5 h-5"
-                      )}>
-                        <item.icon className={cn("w-5 h-5 transition-colors duration-150", isActive && "text-gold-400")} />
+                      {/* Icon container - Compact */}
+                      <div className="flex items-center justify-center shrink-0 w-4 h-4">
+                        <item.icon className={cn("w-4 h-4 transition-colors duration-150", isActive && "text-gold-400")} />
                       </div>
                       
-                      {/* Label - fades in smoothly without affecting icon position */}
-                      <span className={cn(
-                        "font-medium truncate transition-all duration-150 ease-out",
-                        isExpanded 
-                          ? "opacity-100 translate-x-0 ml-0 w-auto flex-1 min-w-0" 
-                          : "opacity-0 -translate-x-2 w-0 ml-0 pointer-events-none"
-                      )}>
+                      {/* Label - Always visible (static sidebar) */}
+                      <span className="font-medium truncate flex-1 min-w-0 text-xs">
                         {item.label}
                       </span>
                       
-                      {isExpanded && (
-                        <>
-                          
-                          {item.badge !== null && item.badge !== undefined && (
-                            <span 
-                              className={cn(
-                                "ml-auto px-2 py-0.5 text-white text-[10px] font-bold rounded-full transition-all duration-300",
-                                "bg-emerald-500",
-                                badgeAnimation === 'pulse' && "animate-pulse ring-2 ring-emerald-300",
-                                badgeAnimation === 'bounce' && "animate-bounce",
-                                isLoadingCount && "opacity-50"
-                              )}
-                            >
-                              {isLoadingCount ? (
-                                <span className="inline-block w-4 h-3 bg-white/30 rounded animate-pulse" />
-                              ) : (
-                                typeof item.badge === 'number' ? (item.badge > 99 ? '99+' : item.badge) : item.badge
-                              )}
-                            </span>
+                      {item.badge !== null && item.badge !== undefined && (
+                        <span 
+                          className={cn(
+                            "ml-auto px-1.5 py-0.5 text-white text-[9px] font-bold rounded-full transition-all duration-300",
+                            "bg-emerald-500",
+                            badgeAnimation === 'pulse' && "animate-pulse ring-1 ring-emerald-300",
+                            badgeAnimation === 'bounce' && "animate-bounce",
+                            isLoadingCount && "opacity-50"
                           )}
-
-                          {hasSubmenu && (
-                            <button
-                              type="button"
-                              onClick={(e) => {
-                                e.preventDefault()
-                                e.stopPropagation()
-                                toggleSubmenu(item.href)
-                              }}
-                              className="ml-auto p-0.5 hover:bg-white/5 rounded transition-colors shrink-0"
-                              aria-label={isSubmenuOpen ? "Collapse submenu" : "Expand submenu"}
-                              aria-expanded={isSubmenuOpen}
-                            >
-                              {isSubmenuOpen ? (
-                                <ChevronDown className="w-4 h-4 text-gray-400 transition-transform duration-150" />
-                              ) : (
-                                <ChevronRight className="w-4 h-4 text-gray-400 transition-transform duration-150" />
-                              )}
-                            </button>
+                        >
+                          {isLoadingCount ? (
+                            <span className="inline-block w-3 h-2.5 bg-white/30 rounded animate-pulse" />
+                          ) : (
+                            typeof item.badge === 'number' ? (item.badge > 99 ? '99+' : item.badge) : item.badge
                           )}
-
-                          {isLocked && (
-                            <Lock 
-                              className="ml-auto w-4 h-4 text-gray-500 shrink-0" 
-                              title="Upgrade to Pro to access Revenue features"
-                            />
-                          )}
-                        </>
+                        </span>
                       )}
 
-                      {/* Badge in collapsed state */}
-                      {!isExpanded && item.badge !== null && item.badge !== undefined && (
-                        <span className="absolute top-1 right-1 w-2 h-2 bg-emerald-500 rounded-full" />
+                      {hasSubmenu && (
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.preventDefault()
+                            e.stopPropagation()
+                            toggleSubmenu(item.href)
+                          }}
+                          className="ml-auto p-0.5 hover:bg-white/5 rounded transition-colors shrink-0"
+                          aria-label={isSubmenuOpen ? "Collapse submenu" : "Expand submenu"}
+                          aria-expanded={isSubmenuOpen}
+                        >
+                          {isSubmenuOpen ? (
+                            <ChevronDown className="w-3.5 h-3.5 text-gray-400 transition-transform duration-150" />
+                          ) : (
+                            <ChevronRight className="w-3.5 h-3.5 text-gray-400 transition-transform duration-150" />
+                          )}
+                        </button>
+                      )}
+
+                      {isLocked && (
+                        <Lock 
+                          className="ml-auto w-3.5 h-3.5 text-gray-500 shrink-0" 
+                          title="Upgrade to Pro to access Revenue features"
+                        />
                       )}
                     </Link>
 
@@ -635,13 +574,13 @@ export function BuilderSidebar() {
                     <div 
                       className={cn(
                         "overflow-hidden transition-all duration-150 ease-out",
-                        hasSubmenu && isSubmenuOpen && isExpanded
+                        hasSubmenu && isSubmenuOpen
                           ? "max-h-96 opacity-100"
                           : "max-h-0 opacity-0"
                       )}
                     >
                       {hasSubmenu && (
-                        <div className="ml-4 mt-1 space-y-0.5 border-l border-white/10 pl-4">
+                        <div className="ml-3 mt-0.5 space-y-0.5 border-l border-white/10 pl-3">
                           {item.submenu?.map((sub) => {
                             const isSubActive = pathname === sub.href || 
                               (shouldUseUnifiedDashboard(sub.href) && 
@@ -661,7 +600,7 @@ export function BuilderSidebar() {
                                   }
                                 }}
                                 className={cn(
-                                  "block px-3 py-1.5 text-xs rounded-lg transition-colors duration-150",
+                                  "block px-2 py-1 text-[11px] rounded-lg transition-colors duration-150",
                                   isSubActive
                                     ? "text-gold-300 font-medium bg-white/5"
                                     : "text-gray-400 hover:text-white hover:bg-white/5"
@@ -681,14 +620,14 @@ export function BuilderSidebar() {
           ))}
         </nav>
 
-        {/* Footer Section */}
-        <div className="flex-shrink-0 border-t border-white/10 px-4 py-4 space-y-3">
-          {/* Trial/Upgrade CTA - Fully Functional with Real Data */}
-          {isTrial && isExpanded && (
+        {/* Footer Section - Only Trial Banner (Removed Help & Support, User Profile, Pin Sidebar) */}
+        <div className="flex-shrink-0 border-t border-white/10 px-2 py-3">
+          {/* Trial/Upgrade CTA - Compact Design */}
+          {isTrial && (
             <Link
               href="/pricing"
               className={cn(
-                "block p-3 rounded-xl backdrop-blur-sm border transition-colors",
+                "block p-2 rounded-lg backdrop-blur-sm border transition-colors",
                 trialStatus.isExpired
                   ? "bg-red-500/15 border-red-500/30 hover:bg-red-500/20"
                   : trialStatus.isUrgent
@@ -696,23 +635,23 @@ export function BuilderSidebar() {
                   : "bg-gold-500/15 border-gold-500/30 hover:bg-gold-500/20"
               )}
             >
-              <div className="flex items-center gap-2 mb-1">
+              <div className="flex items-center gap-1.5 mb-1">
                 <Clock className={cn(
-                  "w-3.5 h-3.5",
+                  "w-3 h-3",
                   trialStatus.isExpired ? "text-red-300" : trialStatus.isUrgent ? "text-orange-300" : "text-gold-300"
                 )} />
                 <span className={cn(
-                  "text-[11px] font-semibold",
+                  "text-[10px] font-semibold",
                   trialStatus.isExpired ? "text-red-100" : trialStatus.isUrgent ? "text-orange-100" : "text-gold-100"
                 )}>
                   {trialStatus.isExpired ? "Trial Expired" : "Trial Active"}
                 </span>
               </div>
               {!trialStatus.isExpired && (
-                <div className="h-1.5 w-full rounded-full bg-primary-900 overflow-hidden mb-1">
+                <div className="h-1 w-full rounded-full bg-primary-900 overflow-hidden mb-1">
                   <div
                     className={cn(
-                      "h-1.5 rounded-full transition-all duration-300",
+                      "h-1 rounded-full transition-all duration-300",
                       trialStatus.isUrgent ? "bg-orange-400" : "bg-gold-400"
                     )}
                     style={{ width: `${trialStatus.progressPercentage.toFixed(0)}%` }}
@@ -720,7 +659,7 @@ export function BuilderSidebar() {
                 </div>
               )}
               <div className={cn(
-                "text-[11px]",
+                "text-[10px]",
                 trialStatus.isExpired 
                   ? "text-red-400 font-semibold" 
                   : trialStatus.isUrgent 
@@ -728,67 +667,22 @@ export function BuilderSidebar() {
                   : "text-gray-300"
               )}>
                 {trialStatus.isExpired 
-                  ? 'Expired - Upgrade Now'
+                  ? 'Upgrade Now'
                   : trialStatus.isUrgent
                   ? `⚠️ ${trialStatus.formattedDaysLeft}`
                   : trialStatus.formattedDaysLeft}
               </div>
               {(trialStatus.isExpired || trialStatus.isUrgent) && (
                 <div className="mt-1 flex items-center justify-between">
-                  <span className="text-[10px] text-gray-400">
-                    {trialStatus.trialLeadsUsed}/{trialStatus.trialLeadsLimit} leads used
+                  <span className="text-[9px] text-gray-400">
+                    {trialStatus.trialLeadsUsed}/{trialStatus.trialLeadsLimit} leads
                   </span>
-                  <span className="text-[10px] text-gold-300 font-semibold">Upgrade →</span>
+                  <span className="text-[9px] text-gold-300 font-semibold">→</span>
                 </div>
               )}
             </Link>
           )}
-
-          {/* Help & Support */}
-          <button
-            onClick={() => window.dispatchEvent(new CustomEvent('open-ai-assistant'))}
-            className={cn(
-              "w-full flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-gray-400 hover:bg-white/5 hover:text-white transition-all",
-              !isExpanded && "justify-center"
-            )}
-            title={!isExpanded ? "Help & Support" : undefined}
-          >
-            <HelpCircle className="w-5 h-5 shrink-0" />
-            {isExpanded && <span>Help & Support</span>}
-          </button>
-
-          {/* User Profile */}
-          <div className={cn(
-            "flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-white/5 transition-colors cursor-pointer",
-            !isExpanded && "justify-center"
-          )}>
-            <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-primary-600 to-primary-500 text-white flex items-center justify-center text-sm font-semibold shadow-lg shrink-0">
-              {(trialStatus.subscription?.builder_name || 'B').charAt(0).toUpperCase()}
-            </div>
-            {isExpanded && (
-              <div className="flex-1 min-w-0">
-                <div className="text-sm font-medium text-white truncate">
-                  {trialStatus.subscription?.builder_name || 'Builder'}
-                </div>
-                <div className="text-[10px] text-gray-400 truncate">My Account</div>
-              </div>
-            )}
-          </div>
-
-          {/* Pin/Unpin Toggle */}
-          {isExpanded && (
-            <button
-              onClick={() => {
-                setIsPinned(!isPinned)
-                if (!isPinned) {
-                  setIsExpanded(true)
-                }
-              }}
-              className="w-full px-3 py-2 text-xs text-gray-400 hover:text-white hover:bg-white/5 rounded-lg transition-colors text-left"
-            >
-              {isPinned ? 'Unpin Sidebar' : 'Pin Sidebar'}
-            </button>
-          )}
+        </div>
         </div>
       </aside>
 
@@ -1033,7 +927,7 @@ export function BuilderSidebar() {
         </>
       )}
 
-      {/* Set CSS variable for sidebar width - Fast transition matching sidebar */}
+      {/* Set CSS variable for sidebar width - Static sidebar */}
       <style dangerouslySetInnerHTML={{
         __html: `
           :root {
@@ -1042,7 +936,6 @@ export function BuilderSidebar() {
           @media (min-width: 1024px) {
             main.flex-1 {
               margin-left: var(--sidebar-width);
-              transition: margin-left 150ms ease-out;
             }
           }
         `

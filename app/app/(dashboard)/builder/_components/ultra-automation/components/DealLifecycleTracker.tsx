@@ -208,7 +208,7 @@ function DealCard({ lifecycle, milestones }: { lifecycle: any; milestones: any[]
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       className={cn(
-        glassPrimary,
+        builderGlassPanel,
         'p-6',
         isStalled && 'border-red-500/30 bg-red-500/5'
       )}

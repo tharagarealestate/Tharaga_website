@@ -91,7 +91,7 @@ export function NegotiationsDashboard({ builderId }: NegotiationsDashboardProps)
   return (
     <div className="space-y-6">
       {/* Header with Analysis */}
-      <div className={glassPrimary + ' p-6'}>
+      <div className={builderGlassPanel + ' p-6'}>
         <div className="flex items-center justify-between mb-6">
           <div>
             <h3 className="text-xl font-bold text-white mb-1">Negotiations</h3>
@@ -140,7 +140,7 @@ export function NegotiationsDashboard({ builderId }: NegotiationsDashboardProps)
 
       {/* Recommendations */}
       {analysis.recommendations.length > 0 && (
-        <div className={glassPrimary + ' p-6'}>
+        <div className={builderGlassPanel + ' p-6'}>
           <div className="flex items-center gap-2 mb-4">
             <Lightbulb className="w-5 h-5 text-yellow-400" />
             <h4 className="text-lg font-semibold text-white">AI Recommendations</h4>

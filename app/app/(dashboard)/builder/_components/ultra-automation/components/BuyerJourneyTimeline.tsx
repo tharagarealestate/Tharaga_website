@@ -168,7 +168,7 @@ export function BuyerJourneyTimeline({ leadId, journeyId }: BuyerJourneyTimeline
   };
 
   return (
-    <div className={glassPrimary + ' p-6 space-y-6'}>
+    <div className={builderGlassPanel + ' p-6 space-y-6'}>
       {/* Journey Header */}
       <div className="flex items-center justify-between">
         <div>

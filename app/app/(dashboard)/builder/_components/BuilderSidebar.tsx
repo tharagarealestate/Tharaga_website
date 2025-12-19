@@ -383,8 +383,13 @@ export function BuilderSidebar() {
     })).filter(group => group.items.length > 0)
   }, [navGroups, searchQuery])
 
+<<<<<<< HEAD
   // Static sidebar - always expanded, width minimized to content
   const sidebarWidth = 220 // Compact width optimized for content
+=======
+  // Reduced width for compact design - pricing card style
+  const sidebarWidth = isExpanded ? 240 : 64
+>>>>>>> 6ea032dba0a9adbd68fc37308bf15ab210292842
 
   return (
     <>
@@ -397,9 +402,15 @@ export function BuilderSidebar() {
           "relative",
           "backdrop-blur-xl bg-white/10 border-r border-white/20",
           "rounded-r-3xl overflow-hidden",
+<<<<<<< HEAD
           "shadow-[0_8px_32px_rgba(0,0,0,0.3)]",
           "hover:shadow-2xl",
           "transition-all duration-[250ms] ease-in-out",
+=======
+          "transition-all duration-[250ms] ease-in-out",
+          "shadow-[0_8px_32px_rgba(0,0,0,0.3)]",
+          "hover:shadow-2xl",
+>>>>>>> 6ea032dba0a9adbd68fc37308bf15ab210292842
           "hidden lg:flex"
         )}
         style={{ width: `${sidebarWidth}px` }}
@@ -410,8 +421,13 @@ export function BuilderSidebar() {
         
         {/* Content Container */}
         <div className="relative z-10 flex flex-col h-full bg-gradient-to-b from-primary-950/80 via-primary-900/80 to-primary-950/80">
+<<<<<<< HEAD
         {/* Header Section - Compact */}
         <div className="flex-shrink-0 px-3 py-3 border-b border-white/10">
+=======
+        {/* Header Section */}
+        <div className="flex-shrink-0 px-4 py-4 border-b border-white/10">
+>>>>>>> 6ea032dba0a9adbd68fc37308bf15ab210292842
           {/* Brand Logo */}
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-gold-500 to-gold-400 flex items-center justify-center shadow-lg shadow-gold-500/30 shrink-0">
@@ -423,8 +439,18 @@ export function BuilderSidebar() {
             </div>
           </div>
 
+<<<<<<< HEAD
           {/* Search Bar - Always Visible (Static) */}
           <div className="mt-3">
+=======
+          {/* Search Bar - Compact */}
+          <div className={cn(
+            "mt-3 transition-all duration-150 ease-out",
+            isExpanded 
+              ? "opacity-100 max-h-40 pointer-events-auto" 
+              : "opacity-0 max-h-0 overflow-hidden pointer-events-none"
+          )}>
+>>>>>>> 6ea032dba0a9adbd68fc37308bf15ab210292842
             <div className="relative">
               <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400 pointer-events-none" />
               <input
@@ -442,14 +468,42 @@ export function BuilderSidebar() {
               </kbd>
             </div>
           </div>
+<<<<<<< HEAD
+=======
+
+          {/* Collapsed Search Icon */}
+          {!isExpanded && (
+            <button
+              onClick={() => {
+                setIsExpanded(true)
+                setTimeout(() => {
+                  const searchInput = document.getElementById('sidebar-search-input')
+                  if (searchInput) {
+                    (searchInput as HTMLInputElement).focus()
+                  }
+                }, 250)
+              }}
+              className="mt-3 w-full flex items-center justify-center p-1.5 rounded-lg hover:bg-white/5 transition-colors"
+              aria-label="Search"
+            >
+              <Search className="w-4 h-4 text-gray-400" />
+            </button>
+          )}
+>>>>>>> 6ea032dba0a9adbd68fc37308bf15ab210292842
         </div>
 
         {/* Main Navigation - Scrollable - Compact */}
         <nav className="flex-1 overflow-y-auto overflow-x-hidden px-1.5 py-3 space-y-0.5 custom-scrollbar">
           {filteredGroups.map((group, groupIndex) => (
+<<<<<<< HEAD
             <div key={groupIndex} className={cn("space-y-0.5", group.label && "mb-3")}>
               {/* Group Label */}
               {group.label && (
+=======
+            <div key={groupIndex} className={cn("space-y-1", group.label && isExpanded && "mb-4")}>
+              {/* Group Label - Compact */}
+              {group.label && isExpanded && (
+>>>>>>> 6ea032dba0a9adbd68fc37308bf15ab210292842
                 <div className="px-2 py-1 text-[9px] font-semibold text-gray-500 uppercase tracking-wider">
                   {group.label}
                 </div>
@@ -515,12 +569,29 @@ export function BuilderSidebar() {
                       )}
                     >
                       {/* Icon container - Compact */}
+<<<<<<< HEAD
                       <div className="flex items-center justify-center shrink-0 w-4 h-4">
                         <item.icon className={cn("w-4 h-4 transition-colors duration-150", isActive && "text-gold-400")} />
                       </div>
                       
                       {/* Label - Always visible (static sidebar) */}
                       <span className="font-medium truncate flex-1 min-w-0 text-xs">
+=======
+                      <div className={cn(
+                        "flex items-center justify-center shrink-0 transition-all duration-150",
+                        "w-4 h-4"
+                      )}>
+                        <item.icon className={cn("w-4 h-4 transition-colors duration-150", isActive && "text-gold-400")} />
+                      </div>
+                      
+                      {/* Label - Compact */}
+                      <span className={cn(
+                        "font-medium truncate transition-all duration-150 ease-out text-xs",
+                        isExpanded 
+                          ? "opacity-100 translate-x-0 ml-0 w-auto flex-1 min-w-0" 
+                          : "opacity-0 -translate-x-2 w-0 ml-0 pointer-events-none"
+                      )}>
+>>>>>>> 6ea032dba0a9adbd68fc37308bf15ab210292842
                         {item.label}
                       </span>
                       
@@ -623,7 +694,11 @@ export function BuilderSidebar() {
         {/* Footer Section - Only Trial Banner (Removed Help & Support, User Profile, Pin Sidebar) */}
         <div className="flex-shrink-0 border-t border-white/10 px-2 py-3">
           {/* Trial/Upgrade CTA - Compact Design */}
+<<<<<<< HEAD
           {isTrial && (
+=======
+          {isTrial && isExpanded && (
+>>>>>>> 6ea032dba0a9adbd68fc37308bf15ab210292842
             <Link
               href="/pricing"
               className={cn(

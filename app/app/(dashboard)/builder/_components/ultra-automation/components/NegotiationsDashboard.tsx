@@ -44,9 +44,20 @@ export function NegotiationsDashboard({ builderId }: NegotiationsDashboardProps)
   const insights = data?.insights || [];
   const isEmpty = data?.isEmpty || false;
 
-  // Analyze negotiations
+  // Analyze negotiations with error handling
   const analysis = useMemo(() => {
-    return analyzeNegotiations(negotiations);
+    try {
+      return analyzeNegotiations(negotiations);
+    } catch (error) {
+      console.error('[NegotiationsDashboard] Analysis error:', error);
+      // Return safe defaults if analysis fails
+      return {
+        activeCount: 0,
+        avgPriceGap: 0,
+        successProbability: 0,
+        recommendations: [],
+      };
+    }
   }, [negotiations]);
 
   if (isLoading) {
@@ -120,33 +131,33 @@ export function NegotiationsDashboard({ builderId }: NegotiationsDashboardProps)
           <AnalysisCard
             icon={Handshake}
             label="Active Negotiations"
-            value={analysis.activeCount}
+            value={analysis?.activeCount ?? 0}
             color="text-blue-400"
           />
           <AnalysisCard
             icon={TrendingUp}
             label="Avg Price Gap"
-            value={`${analysis.avgPriceGap.toFixed(1)}%`}
+            value={`${(analysis?.avgPriceGap ?? 0).toFixed(1)}%`}
             color="text-orange-400"
           />
           <AnalysisCard
             icon={BarChart3}
             label="Success Probability"
-            value={`${analysis.successProbability.toFixed(0)}%`}
+            value={`${(analysis?.successProbability ?? 0).toFixed(0)}%`}
             color="text-emerald-400"
           />
         </div>
       </div>
 
       {/* Recommendations */}
-      {analysis.recommendations.length > 0 && (
+      {analysis?.recommendations && analysis.recommendations.length > 0 && (
         <div className={builderGlassPanel + ' p-6'}>
           <div className="flex items-center gap-2 mb-4">
             <Lightbulb className="w-5 h-5 text-yellow-400" />
             <h4 className="text-lg font-semibold text-white">AI Recommendations</h4>
           </div>
           <div className="space-y-3">
-            {analysis.recommendations.slice(0, 5).map((rec) => (
+            {analysis.recommendations.slice(0, 5).map((rec: any) => (
               <RecommendationCard key={rec.negotiationId} recommendation={rec} />
             ))}
           </div>
@@ -161,9 +172,13 @@ export function NegotiationsDashboard({ builderId }: NegotiationsDashboardProps)
             <p className="text-gray-400">No negotiations found</p>
           </div>
         ) : (
-          negotiations.map((negotiation: any) => (
-            <NegotiationCard key={negotiation.id} negotiation={negotiation} />
-          ))
+          negotiations.map((negotiation: any) => {
+            if (!negotiation || !negotiation.id) {
+              console.warn('[NegotiationsDashboard] Invalid negotiation data:', negotiation);
+              return null;
+            }
+            return <NegotiationCard key={negotiation.id} negotiation={negotiation} />;
+          }).filter(Boolean)
         )}
       </div>
     </div>

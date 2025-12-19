@@ -123,8 +123,11 @@ export function analyzeNegotiations(negotiations: NegotiationData[]): {
 
   // Calculate average price gap
   const priceGaps = active.map((n) => {
-    const gap = Math.abs(n.asking_price - n.current_price);
-    const percentage = (gap / n.asking_price) * 100;
+    // Support both asking_price and initial_price for backward compatibility
+    const askingPrice = n.asking_price ?? n.initial_price ?? 0;
+    const currentPrice = n.current_price ?? 0;
+    const gap = Math.abs(askingPrice - currentPrice);
+    const percentage = askingPrice > 0 ? (gap / askingPrice) * 100 : 0;
     return { gap, percentage };
   });
 
@@ -135,7 +138,10 @@ export function analyzeNegotiations(negotiations: NegotiationData[]): {
 
   // Calculate success probability based on price gap and journey stage
   const successProbability = active.reduce((sum, n) => {
-    const gapPercent = Math.abs((n.asking_price - n.current_price) / n.asking_price) * 100;
+    // Support both asking_price and initial_price for backward compatibility
+    const askingPrice = n.asking_price ?? n.initial_price ?? 0;
+    const currentPrice = n.current_price ?? 0;
+    const gapPercent = askingPrice > 0 ? Math.abs((askingPrice - currentPrice) / askingPrice) * 100 : 0;
     // Smaller gap = higher success probability
     const gapScore = Math.max(0, 100 - gapPercent * 2);
     
@@ -149,8 +155,11 @@ export function analyzeNegotiations(negotiations: NegotiationData[]): {
 
   // Generate recommendations
   const recommendations = active.map((n) => {
-    const gapPercent = Math.abs((n.asking_price - n.current_price) / n.asking_price) * 100;
-    const gap = Math.abs(n.asking_price - n.current_price);
+    // Support both asking_price and initial_price for backward compatibility
+    const askingPrice = n.asking_price ?? n.initial_price ?? 0;
+    const currentPrice = n.current_price ?? 0;
+    const gapPercent = askingPrice > 0 ? Math.abs((askingPrice - currentPrice) / askingPrice) * 100 : 0;
+    const gap = Math.abs(askingPrice - currentPrice);
 
     let recommendedAction = '';
     let priority: 'high' | 'medium' | 'low' = 'medium';

@@ -161,11 +161,13 @@ export const DEMO_DATA = {
         id: 'demo-negotiation-1',
         builder_id: 'demo-builder',
         status: 'active',
-        initial_price: 8500000,
+        asking_price: 8500000, // Changed from initial_price to asking_price to match analyzeNegotiations
         current_price: 8200000,
+        initial_price: 8500000, // Keep for backward compatibility
         created_at: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
         journey: {
           id: 'demo-journey-1',
+          current_stage: 'negotiation',
           lead: {
             id: 'demo-lead-1',
             name: 'Rajesh Kumar',

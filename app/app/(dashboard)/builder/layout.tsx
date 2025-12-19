@@ -28,9 +28,9 @@ export default function BuilderDashboardLayout({ children }: { children: ReactNo
         {/* Sidebar */}
         <BuilderSidebar />
 
-        {/* Main Content Area - Positioned next to static sidebar using CSS variable */}
-        <main className="flex-1 relative z-10" style={{ marginLeft: 'var(--sidebar-width, 220px)' }}>
-          <div className="min-h-screen p-4 lg:p-6">
+        {/* Main Content Area - Positioned next to static sidebar */}
+        <main className="flex-1 relative z-10" style={{ marginLeft: '220px' }}>
+          <div className="min-h-screen">
             {children}
           </div>
         </main>

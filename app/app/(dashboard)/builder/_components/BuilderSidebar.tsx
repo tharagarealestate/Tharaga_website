@@ -394,7 +394,7 @@ export function BuilderSidebar() {
         className={cn(
           "fixed left-0 top-0 bottom-0 z-[1000] group/sidebar",
           "flex flex-col",
-          "relative",
+          "relative h-full",
           "backdrop-blur-xl bg-white/10 border-r border-white/20",
           "rounded-r-3xl overflow-hidden",
           "shadow-[0_8px_32px_rgba(0,0,0,0.3)]",
@@ -405,10 +405,10 @@ export function BuilderSidebar() {
         style={{ width: `${sidebarWidth}px` }}
         aria-label="Main navigation sidebar"
       >
-        {/* Shimmer Effect - Pricing Card Style */}
+        {/* Shimmer Effect - Pricing Card Style (EXACT from pricing page) */}
         <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover/sidebar:translate-x-full transition-transform duration-1000 ease-in-out pointer-events-none z-0" />
         
-        {/* Content Container */}
+        {/* Content Container - Dark gradient overlay for pricing card effect */}
         <div className="relative z-10 flex flex-col h-full bg-gradient-to-b from-primary-950/80 via-primary-900/80 to-primary-950/80">
         {/* Header Section - Compact */}
         <div className="flex-shrink-0 px-3 py-3 border-b border-white/10">

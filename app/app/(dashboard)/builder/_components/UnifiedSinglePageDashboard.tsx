@@ -74,7 +74,7 @@ export function UnifiedSinglePageDashboard({ activeSection, onSectionChange }: U
   const ActiveComponent = sectionComponents[activeSection] || OverviewSection
 
   return (
-    <div className="relative w-full">
+    <div className="relative w-full min-h-screen">
       {/* Background is handled by layout.tsx - no duplicate background here */}
 
       {/* Main Content Area with Smooth Transitions */}

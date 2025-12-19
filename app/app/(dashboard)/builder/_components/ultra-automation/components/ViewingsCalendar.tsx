@@ -233,7 +233,7 @@ function ViewingCard({ viewing, reminders, compact = false }: {
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       className={cn(
-        glassSecondary,
+        builderGlassSubPanel,
         'p-4 border transition-all hover:border-white/20',
         dateInfo.isUrgent && 'border-orange-500/30 bg-orange-500/5'
       )}
@@ -298,7 +298,7 @@ function StatCard({ label, value, color }: {
   color: string;
 }) {
   return (
-    <div className={glassSecondary + ' p-4 text-center'}>
+    <div className={builderGlassSubPanel + ' p-4 text-center'}>
       <div className={cn('text-2xl font-bold mb-1', color)}>{value}</div>
       <div className="text-xs text-gray-400">{label}</div>
     </div>

@@ -313,7 +313,7 @@ function AlertCard({ icon: Icon, label, value, color, urgent }: {
   urgent?: boolean;
 }) {
   return (
-    <div className={cn(glassSecondary, 'p-4 border', color.split(' ').slice(1).join(' '))}>
+    <div className={cn(builderGlassSubPanel, 'p-4 border', color.split(' ').slice(1).join(' '))}>
       <Icon className={cn('w-6 h-6 mb-3', color.split(' ')[0])} />
       <div className={cn('text-2xl font-bold mb-1', color.split(' ')[0])}>{value}</div>
       <div className="text-xs text-gray-400">{label}</div>
@@ -327,7 +327,7 @@ function FunnelStage({ label, value, color }: {
   color: string;
 }) {
   return (
-    <div className={glassSecondary + ' p-4'}>
+    <div className={builderGlassSubPanel + ' p-4'}>
       <div className={cn('text-2xl font-bold mb-1', color)}>{value.toFixed(1)}%</div>
       <div className="text-xs text-gray-400">{label}</div>
     </div>

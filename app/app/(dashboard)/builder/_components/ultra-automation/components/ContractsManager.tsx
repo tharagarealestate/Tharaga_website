@@ -211,7 +211,7 @@ function ContractCard({ contract }: { contract: any }) {
     <motion.div
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      className={glassPrimary + ' p-6'}
+      className={builderGlassPanel + ' p-6'}
     >
       <div className="flex items-start justify-between mb-4">
         <div className="flex-1">
@@ -282,7 +282,7 @@ function StatCard({ icon: Icon, label, value, color }: {
   color: string;
 }) {
   return (
-    <div className={glassSecondary + ' p-4'}>
+    <div className={builderGlassSubPanel + ' p-4'}>
       <Icon className={cn('w-6 h-6 mb-3', color)} />
       <div className={cn('text-2xl font-bold mb-1', color)}>{value}</div>
       <div className="text-xs text-gray-400">{label}</div>

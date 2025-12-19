@@ -181,7 +181,7 @@ function NegotiationCard({ negotiation }: { negotiation: any }) {
     <motion.div
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      className={glassPrimary + ' p-6'}
+      className={builderGlassPanel + ' p-6'}
     >
       <div className="flex items-start justify-between mb-4">
         <div className="flex-1">
@@ -220,13 +220,13 @@ function NegotiationCard({ negotiation }: { negotiation: any }) {
 
       {/* Price Comparison */}
       <div className="grid grid-cols-2 gap-4 mb-4">
-        <div className={glassSecondary + ' p-4'}>
+        <div className={builderGlassSubPanel + ' p-4'}>
           <div className="text-xs text-gray-400 mb-1">Asking Price</div>
           <div className="text-xl font-bold text-white">
             ₹{askingPrice.toLocaleString('en-IN')}
           </div>
         </div>
-        <div className={glassSecondary + ' p-4'}>
+        <div className={builderGlassSubPanel + ' p-4'}>
           <div className="text-xs text-gray-400 mb-1">Current Offer</div>
           <div className="flex items-center gap-2">
             <div className="text-xl font-bold text-white">
@@ -266,7 +266,7 @@ function AnalysisCard({ icon: Icon, label, value, color }: {
   color: string;
 }) {
   return (
-    <div className={glassSecondary + ' p-4'}>
+    <div className={builderGlassSubPanel + ' p-4'}>
       <Icon className={cn('w-6 h-6 mb-3', color)} />
       <div className={cn('text-2xl font-bold mb-1', color)}>{value}</div>
       <div className="text-xs text-gray-400">{label}</div>
@@ -289,7 +289,7 @@ function RecommendationCard({ recommendation }: {
   };
 
   return (
-    <div className={cn(glassSecondary, 'p-4 border', priorityColors[recommendation.priority])}>
+    <div className={cn(builderGlassSubPanel, 'p-4 border', priorityColors[recommendation.priority])}>
       <div className="flex items-start justify-between mb-2">
         <h6 className="font-semibold text-white">{recommendation.recommendedAction}</h6>
         <span className={cn('px-2 py-1 rounded text-xs font-medium', priorityColors[recommendation.priority])}>

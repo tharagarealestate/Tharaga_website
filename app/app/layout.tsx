@@ -35,7 +35,6 @@ export const metadata: Metadata = {
 
 import { AppI18nProvider } from '@/components/providers/AppI18nProvider'
 import { EntitlementsProvider } from '@/components/ui/FeatureGate'
-import MobileBottomNav from '@/components/MobileBottomNav'
 import { MobileSiteNav } from '@/components/MobileSiteNav'
 import { PrefetchRoutes } from '@/components/providers/PrefetchRoutes'
 import { HeaderLinkInterceptor } from '@/components/HeaderLinkInterceptor'
@@ -1717,6 +1716,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           }
           
           @media (max-width: 880px) {
+            /* Hide hamburger menu toggle on all pages except homepage in mobile view */
+            header.nav .mobile-menu-toggle{ display:none !important }
+            /* Show hamburger menu toggle only on homepage */
+            body:has(.hero-premium) header.nav .mobile-menu-toggle,
+            .homepage-header header.nav .mobile-menu-toggle{ display:flex !important }
             /* Mobile header: keep single-row like desktop, just tighter
                Reserve more right-side space so "Features | Login / Signup" never overlaps */
             header.nav .inner { padding-right:160px; flex-wrap:nowrap; gap:8px }
@@ -1742,6 +1746,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             /* Right-side auth group position */
             header.nav .thg-auth-wrap{ position:absolute; top:10px; right:12px; padding:0; gap:10px }
             header.nav .thg-auth-wrap::before{ height:14px }
+            /* Hide user icon/auth button on mobile for all pages except homepage */
+            header.nav .thg-auth-wrap{ display:none !important }
+            /* Show user icon/auth button on mobile only for homepage */
+            body:has(.hero-premium) header.nav .thg-auth-wrap,
+            .homepage-header header.nav .thg-auth-wrap{ display:flex !important }
             /* Hide trust pill to avoid crowding on small screens */
             #home_pill_trust{ display:none }
             /* Use the same dropdown style as desktop */
@@ -2364,7 +2373,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           })();
         `}} />
         <MobileSiteNav />
-        <MobileBottomNav />
         <CookieConsent />
       </body>
     </html>

@@ -151,3 +151,4 @@ CREATE TRIGGER update_cookie_consents_updated_at
     EXECUTE FUNCTION update_updated_at_column();
 
 
+

@@ -184,9 +184,18 @@ function PropertyListingPageContent() {
     try {
       let query = supabase
         .from('properties')
-        .select('*, builder:builders(*), lead_scores(*)', { count: 'exact' })
-        .eq('status', 'active')
-        .eq('listing_type', 'sale'); // or 'rent' based on tab
+        .select(`
+          *,
+          builder:profiles!builder_id (
+            id,
+            email,
+            company_name,
+            logo_url,
+            verified
+          )
+        `, { count: 'exact' })
+        .eq('verification_status', 'approved')
+        .eq('availability_status', 'available');
 
       // Apply filters
       if (filters.city.length > 0) {
@@ -197,43 +206,69 @@ function PropertyListingPageContent() {
         query = query.in('locality', filters.locality);
       }
       
-      // Use price_inr (primary) or price (fallback)
+      // Use base_price (new schema) - we've migrated all properties to use base_price
       if (filters.priceMin > 0) {
-        query = query.gte('price_inr', filters.priceMin);
+        // Use base_price if available, otherwise fallback to price_inr
+        query = query.or(`base_price.gte.${filters.priceMin},price_inr.gte.${filters.priceMin}`);
       }
       
       if (filters.priceMax < 200000000) {
-        query = query.lte('price_inr', filters.priceMax);
+        query = query.or(`base_price.lte.${filters.priceMax},price_inr.lte.${filters.priceMax}`);
       }
       
       if (filters.propertyType.length > 0) {
         query = query.in('property_type', filters.propertyType);
       }
       
+      // Use bhk_type (new schema) with fallback to bedrooms
       if (filters.bhk.length > 0) {
-        query = query.in('bedrooms', filters.bhk);
+        const bhkMapping: Record<number, string> = {
+          1: '1BHK',
+          2: '2BHK',
+          3: '3BHK',
+          4: '4BHK',
+          5: '5BHK+'
+        };
+        const bhkTypes = filters.bhk.map(b => bhkMapping[b]).filter(Boolean);
+        if (bhkTypes.length > 0) {
+          // Use bhk_type (new schema)
+          query = query.in('bhk_type', bhkTypes);
+        } else {
+          // Fallback to bedrooms
+          query = query.in('bedrooms', filters.bhk);
+        }
       }
       
+      // Use carpet_area (new schema) with fallback to sqft
       if (filters.areaMin > 0) {
-        query = query.gte('sqft', filters.areaMin);
+        query = query.or(`carpet_area.gte.${filters.areaMin},sqft.gte.${filters.areaMin}`);
       }
       
       if (filters.areaMax < 10000) {
-        query = query.lte('sqft', filters.areaMax);
+        query = query.or(`carpet_area.lte.${filters.areaMax},sqft.lte.${filters.areaMax}`);
       }
       
       if (filters.furnishedStatus[0] !== 'any') {
-        query = query.eq('furnished', filters.furnishedStatus[0]);
+        // Map old status to new schema
+        const statusMap: Record<string, string> = {
+          'furnished': 'fully-furnished',
+          'semi_furnished': 'semi-furnished',
+          'unfurnished': 'unfurnished'
+        };
+        const newStatus = statusMap[filters.furnishedStatus[0]] || filters.furnishedStatus[0];
+        // Use furnishing_status (new schema) with fallback
+        query = query.or(`furnishing_status.eq.${newStatus},furnished.eq.${filters.furnishedStatus[0]}`);
       }
       
       if (filters.facing[0] !== 'any') {
         query = query.eq('facing', filters.facing[0]);
       }
       
-      // Metro filter
-      if (filters.nearMetro) {
-        query = query.lte('nearest_metro_minutes', filters.metroDistance);
-      }
+      // Metro filter - skip if field might not exist
+      // Note: This field may not be in all properties, so we'll skip it for now
+      // if (filters.nearMetro) {
+      //   query = query.lte('nearest_metro_minutes', filters.metroDistance);
+      // }
       
       // Amenities filter (array column)
       if (filters.amenities.length > 0) {
@@ -242,22 +277,29 @@ function PropertyListingPageContent() {
         });
       }
       
-      // Apply sorting
+      // Apply sorting - use new schema fields with fallbacks
       switch (filters.sortBy) {
         case 'ai_relevance':
-          query = query.order('ai_score', { ascending: false });
+          // Use ai_appreciation_band or created_at
+          query = query.order('ai_appreciation_band', { ascending: false, nullsLast: true });
+          query = query.order('created_at', { ascending: false });
           break;
         case 'newest':
           query = query.order('created_at', { ascending: false });
           break;
         case 'price_low_high':
-          query = query.order('price_inr', { ascending: true, nullsFirst: false });
+          // Prefer base_price, fallback to price_inr
+          query = query.order('base_price', { ascending: true, nullsLast: true });
+          query = query.order('price_inr', { ascending: true, nullsLast: true });
           break;
         case 'price_high_low':
-          query = query.order('price_inr', { ascending: false, nullsFirst: false });
+          query = query.order('base_price', { ascending: false, nullsLast: true });
+          query = query.order('price_inr', { ascending: false, nullsLast: true });
           break;
         case 'area_high_low':
-          query = query.order('sqft', { ascending: false });
+          // Prefer carpet_area, fallback to sqft
+          query = query.order('carpet_area', { ascending: false, nullsLast: true });
+          query = query.order('sqft', { ascending: false, nullsLast: true });
           break;
       }
       

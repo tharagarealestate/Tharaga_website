@@ -7,7 +7,7 @@ import { LegalContent } from '@/types/legal';
 
 export const metadata: Metadata = {
   title: 'Privacy Policy | Tharaga - DPDP Act 2023 Compliant',
-  description: 'Tharaga privacy policy compliant with India\'s Digital Personal Data Protection Act 2023. Learn how we protect your data.',
+  description: "Tharaga privacy policy compliant with India's Digital Personal Data Protection Act 2023. Learn how we protect your data.",
   robots: 'index, follow',
 };
 

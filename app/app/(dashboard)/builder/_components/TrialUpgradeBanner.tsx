@@ -59,7 +59,7 @@ export function TrialUpgradeBanner() {
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: -20 }}
         className={`
-          relative z-40 border-b
+          relative z-40 border-b fixed top-0 left-0 right-0
           ${isExpired 
             ? 'bg-red-50 border-red-200' 
             : isUrgent 
@@ -67,6 +67,7 @@ export function TrialUpgradeBanner() {
             : 'bg-amber-50 border-amber-200'
           }
         `}
+        style={{ marginLeft: '220px', width: 'calc(100% - 220px)' }}
       >
         <div className="container mx-auto px-4 py-3">
           <div className="flex items-center justify-between gap-4">

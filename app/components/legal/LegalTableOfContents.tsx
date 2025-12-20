@@ -80,3 +80,5 @@ export function LegalTableOfContents({ sections }: Props) {
     </div>
   );
 }
+
+

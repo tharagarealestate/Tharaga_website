@@ -149,3 +149,5 @@ CREATE TRIGGER update_cookie_consents_updated_at
     BEFORE UPDATE ON cookie_consents
     FOR EACH ROW
     EXECUTE FUNCTION update_updated_at_column();
+
+

@@ -87,3 +87,5 @@ export interface CookiePreferences {
   marketing: boolean;
   preferences: boolean;
 }
+
+

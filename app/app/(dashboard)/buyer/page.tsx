@@ -415,18 +415,13 @@ function SavedPropertiesSection({ saved }: { saved: ReturnType<typeof listSaved>
 
 function UpcomingVisitsSection() {
   return (
-    <motion.section
-      initial={{ opacity: 0, y: 24 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.6, delay: 0.25 }}
-      className="glass-panel space-y-4 rounded-[28px] border border-white/10 bg-white/6 p-6 text-white shadow-[0_20px_80px_rgba(8,15,40,0.45)] backdrop-blur-2xl sm:p-8"
-    >
+    <section className="space-y-4 rounded-[28px] border-2 border-amber-300 bg-slate-900/95 p-6 text-white sm:p-8">
       <SectionHeader
         title="Upcoming site visits"
         subtitle="Stay organised and never miss a walkthrough."
         icon={<Calendar className="h-5 w-5 text-sky-200" />}
       />
-      <div className="rounded-2xl border border-white/10 bg-white/[0.05] p-10 text-center text-white/70">
+      <div className="rounded-2xl border border-amber-300/50 bg-slate-800/50 p-10 text-center text-slate-100">
         <Calendar className="mx-auto h-14 w-14 text-white/40" />
         <p className="mt-4 text-lg text-white">No visits scheduled yet</p>
         <p className="text-sm text-white/60">Pick your favourites and lock a time that suits you best.</p>

@@ -256,32 +256,32 @@ export default function NotificationPanel() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 12, scale: 0.96 }}
             transition={{ type: 'spring', stiffness: 240, damping: 24 }}
-            className="absolute right-0 z-50 mt-4 w-[380px] origin-top-right rounded-3xl border border-white/15 bg-white/90 p-3 shadow-2xl shadow-primary-900/25 backdrop-blur-xl"
+            className="absolute right-0 z-50 mt-4 w-[380px] origin-top-right rounded-3xl border border-white/15 bg-white/95 p-3 shadow-2xl shadow-primary-900/25"
           >
             <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary-950 via-primary-900 to-primary-800 p-5 text-white">
               <div className="absolute inset-0 opacity-60">
                 <div className="absolute -top-16 -right-16 h-40 w-40 rounded-full bg-emerald-500/40 blur-3xl" />
                 <div className="absolute -bottom-16 -left-16 h-48 w-48 rounded-full bg-gold-500/30 blur-3xl" />
               </div>
-              <div className="relative flex items-start justify-between gap-3">
-                <div>
+              <div className="relative flex items-start justify-between gap-4">
+                <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 text-[11px] uppercase tracking-[0.22em] text-white/70">
-                    <BellRing className="h-4 w-4" />
-                    Live Alerts
+                    <BellRing className="h-4 w-4 flex-shrink-0" />
+                    <span>Live Alerts</span>
                   </div>
-                  <h3 className="mt-1 text-xl font-semibold">Notification Center</h3>
-                  <p className="mt-1 text-sm text-white/70">
+                  <h3 className="mt-1 text-xl font-semibold text-white">Notification Center</h3>
+                  <p className="mt-1 text-sm text-white/70 line-clamp-2">
                     Stay on top of leads, meetings, payments and system alerts as they happen.
                   </p>
                 </div>
-                <div className="flex flex-col items-end gap-2">
-                  <span className="rounded-full bg-white/10 px-3 py-1 text-xs font-semibold text-white/80">
+                <div className="flex flex-shrink-0 flex-col items-end gap-2">
+                  <span className="rounded-full bg-white/10 px-3 py-1 text-xs font-semibold text-white whitespace-nowrap">
                     {unreadCount} unread
                   </span>
                   {unreadCount > 0 && (
                     <button
                       onClick={markAllAsRead}
-                      className="inline-flex items-center gap-1 rounded-full bg-white/15 px-3 py-1 text-[11px] font-semibold uppercase tracking-wide text-white transition hover:bg-white/25"
+                      className="inline-flex items-center gap-1 rounded-full bg-white/15 px-3 py-1 text-[11px] font-semibold uppercase tracking-wide text-white transition hover:bg-white/25 whitespace-nowrap"
                     >
                       <CheckCheck className="h-3.5 w-3.5" />
                       Mark all read
@@ -292,7 +292,7 @@ export default function NotificationPanel() {
             </div>
 
             <div className="mt-3 space-y-3 px-1">
-              <div className="flex items-center justify-between rounded-2xl bg-white/90 p-3 shadow-inner shadow-white/30 backdrop-blur-md">
+              <div className="flex items-center justify-between rounded-2xl bg-white/95 p-3 shadow-inner shadow-white/30">
                 <div className="flex items-center gap-3">
                   <div className="relative flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-gold-500/20 via-amber-500/20 to-primary-500/20">
                     <Settings2 className="h-5 w-5 text-primary-700" />
@@ -369,14 +369,14 @@ export default function NotificationPanel() {
 
               <div className="max-h-[420px] space-y-2 overflow-y-auto pr-1">
                 {loading && (
-                  <div className="flex items-center justify-center gap-2 rounded-2xl border border-dashed border-primary-200/70 bg-white/70 px-4 py-6 text-primary-700 backdrop-blur">
+                  <div className="flex items-center justify-center gap-2 rounded-2xl border border-dashed border-primary-200/70 bg-white/90 px-4 py-6 text-primary-700">
                     <Loader2 className="h-4 w-4 animate-spin" />
-                    Syncing notifications...
+                    <span>Syncing notifications...</span>
                   </div>
                 )}
 
                 {!loading && filteredNotifications.length === 0 && (
-                  <div className="rounded-2xl border border-dashed border-primary-200/60 bg-white/70 p-6 text-center backdrop-blur">
+                  <div className="rounded-2xl border border-dashed border-primary-200/60 bg-white/90 p-6 text-center">
                     <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-primary-100 text-primary-600">
                       <Sparkles className="h-6 w-6" />
                     </div>

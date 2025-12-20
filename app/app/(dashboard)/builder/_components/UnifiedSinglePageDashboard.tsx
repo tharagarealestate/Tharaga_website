@@ -78,7 +78,7 @@ export function UnifiedSinglePageDashboard({ activeSection, onSectionChange }: U
       {/* Background is handled by layout.tsx - no duplicate background here */}
 
       {/* Main Content Area with Smooth Transitions */}
-      <div className="relative z-10 w-full px-4 sm:px-6 lg:px-8 py-6 lg:py-8 bg-transparent">
+      <div className="relative z-10 w-full px-4 sm:px-6 lg:px-8 pt-0 pb-6 lg:pb-8 bg-transparent">
         <AnimatePresence mode="wait">
           <motion.div
             key={activeSection}

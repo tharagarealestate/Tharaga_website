@@ -346,7 +346,7 @@ export function UnifiedDashboard({ onNavigate }: UnifiedDashboardProps) {
   return (
     <div className="relative w-full">
       {/* Main Content - Background is handled by layout */}
-      <div className="relative z-10 px-6 pt-2 pb-8 space-y-6">
+      <div className="relative z-10 px-6 pt-0 pb-8 space-y-6">
         {/* Welcome Section */}
         <div className={cn(builderGlassPrimary, "p-8")}>
           {/* Shimmer Effect on Hover - EXACT from pricing page */}

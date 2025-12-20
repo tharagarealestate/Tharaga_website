@@ -59,7 +59,7 @@ export function TrialUpgradeBanner() {
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: -20 }}
         className={`
-          relative z-40 border-b fixed top-0 left-0 right-0
+          fixed top-0 left-0 right-0 z-40 border-b
           ${isExpired 
             ? 'bg-red-50 border-red-200' 
             : isUrgent 

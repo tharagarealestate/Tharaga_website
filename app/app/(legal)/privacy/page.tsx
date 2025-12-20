@@ -361,7 +361,7 @@ We ensure all international transfers comply with DPDP Act 2023 requirements.`,
     },
     {
       id: 'children-privacy',
-      heading: '12. Children's Privacy',
+      heading: "12. Children's Privacy",
       content: `Tharaga is not intended for users under 18 years old. We do not knowingly collect data from minors. If you believe a minor has provided us data, contact: privacy@tharaga.com`,
       order: 12
     },

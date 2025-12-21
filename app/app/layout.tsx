@@ -346,6 +346,18 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   .thg-auth-menu{ right:8px; }
 }
 
+/* Hide auth button on mobile for my-dashboard route */
+@media (max-width: 767px) {
+  /* This will be applied via JavaScript when on my-dashboard route */
+  .thg-auth-wrap.hide-on-mobile,
+  .thg-auth-btn.hide-on-mobile {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+  }
+}
+
 /* tagline styling */
 .thg-tagline{ color:#9ca3af; font-size:13px; margin:-4px 0 12px; }
 \`;
@@ -451,6 +463,51 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       if (window.AUTH_HIDE_HEADER === true || window.AUTH_NO_HEADER === true) {
         if (wrap) wrap.style.display = 'none';
       }
+      // Hide on mobile for my-dashboard route
+      function checkAndHideOnMobile() {
+        if (typeof window === 'undefined' || !wrap) return;
+        const isMyDashboard = window.location.pathname.includes('/my-dashboard');
+        const isMobile = window.innerWidth <= 767;
+        if (isMyDashboard && isMobile) {
+          wrap.classList.add('hide-on-mobile');
+          wrap.style.display = 'none';
+          wrap.style.visibility = 'hidden';
+          if (btn) {
+            btn.classList.add('hide-on-mobile');
+            btn.style.display = 'none';
+            btn.style.visibility = 'hidden';
+          }
+        } else {
+          wrap.classList.remove('hide-on-mobile');
+          if (btn) btn.classList.remove('hide-on-mobile');
+          // Only restore if not globally hidden
+          if (window.AUTH_HIDE_HEADER !== true && window.AUTH_NO_HEADER !== true) {
+            wrap.style.display = '';
+            wrap.style.visibility = '';
+            if (btn) {
+              btn.style.display = '';
+              btn.style.visibility = '';
+            }
+          }
+        }
+      }
+      // Check immediately
+      checkAndHideOnMobile();
+      // Listen for resize events
+      window.addEventListener('resize', checkAndHideOnMobile);
+      // Listen for route changes (Next.js)
+      const originalPushState = history.pushState;
+      const originalReplaceState = history.replaceState;
+      history.pushState = function(...args) {
+        originalPushState.apply(history, args);
+        setTimeout(checkAndHideOnMobile, 0);
+      };
+      history.replaceState = function(...args) {
+        originalReplaceState.apply(history, args);
+        setTimeout(checkAndHideOnMobile, 0);
+      };
+      // Also check on popstate (back/forward)
+      window.addEventListener('popstate', checkAndHideOnMobile);
     } catch(_){}
     return { wrap, btn, menu, overlay, confirmEl };
   }

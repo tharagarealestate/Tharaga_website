@@ -373,12 +373,12 @@ function PropertyListingPageContent() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-950 via-primary-900 to-primary-800 relative overflow-hidden">
-      {/* Animated Background Elements - EXACT from pricing page */}
-      <div className="absolute inset-0 opacity-30">
-        <div className="absolute top-20 left-10 w-96 h-96 bg-gold-500 rounded-full blur-3xl animate-pulse-slow" />
+    <div className="min-h-screen bg-slate-900/95 relative overflow-hidden">
+      {/* Subtle background gradient */}
+      <div className="absolute inset-0 opacity-20">
+        <div className="absolute top-20 left-10 w-96 h-96 bg-amber-500 rounded-full blur-3xl" />
         <div
-          className="absolute bottom-20 right-10 w-[600px] h-[600px] bg-emerald-500 rounded-full blur-3xl animate-pulse-slow"
+          className="absolute bottom-20 right-10 w-[600px] h-[600px] bg-slate-700 rounded-full blur-3xl"
           style={{ animationDelay: '1s' }}
         />
       </div>
@@ -388,7 +388,7 @@ function PropertyListingPageContent() {
         <div className="max-w-[1920px] mx-auto">
         <div className="flex">
           {/* LEFT SIDEBAR - Desktop Only */}
-          <aside className="hidden lg:block w-80 xl:w-96 bg-white border-r h-[calc(100vh-64px)] sticky top-16 overflow-y-auto">
+          <aside className="hidden lg:block w-80 xl:w-96 bg-slate-800/95 border-r-2 border-amber-300 h-[calc(100vh-64px)] sticky top-16 overflow-y-auto">
             <PropertyListingSidebar
               filters={filters}
               updateFilters={updateFilters}
@@ -398,7 +398,7 @@ function PropertyListingPageContent() {
           </aside>
 
           {/* RIGHT CONTENT AREA */}
-          <main className="flex-1 min-w-0">
+          <main className="flex-1 min-w-0 bg-slate-900/95">
             <div className="p-6">
               <Breadcrumb items={[
                 { label: 'Home', href: '/' },
@@ -435,7 +435,11 @@ function PropertyListingPageContent() {
 
 export default function PropertyListingPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen flex items-center justify-center">Loading...</div>}>
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-slate-900/95">
+        <div className="text-white">Loading...</div>
+      </div>
+    }>
       <PropertyListingPageContent />
     </Suspense>
   );

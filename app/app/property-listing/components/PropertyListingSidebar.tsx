@@ -78,47 +78,33 @@ export default function PropertyListingSidebar({
   ];
 
   return (
-    <div className="relative">
-      {/* Premium gradient background (subtle version) */}
-      <div className="absolute inset-0 bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 -z-10" />
-      
-      {/* Noise texture overlay */}
-      <div 
-        className="absolute inset-0 opacity-[0.03] mix-blend-overlay pointer-events-none -z-10"
-        style={{
-          backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")`
-        }}
-      />
-      
+    <div className="relative bg-slate-800/95">
       {/* Main sidebar content */}
       <div className="relative p-6 space-y-6">
         {/* HEADER */}
         <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold flex items-center gap-2">
-            <SlidersHorizontal className="w-5 h-5" />
+          <h2 className="text-lg font-semibold flex items-center gap-2 text-white">
+            <SlidersHorizontal className="w-5 h-5 text-amber-300" />
             Filters
           </h2>
           <Button
             variant="invisible"
             size="sm"
             onClick={resetFilters}
-            className="text-sm text-indigo-600 hover:text-indigo-700"
+            className="text-sm text-amber-300 hover:text-amber-200"
           >
             Clear All
           </Button>
         </div>
 
         {/* RESULTS COUNT */}
-        <div className="relative overflow-hidden bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl p-4 shadow-lg shadow-indigo-500/30">
-          {/* Shine effect */}
-          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shimmer" />
-          
+        <div className="relative overflow-hidden bg-slate-700/50 rounded-xl p-4 border-2 border-amber-300">
           <div className="relative flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center border border-white/30">
-              <Home className="w-5 h-5 text-white" />
+            <div className="w-10 h-10 rounded-xl bg-slate-600/50 flex items-center justify-center border-2 border-amber-300">
+              <Home className="w-5 h-5 text-amber-300" />
             </div>
             <div>
-              <div className="text-white/80 text-xs font-medium">Properties Found</div>
+              <div className="text-slate-300 text-xs font-medium">Properties Found</div>
               <div className="text-white text-2xl font-bold">
                 {propertiesCount.toLocaleString('en-IN')}
               </div>

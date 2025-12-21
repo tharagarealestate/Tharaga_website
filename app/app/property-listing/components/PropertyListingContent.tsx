@@ -39,22 +39,22 @@ export default function PropertyListingContent({
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-slate-900/95">
       {/* TOP BAR: Search, Sort, View Toggle */}
-      <div className="bg-white border-b sticky top-16 z-30">
+      <div className="bg-slate-800/95 border-b-2 border-amber-300 sticky top-16 z-30">
         <div className="p-4 space-y-4">
           {/* Row 1: Search + Mobile Filter Button + Sort + View Toggle */}
           <div className="flex items-center gap-3">
             {/* Quick Search */}
             <div className="flex-1 relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
               <Input
                 type="text"
                 placeholder="Try: 3BHK near metro under 1Cr in Adyar"
                 value={quickSearch}
                 onChange={(e) => setQuickSearch(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleQuickSearch()}
-                className="pl-10 pr-4 py-6 text-base"
+                className="pl-10 pr-4 py-6 text-base bg-slate-700/50 border-2 border-amber-300 text-white placeholder:text-slate-400 focus:border-amber-200 focus:ring-2 focus:ring-amber-300/20"
               />
             </div>
 
@@ -82,11 +82,12 @@ export default function PropertyListingContent({
             </Select>
 
             {/* View Toggle */}
-            <div className="hidden md:flex items-center gap-1 border rounded-lg p-1">
+            <div className="hidden md:flex items-center gap-1 border-2 border-amber-300 rounded-lg p-1 bg-slate-800/95">
               <Button
                 variant={filters.viewType === 'grid' ? 'primary' : 'invisible'}
                 size="sm"
                 onClick={() => updateFilters({ viewType: 'grid' })}
+                className={filters.viewType === 'grid' ? 'bg-amber-300 text-slate-900 hover:bg-amber-200' : 'text-slate-200 hover:bg-slate-700/50'}
               >
                 <Grid3x3 className="w-4 h-4" />
               </Button>
@@ -94,6 +95,7 @@ export default function PropertyListingContent({
                 variant={filters.viewType === 'list' ? 'primary' : 'invisible'}
                 size="sm"
                 onClick={() => updateFilters({ viewType: 'list' })}
+                className={filters.viewType === 'list' ? 'bg-amber-300 text-slate-900 hover:bg-amber-200' : 'text-slate-200 hover:bg-slate-700/50'}
               >
                 <List className="w-4 h-4" />
               </Button>
@@ -101,6 +103,7 @@ export default function PropertyListingContent({
                 variant={filters.viewType === 'map' ? 'primary' : 'invisible'}
                 size="sm"
                 onClick={() => updateFilters({ viewType: 'map' })}
+                className={filters.viewType === 'map' ? 'bg-amber-300 text-slate-900 hover:bg-amber-200' : 'text-slate-200 hover:bg-slate-700/50'}
               >
                 <MapIcon className="w-4 h-4" />
               </Button>
@@ -109,16 +112,16 @@ export default function PropertyListingContent({
 
           {/* Row 2: Results Count + Applied Filters */}
           <div className="flex items-center gap-4 flex-wrap">
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-slate-200">
               {loading ? (
-                <span className="flex items-center gap-2">
-                  <Loader2 className="w-4 h-4 animate-spin" />
+                <span className="flex items-center gap-2 text-slate-200">
+                  <Loader2 className="w-4 h-4 animate-spin text-amber-300" />
                   Loading properties...
                 </span>
               ) : (
-                <span>
-                  Showing <span className="font-semibold">{properties.length}</span> of{' '}
-                  <span className="font-semibold">{formatIndianNumber(totalCount)}</span> properties
+                <span className="text-slate-200">
+                  Showing <span className="font-semibold text-white">{properties.length}</span> of{' '}
+                  <span className="font-semibold text-white">{formatIndianNumber(totalCount)}</span> properties
                 </span>
               )}
             </p>
@@ -130,10 +133,10 @@ export default function PropertyListingContent({
       </div>
 
       {/* CONTENT AREA */}
-      <div className="p-4">
+      <div className="p-4 bg-slate-900/95">
         {filters.viewType === 'map' ? (
-          <div className="h-[600px] bg-gray-200 rounded-lg flex items-center justify-center">
-            <p className="text-gray-500">Map view coming soon</p>
+          <div className="h-[600px] bg-slate-800/95 border-2 border-amber-300 rounded-lg flex items-center justify-center">
+            <p className="text-slate-300">Map view coming soon</p>
           </div>
         ) : (
           <PropertyGrid

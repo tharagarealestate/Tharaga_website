@@ -122,7 +122,7 @@ export function PropertyCard({
     const badge = config[property.ai_appreciation_band];
 
     return (
-      <div className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${badge.color}`}>
+      <div className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium border ${badge.color}`}>
         <span>{badge.icon}</span>
         <span>{badge.text}</span>
       </div>
@@ -136,7 +136,7 @@ export function PropertyCard({
         animate={{ opacity: 1, y: 0 }}
         whileHover={{ y: -4 }}
         onClick={handleCardClick}
-        className="bg-white rounded-xl shadow-sm hover:shadow-xl transition-all duration-300 cursor-pointer border border-slate-200 overflow-hidden flex flex-col sm:flex-row"
+        className="bg-slate-800/95 rounded-xl transition-all duration-300 cursor-pointer border-2 border-amber-300 overflow-hidden flex flex-col sm:flex-row hover:bg-slate-700/70"
       >
         {/* Image Section */}
         <div className="relative sm:w-80 h-64 sm:h-auto flex-shrink-0">
@@ -167,16 +167,16 @@ export function PropertyCard({
           <button
             onClick={handleFavoriteClick}
             disabled={isLoading}
-            className="absolute top-3 right-3 p-2 bg-white/90 backdrop-blur-sm rounded-full hover:bg-white transition-colors"
+            className="absolute top-3 right-3 p-2 bg-slate-800/95 rounded-full hover:bg-slate-700/90 transition-colors border-2 border-amber-300 z-10"
             aria-label="Add to favorites"
           >
             <Heart 
-              className={`w-5 h-5 ${isFavorited ? 'fill-red-500 text-red-500' : 'text-slate-600'}`} 
+              className={`w-5 h-5 ${isFavorited ? 'fill-red-500 text-red-500' : 'text-slate-200'}`} 
             />
           </button>
 
           {/* View Count */}
-          <div className="absolute bottom-3 right-3 px-2 py-1 bg-black/60 backdrop-blur-sm text-white text-xs rounded-full flex items-center gap-1">
+          <div className="absolute bottom-3 right-3 px-2 py-1 bg-slate-900/80 text-white text-xs rounded-full flex items-center gap-1 border border-amber-300/50">
             <Eye className="w-3 h-3" />
             {property.view_count}
           </div>
@@ -186,11 +186,11 @@ export function PropertyCard({
         <div className="flex-1 p-6">
           <div className="flex items-start justify-between mb-3">
             <div>
-              <h3 className="text-xl font-bold text-slate-900 mb-1 line-clamp-2">
+              <h3 className="text-xl font-bold text-white mb-1 line-clamp-2">
                 {property.title}
               </h3>
-              <div className="flex items-center text-sm text-slate-600 gap-1">
-                <MapPin className="w-4 h-4" />
+              <div className="flex items-center text-sm text-slate-200 gap-1">
+                <MapPin className="w-4 h-4 text-slate-300" />
                 <span>{property.address}, {property.city}</span>
               </div>
             </div>
@@ -199,14 +199,14 @@ export function PropertyCard({
 
           {/* Price */}
           <div className="mb-4">
-            <div className="text-3xl font-bold text-[#1e40af]">
+            <div className="text-3xl font-semibold text-amber-300">
               {formatPrice(property.base_price)}
               {property.negotiable && (
-                <span className="text-sm text-slate-500 font-normal ml-2">Negotiable</span>
+                <span className="text-sm text-slate-300 font-normal ml-2">Negotiable</span>
               )}
             </div>
             {property.price_per_sqft && (
-              <div className="text-sm text-slate-600">
+              <div className="text-sm text-slate-300">
                 ₹{property.price_per_sqft.toLocaleString('en-IN')}/sqft
               </div>
             )}
@@ -214,15 +214,15 @@ export function PropertyCard({
 
           {/* Property Details */}
           <div className="flex flex-wrap items-center gap-4 mb-4">
-            <div className="flex items-center gap-1 text-slate-700">
+            <div className="flex items-center gap-1 text-slate-200">
               <Bed className="w-5 h-5 text-slate-400" />
               <span className="font-semibold">{property.bhk_type}</span>
             </div>
-            <div className="flex items-center gap-1 text-slate-700">
+            <div className="flex items-center gap-1 text-slate-200">
               <Maximize className="w-5 h-5 text-slate-400" />
               <span className="font-semibold">{property.carpet_area} sqft</span>
             </div>
-            <div className="px-3 py-1 bg-slate-100 rounded-full text-sm text-slate-700 font-medium">
+            <div className="px-3 py-1 bg-slate-700/50 rounded-full text-sm text-slate-200 font-medium border border-amber-300/30">
               {property.possession_status === 'ready-to-move' ? 'Ready to Move' : 'Under Construction'}
             </div>
           </div>
@@ -232,13 +232,13 @@ export function PropertyCard({
             {property.amenities.slice(0, 6).map((amenity) => (
               <span 
                 key={amenity} 
-                className="px-2 py-1 bg-slate-50 text-slate-600 text-xs rounded border border-slate-200"
+                className="px-2 py-1 bg-slate-700/50 text-slate-200 text-xs rounded border border-amber-300/30"
               >
                 {amenity}
               </span>
             ))}
             {property.amenities.length > 6 && (
-              <span className="px-2 py-1 text-slate-500 text-xs">
+              <span className="px-2 py-1 text-slate-400 text-xs">
                 +{property.amenities.length - 6} more
               </span>
             )}
@@ -246,22 +246,22 @@ export function PropertyCard({
 
           {/* Builder Info */}
           {showBuilder && property.builder && (
-            <div className="flex items-center gap-3 pt-4 border-t border-slate-200">
+            <div className="flex items-center gap-3 pt-4 border-t border-slate-700">
               {property.builder.logo_url && (
                 <Image
                   src={property.builder.logo_url}
                   alt={property.builder.company_name}
                   width={40}
                   height={40}
-                  className="rounded-lg"
+                  className="rounded-lg border border-amber-300/30"
                 />
               )}
               <div className="flex-1">
-                <div className="text-sm font-semibold text-slate-900">
+                <div className="text-sm font-semibold text-white">
                   {property.builder.company_name}
                 </div>
                 {property.builder.verified && (
-                  <div className="text-xs text-emerald-600 flex items-center gap-1">
+                  <div className="text-xs text-emerald-400 flex items-center gap-1">
                     <Shield className="w-3 h-3" />
                     Verified Builder
                   </div>
@@ -272,7 +272,7 @@ export function PropertyCard({
                   e.stopPropagation();
                   router.push(`/property/${property.slug || property.id}#contact`);
                 }}
-                className="px-4 py-2 bg-gradient-to-r from-[#D4AF37] to-[#1e40af] text-white text-sm font-medium rounded-lg hover:shadow-lg transition-all"
+                className="px-4 py-2 bg-amber-300 text-slate-900 text-sm font-medium rounded-lg hover:bg-amber-200 transition-all border-2 border-amber-300"
               >
                 Contact
               </button>
@@ -288,9 +288,9 @@ export function PropertyCard({
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      whileHover={{ y: -8, boxShadow: '0 20px 40px rgba(0,0,0,0.1)' }}
+      whileHover={{ y: -4 }}
       onClick={handleCardClick}
-      className="bg-white rounded-xl shadow-sm hover:shadow-2xl transition-all duration-300 cursor-pointer border border-slate-200 overflow-hidden"
+      className="bg-slate-800/95 rounded-xl transition-all duration-300 cursor-pointer border-2 border-amber-300 overflow-hidden hover:bg-slate-700/70"
     >
       {/* Image Section */}
       <div className="relative h-56">
@@ -330,7 +330,7 @@ export function PropertyCard({
         </button>
 
         {/* View Count */}
-        <div className="absolute bottom-3 right-3 px-2 py-1 bg-black/60 backdrop-blur-sm text-white text-xs rounded-full flex items-center gap-1">
+        <div className="absolute bottom-3 right-3 px-2 py-1 bg-slate-900/80 text-white text-xs rounded-full flex items-center gap-1 border border-amber-300/50">
           <Eye className="w-3 h-3" />
           {property.view_count}
         </div>
@@ -344,35 +344,35 @@ export function PropertyCard({
       {/* Content Section */}
       <div className="p-4">
         {/* Title */}
-        <h3 className="text-lg font-bold text-slate-900 mb-2 line-clamp-2 min-h-[3.5rem]">
+        <h3 className="text-lg font-bold text-white mb-2 line-clamp-2 min-h-[3.5rem]">
           {property.title}
         </h3>
 
         {/* Location */}
-        <div className="flex items-center text-sm text-slate-600 mb-3 gap-1">
-          <MapPin className="w-4 h-4 flex-shrink-0" />
+        <div className="flex items-center text-sm text-slate-200 mb-3 gap-1">
+          <MapPin className="w-4 h-4 flex-shrink-0 text-slate-300" />
           <span className="truncate">{property.address}, {property.city}</span>
         </div>
 
         {/* Price */}
         <div className="mb-3">
-          <div className="text-2xl font-bold text-[#1e40af]">
+          <div className="text-2xl font-semibold text-amber-300">
             {formatPrice(property.base_price)}
           </div>
           {property.price_per_sqft && (
-            <div className="text-xs text-slate-500">
+            <div className="text-xs text-slate-300">
               ₹{property.price_per_sqft.toLocaleString('en-IN')}/sqft
             </div>
           )}
         </div>
 
         {/* Property Details */}
-        <div className="flex items-center gap-4 mb-3 pb-3 border-b border-slate-200">
-          <div className="flex items-center gap-1 text-slate-700">
+        <div className="flex items-center gap-4 mb-3 pb-3 border-b border-slate-700">
+          <div className="flex items-center gap-1 text-slate-200">
             <Bed className="w-4 h-4 text-slate-400" />
             <span className="text-sm font-semibold">{property.bhk_type}</span>
           </div>
-          <div className="flex items-center gap-1 text-slate-700">
+          <div className="flex items-center gap-1 text-slate-200">
             <Maximize className="w-4 h-4 text-slate-400" />
             <span className="text-sm font-semibold">{property.carpet_area} sqft</span>
           </div>
@@ -383,13 +383,13 @@ export function PropertyCard({
           {property.amenities.slice(0, 3).map((amenity) => (
             <span 
               key={amenity} 
-              className="px-2 py-0.5 bg-slate-50 text-slate-600 text-xs rounded"
+              className="px-2 py-0.5 bg-slate-700/50 text-slate-200 text-xs rounded border border-amber-300/30"
             >
               {amenity}
             </span>
           ))}
           {property.amenities.length > 3 && (
-            <span className="px-2 py-0.5 text-slate-500 text-xs">
+            <span className="px-2 py-0.5 text-slate-400 text-xs">
               +{property.amenities.length - 3}
             </span>
           )}
@@ -397,7 +397,7 @@ export function PropertyCard({
 
         {/* Builder Info */}
         {showBuilder && property.builder && (
-          <div className="flex items-center justify-between pt-3 border-t border-slate-200">
+          <div className="flex items-center justify-between pt-3 border-t border-slate-700">
             <div className="flex items-center gap-2">
               {property.builder.logo_url && (
                 <Image
@@ -405,15 +405,15 @@ export function PropertyCard({
                   alt={property.builder.company_name}
                   width={32}
                   height={32}
-                  className="rounded"
+                  className="rounded border border-amber-300/30"
                 />
               )}
-              <div className="text-xs text-slate-600 truncate max-w-[120px]">
+              <div className="text-xs text-slate-200 truncate max-w-[120px]">
                 {property.builder.company_name}
               </div>
             </div>
             {property.builder.verified && (
-              <div className="flex items-center gap-1 text-emerald-600">
+              <div className="flex items-center gap-1 text-emerald-400">
                 <Shield className="w-3 h-3" />
                 <span className="text-xs">Verified</span>
               </div>

@@ -34,9 +34,9 @@ export default function BuilderDashboardLayout({ children }: { children: ReactNo
           style={{ 
             marginLeft: '220px',
             width: 'calc(100% - 220px)',
-            paddingTop: '72px',
+            paddingTop: '60px',
             marginTop: 0,
-            padding: '72px 0 0 0'
+            padding: '60px 0 0 0'
           }}
         >
           {children}

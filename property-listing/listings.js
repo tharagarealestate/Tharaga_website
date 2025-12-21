@@ -423,7 +423,7 @@ function apply(){
           const pct = Math.round((p.val/10)*100);
           return `<div class="explain-row" title="${p.label}"><div class="bar"><div style="width:${pct}%;"></div></div><span class="chip">${p.label}</span></div>`;
         }).join('') + '</div>' +
-        `<div class="row" style="gap:6px;margin-top:6px"><small style="color:var(--muted)">Tune:</small>
+        `<div class="row" style="gap:6px;margin-top:6px"><small style="color:rgb(148, 163, 184)">Tune:</small>
           <button class="chip" data-tune="value+">More value</button>
           <button class="chip" data-tune="recency+">Newer</button>
           <button class="chip" data-tune="metro+">Closer to metro</button>

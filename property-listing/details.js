@@ -4,7 +4,7 @@
 function qs(n){ return document.querySelector(n); }
 function el(html){ const t = document.createElement('template'); t.innerHTML = html.trim(); return t.content.firstChild; }
 
-function row(k,v){ return `<div class="spec-row"><div style="color:var(--muted)">${k}</div><div>${v||'—'}</div></div>`; }
+function row(k,v){ return `<div class="spec-row"><div style="color:rgb(148, 163, 184)">${k}</div><div style="color:rgb(226, 232, 240)">${v||'—'}</div></div>`; }
 
 function smartSummary(p){
   const bits = [];
@@ -23,7 +23,7 @@ function cardMini(p){
     <div class="card-img"><img src="${img}" alt="${p.title}"></div>
     <div style="padding:10px">
       <div style="font-weight:600">${p.title}</div>
-      <div style="color:var(--muted);font-size:12px">${(p.locality||'')}${p.city? ', '+p.city:''}</div>
+      <div style="color:rgb(148, 163, 184);font-size:12px">${(p.locality||'')}${p.city? ', '+p.city:''}</div>
       <div style="margin-top:6px;font-weight:700">${price}</div>
     </div>
   </a>`;

@@ -132,3 +132,5 @@ The property listing page now matches the Buyer Dashboard UI design system:
 - Professional appearance
 
 All changes have been successfully committed and pushed to the main branch!
+
+

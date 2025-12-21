@@ -1568,42 +1568,47 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             background:rgba(226,232,240,.6) !important; 
             border-radius:1px !important;
           }
-          header.nav .thg-auth-btn{
-            background:rgba(30,64,175,.08) !important;
-            color:#1e40af !important;
-            border-color:rgba(30,64,175,.20) !important;
-            font-weight:600 !important;
-            visibility: visible !important;
-            opacity: 1 !important;
-            display: inline-flex !important;
-            /* Override auth system's white text - match homepage exactly */
-            color: var(--primary) !important;
-            border: 1px solid rgba(30,64,175,.20) !important;
+          /* Auth button styling - DESKTOP ONLY */
+          @media (min-width: 881px) {
+            header.nav .thg-auth-btn{
+              background:rgba(30,64,175,.08) !important;
+              color:#1e40af !important;
+              border-color:rgba(30,64,175,.20) !important;
+              font-weight:600 !important;
+              visibility: visible !important;
+              opacity: 1 !important;
+              display: inline-flex !important;
+              /* Override auth system's white text - match homepage exactly */
+              color: var(--primary) !important;
+              border: 1px solid rgba(30,64,175,.20) !important;
+            }
           }
-          /* Override auth system default white text styles - match homepage exactly */
-          header.nav .thg-auth-btn .thg-label {
-            color: var(--primary) !important;
-            font-weight: 600 !important;
+          /* Override auth system default white text styles - match homepage exactly - DESKTOP ONLY */
+          @media (min-width: 881px) {
+            header.nav .thg-auth-btn .thg-label {
+              color: var(--primary) !important;
+              font-weight: 600 !important;
+            }
+            /* Ensure auth button text is always visible and matches homepage */
+            header.nav .thg-auth-btn,
+            header.nav .thg-auth-btn * {
+              color: var(--primary) !important;
+            }
+            /* Override auth system's white border */
+            header.nav .thg-auth-btn {
+              border-color: rgba(30,64,175,.20) !important;
+            }
+            /* Spinner should also match */
+            header.nav .thg-auth-btn .thg-spinner {
+              border-color: rgba(30,64,175,.35) !important;
+              border-top-color: var(--primary) !important;
+            }
+            header.nav .thg-auth-btn:hover{
+              background:rgba(30,64,175,.15) !important;
+              border-color:#1e40af !important;
+            }
+            header.nav .thg-auth-btn.is-auth::after{ border-top-color:#1e40af !important }
           }
-          /* Ensure auth button text is always visible and matches homepage */
-          header.nav .thg-auth-btn,
-          header.nav .thg-auth-btn * {
-            color: var(--primary) !important;
-          }
-          /* Override auth system's white border */
-          header.nav .thg-auth-btn {
-            border-color: rgba(30,64,175,.20) !important;
-          }
-          /* Spinner should also match */
-          header.nav .thg-auth-btn .thg-spinner {
-            border-color: rgba(30,64,175,.35) !important;
-            border-top-color: var(--primary) !important;
-          }
-          header.nav .thg-auth-btn:hover{
-            background:rgba(30,64,175,.15) !important;
-            border-color:#1e40af !important;
-          }
-          header.nav .thg-auth-btn.is-auth::after{ border-top-color:#1e40af !important }
           header.nav .divider{ background:rgba(226,232,240,.6) }
           /* Prevent auth container from being hidden - DESKTOP ONLY */
           @media (min-width: 881px) {
@@ -1777,11 +1782,23 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           }
           
           @media (max-width: 880px) {
-            /* Hide hamburger menu toggle on all pages except homepage in mobile view */
-            header.nav .mobile-menu-toggle{ display:none !important }
-            /* Show hamburger menu toggle only on homepage */
+            /* Hide hamburger menu toggle on ALL pages by default in mobile view */
+            /* Use :not() to explicitly exclude homepage */
+            body:not(:has(.hero-premium)):not(.homepage-header) header.nav .mobile-menu-toggle,
+            header.nav .mobile-menu-toggle{ 
+              display:none !important; 
+              visibility:hidden !important; 
+              opacity:0 !important; 
+              pointer-events:none !important 
+            }
+            /* Show hamburger menu toggle ONLY on homepage */
             body:has(.hero-premium) header.nav .mobile-menu-toggle,
-            .homepage-header header.nav .mobile-menu-toggle{ display:flex !important }
+            .homepage-header header.nav .mobile-menu-toggle{ 
+              display:flex !important; 
+              visibility:visible !important; 
+              opacity:1 !important; 
+              pointer-events:auto !important 
+            }
             /* Mobile header: keep single-row like desktop, just tighter
                Reserve more right-side space so "Features | Login / Signup" never overlaps */
             header.nav .inner { padding-right:160px; flex-wrap:nowrap; gap:8px }
@@ -1809,6 +1826,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             header.nav .thg-auth-wrap::before{ height:14px }
             /* CRITICAL: Hide user icon/auth button on mobile for ALL pages by default */
             /* Must override any desktop rules - highest specificity */
+            /* Use :not() to explicitly exclude homepage */
+            body:not(:has(.hero-premium)):not(.homepage-header) header.nav .thg-auth-wrap,
+            body:not(:has(.hero-premium)):not(.homepage-header) header.nav #site-header-auth-container,
+            body:not(:has(.hero-premium)):not(.homepage-header) header.nav #site-header-auth-container.thg-auth-wrap,
+            body:not(:has(.hero-premium)):not(.homepage-header) #site-header-auth-container.thg-auth-wrap,
             header.nav .thg-auth-wrap,
             header.nav #site-header-auth-container,
             header.nav #site-header-auth-container.thg-auth-wrap,
@@ -2401,27 +2423,38 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                      
                      // On mobile, only show on homepage - hide on all other pages
                      if (isMobileView && !isHomepageView) {
-                       // Explicitly hide on mobile non-homepage pages
+                       // Explicitly hide on mobile non-homepage pages using setProperty with important
                        const container = document.getElementById('site-header-auth-container');
                        const wrap = document.querySelector('header.nav .thg-auth-wrap');
                        const btn = document.querySelector('header.nav .thg-auth-btn');
+                       const toggle = document.querySelector('header.nav .mobile-menu-toggle');
                        
                        if (container) {
-                         container.style.display = 'none';
-                         container.style.visibility = 'hidden';
-                         container.style.opacity = '0';
+                         container.style.setProperty('display', 'none', 'important');
+                         container.style.setProperty('visibility', 'hidden', 'important');
+                         container.style.setProperty('opacity', '0', 'important');
+                         container.style.setProperty('pointer-events', 'none', 'important');
                        }
                        
                        if (wrap) {
-                         wrap.style.display = 'none';
-                         wrap.style.visibility = 'hidden';
-                         wrap.style.opacity = '0';
+                         wrap.style.setProperty('display', 'none', 'important');
+                         wrap.style.setProperty('visibility', 'hidden', 'important');
+                         wrap.style.setProperty('opacity', '0', 'important');
+                         wrap.style.setProperty('pointer-events', 'none', 'important');
                        }
                        
                        if (btn) {
-                         btn.style.display = 'none';
-                         btn.style.visibility = 'hidden';
-                         btn.style.opacity = '0';
+                         btn.style.setProperty('display', 'none', 'important');
+                         btn.style.setProperty('visibility', 'hidden', 'important');
+                         btn.style.setProperty('opacity', '0', 'important');
+                         btn.style.setProperty('pointer-events', 'none', 'important');
+                       }
+                       
+                       if (toggle) {
+                         toggle.style.setProperty('display', 'none', 'important');
+                         toggle.style.setProperty('visibility', 'hidden', 'important');
+                         toggle.style.setProperty('opacity', '0', 'important');
+                         toggle.style.setProperty('pointer-events', 'none', 'important');
                        }
                        return; // Don't show on mobile non-homepage pages
                      }
@@ -2472,6 +2505,62 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                    
                    // Run periodically to prevent hiding - but respect mobile rules
                    setInterval(forceAuthVisible, 200);
+                   
+                   // AGGRESSIVE: Use MutationObserver to continuously enforce hide rules on mobile non-homepage
+                   if (typeof MutationObserver !== 'undefined') {
+                     const observer = new MutationObserver(function() {
+                       const isMobileView = isMobile();
+                       const isHomepageView = isHomepage();
+                       
+                       if (isMobileView && !isHomepageView) {
+                         // Force hide on mobile non-homepage pages
+                         const container = document.getElementById('site-header-auth-container');
+                         const wrap = document.querySelector('header.nav .thg-auth-wrap');
+                         const btn = document.querySelector('header.nav .thg-auth-btn');
+                         const toggle = document.querySelector('header.nav .mobile-menu-toggle');
+                         
+                         if (container) {
+                           container.style.setProperty('display', 'none', 'important');
+                           container.style.setProperty('visibility', 'hidden', 'important');
+                           container.style.setProperty('opacity', '0', 'important');
+                         }
+                         
+                         if (wrap) {
+                           wrap.style.setProperty('display', 'none', 'important');
+                           wrap.style.setProperty('visibility', 'hidden', 'important');
+                           wrap.style.setProperty('opacity', '0', 'important');
+                         }
+                         
+                         if (btn) {
+                           btn.style.setProperty('display', 'none', 'important');
+                           btn.style.setProperty('visibility', 'hidden', 'important');
+                           btn.style.setProperty('opacity', '0', 'important');
+                         }
+                         
+                         if (toggle) {
+                           toggle.style.setProperty('display', 'none', 'important');
+                           toggle.style.setProperty('visibility', 'hidden', 'important');
+                         }
+                       }
+                     });
+                     
+                     // Observe changes to the header and body
+                     const header = document.querySelector('header.nav');
+                     if (header) {
+                       observer.observe(header, { 
+                         attributes: true, 
+                         attributeFilter: ['style', 'class'],
+                         childList: true, 
+                         subtree: true 
+                       });
+                     }
+                     observer.observe(document.body, { 
+                       attributes: true, 
+                       attributeFilter: ['class'],
+                       childList: true, 
+                       subtree: false 
+                     });
+                   }
                  })();
                ` }} />
         <AppI18nProvider>

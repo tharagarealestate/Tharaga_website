@@ -67,7 +67,7 @@ async function main() {
     'auth-email-landing',
     'login_signup_glassdrop', // Required for auth-gate.js iframe modal
     'Reset_password',
-    // 'property-listing', // REMOVED: Now using Next.js App Router route at app/app/property-listing/page.tsx
+    'property-listing', // Static HTML version with full Supabase functionality and dark theme
     'snippets',
     'pricing',
     'admin', // Admin panel with updated glassy blue header

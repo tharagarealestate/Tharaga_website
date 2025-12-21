@@ -239,3 +239,5 @@ The buyer dashboard has been transformed from a glassmorphic, glow-heavy design 
 
 All changes maintain the advanced, professional feel while significantly improving usability and clarity.
 
+
+

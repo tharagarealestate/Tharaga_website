@@ -136,147 +136,206 @@ export function LeadsList({ onSelectLead, initialFilters, showInlineFilters = tr
     };
   }, [supabase]);
 
+  const fetchControllerRef = useRef<AbortController | null>(null);
+  const fetchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
   const fetchLeads = useCallback(async () => {
     if (!userId) return;
 
-    setLoading(true);
-    setError(null);
+    // Cancel previous request if still pending
+    if (fetchControllerRef.current) {
+      fetchControllerRef.current.abort();
+    }
 
-    try {
-      const currentPage = filters.page ?? 1;
-      const limit = filters.limit ?? 20;
+    // Clear any pending debounce timeout
+    if (fetchTimeoutRef.current) {
+      clearTimeout(fetchTimeoutRef.current);
+    }
 
-      const params = new URLSearchParams({
-        page: currentPage.toString(),
-        limit: limit.toString(),
-        sort_by: (filters.sort_by ?? 'score').toString(),
-        sort_order: (filters.sort_order ?? 'desc').toString(),
-      });
+    // Create new abort controller for this request
+    const controller = new AbortController();
+    fetchControllerRef.current = controller;
 
-      if (filters.search) params.append('search', filters.search);
-      if (filters.category) params.append('category', filters.category);
-      if (typeof filters.score_min === 'number' && filters.score_min > 0) {
-        params.append('score_min', filters.score_min.toString());
-      }
-      if (typeof filters.score_max === 'number' && filters.score_max < 10) {
-        params.append('score_max', filters.score_max.toString());
-      }
-      if (filters.budget_min !== undefined && filters.budget_min !== null && filters.budget_min !== '') {
-        params.append('budget_min', filters.budget_min.toString());
-      }
-      if (filters.budget_max !== undefined && filters.budget_max !== null && filters.budget_max !== '') {
-        params.append('budget_max', filters.budget_max.toString());
-      }
-      if (filters.location) params.append('location', filters.location);
-      if (filters.property_type) params.append('property_type', filters.property_type);
-      if (filters.has_interactions !== undefined && filters.has_interactions !== null) {
-        params.append('has_interactions', filters.has_interactions.toString());
-      }
-      if (filters.no_response !== undefined && filters.no_response !== null) {
-        params.append('no_response', filters.no_response.toString());
-      }
-
-      const response = await fetch(`/api/leads?${params.toString()}`, {
-        method: 'GET',
-        headers: { 'Content-Type': 'application/json' },
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || 'Failed to fetch leads');
-      }
-
-      const payload = await response.json();
-      
-      // Check for API errors
-      if (!response.ok || !payload.success) {
-        const errorMessage = payload.message || payload.error || 'Failed to fetch leads';
-        const errorType = payload.errorType || 'UNKNOWN_ERROR';
-        
-        // Distinguish between no data and actual errors
-        if (errorType === 'NO_DATA' || payload.isEmpty) {
-          setLeads([]);
-          setStats({
-            total_leads: 0,
-            hot_leads: 0,
-            warm_leads: 0,
-            pending_interactions: 0,
-            average_score: 0,
-          });
-          setTotalPages(1);
-          setError(null); // No error, just empty
+    // Debounce rapid filter changes (300ms delay)
+    return new Promise<void>((resolve) => {
+      fetchTimeoutRef.current = setTimeout(async () => {
+        if (controller.signal.aborted) {
+          resolve();
           return;
         }
-        
-        throw new Error(errorMessage);
-      }
-      
-      // Handle both old and new API response formats
-      const leadsData: Lead[] = Array.isArray(payload?.data?.leads) 
-        ? payload.data.leads 
-        : Array.isArray(payload?.leads)
-        ? payload.leads
-        : Array.isArray(payload?.data)
-        ? payload.data
-        : [];
-      
-      const pagination = payload?.data?.pagination || payload?.pagination || {};
-      const statsData = payload?.data?.stats || payload?.stats || {};
-      
-      // Check if empty (not an error)
-      if (payload.isEmpty || leadsData.length === 0) {
-        setLeads([]);
-        setStats({
-          total_leads: 0,
-          hot_leads: 0,
-          warm_leads: 0,
-          pending_interactions: 0,
-          average_score: 0,
-        });
-        setTotalPages(1);
-        setError(null); // No error, just empty
-        return;
-      }
 
-      setLeads(leadsData);
-      setStats({
-        total_leads: statsData.total_leads ?? 0,
-        hot_leads: statsData.hot_leads ?? 0,
-        warm_leads: statsData.warm_leads ?? 0,
-        pending_interactions: statsData.pending_interactions ?? 0,
-        average_score: statsData.average_score ?? 0,
-      });
-      setTotalPages(Math.max(1, pagination.total_pages ?? 1));
+        setLoading(true);
+        setError(null);
 
-      const activeFilters = Object.entries(filters)
-        .filter(([key, value]) => {
-          if (key === 'sort_by' || key === 'sort_order') return false;
-          if (key === 'score_min') return value !== 0;
-          if (key === 'score_max') return value !== 10;
-          return value !== '' && value !== null;
-        })
-        .map(([key]) => key);
+        try {
+          const currentPage = filters.page ?? 1;
+          const limit = filters.limit ?? 20;
 
-      await trackBehavior({
-        behavior_type: 'search',
-        metadata: {
-          context: 'builder_dashboard',
-          filters_applied: activeFilters,
-          results_count: leadsData.length,
-        },
-      }).catch(() => undefined);
-    } catch (err) {
-      console.error('[LeadsList] Fetch error:', err);
-      setError(err instanceof Error ? err.message : 'Failed to load leads');
-    } finally {
-      setLoading(false);
-    }
+          const params = new URLSearchParams({
+            page: currentPage.toString(),
+            limit: limit.toString(),
+            sort_by: (filters.sort_by ?? 'score').toString(),
+            sort_order: (filters.sort_order ?? 'desc').toString(),
+          });
+
+          if (filters.search) params.append('search', filters.search);
+          if (filters.category) params.append('category', filters.category);
+          if (typeof filters.score_min === 'number' && filters.score_min > 0) {
+            params.append('score_min', filters.score_min.toString());
+          }
+          if (typeof filters.score_max === 'number' && filters.score_max < 10) {
+            params.append('score_max', filters.score_max.toString());
+          }
+          if (filters.budget_min !== undefined && filters.budget_min !== null && filters.budget_min !== '') {
+            params.append('budget_min', filters.budget_min.toString());
+          }
+          if (filters.budget_max !== undefined && filters.budget_max !== null && filters.budget_max !== '') {
+            params.append('budget_max', filters.budget_max.toString());
+          }
+          if (filters.location) params.append('location', filters.location);
+          if (filters.property_type) params.append('property_type', filters.property_type);
+          if (filters.has_interactions !== undefined && filters.has_interactions !== null) {
+            params.append('has_interactions', filters.has_interactions.toString());
+          }
+          if (filters.no_response !== undefined && filters.no_response !== null) {
+            params.append('no_response', filters.no_response.toString());
+          }
+
+          const response = await fetch(`/api/leads?${params.toString()}`, {
+            method: 'GET',
+            headers: { 'Content-Type': 'application/json' },
+            signal: controller.signal,
+          });
+
+          // Handle aborted requests
+          if (controller.signal.aborted) {
+            resolve();
+            return;
+          }
+
+          if (!response.ok) {
+            // Handle Method Not Allowed specifically
+            if (response.status === 405) {
+              throw new Error('API method not allowed. Please refresh the page.');
+            }
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(errorData.error || errorData.message || `Failed to fetch leads (${response.status})`);
+          }
+
+          const payload = await response.json();
+          
+          // Check for API errors
+          if (!payload.success) {
+            const errorMessage = payload.message || payload.error || 'Failed to fetch leads';
+            const errorType = payload.errorType || 'UNKNOWN_ERROR';
+            
+            // Distinguish between no data and actual errors
+            if (errorType === 'NO_DATA' || payload.isEmpty) {
+              setLeads([]);
+              setStats({
+                total_leads: 0,
+                hot_leads: 0,
+                warm_leads: 0,
+                pending_interactions: 0,
+                average_score: 0,
+              });
+              setTotalPages(1);
+              setError(null); // No error, just empty
+              resolve();
+              return;
+            }
+            
+            throw new Error(errorMessage);
+          }
+          
+          // Handle both old and new API response formats
+          const leadsData: Lead[] = Array.isArray(payload?.data?.leads) 
+            ? payload.data.leads 
+            : Array.isArray(payload?.leads)
+            ? payload.leads
+            : Array.isArray(payload?.data)
+            ? payload.data
+            : [];
+          
+          const pagination = payload?.data?.pagination || payload?.pagination || {};
+          const statsData = payload?.data?.stats || payload?.stats || {};
+          
+          // Check if empty (not an error)
+          if (payload.isEmpty || leadsData.length === 0) {
+            setLeads([]);
+            setStats({
+              total_leads: 0,
+              hot_leads: 0,
+              warm_leads: 0,
+              pending_interactions: 0,
+              average_score: 0,
+            });
+            setTotalPages(1);
+            setError(null); // No error, just empty
+            resolve();
+            return;
+          }
+
+          setLeads(leadsData);
+          setStats({
+            total_leads: statsData.total_leads ?? 0,
+            hot_leads: statsData.hot_leads ?? 0,
+            warm_leads: statsData.warm_leads ?? 0,
+            pending_interactions: statsData.pending_interactions ?? 0,
+            average_score: statsData.average_score ?? 0,
+          });
+          setTotalPages(Math.max(1, pagination.total_pages ?? 1));
+
+          const activeFilters = Object.entries(filters)
+            .filter(([key, value]) => {
+              if (key === 'sort_by' || key === 'sort_order') return false;
+              if (key === 'score_min') return value !== 0;
+              if (key === 'score_max') return value !== 10;
+              return value !== '' && value !== null;
+            })
+            .map(([key]) => key);
+
+          await trackBehavior({
+            behavior_type: 'search',
+            metadata: {
+              context: 'builder_dashboard',
+              filters_applied: activeFilters,
+              results_count: leadsData.length,
+            },
+          }).catch(() => undefined);
+        } catch (err) {
+          // Don't set error if request was aborted
+          if (controller.signal.aborted) {
+            resolve();
+            return;
+          }
+          console.error('[LeadsList] Fetch error:', err);
+          setError(err instanceof Error ? err.message : 'Failed to load leads');
+        } finally {
+          if (!controller.signal.aborted) {
+            setLoading(false);
+          }
+          fetchControllerRef.current = null;
+          resolve();
+        }
+      }, 300); // 300ms debounce
+    });
   }, [filters, trackBehavior, userId]);
 
   useEffect(() => {
     if (!userId) return;
 
     fetchLeads();
+
+    // Cleanup on unmount
+    return () => {
+      if (fetchControllerRef.current) {
+        fetchControllerRef.current.abort();
+      }
+      if (fetchTimeoutRef.current) {
+        clearTimeout(fetchTimeoutRef.current);
+      }
+    };
   }, [fetchLeads, userId]);
 
   useEffect(() => {
@@ -415,6 +474,7 @@ export function LeadsList({ onSelectLead, initialFilters, showInlineFilters = tr
         <div className="bg-red-500/10 border border-red-500/50 rounded-2xl p-8 text-center max-w-md backdrop-blur-xl">
           <AlertCircle className="w-12 h-12 text-red-400 mx-auto mb-4" />
           <h3 className="text-xl font-semibold text-red-100 mb-2">Error Loading Leads</h3>
+          <p className="text-sm text-red-200/80 mb-4">{error}</p>
           <p className="text-red-200/70 mb-4">{error}</p>
           <button
             onClick={() => {

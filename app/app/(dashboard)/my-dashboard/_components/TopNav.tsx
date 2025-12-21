@@ -179,7 +179,7 @@ export default function TopNav() {
         </div>
       </div>
 
-      {/* Mobile Navigation */}
+      {/* Mobile Navigation - Icons hidden on my-dashboard route */}
       <div className="sticky top-[60px] z-40 border-b border-gray-300 bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/75 md:hidden" style={{ paddingLeft: 'max(16px, env(safe-area-inset-left))', paddingRight: 'max(16px, env(safe-area-inset-right))' }}>
         <div className="mx-auto flex items-center justify-between px-3 py-2">
           {/* Left: Logo (20% width) */}
@@ -187,8 +187,8 @@ export default function TopNav() {
             Tharaga
           </Link>
 
-          {/* Right: User Icon & Hamburger Menu (40% width) */}
-          <div className="flex items-center gap-2">
+          {/* Right: User Icon & Hamburger Menu (40% width) - HIDDEN on mobile */}
+          <div className="flex items-center gap-2 hidden md:flex">
             {/* User Account Icon */}
             <button
               onClick={() => setMenuOpen(!menuOpen)}

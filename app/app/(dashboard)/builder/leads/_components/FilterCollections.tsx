@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState, useCallback } from 'react'
 import { motion } from 'framer-motion'
 import {
   BookmarkPlus,
@@ -34,6 +34,7 @@ export function FilterCollections() {
   const [description, setDescription] = useState('')
   const [icon, setIcon] = useState('🔍')
   const [saving, setSaving] = useState(false)
+  const [applyingPreset, setApplyingPreset] = useState<string | null>(null)
   const [activeCategory, setActiveCategory] = useState<string>('quick_wins')
 
   const categories = useMemo(() => {
@@ -95,6 +96,37 @@ export function FilterCollections() {
     if (!confirmed) return
     await deleteSavedFilter(filter.id)
   }
+
+  const handleApplyPreset = useCallback((preset: FilterPreset) => {
+    if (applyingPreset) return // Prevent multiple simultaneous applications
+    
+    setApplyingPreset(preset.id)
+    try {
+      loadPreset(preset)
+    } catch (error) {
+      console.error('[FilterCollections] Error applying preset:', error)
+      toast.error('Failed to apply preset')
+    } finally {
+      // Clear applying state after a short delay to allow filter update to propagate
+      setTimeout(() => setApplyingPreset(null), 500)
+    }
+  }, [applyingPreset, loadPreset])
+
+  const handleApplySavedFilter = useCallback(async (filter: SavedFilter) => {
+    if (applyingPreset) return // Prevent multiple simultaneous applications
+    
+    setApplyingPreset(filter.id)
+    try {
+      await loadSavedFilter(filter)
+    } catch (error) {
+      console.error('[FilterCollections] Error applying saved filter:', error)
+      toast.error('Failed to apply filter')
+      setApplyingPreset(null)
+    } finally {
+      // Clear applying state after a short delay
+      setTimeout(() => setApplyingPreset(null), 500)
+    }
+  }, [applyingPreset, loadSavedFilter])
 
   const heroPresetLabel = defaultFilter
     ? `Default: ${defaultFilter.name}`
@@ -263,11 +295,12 @@ export function FilterCollections() {
                         <span>{lastUsed}</span>
                         <div className="flex gap-2">
                           <button
-                            onClick={() => loadSavedFilter(filter).catch(() => undefined)}
-                            className="inline-flex items-center gap-1 rounded-lg border border-emerald-400/40 bg-emerald-400/15 px-3 py-1.5 text-[11px] font-medium text-emerald-100 transition-colors hover:bg-emerald-400/25"
+                            onClick={() => handleApplySavedFilter(filter)}
+                            disabled={applyingPreset !== null}
+                            className="inline-flex items-center gap-1 rounded-lg border border-emerald-400/40 bg-emerald-400/15 px-3 py-1.5 text-[11px] font-medium text-emerald-100 transition-colors hover:bg-emerald-400/25 disabled:cursor-not-allowed disabled:opacity-50"
                           >
                             <Wand2 className="h-3 w-3" />
-                            Apply
+                            {applyingPreset === filter.id ? 'Applying...' : 'Apply'}
                           </button>
                           <button
                             onClick={() => setDefaultFilter(filter.id)}
@@ -371,11 +404,12 @@ export function FilterCollections() {
                           Sort priority {String(preset.sort_order ?? 0).padStart(2, '0')}
                         </span>
                         <button
-                          onClick={() => loadPreset(preset)}
-                          className="inline-flex items-center gap-2 rounded-lg border border-white/15 bg-white/10 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-white/20"
+                          onClick={() => handleApplyPreset(preset)}
+                          disabled={applyingPreset !== null}
+                          className="inline-flex items-center gap-2 rounded-lg border border-white/15 bg-white/10 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-white/20 disabled:cursor-not-allowed disabled:opacity-50"
                         >
                           <Wand2 className="h-4 w-4" />
-                          Apply Preset
+                          {applyingPreset === preset.id ? 'Applying...' : 'Apply Preset'}
                         </button>
                       </div>
                     </div>

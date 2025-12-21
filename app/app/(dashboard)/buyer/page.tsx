@@ -398,7 +398,7 @@ function SavedPropertiesSection({ saved }: { saved: ReturnType<typeof listSaved>
           ))}
         </div>
       )}
-    </section>
+    </motion.section>
   );
 }
 

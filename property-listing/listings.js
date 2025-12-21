@@ -3,6 +3,13 @@
 // Notes: stable debouncer, accessible & persistent "pill" UI, same filtering logic.
 
 import * as App from './app.js?v=20251002';
+import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
+
+// Supabase client for real-time updates
+const CFG = (typeof window !== "undefined" && window.CONFIG) || {};
+const SUPABASE_URL = CFG.SUPABASE_URL || "https://wedevtjjmdvngyshqdro.supabase.co";
+const SUPABASE_ANON_KEY = CFG.SUPABASE_ANON_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndlZGV2dGpqbWR2bmd5c2hxZHJvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU0NzYwMzgsImV4cCI6MjA3MTA1MjAzOH0.Ex2c_sx358dFdygUGMVBohyTVto6fdEQ5nydDRh9m6M";
+const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 const PAGE_SIZE = 9;
 let ALL = [];
@@ -444,6 +451,11 @@ function apply(){
     } catch(_) {}
   }
 
+  // Real-time badge updates
+  try {
+    updateBadgesRealTime(slice.map(({p}) => p));
+  } catch(_) {}
+
   const pager = document.querySelector('#pager');
   if (pager) {
     pager.innerHTML = Array.from({length: pages}, (_,i)=>{
@@ -861,6 +873,66 @@ async function init(){
   try {
     [200, 500, 900].forEach((ms)=> setTimeout(()=>{ try { applyQueryParams(); apply(); } catch(_){} }, ms));
   } catch(_) {}
+}
+
+// Real-time badge update functionality
+async function updateBadgesRealTime(properties) {
+  if (!properties || properties.length === 0) return;
+  
+  try {
+    // Update verification badges in real-time from Supabase
+    const { data: verificationData } = await supabase
+      .from('properties')
+      .select('id, verification_status, availability_status')
+      .in('id', properties.map(p => p.id).filter(Boolean));
+    
+    if (verificationData && Array.isArray(verificationData)) {
+      verificationData.forEach(prop => {
+        const card = document.querySelector(`[data-prop-id="${prop.id}"]`);
+        if (!card) return;
+        
+        const badge = card.querySelector('.verified-badge');
+        if (badge) {
+          const isVerified = prop.verification_status === 'verified' || prop.verification_status === 'approved';
+          badge.setAttribute('data-verified', isVerified ? 'true' : 'false');
+          badge.textContent = isVerified ? '✓ Verified' : 'Pending';
+        }
+      });
+    }
+  } catch (e) {
+    console.warn('Real-time badge update failed:', e);
+  }
+}
+
+// Periodic real-time updates (every 30 seconds)
+if (typeof window !== 'undefined') {
+  setInterval(() => {
+    const cards = document.querySelectorAll('article.card');
+    if (cards.length > 0) {
+      const propertyIds = Array.from(cards).map(card => card.getAttribute('data-prop-id')).filter(Boolean);
+      if (propertyIds.length > 0) {
+        supabase
+          .from('properties')
+          .select('id, verification_status')
+          .in('id', propertyIds)
+          .then(({ data }) => {
+            if (data && Array.isArray(data)) {
+              data.forEach(prop => {
+                const card = document.querySelector(`[data-prop-id="${prop.id}"]`);
+                if (!card) return;
+                const badge = card.querySelector('.verified-badge');
+                if (badge) {
+                  const isVerified = prop.verification_status === 'verified' || prop.verification_status === 'approved';
+                  badge.setAttribute('data-verified', isVerified ? 'true' : 'false');
+                  badge.textContent = isVerified ? '✓ Verified' : 'Pending';
+                }
+              });
+            }
+          })
+          .catch(() => {});
+      }
+    }
+  }, 30000); // Update every 30 seconds
 }
 
 if (document.readyState === 'loading') {

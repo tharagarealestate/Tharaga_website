@@ -305,16 +305,34 @@ function explainScore(p, q = "", amenity = ""){
 
 /** Card HTML generator — unchanged shape so your UI remains the same */
 function cardHTML(p, s) {
-  const img = (p.images && p.images[0]) || "./noimg.svg";
+  const hasImage = p.images && p.images[0] && p.images[0].trim() !== '' && p.images[0] !== './noimg.svg';
+  const imgSrc = hasImage ? p.images[0] : '';
   const tags = [`${p.bhk||''} BHK`, `${p.carpetAreaSqft||'-'} sqft`, p.furnished||'', p.facing?`Facing ${p.facing}`:'' ]
     .filter(Boolean).map(t=>`<span class="tag">${t}</span>`).join(' ');
   const price = p.priceDisplay || (p.priceINR ? currency(p.priceINR) : 'Price on request');
   const pps = p.pricePerSqftINR ? `₹${p.pricePerSqftINR.toLocaleString('en-IN')}/sqft` : '';
-  return `<article class="card" style="display:flex;flex-direction:column" data-prop-id="${escapeHtml(p.id)}">
-    <div class="card-img">
-      <img class="blur-up squeeze-img" loading="lazy" src="${escapeHtml(img)}" alt="${escapeHtml(p.title)}" onload="this.classList.remove('blur-up')" onerror="this.onerror=null;this.src='./noimg.svg'">
-      <div class="badge ribbon">${p.listingStatus || "Verified"}</div>
-      <div class="tag score">Match ${Math.round((s/30)*100)}%</div>
+  
+  // Real-time verification status
+  const isVerified = p.verification_status === 'verified' || p.listingStatus === 'Verified' || p.is_verified === true;
+  const verificationBadge = isVerified 
+    ? '<div class="badge ribbon verified-badge" data-verified="true">✓ Verified</div>'
+    : '<div class="badge ribbon verified-badge" data-verified="false">Pending</div>';
+  
+  // Real-time match score calculation (normalized to 0-100)
+  const matchScore = Math.min(100, Math.max(0, Math.round((s/30)*100)));
+  const matchColor = matchScore >= 80 ? 'match-excellent' : matchScore >= 60 ? 'match-good' : matchScore >= 40 ? 'match-fair' : 'match-poor';
+  const matchBadge = `<div class="tag score match-badge ${matchColor}" data-score="${matchScore}">Match ${matchScore}%</div>`;
+  
+  const propId = escapeHtml(p.id);
+  return `<article class="card" style="display:flex;flex-direction:column" data-prop-id="${propId}">
+    <div class="card-img" data-prop-id="${propId}">
+      ${hasImage 
+        ? `<img class="blur-up squeeze-img" loading="lazy" src="${escapeHtml(imgSrc)}" alt="${escapeHtml(p.title)}" onload="this.classList.remove('blur-up')" onerror="this.onerror=null;this.classList.add('img-error');this.parentElement.querySelector('.no-image-text').style.display='flex';">`
+        : ''
+      }
+      <div class="no-image-text" style="display: ${hasImage ? 'none' : 'flex'};">no image</div>
+      ${verificationBadge}
+      ${matchBadge}
     </div>
     <div style="padding:14px;display:flex;gap:12px;flex-direction:column">
       <div>

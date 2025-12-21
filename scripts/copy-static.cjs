@@ -67,7 +67,7 @@ async function main() {
     'auth-email-landing',
     'login_signup_glassdrop', // Required for auth-gate.js iframe modal
     'Reset_password',
-    'property-listing',
+    // 'property-listing', // REMOVED: Now using Next.js App Router route at app/app/property-listing/page.tsx
     'snippets',
     'pricing',
     'admin', // Admin panel with updated glassy blue header

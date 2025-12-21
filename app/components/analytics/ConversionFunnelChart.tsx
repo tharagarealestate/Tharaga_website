@@ -15,28 +15,43 @@ export function ConversionFunnelChart() {
   const [funnelData, setFunnelData] = useState<FunnelData[]>([]);
 
   useEffect(() => {
-    // Fetch funnel data from API
-    fetch('/api/analytics/funnel')
-      .then(res => res.json())
-      .then(data => {
-        setFunnelData(data.funnel || [
-          { step: 'Page Visit', count: 10000, dropoff: 0, icon: Users },
-          { step: 'Search', count: 7000, dropoff: 30, icon: Search },
-          { step: 'View Property', count: 3500, dropoff: 50, icon: Eye },
-          { step: 'Inquiry', count: 1050, dropoff: 70, icon: MessageSquare },
-          { step: 'Conversion', count: 315, dropoff: 70, icon: CheckCircle },
-        ]);
-      })
-      .catch(() => {
-        // Fallback data
-        setFunnelData([
-          { step: 'Page Visit', count: 10000, dropoff: 0, icon: Users },
-          { step: 'Search', count: 7000, dropoff: 30, icon: Search },
-          { step: 'View Property', count: 3500, dropoff: 50, icon: Eye },
-          { step: 'Inquiry', count: 1050, dropoff: 70, icon: MessageSquare },
-          { step: 'Conversion', count: 315, dropoff: 70, icon: CheckCircle },
-        ]);
-      });
+    const fetchFunnelData = () => {
+      fetch('/api/analytics/funnel')
+        .then(res => res.json())
+        .then(data => {
+          if (data.funnel && data.funnel.length > 0) {
+            const mapped = data.funnel.map((item: any, idx: number) => ({
+              ...item,
+              icon: [Users, Search, Eye, MessageSquare, CheckCircle][idx] || Users
+            }));
+            setFunnelData(mapped);
+          } else {
+            // No data yet - return empty structure
+            setFunnelData([
+              { step: 'Page Visit', count: 0, dropoff: 0, icon: Users },
+              { step: 'Search', count: 0, dropoff: 0, icon: Search },
+              { step: 'View Property', count: 0, dropoff: 0, icon: Eye },
+              { step: 'Inquiry', count: 0, dropoff: 0, icon: MessageSquare },
+              { step: 'Conversion', count: 0, dropoff: 0, icon: CheckCircle },
+            ]);
+          }
+        })
+        .catch(() => {
+          // On error, show empty structure
+          setFunnelData([
+            { step: 'Page Visit', count: 0, dropoff: 0, icon: Users },
+            { step: 'Search', count: 0, dropoff: 0, icon: Search },
+            { step: 'View Property', count: 0, dropoff: 0, icon: Eye },
+            { step: 'Inquiry', count: 0, dropoff: 0, icon: MessageSquare },
+            { step: 'Conversion', count: 0, dropoff: 0, icon: CheckCircle },
+          ]);
+        });
+    };
+
+    fetchFunnelData();
+    // Real-time refresh every 30 seconds
+    const interval = setInterval(fetchFunnelData, 30000);
+    return () => clearInterval(interval);
   }, []);
 
   const colors = ['#D4AF37', '#3b82f6', '#10b981', '#f59e0b', '#8b5cf6'];

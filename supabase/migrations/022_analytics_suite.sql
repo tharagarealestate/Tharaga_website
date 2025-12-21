@@ -373,7 +373,6 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 
 -- Function to track user event
 CREATE OR REPLACE FUNCTION track_event(
-    p_user_id UUID DEFAULT NULL,
     p_event_name TEXT,
     p_event_category TEXT,
     p_properties JSONB DEFAULT '{}'::jsonb,
@@ -382,7 +381,8 @@ CREATE OR REPLACE FUNCTION track_event(
     p_browser TEXT DEFAULT NULL,
     p_os TEXT DEFAULT NULL,
     p_city TEXT DEFAULT NULL,
-    p_country TEXT DEFAULT NULL
+    p_country TEXT DEFAULT NULL,
+    p_user_id UUID DEFAULT NULL
 )
 RETURNS UUID AS $$
 DECLARE

@@ -3,9 +3,14 @@ import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
 import { cookies } from 'next/headers';
 import OpenAI from 'openai';
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY
-});
+// Lazy initialization to avoid build-time errors when API key is not set
+function getOpenAIClient() {
+  const apiKey = process.env.OPENAI_API_KEY;
+  if (!apiKey) {
+    throw new Error('OPENAI_API_KEY is not configured');
+  }
+  return new OpenAI({ apiKey });
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -53,6 +58,7 @@ Generate 5 personalized property recommendations with:
 
 Return JSON array of recommendations.`;
 
+      const openai = getOpenAIClient();
       const completion = await openai.chat.completions.create({
         model: 'gpt-4o-mini',
         messages: [

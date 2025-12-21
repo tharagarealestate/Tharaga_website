@@ -187,8 +187,8 @@ export default function TopNav() {
             Tharaga
           </Link>
 
-          {/* Right: User Icon & Hamburger Menu (40% width) - HIDDEN on mobile */}
-          <div className="flex items-center gap-2 hidden md:flex">
+          {/* Right: User Icon & Hamburger Menu (40% width) - HIDDEN on mobile for my-dashboard */}
+          <div className="flex items-center gap-2" style={{ display: 'none' }}>
             {/* User Account Icon */}
             <button
               onClick={() => setMenuOpen(!menuOpen)}

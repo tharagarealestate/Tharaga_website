@@ -404,7 +404,7 @@ function RecommendationsSection({ recs, error }: { recs: RecommendationItem[]; e
         }}
       />
       <Suspense fallback={<div className="rounded-2xl border-2 border-amber-300 bg-slate-800/95 p-8 text-center text-white">Loading recommendations…</div>}>
-        <RecommendationsCarousel items={recs} isLoading={!recs.length && !error && !recError} error={error || recError} />
+        <RecommendationsCarousel items={recs} isLoading={!recs.length && !error} error={error} />
       </Suspense>
     </motion.section>
   );

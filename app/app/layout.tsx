@@ -2365,17 +2365,22 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               
               function updateMobileMenuVisibility() {
                 const isMobile = window.innerWidth <= 880;
-                const isHomepage = document.body.classList.contains('homepage-header') || 
-                                  document.querySelector('.hero-premium') !== null ||
-                                  document.querySelector('main.hero-premium') !== null ||
-                                  window.location.pathname === '/' || 
-                                  window.location.pathname === '';
+                const pathname = window.location.pathname;
+                const isRootPath = pathname === '/' || pathname === '' || pathname === '/index.html';
+                const hasHomepageClass = document.body.classList.contains('homepage-header');
+                const hasHeroPremium = document.querySelector('.hero-premium') !== null || 
+                                     document.querySelector('main.hero-premium') !== null;
+                const isHomepage = isRootPath || hasHomepageClass || hasHeroPremium;
                 
                 // Only show hamburger on mobile if it's homepage
                 if (isMobile && isHomepage) {
-                  toggleBtn.style.display = 'flex';
+                  toggleBtn.style.setProperty('display', 'flex', 'important');
+                  toggleBtn.style.setProperty('visibility', 'visible', 'important');
+                  toggleBtn.style.setProperty('opacity', '1', 'important');
                 } else {
-                  toggleBtn.style.display = 'none';
+                  toggleBtn.style.setProperty('display', 'none', 'important');
+                  toggleBtn.style.setProperty('visibility', 'hidden', 'important');
+                  toggleBtn.style.setProperty('opacity', '0', 'important');
                   closeMenu();
                 }
               }
@@ -2402,13 +2407,15 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                  (function() {
                    'use strict';
                    
-                   // Check if we're on homepage
+                   // Check if we're on homepage - comprehensive check
                    function isHomepage() {
-                     return document.body.classList.contains('homepage-header') || 
-                            document.querySelector('.hero-premium') !== null ||
-                            document.querySelector('main.hero-premium') !== null ||
-                            window.location.pathname === '/' || 
-                            window.location.pathname === '';
+                     const pathname = window.location.pathname;
+                     const isRootPath = pathname === '/' || pathname === '' || pathname === '/index.html';
+                     const hasHomepageClass = document.body.classList.contains('homepage-header');
+                     const hasHeroPremium = document.querySelector('.hero-premium') !== null || 
+                                           document.querySelector('main.hero-premium') !== null;
+                     
+                     return isRootPath || hasHomepageClass || hasHeroPremium;
                    }
                    
                    // Check if we're on mobile
@@ -2506,42 +2513,58 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                    // Run periodically to prevent hiding - but respect mobile rules
                    setInterval(forceAuthVisible, 200);
                    
+                   // AGGRESSIVE: Function to force hide icons on mobile non-homepage
+                   function forceHideOnMobileNonHomepage() {
+                     const isMobileView = isMobile();
+                     const isHomepageView = isHomepage();
+                     
+                     if (isMobileView && !isHomepageView) {
+                       // Force hide on mobile non-homepage pages using setProperty with important
+                       const container = document.getElementById('site-header-auth-container');
+                       const wrap = document.querySelector('header.nav .thg-auth-wrap');
+                       const btn = document.querySelector('header.nav .thg-auth-btn');
+                       const toggle = document.querySelector('header.nav .mobile-menu-toggle');
+                       
+                       if (container) {
+                         container.style.setProperty('display', 'none', 'important');
+                         container.style.setProperty('visibility', 'hidden', 'important');
+                         container.style.setProperty('opacity', '0', 'important');
+                         container.style.setProperty('pointer-events', 'none', 'important');
+                       }
+                       
+                       if (wrap) {
+                         wrap.style.setProperty('display', 'none', 'important');
+                         wrap.style.setProperty('visibility', 'hidden', 'important');
+                         wrap.style.setProperty('opacity', '0', 'important');
+                         wrap.style.setProperty('pointer-events', 'none', 'important');
+                       }
+                       
+                       if (btn) {
+                         btn.style.setProperty('display', 'none', 'important');
+                         btn.style.setProperty('visibility', 'hidden', 'important');
+                         btn.style.setProperty('opacity', '0', 'important');
+                         btn.style.setProperty('pointer-events', 'none', 'important');
+                       }
+                       
+                       if (toggle) {
+                         toggle.style.setProperty('display', 'none', 'important');
+                         toggle.style.setProperty('visibility', 'hidden', 'important');
+                         toggle.style.setProperty('opacity', '0', 'important');
+                         toggle.style.setProperty('pointer-events', 'none', 'important');
+                       }
+                     }
+                   }
+                   
+                   // Run immediately
+                   forceHideOnMobileNonHomepage();
+                   
+                   // Run on every interval to aggressively enforce
+                   setInterval(forceHideOnMobileNonHomepage, 100);
+                   
                    // AGGRESSIVE: Use MutationObserver to continuously enforce hide rules on mobile non-homepage
                    if (typeof MutationObserver !== 'undefined') {
                      const observer = new MutationObserver(function() {
-                       const isMobileView = isMobile();
-                       const isHomepageView = isHomepage();
-                       
-                       if (isMobileView && !isHomepageView) {
-                         // Force hide on mobile non-homepage pages
-                         const container = document.getElementById('site-header-auth-container');
-                         const wrap = document.querySelector('header.nav .thg-auth-wrap');
-                         const btn = document.querySelector('header.nav .thg-auth-btn');
-                         const toggle = document.querySelector('header.nav .mobile-menu-toggle');
-                         
-                         if (container) {
-                           container.style.setProperty('display', 'none', 'important');
-                           container.style.setProperty('visibility', 'hidden', 'important');
-                           container.style.setProperty('opacity', '0', 'important');
-                         }
-                         
-                         if (wrap) {
-                           wrap.style.setProperty('display', 'none', 'important');
-                           wrap.style.setProperty('visibility', 'hidden', 'important');
-                           wrap.style.setProperty('opacity', '0', 'important');
-                         }
-                         
-                         if (btn) {
-                           btn.style.setProperty('display', 'none', 'important');
-                           btn.style.setProperty('visibility', 'hidden', 'important');
-                           btn.style.setProperty('opacity', '0', 'important');
-                         }
-                         
-                         if (toggle) {
-                           toggle.style.setProperty('display', 'none', 'important');
-                           toggle.style.setProperty('visibility', 'hidden', 'important');
-                         }
-                       }
+                       forceHideOnMobileNonHomepage();
                      });
                      
                      // Observe changes to the header and body
@@ -2559,6 +2582,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                        attributeFilter: ['class'],
                        childList: true, 
                        subtree: false 
+                     });
+                     
+                     // Also observe document for route changes
+                     observer.observe(document.documentElement, {
+                       attributes: true,
+                       attributeFilter: ['class'],
+                       childList: false,
+                       subtree: false
                      });
                    }
                  })();

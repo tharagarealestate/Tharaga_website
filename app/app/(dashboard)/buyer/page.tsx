@@ -132,7 +132,7 @@ function BuyerDashboardContent() {
           <StatTile icon={<Shield className="h-5 w-5" />} label="Zero Brokerage" value="100%" accent="from-yellow-400 via-amber-500 to-orange-500" />
           <StatTile icon={<Award className="h-5 w-5" />} label="Avg. Satisfaction" value="4.9★" accent="from-blue-400 via-indigo-500 to-purple-500" />
           <StatTile icon={<Zap className="h-5 w-5" />} label="AI Match Score" value="92%" accent="from-fuchsia-400 via-pink-500 to-rose-500" />
-        </section>
+        </motion.section>
 
         <QuickActions savedCount={savedCount} />
 
@@ -322,7 +322,7 @@ function RecommendationsSection({ recs, error }: { recs: RecommendationItem[]; e
       <Suspense fallback={<div className="rounded-2xl border border-white/10 bg-white/6 p-8 text-center text-white/70">Gathering recommendations…</div>}>
         <RecommendationsCarousel items={recs} isLoading={!recs.length && !error} error={error} />
       </Suspense>
-    </section>
+    </motion.section>
   );
 }
 

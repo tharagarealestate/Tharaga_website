@@ -16,7 +16,6 @@ import {
   TrendingUp,
   Zap,
 } from 'lucide-react';
-import { motion } from 'framer-motion';
 import Link from 'next/link';
 import Image from 'next/image';
 import dynamic from 'next/dynamic';
@@ -132,7 +131,7 @@ function BuyerDashboardContent() {
           <StatTile icon={<Shield className="h-5 w-5" />} label="Zero Brokerage" value="100%" accent="from-yellow-400 via-amber-500 to-orange-500" />
           <StatTile icon={<Award className="h-5 w-5" />} label="Avg. Satisfaction" value="4.9★" accent="from-blue-400 via-indigo-500 to-purple-500" />
           <StatTile icon={<Zap className="h-5 w-5" />} label="AI Match Score" value="92%" accent="from-fuchsia-400 via-pink-500 to-rose-500" />
-        </motion.section>
+        </section>
 
         <QuickActions savedCount={savedCount} />
 
@@ -218,7 +217,7 @@ function HeroSection({ greeting, name, savedCount }: { greeting: string; name: s
           icon={<MapPin className="h-4 w-4 text-emerald-300" />}
         />
       </div>
-    </motion.section>
+    </section>
   );
 }
 
@@ -271,24 +270,18 @@ function QuickActions({ savedCount }: { savedCount: number }) {
   ];
 
   return (
-    <motion.section
-      initial={{ opacity: 0, y: 24 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.6, delay: 0.1 }}
-      className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4"
-    >
+    <section className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
       {cards.map((card) => (
         <Link key={card.label} href={card.href} className="group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-300">
-          <div className="glass-tile relative flex h-full min-h-[240px] flex-col justify-between overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-white/12 via-white/10 to-white/6 p-6 shadow-[0_20px_60px_rgba(8,15,40,0.35)] backdrop-blur-2xl transition-transform duration-200 hover:-translate-y-1 hover:shadow-[0_30px_80px_rgba(8,15,40,0.45)]">
-            <div className="absolute inset-0 opacity-70 blur-2xl" style={{ backgroundImage: `linear-gradient(135deg, ${card.accent})` }} />
+          <div className="relative flex h-full min-h-[240px] flex-col justify-between overflow-hidden rounded-3xl border-2 border-amber-300 bg-slate-800/95 p-6 transition-transform duration-200 hover:-translate-y-1">
             <div className="relative z-10 flex items-center justify-between">
-              <div className="rounded-2xl bg-white/15 p-3 backdrop-blur">
+              <div className="rounded-2xl bg-slate-700/50 p-3">
                 {card.icon}
               </div>
-              <Bell className="h-4 w-4 text-white/40 transition-opacity duration-200 group-hover:text-white/70" />
+              <Bell className="h-4 w-4 text-slate-400 transition-opacity duration-200 group-hover:text-white" />
             </div>
             <div className="relative z-10 mt-8 space-y-2">
-              <div className="text-xs uppercase tracking-[0.2em] text-white/60">Workspace</div>
+              <div className="text-xs uppercase tracking-[0.2em] text-slate-400">Workspace</div>
               <h3 className="font-display text-xl font-semibold text-white">{card.label}</h3>
               <p className="text-sm text-white/70">{card.description}</p>
               {card.value !== null && <span className="text-3xl font-bold text-white">{card.value}</span>}
@@ -300,7 +293,7 @@ function QuickActions({ savedCount }: { savedCount: number }) {
           </div>
         </Link>
       ))}
-    </motion.section>
+    </section>
   );
 }
 
@@ -328,7 +321,7 @@ function RecommendationsSection({ recs, error }: { recs: RecommendationItem[]; e
       <Suspense fallback={<div className="rounded-2xl border border-white/10 bg-white/6 p-8 text-center text-white/70">Gathering recommendations…</div>}>
         <RecommendationsCarousel items={recs} isLoading={!recs.length && !error} error={error} />
       </Suspense>
-    </motion.section>
+    </section>
   );
 }
 
@@ -405,7 +398,7 @@ function SavedPropertiesSection({ saved }: { saved: ReturnType<typeof listSaved>
           ))}
         </div>
       )}
-    </motion.section>
+    </section>
   );
 }
 
@@ -422,16 +415,16 @@ function UpcomingVisitsSection() {
         icon={<Calendar className="h-5 w-5 text-sky-200" />}
       />
       <div className="rounded-2xl border border-amber-300/50 bg-slate-800/50 p-10 text-center text-slate-100">
-        <Calendar className="mx-auto h-14 w-14 text-white/40" />
+        <Calendar className="mx-auto h-14 w-14 text-slate-400" />
         <p className="mt-4 text-lg text-white">No visits scheduled yet</p>
-        <p className="text-sm text-white/60">Pick your favourites and lock a time that suits you best.</p>
+        <p className="text-sm text-slate-300">Pick your favourites and lock a time that suits you best.</p>
         <div className="mt-6 flex justify-center">
           <PrimaryActionButton href="/visits" icon={<Calendar className="h-4 w-4" />}>
             Schedule a visit
           </PrimaryActionButton>
         </div>
       </div>
-    </motion.section>
+    </section>
   );
 }
 
@@ -459,25 +452,20 @@ function TrustIndicatorsSection() {
   ];
 
   return (
-    <motion.section
-      initial={{ opacity: 0, y: 24 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.6, delay: 0.3 }}
-      className="rounded-[32px] border border-white/10 bg-white/6 px-6 py-10 text-white shadow-[0_20px_90px_rgba(8,15,40,0.45)] backdrop-blur-2xl sm:px-10"
-    >
+    <section className="rounded-[32px] border-2 border-amber-300 bg-slate-900/95 px-6 py-10 text-white sm:px-10">
       <div className="mx-auto grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
         {items.map((item) => (
-          <div key={item.title} className="flex flex-col gap-4 rounded-3xl border border-white/10 bg-white/8 p-6 shadow-[0_12px_45px_rgba(8,15,40,0.25)] backdrop-blur-xl">
-            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white/10">{item.icon}</div>
+          <div key={item.title} className="flex flex-col gap-4 rounded-3xl border-2 border-amber-300 bg-slate-800/95 p-6">
+            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-700/50">{item.icon}</div>
             <div>
               <h3 className="font-display text-xl text-white">{item.title}</h3>
-              <p className="mt-2 text-sm text-white/70">{item.description}</p>
+              <p className="mt-2 text-sm text-slate-200">{item.description}</p>
             </div>
-            <ArrowRight className="mt-2 h-4 w-4 text-white/50" />
+            <ArrowRight className="mt-2 h-4 w-4 text-slate-400" />
           </div>
         ))}
       </div>
-    </motion.section>
+    </section>
   );
 }
 
@@ -516,12 +504,11 @@ function StatTile({
   accent: string;
 }) {
   return (
-    <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-white/8 p-6 shadow-[0_20px_70px_rgba(8,15,40,0.35)] backdrop-blur-2xl">
-      <div className="absolute inset-0 opacity-80 blur-2xl" style={{ backgroundImage: `linear-gradient(135deg, ${accent})` }} />
+    <div className="relative overflow-hidden rounded-3xl border-2 border-amber-300 bg-slate-800/95 p-6">
       <div className="relative z-10 flex flex-col gap-3 text-white">
-        <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white/15">{icon}</div>
-        <div className="text-4xl font-bold">{value}</div>
-        <div className="text-sm uppercase tracking-[0.3em] text-white/70">{label}</div>
+        <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-slate-700/50">{icon}</div>
+        <div className="text-4xl font-bold text-white">{value}</div>
+        <div className="text-sm uppercase tracking-[0.3em] text-slate-300">{label}</div>
       </div>
     </div>
   );
@@ -564,16 +551,16 @@ function SectionHeader({
   return (
     <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
       <div className="flex items-start gap-4">
-        {icon && <div className="rounded-2xl bg-white/12 p-3 backdrop-blur">{icon}</div>}
+        {icon && <div className="rounded-2xl bg-slate-700/50 p-3">{icon}</div>}
         <div>
           <h2 className="font-display text-2xl text-white">{title}</h2>
-          <p className="mt-1 text-sm text-white/70">{subtitle}</p>
+          <p className="mt-1 text-sm text-slate-200">{subtitle}</p>
         </div>
       </div>
       {action && (
         <Link
           href={action.href}
-          className="group inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-2 text-sm font-medium text-white/80 backdrop-blur transition hover:border-white/40 hover:text-white"
+          className="group inline-flex items-center gap-2 rounded-full border-2 border-amber-300 bg-slate-800/80 px-4 py-2 text-sm font-medium text-white transition hover:border-amber-400 hover:bg-slate-700/80"
         >
           {action.label}
           <ArrowRight className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-1" />

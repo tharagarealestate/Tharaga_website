@@ -218,7 +218,7 @@ function HeroSection({ greeting, name, savedCount }: { greeting: string; name: s
           icon={<MapPin className="h-4 w-4 text-emerald-300" />}
         />
       </div>
-    </section>
+    </motion.section>
   );
 }
 

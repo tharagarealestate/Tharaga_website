@@ -16,28 +16,22 @@ export function GeographicDistribution() {
   const [locationData, setLocationData] = useState<LocationData[]>([]);
 
   useEffect(() => {
-    // Fetch geographic data from API
-    fetch('/api/analytics/geographic')
-      .then(res => res.json())
-      .then(data => {
-        setLocationData(data.locations || [
-          { city: 'Chennai', count: 4500, percentage: 35 },
-          { city: 'Bangalore', count: 3200, percentage: 25 },
-          { city: 'Mumbai', count: 2100, percentage: 16 },
-          { city: 'Delhi', count: 1800, percentage: 14 },
-          { city: 'Hyderabad', count: 1200, percentage: 10 },
-        ]);
-      })
-      .catch(() => {
-        // Fallback data
-        setLocationData([
-          { city: 'Chennai', count: 4500, percentage: 35 },
-          { city: 'Bangalore', count: 3200, percentage: 25 },
-          { city: 'Mumbai', count: 2100, percentage: 16 },
-          { city: 'Delhi', count: 1800, percentage: 14 },
-          { city: 'Hyderabad', count: 1200, percentage: 10 },
-        ]);
-      });
+    const fetchGeographicData = () => {
+      fetch('/api/analytics/geographic')
+        .then(res => res.json())
+        .then(data => {
+          setLocationData(data.locations || []);
+        })
+        .catch(() => {
+          // On error, show empty
+          setLocationData([]);
+        });
+    };
+
+    fetchGeographicData();
+    // Real-time refresh every 30 seconds
+    const interval = setInterval(fetchGeographicData, 30000);
+    return () => clearInterval(interval);
   }, []);
 
   const CustomTooltip = ({ active, payload }: any) => {

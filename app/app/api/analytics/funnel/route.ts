@@ -68,11 +68,11 @@ export async function GET(request: NextRequest) {
       .select('*', { count: 'exact', head: true })
       .in('status', ['won', 'converted']);
 
-    const step1 = pageViews?.count || 10000;
-    const step2 = searches?.count || 7000;
-    const step3 = propertyViews?.count || 3500;
-    const step4 = inquiries?.count || 1050;
-    const step5 = conversions?.count || 315;
+    const step1 = pageViews?.count || 0;
+    const step2 = searches?.count || 0;
+    const step3 = propertyViews?.count || 0;
+    const step4 = inquiries?.count || 0;
+    const step5 = conversions?.count || 0;
 
     const funnel = [
       { step: 'Page Visit', count: step1, dropoff: 0 },

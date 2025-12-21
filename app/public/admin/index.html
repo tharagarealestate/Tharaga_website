@@ -251,6 +251,14 @@
       box-shadow: 0 2px 8px rgba(0,0,0,0.06);
       margin-bottom: 24px;
       border-top: 4px solid var(--gold);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+    }
+    
+    .page-header > div {
+      flex: 1;
     }
 
     .page-header h1 {
@@ -918,8 +926,13 @@
   <div class="container">
     <!-- Page Header -->
     <div class="page-header">
-      <h1>🛡️ Admin Dashboard</h1>
-      <p>Manage builder verifications and monitor platform statistics</p>
+      <div>
+        <h1>🛡️ Admin Dashboard</h1>
+        <p>Manage builder verifications and monitor platform statistics</p>
+      </div>
+      <a href="/admin/analytics" class="btn" style="margin-left: auto; background: var(--gold); color: var(--slate-900); font-weight: 600; padding: 10px 20px; border-radius: 8px; text-decoration: none; display: inline-flex; align-items: center; gap: 8px;">
+        📊 Analytics Suite
+      </a>
     </div>
 
     <!-- Stats Grid -->

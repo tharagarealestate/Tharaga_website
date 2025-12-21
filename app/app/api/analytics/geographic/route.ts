@@ -53,18 +53,7 @@ export async function GET(request: NextRequest) {
       loc.percentage = totalUsers > 0 ? Math.round((loc.count / totalUsers) * 100) : 0;
     });
 
-    // If no data, return fallback
-    if (locations.length === 0) {
-      return NextResponse.json({
-        locations: [
-          { city: 'Chennai', count: 4500, percentage: 35 },
-          { city: 'Bangalore', count: 3200, percentage: 25 },
-          { city: 'Mumbai', count: 2100, percentage: 16 },
-          { city: 'Delhi', count: 1800, percentage: 14 },
-          { city: 'Hyderabad', count: 1200, percentage: 10 },
-        ]
-      });
-    }
+    // Return empty array if no data - no fallback dummy data
 
     return NextResponse.json({ locations });
 

@@ -47,9 +47,21 @@ export async function GET(
     const convertedLeads = leads?.filter(l => l.status === 'won' || l.status === 'converted').length || 0;
     const conversionRate = totalLeads > 0 ? (convertedLeads / totalLeads) * 100 : 0;
 
-    // Calculate avg response time (simplified - calculate from lead creation to first contact)
-    // In real implementation, you'd track actual response times
-    const avgResponseTime = 25; // Placeholder - implement actual calculation
+    // Calculate avg response time from lead_interactions
+    let avgResponseTime = 0;
+    if (leads && leads.length > 0) {
+      const leadIds = leads.map(l => l.id.toString());
+      const { data: interactions } = await supabase
+        .from('lead_interactions')
+        .select('lead_id, response_time_minutes, timestamp, created_at')
+        .in('lead_id', leadIds)
+        .not('response_time_minutes', 'is', null);
+      
+      if (interactions && interactions.length > 0) {
+        const totalMinutes = interactions.reduce((sum, i) => sum + (i.response_time_minutes || 0), 0);
+        avgResponseTime = Math.round(totalMinutes / interactions.length);
+      }
+    }
 
     // Get top properties by lead count
     const { data: topProperties } = await supabase

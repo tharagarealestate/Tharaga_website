@@ -53,26 +53,26 @@ function BuyerDashboardContent() {
   // Non-blocking auth check - render immediately like admin dashboard
   useEffect(() => {
     // Only run in browser (prevent SSR errors)
-    if (typeof window === 'undefined') return
+    if (typeof window === 'undefined') return;
 
     // Try to initialize Supabase and get user - non-blocking
     try {
-      const supabase = getSupabase()
+      const supabase = getSupabase();
       supabase.auth.getUser()
         .then(({ data, error }: any) => {
           if (data?.user) {
-            setUser(data.user)
-            const name = data.user.user_metadata?.full_name || data.user.email || 'Buyer'
-            setUserName(name.split(' ')[0].split('@')[0])
+            setUser(data.user);
+            const name = data.user.user_metadata?.full_name || data.user.email || 'Buyer';
+            setUserName(name.split(' ')[0].split('@')[0]);
           }
         })
         .catch((err: any) => {
-          console.error('[Buyer] Auth error:', err)
-        })
+          console.error('[Buyer] Auth error:', err);
+        });
     } catch (err) {
-      console.error('[Buyer] Supabase init failed:', err)
+      console.error('[Buyer] Supabase init failed:', err);
     }
-  }, [])
+  }, []);
 
   // Load recommendations after user is authenticated
   useEffect(() => {

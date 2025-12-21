@@ -139,34 +139,55 @@ function BuyerDashboardContent() {
 
   // Load recommendations after user is authenticated
   useEffect(() => {
-    if (!user) return;
+    // Wait for user to be loaded
+    if (!user?.id) {
+      setRecs([]);
+      setRecError(null);
+      return;
+    }
 
     async function loadRecommendations() {
       try {
+        setRecError(null);
         const sid =
           typeof document !== 'undefined'
             ? document.cookie.match(/(?:^|; )thg_sid=([^;]+)/)?.[1]
             : null;
+        
+        // Use user_id from authenticated user instead of just session_id
         const response = await fetch('/api/recommendations', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ session_id: sid, num_results: 6 }),
+          body: JSON.stringify({ 
+            session_id: sid, 
+            user_id: user.id,
+            num_results: 6 
+          }),
         });
 
         if (!response.ok) {
-          setRecError('Failed to load');
+          const errorText = await response.text();
+          console.error('[Buyer Dashboard] Recommendations API error:', response.status, errorText);
+          setRecError('Failed to load recommendations');
+          setRecs([]);
           return;
         }
 
         const data = await response.json();
-        setRecs(Array.isArray(data.items) ? data.items : []);
-      } catch {
-        setRecError('Failed to load');
+        if (data?.items && Array.isArray(data.items)) {
+          setRecs(data.items);
+        } else {
+          setRecs([]);
+        }
+      } catch (err) {
+        console.error('[Buyer Dashboard] Error loading recommendations:', err);
+        setRecError('Failed to load recommendations');
+        setRecs([]);
       }
     }
 
     loadRecommendations();
-  }, [user]);
+  }, [user?.id]);
 
   const savedCount = savedProperties.length;
 
@@ -382,8 +403,8 @@ function RecommendationsSection({ recs, error }: { recs: RecommendationItem[]; e
           href: '/property-listing',
         }}
       />
-      <Suspense fallback={<div className="rounded-2xl border border-white/10 bg-white/6 p-8 text-center text-white/70">Gathering recommendations…</div>}>
-        <RecommendationsCarousel items={recs} isLoading={!recs.length && !error} error={error} />
+      <Suspense fallback={<div className="rounded-2xl border-2 border-amber-300 bg-slate-800/95 p-8 text-center text-white">Loading recommendations…</div>}>
+        <RecommendationsCarousel items={recs} isLoading={!recs.length && !error && !recError} error={error || recError} />
       </Suspense>
     </motion.section>
   );

@@ -223,11 +223,11 @@ function ScrollableRow({ children }: { children: React.ReactNode }) {
 
 function CardSkeleton() {
   return (
-    <div className="min-w-[280px] max-w-[320px] rounded-xl bg-canvas shadow-card border border-border overflow-hidden animate-pulse">
-      <div className="h-40 w-full bg-accent/10" />
+    <div className="min-w-[280px] max-w-[320px] rounded-xl bg-slate-800/95 border-2 border-amber-300 overflow-hidden">
+      <div className="h-40 w-full bg-slate-700/50" />
       <div className="p-3 space-y-2">
-        <div className="h-4 w-3/4 bg-accent/10 rounded" />
-        <div className="h-3 w-2/3 bg-accent/10 rounded" />
+        <div className="h-4 w-3/4 bg-slate-700/50 rounded" />
+        <div className="h-3 w-2/3 bg-slate-700/50 rounded" />
       </div>
     </div>
   )

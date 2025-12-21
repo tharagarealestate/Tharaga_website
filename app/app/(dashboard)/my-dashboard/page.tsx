@@ -24,7 +24,6 @@ import { Suspense } from 'react';
 import { useRouter } from 'next/navigation';
 
 import { getSupabase } from '@/lib/supabase';
-import { listSaved } from '@/lib/saved';
 import type { RecommendationItem } from '@/types/recommendations';
 
 const RecommendationsCarousel = dynamic(
@@ -32,15 +31,25 @@ const RecommendationsCarousel = dynamic(
   { ssr: false }
 );
 
+type SavedItem = {
+  property_id: string;
+  title: string;
+  image_url: string;
+  specs?: {
+    bedrooms?: number | null;
+    area_sqft?: number | null;
+  };
+  saved_at: number;
+};
+
 function BuyerDashboardContent() {
   const [greeting, setGreeting] = useState('Good Evening');
   const [userName, setUserName] = useState('Buyer');
   const [recs, setRecs] = useState<RecommendationItem[]>([]);
   const [recError, setRecError] = useState<string | null>(null);
   const [user, setUser] = useState<any>({ id: 'verified', email: 'buyer@tharaga.co.in' });
+  const [savedProperties, setSavedProperties] = useState<SavedItem[]>([]);
   const router = useRouter();
-
-  const savedProperties = useMemo(() => listSaved(), []);
 
   // Set greeting based on time
   useEffect(() => {
@@ -73,6 +82,60 @@ function BuyerDashboardContent() {
       console.error('[Buyer] Supabase init failed:', err);
     }
   }, []);
+
+  // Load saved properties from Supabase
+  useEffect(() => {
+    if (!user?.id) {
+      setSavedProperties([]);
+      return;
+    }
+
+    async function loadSavedProperties() {
+      try {
+        const supabase = getSupabase();
+        const { data, error } = await supabase
+          .from('user_favorites')
+          .select(`
+            *,
+            property:properties (
+              id, title, locality, city, images, bhk_type, carpet_area, sqft
+            )
+          `)
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false });
+
+        if (error) throw error;
+
+        // Map Supabase data to SavedItem format
+        const mapped: SavedItem[] = (data || []).map((fav: any) => {
+          const prop = fav.property;
+          if (!prop) return null;
+
+          const imageUrl = Array.isArray(prop.images) 
+            ? (prop.images[0] || '/placeholder-property.jpg')
+            : (prop.images || '/placeholder-property.jpg');
+
+          return {
+            property_id: prop.id || fav.property_id,
+            title: prop.title || `${prop.locality || ''}, ${prop.city || ''}`.trim() || 'Property',
+            image_url: typeof imageUrl === 'string' ? imageUrl : '/placeholder-property.jpg',
+            specs: {
+              bedrooms: prop.bhk_type || null,
+              area_sqft: prop.carpet_area || prop.sqft || null,
+            },
+            saved_at: fav.created_at ? new Date(fav.created_at).getTime() : Date.now(),
+          };
+        }).filter(Boolean) as SavedItem[];
+
+        setSavedProperties(mapped);
+      } catch (err) {
+        console.error('[Buyer Dashboard] Error loading saved properties:', err);
+        setSavedProperties([]);
+      }
+    }
+
+    loadSavedProperties();
+  }, [user?.id]);
 
   // Load recommendations after user is authenticated
   useEffect(() => {
@@ -308,7 +371,7 @@ function RecommendationsSection({ recs, error }: { recs: RecommendationItem[]; e
       initial={{ opacity: 0, y: 24 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6, delay: 0.15 }}
-      className="glass-panel space-y-6 rounded-[28px] border border-white/10 bg-white/6 p-6 shadow-[0_20px_80px_rgba(8,15,40,0.45)] backdrop-blur-2xl sm:p-8"
+      className="space-y-6 rounded-[28px] border-2 border-amber-300 bg-slate-900/95 p-6 sm:p-8"
     >
       <SectionHeader
         title="Perfect matches for you"
@@ -330,13 +393,13 @@ function RecommendationsSection({ recs, error }: { recs: RecommendationItem[]; e
 // SAVED PROPERTIES
 // ============================================================
 
-function SavedPropertiesSection({ saved }: { saved: ReturnType<typeof listSaved> }) {
+function SavedPropertiesSection({ saved }: { saved: SavedItem[] }) {
   return (
     <motion.section
       initial={{ opacity: 0, y: 24 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6, delay: 0.2 }}
-      className="glass-panel space-y-6 rounded-[28px] border border-white/10 bg-white/6 p-6 shadow-[0_20px_80px_rgba(8,15,40,0.45)] backdrop-blur-2xl sm:p-8"
+      className="space-y-6 rounded-[28px] border-2 border-amber-300 bg-slate-900/95 p-6 sm:p-8"
     >
       <SectionHeader
         title="Your curated shortlist"
@@ -374,7 +437,7 @@ function SavedPropertiesSection({ saved }: { saved: ReturnType<typeof listSaved>
                     alt={item.title}
                     fill
                     sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
-                    className="object-cover transition-transform duration-500 group-hover:scale-105"
+                    className="object-cover"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-black/10 to-transparent" />
                   <div className="absolute right-3 top-3 rounded-full bg-white/80 p-2 text-rose-500 shadow">

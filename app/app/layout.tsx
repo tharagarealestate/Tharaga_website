@@ -346,11 +346,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   .thg-auth-menu{ right:8px; }
 }
 
-/* Hide auth button on mobile for my-dashboard route */
-@media (max-width: 767px) {
-  /* This will be applied via JavaScript when on my-dashboard route */
+/* Hide auth button on mobile for ALL non-homepage pages */
+@media (max-width: 880px) {
+  /* This will be applied via JavaScript when on non-homepage pages */
   .thg-auth-wrap.hide-on-mobile,
-  .thg-auth-btn.hide-on-mobile {
+  .thg-auth-btn.hide-on-mobile,
+  #site-header-auth-container.hide-on-mobile {
     display: none !important;
     visibility: hidden !important;
     opacity: 0 !important;
@@ -463,30 +464,65 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       if (window.AUTH_HIDE_HEADER === true || window.AUTH_NO_HEADER === true) {
         if (wrap) wrap.style.display = 'none';
       }
-      // Hide on mobile for my-dashboard route
+      // Hide on mobile for ALL non-homepage pages
       function checkAndHideOnMobile() {
         if (typeof window === 'undefined' || !wrap) return;
-        const isMyDashboard = window.location.pathname.includes('/my-dashboard');
-        const isMobile = window.innerWidth <= 767;
-        if (isMyDashboard && isMobile) {
+        const pathname = window.location.pathname;
+        const isRootPath = pathname === '/' || pathname === '' || pathname === '/index.html';
+        const hasHomepageClass = document.body.classList.contains('homepage-header');
+        const hasHeroPremium = document.querySelector('.hero-premium') !== null || 
+                             document.querySelector('main.hero-premium') !== null;
+        const isHomepage = isRootPath || hasHomepageClass || hasHeroPremium;
+        const isMobile = window.innerWidth <= 880;
+        
+        const container = document.getElementById('site-header-auth-container');
+        
+        // On mobile, hide on all pages except homepage
+        if (isMobile && !isHomepage) {
+          // Add hide class and set inline styles with important
+          if (container) {
+            container.classList.add('hide-on-mobile');
+            container.style.setProperty('display', 'none', 'important');
+            container.style.setProperty('visibility', 'hidden', 'important');
+            container.style.setProperty('opacity', '0', 'important');
+            container.style.setProperty('pointer-events', 'none', 'important');
+          }
           wrap.classList.add('hide-on-mobile');
-          wrap.style.display = 'none';
-          wrap.style.visibility = 'hidden';
+          wrap.style.setProperty('display', 'none', 'important');
+          wrap.style.setProperty('visibility', 'hidden', 'important');
+          wrap.style.setProperty('opacity', '0', 'important');
+          wrap.style.setProperty('pointer-events', 'none', 'important');
           if (btn) {
             btn.classList.add('hide-on-mobile');
-            btn.style.display = 'none';
-            btn.style.visibility = 'hidden';
+            btn.style.setProperty('display', 'none', 'important');
+            btn.style.setProperty('visibility', 'hidden', 'important');
+            btn.style.setProperty('opacity', '0', 'important');
+            btn.style.setProperty('pointer-events', 'none', 'important');
           }
         } else {
+          // Remove hide class and restore styles only if not globally hidden
+          if (container) container.classList.remove('hide-on-mobile');
           wrap.classList.remove('hide-on-mobile');
           if (btn) btn.classList.remove('hide-on-mobile');
-          // Only restore if not globally hidden
+          // Only restore if not globally hidden and not on mobile non-homepage
           if (window.AUTH_HIDE_HEADER !== true && window.AUTH_NO_HEADER !== true) {
-            wrap.style.display = '';
-            wrap.style.visibility = '';
-            if (btn) {
-              btn.style.display = '';
-              btn.style.visibility = '';
+            if (!isMobile || isHomepage) {
+              if (container) {
+                container.style.removeProperty('display');
+                container.style.removeProperty('visibility');
+                container.style.removeProperty('opacity');
+                container.style.removeProperty('pointer-events');
+              }
+              wrap.style.removeProperty('display');
+              wrap.style.removeProperty('visibility');
+              wrap.style.removeProperty('opacity');
+              wrap.style.removeProperty('pointer-events');
+              if (btn) {
+                btn.style.removeProperty('display');
+                btn.style.removeProperty('visibility');
+                btn.style.removeProperty('opacity');
+                btn.style.removeProperty('pointer-events');
+              }
             }
           }
         }

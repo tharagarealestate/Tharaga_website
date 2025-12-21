@@ -1484,24 +1484,22 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           }
           details.dropdown .menu .show-mobile-only{ display:none }
 
-          /* Auth button styling - Glassy header - EXACT MATCH TO HOMEPAGE - DESKTOP ONLY */
+          /* Auth button styling - Glassy header - EXACT MATCH TO HOMEPAGE */
           /* Override auth system's absolute positioning - use flex layout instead */
-          @media (min-width: 881px) {
-            header.nav .thg-auth-wrap,
-            header.nav #site-header-auth-container.thg-auth-wrap { 
-              display:flex !important; 
-              align-items:center !important; 
-              gap:12px !important;
-              visibility: visible !important;
-              opacity: 1 !important;
-              position: relative !important;
-              top: auto !important;
-              right: auto !important;
-              transform: none !important;
-              margin-left: auto !important;
-              /* Ensure auth button is aligned to right corner like homepage */
-              justify-content: flex-end !important;
-            }
+          header.nav .thg-auth-wrap,
+          header.nav #site-header-auth-container.thg-auth-wrap { 
+            display:flex !important; 
+            align-items:center !important; 
+            gap:12px !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+            position: relative !important;
+            top: auto !important;
+            right: auto !important;
+            transform: none !important;
+            margin-left: auto !important;
+            /* Ensure auth button is aligned to right corner like homepage */
+            justify-content: flex-end !important;
           }
           header.nav .thg-auth-wrap::before{
             content:"" !important; 
@@ -1548,25 +1546,23 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           }
           header.nav .thg-auth-btn.is-auth::after{ border-top-color:#1e40af !important }
           header.nav .divider{ background:rgba(226,232,240,.6) }
-          /* Prevent auth container from being hidden - DESKTOP ONLY */
-          @media (min-width: 881px) {
-            header.nav #site-header-auth-container,
-            header.nav .thg-auth-wrap {
-              display: flex !important;
-              visibility: visible !important;
-              opacity: 1 !important;
-            }
-            #site-header-auth-container{ 
-              display:flex !important; 
-              align-items:center !important; 
-              gap:12px !important;
-              visibility: visible !important;
-              opacity: 1 !important;
-              position: relative !important;
-              margin-left: auto !important;
-              /* Ensure auth button is aligned to right corner like homepage */
-              justify-content: flex-end !important;
-            }
+          /* Prevent auth container from being hidden */
+          header.nav #site-header-auth-container,
+          header.nav .thg-auth-wrap {
+            display: flex !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+          }
+          #site-header-auth-container{ 
+            display:flex !important; 
+            align-items:center !important; 
+            gap:12px !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+            position: relative !important;
+            margin-left: auto !important;
+            /* Ensure auth button is aligned to right corner like homepage */
+            justify-content: flex-end !important;
           }
 
           /* Mobile adjustments - exact match to homepage */
@@ -1750,28 +1746,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             /* Right-side auth group position */
             header.nav .thg-auth-wrap{ position:absolute; top:10px; right:12px; padding:0; gap:10px }
             header.nav .thg-auth-wrap::before{ height:14px }
-            /* CRITICAL: Hide user icon/auth button on mobile for ALL pages by default */
-            /* This must override any desktop rules that force display:flex */
-            header.nav .thg-auth-wrap,
-            header.nav #site-header-auth-container,
-            header.nav #site-header-auth-container.thg-auth-wrap{ 
-              display:none !important; 
-              visibility:hidden !important; 
-              opacity:0 !important; 
-              pointer-events:none !important 
-            }
-            /* Show user icon/auth button on mobile ONLY for homepage - highest specificity */
+            /* Hide user icon/auth button on mobile for all pages except homepage */
+            header.nav .thg-auth-wrap{ display:none !important }
+            /* Show user icon/auth button on mobile only for homepage */
             body:has(.hero-premium) header.nav .thg-auth-wrap,
-            body:has(.hero-premium) header.nav #site-header-auth-container,
-            body:has(.hero-premium) header.nav #site-header-auth-container.thg-auth-wrap,
-            .homepage-header header.nav .thg-auth-wrap,
-            .homepage-header header.nav #site-header-auth-container,
-            .homepage-header header.nav #site-header-auth-container.thg-auth-wrap{ 
-              display:flex !important; 
-              visibility:visible !important; 
-              opacity:1 !important; 
-              pointer-events:auto !important 
-            }
+            .homepage-header header.nav .thg-auth-wrap{ display:flex !important }
             /* Hide trust pill to avoid crowding on small screens */
             #home_pill_trust{ display:none }
             /* Use the same dropdown style as desktop */
@@ -2307,34 +2286,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           })();
         `}} />
         <HeaderLinkInterceptor />
-               {/* Ensure auth button is visible - but respect mobile hide rules for non-homepage */}
+               {/* Ensure auth button is always visible */}
                <script dangerouslySetInnerHTML={{ __html: `
                  (function() {
                    'use strict';
                    
-                   // Check if we're on homepage
-                   function isHomepage() {
-                     return document.body.classList.contains('homepage-header') || 
-                            document.querySelector('.hero-premium') !== null ||
-                            window.location.pathname === '/' || 
-                            window.location.pathname === '';
-                   }
-                   
-                   // Check if we're on mobile
-                   function isMobile() {
-                     return window.innerWidth <= 880;
-                   }
-                   
-                   // Force auth container to be visible - but only on desktop or homepage mobile
+                   // Force auth container to be visible immediately
                    function forceAuthVisible() {
-                     const isMobileView = isMobile();
-                     const isHomepageView = isHomepage();
-                     
-                     // On mobile, only show on homepage
-                     if (isMobileView && !isHomepageView) {
-                       return; // Don't show on mobile non-homepage pages
-                     }
-                     
                      const container = document.getElementById('site-header-auth-container');
                      const wrap = document.querySelector('header.nav .thg-auth-wrap');
                      const btn = document.querySelector('header.nav .thg-auth-btn');
@@ -2375,10 +2333,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                      document.addEventListener('DOMContentLoaded', forceAuthVisible);
                    }
                    
-                   // Run on resize to handle mobile/desktop switching
-                   window.addEventListener('resize', forceAuthVisible);
-                   
-                   // Run periodically to prevent hiding - but respect mobile rules
+                   // Run periodically to prevent hiding
                    setInterval(forceAuthVisible, 200);
                  })();
                ` }} />

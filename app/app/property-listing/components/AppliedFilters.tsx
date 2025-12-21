@@ -119,12 +119,12 @@ export default function AppliedFilters({ filters, updateFilters }: AppliedFilter
       {appliedFilters.map((filter) => (
         <div
           key={filter.key}
-          className="group pl-3 pr-2 py-2 bg-white/70 backdrop-blur-md border border-indigo-200/50 hover:border-indigo-300 hover:bg-white/90 shadow-sm hover:shadow-md transition-all duration-200 flex items-center gap-2 rounded-full"
+          className="group pl-3 pr-2 py-2 bg-slate-700/50 border-2 border-amber-300 hover:bg-slate-600/50 transition-all duration-200 flex items-center gap-2 rounded-full"
         >
-          <span className="text-sm font-medium text-gray-700">{filter.label}</span>
+          <span className="text-sm font-medium text-slate-200">{filter.label}</span>
           <button
             onClick={filter.onRemove}
-            className="w-5 h-5 rounded-full bg-gradient-to-br from-red-400 to-pink-500 flex items-center justify-center hover:from-red-500 hover:to-pink-600 shadow-sm transition-all duration-200 group-hover:scale-110"
+            className="w-5 h-5 rounded-full bg-red-500/80 hover:bg-red-500 flex items-center justify-center transition-all duration-200 hover:-translate-y-0.5"
             aria-label={`Remove ${filter.label} filter`}
           >
             <X className="w-3 h-3 text-white" />

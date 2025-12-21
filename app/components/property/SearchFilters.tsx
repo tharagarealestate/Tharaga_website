@@ -79,14 +79,14 @@ export function SearchFilters() {
   const activeFilterCount = Object.values(filters).flat().filter(Boolean).length;
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 sticky top-24">
+    <div className="bg-slate-800/95 rounded-xl border-2 border-amber-300 p-6 sticky top-24">
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
-        <h3 className="text-lg font-bold text-slate-900">Filters</h3>
+        <h3 className="text-lg font-bold text-white">Filters</h3>
         {activeFilterCount > 0 && (
           <button
             onClick={clearFilters}
-            className="flex items-center gap-1 text-sm text-slate-600 hover:text-slate-900"
+            className="flex items-center gap-1 text-sm text-amber-300 hover:text-amber-200"
           >
             <X className="w-4 h-4" />
             Clear ({activeFilterCount})
@@ -107,9 +107,9 @@ export function SearchFilters() {
                 type="checkbox"
                 checked={filters.property_type.includes(type)}
                 onChange={() => handleFilterChange('property_type', type, true)}
-                className="w-4 h-4 text-[#1e40af] rounded focus:ring-2 focus:ring-[#D4AF37]"
+                className="w-4 h-4 text-amber-300 rounded focus:ring-2 focus:ring-amber-300/50 bg-slate-700/50 border-amber-300"
               />
-              <span className="text-sm text-slate-700 capitalize">{type}</span>
+              <span className="text-sm text-slate-200 capitalize">{type}</span>
             </label>
           ))}
         </FilterSection>
@@ -126,9 +126,9 @@ export function SearchFilters() {
                 type="checkbox"
                 checked={filters.bhk_type.includes(bhk)}
                 onChange={() => handleFilterChange('bhk_type', bhk, true)}
-                className="w-4 h-4 text-[#1e40af] rounded focus:ring-2 focus:ring-[#D4AF37]"
+                className="w-4 h-4 text-amber-300 rounded focus:ring-2 focus:ring-amber-300/50 bg-slate-700/50 border-amber-300"
               />
-              <span className="text-sm text-slate-700">{bhk}</span>
+              <span className="text-sm text-slate-200">{bhk}</span>
             </label>
           ))}
         </FilterSection>
@@ -141,23 +141,23 @@ export function SearchFilters() {
         >
           <div className="space-y-3">
             <div>
-              <label className="text-xs text-slate-600 mb-1 block">Min Price (₹)</label>
+              <label className="text-xs text-slate-300 mb-1 block">Min Price (₹)</label>
               <input
                 type="number"
                 placeholder="e.g., 5000000"
                 value={filters.min_price}
                 onChange={(e) => handleFilterChange('min_price', e.target.value)}
-                className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-[#D4AF37] focus:border-transparent"
+                className="w-full px-3 py-2 border-2 border-amber-300 bg-slate-700/50 text-white rounded-lg text-sm focus:ring-2 focus:ring-amber-300/20 focus:border-amber-200 placeholder:text-slate-400"
               />
             </div>
             <div>
-              <label className="text-xs text-slate-600 mb-1 block">Max Price (₹)</label>
+              <label className="text-xs text-slate-300 mb-1 block">Max Price (₹)</label>
               <input
                 type="number"
                 placeholder="e.g., 10000000"
                 value={filters.max_price}
                 onChange={(e) => handleFilterChange('max_price', e.target.value)}
-                className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-[#D4AF37] focus:border-transparent"
+                className="w-full px-3 py-2 border-2 border-amber-300 bg-slate-700/50 text-white rounded-lg text-sm focus:ring-2 focus:ring-amber-300/20 focus:border-amber-200 placeholder:text-slate-400"
               />
             </div>
           </div>
@@ -175,9 +175,9 @@ export function SearchFilters() {
                 type="checkbox"
                 checked={filters.possession_status.includes(status)}
                 onChange={() => handleFilterChange('possession_status', status, true)}
-                className="w-4 h-4 text-[#1e40af] rounded focus:ring-2 focus:ring-[#D4AF37]"
+                className="w-4 h-4 text-amber-300 rounded focus:ring-2 focus:ring-amber-300/50 bg-slate-700/50 border-amber-300"
               />
-              <span className="text-sm text-slate-700 capitalize">
+              <span className="text-sm text-slate-200 capitalize">
                 {status.replace('-', ' ')}
               </span>
             </label>
@@ -196,9 +196,9 @@ export function SearchFilters() {
                 type="checkbox"
                 checked={filters.amenities.includes(amenity)}
                 onChange={() => handleFilterChange('amenities', amenity, true)}
-                className="w-4 h-4 text-[#1e40af] rounded focus:ring-2 focus:ring-[#D4AF37]"
+                className="w-4 h-4 text-amber-300 rounded focus:ring-2 focus:ring-amber-300/50 bg-slate-700/50 border-amber-300"
               />
-              <span className="text-sm text-slate-700">{amenity}</span>
+              <span className="text-sm text-slate-200">{amenity}</span>
             </label>
           ))}
         </FilterSection>
@@ -214,18 +214,18 @@ export function SearchFilters() {
               type="checkbox"
               checked={filters.rera_verified}
               onChange={(e) => handleFilterChange('rera_verified', e.target.checked)}
-              className="w-4 h-4 text-[#1e40af] rounded focus:ring-2 focus:ring-[#D4AF37]"
+              className="w-4 h-4 text-amber-300 rounded focus:ring-2 focus:ring-amber-300/50 bg-slate-700/50 border-amber-300"
             />
-            <span className="text-sm text-slate-700">RERA Verified Only</span>
+            <span className="text-sm text-slate-200">RERA Verified Only</span>
           </label>
           <label className="flex items-center gap-2 cursor-pointer">
             <input
               type="checkbox"
               checked={filters.approved_by_bank}
               onChange={(e) => handleFilterChange('approved_by_bank', e.target.checked)}
-              className="w-4 h-4 text-[#1e40af] rounded focus:ring-2 focus:ring-[#D4AF37]"
+              className="w-4 h-4 text-amber-300 rounded focus:ring-2 focus:ring-amber-300/50 bg-slate-700/50 border-amber-300"
             />
-            <span className="text-sm text-slate-700">Bank Approved</span>
+            <span className="text-sm text-slate-200">Bank Approved</span>
           </label>
         </FilterSection>
       </div>
@@ -253,16 +253,16 @@ function FilterSection({
   children: React.ReactNode;
 }) {
   return (
-    <div className="border-b border-slate-200 pb-4">
+    <div className="border-b border-slate-700 pb-4">
       <button
         onClick={onToggle}
         className="flex items-center justify-between w-full mb-3"
       >
-        <span className="font-semibold text-slate-900">{title}</span>
+        <span className="font-semibold text-white">{title}</span>
         {isExpanded ? (
-          <ChevronUp className="w-5 h-5 text-slate-400" />
+          <ChevronUp className="w-5 h-5 text-amber-300" />
         ) : (
-          <ChevronDown className="w-5 h-5 text-slate-400" />
+          <ChevronDown className="w-5 h-5 text-amber-300" />
         )}
       </button>
       <AnimatePresence>

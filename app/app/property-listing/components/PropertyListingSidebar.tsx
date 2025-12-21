@@ -143,7 +143,7 @@ export default function PropertyListingSidebar({
                     />
                     <label
                       htmlFor={`city-${city}`}
-                      className="text-sm cursor-pointer flex-1"
+                      className="text-sm cursor-pointer flex-1 text-slate-200"
                     >
                       {city}
                     </label>
@@ -182,7 +182,7 @@ export default function PropertyListingSidebar({
                       />
                       <label
                         htmlFor={`locality-${locality}`}
-                        className="text-sm cursor-pointer flex-1"
+                        className="text-sm cursor-pointer flex-1 text-slate-200"
                       >
                         {locality}
                       </label>
@@ -201,11 +201,11 @@ export default function PropertyListingSidebar({
           >
             <div className="space-y-4">
               <div className="flex items-center justify-between">
-                <div className="text-lg font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+                <div className="text-lg font-bold text-amber-300">
                   {formatIndianCurrency(filters.priceMin)}
                 </div>
-                <div className="text-gray-400">—</div>
-                <div className="text-lg font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+                <div className="text-slate-400">—</div>
+                <div className="text-lg font-bold text-amber-300">
                   {formatIndianCurrency(filters.priceMax)}
                 </div>
               </div>
@@ -240,7 +240,7 @@ export default function PropertyListingSidebar({
                         priceMax: preset.max || 200000000,
                       });
                     }}
-                    className="px-3 py-2 text-xs font-medium bg-white/50 backdrop-blur-sm border border-white/60 rounded-lg hover:bg-white/70 hover:border-indigo-300 hover:shadow-md transition-all duration-200 active:scale-95"
+                    className="px-3 py-2 text-xs font-medium bg-slate-700/50 border-2 border-amber-300 rounded-lg hover:bg-slate-600/50 text-slate-200 transition-all duration-200 hover:-translate-y-0.5"
                   >
                     {preset.label}
                   </button>
@@ -303,10 +303,10 @@ export default function PropertyListingSidebar({
                       : [...filters.bhk, bhk as any];
                     updateFilters({ bhk: newBhk });
                   }}
-                  className={`aspect-square rounded-xl font-semibold text-lg transition-all duration-200 active:scale-95 ${
+                  className={`aspect-square rounded-xl font-semibold text-lg transition-all duration-200 hover:-translate-y-0.5 ${
                     filters.bhk.includes(bhk as any)
-                      ? 'bg-gradient-to-br from-indigo-500 to-purple-600 text-white shadow-lg shadow-indigo-500/40 hover:shadow-xl hover:shadow-indigo-500/50 border-2 border-white/30'
-                      : 'bg-white/50 backdrop-blur-sm text-gray-700 border border-white/60 hover:bg-white/70 hover:border-indigo-300 hover:shadow-md'
+                      ? 'bg-amber-300 text-slate-900 border-2 border-amber-300'
+                      : 'bg-slate-700/50 text-slate-200 border-2 border-amber-300 hover:bg-slate-600/50'
                   }`}
                 >
                   {bhk}
@@ -336,7 +336,7 @@ export default function PropertyListingSidebar({
               ].map((option) => (
                 <div key={option.value} className="flex items-center space-x-2">
                   <RadioGroupItem value={option.value} id={`furnished-${option.value}`} />
-                  <Label htmlFor={`furnished-${option.value}`} className="text-sm cursor-pointer">
+                  <Label htmlFor={`furnished-${option.value}`} className="text-sm cursor-pointer text-slate-200">
                     {option.label}
                   </Label>
                 </div>
@@ -439,7 +439,7 @@ export default function PropertyListingSidebar({
                       />
                       <label
                         htmlFor={`amenity-${amenity}`}
-                        className="text-sm cursor-pointer flex-1"
+                        className="text-sm cursor-pointer flex-1 text-slate-200"
                       >
                         {amenity}
                       </label>
@@ -509,32 +509,27 @@ interface FilterSectionProps {
 
 function FilterSection({ icon, title, isExpanded, onToggle, children }: FilterSectionProps) {
   return (
-    <div className="relative overflow-hidden bg-white/60 backdrop-blur-md backdrop-saturate-180 border border-white/40 rounded-2xl shadow-[0_8px_32px_0_rgba(31,38,135,0.08)] hover:shadow-[0_8px_32px_0_rgba(31,38,135,0.15)] transition-all duration-300 hover:border-white/60 group">
-      {/* Inner glow effect */}
-      <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-        <div className="absolute inset-0 bg-gradient-to-br from-white/20 via-transparent to-transparent" />
-      </div>
-      
+    <div className="relative overflow-hidden bg-slate-700/50 border-2 border-amber-300 rounded-xl transition-all duration-300 hover:bg-slate-600/50 group">
       {/* Section Header */}
       <button
         onClick={onToggle}
-        className="relative w-full flex items-center justify-between p-4 hover:bg-white/30 transition-all duration-200 rounded-t-2xl"
+        className="relative w-full flex items-center justify-between p-4 hover:bg-slate-600/30 transition-all duration-200 rounded-t-xl"
         aria-expanded={isExpanded}
       >
-        <div className="flex items-center gap-3 font-semibold text-sm text-gray-800">
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg shadow-indigo-500/30">
-            <div className="text-white filter drop-shadow-sm">
+        <div className="flex items-center gap-3 font-semibold text-sm text-white">
+          <div className="w-8 h-8 rounded-lg bg-slate-600/50 flex items-center justify-center border-2 border-amber-300">
+            <div className="text-amber-300">
               {icon}
             </div>
           </div>
-          <span className="bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+          <span className="text-white">
             {title}
           </span>
         </div>
         {isExpanded ? (
-          <ChevronUp className="w-4 h-4 text-gray-600 transition-transform duration-200" />
+          <ChevronUp className="w-4 h-4 text-amber-300 transition-transform duration-200" />
         ) : (
-          <ChevronDown className="w-4 h-4 text-gray-600 transition-transform duration-200" />
+          <ChevronDown className="w-4 h-4 text-amber-300 transition-transform duration-200" />
         )}
       </button>
 
@@ -544,7 +539,7 @@ function FilterSection({ icon, title, isExpanded, onToggle, children }: FilterSe
           isExpanded ? 'max-h-[1000px] opacity-100' : 'max-h-0 opacity-0'
         }`}
       >
-        <div className="p-4 pt-0 border-t border-white/40">
+        <div className="p-4 pt-0 border-t border-slate-700">
           {children}
         </div>
       </div>

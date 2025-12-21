@@ -48,8 +48,8 @@ export default function PropertyGrid({
     return (
       <div className="flex flex-col items-center justify-center py-16 text-center">
         <div className="text-6xl mb-4">🏠</div>
-        <h3 className="text-xl font-semibold mb-2">No properties found</h3>
-        <p className="text-gray-600 mb-4">Try adjusting your filters to see more results</p>
+        <h3 className="text-xl font-semibold mb-2 text-white">No properties found</h3>
+        <p className="text-slate-300 mb-4">Try adjusting your filters to see more results</p>
       </div>
     );
   }
@@ -76,7 +76,7 @@ export default function PropertyGrid({
       {/* Loading State */}
       {loading && (
         <div className="flex items-center justify-center py-8">
-          <Loader2 className="w-8 h-8 animate-spin text-indigo-600" />
+          <Loader2 className="w-8 h-8 animate-spin text-amber-300" />
         </div>
       )}
 
@@ -87,7 +87,7 @@ export default function PropertyGrid({
 
       {/* End of Results */}
       {!hasMore && properties.length > 0 && (
-        <div className="text-center py-8 text-gray-500">
+        <div className="text-center py-8 text-slate-400">
           You've reached the end of results
         </div>
       )}

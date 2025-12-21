@@ -43,7 +43,7 @@ export function PropertySearchInterface() {
   };
 
   return (
-    <div className="bg-white rounded-2xl shadow-lg p-6 -mt-8 relative z-10">
+    <div className="bg-slate-800/95 rounded-2xl border-2 border-amber-300 p-6 -mt-8 relative z-10">
       <form onSubmit={handleSearch} className="space-y-4">
         {/* Main Search Bar */}
         <div className="flex gap-3">
@@ -54,21 +54,21 @@ export function PropertySearchInterface() {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search by location, property name, or builder..."
-              className="w-full pl-12 pr-12 py-4 border-2 border-slate-200 rounded-xl text-lg focus:border-[#D4AF37] focus:ring-2 focus:ring-[#D4AF37]/20 transition-all"
+              className="w-full pl-12 pr-12 py-4 border-2 border-amber-300 bg-slate-700/50 text-white rounded-xl text-lg focus:border-amber-200 focus:ring-2 focus:ring-amber-300/20 transition-all placeholder:text-slate-400"
             />
             <button
               type="button"
               onClick={handleVoiceSearch}
-              className="absolute right-4 top-1/2 -translate-y-1/2 p-2 hover:bg-slate-100 rounded-lg transition-colors"
+              className="absolute right-4 top-1/2 -translate-y-1/2 p-2 hover:bg-slate-600/50 rounded-lg transition-colors"
               aria-label="Voice search"
             >
-              <Mic className="w-5 h-5 text-slate-400" />
+              <Mic className="w-5 h-5 text-slate-300" />
             </button>
           </div>
           
           <button
             type="submit"
-            className="px-8 py-4 bg-gradient-to-r from-[#D4AF37] to-[#1e40af] text-white font-semibold rounded-xl hover:shadow-lg transition-all"
+            className="px-8 py-4 bg-amber-300 text-slate-900 font-semibold rounded-xl hover:bg-amber-200 transition-all border-2 border-amber-300"
           >
             Search
           </button>
@@ -79,7 +79,7 @@ export function PropertySearchInterface() {
           <button
             type="button"
             onClick={() => setShowQuickFilters(!showQuickFilters)}
-            className="flex items-center gap-2 px-4 py-2 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors"
+            className="flex items-center gap-2 px-4 py-2 bg-slate-700/50 hover:bg-slate-600/50 rounded-lg transition-colors border-2 border-amber-300 text-slate-200"
           >
             <SlidersHorizontal className="w-4 h-4" />
             Quick Filters
@@ -88,7 +88,7 @@ export function PropertySearchInterface() {
           <select
             value={quickFilters.bhk}
             onChange={(e) => setQuickFilters(prev => ({ ...prev, bhk: e.target.value }))}
-            className="px-4 py-2 border border-slate-200 rounded-lg bg-white"
+            className="px-4 py-2 border-2 border-amber-300 rounded-lg bg-slate-700/50 text-white"
           >
             <option value="">All BHK</option>
             <option value="1BHK">1 BHK</option>
@@ -100,7 +100,7 @@ export function PropertySearchInterface() {
           <select
             value={quickFilters.city}
             onChange={(e) => setQuickFilters(prev => ({ ...prev, city: e.target.value }))}
-            className="px-4 py-2 border border-slate-200 rounded-lg bg-white"
+            className="px-4 py-2 border-2 border-amber-300 rounded-lg bg-slate-700/50 text-white"
           >
             <option value="Chennai">Chennai</option>
             <option value="Bangalore">Bangalore</option>
@@ -113,28 +113,28 @@ export function PropertySearchInterface() {
               placeholder="Min ₹"
               value={quickFilters.minPrice}
               onChange={(e) => setQuickFilters(prev => ({ ...prev, minPrice: e.target.value }))}
-              className="w-32 px-4 py-2 border border-slate-200 rounded-lg"
+              className="w-32 px-4 py-2 border-2 border-amber-300 rounded-lg bg-slate-700/50 text-white placeholder:text-slate-400"
             />
-            <span className="text-slate-400">to</span>
+            <span className="text-slate-300">to</span>
             <input
               type="number"
               placeholder="Max ₹"
               value={quickFilters.maxPrice}
               onChange={(e) => setQuickFilters(prev => ({ ...prev, maxPrice: e.target.value }))}
-              className="w-32 px-4 py-2 border border-slate-200 rounded-lg"
+              className="w-32 px-4 py-2 border-2 border-amber-300 rounded-lg bg-slate-700/50 text-white placeholder:text-slate-400"
             />
           </div>
         </div>
 
         {/* Popular Searches */}
         <div className="flex items-center gap-2 flex-wrap text-sm">
-          <span className="text-slate-600">Popular:</span>
+          <span className="text-slate-300">Popular:</span>
           {['3BHK in Velachery', 'Villa in OMR', 'Under ₹80L', 'Ready to Move'].map(search => (
             <button
               key={search}
               type="button"
               onClick={() => setSearchQuery(search)}
-              className="px-3 py-1 bg-slate-50 hover:bg-slate-100 text-slate-700 rounded-full transition-colors"
+              className="px-3 py-1 bg-slate-700/50 hover:bg-slate-600/50 text-slate-200 rounded-full transition-colors border border-amber-300/30"
             >
               {search}
             </button>

@@ -4,7 +4,6 @@ import { useState } from 'react';
 import { Search, SlidersHorizontal, Grid3x3, List, Map as MapIcon, Loader2 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Select } from '@/components/ui/select';
 import { PropertyFilters } from '../page';
 import AppliedFilters from './AppliedFilters';
 import PropertyGrid from './PropertyGrid';
@@ -69,17 +68,17 @@ export default function PropertyListingContent({
             </Button>
 
             {/* Sort Dropdown */}
-            <Select
+            <select
               value={filters.sortBy}
               onChange={(e) => updateFilters({ sortBy: e.target.value as any })}
-              className="w-[200px] hidden sm:flex"
+              className="w-[200px] hidden sm:flex px-4 py-2 border-2 border-amber-300 rounded-lg bg-slate-700/50 text-white focus:ring-2 focus:ring-amber-300/20 focus:border-amber-200"
             >
               <option value="ai_relevance">✨ AI Relevance</option>
               <option value="newest">🆕 Newest</option>
               <option value="price_low_high">💰 Price: Low → High</option>
               <option value="price_high_low">💎 Price: High → Low</option>
               <option value="area_high_low">📏 Area: High → Low</option>
-            </Select>
+            </select>
 
             {/* View Toggle */}
             <div className="hidden md:flex items-center gap-1 border-2 border-amber-300 rounded-lg p-1 bg-slate-800/95">

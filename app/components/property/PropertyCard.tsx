@@ -321,11 +321,11 @@ export function PropertyCard({
         <button
           onClick={handleFavoriteClick}
           disabled={isLoading}
-          className="absolute top-3 right-3 p-2 bg-white/90 backdrop-blur-sm rounded-full hover:bg-white transition-colors z-10"
+          className="absolute top-3 right-3 p-2 bg-slate-800/95 rounded-full hover:bg-slate-700/90 transition-colors z-10 border-2 border-amber-300"
           aria-label="Add to favorites"
         >
           <Heart 
-            className={`w-5 h-5 ${isFavorited ? 'fill-red-500 text-red-500' : 'text-slate-600'}`} 
+            className={`w-5 h-5 ${isFavorited ? 'fill-red-500 text-red-500' : 'text-slate-200'}`} 
           />
         </button>
 

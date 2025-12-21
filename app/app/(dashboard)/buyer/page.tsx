@@ -283,10 +283,10 @@ function QuickActions({ savedCount }: { savedCount: number }) {
             <div className="relative z-10 mt-8 space-y-2">
               <div className="text-xs uppercase tracking-[0.2em] text-slate-400">Workspace</div>
               <h3 className="font-display text-xl font-semibold text-white">{card.label}</h3>
-              <p className="text-sm text-white/70">{card.description}</p>
+              <p className="text-sm text-slate-200">{card.description}</p>
               {card.value !== null && <span className="text-3xl font-bold text-white">{card.value}</span>}
             </div>
-            <div className="relative z-10 mt-6 flex items-center gap-2 text-sm font-medium text-white/70">
+            <div className="relative z-10 mt-6 flex items-center gap-2 text-sm font-medium text-slate-200">
               Manage
               <ArrowRight className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-1" />
             </div>
@@ -526,13 +526,13 @@ function HeroMiniCard({
   icon: React.ReactNode;
 }) {
   return (
-    <div className="flex flex-col gap-3 rounded-2xl border border-white/10 bg-white/6 p-4 text-white shadow-[0_12px_40px_rgba(8,15,40,0.35)] backdrop-blur-xl">
-      <div className="flex items-center justify-between text-xs uppercase tracking-[0.28em] text-white/60">
+    <div className="flex flex-col gap-3 rounded-2xl border-2 border-amber-300 bg-slate-800/95 p-4 text-white">
+      <div className="flex items-center justify-between text-xs uppercase tracking-[0.28em] text-slate-400">
         {title}
         {icon}
       </div>
       <div className="text-2xl font-semibold text-white">{value}</div>
-      <p className="text-sm text-white/70">{caption}</p>
+      <p className="text-sm text-slate-200">{caption}</p>
     </div>
   );
 }

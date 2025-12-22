@@ -3180,6 +3180,27 @@
         portalMenuItems.innerHTML = menuHTML || '<a href="/my-dashboard">🏠 Buyer Dashboard</a><a href="/builder">🏗️ Builder Dashboard</a>';
       }
 
+      // CRITICAL: Try to fetch roles immediately if user is already logged in
+      (async function() {
+        try {
+          // Check if user is already logged in
+          if (window.supabase && window.supabase.auth) {
+            const { data: { user } } = await window.supabase.auth.getUser();
+            if (user && window.thgRoleManager) {
+              // User is logged in, fetch roles immediately
+              console.log('[Portal Menu] User already logged in, fetching roles immediately');
+              await window.thgRoleManager.fetchRoles();
+              updatePortalMenu(); // Update menu immediately after roles are fetched
+            }
+          }
+        } catch (e) {
+          console.debug('[Portal Menu] Could not fetch roles immediately:', e);
+        }
+      })();
+
+      // CRITICAL: Call updatePortalMenu immediately on DOMContentLoaded
+      updatePortalMenu();
+
       // CRITICAL: Prevent Portal dropdown from opening until content is ready
       (function() {
         const portalMenu = document.getElementById('portal-menu');

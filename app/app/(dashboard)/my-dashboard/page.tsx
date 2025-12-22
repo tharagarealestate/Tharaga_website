@@ -220,9 +220,9 @@ function BuyerDashboardContent() {
 
         <QuickActions savedCount={savedCount} />
 
-        <RecommendationsSection recs={recs} error={recError} />
+        <RecommendationsSection recs={recs} error={recError} userId={user?.id} />
 
-        <SavedPropertiesSection saved={savedProperties} />
+        <SavedPropertiesSection saved={savedProperties} userId={user?.id} />
 
         <UpcomingVisitsSection />
 
@@ -386,7 +386,7 @@ function QuickActions({ savedCount }: { savedCount: number }) {
 // RECOMMENDATIONS
 // ============================================================
 
-function RecommendationsSection({ recs, error }: { recs: RecommendationItem[]; error: string | null }) {
+function RecommendationsSection({ recs, error, userId }: { recs: RecommendationItem[]; error: string | null; userId?: string }) {
   return (
     <motion.section
       initial={{ opacity: 0, y: 24 }}
@@ -396,13 +396,23 @@ function RecommendationsSection({ recs, error }: { recs: RecommendationItem[]; e
     >
       <SectionHeader
         title="Perfect matches for you"
-        subtitle="AI compares thousands of data points to surface the most relevant homes."
+        subtitle={`AI-powered recommendations based on your preferences${userId ? ' and search history' : ''}. Each property shows a personalized match score.`}
         icon={<Sparkles className="h-5 w-5 text-emerald-200" />}
         action={{
           label: 'View all properties',
           href: '/property-listing',
         }}
       />
+      {recs.length > 0 && (
+        <div className="mb-4 rounded-lg border border-amber-300/30 bg-slate-800/50 p-3 text-sm text-slate-300">
+          <div className="flex items-center gap-2">
+            <Sparkles className="h-4 w-4 text-amber-300" />
+            <span>
+              Match scores are calculated using AI analysis of your preferences, search history, and property features.
+            </span>
+          </div>
+        </div>
+      )}
       <Suspense fallback={<div className="rounded-2xl border-2 border-amber-300 bg-slate-800/95 p-8 text-center text-white">Loading recommendations…</div>}>
         <RecommendationsCarousel items={recs} isLoading={!recs.length && !error} error={error} />
       </Suspense>

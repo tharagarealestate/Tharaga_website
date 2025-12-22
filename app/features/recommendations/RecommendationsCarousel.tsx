@@ -81,6 +81,14 @@ function PropertyCard({ item, onLead }: { item: RecommendationItem; onLead: (pro
   const blurDataURL = 'data:image/gif;base64,R0lGODlhAQABAAAAACw=' // tiny 1x1
   const cardRef = React.useRef<HTMLDivElement>(null)
   const dragState = React.useRef<{ x0: number; dragging: boolean }>({ x0: 0, dragging: false })
+  
+  // Calculate match score from item.score
+  const matchScore = item.score ? Math.min(100, Math.max(0, Math.round(Number(item.score) * 100))) : null
+  const scoreColor = matchScore && matchScore >= 80
+    ? 'text-emerald-400'
+    : matchScore && matchScore >= 60
+    ? 'text-yellow-400'
+    : 'text-orange-400'
 
   function toggleSave(){
     if (saved) {
@@ -135,6 +143,12 @@ function PropertyCard({ item, onLead }: { item: RecommendationItem; onLead: (pro
             </button>
           </Tooltip>
         </div>
+        {matchScore !== null && (
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-fgMuted">AI Match:</span>
+            <span className={`text-sm font-semibold ${scoreColor}`}>{matchScore}%</span>
+          </div>
+        )}
         <Specs specs={item.specs} />
         <div className="mt-2 flex gap-2 items-center">
           <button className="rounded-lg border border-border px-3 py-1 text-sm" onClick={() => onLead(item.property_id)}>

@@ -2,7 +2,17 @@
 // Falls back to in-memory for development
 
 import { getSupabase } from '../supabase'
-import { getClientIp } from './auth'
+import { NextRequest } from 'next/server'
+
+/**
+ * Extract IP address from request
+ */
+function getClientIp(req: NextRequest): string {
+  const forwarded = req.headers.get('x-forwarded-for')
+  const realIp = req.headers.get('x-real-ip')
+  const cfConnectingIp = req.headers.get('cf-connecting-ip')
+  return cfConnectingIp || realIp || forwarded?.split(',')[0] || 'unknown'
+}
 
 interface RateLimitConfig {
   windowMs: number
@@ -193,4 +203,7 @@ export const rateLimiters = {
     maxRequests: 3
   }
 }
+
+
+
 

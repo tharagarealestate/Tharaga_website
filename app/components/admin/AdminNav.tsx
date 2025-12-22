@@ -26,7 +26,7 @@ export default function AdminNav() {
   const pathname = usePathname();
 
   return (
-    <nav className="bg-gray-900 border-b border-gray-800 mb-6">
+    <nav className="bg-slate-900/95 border-b-2 border-amber-300 mb-6">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex gap-1 overflow-x-auto">
           {navItems.map((item) => {
@@ -39,8 +39,8 @@ export default function AdminNav() {
                 href={item.href}
                 className={`flex items-center gap-2 px-4 py-3 text-sm font-semibold transition-colors whitespace-nowrap border-b-2 ${
                   isActive
-                    ? 'text-yellow-500 border-yellow-500'
-                    : 'text-gray-400 border-transparent hover:text-gray-300 hover:border-gray-700'
+                    ? 'text-amber-300 border-amber-300'
+                    : 'text-slate-400 border-transparent hover:text-slate-200 hover:border-slate-600'
                 }`}
               >
                 <Icon className="w-4 h-4" />
@@ -53,4 +53,7 @@ export default function AdminNav() {
     </nav>
   );
 }
+
+
+
 

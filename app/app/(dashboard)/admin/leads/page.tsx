@@ -71,50 +71,50 @@ export default function AdminLeadsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-gray-100 mb-2">Leads Management</h1>
-        <p className="text-gray-400">View and manage all property leads</p>
+        <h1 className="text-3xl font-bold text-white mb-2">Leads Management</h1>
+        <p className="text-slate-300">View and manage all property leads</p>
       </div>
 
       {msg && (
-        <div className="bg-gray-900 border border-gray-800 rounded-lg p-4 text-sm text-gray-300">
+        <div className="bg-slate-800/95 border-2 border-amber-300 rounded-lg p-4 text-sm text-slate-200">
           {msg}
         </div>
       )}
 
       {busy && (
-        <div className="text-sm text-gray-400">Loading…</div>
+        <div className="text-sm text-slate-400">Loading…</div>
       )}
 
-      <div className="bg-gray-900 border border-gray-800 rounded-lg overflow-hidden">
+      <div className="bg-slate-800/95 border-2 border-amber-300 rounded-lg overflow-hidden">
         <div className="overflow-x-auto">
           <table className="min-w-full text-sm">
-            <thead className="bg-gray-800/60">
+            <thead className="bg-slate-700/50">
               <tr>
-                <th className="px-3 py-3 text-left text-gray-300 font-bold">When</th>
-                <th className="px-3 py-3 text-left text-gray-300 font-bold">Name</th>
-                <th className="px-3 py-3 text-left text-gray-300 font-bold">Contact</th>
-                <th className="px-3 py-3 text-left text-gray-300 font-bold">Property</th>
-                <th className="px-3 py-3 text-left text-gray-300 font-bold">Message</th>
+                <th className="px-3 py-3 text-left text-slate-300 font-bold">When</th>
+                <th className="px-3 py-3 text-left text-slate-300 font-bold">Name</th>
+                <th className="px-3 py-3 text-left text-slate-300 font-bold">Contact</th>
+                <th className="px-3 py-3 text-left text-slate-300 font-bold">Property</th>
+                <th className="px-3 py-3 text-left text-slate-300 font-bold">Message</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-800">
+            <tbody className="divide-y divide-slate-700/50">
               {rows.map((r) => (
-                <tr key={r.id} className="hover:bg-gray-800/30">
-                  <td className="px-3 py-3 text-gray-300 whitespace-nowrap">
+                <tr key={r.id} className="hover:bg-slate-700/30">
+                  <td className="px-3 py-3 text-slate-200 whitespace-nowrap">
                     {new Date(r.created_at).toLocaleString()}
                   </td>
-                  <td className="px-3 py-3 text-gray-200">{r.name || '-'}</td>
-                  <td className="px-3 py-3 text-gray-300">
+                  <td className="px-3 py-3 text-white">{r.name || '-'}</td>
+                  <td className="px-3 py-3 text-slate-200">
                     <div>{r.email || '-'}</div>
-                    <div className="text-xs text-gray-400">{r.phone || '-'}</div>
+                    <div className="text-xs text-slate-400">{r.phone || '-'}</div>
                   </td>
-                  <td className="px-3 py-3 text-gray-300">{r.property_id}</td>
-                  <td className="px-3 py-3 text-gray-300">{r.message || '-'}</td>
+                  <td className="px-3 py-3 text-slate-200">{r.property_id}</td>
+                  <td className="px-3 py-3 text-slate-200">{r.message || '-'}</td>
                 </tr>
               ))}
               {!rows.length && !busy && (
                 <tr>
-                  <td className="px-3 py-8 text-center text-gray-400" colSpan={5}>
+                  <td className="px-3 py-8 text-center text-slate-400" colSpan={5}>
                     No leads yet.
                   </td>
                 </tr>
@@ -126,4 +126,7 @@ export default function AdminLeadsPage() {
     </div>
   );
 }
+
+
+
 

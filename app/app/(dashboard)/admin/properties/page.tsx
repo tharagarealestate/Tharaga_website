@@ -107,42 +107,42 @@ export default function AdminPropertiesPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-gray-100 mb-2">Property Verification</h1>
-        <p className="text-gray-400">Verify and approve property listings</p>
+        <h1 className="text-3xl font-bold text-white mb-2">Property Verification</h1>
+        <p className="text-slate-300">Verify and approve property listings</p>
       </div>
 
       {msg && (
-        <div className="bg-gray-900 border border-gray-800 rounded-lg p-4 text-sm text-gray-300">
+        <div className="bg-slate-800/95 border-2 border-amber-300 rounded-lg p-4 text-sm text-slate-200">
           {msg}
         </div>
       )}
 
       {busy && (
-        <div className="text-sm text-gray-400">Loading…</div>
+        <div className="text-sm text-slate-400">Loading…</div>
       )}
 
       <div className="space-y-2">
         {rows.map((r) => (
           <div
             key={r.id}
-            className="bg-gray-900 border border-gray-800 rounded-lg p-4 flex items-center justify-between hover:bg-gray-800/50 transition-colors"
+            className="bg-slate-800/95 border-2 border-amber-300 rounded-lg p-4 flex items-center justify-between hover:bg-slate-700/50 transition-colors"
           >
             <div>
-              <div className="font-semibold text-gray-100">{r.title}</div>
-              <div className="text-xs text-gray-400 mt-1">
+              <div className="font-semibold text-white">{r.title}</div>
+              <div className="text-xs text-slate-300 mt-1">
                 {[r.locality, r.city].filter(Boolean).join(', ')}
               </div>
             </div>
             <button
               onClick={() => verify(r.id)}
-              className="px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-gray-900 font-bold rounded-lg transition-colors"
+              className="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-slate-900 font-bold rounded-lg transition-colors border-2 border-amber-300"
             >
               Verify
             </button>
           </div>
         ))}
         {!rows.length && !busy && (
-          <div className="text-sm text-gray-400 text-center py-8">
+          <div className="text-sm text-slate-400 text-center py-8">
             No pending properties.
           </div>
         )}
@@ -150,4 +150,7 @@ export default function AdminPropertiesPage() {
     </div>
   );
 }
+
+
+
 

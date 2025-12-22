@@ -1,7 +1,24 @@
 // API security utilities and middleware wrappers
 
 import { NextRequest, NextResponse } from 'next/server'
-import { verifyAuthToken, getClientIp, getUserAgent } from './auth'
+import { verifyAuthToken } from './auth'
+
+/**
+ * Extract IP address from request
+ */
+function getClientIp(req: NextRequest): string {
+  const forwarded = req.headers.get('x-forwarded-for')
+  const realIp = req.headers.get('x-real-ip')
+  const cfConnectingIp = req.headers.get('cf-connecting-ip')
+  return cfConnectingIp || realIp || forwarded?.split(',')[0] || 'unknown'
+}
+
+/**
+ * Get user agent from request
+ */
+function getUserAgent(req: NextRequest): string {
+  return req.headers.get('user-agent') || 'unknown'
+}
 import { withRateLimitWrapper, rateLimiters } from './rate-limit-enhanced'
 import { validateInput } from './validation'
 import { logSecurityEvent, AuditActions, AuditResourceTypes } from './audit'
@@ -192,4 +209,7 @@ export function handleCORS(req: NextRequest): Response | null {
   }
   return null
 }
+
+
+
 

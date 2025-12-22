@@ -214,21 +214,21 @@ export default function AdminDashboardPage() {
     <div className="space-y-8">
       {/* Header */}
       <div className="mb-6">
-        <h1 className="text-3xl font-bold text-gray-100 mb-2">Admin Dashboard</h1>
-        <p className="text-gray-400">Comprehensive platform metrics and insights</p>
+        <h1 className="text-3xl font-bold text-white mb-2">Admin Dashboard</h1>
+        <p className="text-slate-300">Comprehensive platform metrics and insights</p>
       </div>
 
       {/* Controls */}
       <div className="flex items-center gap-3">
-        <Select value={range} onChange={(e) => setRange(e.target.value as DateRange)} className="w-[160px] bg-gray-900 text-gray-100 border-gray-800">
+        <Select value={range} onChange={(e) => setRange(e.target.value as DateRange)} className="w-[160px] bg-slate-800/95 text-white border-2 border-amber-300">
           <option value="7d">Last 7 days</option>
           <option value="30d">Last 30 days</option>
           <option value="90d">Last 90 days</option>
         </Select>
-        <Button onClick={exportCSV} className="bg-gold-600 hover:bg-gold-500 border-gold-500 text-gray-900">Export CSV</Button>
+        <Button onClick={exportCSV} className="bg-amber-500 hover:bg-amber-600 border-2 border-amber-300 text-slate-900">Export CSV</Button>
         <Button
           variant="secondary"
-          className="border-gray-800 bg-gray-900 text-gray-200 hover:bg-gray-800"
+          className="border-2 border-amber-300 bg-slate-800/95 text-slate-200 hover:bg-slate-700/50"
           onClick={async () => {
             const emails = window.prompt('Enter recipient emails (comma separated)') || ''
             if (!emails.trim()) return

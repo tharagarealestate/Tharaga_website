@@ -306,3 +306,6 @@ export async function getMarketAnalysis(area: string): Promise<MarketAnalysis | 
 }
 
 
+
+
+

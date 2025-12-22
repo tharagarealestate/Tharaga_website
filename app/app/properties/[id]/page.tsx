@@ -16,6 +16,7 @@ import RiskFlags from '@/components/property/RiskFlags'
 import DocumentUpload from '@/components/property/DocumentUpload'
 import ChennaiInsights from '@/components/property/ChennaiInsights'
 import AppreciationPrediction from '@/components/property/AppreciationPrediction'
+import ClientMarketAnalysis from '@/components/property/ClientMarketAnalysis'
 import { getSupabase } from '@/lib/supabase'
 
 export const revalidate = 300 // ISR: 5 minutes
@@ -363,6 +364,11 @@ export default async function PropertyPage({ params }: { params: { id: string } 
           <div className="mt-6">
             <AppreciationPrediction propertyId={p.id} />
           </div>
+          {(p.locality || p.city) && (
+            <div className="mt-6">
+              <ClientMarketAnalysis area={p.locality || p.city || ''} propertyId={p.id} />
+            </div>
+          )}
           <LocationInsights p={p} />
           <Financials price={p.priceINR} sqft={p.sqft} />
           <BuilderInfo p={p} builder={builder} />

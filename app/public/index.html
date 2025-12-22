@@ -2106,15 +2106,43 @@
 
           // Initialize role manager for new sign-ins and existing sessions
           if ((event === 'SIGNED_IN' || event === 'INITIAL_SESSION') && state.user && window.thgRoleManager) {
-            console.log('[thg-auth] Initializing role manager for user');
-            window.thgRoleManager.init(state.user, ui).then(() => {
-              // CRITICAL: Update Portal menu immediately after role manager initializes
+            console.log('[thg-auth] User signed in, syncing Portal menu');
+            
+            // CRITICAL: Immediately close Portal dropdown and set loading state
+            const portalMenu = document.getElementById('portal-menu');
+            if (portalMenu) {
+              portalMenu.removeAttribute('open'); // Force close
+              portalMenu.setAttribute('data-loading', 'true'); // Prevent opening
+              const portalMenuItems = document.getElementById('portal-menu-items');
+              if (portalMenuItems) {
+                portalMenuItems.innerHTML = '<div style="padding:12px;color:rgba(255,255,255,0.6);text-align:center;font-size:13px;">Loading...</div>';
+              }
+            }
+            
+            // Initialize role manager and fetch roles immediately
+            window.thgRoleManager.init(state.user, ui).then(async () => {
+              // CRITICAL: Fetch roles immediately after init to ensure they're ready
+              if (window.thgRoleManager && window.thgRoleManager.fetchRoles) {
+                try {
+                  await window.thgRoleManager.fetchRoles(true); // Force fetch
+                  console.log('[thg-auth] Roles fetched, updating Portal menu');
+                } catch (err) {
+                  console.error('[thg-auth] Error fetching roles:', err);
+                }
+              }
+              
+              // CRITICAL: Update Portal menu immediately after roles are fetched
               if (window.__updatePortalMenu) {
                 window.__updatePortalMenu();
               }
             }).catch(err => console.error('[thg-auth] Role manager init error:', err));
           } else if (event === 'SIGNED_OUT') {
-            // User logged out, clear Portal menu
+            // User logged out, clear Portal menu and close dropdown
+            const portalMenu = document.getElementById('portal-menu');
+            if (portalMenu) {
+              portalMenu.removeAttribute('open');
+              portalMenu.setAttribute('data-loading', 'true');
+            }
             if (window.__updatePortalMenu) {
               window.__updatePortalMenu();
             }
@@ -3213,6 +3241,11 @@
                 e.preventDefault();
                 e.stopPropagation();
                 portalMenu.removeAttribute('open');
+                // Show loading message
+                const portalMenuItems = document.getElementById('portal-menu-items');
+                if (portalMenuItems) {
+                  portalMenuItems.innerHTML = '<div style="padding:12px;color:rgba(255,255,255,0.6);text-align:center;font-size:13px;">Loading...</div>';
+                }
                 return false;
               }
             });
@@ -3229,6 +3262,21 @@
             });
           });
           observer.observe(portalMenu, { attributes: true, attributeFilter: ['open'] });
+          
+          // CRITICAL: Listen for auth state changes to close dropdown immediately on login
+          if (window.supabase && window.supabase.auth) {
+            window.supabase.auth.onAuthStateChange((event, session) => {
+              if (event === 'SIGNED_IN' && session?.user) {
+                // Immediately close dropdown and set loading on login
+                portalMenu.removeAttribute('open');
+                portalMenu.setAttribute('data-loading', 'true');
+                const portalMenuItems = document.getElementById('portal-menu-items');
+                if (portalMenuItems) {
+                  portalMenuItems.innerHTML = '<div style="padding:12px;color:rgba(255,255,255,0.6);text-align:center;font-size:13px;">Loading...</div>';
+                }
+              }
+            });
+          }
         }
       })();
 

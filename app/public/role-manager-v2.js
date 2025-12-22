@@ -112,6 +112,12 @@
       // Dispatch event to notify portal menu and other listeners
       emitRoleChangeEvent();
 
+      // CRITICAL: Update Portal menu immediately after roles are fetched
+      // This ensures Portal dropdown shows correct content immediately after login
+      if (window.__updatePortalMenu) {
+        window.__updatePortalMenu();
+      }
+
       return roleState;
     } catch (error) {
       console.error('[role-v2] Error fetching roles:', error);

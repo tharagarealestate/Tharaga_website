@@ -434,7 +434,7 @@ function SavedPropertiesSection({ saved, userId }: { saved: SavedItem[]; userId?
     >
       <SectionHeader
         title="Your curated shortlist"
-        subtitle="Easily compare features, track price changes, and take the next step."
+        subtitle="Easily compare features, track price changes, and take the next step. Click any property to see detailed market analysis."
         icon={<Bookmark className="h-5 w-5 text-rose-200" />}
         action={{
           label: 'Manage saved homes',

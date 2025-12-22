@@ -292,11 +292,12 @@ export async function generatePersonalizedRecommendations(
 /**
  * Get market analysis for an area
  */
-export async function getMarketAnalysis(area: string): Promise<MarketAnalysis | null> {
+export async function getMarketAnalysis(area: string): Promise<MarketAnalysis & { success?: boolean } | null> {
   try {
     const response = await fetch(`/api/ai/market-analysis?area=${encodeURIComponent(area)}`);
     if (response.ok) {
-      return await response.json();
+      const data = await response.json();
+      return data;
     }
   } catch (error) {
     console.error('Market analysis error:', error);

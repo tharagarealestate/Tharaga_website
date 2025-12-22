@@ -2,7 +2,17 @@
 
 import React, { useEffect, useState } from 'react'
 import { TrendingUp, TrendingDown, Minus, MapPin, Lightbulb, Building2, AlertCircle, Loader2 } from 'lucide-react'
-import { getMarketAnalysis, type MarketAnalysis as MarketAnalysisType } from '@/lib/ai/enhanced-search'
+import { getMarketAnalysis } from '@/lib/ai/enhanced-search'
+
+interface MarketAnalysisData {
+  area: string
+  averagePricePerSqft?: number
+  priceGrowthRate?: number
+  demandLevel?: 'high' | 'medium' | 'low'
+  futurePotential?: number
+  nearbyDevelopments?: string[]
+  investmentAdvice?: string
+}
 
 interface MarketAnalysisProps {
   area: string
@@ -11,7 +21,7 @@ interface MarketAnalysisProps {
 }
 
 export function MarketAnalysis({ area, propertyId, className = '' }: MarketAnalysisProps) {
-  const [data, setData] = useState<MarketAnalysisType | null>(null)
+  const [data, setData] = useState<MarketAnalysisData | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -26,8 +36,18 @@ export function MarketAnalysis({ area, propertyId, className = '' }: MarketAnaly
         setLoading(true)
         setError(null)
         const result = await getMarketAnalysis(area)
-        if (result) {
-          setData(result)
+        if (result && result.success !== false) {
+          // Handle API response which may include success field
+          const analysisData: MarketAnalysisData = {
+            area: result.area || area,
+            averagePricePerSqft: result.averagePricePerSqft,
+            priceGrowthRate: result.priceGrowthRate,
+            demandLevel: result.demandLevel,
+            futurePotential: result.futurePotential,
+            nearbyDevelopments: result.nearbyDevelopments,
+            investmentAdvice: result.investmentAdvice
+          }
+          setData(analysisData)
         } else {
           setError('Market data not available')
         }

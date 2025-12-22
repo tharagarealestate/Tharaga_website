@@ -112,12 +112,6 @@
       // Dispatch event to notify portal menu and other listeners
       emitRoleChangeEvent();
 
-      // CRITICAL: Also directly call updatePortalMenu if available
-      // This ensures Portal dropdown updates immediately when roles are fetched
-      if (window.__updatePortalMenu) {
-        window.__updatePortalMenu();
-      }
-
       return roleState;
     } catch (error) {
       console.error('[role-v2] Error fetching roles:', error);
@@ -1135,12 +1129,6 @@
       // Build menu
       if (ui && ui.menu) {
         buildEnhancedMenu(ui);
-      }
-
-      // CRITICAL: Update Portal menu immediately after roles are fetched
-      // This ensures Portal dropdown shows correct content immediately
-      if (window.__updatePortalMenu) {
-        window.__updatePortalMenu();
       }
 
       // Check if needs onboarding (ONCE)

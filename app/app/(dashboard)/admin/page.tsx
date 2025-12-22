@@ -212,6 +212,12 @@ export default function AdminDashboardPage() {
 
   return (
     <div className="space-y-8">
+      {/* Header */}
+      <div className="mb-6">
+        <h1 className="text-3xl font-bold text-gray-100 mb-2">Admin Dashboard</h1>
+        <p className="text-gray-400">Comprehensive platform metrics and insights</p>
+      </div>
+
       {/* Controls */}
       <div className="flex items-center gap-3">
         <Select value={range} onChange={(e) => setRange(e.target.value as DateRange)} className="w-[160px] bg-gray-900 text-gray-100 border-gray-800">

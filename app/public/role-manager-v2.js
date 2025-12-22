@@ -1131,6 +1131,12 @@
         buildEnhancedMenu(ui);
       }
 
+      // CRITICAL: Update Portal menu immediately after roles are fetched
+      // This ensures Portal dropdown shows correct content immediately
+      if (window.__updatePortalMenu) {
+        window.__updatePortalMenu();
+      }
+
       // Check if needs onboarding (ONCE)
       if (await needsOnboarding()) {
         console.log('[role-v2] User needs onboarding');

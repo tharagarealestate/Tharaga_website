@@ -59,6 +59,40 @@ export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl
   const response = NextResponse.next()
 
+  // ============================================
+  // SECURITY HEADERS (Applied to all responses)
+  // ============================================
+  response.headers.set('X-Frame-Options', 'DENY')
+  response.headers.set('X-Content-Type-Options', 'nosniff')
+  response.headers.set('X-XSS-Protection', '1; mode=block')
+  response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin')
+  response.headers.set('Permissions-Policy', 'geolocation=(), microphone=(), camera=()')
+  
+  // Content Security Policy
+  response.headers.set(
+    'Content-Security-Policy',
+    [
+      "default-src 'self'",
+      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://checkout.razorpay.com https://cdn.jsdelivr.net https://www.gstatic.com https://www.google.com https://www.googletagmanager.com",
+      "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+      "img-src 'self' data: https:",
+      "font-src 'self' data: https://fonts.gstatic.com",
+      "connect-src 'self' https://*.supabase.co https://api.razorpay.com https://www.googleapis.com",
+      "frame-src https://api.razorpay.com https://checkout.razorpay.com https://www.google.com",
+      "base-uri 'self'",
+      "form-action 'self'",
+      "upgrade-insecure-requests"
+    ].join('; ')
+  )
+
+  // HSTS (HTTP Strict Transport Security)
+  if (req.nextUrl.protocol === 'https:') {
+    response.headers.set(
+      'Strict-Transport-Security',
+      'max-age=31536000; includeSubDomains; preload'
+    )
+  }
+
   // 0) Homepage uses Next.js App Router (app/app/page.tsx)
   // Renders React components: Header, HeroSection, DashboardCTASection, FeaturesSection, Footer
   // Header includes Supabase auth integration via layout.tsx auth script

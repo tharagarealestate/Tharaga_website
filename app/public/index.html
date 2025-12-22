@@ -2299,9 +2299,7 @@
           <details class="dropdown" id="portal-menu">
             <summary>Portal</summary>
             <div class="menu" role="menu" aria-label="Portal menu" id="portal-menu-items">
-              <!-- Dynamically populated by role manager -->
-              <a href="/builder">Builder Dashboard</a>
-              <a href="/my-dashboard">Buyer Dashboard</a>
+              <!-- Dynamically populated by role manager - content cleared on load -->
             </div>
           </details>
           <span class="divider" aria-hidden="true"></span>
@@ -3058,31 +3056,57 @@
       // Initialize Lucide icons once DOM and script are ready
       try { window.lucide && window.lucide.createIcons(); } catch(_){ }
 
+      // CRITICAL: Clear Portal menu content immediately to prevent showing old HTML
+      (function() {
+        const portalMenuItems = document.getElementById('portal-menu-items');
+        if (portalMenuItems) {
+          portalMenuItems.innerHTML = ''; // Clear immediately - prevents showing old HTML
+        }
+      })();
+
       // Update Portal menu based on user roles
       function updatePortalMenu() {
         const portalMenuItems = document.getElementById('portal-menu-items');
-        if (!portalMenuItems || !window.thgRoleManager) return;
+        const portalMenu = document.getElementById('portal-menu');
+        if (!portalMenuItems || !portalMenu) return;
+
+        // CRITICAL: Clear content immediately to prevent showing old HTML
+        portalMenuItems.innerHTML = '';
+
+        // If role manager not ready yet, show loading state and prevent opening
+        if (!window.thgRoleManager) {
+          portalMenuItems.innerHTML = '<div style="padding:12px;color:rgba(255,255,255,0.6);text-align:center;font-size:13px;">Loading...</div>';
+          // Prevent dropdown from opening until ready
+          portalMenu.setAttribute('data-loading', 'true');
+          return;
+        }
 
         const state = window.thgRoleManager.getState();
 
         // Wait for both initialization AND user data to be ready
-        if (!state.initialized || !state.user || state.roles.length === 0) {
+        if (!state.initialized || !state.user) {
+          // Still loading, show loading state and prevent opening
+          portalMenuItems.innerHTML = '<div style="padding:12px;color:rgba(255,255,255,0.6);text-align:center;font-size:13px;">Loading...</div>';
+          portalMenu.setAttribute('data-loading', 'true');
+          portalMenu.removeAttribute('open'); // Ensure it's closed
+          return;
+        }
+
+        // Remove loading flag - content is ready
+        portalMenu.removeAttribute('data-loading');
+
+        // If no roles, show default or hide
+        if (state.roles.length === 0 && state.user.email !== 'tharagarealestate@gmail.com') {
           // No roles yet, hide portal menu
-          const portalMenu = document.getElementById('portal-menu');
-          if (portalMenu) {
-            portalMenu.style.display = 'none';
-            portalMenu.removeAttribute('open'); // Ensure it's closed
-          }
+          portalMenu.style.display = 'none';
+          portalMenu.removeAttribute('open');
           return;
         }
 
         // Show portal menu
-        const portalMenu = document.getElementById('portal-menu');
-        if (portalMenu) {
-          portalMenu.style.display = '';
-          // CRITICAL: Ensure dropdown is closed on initial load
-          portalMenu.removeAttribute('open');
-        }
+        portalMenu.style.display = '';
+        // CRITICAL: Ensure dropdown is closed on initial load
+        portalMenu.removeAttribute('open');
 
         let menuHTML = '';
 
@@ -3120,19 +3144,51 @@
           menuHTML += `<a href="/admin" style="border-top:1px solid rgba(255,255,255,0.1);margin-top:8px;padding-top:8px;">⚙️ Admin Panel${active}</a>`;
         }
 
-        portalMenuItems.innerHTML = menuHTML || '<a href="/my-dashboard">Buyer Dashboard</a><a href="/builder">Builder Dashboard</a>';
+        // Set the final HTML - this ensures correct content is shown immediately
+        portalMenuItems.innerHTML = menuHTML || '<a href="/my-dashboard">🏠 Buyer Dashboard</a><a href="/builder">🏗️ Builder Dashboard</a>';
       }
+
+      // CRITICAL: Prevent Portal dropdown from opening until content is ready
+      (function() {
+        const portalMenu = document.getElementById('portal-menu');
+        if (portalMenu) {
+          // Intercept click/toggle events to prevent opening when loading
+          const summary = portalMenu.querySelector('summary');
+          if (summary) {
+            summary.addEventListener('click', function(e) {
+              if (portalMenu.hasAttribute('data-loading')) {
+                e.preventDefault();
+                e.stopPropagation();
+                portalMenu.removeAttribute('open');
+                return false;
+              }
+            });
+          }
+          
+          // Also prevent toggle via attribute change
+          const observer = new MutationObserver(function(mutations) {
+            mutations.forEach(function(mutation) {
+              if (mutation.type === 'attributes' && mutation.attributeName === 'open') {
+                if (portalMenu.hasAttribute('data-loading') && portalMenu.hasAttribute('open')) {
+                  portalMenu.removeAttribute('open');
+                }
+              }
+            });
+          });
+          observer.observe(portalMenu, { attributes: true, attributeFilter: ['open'] });
+        }
+      })();
 
       // Update portal menu when roles change
       if (window.thgRoleManager) {
-        // Initial update after roles are fetched - wait for BOTH initialized AND user
+        // Also check periodically for role updates (faster check - 100ms instead of 500ms)
         const checkRoles = setInterval(() => {
           const state = window.thgRoleManager.getState();
           if (state.initialized && state.user) {
             clearInterval(checkRoles);
-            updatePortalMenu();
+            updatePortalMenu(); // Update when roles are ready
           }
-        }, 500);
+        }, 100); // Faster check interval
 
         // Listen for role change events from role manager
         window.addEventListener('thg-role-changed', updatePortalMenu);
@@ -3147,16 +3203,19 @@
         // Expose update function globally
         window.__updatePortalMenu = updatePortalMenu;
       } else {
-        // If role manager not loaded yet, retry
-        setTimeout(() => {
+        // If role manager not loaded yet, retry more aggressively
+        const retryCheck = setInterval(() => {
           if (window.thgRoleManager) {
+            clearInterval(retryCheck);
+            updatePortalMenu(); // Call immediately when role manager becomes available
+            
             const checkRoles = setInterval(() => {
               const state = window.thgRoleManager.getState();
               if (state.initialized && state.user) {
                 clearInterval(checkRoles);
                 updatePortalMenu();
               }
-            }, 500);
+            }, 100); // Faster check interval
             window.addEventListener('thg-role-changed', updatePortalMenu);
             window.addEventListener('storage', (e) => {
               if (e.key === 'tharaga_active_role') {
@@ -3165,7 +3224,7 @@
             });
             window.__updatePortalMenu = updatePortalMenu;
           }
-        }, 1000);
+        }, 100); // Check every 100ms for role manager
       }
     });
   </script>

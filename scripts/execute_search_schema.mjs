@@ -99,3 +99,4 @@ function showManualInstructions() {
   console.log('4. Verify tables were created in Table Editor\n');
 }
 
+

@@ -148,3 +148,4 @@ export function generateSearchSuggestions(partialQuery: string): string[] {
   return patterns.slice(0, 5);
 }
 
+

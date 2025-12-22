@@ -3295,16 +3295,19 @@
           });
           observer.observe(portalMenu, { attributes: true, attributeFilter: ['open'] });
           
-          // CRITICAL: Listen for auth state changes to close dropdown immediately on login
+          // CRITICAL: Listen for auth state changes to set loading state on login
           if (window.supabase && window.supabase.auth) {
             window.supabase.auth.onAuthStateChange((event, session) => {
               if (event === 'SIGNED_IN' && session?.user) {
-                // Immediately close dropdown and set loading on login
-                portalMenu.removeAttribute('open');
+                // Set loading state to prevent opening with wrong content
                 portalMenu.setAttribute('data-loading', 'true');
                 const portalMenuItems = document.getElementById('portal-menu-items');
                 if (portalMenuItems) {
                   portalMenuItems.innerHTML = '<div style="padding:12px;color:rgba(255,255,255,0.6);text-align:center;font-size:13px;">Loading...</div>';
+                }
+                // Only close if user hasn't manually opened it
+                if (!portalMenu.hasAttribute('data-user-opened')) {
+                  portalMenu.removeAttribute('open');
                 }
               }
             });

@@ -36,22 +36,39 @@
         });
       }
       
+      // CRITICAL: Clear Portal menu content immediately to prevent showing old HTML
+      function clearPortalMenuContent() {
+        var portalMenuItems = document.getElementById('portal-menu-items');
+        if (portalMenuItems) {
+          portalMenuItems.innerHTML = ''; // Clear immediately - prevents FOUC
+        }
+      }
+      
       // Run immediately if DOM already exists
       if (document.body) {
         closeAllDropdowns();
+        clearPortalMenuContent();
       }
       
       // Also run when DOM is ready
       if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', closeAllDropdowns, { once: true });
+        document.addEventListener('DOMContentLoaded', function() {
+          closeAllDropdowns();
+          clearPortalMenuContent();
+        }, { once: true });
       } else {
         // DOM already ready, run immediately
-        setTimeout(closeAllDropdowns, 0);
+        setTimeout(function() {
+          closeAllDropdowns();
+          clearPortalMenuContent();
+        }, 0);
       }
       
       // Run again after a tiny delay to catch any late-rendering elements
       setTimeout(closeAllDropdowns, 10);
+      setTimeout(clearPortalMenuContent, 10);
       setTimeout(closeAllDropdowns, 50);
+      setTimeout(clearPortalMenuContent, 50);
     })();
   </script>
   <!-- Preload Supabase for auth -->

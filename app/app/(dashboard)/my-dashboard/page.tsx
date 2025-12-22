@@ -424,7 +424,7 @@ function RecommendationsSection({ recs, error, userId }: { recs: RecommendationI
 // SAVED PROPERTIES
 // ============================================================
 
-function SavedPropertiesSection({ saved }: { saved: SavedItem[] }) {
+function SavedPropertiesSection({ saved, userId }: { saved: SavedItem[]; userId?: string }) {
   return (
     <motion.section
       initial={{ opacity: 0, y: 24 }}

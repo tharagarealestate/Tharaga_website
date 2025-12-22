@@ -3148,25 +3148,27 @@
           // Still loading, show loading state and prevent opening
           portalMenuItems.innerHTML = '<div style="padding:12px;color:rgba(255,255,255,0.6);text-align:center;font-size:13px;">Loading...</div>';
           portalMenu.setAttribute('data-loading', 'true');
-          portalMenu.removeAttribute('open'); // Ensure it's closed
+          // CRITICAL: Only close if it's not already open (don't force close if user opened it)
+          if (!portalMenu.hasAttribute('open')) {
+            portalMenu.removeAttribute('open');
+          }
           return;
         }
-
-        // Remove loading flag - content is ready
-        portalMenu.removeAttribute('data-loading');
 
         // If no roles, show default or hide
         if (state.roles.length === 0 && state.user.email !== 'tharagarealestate@gmail.com') {
           // No roles yet, hide portal menu
           portalMenu.style.display = 'none';
+          portalMenu.setAttribute('data-loading', 'true');
           portalMenu.removeAttribute('open');
           return;
         }
 
         // Show portal menu
         portalMenu.style.display = '';
-        // CRITICAL: Ensure dropdown is closed on initial load
-        portalMenu.removeAttribute('open');
+        
+        // CRITICAL: Build menu content FIRST before removing loading flag
+        // This ensures content is ready when dropdown opens
 
         let menuHTML = '';
 
@@ -3206,6 +3208,20 @@
 
         // Set the final HTML - this ensures correct content is shown immediately
         portalMenuItems.innerHTML = menuHTML || '<a href="/my-dashboard">🏠 Buyer Dashboard</a><a href="/builder">🏗️ Builder Dashboard</a>';
+        
+        // CRITICAL: Only remove loading flag AFTER content is fully populated
+        // This prevents dropdown from opening with incorrect content
+        portalMenu.removeAttribute('data-loading');
+        
+        // CRITICAL: Don't automatically close dropdown - let user control it
+        // Only ensure it's closed on initial page load (not after login)
+        if (!portalMenu.hasAttribute('data-user-opened')) {
+          // Only close if this is initial load, not if user manually opened it
+          const wasJustOpened = portalMenu.hasAttribute('open');
+          if (!wasJustOpened) {
+            portalMenu.removeAttribute('open');
+          }
+        }
       }
 
       // CRITICAL: Try to fetch roles immediately if user is already logged in
@@ -3247,9 +3263,25 @@
                   portalMenuItems.innerHTML = '<div style="padding:12px;color:rgba(255,255,255,0.6);text-align:center;font-size:13px;">Loading...</div>';
                 }
                 return false;
+              } else {
+                // Mark that user manually opened the dropdown
+                portalMenu.setAttribute('data-user-opened', 'true');
               }
             });
           }
+          
+          // Track when dropdown closes to reset user-opened flag
+          const detailsObserver = new MutationObserver(function(mutations) {
+            mutations.forEach(function(mutation) {
+              if (mutation.type === 'attributes' && mutation.attributeName === 'open') {
+                if (!portalMenu.hasAttribute('open')) {
+                  // Dropdown closed, reset flag
+                  portalMenu.removeAttribute('data-user-opened');
+                }
+              }
+            });
+          });
+          detailsObserver.observe(portalMenu, { attributes: true, attributeFilter: ['open'] });
           
           // Also prevent toggle via attribute change
           const observer = new MutationObserver(function(mutations) {

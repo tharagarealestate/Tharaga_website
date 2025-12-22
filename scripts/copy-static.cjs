@@ -70,7 +70,7 @@ async function main() {
     'property-listing', // Static HTML version with full Supabase functionality and dark theme
     'snippets',
     'pricing',
-    'admin', // Admin panel with updated glassy blue header
+    // 'admin' removed - now handled by Next.js route at app/app/(dashboard)/admin/
   ]);
 
   await ensureDir(nextPublic);

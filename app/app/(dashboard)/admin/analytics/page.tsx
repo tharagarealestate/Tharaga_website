@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { createClient } from '@/lib/supabase/client';
+import { getSupabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
 import { MetricsGrid } from '@/components/analytics/MetricsGrid';
 import { RevenueChart } from '@/components/analytics/RevenueChart';
@@ -38,7 +38,7 @@ export default function PlatformAnalytics() {
 
   const fetchData = async () => {
     try {
-      const supabase = createClient();
+      const supabase = getSupabase();
       
       // Check auth
       const { data: { user } } = await supabase.auth.getUser();
@@ -111,7 +111,7 @@ export default function PlatformAnalytics() {
     fetchData();
 
     // Set up real-time subscriptions
-    const supabase = createClient();
+    const supabase = getSupabase();
     
     // Subscribe to platform_metrics changes
     const metricsChannel = supabase

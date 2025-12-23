@@ -1,8 +1,9 @@
 "use client"
 import type { ReactNode } from 'react'
+import { motion } from 'framer-motion'
 import { ReactQueryProvider } from '@/components/providers/ReactQueryProvider'
 import { DemoDataProvider } from './_components/DemoDataProvider'
-import { BuilderSidebar } from './_components/BuilderSidebar'
+import { AdvancedAISidebar } from './_components/AdvancedAISidebar'
 import { TrialUpgradeBanner } from './_components/TrialUpgradeBanner'
 import { AIAssistant } from './_components/AIAssistant'
 import { KeyboardShortcutsHelp } from './_components/KeyboardShortcutsHelp'
@@ -12,35 +13,29 @@ export default function BuilderDashboardLayout({ children }: { children: ReactNo
   return (
     <ReactQueryProvider>
       <DemoDataProvider>
-        <div className="min-h-screen relative overflow-hidden bg-gradient-to-br from-primary-950 via-primary-900 to-primary-800">
-        {/* Animated Background Elements - EXACT from pricing page */}
-        <div className="absolute inset-0 opacity-30 pointer-events-none">
-          <div className="absolute top-20 left-10 w-96 h-96 bg-gold-500 rounded-full blur-3xl animate-pulse-slow" />
-          <div
-            className="absolute bottom-20 right-10 w-[600px] h-[600px] bg-emerald-500 rounded-full blur-3xl animate-pulse-slow"
-            style={{ animationDelay: '1s' }}
-          />
-        </div>
+        <div className="min-h-screen bg-slate-950 text-white overflow-x-hidden">
 
         {/* Trial upgrade banner */}
         <TrialUpgradeBanner />
 
-        {/* Sidebar - Fixed positioning, taken out of document flow */}
-        <BuilderSidebar />
+        {/* Advanced AI Sidebar - Fixed positioning with smooth transitions */}
+        <AdvancedAISidebar />
 
-        {/* Main Content Area - Positioned next to static sidebar */}
-        <main 
-          className="relative z-10" 
+        {/* Main Content Area - Positioned next to sidebar with smooth transitions */}
+        <motion.main 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, ease: 'easeOut' }}
+          className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 pt-0 pb-6 sm:pb-8" 
           style={{ 
-            marginLeft: '220px',
-            width: 'calc(100% - 220px)',
-            paddingTop: '60px',
-            marginTop: 0,
-            padding: '60px 0 0 0'
+            marginLeft: '260px',
+            width: 'calc(100% - 260px)',
+            paddingLeft: 'max(16px, env(safe-area-inset-left))', 
+            paddingRight: 'max(16px, env(safe-area-inset-right))' 
           }}
         >
           {children}
-        </main>
+        </motion.main>
         
         {/* AI Assistant */}
         <AIAssistant />

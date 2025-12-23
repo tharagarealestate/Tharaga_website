@@ -2,24 +2,16 @@
 
 import { useMemo, useEffect, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
+import { motion } from 'framer-motion'
 import { 
-  Users, Building2, MessageSquare, Settings, 
-  TrendingUp, DollarSign, BarChart3, Zap,
-  ArrowUpRight, ArrowDownRight, Phone, Mail,
-  Search, Filter, Plus, MoreVertical,
-  Clock, MapPin, Star, Eye, MessageCircle,
-  Sparkles, CheckCircle2, Calendar, FileText, Handshake, Activity
+  Users, Building2, Settings, 
+  TrendingUp, DollarSign, BarChart3,
+  ArrowUpRight, ArrowDownRight,
+  MapPin, Eye, MessageCircle
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { LoadingSpinner, GlassLoadingOverlay } from '@/components/ui/loading-spinner'
 import { getSupabase } from '@/lib/supabase'
 import { useDemoMode, DEMO_DATA } from './DemoDataProvider'
-import {
-  builderGlassPrimary,
-  builderGlassSecondary,
-  builderGlassInteractive,
-  builderGlassBadge,
-} from './builderGlassStyles'
 
 interface Lead {
   id: string
@@ -344,344 +336,185 @@ export function UnifiedDashboard({ onNavigate }: UnifiedDashboardProps) {
   }, [mergedLeads, mergedProperties, stats, previousStats])
 
   return (
-    <div className="relative w-full">
-      {/* Main Content - Background is handled by layout */}
-      <div className="relative z-10 px-6 pt-0 pb-8 space-y-6">
-        {/* Welcome Section */}
-        <div className={cn(builderGlassPrimary, "p-8")}>
-          {/* Shimmer Effect on Hover - EXACT from pricing page */}
-          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-in-out pointer-events-none" />
-          <div className="relative flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold text-white mb-2">
-                Welcome back! 👋
-              </h1>
-              <p className="text-xl text-gray-300 leading-relaxed">Here's your portfolio at a glance</p>
-            </div>
-            <div className="flex items-center gap-3">
-              <button className={cn(builderGlassInteractive, "px-6 py-3 text-white font-semibold")}>
-                <Plus className="w-4 h-4 inline mr-2" />
-                Quick Action
-              </button>
+    <div className="space-y-6">
+      {/* Header - Admin Design System */}
+      <div className="mb-4">
+        <h1 className="text-3xl font-bold text-white mb-2">Welcome back! 👋</h1>
+        <p className="text-slate-300">Here's what's happening with your properties today</p>
+      </div>
+
+      {/* Stats Grid - Admin Design System with Advanced Animations */}
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4 }}
+        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4"
+      >
+        {[
+          { icon: Users, label: "Total Leads", value: metrics.totalLeads, subtitle: `${metrics.hotLeads} hot • ${metrics.warmLeads} warm`, trend: { value: parseFloat(metrics.leadTrend), positive: parseFloat(metrics.leadTrend) >= 0 }, loading: statsLoading },
+          { icon: Building2, label: "Properties", value: metrics.totalProperties, subtitle: `${metrics.activeProperties} active`, loading: propertiesLoading },
+          { icon: TrendingUp, label: "Conversion Rate", value: `${metrics.conversionRate}%`, trend: { value: parseFloat(metrics.conversionTrend), positive: parseFloat(metrics.conversionTrend) >= 0 }, loading: statsLoading },
+          { icon: DollarSign, label: "This Month", value: revenueData?.monthlyRevenue ? revenueData.monthlyRevenue >= 10000000 ? `₹${(revenueData.monthlyRevenue / 10000000).toFixed(2)} Cr` : revenueData.monthlyRevenue >= 100000 ? `₹${(revenueData.monthlyRevenue / 100000).toFixed(2)} L` : `₹${(revenueData.monthlyRevenue / 1000).toFixed(1)}K` : '₹0', subtitle: "Revenue", loading: revenueLoading },
+        ].map((stat, index) => (
+          <motion.div
+            key={stat.label}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: index * 0.1, duration: 0.4 }}
+          >
+            <StatCard {...stat} />
+          </motion.div>
+        ))}
+      </motion.div>
+
+      {/* Main Content - Two Column Layout */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Recent Leads Card - Admin Design System */}
+        <div className="bg-slate-800/95 border-2 border-amber-300 rounded-lg overflow-hidden">
+          <div className="p-6 border-b-2 border-amber-300">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-lg bg-slate-700/50 flex items-center justify-center">
+                  <Users className="w-5 h-5 text-amber-300" />
+                </div>
+                <div>
+                  <h2 className="text-xl font-bold text-white">Recent Leads</h2>
+                  <p className="text-sm text-slate-300">{metrics.hotLeads} hot • {metrics.warmLeads} warm</p>
+                </div>
+              </div>
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => onNavigate?.('leads')}
+                className="px-4 py-2 bg-amber-500 hover:bg-amber-600 border-2 border-amber-300 text-slate-900 font-semibold rounded-lg transition-all text-sm shadow-lg shadow-amber-500/20 hover:shadow-amber-500/40"
+              >
+                View All
+              </motion.button>
             </div>
           </div>
-        </div>
 
-        {/* Stats Cards Row */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <StatCard
-            icon={Users}
-            label="Total Leads"
-            value={metrics.totalLeads}
-            trend={{ 
-              value: parseFloat(metrics.leadTrend), 
-              positive: parseFloat(metrics.leadTrend) >= 0 
-            }}
-            loading={statsLoading}
-          />
-          <StatCard
-            icon={Building2}
-            label="Properties"
-            value={metrics.totalProperties}
-            subtitle={`${metrics.activeProperties} active`}
-            loading={propertiesLoading}
-          />
-          <StatCard
-            icon={TrendingUp}
-            label="Conversion Rate"
-            value={`${metrics.conversionRate}%`}
-            trend={{ 
-              value: parseFloat(metrics.conversionTrend), 
-              positive: parseFloat(metrics.conversionTrend) >= 0 
-            }}
-            loading={statsLoading}
-          />
-          <StatCard
-            icon={DollarSign}
-            label="This Month"
-            value={revenueData?.monthlyRevenue 
-              ? revenueData.monthlyRevenue >= 10000000 
-                ? `₹${(revenueData.monthlyRevenue / 10000000).toFixed(2)} Cr`
-                : revenueData.monthlyRevenue >= 100000
-                ? `₹${(revenueData.monthlyRevenue / 100000).toFixed(2)} L`
-                : `₹${(revenueData.monthlyRevenue / 1000).toFixed(1)}K`
-              : '₹0'}
-            subtitle="Revenue"
-            loading={revenueLoading}
-          />
-        </div>
-
-        {/* Main Sections Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* LEADS SECTION */}
-          <section className={cn(builderGlassPrimary, "p-6")}>
-            {/* Shimmer Effect on Hover - EXACT from pricing page */}
-            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-in-out pointer-events-none" />
-            <div className="relative">
-              <div className="flex items-center justify-between mb-6">
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-gold-600 to-gold-500 flex items-center justify-center">
-                    <Users className="w-6 h-6 text-primary-950" />
-                  </div>
-                  <div>
-                    <h2 className="text-xl font-bold text-white">Leads Management</h2>
-                    <p className="text-sm text-gray-300">{metrics.hotLeads} hot • {metrics.warmLeads} warm</p>
-                  </div>
-                </div>
-              <button 
-                onClick={() => onNavigate?.('leads')}
-                className={cn(builderGlassBadge, "text-gold-400 hover:text-gold-300 cursor-pointer flex items-center gap-1")}
-              >
-                View All <ArrowUpRight className="w-3 h-3" />
-              </button>
-            </div>
-
+          <div className="p-6">
             {leadsLoading ? (
-              <div className="relative min-h-[200px]">
-                <GlassLoadingOverlay />
+              <div className="flex items-center justify-center h-64">
+                <div className="text-center">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-amber-300 mx-auto mb-4"></div>
+                  <p className="text-slate-400">Loading leads...</p>
+                </div>
               </div>
             ) : mergedLeads.length === 0 ? (
               <div className="text-center py-12">
-                <Users className="w-12 h-12 mx-auto mb-3 opacity-50 text-white" />
-                <p className="text-white">No leads yet</p>
+                <Users className="w-12 h-12 mx-auto mb-3 text-slate-400" />
+                <p className="text-white mb-2">No leads yet</p>
+                <p className="text-sm text-slate-400">Share your property listings to start receiving inquiries</p>
               </div>
             ) : (
               <div className="space-y-3">
-                {mergedLeads.slice(0, 5).map((lead: any) => (
+                {mergedLeads.slice(0, 6).map((lead: any) => (
                   <LeadCard key={lead.id} lead={lead} onNavigate={onNavigate} />
                 ))}
               </div>
             )}
-            </div>
-          </section>
+          </div>
+        </div>
 
-          {/* PROPERTIES SECTION */}
-          <section className={cn(builderGlassPrimary, "p-6")}>
-            {/* Shimmer Effect on Hover - EXACT from pricing page */}
-            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-in-out pointer-events-none" />
-            <div className="relative">
-              <div className="flex items-center justify-between mb-6">
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-600 to-emerald-500 flex items-center justify-center">
-                    <Building2 className="w-6 h-6 text-white" />
-                  </div>
-                  <div>
-                    <h2 className="text-xl font-bold text-white">My Properties</h2>
-                    <p className="text-sm text-gray-300">{metrics.activeProperties} active listings</p>
-                  </div>
+        {/* Recent Properties Card - Admin Design System */}
+        <div className="bg-slate-800/95 border-2 border-amber-300 rounded-lg overflow-hidden">
+          <div className="p-6 border-b-2 border-amber-300">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-lg bg-slate-700/50 flex items-center justify-center">
+                  <Building2 className="w-5 h-5 text-amber-300" />
                 </div>
-              <button 
+                <div>
+                  <h2 className="text-xl font-bold text-white">My Properties</h2>
+                  <p className="text-sm text-slate-300">{metrics.activeProperties} active listings</p>
+                </div>
+              </div>
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
                 onClick={() => onNavigate?.('properties')}
-                className={cn(builderGlassBadge, "text-emerald-400 hover:text-emerald-300 cursor-pointer flex items-center gap-1")}
+                className="px-4 py-2 bg-amber-500 hover:bg-amber-600 border-2 border-amber-300 text-slate-900 font-semibold rounded-lg transition-all text-sm shadow-lg shadow-amber-500/20 hover:shadow-amber-500/40"
               >
-                View All <ArrowUpRight className="w-3 h-3" />
-              </button>
+                View All
+              </motion.button>
             </div>
+          </div>
 
+          <div className="p-6">
             {propertiesLoading ? (
-              <div className="relative min-h-[200px]">
-                <GlassLoadingOverlay />
+              <div className="flex items-center justify-center h-64">
+                <div className="text-center">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-amber-300 mx-auto mb-4"></div>
+                  <p className="text-slate-400">Loading properties...</p>
+                </div>
               </div>
             ) : mergedProperties.length === 0 ? (
               <div className="text-center py-12">
-                <Building2 className="w-12 h-12 mx-auto mb-3 opacity-50 text-white" />
-                <p className="text-white">No properties yet</p>
+                <Building2 className="w-12 h-12 mx-auto mb-3 text-slate-400" />
+                <p className="text-white mb-2">No properties yet</p>
                 <button 
                   onClick={() => onNavigate?.('properties')}
-                  className="text-gold-400 hover:text-gold-300 mt-2 inline-block cursor-pointer font-medium"
+                  className="px-4 py-2 bg-amber-500 hover:bg-amber-600 border-2 border-amber-300 text-slate-900 font-semibold rounded-lg transition-colors text-sm mt-2"
                 >
                   Add your first property →
                 </button>
               </div>
             ) : (
               <div className="space-y-3">
-                {mergedProperties.slice(0, 5).map((property: any) => (
+                {mergedProperties.slice(0, 6).map((property: any) => (
                   <PropertyCard key={property.id} property={property} onNavigate={onNavigate} />
                 ))}
               </div>
             )}
-            </div>
-          </section>
-
-          {/* CLIENT OUTREACH SECTION */}
-          <section className={cn(builderGlassPrimary, "p-6")}>
-            {/* Shimmer Effect on Hover - EXACT from pricing page */}
-            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-in-out pointer-events-none" />
-            <div className="relative">
-              <div className="flex items-center justify-between mb-6">
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-600 to-blue-500 flex items-center justify-center">
-                    <MessageSquare className="w-6 h-6 text-white" />
-                  </div>
-                  <div>
-                    <h2 className="text-xl font-bold text-white">Client Outreach</h2>
-                    <p className="text-sm text-gray-300">Send SMS and WhatsApp messages</p>
-                  </div>
-                </div>
-              <button 
-                onClick={() => onNavigate?.('client-outreach')}
-                className={cn(builderGlassBadge, "text-blue-400 hover:text-blue-300 cursor-pointer flex items-center gap-1")}
-              >
-                Open <ArrowUpRight className="w-3 h-3" />
-              </button>
-            </div>
-
-            <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <button className={cn(builderGlassInteractive, "p-4 text-left")}>
-                  <Phone className="w-5 h-5 text-gold-400 mb-2" />
-                  <div className="text-sm font-medium text-white">Send SMS</div>
-                  <div className="text-xs text-gray-400 mt-1">Quick message</div>
-                </button>
-                <button className={cn(builderGlassInteractive, "p-4 text-left")}>
-                  <MessageCircle className="w-5 h-5 text-emerald-400 mb-2" />
-                  <div className="text-sm font-medium text-white">WhatsApp</div>
-                  <div className="text-xs text-gray-400 mt-1">Instant chat</div>
-                </button>
-              </div>
-              
-              <div className={cn(builderGlassSecondary, "p-4")}>
-                <div className="flex items-center justify-between mb-3">
-                  <span className="text-sm font-medium text-white">Recent Messages</span>
-                  <span className="text-xs text-gray-400">3 sent today</span>
-                </div>
-                <div className="space-y-2">
-                  {[1, 2].map(i => (
-                    <div key={i} className="flex items-center gap-3 text-sm">
-                      <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center">
-                        <MessageSquare className="w-4 h-4 text-gray-400" />
-                      </div>
-                      <div className="flex-1">
-                        <div className="text-white">Rajesh Kumar</div>
-                        <div className="text-xs text-gray-400">Site visit scheduled</div>
-                      </div>
-                      <div className="text-xs text-gray-500">2h ago</div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-            </div>
-          </section>
-
-          {/* ANALYTICS & SETTINGS SECTION */}
-          <section className={cn(builderGlassPrimary, "p-6")}>
-            {/* Shimmer Effect on Hover - EXACT from pricing page */}
-            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-in-out pointer-events-none" />
-            <div className="relative">
-              <div className="flex items-center justify-between mb-6">
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-600 to-purple-500 flex items-center justify-center">
-                    <BarChart3 className="w-6 h-6 text-white" />
-                  </div>
-                  <div>
-                    <h2 className="text-xl font-bold text-white">Analytics & Settings</h2>
-                    <p className="text-sm text-gray-300">Performance insights</p>
-                  </div>
-                </div>
-              </div>
-
-            <div className="grid grid-cols-2 gap-4 mb-4">
-              <button 
-                onClick={() => onNavigate?.('behavior-analytics')}
-                className={cn(builderGlassInteractive, "p-4 text-center w-full cursor-pointer")}
-              >
-                <BarChart3 className="w-6 h-6 text-gold-400 mx-auto mb-2" />
-                <div className="text-sm font-medium text-white">Analytics</div>
-              </button>
-              <button 
-                onClick={() => onNavigate?.('settings')}
-                className={cn(builderGlassInteractive, "p-4 text-center w-full cursor-pointer")}
-              >
-                <Settings className="w-6 h-6 text-gold-400 mx-auto mb-2" />
-                <div className="text-sm font-medium text-white">Settings</div>
-              </button>
-            </div>
-
-            <div className={cn(builderGlassSecondary, "p-4")}>
-              <div className="flex items-center justify-between mb-3">
-                <span className="text-sm font-medium text-white">Quick Stats</span>
-              </div>
-              <div className="space-y-2 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-gray-400">Total Views</span>
-                  <span className="text-white font-medium">{metrics.totalViews.toLocaleString()}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-400">Inquiries</span>
-                  <span className="text-white font-medium">{metrics.totalInquiries}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-400">Avg. Response</span>
-                  <span className="text-emerald-400 font-medium">2.4hr</span>
-                </div>
-              </div>
-            </div>
-            </div>
-          </section>
+          </div>
         </div>
+      </div>
 
-        {/* ULTRA AUTOMATION STATUS SECTION */}
-        <section className={cn(builderGlassPrimary, "p-6 border border-gold-500/20")}>
-          {/* Shimmer Effect on Hover - EXACT from pricing page */}
-          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-in-out pointer-events-none" />
-          <div className="relative">
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-gold-600 to-gold-500 flex items-center justify-center">
-                <Sparkles className="w-6 h-6 text-primary-950" />
-              </div>
-              <div>
-                <h2 className="text-xl font-bold text-white">Ultra Automation</h2>
-                <p className="text-sm text-gray-300">AI-powered automation active</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="h-2 w-2 rounded-full bg-emerald-400" />
-              <span className="text-xs text-emerald-400 font-medium">Active</span>
-            </div>
+      {/* Quick Actions Card - Admin Design System */}
+      <div className="bg-slate-800/95 border-2 border-amber-300 rounded-lg p-6">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <h3 className="text-lg font-bold text-white mb-1">Quick Actions</h3>
+            <p className="text-sm text-slate-300">Access your most used features</p>
           </div>
-
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-4">
-            <div className={cn(builderGlassSecondary, "p-3 text-center")}>
-              <CheckCircle2 className="w-5 h-5 text-emerald-400 mx-auto mb-1" />
-              <div className="text-xs text-gray-400">Lead Gen</div>
-            </div>
-            <div className={cn(builderGlassSecondary, "p-3 text-center")}>
-              <CheckCircle2 className="w-5 h-5 text-emerald-400 mx-auto mb-1" />
-              <div className="text-xs text-gray-400">Journeys</div>
-            </div>
-            <div className={cn(builderGlassSecondary, "p-3 text-center")}>
-              <CheckCircle2 className="w-5 h-5 text-emerald-400 mx-auto mb-1" />
-              <div className="text-xs text-gray-400">Viewings</div>
-            </div>
-            <div className={cn(builderGlassSecondary, "p-3 text-center")}>
-              <CheckCircle2 className="w-5 h-5 text-emerald-400 mx-auto mb-1" />
-              <div className="text-xs text-gray-400">Contracts</div>
-            </div>
-            <div className={cn(builderGlassSecondary, "p-3 text-center")}>
-              <CheckCircle2 className="w-5 h-5 text-emerald-400 mx-auto mb-1" />
-              <div className="text-xs text-gray-400">Analytics</div>
-            </div>
+          <div className="flex flex-wrap items-center gap-3">
+            <button 
+              onClick={() => onNavigate?.('leads')}
+              className="px-4 py-2 border-2 border-amber-300 bg-slate-800/95 text-slate-200 hover:bg-slate-700/50 rounded-lg text-sm font-semibold transition-colors flex items-center gap-2"
+            >
+              <Users className="w-4 h-4" />
+              <span className="hidden sm:inline">Manage </span>Leads
+            </button>
+            <button 
+              onClick={() => onNavigate?.('properties')}
+              className="px-4 py-2 border-2 border-amber-300 bg-slate-800/95 text-slate-200 hover:bg-slate-700/50 rounded-lg text-sm font-semibold transition-colors flex items-center gap-2"
+            >
+              <Building2 className="w-4 h-4" />
+              Properties
+            </button>
+            <button 
+              onClick={() => onNavigate?.('behavior-analytics')}
+              className="px-4 py-2 border-2 border-amber-300 bg-slate-800/95 text-slate-200 hover:bg-slate-700/50 rounded-lg text-sm font-semibold transition-colors flex items-center gap-2"
+            >
+              <BarChart3 className="w-4 h-4" />
+              Analytics
+            </button>
+            <button 
+              onClick={() => onNavigate?.('settings')}
+              className="px-4 py-2 border-2 border-amber-300 bg-slate-800/95 text-slate-200 hover:bg-slate-700/50 rounded-lg text-sm font-semibold transition-colors flex items-center gap-2"
+            >
+              <Settings className="w-4 h-4" />
+              Settings
+            </button>
           </div>
-
-          <div className={cn(builderGlassSecondary, "p-4")}>
-            <p className="text-sm text-gray-300 mb-2">
-              All 10 automation layers are running automatically in the background. 
-              Access data via API endpoints or database queries.
-            </p>
-            <div className="flex items-center gap-2 text-xs text-gray-400">
-              <Activity className="w-3 h-3" />
-              <span>Processing leads, emails, viewings, and contracts automatically</span>
-            </div>
-          </div>
-          </div>
-        </section>
+        </div>
       </div>
     </div>
   )
 }
 
+// Stat Card - Admin Design System with Advanced Hover Effects
 function StatCard({ 
   icon: Icon, 
   label, 
@@ -698,122 +531,173 @@ function StatCard({
   loading: boolean
 }) {
   return (
-    <div className={cn(builderGlassInteractive, "p-6")}>
-      {/* Shimmer Effect on Hover - EXACT from pricing page */}
-      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-in-out pointer-events-none" />
-      <div className="relative">
-        <div className="flex items-start justify-between mb-4">
-          <div className="w-12 h-12 rounded-xl bg-white/10 backdrop-blur-sm flex items-center justify-center">
-            <Icon className="w-6 h-6 text-gold-400" />
-          </div>
-          {trend && (
-            <div className={cn(
-              "flex items-center gap-1 text-xs font-medium",
-              trend.positive ? "text-emerald-400" : "text-red-400"
-            )}>
-              {trend.positive ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
-              {Math.abs(trend.value)}%
-            </div>
-          )}
-        </div>
+    <motion.div
+      whileHover={{ scale: 1.02, y: -4 }}
+      whileTap={{ scale: 0.98 }}
+      className="relative bg-slate-800/95 border-2 border-amber-300 rounded-lg p-4 overflow-hidden group cursor-pointer"
+    >
+      {/* Hover Glow Effect */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        whileHover={{ opacity: 1 }}
+        className="absolute inset-0 bg-gradient-to-br from-amber-500/10 via-transparent to-transparent pointer-events-none"
+      />
+      
+      {/* Icon with Animation */}
+      <motion.div
+        whileHover={{ rotate: 5, scale: 1.1 }}
+        className="absolute top-4 right-4 opacity-10 group-hover:opacity-20 transition-opacity"
+      >
+        <Icon className="w-16 h-16 text-amber-300" />
+      </motion.div>
+
+      <div className="relative z-10">
+        <h3 className="text-xs font-bold text-slate-400 uppercase mb-2">{label}</h3>
         {loading ? (
           <div className="flex items-center justify-center h-12">
-            <LoadingSpinner size="md" variant="gold" />
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-amber-300"></div>
           </div>
         ) : (
           <>
-            <div className="text-3xl font-bold text-white mb-1">{value}</div>
-            <div className="text-sm text-gray-300">{label}</div>
-            {subtitle && <div className="text-xs text-gray-400 mt-1">{subtitle}</div>}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.1 }}
+              className="flex items-baseline gap-2 mb-1"
+            >
+              <div className="text-2xl font-bold text-white tabular-nums">{value}</div>
+              {trend && (
+                <motion.div
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.2 }}
+                  className={cn(
+                    "flex items-center gap-1 text-xs font-medium",
+                    trend.positive ? "text-emerald-300" : "text-red-300"
+                  )}
+                >
+                  {trend.positive ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
+                  {Math.abs(trend.value)}%
+                </motion.div>
+              )}
+            </motion.div>
+            {subtitle && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.15 }}
+                className="text-xs text-slate-400"
+              >
+                {subtitle}
+              </motion.div>
+            )}
           </>
         )}
       </div>
-    </div>
+    </motion.div>
   )
 }
 
+// Lead Card - Admin Design System with Advanced Animations
 function LeadCard({ lead, onNavigate }: { lead: Lead; onNavigate?: (section: string) => void }) {
   const score = lead.score || 0
-  const isHot = score >= 80
-  const isWarm = score >= 50 && score < 80
+  const isHot = score >= 70
+  const isWarm = score >= 40 && score < 70
 
   return (
-    <button
+    <motion.button
+      whileHover={{ scale: 1.02, x: 4 }}
+      whileTap={{ scale: 0.98 }}
       onClick={() => {
-        // Navigate to leads section first, then could open detail modal
         onNavigate?.('leads')
-        // Could also dispatch event for lead detail modal
         window.dispatchEvent(new CustomEvent('open-lead-detail', { detail: { leadId: lead.id } }))
       }}
-      className={cn(builderGlassSecondary, "p-4 block hover:bg-white/[0.04] transition-all group w-full text-left cursor-pointer")}
+      className="w-full p-4 bg-slate-700/50 hover:bg-slate-700/70 border-2 border-slate-600/50 hover:border-amber-300/50 rounded-lg transition-all text-left relative overflow-hidden group"
     >
-      <div className="flex items-center gap-3">
-        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-gold-600 to-gold-500 flex items-center justify-center text-white font-semibold text-sm">
-          {lead.name?.charAt(0) || 'L'}
+      {/* Hover Glow */}
+      <motion.div
+        initial={{ opacity: 0, x: -20 }}
+        whileHover={{ opacity: 1, x: 0 }}
+        className="absolute inset-0 bg-gradient-to-r from-amber-500/5 via-transparent to-transparent pointer-events-none"
+      />
+      <div className="relative z-10 flex items-center gap-3">
+        <div className="w-10 h-10 rounded-full bg-slate-600 flex items-center justify-center text-white font-semibold text-sm flex-shrink-0">
+          {lead.name?.charAt(0)?.toUpperCase() || 'L'}
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-1">
-            <span className="text-sm font-medium text-white truncate">{lead.name}</span>
+            <span className="text-sm font-semibold text-white truncate">{lead.name}</span>
             {isHot && <span className="text-xs">🔥</span>}
           </div>
-          <div className="text-xs text-gray-400 truncate">{lead.email}</div>
+          <div className="text-xs text-slate-300 truncate">{lead.email}</div>
+          {lead.property_interest && (
+            <div className="mt-1.5 text-xs text-slate-400 flex items-center gap-1">
+              <MapPin className="w-3 h-3" />
+              <span className="truncate">{lead.property_interest}</span>
+            </div>
+          )}
         </div>
         <div className={cn(
-          "px-2 py-1 rounded-full text-xs font-bold",
-          isHot ? "bg-gold-500/20 text-gold-400" : isWarm ? "bg-emerald-500/20 text-emerald-400" : "bg-gray-500/20 text-gray-400"
+          "px-2.5 py-1 rounded text-xs font-bold flex-shrink-0",
+          isHot ? "bg-red-500/20 text-red-300" : isWarm ? "bg-amber-500/20 text-amber-300" : "bg-blue-500/20 text-blue-300"
         )}>
           {score}
         </div>
       </div>
-      {lead.property_interest && (
-        <div className="mt-2 text-xs text-gray-500 flex items-center gap-1">
-          <MapPin className="w-3 h-3" />
-          {lead.property_interest}
-        </div>
-      )}
-    </button>
+    </motion.button>
   )
 }
 
+// Property Card - Admin Design System with Advanced Animations
 function PropertyCard({ property, onNavigate }: { property: Property; onNavigate?: (section: string) => void }) {
   return (
-    <button
+    <motion.button
+      whileHover={{ scale: 1.02, x: 4 }}
+      whileTap={{ scale: 0.98 }}
       onClick={() => {
         onNavigate?.('properties')
-        // Could dispatch event for property detail
         window.dispatchEvent(new CustomEvent('open-property-detail', { detail: { propertyId: property.id } }))
       }}
-      className={cn(builderGlassSecondary, "p-4 block hover:bg-white/[0.04] transition-all group w-full text-left cursor-pointer")}
+      className="w-full p-4 bg-slate-700/50 hover:bg-slate-700/70 border-2 border-slate-600/50 hover:border-amber-300/50 rounded-lg transition-all text-left relative overflow-hidden group"
     >
-      <div className="flex items-start justify-between gap-3">
+      {/* Hover Glow */}
+      <motion.div
+        initial={{ opacity: 0, x: -20 }}
+        whileHover={{ opacity: 1, x: 0 }}
+        className="absolute inset-0 bg-gradient-to-r from-amber-500/5 via-transparent to-transparent pointer-events-none"
+      />
+      <div className="relative z-10 flex items-start justify-between gap-3">
         <div className="flex-1 min-w-0">
-          <div className="text-sm font-medium text-white mb-1 truncate">{property.title}</div>
-          <div className="text-xs text-gray-400 flex items-center gap-1 mb-2">
-            <MapPin className="w-3 h-3" />
-            {property.locality || property.city || 'Location'}
+          <div className="text-sm font-semibold text-white mb-1.5 truncate">{property.title}</div>
+          <div className="text-xs text-slate-300 flex items-center gap-1.5 mb-2">
+            <MapPin className="w-3 h-3 flex-shrink-0" />
+            <span className="truncate">{property.locality || property.city || 'Location'}</span>
           </div>
           {property.priceINR && (
-            <div className="text-sm font-semibold text-gold-400">
-              ₹{(property.priceINR / 10000000).toFixed(2)}Cr
+            <div className="text-sm font-bold text-amber-300">
+              {property.priceINR >= 10000000 
+                ? `₹${(property.priceINR / 10000000).toFixed(2)} Cr`
+                : property.priceINR >= 100000
+                ? `₹${(property.priceINR / 100000).toFixed(1)} L`
+                : `₹${(property.priceINR / 1000).toFixed(0)}K`}
             </div>
           )}
         </div>
-        <div className="flex flex-col items-end gap-1">
+        <div className="flex flex-col items-end gap-2 flex-shrink-0">
           {property.views !== undefined && (
-            <div className="text-xs text-gray-400 flex items-center gap-1">
+            <div className="text-xs text-slate-400 flex items-center gap-1">
               <Eye className="w-3 h-3" />
-              {property.views}
+              <span>{property.views}</span>
             </div>
           )}
           {property.inquiries !== undefined && (
-            <div className="text-xs text-emerald-400 flex items-center gap-1">
+            <div className="text-xs text-emerald-300 flex items-center gap-1 font-medium">
               <MessageCircle className="w-3 h-3" />
-              {property.inquiries}
+              <span>{property.inquiries}</span>
             </div>
           )}
         </div>
       </div>
-    </button>
+    </motion.button>
   )
 }
-

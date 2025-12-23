@@ -67,7 +67,7 @@ export function TrialUpgradeBanner() {
             : 'bg-amber-50 border-amber-200'
           }
         `}
-        style={{ marginLeft: '220px', width: 'calc(100% - 220px)' }}
+        style={{ marginLeft: '260px', width: 'calc(100% - 260px)' }}
       >
         <div className="container mx-auto px-4 py-3">
           <div className="flex items-center justify-between gap-4">

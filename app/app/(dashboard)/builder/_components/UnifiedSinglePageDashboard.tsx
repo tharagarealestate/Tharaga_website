@@ -77,30 +77,60 @@ export function UnifiedSinglePageDashboard({ activeSection, onSectionChange }: U
     <div className="relative w-full bg-transparent">
       {/* Background is handled by layout.tsx - no duplicate background here */}
 
-      {/* Main Content Area with Smooth Transitions */}
+      {/* Main Content Area with Advanced AI Transitions */}
       <div className="relative z-10 w-full px-4 sm:px-6 lg:px-8 pt-0 pb-6 lg:pb-8 bg-transparent">
         <AnimatePresence mode="wait">
           <motion.div
             key={activeSection}
-            initial={{ opacity: 0, y: 20, scale: 0.98 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -20, scale: 0.98 }}
-            transition={{
-              duration: 0.35,
-              ease: [0.4, 0, 0.2, 1], // Custom cubic-bezier for smooth feel
+            initial={{ opacity: 0, y: 30, scale: 0.96, filter: 'blur(4px)' }}
+            animate={{ 
+              opacity: 1, 
+              y: 0, 
+              scale: 1, 
+              filter: 'blur(0px)',
+              transition: {
+                duration: 0.5,
+                ease: [0.16, 1, 0.3, 1], // Custom easing for smooth AI feel
+              }
+            }}
+            exit={{ 
+              opacity: 0, 
+              y: -20, 
+              scale: 0.98,
+              filter: 'blur(2px)',
+              transition: {
+                duration: 0.3,
+                ease: [0.4, 0, 1, 1],
+              }
             }}
             onAnimationStart={() => {
-              // Ensure smooth scroll during transition
+              // Smooth scroll to top during transition
               window.scrollTo({ top: 0, behavior: 'smooth' })
             }}
             className="w-full"
           >
-            {/* Non-blocking Suspense - renders immediately with fallback */}
-            <ErrorBoundary>
-              <Suspense fallback={<SectionLoader section={activeSection} />}>
-                <ActiveComponent onNavigate={(section: string) => onSectionChange(section)} />
-              </Suspense>
-            </ErrorBoundary>
+            {/* Subtle glow effect on active section */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.2 }}
+              className="absolute -inset-4 bg-gradient-to-r from-amber-500/5 via-transparent to-amber-500/5 rounded-2xl blur-2xl pointer-events-none"
+            />
+            
+            {/* Content with fade-in stagger */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.1, duration: 0.4 }}
+              className="relative z-10"
+            >
+              {/* Non-blocking Suspense - renders immediately with fallback */}
+              <ErrorBoundary>
+                <Suspense fallback={<SectionLoader section={activeSection} />}>
+                  <ActiveComponent onNavigate={(section: string) => onSectionChange(section)} />
+                </Suspense>
+              </ErrorBoundary>
+            </motion.div>
           </motion.div>
         </AnimatePresence>
       </div>

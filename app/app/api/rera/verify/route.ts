@@ -1,80 +1,65 @@
-import { createClient } from '@/lib/supabase/server';
 import { NextResponse } from 'next/server';
+import { reraVerificationEngine } from '@/lib/rera/verification-engine';
 
-// AI-powered RERA verification using OCR + database cross-reference
+/**
+ * Advanced RERA Verification API Route
+ * 
+ * Uses the comprehensive RERA verification engine to:
+ * - Validate RERA number format
+ * - Scrape RERA portals
+ * - Verify documents via OCR
+ * - Calculate confidence scores
+ * - Store results in database
+ */
 export async function POST(request: Request) {
   try {
-    const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    const body = await request.json();
+    const { rera_number, reraNumber, state, type, builder_id, builderId, property_id, propertyId, project_name, projectName, promoter_name, promoterName, document_url, documentUrl, force_refresh, forceRefresh } = body;
 
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    // Normalize input (support both snake_case and camelCase)
+    const input = {
+      reraNumber: reraNumber || rera_number,
+      state: state || 'Tamil Nadu',
+      type: type || 'builder',
+      builderId: builderId || builder_id,
+      propertyId: propertyId || property_id,
+      projectName: projectName || project_name,
+      promoterName: promoterName || promoter_name,
+      documentUrl: documentUrl || document_url,
+      forceRefresh: forceRefresh || force_refresh || false,
+    };
 
-    const { rera_number, state, document_url } = await request.json();
-
-    if (!rera_number || !state) {
+    if (!input.reraNumber || !input.state) {
       return NextResponse.json({ 
         error: 'RERA number and state are required',
         valid: false 
       }, { status: 400 });
     }
 
-    // Step 1: Validate RERA number format (state-specific)
-    if (!validateRERAFormat(rera_number, state)) {
-      return NextResponse.json({ 
-        error: 'Invalid RERA number format',
+    // Use the verification engine
+    const result = await reraVerificationEngine.verify(input);
+
+    if (!result.success) {
+      return NextResponse.json({
+        error: result.error || 'Verification failed',
         valid: false,
-        message: `RERA number format for ${state} is invalid. Expected format: ${getRERAFormat(state)}`
+        warnings: result.warnings,
       }, { status: 400 });
     }
 
-    // Step 2: Cross-reference with public RERA database (web scraping)
-    const publicVerification = await verifyWithRERAPortal(rera_number, state);
-
-    // Step 3: OCR document verification (if document provided)
-    let documentVerification = null;
-    if (document_url) {
-      documentVerification = await verifyRERADocument(document_url, rera_number);
-    }
-
-    // Step 4: Calculate confidence score
-    const confidence = calculateConfidence(publicVerification, documentVerification);
-
-    // Step 5: Save verification record
-    const { data, error } = await supabase
-      .from('rera_verifications')
-      .upsert({
-        builder_id: user.id,
-        rera_number,
-        state,
-        verification_status: confidence > 0.8 ? 'verified' : 'pending',
-        verification_document_url: document_url,
-        auto_verify_confidence: confidence,
-        last_checked_at: new Date().toISOString(),
-        verification_notes: publicVerification.notes,
-        project_name: publicVerification.project_name || null
-      }, { 
-        onConflict: 'rera_number',
-        ignoreDuplicates: false
-      })
-      .select()
-      .single();
-
-    if (error) {
-      console.error('Database error:', error);
-      throw error;
-    }
-
     return NextResponse.json({
-      verification: data,
-      confidence,
-      public_record: publicVerification,
-      document_match: documentVerification,
-      status: confidence > 0.8 ? 'verified' : 'pending',
-      message: confidence > 0.8 
+      success: true,
+      verified: result.verified,
+      registrationId: result.registrationId,
+      data: result.data,
+      verificationMethod: result.verificationMethod,
+      confidence: result.confidence,
+      source: result.source,
+      warnings: result.warnings,
+      snapshot: result.snapshot,
+      message: result.verified 
         ? 'RERA number verified successfully' 
-        : 'RERA number requires manual verification'
+        : 'RERA number requires manual verification',
     });
 
   } catch (error) {
@@ -86,101 +71,75 @@ export async function POST(request: Request) {
   }
 }
 
-// Helper functions
-function validateRERAFormat(reraNumber: string, state: string): boolean {
-  const formats: Record<string, RegExp> = {
-    'Tamil Nadu': /^TN\/\d{2}\/\d{4}\/\d{6}$/,
-    'Karnataka': /^KA\/\d{2}\/\d{4}\/\d{6}$/,
-    'Maharashtra': /^MH\/\d{2}\/\d{4}\/\d{6}$/,
-    'Telangana': /^TS\/\d{2}\/\d{4}\/\d{6}$/,
-    'Andhra Pradesh': /^AP\/\d{2}\/\d{4}\/\d{6}$/,
-    'Gujarat': /^GJ\/\d{2}\/\d{4}\/\d{6}$/,
-    'Delhi': /^DL\/\d{2}\/\d{4}\/\d{6}$/,
-    'Punjab': /^PB\/\d{2}\/\d{4}\/\d{6}$/,
-    'Haryana': /^HR\/\d{2}\/\d{4}\/\d{6}$/,
-    'Rajasthan': /^RJ\/\d{2}\/\d{4}\/\d{6}$/,
-    'Uttar Pradesh': /^UP\/\d{2}\/\d{4}\/\d{6}$/,
-    'West Bengal': /^WB\/\d{2}\/\d{4}\/\d{6}$/,
-    'Kerala': /^KL\/\d{2}\/\d{4}\/\d{6}$/,
-  };
-  
-  const format = formats[state];
-  return format ? format.test(reraNumber) : false;
-}
-
-function getRERAFormat(state: string): string {
-  const formats: Record<string, string> = {
-    'Tamil Nadu': 'TN/XX/YYYY/XXXXXX',
-    'Karnataka': 'KA/XX/YYYY/XXXXXX',
-    'Maharashtra': 'MH/XX/YYYY/XXXXXX',
-    'Telangana': 'TS/XX/YYYY/XXXXXX',
-  };
-  return formats[state] || 'STATE/XX/YYYY/XXXXXX';
-}
-
-async function verifyWithRERAPortal(reraNumber: string, state: string) {
-  // This would scrape the official RERA portal for verification
-  // For now, returning mock data with realistic structure
-  // In production, implement actual web scraping or API integration
-  
+/**
+ * GET endpoint to retrieve RERA verification status
+ */
+export async function GET(request: Request) {
   try {
-    // TODO: Implement actual RERA portal scraping
-    // Example: Fetch from state-specific RERA portal
-    // const response = await fetch(`https://${state.toLowerCase().replace(' ', '')}rera.gov.in/verify/${reraNumber}`);
-    
-    return {
-      found: true,
-      status: 'Active',
-      project_name: 'Sample Project',
-      builder_name: 'Sample Builder',
-      registration_date: '2023-01-01',
-      expiry_date: '2028-01-01',
-      notes: 'Verified through public RERA portal (mock data - implement actual verification)'
-    };
-  } catch (error) {
-    console.error('RERA portal verification error:', error);
-    return {
-      found: false,
-      status: 'Unknown',
-      notes: 'Unable to verify through public portal'
-    };
-  }
-}
+    const { searchParams } = new URL(request.url);
+    const reraNumber = searchParams.get('rera_number') || searchParams.get('reraNumber');
+    const state = searchParams.get('state') || 'Tamil Nadu';
+    const propertyId = searchParams.get('property_id') || searchParams.get('propertyId');
 
-async function verifyRERADocument(documentUrl: string, expectedRERA: string) {
-  // This would use OCR (Tesseract.js or Google Vision API) to extract text
-  // and verify RERA number presence
-  // For now, returning mock data
-  
-  try {
-    // TODO: Implement actual OCR verification
-    // Example: Use Google Cloud Vision API or Tesseract.js
-    // const ocrResult = await performOCR(documentUrl);
-    // const reraFound = ocrResult.text.includes(expectedRERA);
-    
-    return {
-      rera_found: true,
-      rera_matches: true,
-      confidence: 0.95,
-      notes: 'Document OCR verification (mock data - implement actual OCR)'
-    };
-  } catch (error) {
-    console.error('Document verification error:', error);
-    return {
-      rera_found: false,
-      rera_matches: false,
-      confidence: 0,
-      notes: 'Unable to verify document'
-    };
-  }
-}
+    if (!reraNumber) {
+      return NextResponse.json({ 
+        error: 'RERA number is required' 
+      }, { status: 400 });
+    }
 
-function calculateConfidence(publicVerif: any, docVerif: any | null): number {
-  let score = 0;
-  
-  if (publicVerif?.found) score += 0.7;
-  if (publicVerif?.status === 'Active') score += 0.1;
-  if (docVerif?.rera_matches) score += 0.2;
-  
-  return Math.min(score, 1.0);
+    // Get cached verification
+    const { createClient } = await import('@supabase/supabase-js');
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
+    const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_ROLE;
+    
+    if (!supabaseUrl || !supabaseKey) {
+      return NextResponse.json({ error: 'Database not configured' }, { status: 500 });
+    }
+
+    const supabase = createClient(supabaseUrl, supabaseKey);
+
+    const { data, error } = await supabase
+      .from('rera_registrations')
+      .select('*')
+      .eq('rera_number', reraNumber.toUpperCase())
+      .eq('rera_state', state)
+      .maybeSingle();
+
+    if (error) {
+      console.error('Database error:', error);
+      return NextResponse.json({ error: 'Database error' }, { status: 500 });
+    }
+
+    if (!data) {
+      return NextResponse.json({ 
+        verified: false,
+        message: 'RERA number not found'
+      });
+    }
+
+    return NextResponse.json({
+      verified: data.verified || data.verification_status === 'verified',
+      data: {
+        reraNumber: data.rera_number,
+        registeredName: data.registered_name,
+        registrationType: data.registration_type,
+        registrationDate: data.registration_date,
+        expiryDate: data.expiry_date,
+        promoterName: data.promoter_name,
+        status: data.status,
+        isActive: data.is_active,
+        complianceScore: data.compliance_score,
+        projectName: data.project_name,
+      },
+      verificationMethod: data.verification_method,
+      lastVerifiedAt: data.last_verified_at,
+    });
+
+  } catch (error) {
+    console.error('RERA retrieval error:', error);
+    return NextResponse.json({ 
+      error: 'Failed to retrieve RERA information',
+      details: error instanceof Error ? error.message : 'Unknown error'
+    }, { status: 500 });
+  }
 }

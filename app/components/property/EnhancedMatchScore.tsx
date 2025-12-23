@@ -1,9 +1,14 @@
 "use client"
 
 import React, { useEffect, useState } from 'react'
-import { Sparkles, TrendingUp, AlertCircle, Loader2, CheckCircle2 } from 'lucide-react'
-import { generatePersonalizedRecommendations, type PropertyRecommendation } from '@/lib/ai/enhanced-search'
+import { Sparkles, Loader2, CheckCircle2 } from 'lucide-react'
+import { fetchRecommendations } from '@/lib/api'
 import { getSupabase } from '@/lib/supabase'
+
+interface MatchData {
+  score: number
+  reasons: string[]
+}
 
 interface EnhancedMatchScoreProps {
   propertyId: string
@@ -12,7 +17,7 @@ interface EnhancedMatchScoreProps {
 }
 
 export function EnhancedMatchScore({ propertyId, userId, className = '' }: EnhancedMatchScoreProps) {
-  const [matchData, setMatchData] = useState<PropertyRecommendation | null>(null)
+  const [matchData, setMatchData] = useState<MatchData | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [user, setUser] = useState<any>(null)
@@ -48,7 +53,7 @@ export function EnhancedMatchScore({ propertyId, userId, className = '' }: Enhan
   }, [userId])
 
   useEffect(() => {
-    if (!user?.id || !propertyId) {
+    if (!propertyId) {
       setLoading(false)
       return
     }
@@ -58,41 +63,39 @@ export function EnhancedMatchScore({ propertyId, userId, className = '' }: Enhan
         setLoading(true)
         setError(null)
 
-        // Get user's search history to build filters
-        const supabase = getSupabase()
-        const { data: searchHistory } = await supabase
-          .from('search_history')
-          .select('filters')
-          .eq('user_id', user.id)
-          .order('searched_at', { ascending: false })
-          .limit(5)
+        const sessionId = typeof document !== 'undefined'
+          ? document.cookie.match(/(?:^|; )thg_sid=([^;]+)/)?.[1]
+          : null
 
-        // Build filters from search history
-        const filters: any = {}
-        if (searchHistory && searchHistory.length > 0) {
-          searchHistory.forEach((search: any) => {
-            if (search.filters) {
-              Object.assign(filters, search.filters)
-            }
-          })
+        // Get recommendations using existing API
+        const res = await fetchRecommendations({ 
+          user_id: user?.id || 'anon', 
+          session_id: sessionId || 'anon', 
+          num_results: 20 
+        })
+        
+        const items = res?.items || []
+        if (!items.length) {
+          setLoading(false)
+          return
         }
 
-        // Get recommendations
-        const recommendations = await generatePersonalizedRecommendations(user.id, filters)
-        
         // Find this property in recommendations
-        const match = recommendations.find((rec: PropertyRecommendation) => rec.propertyId === propertyId)
+        const found = items.find((i: any) => i.property_id === propertyId)
         
-        if (match) {
-          setMatchData(match)
-        } else {
-          // If not in recommendations, still show a basic match
+        if (found) {
+          // Normalize score to 0-100
+          const maxScore = Math.max(1, ...items.map((i: any) => Math.max(0, Number(i.score || 0))))
+          const score = Math.max(0, Number(found.score || 0))
+          const normalizedScore = Math.round((score / maxScore) * 100)
+          
           setMatchData({
-            propertyId,
-            reason: 'Property matches your search criteria',
-            matchScore: 75,
-            features: ['Matches your preferences']
+            score: normalizedScore,
+            reasons: found.reasons || []
           })
+        } else {
+          setLoading(false)
+          return
         }
       } catch (err: any) {
         console.error('Match score error:', err)
@@ -123,7 +126,7 @@ export function EnhancedMatchScore({ propertyId, userId, className = '' }: Enhan
     return null // Fail silently if no match data
   }
 
-  const score = matchData.matchScore || 0
+  const score = matchData.score || 0
   const scoreColor = score >= 80
     ? 'text-emerald-400'
     : score >= 60
@@ -160,19 +163,16 @@ export function EnhancedMatchScore({ propertyId, userId, className = '' }: Enhan
             style={{ width: `${score}%` }}
           />
         </div>
-        {matchData.reason && (
-          <p className="text-xs text-slate-300 leading-relaxed">{matchData.reason}</p>
-        )}
       </div>
 
-      {matchData.features && matchData.features.length > 0 && (
+      {matchData.reasons && matchData.reasons.length > 0 && (
         <div className="space-y-2">
           <span className="text-xs font-medium text-slate-400 uppercase tracking-wide">Why it matches:</span>
           <ul className="space-y-1.5">
-            {matchData.features.slice(0, 3).map((feature, idx) => (
+            {matchData.reasons.slice(0, 3).map((reason, idx) => (
               <li key={idx} className="flex items-start gap-2 text-xs text-slate-300">
                 <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400 flex-shrink-0 mt-0.5" />
-                <span>{feature}</span>
+                <span>{reason}</span>
               </li>
             ))}
           </ul>
@@ -187,4 +187,5 @@ export function EnhancedMatchScore({ propertyId, userId, className = '' }: Enhan
     </div>
   )
 }
+
 

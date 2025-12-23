@@ -471,17 +471,16 @@ export function LeadsList({ onSelectLead, initialFilters, showInlineFilters = tr
   if (error) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
-        <div className="bg-red-500/10 border border-red-500/50 rounded-2xl p-8 text-center max-w-md backdrop-blur-xl">
-          <AlertCircle className="w-12 h-12 text-red-400 mx-auto mb-4" />
-          <h3 className="text-xl font-semibold text-red-100 mb-2">Error Loading Leads</h3>
-          <p className="text-sm text-red-200/80 mb-4">{error}</p>
-          <p className="text-red-200/70 mb-4">{error}</p>
+        <div className="bg-slate-800/95 border-2 border-red-500/50 rounded-lg p-8 text-center max-w-md">
+          <AlertCircle className="w-12 h-12 text-red-300 mx-auto mb-4" />
+          <h3 className="text-xl font-bold text-white mb-2">Error Loading Leads</h3>
+          <p className="text-sm text-slate-300 mb-4">{error}</p>
           <button
             onClick={() => {
               setError(null);
               fetchLeads();
             }}
-            className="px-6 py-2 bg-gold-500/20 hover:bg-gold-500/30 border border-gold-500/50 rounded-xl text-gold-100 transition-all"
+            className="px-6 py-2 bg-amber-500 hover:bg-amber-600 border-2 border-amber-300 text-slate-900 font-semibold rounded-lg transition-colors"
           >
             Try Again
           </button>
@@ -492,59 +491,51 @@ export function LeadsList({ onSelectLead, initialFilters, showInlineFilters = tr
 
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatsCard
           title="Total Leads"
           value={stats.total_leads}
-          icon={<UsersGlyph />}
-          gradient="from-blue-500/20 to-cyan-500/20"
-          borderColor="border-blue-500/50"
+          icon={<Users className="w-5 h-5" />}
         />
         <StatsCard
           title="Hot Leads"
           value={stats.hot_leads}
           icon={<TrendingUp className="w-5 h-5" />}
-          gradient="from-red-500/20 to-orange-500/20"
-          borderColor="border-red-500/50"
         />
         <StatsCard
           title="Avg Score"
           value={stats.average_score.toFixed(1)}
           icon={<Star className="w-5 h-5" />}
-          gradient="from-amber-500/20 to-yellow-500/20"
-          borderColor="border-amber-500/50"
         />
         <StatsCard
           title="Pending Actions"
           value={stats.pending_interactions}
           icon={<Clock className="w-5 h-5" />}
-          gradient="from-purple-500/20 to-pink-500/20"
-          borderColor="border-purple-500/50"
         />
       </div>
 
-      <div className="bg-gradient-to-br from-[#0A1628]/80 to-[#0F1B2D]/80 backdrop-blur-xl border border-blue-500/20 rounded-2xl p-6 shadow-lg shadow-blue-500/10">
+      <div className="bg-slate-800/95 border-2 border-amber-300 rounded-lg p-6">
         <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center justify-between">
           <div className="relative flex-1 w-full lg:max-w-md">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-blue-400/50" />
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
             <input
               type="text"
               placeholder="Search by name, email, or phone..."
               value={searchQuery}
               onChange={(event) => setSearchQuery(event.target.value)}
-              className="w-full pl-12 pr-4 py-3 bg-[#0A1628]/50 border border-blue-500/20 rounded-xl text-white placeholder:text-gray-400 focus:outline-none focus:border-blue-500/50 focus:ring-2 focus:ring-blue-500/20 transition-all"
+              className="w-full pl-12 pr-4 py-3 bg-slate-700/50 border-2 border-amber-300 rounded-lg text-white placeholder:text-slate-400 focus:outline-none focus:border-amber-400 transition-all"
             />
           </div>
 
           <div className="flex gap-3 w-full lg:w-auto">
             <button
               onClick={() => setIsFilterPanelOpen(!isFilterPanelOpen)}
-              className="flex-1 lg:flex-initial px-4 py-3 bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/30 rounded-xl text-blue-100 font-medium transition-all flex items-center justify-center gap-2 relative"
+              className="flex-1 lg:flex-initial px-4 py-2 border-2 border-amber-300 bg-slate-800/95 text-slate-200 hover:bg-slate-700/50 rounded-lg text-sm font-semibold transition-colors flex items-center justify-center gap-2 relative"
             >
-              <Filter className="w-5 h-5" />
+              <Filter className="w-4 h-4" />
               <span>Filters</span>
               {activeFilterCount > 0 && (
-                <span className="absolute -top-2 -right-2 w-6 h-6 bg-amber-500 text-white text-xs font-bold rounded-full flex items-center justify-center">
+                <span className="absolute -top-2 -right-2 w-6 h-6 bg-amber-500 text-slate-900 text-xs font-bold rounded-full flex items-center justify-center">
                   {activeFilterCount}
                 </span>
               )}
@@ -552,9 +543,9 @@ export function LeadsList({ onSelectLead, initialFilters, showInlineFilters = tr
 
             <button
               onClick={handleExport}
-              className="flex-1 lg:flex-initial px-4 py-3 bg-gradient-to-r from-amber-500/20 to-orange-500/20 hover:from-amber-500/30 hover:to-orange-500/30 border border-amber-500/50 rounded-xl text-amber-100 font-medium transition-all flex items-center justify-center gap-2"
+              className="flex-1 lg:flex-initial px-4 py-2 bg-amber-500 hover:bg-amber-600 border-2 border-amber-300 text-slate-900 font-semibold rounded-lg transition-colors flex items-center justify-center gap-2"
             >
-              <Download className="w-5 h-5" />
+              <Download className="w-4 h-4" />
               <span className="hidden lg:inline">Export</span>
             </button>
           </div>
@@ -569,13 +560,13 @@ export function LeadsList({ onSelectLead, initialFilters, showInlineFilters = tr
               transition={{ duration: 0.3 }}
               className="overflow-hidden"
             >
-              <div className="mt-6 pt-6 border-t border-blue-500/20 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="mt-6 pt-6 border-t-2 border-amber-300 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-blue-200/70 mb-2">Category</label>
+                  <label className="block text-xs font-bold text-slate-400 uppercase mb-2">Category</label>
                   <select
                     value={filters.category ?? ''}
                     onChange={(event) => updateFilter('category', event.target.value)}
-                    className="w-full px-4 py-2.5 bg-[#0A1628]/50 border border-blue-500/20 rounded-xl text-white focus:outline-none focus:border-blue-500/50 transition-all"
+                    className="w-full px-4 py-2.5 bg-slate-700/50 border-2 border-amber-300 rounded-lg text-white focus:outline-none focus:border-amber-400 transition-all"
                   >
                     <option value="">All Categories</option>
                     <option value="Hot Lead">🔥 Hot Lead</option>
@@ -587,7 +578,7 @@ export function LeadsList({ onSelectLead, initialFilters, showInlineFilters = tr
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-blue-200/70 mb-2">
+                  <label className="block text-xs font-bold text-slate-400 uppercase mb-2">
                     Score Range: {filters.score_min} - {filters.score_max}
                   </label>
                   <div className="flex gap-2 items-center">
@@ -613,11 +604,12 @@ export function LeadsList({ onSelectLead, initialFilters, showInlineFilters = tr
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-blue-200/70 mb-2">Location</label>
+                  <label className="block text-xs font-bold text-slate-400 uppercase mb-2">Location</label>
                   <input
                     type="text"
                     placeholder="e.g. Bangalore, Mumbai"
                     value={filters.location ?? ''}
+                    className="w-full px-4 py-2.5 bg-slate-700/50 border-2 border-amber-300 rounded-lg text-white placeholder:text-slate-400 focus:outline-none focus:border-amber-400 transition-all"
                     onChange={(event) => updateFilter('location', event.target.value)}
                     className="w-full px-4 py-2.5 bg-[#0A1628]/50 border border-blue-500/20 rounded-xl text-white placeholder:text-gray-400 focus:outline-none focus:border-blue-500/50 transition-all"
                   />
@@ -944,23 +936,19 @@ interface StatsCardProps {
   title: string;
   value: number | string;
   icon: ReactNode;
-  gradient: string;
-  borderColor: string;
 }
 
-function StatsCard({ title, value, icon, gradient, borderColor }: StatsCardProps) {
+function StatsCard({ title, value, icon }: StatsCardProps) {
   return (
-    <motion.div
-      initial={{ opacity: 0, scale: 0.9 }}
-      animate={{ opacity: 1, scale: 1 }}
-      className={`bg-gradient-to-br ${gradient} backdrop-blur-xl border ${borderColor} rounded-2xl p-6 shadow-lg shadow-black/10`}
-    >
-      <div className="flex items-center justify-between mb-3">
-        <div className="w-12 h-12 bg-white/10 rounded-xl flex items-center justify-center text-white">{icon}</div>
+    <div className="bg-slate-800/95 border-2 border-amber-300 rounded-lg p-4">
+      <h3 className="text-xs font-bold text-slate-400 uppercase mb-2">{title}</h3>
+      <div className="flex items-center gap-3">
+        <div className="w-10 h-10 rounded-lg bg-slate-700/50 flex items-center justify-center text-amber-300">
+          {icon}
+        </div>
+        <div className="text-2xl font-bold text-white tabular-nums">{value}</div>
       </div>
-      <div className="text-3xl font-bold text-white mb-1">{value}</div>
-      <div className="text-sm text-gray-300">{title}</div>
-    </motion.div>
+    </div>
   );
 }
 

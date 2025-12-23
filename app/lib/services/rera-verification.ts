@@ -207,7 +207,7 @@ export class ReraVerificationService {
   }
 
   /**
-   * Verify via partner API
+   * Verify via partner API (uses our internal partner API service)
    */
   private async verifyViaPartner(
     reraNumber: string,
@@ -215,29 +215,14 @@ export class ReraVerificationService {
     type: string
   ): Promise<ReraVerificationResult> {
     try {
-      const apiUrl = this.getPartnerApiUrl();
-      const apiKey = this.getPartnerApiKey();
-      if (!apiUrl || !apiKey) {
-        throw new Error('Partner API not configured');
-      }
-      const response = await fetch(`${apiUrl}/verify`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-API-Key': apiKey,
-        },
-        body: JSON.stringify({
-          rera_number: reraNumber,
-          state: state,
-          type: type,
-        }),
+      // Use our own internal partner API service instead of external HTTP calls
+      const { reraPartnerAPIService } = await import('../rera/partner-api-service');
+      
+      const result = await reraPartnerAPIService.verify({
+        rera_number: reraNumber,
+        state: state,
+        type: type as 'builder' | 'project' | 'agent',
       });
-
-      if (!response.ok) {
-        throw new Error(`Partner API returned ${response.status}`);
-      }
-
-      const result = await response.json();
 
       if (result.found && result.data) {
         return {
@@ -251,7 +236,7 @@ export class ReraVerificationService {
             expiryDate: result.data.expiry_date,
             promoterName: result.data.promoter_name,
             promoterType: result.data.promoter_type || 'company',
-            registeredAddress: result.data.address,
+            registeredAddress: result.data.address || '',
             contactEmail: result.data.email || '',
             contactPhone: result.data.phone || '',
             isActive: result.data.status === 'active',
@@ -259,8 +244,8 @@ export class ReraVerificationService {
             complaintsCount: result.data.complaints || 0,
           },
           verificationMethod: 'partner',
-          confidence: 0.95,
-          source: 'partner_api',
+          confidence: result.cached ? 0.98 : 0.95,
+          source: result.source === 'cache' ? 'partner_cache' : (result.source === 'database' ? 'partner_database' : 'partner_api'),
         };
       }
 

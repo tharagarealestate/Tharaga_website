@@ -9,6 +9,15 @@ export const runtime = 'nodejs'
 export const metadata: Metadata = {
   title: 'Tharaga — Premium Real Estate',
   description: 'AI-powered real estate assistant. Find your dream home or list properties with verified builders and buyers.',
+  manifest: '/manifest.webmanifest',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'default',
+    title: 'Tharaga'
+  },
+  formatDetection: {
+    telephone: false
+  },
   openGraph: {
     title: 'Tharaga — Premium Real Estate',
     description: 'AI-powered real estate assistant. Find your dream home or list properties with verified builders and buyers.',
@@ -67,7 +76,32 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en" className={`${playfair.variable} ${plusJakarta.variable} ${manrope.variable}`}>
       <head>
         <link rel="manifest" href="/manifest.webmanifest" />
-        <meta name="theme-color" content="#ffffff" />
+        <meta name="theme-color" content="#1e40af" />
+        <meta name="mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+        <meta name="apple-mobile-web-app-title" content="Tharaga" />
+        <link rel="apple-touch-icon" href="/icons/icon-192x192.png" />
+        {/* Service Worker Registration */}
+        <Script id="sw-register" strategy="afterInteractive">
+          {`
+            if ('serviceWorker' in navigator) {
+              window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                  .then((registration) => {
+                    console.log('SW registered:', registration.scope);
+                    // Check for updates every hour
+                    setInterval(() => {
+                      registration.update();
+                    }, 3600000);
+                  })
+                  .catch((error) => {
+                    console.log('SW registration failed:', error);
+                  });
+              });
+            }
+          `}
+        </Script>
         {/* Auth configuration */}
         <Script id="auth-config" strategy="beforeInteractive">
           {`window.AUTH_HIDE_HEADER=false;window.AUTH_OPEN_ON_LOAD=false;`}

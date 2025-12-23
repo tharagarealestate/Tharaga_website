@@ -18,3 +18,8 @@ export default function ClientMarketAnalysis(props: any) {
   return <MarketAnalysis {...props} />
 }
 
+
+
+
+
+

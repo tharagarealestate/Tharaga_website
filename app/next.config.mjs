@@ -126,6 +126,11 @@ const nextConfig = {
   },
   images: {
     formats: ['image/avif', 'image/webp'],
+    // Mobile-optimized image sizes
+    deviceSizes: [640, 750, 828, 1080, 1200, 1920],
+    imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
+    // Enable image optimization
+    minimumCacheTTL: 60,
     remotePatterns: [
       { protocol: 'https', hostname: 'picsum.photos' },
       { protocol: 'https', hostname: 'images.unsplash.com' },
@@ -136,6 +141,10 @@ const nextConfig = {
       { protocol: 'https', hostname: 'i.pravatar.cc' },
     ],
   },
+  // Mobile performance optimizations
+  compress: true,
+  poweredByHeader: false,
+  swcMinify: true,
 };
 
 // Enable next-intl for the App Router. This wires up the

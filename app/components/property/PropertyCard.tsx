@@ -7,6 +7,7 @@ import { getSupabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import Image from 'next/image';
+import { RERABadge } from '@/components/rera/RERABadge';
 
 interface PropertyCardProps {
   property: Property;
@@ -155,11 +156,13 @@ export function PropertyCard({
                 NEW
               </span>
             )}
-            {property.rera_verified && (
-              <span className="px-2 py-1 bg-emerald-500 text-white text-xs font-bold rounded-full flex items-center gap-1">
-                <Shield className="w-3 h-3" />
-                RERA
-              </span>
+            {property.rera_verified && property.rera_number && (
+              <RERABadge
+                verified={property.rera_verified}
+                reraNumber={property.rera_number}
+                size="sm"
+                variant="badge"
+              />
             )}
           </div>
 
@@ -309,11 +312,13 @@ export function PropertyCard({
               NEW
             </span>
           )}
-          {property.rera_verified && (
-            <span className="px-2 py-1 bg-emerald-500 text-white text-xs font-bold rounded-full flex items-center gap-1">
-              <Shield className="w-3 h-3" />
-              RERA
-            </span>
+          {property.rera_verified && property.rera_number && (
+            <RERABadge
+              verified={property.rera_verified}
+              reraNumber={property.rera_number}
+              size="sm"
+              variant="badge"
+            />
           )}
         </div>
 

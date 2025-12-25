@@ -124,20 +124,31 @@ export default function AddPropertyPage() {
     try {
       const session = await ensureAuth()
       const builder_id = session.user.id
+      
+      // Check quota using new property-based pricing system
+      if (!propertyId) {
+        // Only check quota when creating new property, not when updating
+        try {
+          const quotaResponse = await fetch('/api/pricing/check-quota')
+          const quotaData = await quotaResponse.json()
+          
+          if (quotaData.success && !quotaData.quota.allowed) {
+            setMsg(`${quotaData.quota.message} Please upgrade your plan at /builder/billing`)
+            setBusy(false)
+            return
+          }
+        } catch (quotaError) {
+          console.error('Quota check failed:', quotaError)
+          // Continue with creation if quota check fails (graceful degradation)
+        }
+      }
+      
       const payload = {
         title: form.title.trim(), description: form.description.trim(),
         city: form.city.trim(), locality: form.locality.trim() || null,
         property_type: form.property_type, bedrooms: Number(form.bedrooms)||null,
         bathrooms: Number(form.bathrooms)||null, price_inr: Number(form.price_inr)||0, sqft: Number(form.sqft)||null,
         images: form.images, builder_id, listing_status: 'active'
-      }
-      // Enforce simple cap: count current active listings by builder
-      if (Number.isFinite(limit)) {
-        const { count } = await getSupabase().from('properties').select('id', { count: 'exact', head: true }).eq('builder_id', builder_id).eq('listing_status','active')
-        if ((count||0) >= limit) {
-          setMsg(`Your plan (${tier}) allows ${limit} active project${limit===1?'':'s'}. Upgrade on Pricing.`)
-          return
-        }
       }
       if (propertyId) {
         // Update existing property

@@ -162,25 +162,47 @@ export default function PricingCard({
                 return
               }
               
-              // Paid plan - create Razorpay subscription
+              // Paid plan - create Razorpay subscription using new property-based pricing
               try {
+                // Map plan ID to database plan slug
                 const planId = (plan as any).id
-                const planName = planId.includes('starter') ? 'starter' : planId.includes('professional') || planId.includes('pro') ? 'professional' : 'enterprise'
+                let planSlug = 'starter'
+                if (planId.includes('pro') || planId.includes('growth')) {
+                  planSlug = 'growth'
+                } else if (planId.includes('enterprise') && !planId.includes('plus')) {
+                  planSlug = 'scale'
+                } else if (planId.includes('enterprise_plus')) {
+                  planSlug = 'enterprise'
+                }
                 
-                const response = await fetch('/api/rzp/create-subscription', {
+                // Get plan ID from database
+                const plansResponse = await fetch('/api/pricing/plans')
+                const plansData = await plansResponse.json()
+                
+                if (!plansData.success) {
+                  alert('Unable to load plans. Please try again.')
+                  return
+                }
+                
+                const dbPlan = plansData.plans.find((p: any) => p.slug === planSlug)
+                if (!dbPlan) {
+                  alert('Plan not found. Please contact support.')
+                  return
+                }
+                
+                const response = await fetch('/api/pricing/create-subscription', {
                   method: 'POST',
                   headers: { 'Content-Type': 'application/json' },
                   body: JSON.stringify({
-                    plan: planName,
-                    annual: billingCycle === 'yearly',
-                    notes: { source: 'pricing_page' }
+                    planId: dbPlan.id,
+                    billingCycle: billingCycle
                   })
                 })
                 
                 const data = await response.json()
                 
-                if (!data.id) {
-                  alert('Unable to start checkout. Please try again.')
+                if (!data.success || !data.subscriptionId) {
+                  alert(data.error || 'Unable to start checkout. Please try again.')
                   return
                 }
                 
@@ -197,7 +219,7 @@ export default function PricingCard({
                 function openRazorpayCheckout(subData: any) {
                   const options = {
                     key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || (window as any).RAZORPAY_KEY_ID,
-                    subscription_id: subData.id,
+                    subscription_id: subData.subscriptionId,
                     name: 'Tharaga',
                     description: `${(plan as any).displayName} - ${billingCycle === 'monthly' ? 'Monthly' : 'Annual'}`,
                     prefill: {
@@ -207,7 +229,7 @@ export default function PricingCard({
                       color: '#D4AF37'
                     },
                     handler: function () {
-                      window.location.href = '/pricing?success=1'
+                      window.location.href = '/builder/billing?success=1'
                     },
                     modal: {
                       ondismiss: function() {

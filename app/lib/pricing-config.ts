@@ -10,13 +10,13 @@ export const PRICING_CONFIG = {
       id: 'builder_starter',
       name: 'Starter',
       displayName: 'Builder Starter',
-      tagline: 'Perfect for emerging builders',
+      tagline: 'Perfect for micro builders',
       price: {
         monthly: 999,
-        yearly: 9990, // 17% discount (₹11,988 - ₹1,998 = ₹9,990)
+        yearly: 9988, // 17% discount (₹11,988 - ₹2,000 = ₹9,988)
         yearlyDiscount: 17,
         display: '₹999/month',
-        displayYearly: '₹9,990/year (Save ₹1,998)',
+        displayYearly: '₹9,988/year (Save ₹2,000)',
         perDay: '₹33/day'
       },
       commission: {
@@ -25,44 +25,54 @@ export const PRICING_CONFIG = {
       },
       features: {
         included: [
-          'Up to 3 property listings',
-          'Basic lead scoring',
+          'Up to 5 property listings',
+          'Unlimited photos per property',
+          'AI lead scoring (85% accuracy)',
+          'Tamil + English voice search',
+          'Advanced search filters',
+          'Property comparison tools',
+          'Email + WhatsApp automation',
           'Basic analytics dashboard',
-          'Email notifications',
-          'Community support',
           'Mobile app access',
-          'Up to 50 leads per month'
+          'Community support (24-hour response)',
+          'RERA verification',
+          'Bank loan integration',
+          'EMI calculator',
+          'Virtual property tours'
         ],
         notIncluded: [
-          'Advanced AI analytics',
+          'Advanced analytics',
           'Priority support',
           'API access',
           'Team collaboration',
           'Custom branding',
-          'Lawyer-verified documents',
-          'WhatsApp support'
+          'Featured listings'
         ]
       },
       limits: {
-        projects: 1,
-        propertiesPerProject: 3,
-        leadsPerMonth: 50,
+        projects: null,
+        propertiesPerProject: 5, // Property-based: 1-5 properties
+        leadsPerMonth: null, // Unlimited
         teamMembers: 1,
         featuredListings: 0
+      },
+      propertyRange: {
+        min: 1,
+        max: 5
       }
     },
     pro: {
       id: 'builder_pro',
-      name: 'Professional',
-      displayName: 'Builder Professional',
-      tagline: 'For active builders (2-4 deals/year)',
+      name: 'Growth',
+      displayName: 'Builder Growth',
+      tagline: 'Best for small builders',
       badge: 'MOST POPULAR',
       price: {
         monthly: 2999,
-        yearly: 29990, // 17% discount (₹35,988 - ₹5,998 = ₹29,990)
+        yearly: 29988, // 17% discount (₹35,988 - ₹6,000 = ₹29,988)
         yearlyDiscount: 17,
         display: '₹2,999/month',
-        displayYearly: '₹29,990/year (Save ₹5,998)',
+        displayYearly: '₹29,988/year (Save ₹6,000)',
         perDay: '₹100/day'
       },
       commission: {
@@ -71,18 +81,18 @@ export const PRICING_CONFIG = {
       },
       features: {
         included: [
-          'Up to 10 property listings',
-          '10,000+ AI-scored verified buyers',
-          'Advanced AI lead scoring',
-          'Lawyer-verified documents',
-          'Advanced analytics dashboard',
-          'WhatsApp support',
+          'Everything in Starter',
+          'Up to 15 property listings',
+          'AI-powered lead recommendations',
+          'Advanced analytics (conversion funnels)',
           'Priority support (4-hour response)',
-          'Unlimited leads',
+          '3 team member seats',
           'CRM integration',
-          'Automated follow-ups',
-          'Bulk upload properties',
-          'Custom email templates'
+          'Bulk property upload',
+          'Custom email templates',
+          '3 featured listings/month',
+          'Performance insights',
+          'Lead source tracking'
         ],
         notIncluded: [
           'White-label branding',
@@ -92,27 +102,30 @@ export const PRICING_CONFIG = {
         ]
       },
       limits: {
-        projects: 5,
-        propertiesPerProject: 10,
+        projects: null,
+        propertiesPerProject: 15, // Property-based: 6-15 properties
         leadsPerMonth: null, // Unlimited
         teamMembers: 3,
         featuredListings: 3
+      },
+      propertyRange: {
+        min: 6,
+        max: 15
       }
     },
     enterprise: {
       id: 'builder_enterprise',
-      name: 'Enterprise',
-      displayName: 'Builder Enterprise',
-      tagline: 'For large builders (10+ deals/year)',
+      name: 'Scale',
+      displayName: 'Builder Scale',
+      tagline: 'Built for medium builders',
       badge: 'Premium',
       price: {
         monthly: 5999,
-        yearly: 59990, // 17% discount (₹71,988 - ₹11,998 = ₹59,990)
+        yearly: 59988, // 17% discount (₹71,988 - ₹12,000 = ₹59,988)
         yearlyDiscount: 17,
         display: '₹5,999/month',
-        displayYearly: '₹59,990/year (Save ₹11,998)',
-        perDay: '₹200/day',
-        custom: 'Custom pricing available for 100+ properties'
+        displayYearly: '₹59,988/year (Save ₹12,000)',
+        perDay: '₹200/day'
       },
       commission: {
         rate: 0,
@@ -120,30 +133,83 @@ export const PRICING_CONFIG = {
       },
       features: {
         included: [
-          'Unlimited property listings',
-          'Unlimited AI-scored verified buyers',
-          'AI-powered predictive analytics',
-          'Custom analytics dashboards',
-          'Dedicated account manager',
-          'Unlimited team members',
+          'Everything in Growth',
+          'Up to 50 property listings',
+          'Predictive analytics',
+          '10 team member seats',
           'API access + webhooks',
           '10 featured listings/month',
           'White-label branding',
           'Multi-location management',
-          'Custom integrations',
-          '99.9% SLA guarantee',
+          'Dedicated account manager',
           'Priority phone support',
-          'On-site training',
+          'Custom integrations',
           'Quarterly business reviews'
+        ],
+        notIncluded: [
+          'Unlimited properties',
+          'Custom feature development',
+          '99.9% SLA guarantee',
+          'On-site training'
+        ]
+      },
+      limits: {
+        projects: null,
+        propertiesPerProject: 50, // Property-based: 16-50 properties
+        leadsPerMonth: null,
+        teamMembers: 10,
+        featuredListings: 10
+      },
+      propertyRange: {
+        min: 16,
+        max: 50
+      }
+    },
+    enterprisePlus: {
+      id: 'builder_enterprise_plus',
+      name: 'Enterprise',
+      displayName: 'Builder Enterprise',
+      tagline: 'For large developers',
+      badge: 'Enterprise',
+      price: {
+        monthly: 15000,
+        yearly: 150000, // 17% discount
+        yearlyDiscount: 17,
+        display: '₹15,000+/month',
+        displayYearly: '₹1,50,000+/year',
+        perDay: '₹500+/day',
+        custom: 'Custom pricing for 50+ properties'
+      },
+      commission: {
+        rate: 0,
+        description: 'Zero commission, pure subscription'
+      },
+      features: {
+        included: [
+          'Everything in Scale',
+          'Unlimited property listings',
+          'Unlimited team members',
+          'Custom feature development',
+          '99.9% SLA guarantee',
+          'On-site training',
+          'Monthly business reviews',
+          'Custom branding & domain',
+          'Dedicated tech support',
+          'Custom analytics reports',
+          'Direct API access'
         ],
         notIncluded: []
       },
       limits: {
-        projects: null, // Unlimited
-        propertiesPerProject: null,
+        projects: null,
+        propertiesPerProject: null, // Unlimited
         leadsPerMonth: null,
         teamMembers: null,
-        featuredListings: 10
+        featuredListings: null // Unlimited
+      },
+      propertyRange: {
+        min: 51,
+        max: null // Unlimited
       }
     }
   },

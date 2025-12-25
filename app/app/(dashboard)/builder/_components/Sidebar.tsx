@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useEffect, useMemo, useState, useRef } from 'react'
 import { cn } from '@/lib/utils'
-import { LayoutDashboard, Users, Building2, DollarSign, MessageSquare, Settings, Lock, HelpCircle, Building, Clock, BarChart3 } from 'lucide-react'
+import { LayoutDashboard, Users, Building2, DollarSign, MessageSquare, Settings, Lock, HelpCircle, Building, Clock, BarChart3, CreditCard } from 'lucide-react'
 
 interface SubscriptionData {
   tier: 'trial' | 'pro' | 'enterprise' | 'trial_expired' | string
@@ -198,6 +198,7 @@ export function Sidebar() {
       { href: '/builder/communications', label: 'Communications' },
     ]},
     { href: '/behavior-tracking', label: 'Behavior Analytics', icon: BarChart3, requiresPro: false },
+    { href: '/builder/billing', label: 'Billing & Usage', icon: CreditCard, requiresPro: false },
     { href: '/builder/settings', label: 'Settings', icon: Settings, requiresPro: false },
   ], [leadCount, isLoadingCount])
 

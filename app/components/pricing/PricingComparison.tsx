@@ -14,19 +14,19 @@ export default function PricingComparison({ activeTab }: PricingComparisonProps)
 
   const features = activeTab === 'builder'
     ? [
-        { name: 'Property Listings', starter: '3', pro: '10', enterprise: 'Unlimited' },
-        { name: 'AI-Scored Verified Buyers', starter: '50/month', pro: '10,000+', enterprise: 'Unlimited' },
-        { name: 'Lead Scoring', starter: 'Basic', pro: 'Advanced AI', enterprise: 'AI-Powered' },
-        { name: 'Lawyer-Verified Documents', starter: false, pro: true, enterprise: true },
-        { name: 'Analytics', starter: 'Basic', pro: 'Advanced', enterprise: 'Custom' },
-        { name: 'Support', starter: 'Community', pro: 'Priority (4hr)', enterprise: 'Dedicated Manager' },
-        { name: 'WhatsApp Support', starter: false, pro: true, enterprise: true },
-        { name: 'API Access', starter: false, pro: true, enterprise: true },
-        { name: 'Team Members', starter: '1', pro: '3', enterprise: 'Unlimited' },
+        { name: 'Property Listings', starter: '1-5', pro: '6-15', enterprise: '16-50' },
+        { name: 'AI Lead Scoring', starter: true, pro: true, enterprise: true },
+        { name: 'Tamil + English Voice Search', starter: true, pro: true, enterprise: true },
+        { name: 'Advanced Analytics', starter: false, pro: true, enterprise: true },
+        { name: 'Support', starter: 'Community (24hr)', pro: 'Priority (4hr)', enterprise: 'Dedicated (1hr)' },
+        { name: 'Team Members', starter: '1', pro: '3', enterprise: '10' },
         { name: 'Featured Listings', starter: '0', pro: '3/month', enterprise: '10/month' },
-        { name: 'Custom Branding', starter: false, pro: false, enterprise: true },
-        { name: 'White Label', starter: false, pro: false, enterprise: true },
-        { name: 'SLA Guarantee', starter: false, pro: false, enterprise: '99.9%' },
+        { name: 'API Access', starter: false, pro: false, enterprise: true },
+        { name: 'White-Label Branding', starter: false, pro: false, enterprise: true },
+        { name: 'RERA Verification', starter: true, pro: true, enterprise: true },
+        { name: 'Email + WhatsApp Automation', starter: true, pro: true, enterprise: true },
+        { name: 'CRM Integration', starter: false, pro: true, enterprise: true },
+        { name: 'Bulk Property Upload', starter: false, pro: true, enterprise: true },
       ]
     : [
         { name: 'Property Search', free: 'Unlimited', premium: 'Unlimited', vip: 'Unlimited' },

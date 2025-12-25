@@ -2,9 +2,13 @@ import { NextRequest, NextResponse } from 'next/server'
 export const runtime = 'edge'
 export const dynamic = 'force-dynamic'
 import { getSupabase } from '@/lib/supabase'
+import { secureApiRoute } from '@/lib/security/api-security'
+import { Permissions } from '@/lib/security/permissions'
+import { AuditActions, AuditResourceTypes } from '@/lib/security/audit'
 
-export async function GET(req: NextRequest) {
-  const supabase = getSupabase()
+export const GET = secureApiRoute(
+  async (req: NextRequest, user) => {
+    const supabase = getSupabase()
   const url = new URL(req.url)
   const range = (url.searchParams.get('range') || '30d') as '7d' | '30d' | '90d'
   const days = range === '7d' ? 7 : range === '90d' ? 90 : 30
@@ -63,5 +67,14 @@ export async function GET(req: NextRequest) {
     out.push({ date: key, total_users: cumulative, active_users: per.active_users, new_users: per.new_users })
   }
 
-  return NextResponse.json(out)
-}
+    return NextResponse.json(out)
+  },
+  {
+    requireAuth: true,
+    requireRole: ['admin'],
+    requirePermission: Permissions.ADMIN_ACCESS,
+    rateLimit: 'api',
+    auditAction: AuditActions.VIEW,
+    auditResourceType: AuditResourceTypes.ADMIN
+  }
+)

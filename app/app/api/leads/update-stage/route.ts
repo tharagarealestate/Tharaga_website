@@ -1,5 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { secureApiRoute } from '@/lib/security/api-security';
+import { Permissions } from '@/lib/security/permissions';
+import { AuditActions, AuditResourceTypes } from '@/lib/security/audit';
+import { z } from 'zod';
 
 const STAGE_ORDER: Record<string, number> = {
   new: 1,
@@ -24,56 +28,35 @@ type PipelineStage =
   | "closed_won"
   | "closed_lost";
 
+// Validation schema
+const UpdateStageSchema = z.object({
+  pipeline_id: z.string().uuid('Invalid pipeline ID'),
+  new_stage: z.enum(['new', 'contacted', 'qualified', 'site_visit_scheduled', 'site_visit_completed', 'negotiation', 'offer_made', 'closed_won', 'closed_lost']),
+  notes: z.string().max(1000).optional(),
+  deal_value: z.number().nonnegative().optional(),
+  probability: z.number().int().min(0).max(100).optional(),
+  expected_close_date: z.string().optional(),
+  loss_reason: z.string().max(500).optional(),
+});
+
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-export async function POST(request: NextRequest) {
-  const supabase = await createClient();
-  const {
-    data: { user },
-    error: authError,
-  } = await supabase.auth.getUser();
+export const POST = secureApiRoute(
+  async (request: NextRequest, user) => {
+    const supabase = await createClient();
 
-  if (authError || !user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
-  let payload: {
-    pipeline_id?: string;
-    new_stage?: PipelineStage;
-    notes?: string;
-    deal_value?: number;
-    probability?: number;
-    expected_close_date?: string;
-    loss_reason?: string;
-  };
-
-  try {
-    payload = await request.json();
-  } catch {
-    return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
-  }
-
-  const {
-    pipeline_id,
-    new_stage,
-    notes,
-    deal_value,
-    probability,
-    expected_close_date,
-    loss_reason,
-  } = payload;
-
-  if (!pipeline_id || !new_stage) {
-    return NextResponse.json(
-      { error: "Missing required fields" },
-      { status: 400 }
-    );
-  }
-
-  if (!(new_stage in STAGE_ORDER)) {
-    return NextResponse.json({ error: "Invalid stage" }, { status: 400 });
-  }
+    // Payload is already validated by secureApiRoute
+    const body = await request.json();
+    const {
+      pipeline_id,
+      new_stage,
+      notes,
+      deal_value,
+      probability,
+      expected_close_date,
+      loss_reason,
+    } = body;
 
   const updateData: Record<string, any> = {
     stage: new_stage,
@@ -145,6 +128,16 @@ export async function POST(request: NextRequest) {
     }
   }
 
-  return NextResponse.json({ success: true, data });
-}
+    return NextResponse.json({ success: true, data });
+  },
+  {
+    requireAuth: true,
+    requireRole: ['builder', 'admin'],
+    requirePermission: Permissions.LEAD_UPDATE,
+    rateLimit: 'api',
+    validateSchema: UpdateStageSchema,
+    auditAction: AuditActions.UPDATE,
+    auditResourceType: AuditResourceTypes.LEAD
+  }
+)
 

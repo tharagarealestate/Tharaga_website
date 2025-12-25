@@ -1,6 +1,14 @@
 import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
 import { cookies } from 'next/headers';
 import { NextRequest, NextResponse } from 'next/server';
+import { secureApiRoute } from '@/lib/security/api-security';
+import { AuditActions, AuditResourceTypes } from '@/lib/security/audit';
+import { z } from 'zod';
+
+const deleteAccountSchema = z.object({
+  confirm: z.boolean().refine(val => val === true, { message: 'Deletion must be confirmed' }),
+  anonymize: z.boolean().default(true)
+});
 
 /**
  * DELETE /api/user/delete-account
@@ -8,29 +16,15 @@ import { NextRequest, NextResponse } from 'next/server';
  * Anonymizes or deletes user data
  * Sets deletion_requested flag or actually deletes
  */
-export async function DELETE(request: NextRequest) {
-  try {
+export const DELETE = secureApiRoute(
+  async (request: NextRequest, user) => {
     const supabase = createRouteHandlerClient({ cookies });
     
-    // Get authenticated user
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    
-    if (authError || !user) {
-      return NextResponse.json(
-        { error: 'Unauthorized. Please sign in.' },
-        { status: 401 }
-      );
-    }
-
+    // User is already authenticated via secureApiRoute
     const body = await request.json().catch(() => ({}));
-    const { confirm = false, anonymize = true } = body;
+    const { confirm = false, anonymize = true } = deleteAccountSchema.parse(body);
 
-    if (!confirm) {
-      return NextResponse.json(
-        { error: 'Deletion must be confirmed. Set confirm: true in request body.' },
-        { status: 400 }
-      );
-    }
+    // Validation is handled by secureApiRoute schema
 
     // Option 1: Anonymize data (recommended for production)
     if (anonymize) {
@@ -121,14 +115,15 @@ export async function DELETE(request: NextRequest) {
         deleted: true,
       });
     }
-  } catch (error) {
-    console.error('Delete account API error:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+  },
+  {
+    requireAuth: true,
+    rateLimit: 'strict',
+    validateSchema: deleteAccountSchema,
+    auditAction: AuditActions.USER_DELETE,
+    auditResourceType: AuditResourceTypes.USER
   }
-}
+)
 
 
 

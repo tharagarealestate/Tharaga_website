@@ -27,23 +27,51 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  const manager = createWebhookManager({ supabase })
-  const { webhooks, error } = await manager.listWebhooks(builderId)
+    const manager = createWebhookManager({ supabase })
+    const { webhooks, error } = await manager.listWebhooks(builderId)
 
-  if (error) {
-    return NextResponse.json({ error }, { status: 500 })
+    if (error) {
+      return NextResponse.json({ error }, { status: 500 })
+    }
+
+    // Log audit event
+    await logSecurityEvent(
+      req,
+      AuditActions.VIEW,
+      AuditResourceTypes.SETTINGS,
+      undefined,
+      user.id
+    );
+
+    return NextResponse.json({ webhooks })
+  } catch (error) {
+    console.error('[API/Webhooks] GET error:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
-
-  return NextResponse.json({ webhooks })
 }
 
 export async function POST(req: NextRequest) {
-  const supabase = await createClient()
-  const builderId = await getBuilderId(req, supabase)
+  try {
+    const supabase = await createClient()
+    
+    // Authentication
+    const user = await withAuth(req);
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
 
-  if (!builderId) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  }
+    // Verify builder role
+    if (user.role !== 'builder' && user.role !== 'admin') {
+      return NextResponse.json({ error: 'Forbidden - Builders only' }, { status: 403 })
+    }
+
+    // Check permission
+    const hasPerm = await hasPermission(user.id, Permissions.WEBHOOK_MANAGE);
+    if (!hasPerm) {
+      return NextResponse.json({ error: 'Forbidden - Insufficient permissions' }, { status: 403 })
+    }
+
+    const builderId = user.id
 
   const body = await req.json().catch(() => null)
 
@@ -62,10 +90,23 @@ export async function POST(req: NextRequest) {
     timeoutSeconds: typeof body.timeout_seconds === 'number' ? body.timeout_seconds : undefined,
   })
 
-  if (error || !webhook) {
-    return NextResponse.json({ error: error ?? 'Failed to create webhook' }, { status: 400 })
-  }
+    if (error || !webhook) {
+      return NextResponse.json({ error: error ?? 'Failed to create webhook' }, { status: 400 })
+    }
 
-  return NextResponse.json({ webhook }, { status: 201 })
+    // Log audit event
+    await logSecurityEvent(
+      req,
+      AuditActions.CREATE,
+      AuditResourceTypes.SETTINGS,
+      webhook.id,
+      user.id
+    );
+
+    return NextResponse.json({ webhook }, { status: 201 })
+  } catch (error) {
+    console.error('[API/Webhooks] POST error:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+  }
 }
 

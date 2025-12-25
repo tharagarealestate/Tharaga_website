@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
 import { cookies } from 'next/headers';
 import Razorpay from 'razorpay';
+import { secureApiRoute } from '@/lib/security/api-security';
+import { AuditActions, AuditResourceTypes } from '@/lib/security/audit';
+import { z } from 'zod';
 
 const razorpay = process.env.RAZORPAY_KEY_ID && process.env.RAZORPAY_KEY_SECRET
   ? new Razorpay({
@@ -10,23 +13,18 @@ const razorpay = process.env.RAZORPAY_KEY_ID && process.env.RAZORPAY_KEY_SECRET
     })
   : null;
 
-export async function POST(request: NextRequest) {
-  try {
+const createSubscriptionSchema = z.object({
+  planId: z.string().uuid('Invalid plan ID'),
+  billingCycle: z.enum(['monthly', 'yearly'])
+});
+
+export const POST = secureApiRoute(
+  async (request: NextRequest, user) => {
     const supabase = createRouteHandlerClient({ cookies });
     
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const { planId, billingCycle } = await request.json();
-
-    if (!planId || !billingCycle) {
-      return NextResponse.json(
-        { error: 'Plan ID and billing cycle are required' },
-        { status: 400 }
-      );
-    }
+    // User is already authenticated via secureApiRoute
+    const body = await request.json();
+    const { planId, billingCycle } = createSubscriptionSchema.parse(body);
 
     if (!razorpay) {
       return NextResponse.json(
@@ -212,13 +210,14 @@ export async function POST(request: NextRequest) {
         { status: 500 }
       );
     }
-
-  } catch (error: any) {
-    console.error('Create subscription error:', error);
-    return NextResponse.json(
-      { error: error.message },
-      { status: 500 }
-    );
+  },
+  {
+    requireAuth: true,
+    requireRole: ['builder', 'admin'],
+    rateLimit: 'strict',
+    validateSchema: createSubscriptionSchema,
+    auditAction: AuditActions.CREATE_PAYMENT,
+    auditResourceType: AuditResourceTypes.PAYMENT
   }
-}
+)
 

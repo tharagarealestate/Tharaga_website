@@ -78,19 +78,59 @@ export async function logSecurityEvent(
  * Predefined audit events
  */
 export const AuditActions = {
+  // Authentication
   LOGIN: 'login',
-  LOGOUT: 'logout',
   LOGIN_FAILED: 'login_failed',
-  UPDATE_LEAD: 'update_lead',
-  DELETE_LEAD: 'delete_lead',
-  UPDATE_PROPERTY: 'update_property',
-  DELETE_PROPERTY: 'delete_property',
-  CREATE_PAYMENT: 'create_payment',
-  UPDATE_SETTINGS: 'update_settings',
-  VIEW_SENSITIVE_DATA: 'view_sensitive_data',
+  LOGOUT: 'logout',
+  PASSWORD_RESET: 'password_reset',
   PASSWORD_CHANGE: 'password_change',
+  
+  // CRUD Operations
+  CREATE: 'create',
+  READ: 'read',
+  VIEW: 'view',
+  UPDATE: 'update',
+  DELETE: 'delete',
+  BULK_UPDATE: 'bulk_update',
+  
+  // Lead Operations
+  LEAD_CREATE: 'lead_create',
+  LEAD_UPDATE: 'lead_update',
+  LEAD_DELETE: 'lead_delete',
+  LEAD_ASSIGN: 'lead_assign',
+  
+  // Property Operations
+  PROPERTY_CREATE: 'property_create',
+  PROPERTY_UPDATE: 'property_update',
+  PROPERTY_DELETE: 'property_delete',
+  PROPERTY_VERIFY: 'property_verify',
+  
+  // User Operations
+  USER_CREATE: 'user_create',
+  USER_UPDATE: 'user_update',
+  USER_DELETE: 'user_delete',
+  ROLE_CHANGE: 'role_change',
+  
+  // Admin Operations
+  ADMIN_ACCESS: 'admin_access',
+  SETTINGS_UPDATE: 'settings_update',
+  
+  // Security Events
+  SUSPICIOUS_ACTIVITY: 'suspicious_activity',
+  RATE_LIMIT_EXCEEDED: 'rate_limit_exceeded',
+  UNAUTHORIZED_ACCESS: 'unauthorized_access',
+  
+  // 2FA Operations
+  TWO_FA_ENABLE: 'two_fa_enable',
+  TWO_FA_DISABLE: 'two_fa_disable',
+  TWO_FA_VERIFY: 'two_fa_verify',
+  
+  // Payment Operations
+  CREATE_PAYMENT: 'create_payment',
+  
+  // Other
   OTP_SENT: 'otp_sent',
-  RATE_LIMIT_EXCEEDED: 'rate_limit_exceeded'
+  VIEW_SENSITIVE_DATA: 'view_sensitive_data'
 } as const
 
 export const AuditResourceTypes = {
@@ -99,6 +139,9 @@ export const AuditResourceTypes = {
   PROPERTY: 'property',
   PAYMENT: 'payment',
   USER: 'user',
-  SETTINGS: 'settings'
+  SETTINGS: 'settings',
+  ADMIN: 'admin',
+  PROFILE: 'profile',
+  ROLE: 'role'
 } as const
 

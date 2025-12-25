@@ -1,6 +1,8 @@
 import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
 import { cookies } from 'next/headers';
 import { NextRequest, NextResponse } from 'next/server';
+import { secureApiRoute } from '@/lib/security/api-security';
+import { AuditActions, AuditResourceTypes } from '@/lib/security/audit';
 
 /**
  * GET /api/user/export-data
@@ -8,19 +10,11 @@ import { NextRequest, NextResponse } from 'next/server';
  * Exports all user data as JSON
  * Returns: profile, roles, properties, leads, documents, subscriptions
  */
-export async function GET(request: NextRequest) {
-  try {
+export const GET = secureApiRoute(
+  async (request: NextRequest, user) => {
     const supabase = createRouteHandlerClient({ cookies });
     
-    // Get authenticated user
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    
-    if (authError || !user) {
-      return NextResponse.json(
-        { error: 'Unauthorized. Please sign in.' },
-        { status: 401 }
-      );
-    }
+    // User is already authenticated via secureApiRoute
 
     // Fetch all user data from various tables
     const [
@@ -71,14 +65,14 @@ export async function GET(request: NextRequest) {
         'Content-Disposition': `attachment; filename="tharaga-user-data-${user.id}-${Date.now()}.json"`,
       },
     });
-  } catch (error) {
-    console.error('Export data API error:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+  },
+  {
+    requireAuth: true,
+    rateLimit: 'api',
+    auditAction: AuditActions.VIEW_SENSITIVE_DATA,
+    auditResourceType: AuditResourceTypes.USER
   }
-}
+)
 
 
 

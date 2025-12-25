@@ -6,32 +6,45 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabase } from '@/lib/supabase';
 import { createProcessingJob } from '@/lib/services/propertyProcessor';
+import { secureApiRoute } from '@/lib/security/api-security';
+import { Permissions } from '@/lib/security/permissions';
+import { AuditActions, AuditResourceTypes } from '@/lib/security/audit';
+import { z } from 'zod';
 
 // Use Node.js runtime since propertyProcessor module uses Node.js-specific dependencies
 export const runtime = 'nodejs';
 export const maxDuration = 60; // 1 minute for upload
 
+const propertyUploadSchema = z.object({
+  property_name: z.string().optional(),
+  title: z.string().optional(),
+  location: z.any().optional(),
+  city: z.string().optional(),
+  locality: z.string().optional(),
+  property_type: z.string().optional(),
+  total_units: z.number().optional(),
+  price_range: z.any().optional(),
+  price_inr: z.number().optional(),
+  description: z.string().optional(),
+  images: z.array(z.string()).optional()
+}).refine(data => data.property_name || data.title, {
+  message: 'property_name or title is required'
+});
+
 /**
  * POST /api/properties/upload
  * Upload a new property and trigger processing
  */
-export async function POST(request: NextRequest) {
-  try {
-    // Get authenticated user
+export const POST = secureApiRoute(
+  async (request: NextRequest, user) => {
     const supabase = getSupabase();
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-
-    if (authError || !user) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
-    }
-
+    
+    // User is already authenticated via secureApiRoute
     const builderId = user.id;
     const body = await request.json();
+    const validatedData = propertyUploadSchema.parse(body);
 
-    // Validate required fields
+    // Input is already validated by secureApiRoute
     const { 
       property_name, 
       title,
@@ -44,14 +57,7 @@ export async function POST(request: NextRequest) {
       price_inr,
       description,
       images
-    } = body;
-
-    if (!property_name && !title) {
-      return NextResponse.json(
-        { error: 'property_name or title is required' },
-        { status: 400 }
-      );
-    }
+    } = validatedData;
 
     // 1. Save property to database
     const propertyData: any = {
@@ -131,16 +137,15 @@ export async function POST(request: NextRequest) {
       jobId: jobId,
       status: 'processing'
     }, { status: 200 });
-
-  } catch (error) {
-    console.error('[Property Upload] Error:', error);
-    return NextResponse.json(
-      { 
-        error: 'Internal server error',
-        message: error instanceof Error ? error.message : 'Unknown error'
-      },
-      { status: 500 }
-    );
+  },
+  {
+    requireAuth: true,
+    requireRole: ['builder', 'admin'],
+    requirePermission: Permissions.PROPERTY_CREATE,
+    rateLimit: 'strict',
+    validateSchema: propertyUploadSchema,
+    auditAction: AuditActions.PROPERTY_CREATE,
+    auditResourceType: AuditResourceTypes.PROPERTY
   }
-}
+)
 

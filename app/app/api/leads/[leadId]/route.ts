@@ -87,6 +87,10 @@ interface LeadDetailResponse {
   };
 }
 
+import { secureApiRoute } from '@/lib/security/api-security';
+import { Permissions } from '@/lib/security/permissions';
+import { AuditActions, AuditResourceTypes } from '@/lib/security/audit';
+
 // =============================================
 // GET HANDLER
 // =============================================
@@ -94,28 +98,15 @@ export async function GET(
   request: NextRequest,
   { params }: { params: { leadId: string } }
 ) {
-  try {
+  // Use secureApiRoute wrapper for auth and rate limiting
+  const handler = secureApiRoute(
+    async (req: NextRequest, user) => {
     const cookieStore = cookies();
     const supabase = await createClient();
     
-    // =============================================
-    // AUTHENTICATION
-    // =============================================
-    
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-    
+    // User is already authenticated via secureApiRoute
     // Verify user is a builder
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', user.id)
-      .single();
-    
-    if (profile?.role !== 'builder') {
+    if (user.role !== 'builder' && user.role !== 'admin') {
       return NextResponse.json(
         { error: 'Forbidden - Builders only' },
         { status: 403 }
@@ -471,6 +462,15 @@ export async function GET(
       recommendations,
     };
     
+    // Log audit event
+    await logSecurityEvent(
+      request,
+      AuditActions.VIEW,
+      AuditResourceTypes.LEAD,
+      params.leadId,
+      user.id
+    );
+
     return NextResponse.json({
       success: true,
       data: response,

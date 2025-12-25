@@ -34,6 +34,10 @@ export const Permissions = {
   ADMIN_SETTINGS: 'admin:settings',
   ADMIN_AUDIT: 'admin:audit',
 
+  // Webhook permissions
+  WEBHOOK_VIEW: 'webhook:view',
+  WEBHOOK_MANAGE: 'webhook:manage',
+
   // Builder permissions
   BUILDER_DASHBOARD: 'builder:dashboard',
   BUILDER_ANALYTICS: 'builder:analytics',
@@ -101,7 +105,9 @@ function checkRolePermission(role: string | null, permission: string): boolean {
       Permissions.PROPERTY_VIEW,
       Permissions.LEAD_VIEW,
       Permissions.LEAD_UPDATE,
-      Permissions.LEAD_ASSIGN
+      Permissions.LEAD_ASSIGN,
+      Permissions.WEBHOOK_VIEW,
+      Permissions.WEBHOOK_MANAGE
     ],
     buyer: [
       Permissions.BUYER_DASHBOARD,
@@ -213,6 +219,7 @@ export async function hasAnyPermission(
   }
   return false
 }
+
 
 
 

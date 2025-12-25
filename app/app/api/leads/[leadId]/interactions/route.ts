@@ -48,6 +48,11 @@ const createInteractionSchema = z.object({
 
 type CreateInteractionInput = z.infer<typeof createInteractionSchema>;
 
+import { withAuth } from '@/lib/security/auth';
+import { hasPermission } from '@/lib/security/permissions';
+import { Permissions } from '@/lib/security/permissions';
+import { logSecurityEvent, AuditActions, AuditResourceTypes } from '@/lib/security/audit';
+
 // =============================================
 // POST HANDLER - CREATE INTERACTION
 // =============================================
@@ -56,34 +61,34 @@ export async function POST(
   { params }: { params: { leadId: string } }
 ) {
   try {
-    const cookieStore = cookies();
-    const supabase = await createClient();
-    
-    // =============================================
-    // AUTHENTICATION
-    // =============================================
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    
-    if (authError || !user) {
+    // Authentication and authorization
+    const user = await withAuth(request);
+    if (!user) {
       return NextResponse.json(
         { error: 'Unauthorized' },
         { status: 401 }
       );
     }
-    
+
     // Verify builder role
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', user.id)
-      .single();
-    
-    if (profile?.role !== 'builder') {
+    if (user.role !== 'builder' && user.role !== 'admin') {
       return NextResponse.json(
         { error: 'Forbidden - Builders only' },
         { status: 403 }
       );
     }
+
+    // Check permission
+    const hasPerm = await hasPermission(user.id, Permissions.LEAD_UPDATE);
+    if (!hasPerm) {
+      return NextResponse.json(
+        { error: 'Forbidden - Insufficient permissions' },
+        { status: 403 }
+      );
+    }
+
+    const cookieStore = cookies();
+    const supabase = await createClient();
     
     // =============================================
     // VALIDATE LEAD EXISTS AND BELONGS TO BUILDER
@@ -330,6 +335,15 @@ export async function POST(
     // =============================================
     
     // Note: Frontend will handle this via query invalidation
+    
+    // Log audit event
+    await logSecurityEvent(
+      request,
+      AuditActions.LEAD_UPDATE,
+      AuditResourceTypes.LEAD,
+      params.leadId,
+      user.id
+    );
     
     return NextResponse.json({
       success: true,

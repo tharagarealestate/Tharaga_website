@@ -59,29 +59,16 @@ const bulkSchema = z.discriminatedUnion('operation', [
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-export async function POST(request: NextRequest) {
-  try {
+import { secureApiRoute } from '@/lib/security/api-security';
+import { Permissions } from '@/lib/security/permissions';
+import { AuditActions, AuditResourceTypes } from '@/lib/security/audit';
+
+export const POST = secureApiRoute(
+  async (request: NextRequest, user) => {
     const cookieStore = cookies();
     const supabase = await createClient();
     
-    // Authenticate
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-    
-    // Verify builder role
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', user.id)
-      .single();
-    
-    if (profile?.role !== 'builder') {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-    }
-    
-    // Parse and validate request
+    // Payload is already validated by secureApiRoute
     const body = await request.json();
     const validatedData = bulkSchema.parse(body);
     
@@ -390,22 +377,17 @@ export async function POST(request: NextRequest) {
       { error: 'Unknown operation' },
       { status: 400 }
     );
-    
-  } catch (error) {
-    if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { error: 'Validation error', details: error.errors },
-        { status: 400 }
-      );
-    }
-    
-    console.error('[API/Bulk] Error:', error);
-    return NextResponse.json(
-      { error: 'Internal server error', details: String(error) },
-      { status: 500 }
-    );
+  },
+  {
+    requireAuth: true,
+    requireRole: ['builder', 'admin'],
+    requirePermission: Permissions.LEAD_UPDATE,
+    rateLimit: 'strict',
+    validateSchema: bulkSchema,
+    auditAction: AuditActions.BULK_UPDATE,
+    auditResourceType: AuditResourceTypes.LEAD
   }
-}
+)
 
 // =============================================
 // HELPER: Send Email (Integrate with Provider)

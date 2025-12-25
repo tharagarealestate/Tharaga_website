@@ -1,6 +1,14 @@
 import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
 import { cookies } from 'next/headers';
 import { NextRequest, NextResponse } from 'next/server';
+import { secureApiRoute } from '@/lib/security/api-security';
+import { Permissions } from '@/lib/security/permissions';
+import { AuditActions, AuditResourceTypes } from '@/lib/security/audit';
+import { z } from 'zod';
+
+const switchRoleSchema = z.object({
+  role: z.enum(['buyer', 'builder', 'admin'])
+});
 
 /**
  * POST /api/user/switch-role
@@ -10,25 +18,18 @@ import { NextRequest, NextResponse } from 'next/server';
  * Also updates profiles table role field for backward compatibility
  * Format expected by role-manager-v2.js
  */
-export async function POST(request: NextRequest) {
-  try {
-    const body = await request.json();
-    const { role } = body;
-
+export const POST = secureApiRoute(
+  async (request: NextRequest, user) => {
     const supabase = createRouteHandlerClient({ cookies });
     
-    // Get authenticated user first
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    
-    if (authError || !user) {
-      return NextResponse.json(
-        { error: 'Unauthorized. Please sign in.' },
-        { status: 401 }
-      );
-    }
+    // Input is already validated by secureApiRoute
+    const body = await request.json();
+    const { role } = switchRoleSchema.parse(body);
 
     // Check if admin owner (tharagarealestate@gmail.com) - allow admin role switching
     const isAdminOwner = user.email === 'tharagarealestate@gmail.com';
+    
+    // User is already authenticated via secureApiRoute
     
     // Validate role - allow admin for admin owner
     const validRoles = isAdminOwner ? ['buyer', 'builder', 'admin'] : ['buyer', 'builder'];
@@ -142,11 +143,12 @@ export async function POST(request: NextRequest) {
       success: true,
       active_role: role,
     });
-  } catch (error) {
-    console.error('Switch role API error:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+  },
+  {
+    requireAuth: true,
+    rateLimit: 'strict',
+    validateSchema: switchRoleSchema,
+    auditAction: AuditActions.ROLE_CHANGE,
+    auditResourceType: AuditResourceTypes.USER_ROLES
   }
-}
+)

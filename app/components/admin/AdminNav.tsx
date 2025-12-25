@@ -9,7 +9,8 @@ import {
   Building2, 
   Users, 
   Settings,
-  Mail
+  Mail,
+  Lock
 } from 'lucide-react';
 
 const navItems = [
@@ -18,6 +19,7 @@ const navItems = [
   { href: '/admin/verify', label: 'Builder Verification', icon: Shield },
   { href: '/admin/properties', label: 'Property Verification', icon: Building2 },
   { href: '/admin/leads', label: 'Leads', icon: Users },
+  { href: '/admin/security', label: 'Security', icon: Lock },
   { href: '/admin/newsletter', label: 'Newsletter', icon: Mail },
   { href: '/admin/settings', label: 'Settings', icon: Settings },
 ];

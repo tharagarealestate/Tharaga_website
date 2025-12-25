@@ -19,14 +19,14 @@
     </div>
   </header>
 
-  <main class="container">
+  <main class="container" style="background: rgb(2, 6, 23); min-height: 100vh; padding-top: 24px;">
     <article id="prop" class="card" style="overflow:visible">
       <div id="gallery" class="details-hero"></div>
       <div style="padding:16px">
         <div class="row" style="justify-content:space-between">
           <div>
             <div id="title" style="font-size:24px;font-weight:800"></div>
-            <div id="meta" style="color:rgb(148, 163, 184);font-size:14px"></div>
+            <div id="meta" style="color:rgb(226, 232, 240);font-size:14px"></div>
           </div>
           <div class="kpi">
             <div class="pill" id="price"></div>
@@ -57,22 +57,22 @@
             <div style="margin-top:12px">
               <h4>Quick Tools</h4>
               <div class="grid" style="grid-template-columns:1fr 1fr">
-                <div><label>Loan (₹)</label><input id="loan" class="input" type="number" placeholder="e.g., 4000000"></div>
-                <div><label>Tenure (yrs)</label><input id="tenure" class="input" type="number" value="20"></div>
-                <div><label>Interest (%)</label><input id="rate" class="input" type="number" value="8.5"></div>
+                <div><label style="display:block;color:rgb(148, 163, 184);font-size:12px;font-weight:600;text-transform:uppercase;margin-bottom:8px">Loan (₹)</label><input id="loan" class="input" type="number" placeholder="e.g., 4000000"></div>
+                <div><label style="display:block;color:rgb(148, 163, 184);font-size:12px;font-weight:600;text-transform:uppercase;margin-bottom:8px">Tenure (yrs)</label><input id="tenure" class="input" type="number" value="20"></div>
+                <div><label style="display:block;color:rgb(148, 163, 184);font-size:12px;font-weight:600;text-transform:uppercase;margin-bottom:8px">Interest (%)</label><input id="rate" class="input" type="number" value="8.5"></div>
               </div>
               <div style="margin-top:8px" id="emi"></div>
             </div>
           </aside>
         </div>
 
-        <section class="card" style="padding:16px;margin-top:16px">
-          <h3>Amenities</h3>
+        <section class="card" style="padding:24px;margin-top:16px">
+          <h3 style="color:rgb(255, 255, 255);font-weight:700;font-size:18px;margin-bottom:16px;margin-top:0">Amenities</h3>
           <div id="amenities" class="row"></div>
         </section>
 
-        <section class="card" style="padding:16px;margin-top:16px">
-          <h3>📍 Location</h3>
+        <section class="card" style="padding:24px;margin-top:16px">
+          <h3 style="color:rgb(255, 255, 255);font-weight:700;font-size:18px;margin-bottom:16px;margin-top:0">📍 Location</h3>
           <div id="map" style="margin-top:10px">
             <iframe id="gmap" width="100%" height="260" style="border:0" loading="lazy"
               referrerpolicy="no-referrer-when-downgrade"></iframe>
@@ -84,9 +84,9 @@
 
         </section>
 
-        <section class="card" style="padding:16px;margin-top:16px">
-          <div class="row" style="justify-content:space-between;align-items:center">
-            <h3>Similar Properties</h3>
+        <section class="card" style="padding:24px;margin-top:16px">
+          <div class="row" style="justify-content:space-between;align-items:center;margin-bottom:16px">
+            <h3 style="color:rgb(255, 255, 255);font-weight:700;font-size:18px;margin:0">Similar Properties</h3>
             <button id="enhanceBtn" class="btn secondary">AI-style Enhance Description</button>
           </div>
           <div id="similar" class="grid" style="grid-template-columns:repeat(auto-fill,minmax(260px,1fr));"></div>
@@ -96,8 +96,8 @@
   </main>
 
   <!-- Enquiry Modal (Netlify Forms ready) -->
-  <div id="modal" class="hidden" style="position:fixed;inset:0;background:rgba(0,0,0,.4);display:flex;align-items:center;justify-content:center;padding:16px">
-    <form name="tharaga-enquiry" method="POST" data-netlify="true" class="card" style="max-width:520px;width:100%;padding:16px;background:#fff">
+  <div id="modal" class="hidden" style="position:fixed;inset:0;background:rgba(0,0,0,0.6);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;padding:16px;z-index:50">
+    <form name="tharaga-enquiry" method="POST" data-netlify="true" class="card" style="max-width:520px;width:100%;padding:24px;background:rgba(30, 41, 59, 0.95);border:2px solid rgb(252, 211, 77);border-radius:16px">
       <input type="hidden" name="form-name" value="tharaga-enquiry">
       <div class="row" style="justify-content:space-between;align-items:center">
         <h3>Enquire about this property</h3>

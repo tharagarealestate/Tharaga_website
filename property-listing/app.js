@@ -337,11 +337,11 @@ function cardHTML(p, s) {
     <div style="padding:14px;display:flex;gap:12px;flex-direction:column">
       <div>
         <div class="loc-loud">${escapeHtml((p.locality||'') + (p.city ? ', ' + p.city : ''))}</div>
-        <div style="color:rgb(255, 255, 255);font-size:13px;font-weight:500">${escapeHtml(p.title)}</div>
+        <div style="color:rgb(226, 232, 240);font-size:13px;font-weight:500">${escapeHtml(p.title)}</div>
       </div>
       <div class="row" style="justify-content:space-between">
         <div class="price-loud">${escapeHtml(price)}</div>
-        <div style="color:rgb(255, 255, 255);font-size:12px;opacity:0.9">${escapeHtml(pps)}</div>
+        <div style="color:rgb(226, 232, 240);font-size:12px;opacity:0.9">${escapeHtml(pps)}</div>
       </div>
       <div class="row" style="gap:8px;flex-wrap:wrap">${tags}</div>
       <div class="explain-inline" aria-hidden="true"></div>

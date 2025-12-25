@@ -292,8 +292,19 @@ async function handleResendEvent(body: any, builderId: string) {
 async function handleEmailSent(data: any, builderId: string) {
   console.log(`📧 Email sent: ${data.email_id} to ${data.to?.[0] || data.email}`);
   
-  // TODO: Update email status in database
-  // This will be triggered through automation rules
+  const adminClient = getAdminClient();
+  
+  // Update email_delivery_logs if exists
+  if (data.email_id) {
+    await supabase
+      .from('email_delivery_logs')
+      .update({ 
+        status: 'sent',
+        sent_at: new Date().toISOString(),
+        provider_message_id: data.email_id
+      })
+      .eq('provider_message_id', data.email_id);
+  }
 }
 
 /**
@@ -302,8 +313,31 @@ async function handleEmailSent(data: any, builderId: string) {
 async function handleEmailDelivered(data: any, builderId: string) {
   console.log(`✅ Email delivered: ${data.email_id}`);
   
-  // TODO: Update email delivery status
-  // This will be triggered through automation rules
+  const adminClient = getAdminClient();
+  
+  // Update email_delivery_logs
+  await adminClient
+    .from('email_delivery_logs')
+    .update({ 
+      status: 'delivered',
+      delivered_at: new Date().toISOString(),
+      provider_response: { delivered_at: new Date().toISOString() }
+    })
+    .eq('provider_message_id', data.email_id);
+
+  // Update sequence if applicable
+  const { data: log } = await adminClient
+    .from('email_delivery_logs')
+    .select('metadata')
+    .eq('provider_message_id', data.email_id)
+    .single();
+
+  if (log?.metadata?.sequence_id) {
+    await adminClient
+      .from('email_sequence_queue')
+      .update({ status: 'delivered' })
+      .eq('id', log.metadata.sequence_id);
+  }
 }
 
 /**
@@ -312,8 +346,59 @@ async function handleEmailDelivered(data: any, builderId: string) {
 async function handleEmailOpened(data: any, builderId: string) {
   console.log(`👀 Email opened: ${data.email_id}`);
   
-  // TODO: Track email engagement in lead behavior
-  // This will be triggered through automation rules
+  const adminClient = getAdminClient();
+  
+  // Update email_delivery_logs
+  const { data: log } = await adminClient
+    .from('email_delivery_logs')
+    .select('*')
+    .eq('provider_message_id', data.email_id)
+    .single();
+
+  if (log) {
+    await adminClient
+      .from('email_delivery_logs')
+      .update({ 
+        opened_at: log.opened_at || new Date().toISOString(),
+        open_count: (log.open_count || 0) + 1,
+        provider_response: {
+          ...(log.provider_response || {}),
+          last_opened: new Date().toISOString()
+        }
+      })
+      .eq('id', log.id);
+
+    // Insert interaction if lead_id exists
+    if (log.lead_id) {
+      await adminClient
+        .from('lead_interactions')
+        .insert({
+          lead_id: log.lead_id,
+          type: 'email_open',
+          metadata: {
+            email_id: data.email_id,
+            subject: log.subject,
+            timestamp: new Date().toISOString()
+          }
+        });
+
+      // Update lead engagement score (if function exists)
+      try {
+        await adminClient.rpc('increment_lead_score', {
+          lead_id: log.lead_id,
+          increment: 2
+        });
+      } catch (e) {
+        // Function might not exist, update directly
+        await adminClient
+          .from('leads')
+          .update({ 
+            ai_lead_score: Math.min((log.ai_lead_score || 0) + 2, 100)
+          })
+          .eq('id', log.lead_id);
+      }
+    }
+  }
 }
 
 /**
@@ -322,8 +407,61 @@ async function handleEmailOpened(data: any, builderId: string) {
 async function handleEmailClicked(data: any, builderId: string) {
   console.log(`🖱️ Email clicked: ${data.email_id} - Link: ${data.link}`);
   
-  // TODO: Track link clicks in lead behavior
-  // This will be triggered through automation rules
+  const adminClient = getAdminClient();
+  
+  // Update email_delivery_logs
+  const { data: log } = await adminClient
+    .from('email_delivery_logs')
+    .select('*')
+    .eq('provider_message_id', data.email_id)
+    .single();
+
+  if (log) {
+    await adminClient
+      .from('email_delivery_logs')
+      .update({ 
+        clicked_at: log.clicked_at || new Date().toISOString(),
+        click_count: (log.click_count || 0) + 1,
+        provider_response: {
+          ...(log.provider_response || {}),
+          last_clicked: new Date().toISOString(),
+          clicked_link: data.link
+        }
+      })
+      .eq('id', log.id);
+
+    // Insert click interaction
+    if (log.lead_id) {
+      await adminClient
+        .from('lead_interactions')
+        .insert({
+          lead_id: log.lead_id,
+          type: 'email_click',
+          metadata: {
+            email_id: data.email_id,
+            link: data.link,
+            user_agent: data.user_agent,
+            timestamp: new Date().toISOString()
+          }
+        });
+
+      // Boost lead score significantly for clicks
+      try {
+        await adminClient.rpc('increment_lead_score', {
+          lead_id: log.lead_id,
+          increment: 5
+        });
+      } catch (e) {
+        // Function might not exist, update directly
+        await adminClient
+          .from('leads')
+          .update({ 
+            ai_lead_score: Math.min((log.ai_lead_score || 0) + 5, 100)
+          })
+          .eq('id', log.lead_id);
+      }
+    }
+  }
 }
 
 /**
@@ -332,8 +470,53 @@ async function handleEmailClicked(data: any, builderId: string) {
 async function handleEmailBounced(data: any, builderId: string) {
   console.log(`❌ Email bounced: ${data.email_id} - Reason: ${data.bounce_type || 'unknown'}`);
   
-  // TODO: Mark email as invalid in lead record
-  // This will be triggered through automation rules
+  const adminClient = getAdminClient();
+  
+  const bounceType = data.bounce_type || 'unknown';
+  
+  // Update email_delivery_logs
+  await adminClient
+    .from('email_delivery_logs')
+    .update({ 
+      status: 'bounced',
+      bounced_at: new Date().toISOString(),
+      bounce_type: bounceType,
+      provider_response: {
+        bounce_type: bounceType,
+        bounced_at: new Date().toISOString()
+      }
+    })
+    .eq('provider_message_id', data.email_id);
+
+  // Mark email as invalid if hard bounce
+  const { data: log } = await adminClient
+    .from('email_delivery_logs')
+    .select('lead_id, recipient_email')
+    .eq('provider_message_id', data.email_id)
+    .single();
+
+  if (log && (bounceType === 'hard' || bounceType === 'spam')) {
+    if (log.lead_id) {
+      await adminClient
+        .from('leads')
+        .update({ 
+          email_valid: false,
+          email_bounce_reason: bounceType
+        })
+        .eq('id', log.lead_id);
+    }
+
+    // Pause sequences for this lead
+    await adminClient
+      .from('email_sequence_queue')
+      .update({ 
+        status: 'paused',
+        paused_reason: `High bounce rate: ${bounceType}`,
+        paused_at: new Date().toISOString()
+      })
+      .eq('lead_id', log.lead_id)
+      .eq('status', 'scheduled');
+  }
 }
 
 /**
@@ -342,8 +525,46 @@ async function handleEmailBounced(data: any, builderId: string) {
 async function handleEmailComplained(data: any, builderId: string) {
   console.log(`⚠️ Spam complaint: ${data.email_id}`);
   
-  // TODO: Unsubscribe lead from email campaigns
-  // This will be triggered through automation rules
+  const adminClient = getAdminClient();
+  
+  // Update email_delivery_logs
+  await adminClient
+    .from('email_delivery_logs')
+    .update({ 
+      status: 'bounced',
+      bounce_type: 'spam',
+      bounced_at: new Date().toISOString()
+    })
+    .eq('provider_message_id', data.email_id);
+
+  // Get lead and unsubscribe
+  const { data: log } = await adminClient
+    .from('email_delivery_logs')
+    .select('lead_id')
+    .eq('provider_message_id', data.email_id)
+    .single();
+
+  if (log?.lead_id) {
+    // Mark lead as unsubscribed
+    await adminClient
+      .from('leads')
+      .update({ 
+        email_valid: false,
+        email_bounce_reason: 'spam_complaint',
+        unsubscribed: true
+      })
+      .eq('id', log.lead_id);
+
+    // Cancel all scheduled sequences
+    await adminClient
+      .from('email_sequence_queue')
+      .update({ 
+        status: 'cancelled',
+        paused_reason: 'Spam complaint - unsubscribed'
+      })
+      .eq('lead_id', log.lead_id)
+      .eq('status', 'scheduled');
+  }
 }
 
 /**

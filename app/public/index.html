@@ -3133,81 +3133,102 @@
         // CRITICAL: Clear content immediately to prevent showing old HTML
         portalMenuItems.innerHTML = '';
 
+        // Check if user is logged in
+        let isLoggedIn = false;
+        let userRoles = [];
+        let primaryRole = '';
+        let builderVerified = false;
+        let userEmail = '';
+
+        if (window.thgRoleManager) {
+          const state = window.thgRoleManager.getState();
+          if (state.initialized && state.user && state.user.email) {
+            isLoggedIn = true;
+            userRoles = state.roles || [];
+            primaryRole = state.primaryRole || '';
+            builderVerified = state.builderVerified || false;
+            userEmail = state.user.email || '';
+          }
+        }
+
         // If role manager not ready yet, show loading state and prevent opening
         if (!window.thgRoleManager) {
           portalMenuItems.innerHTML = '<div style="padding:12px;color:rgba(255,255,255,0.6);text-align:center;font-size:13px;">Loading...</div>';
-          // Prevent dropdown from opening until ready
           portalMenu.setAttribute('data-loading', 'true');
-          return;
-        }
-
-        const state = window.thgRoleManager.getState();
-
-        // Wait for both initialization AND user data to be ready
-        if (!state.initialized || !state.user) {
-          // Still loading, show loading state and prevent opening
-          portalMenuItems.innerHTML = '<div style="padding:12px;color:rgba(255,255,255,0.6);text-align:center;font-size:13px;">Loading...</div>';
-          portalMenu.setAttribute('data-loading', 'true');
-          // CRITICAL: Only close if it's not already open (don't force close if user opened it)
-          if (!portalMenu.hasAttribute('open')) {
-            portalMenu.removeAttribute('open');
-          }
-          return;
-        }
-
-        // If no roles, show default or hide
-        if (state.roles.length === 0 && state.user.email !== 'tharagarealestate@gmail.com') {
-          // No roles yet, hide portal menu
-          portalMenu.style.display = 'none';
-          portalMenu.setAttribute('data-loading', 'true');
-          portalMenu.removeAttribute('open');
           return;
         }
 
         // Show portal menu
         portalMenu.style.display = '';
         
-        // CRITICAL: Build menu content FIRST before removing loading flag
-        // This ensures content is ready when dropdown opens
-
         let menuHTML = '';
 
-        // Special handling: Show ALL dashboards for admin owner email
-        const isAdminOwner = state.user.email === 'tharagarealestate@gmail.com';
+        // If user is NOT logged in, show Buyer and Builder options (no Admin)
+        if (!isLoggedIn) {
+          menuHTML += '<a href="/my-dashboard" class="portal-link" data-portal-type="buyer">🏠 Buyer Dashboard</a>';
+          menuHTML += '<a href="/builder" class="portal-link" data-portal-type="builder">🏗️ Builder Dashboard</a>';
+        } else {
+          // User is logged in - show based on roles
+          const isAdminOwner = userEmail === 'tharagarealestate@gmail.com';
 
-        console.log('[Portal Menu] Updating for user:', state.user.email, 'isAdminOwner:', isAdminOwner, 'roles:', state.roles);
+          // Show Buyer Dashboard if user has buyer role or is admin owner
+          if (userRoles.includes('buyer') || isAdminOwner) {
+            const active = primaryRole === 'buyer' ? ' <span style="color:#10b981">✓</span>' : '';
+            menuHTML += `<a href="/my-dashboard" class="portal-link" data-portal-type="buyer">🏠 Buyer Dashboard${active}</a>`;
+          }
 
-        // Show relevant dashboard(s) based on roles
-        // For admin owner, always show buyer dashboard (but tickmark only if it's primary)
-        if (state.roles.includes('buyer') || isAdminOwner) {
-          const active = state.primaryRole === 'buyer' ? ' <span style="color:#10b981">✓</span>' : '';
-          menuHTML += `<a href="/my-dashboard">🏠 Buyer Dashboard${active}</a>`;
+          // Show Builder Dashboard if user has builder role or is admin owner
+          if (userRoles.includes('builder') || isAdminOwner) {
+            const active = primaryRole === 'builder' ? ' <span style="color:#10b981">✓</span>' : '';
+            const verified = builderVerified ? ' <span style="color:#10b981;font-size:11px">✓ Verified</span>' : '';
+            menuHTML += `<a href="/builder" class="portal-link" data-portal-type="builder">🏗️ Builder Dashboard${active}${verified}</a>`;
+          }
+
+          // Show Admin Panel ONLY if user has admin role or is admin owner
+          const hasAdminRole = userRoles.includes('admin') || isAdminOwner;
+          if (hasAdminRole) {
+            const shouldShowTick = isAdminOwner || primaryRole === 'admin';
+            const active = shouldShowTick ? ' <span style="color:#10b981">✓</span>' : '';
+            menuHTML += `<a href="/admin" class="portal-link" data-portal-type="admin" style="border-top:1px solid rgba(255,255,255,0.1);margin-top:8px;padding-top:8px;">⚙️ Admin Panel${active}</a>`;
+          }
         }
 
-        // For admin owner, always show builder dashboard (but tickmark only if it's primary)
-        if (state.roles.includes('builder') || isAdminOwner) {
-          const active = state.primaryRole === 'builder' ? ' <span style="color:#10b981">✓</span>' : '';
-          const verified = state.builderVerified ? ' <span style="color:#10b981;font-size:11px">✓ Verified</span>' : '';
-          menuHTML += `<a href="/builder">🏗️ Builder Dashboard${active}${verified}</a>`;
-        }
-
-        // Show Admin Panel link ONLY if user has admin role (not for regular users)
-        // Also check if admin owner (tharagarealestate@gmail.com) - they always have admin access
-        // CRITICAL: For admin owner, admin should always be primary, so tickmark should always show
-        const userEmail = state.user?.email || '';
-        const isAdminOwnerCheck = userEmail === 'tharagarealestate@gmail.com';
-        const hasAdminRole = state.roles.includes('admin') || isAdminOwnerCheck;
+        // Set the final HTML
+        portalMenuItems.innerHTML = menuHTML || '<a href="/my-dashboard" class="portal-link" data-portal-type="buyer">🏠 Buyer Dashboard</a><a href="/builder" class="portal-link" data-portal-type="builder">🏗️ Builder Dashboard</a>';
         
-        if (hasAdminRole) {
-          // For admin owner, admin is always primary, so tickmark should always show
-          // For regular admin users, show tickmark only if admin is primary
-          const shouldShowTick = isAdminOwnerCheck || state.primaryRole === 'admin';
-          const active = shouldShowTick ? ' <span style="color:#10b981">✓</span>' : '';
-          menuHTML += `<a href="/admin" style="border-top:1px solid rgba(255,255,255,0.1);margin-top:8px;padding-top:8px;">⚙️ Admin Panel${active}</a>`;
-        }
-
-        // Set the final HTML - this ensures correct content is shown immediately
-        portalMenuItems.innerHTML = menuHTML || '<a href="/my-dashboard">🏠 Buyer Dashboard</a><a href="/builder">🏗️ Builder Dashboard</a>';
+        // Add click handlers to portal links
+        const portalLinks = portalMenuItems.querySelectorAll('.portal-link');
+        portalLinks.forEach(function(link) {
+          link.addEventListener('click', function(e) {
+            // If user is not logged in, prevent navigation and show login modal
+            if (!isLoggedIn) {
+              e.preventDefault();
+              e.stopPropagation();
+              
+              // Open login modal using existing auth system
+              try {
+                const next = link.getAttribute('href') || '/';
+                if (window.authGate && typeof window.authGate.openLoginModal === 'function') {
+                  window.authGate.openLoginModal({ next: next });
+                } else if (typeof window.__thgOpenAuthModal === 'function') {
+                  window.__thgOpenAuthModal({ next: next });
+                } else {
+                  // Fallback: redirect to login page
+                  window.location.href = '/login?next=' + encodeURIComponent(next);
+                }
+              } catch(err) {
+                console.error('[Portal] Error opening login modal:', err);
+                // Fallback: redirect to login page
+                window.location.href = '/login';
+              }
+              
+              // Close dropdown
+              portalMenu.removeAttribute('open');
+              return false;
+            }
+            // If logged in, allow normal navigation
+          });
+        });
         
         // CRITICAL: Always re-attach click handler after menu update
         // This ensures handler is present even if summary was recreated
@@ -3257,13 +3278,10 @@
         }
         
         // CRITICAL: Only remove loading flag AFTER content is fully populated
-        // This prevents dropdown from opening with incorrect content
         portalMenu.removeAttribute('data-loading');
         
         // CRITICAL: Don't automatically close dropdown - let user control it
-        // Only ensure it's closed on initial page load (not after login)
         if (!portalMenu.hasAttribute('data-user-opened')) {
-          // Only close if this is initial load, not if user manually opened it
           const wasJustOpened = portalMenu.hasAttribute('open');
           if (!wasJustOpened) {
             portalMenu.removeAttribute('open');

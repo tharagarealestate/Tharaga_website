@@ -3209,16 +3209,21 @@
         // Set the final HTML - this ensures correct content is shown immediately
         portalMenuItems.innerHTML = menuHTML || '<a href="/my-dashboard">🏠 Buyer Dashboard</a><a href="/builder">🏗️ Builder Dashboard</a>';
         
-        // CRITICAL: Re-attach click handler after menu update (in case summary was recreated)
+        // CRITICAL: Always re-attach click handler after menu update
+        // This ensures handler is present even if summary was recreated
         const summary = portalMenu.querySelector('summary');
-        if (summary && !summary.hasAttribute('data-handler-attached')) {
-          summary.setAttribute('data-handler-attached', 'true');
+        if (summary) {
+          // Remove old handler by cloning (this ensures clean attachment)
           const newSummary = summary.cloneNode(true);
-          newSummary.setAttribute('data-handler-attached', 'true');
+          // Remove the marker if it exists (we'll re-add it)
+          newSummary.removeAttribute('data-handler-attached');
           summary.parentNode.replaceChild(newSummary, summary);
           
+          // Mark as attached and add handler
+          newSummary.setAttribute('data-handler-attached', 'true');
+          
           newSummary.addEventListener('click', function(e) {
-            console.log('[Portal] Summary clicked (re-attached handler)');
+            console.log('[Portal] Summary clicked (handler from updatePortalMenu)');
             
             // First check if loading
             if (portalMenu.hasAttribute('data-loading')) {
@@ -3231,7 +3236,7 @@
             
             // Check if user is logged in (synchronous check)
             const isLoggedIn = checkUserLoggedIn();
-            console.log('[Portal] User logged in:', isLoggedIn);
+            console.log('[Portal] User logged in:', isLoggedIn, 'thgRoleManager:', !!window.thgRoleManager, '__authGateLoggedIn:', window.__authGateLoggedIn);
             
             if (!isLoggedIn) {
               // User not logged in - prevent dropdown from opening and show login modal
@@ -3248,7 +3253,7 @@
               console.log('[Portal] User logged in, allowing dropdown to open');
               portalMenu.setAttribute('data-user-opened', 'true');
             }
-          }, true); // Use capture phase
+          }, true); // Use capture phase for early interception
         }
         
         // CRITICAL: Only remove loading flag AFTER content is fully populated

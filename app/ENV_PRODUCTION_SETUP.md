@@ -81,5 +81,6 @@ After setting up the environment variables:
 
 ---
 
-**Important**: The `.env.production` file is intentionally excluded from git for security reasons. Always configure these variables in your hosting platform's environment variable settings.
+**Important**: The `.env.production` file (located in the root directory) is intentionally excluded from git for security reasons. Always configure these variables in your hosting platform's environment variable settings.
+
 

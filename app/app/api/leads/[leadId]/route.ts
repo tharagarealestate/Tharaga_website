@@ -89,7 +89,7 @@ interface LeadDetailResponse {
 
 import { secureApiRoute } from '@/lib/security/api-security';
 import { Permissions } from '@/lib/security/permissions';
-import { AuditActions, AuditResourceTypes } from '@/lib/security/audit';
+import { logSecurityEvent, AuditActions, AuditResourceTypes } from '@/lib/security/audit';
 
 // =============================================
 // GET HANDLER

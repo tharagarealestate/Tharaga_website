@@ -3,6 +3,9 @@ export const runtime = 'nodejs'
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { createWebhookManager } from '@/lib/webhooks/manager'
+import { withAuth } from '@/lib/security/auth'
+import { hasPermission, Permissions } from '@/lib/security/permissions'
+import { logSecurityEvent, AuditActions, AuditResourceTypes } from '@/lib/security/audit'
 
 async function getBuilderId(req: NextRequest, supabase?: Awaited<ReturnType<typeof createClient>>): Promise<string | null> {
   const client = supabase || await createClient()
@@ -20,12 +23,25 @@ async function getBuilderId(req: NextRequest, supabase?: Awaited<ReturnType<type
 }
 
 export async function GET(req: NextRequest) {
-  const supabase = await createClient()
-  const builderId = await getBuilderId(req, supabase)
+  try {
+    const supabase = await createClient()
+    const builderId = await getBuilderId(req, supabase)
 
-  if (!builderId) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  }
+    if (!builderId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    // Authentication
+    const user = await withAuth(req);
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    // Check permission
+    const hasPerm = await hasPermission(user.id, Permissions.WEBHOOK_VIEW);
+    if (!hasPerm) {
+      return NextResponse.json({ error: 'Forbidden - Insufficient permissions' }, { status: 403 })
+    }
 
     const manager = createWebhookManager({ supabase })
     const { webhooks, error } = await manager.listWebhooks(builderId)

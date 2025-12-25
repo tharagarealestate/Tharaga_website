@@ -32,6 +32,158 @@
     }
   }
 
+  // Beautiful login prompt modal for non-authenticated users
+  function showLoginPromptModal() {
+    // Remove any existing modal
+    const existingModal = document.getElementById('thg-portal-login-prompt');
+    if (existingModal) {
+      existingModal.remove();
+    }
+    
+    // Create modal overlay
+    const modal = document.createElement('div');
+    modal.id = 'thg-portal-login-prompt';
+    modal.setAttribute('aria-hidden', 'false');
+    modal.setAttribute('aria-modal', 'true');
+    modal.setAttribute('role', 'dialog');
+    modal.style.cssText = 'position: fixed; inset: 0; background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(8px) saturate(180%); display: flex; align-items: center; justify-content: center; z-index: 99999; visibility: visible; opacity: 1; transition: opacity 0.25s ease; padding: 20px;';
+    
+    // Create modal content with beautiful design
+    const modalContent = document.createElement('div');
+    modalContent.style.cssText = 'width: 100%; max-width: 480px; background: linear-gradient(180deg, rgba(255,255,255,0.98), rgba(248,250,252,0.98)); color: #111; border: 2px solid rgba(212,175,55,0.3); border-radius: 24px; box-shadow: 0 32px 64px rgba(30,64,175,0.2), 0 0 0 1px rgba(212,175,55,0.1); transform: translateY(0) scale(1); opacity: 1; transition: transform 0.25s ease, opacity 0.25s ease; position: relative; overflow: hidden;';
+    
+    // Gold gradient top border
+    const topBorder = document.createElement('div');
+    topBorder.style.cssText = 'position: absolute; top: 0; left: 0; right: 0; height: 4px; background: linear-gradient(90deg, #d4af37, #f5d779, #d4af37);';
+    modalContent.appendChild(topBorder);
+    
+    // Header section
+    const header = document.createElement('div');
+    header.style.cssText = 'display: flex; align-items: center; justify-content: space-between; padding: 28px 28px 20px; position: relative; z-index: 1;';
+    
+    const headerLeft = document.createElement('div');
+    headerLeft.style.cssText = 'display: flex; align-items: center; gap: 14px;';
+    headerLeft.innerHTML = '<div style="width: 56px; height: 56px; border-radius: 16px; background: linear-gradient(135deg, #d4af37, #f5d779); display: flex; align-items: center; justify-content: center; font-size: 28px; box-shadow: 0 8px 20px rgba(212,175,55,0.3);">🔐</div><div><h2 style="margin: 0; font-weight: 900; font-size: 24px; color: #0f172a; letter-spacing: -0.02em; line-height: 1.2;">Welcome to Tharaga!</h2><p style="margin: 4px 0 0; color: #64748b; font-size: 14px; font-weight: 500;">Your real estate journey starts here</p></div>';
+    
+    const closeBtn = document.createElement('button');
+    closeBtn.id = 'thg-portal-close';
+    closeBtn.setAttribute('aria-label', 'Close');
+    closeBtn.style.cssText = 'appearance: none; background: rgba(0,0,0,0.04); border: 0; color: #64748b; cursor: pointer; font-size: 22px; line-height: 1; padding: 8px; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; border-radius: 10px; transition: all 0.2s ease;';
+    closeBtn.innerHTML = '×';
+    
+    header.appendChild(headerLeft);
+    header.appendChild(closeBtn);
+    
+    // Body section
+    const body = document.createElement('div');
+    body.style.cssText = 'padding: 0 28px 28px; position: relative; z-index: 1;';
+    
+    // Catchy message
+    const message = document.createElement('div');
+    message.style.cssText = 'background: linear-gradient(135deg, rgba(30,64,175,0.08), rgba(59,130,246,0.06)); border: 1px solid rgba(30,64,175,0.12); border-radius: 16px; padding: 20px; margin-bottom: 24px; position: relative; overflow: hidden;';
+    message.innerHTML = '<div style="position: absolute; top: -20px; right: -20px; width: 80px; height: 80px; background: radial-gradient(circle, rgba(212,175,55,0.15), transparent); border-radius: 50%;"></div><div style="position: relative; z-index: 1;"><div style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px;"><span style="font-size: 20px;">✨</span><span style="font-weight: 800; color: #0f172a; font-size: 16px;">Unlock Your Real Estate Potential</span></div><p style="margin: 0; color: #475569; font-size: 15px; line-height: 1.6;">Sign in to access exclusive dashboards, save properties, track leads, and connect directly with verified builders. Join thousands of smart investors!</p></div>';
+    
+    // Features list
+    const features = document.createElement('div');
+    features.style.cssText = 'margin-bottom: 24px;';
+    features.innerHTML = '<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px;"><div style="display: flex; align-items: center; gap: 8px; padding: 10px; background: rgba(255,255,255,0.6); border-radius: 10px;"><span style="font-size: 18px;">🏗️</span><span style="font-size: 13px; font-weight: 600; color: #0f172a;">Builder Portal</span></div><div style="display: flex; align-items: center; gap: 8px; padding: 10px; background: rgba(255,255,255,0.6); border-radius: 10px;"><span style="font-size: 18px;">🏠</span><span style="font-size: 13px; font-weight: 600; color: #0f172a;">Buyer Dashboard</span></div></div>';
+    
+    // CTA Button
+    const loginBtn = document.createElement('button');
+    loginBtn.id = 'thg-portal-login-btn';
+    loginBtn.style.cssText = 'width: 100%; appearance: none; background: linear-gradient(135deg, #d4af37, #f5d779, #c89200); color: #0f172a; border: 0; border-radius: 14px; padding: 16px 24px; font-weight: 800; font-size: 16px; cursor: pointer; transition: all 0.2s ease; box-shadow: 0 6px 20px rgba(212,175,55,0.35), 0 0 0 1px rgba(212,175,55,0.2); margin-bottom: 16px; letter-spacing: 0.01em;';
+    loginBtn.textContent = 'Sign In / Create Account';
+    
+    // Footer text
+    const footer = document.createElement('p');
+    footer.style.cssText = 'margin: 0; text-align: center; color: #64748b; font-size: 13px; font-weight: 500;';
+    footer.innerHTML = '🚀 <strong style="color: #1e40af;">100% Free</strong> • No credit card required • Join in seconds';
+    
+    body.appendChild(message);
+    body.appendChild(features);
+    body.appendChild(loginBtn);
+    body.appendChild(footer);
+    
+    modalContent.appendChild(header);
+    modalContent.appendChild(body);
+    modal.appendChild(modalContent);
+    
+    document.body.appendChild(modal);
+    document.body.style.overflow = 'hidden';
+    
+    // Close modal function
+    const closeModal = function() {
+      modal.style.opacity = '0';
+      modalContent.style.transform = 'translateY(10px) scale(0.98)';
+      setTimeout(function() {
+        if (modal.parentNode) {
+          modal.parentNode.removeChild(modal);
+        }
+        document.body.style.overflow = '';
+      }, 250);
+    };
+    
+    // Close button handlers
+    closeBtn.addEventListener('click', closeModal);
+    closeBtn.addEventListener('mouseenter', function() {
+      closeBtn.style.background = 'rgba(0,0,0,0.08)';
+      closeBtn.style.color = '#0f172a';
+    });
+    closeBtn.addEventListener('mouseleave', function() {
+      closeBtn.style.background = 'rgba(0,0,0,0.04)';
+      closeBtn.style.color = '#64748b';
+    });
+    
+    // Login button handlers
+    loginBtn.addEventListener('click', function() {
+      closeModal();
+      setTimeout(function() {
+        try {
+          if (window.authGate && typeof window.authGate.openLoginModal === 'function') {
+            window.authGate.openLoginModal({ next: location.pathname + location.search });
+          } else if (typeof window.__thgOpenAuthModal === 'function') {
+            window.__thgOpenAuthModal({ next: location.pathname + location.search });
+          } else {
+            window.location.href = '/login';
+          }
+        } catch(e) {
+          console.error('[tharaga-header] Error opening auth modal:', e);
+          window.location.href = '/login';
+        }
+      }, 100);
+    });
+    
+    loginBtn.addEventListener('mouseenter', function() {
+      loginBtn.style.transform = 'translateY(-2px)';
+      loginBtn.style.boxShadow = '0 8px 24px rgba(212,175,55,0.4), 0 0 0 1px rgba(212,175,55,0.3)';
+    });
+    loginBtn.addEventListener('mouseleave', function() {
+      loginBtn.style.transform = 'translateY(0)';
+      loginBtn.style.boxShadow = '0 6px 20px rgba(212,175,55,0.35), 0 0 0 1px rgba(212,175,55,0.2)';
+    });
+    
+    // Close on backdrop click
+    modal.addEventListener('click', function(e) {
+      if (e.target === modal) {
+        closeModal();
+      }
+    });
+    
+    // Close on Escape key
+    const escHandler = function(e) {
+      if (e.key === 'Escape') {
+        closeModal();
+        document.removeEventListener('keydown', escHandler);
+      }
+    };
+    document.addEventListener('keydown', escHandler);
+    
+    // Focus login button
+    setTimeout(function() {
+      if (loginBtn) loginBtn.focus();
+    }, 100);
+  }
+
   // Portal menu update function (called by role manager)
   // Portal menu is ALWAYS VISIBLE - shows login prompt if user not authenticated
   window.__updatePortalMenu = function() {
@@ -62,6 +214,39 @@
       } catch(e) {
         console.error('[tharaga-header] Error getting role state:', e);
       }
+    }
+    
+    // Fallback: check auth state directly if role manager not available
+    if (!isLoggedIn) {
+      try {
+        if (window.__thgAuthState && window.__thgAuthState.user && window.__thgAuthState.user.email) {
+          isLoggedIn = true;
+        } else if (window.__authGateLoggedIn === true) {
+          isLoggedIn = true;
+        }
+      } catch(e) {
+        // Ignore errors
+      }
+    }
+    
+    // Intercept Portal dropdown summary click when user is NOT logged in
+    const portalSummary = portalMenu.querySelector('summary');
+    if (portalSummary) {
+      // Remove old listeners by cloning
+      const newSummary = portalSummary.cloneNode(true);
+      portalSummary.parentNode.replaceChild(newSummary, portalSummary);
+      
+      newSummary.addEventListener('click', function(e) {
+        if (!isLoggedIn) {
+          e.preventDefault();
+          e.stopPropagation();
+          // Close dropdown if it's open
+          portalMenu.removeAttribute('open');
+          // Show beautiful login prompt modal
+          showLoginPromptModal();
+        }
+        // If logged in, let the dropdown open normally
+      });
     }
     
     // Build menu HTML based on user state

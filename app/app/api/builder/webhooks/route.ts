@@ -89,22 +89,22 @@ export async function POST(req: NextRequest) {
 
     const builderId = user.id
 
-  const body = await req.json().catch(() => null)
+    const body = await req.json().catch(() => null)
 
-  if (!body || typeof body.name !== 'string' || typeof body.url !== 'string') {
-    return NextResponse.json({ error: 'Invalid request body' }, { status: 400 })
-  }
+    if (!body || typeof body.name !== 'string' || typeof body.url !== 'string') {
+      return NextResponse.json({ error: 'Invalid request body' }, { status: 400 })
+    }
 
-  const manager = createWebhookManager({ supabase })
-  const { webhook, error } = await manager.registerWebhook({
-    builderId,
-    name: body.name,
-    url: body.url,
-    events: Array.isArray(body.events) ? body.events : [],
-    filters: body.filters ?? undefined,
-    retryCount: typeof body.retry_count === 'number' ? body.retry_count : undefined,
-    timeoutSeconds: typeof body.timeout_seconds === 'number' ? body.timeout_seconds : undefined,
-  })
+    const manager = createWebhookManager({ supabase })
+    const { webhook, error } = await manager.registerWebhook({
+      builderId,
+      name: body.name,
+      url: body.url,
+      events: Array.isArray(body.events) ? body.events : [],
+      filters: body.filters ?? undefined,
+      retryCount: typeof body.retry_count === 'number' ? body.retry_count : undefined,
+      timeoutSeconds: typeof body.timeout_seconds === 'number' ? body.timeout_seconds : undefined,
+    })
 
     if (error || !webhook) {
       return NextResponse.json({ error: error ?? 'Failed to create webhook' }, { status: 400 })

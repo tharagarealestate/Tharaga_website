@@ -98,16 +98,31 @@ export async function GET(
   request: NextRequest,
   { params }: { params: { leadId: string } }
 ) {
-  // Use secureApiRoute wrapper for auth and rate limiting
-  const handler = secureApiRoute(
-    async (req: NextRequest, user) => {
-    try {
+  try {
     const cookieStore = cookies();
     const supabase = await createClient();
     
-    // User is already authenticated via secureApiRoute
+    // Authentication
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    
+    if (authError || !user) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      );
+    }
+    
+    // Get user role
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
+      .maybeSingle();
+    
+    const userRole = profile?.role || '';
+    
     // Verify user is a builder
-    if (user.role !== 'builder' && user.role !== 'admin') {
+    if (userRole !== 'builder' && userRole !== 'admin') {
       return NextResponse.json(
         { error: 'Forbidden - Builders only' },
         { status: 403 }
@@ -476,7 +491,6 @@ export async function GET(
       success: true,
       data: response,
     });
-    
   } catch (error) {
     console.error('[API/Lead/Details] Error:', error);
     return NextResponse.json(

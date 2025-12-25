@@ -2612,6 +2612,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             }
             
             // Portal dropdown click handler - intercept when user is NOT logged in
+            // This is a fallback that runs after header loads (listens for tharaga-header-loaded event)
             function initPortalDropdownHandler() {
               function checkAuthState() {
                 // Check multiple sources for auth state
@@ -2640,8 +2641,17 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 const portalSummary = portalMenu.querySelector('summary');
                 if (!portalSummary) return false;
                 
+                // Check if handler already attached (to avoid duplicate handlers)
+                if (portalSummary.hasAttribute('data-portal-handler-attached')) {
+                  return true;
+                }
+                
+                // Mark as attached
+                portalSummary.setAttribute('data-portal-handler-attached', 'true');
+                
                 // Remove old listeners by cloning
                 const newSummary = portalSummary.cloneNode(true);
+                newSummary.setAttribute('data-portal-handler-attached', 'true');
                 portalSummary.parentNode.replaceChild(newSummary, portalSummary);
                 
                 newSummary.addEventListener('click', function(e) {
@@ -2677,17 +2687,27 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               }, 5000);
             }
             
-            // Initialize on DOM ready
+            // Listen for header loaded event (from header-injector.js)
+            document.addEventListener('tharaga-header-loaded', function() {
+              // Header is now loaded, initialize portal handler
+              setTimeout(initPortalDropdownHandler, 100);
+            });
+            
+            // Also try on DOM ready as fallback
             if (document.readyState === 'loading') {
               document.addEventListener('DOMContentLoaded', function() {
                 initHomepageHeader();
                 initMobileMenu();
-                initPortalDropdownHandler();
+                // Portal handler will be initialized via tharaga-header-loaded event
+                // But also try after a delay as fallback
+                setTimeout(initPortalDropdownHandler, 1000);
               });
             } else {
               initHomepageHeader();
               initMobileMenu();
-              initPortalDropdownHandler();
+              // Portal handler will be initialized via tharaga-header-loaded event
+              // But also try after a delay as fallback
+              setTimeout(initPortalDropdownHandler, 1000);
             }
           })();
         `}} />

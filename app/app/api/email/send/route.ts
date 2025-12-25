@@ -61,7 +61,7 @@ export async function POST(request: NextRequest) {
           <h2 style="color: #f59e0b;">Property Quota Alert</h2>
           <p>You're using <strong>${d.percentage}%</strong> of your property quota on the <strong>${d.planName}</strong> plan.</p>
           <p><strong>Current Usage:</strong> ${d.currentUsage} of ${d.limit} properties</p>
-          ${d.percentage >= 100 ? '<p style="color: #ef4444;"><strong>⚠️ You've reached your limit!</strong> Upgrade now to add more properties.</p>' : '<p>Consider upgrading your plan to avoid hitting the limit.</p>'}
+          ${d.percentage >= 100 ? '<p style="color: #ef4444;"><strong>⚠️ You have reached your limit!</strong> Upgrade now to add more properties.</p>' : '<p>Consider upgrading your plan to avoid hitting the limit.</p>'}
           <a href="https://tharaga.co.in/builder/billing" style="display: inline-block; margin-top: 20px; padding: 12px 24px; background: #D4AF37; color: #000; text-decoration: none; border-radius: 8px;">Upgrade Plan</a>
         </div>
       `

@@ -132,7 +132,12 @@ async function init(){
     if (propField) propField.value = p.id;
     if (modal) modal.classList.remove('hidden');
   });
-  if (closeModal) closeModal.addEventListener('click', ()=> modal && modal.classList.add('hidden'));
+  const closeModalHandler = ()=> {
+    if (modal) modal.classList.add('hidden');
+  };
+  if (closeModal) closeModal.addEventListener('click', closeModalHandler);
+  const closeModalBottom = document.querySelector('#closeModalBottom');
+  if (closeModalBottom) closeModalBottom.addEventListener('click', closeModalHandler);
 
   // EMI calc
   const calc = ()=> {

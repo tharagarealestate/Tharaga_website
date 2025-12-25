@@ -349,12 +349,12 @@ html, body {
   font-size: 12px;
 }
 
-/* Inputs and Selects - Dark Theme */
+/* Inputs and Selects - Admin Dashboard Design System */
 .input, select, textarea {
   padding: 10px 12px;
-  border-radius: 12px;
-  border: 1px solid rgba(148, 163, 184, 0.3); /* subtle border */
-  background: rgba(51, 65, 85, 0.5); /* bg-slate-700/50 */
+  border-radius: 12px; /* rounded-lg */
+  border: 2px solid rgb(252, 211, 77); /* border-amber-300 */
+  background: rgba(30, 41, 59, 0.95); /* bg-slate-800/95 */
   outline: none;
   width: 100%;
   font-size: 14px;
@@ -365,15 +365,15 @@ html, body {
 }
 
 .input:focus, select:focus, textarea:focus {
-  border-color: rgba(59, 130, 246, 0.6); /* blue-500 on focus */
-  background: rgba(51, 65, 85, 0.7);
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1),
-              0 0 20px rgba(59, 130, 246, 0.15);
+  border-color: rgb(251, 191, 36); /* border-amber-400 on focus */
+  background: rgba(30, 41, 59, 1);
+  box-shadow: 0 0 0 3px rgba(252, 211, 77, 0.1),
+              0 0 20px rgba(252, 211, 77, 0.15);
 }
 
 .input:hover, select:hover, textarea:hover {
-  border-color: rgba(148, 163, 184, 0.5);
-  background: rgba(51, 65, 85, 0.6);
+  border-color: rgb(252, 211, 77); /* border-amber-300 */
+  background: rgba(51, 65, 85, 0.7);
 }
 
 select[multiple] {
@@ -552,8 +552,6 @@ input[type="checkbox"]:focus {
   font-size: 12px;
   font-weight: 600;
   z-index: 2;
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
 }
 
 /* Verified badge - Real-time status */

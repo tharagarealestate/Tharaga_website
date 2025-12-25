@@ -6,6 +6,12 @@
 [build.environment]
   NODE_VERSION = "20"
   NPM_FLAGS = "--legacy-peer-deps"
+  # RERA Verification System - Set these in Netlify Dashboard for production
+  # USE_SYNTHETIC_RERA=false
+  # RERA_PARTNER_API_URL=https://wedevtjjmdvngyshqdro.supabase.co/functions/v1/rera-partner
+  # RERA_PARTNER_API_KEY=your-key-here
+  # RERA_MONITOR_API_KEY=your-key-here
+  # SUPABASE_SERVICE_ROLE_KEY=your-key-here
 
 [[plugins]]
   package = "@netlify/plugin-nextjs"

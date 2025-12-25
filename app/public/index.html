@@ -3209,6 +3209,48 @@
         // Set the final HTML - this ensures correct content is shown immediately
         portalMenuItems.innerHTML = menuHTML || '<a href="/my-dashboard">🏠 Buyer Dashboard</a><a href="/builder">🏗️ Builder Dashboard</a>';
         
+        // CRITICAL: Re-attach click handler after menu update (in case summary was recreated)
+        const summary = portalMenu.querySelector('summary');
+        if (summary && !summary.hasAttribute('data-handler-attached')) {
+          summary.setAttribute('data-handler-attached', 'true');
+          const newSummary = summary.cloneNode(true);
+          newSummary.setAttribute('data-handler-attached', 'true');
+          summary.parentNode.replaceChild(newSummary, summary);
+          
+          newSummary.addEventListener('click', function(e) {
+            console.log('[Portal] Summary clicked (re-attached handler)');
+            
+            // First check if loading
+            if (portalMenu.hasAttribute('data-loading')) {
+              console.log('[Portal] Menu is loading, preventing open');
+              e.preventDefault();
+              e.stopPropagation();
+              portalMenu.removeAttribute('open');
+              return false;
+            }
+            
+            // Check if user is logged in (synchronous check)
+            const isLoggedIn = checkUserLoggedIn();
+            console.log('[Portal] User logged in:', isLoggedIn);
+            
+            if (!isLoggedIn) {
+              // User not logged in - prevent dropdown from opening and show login modal
+              console.log('[Portal] User not logged in, showing login modal');
+              e.preventDefault();
+              e.stopPropagation();
+              e.stopImmediatePropagation();
+              portalMenu.removeAttribute('open');
+              // Show beautiful login prompt modal
+              showLoginPromptModal();
+              return false;
+            } else {
+              // User is logged in - allow dropdown to open normally
+              console.log('[Portal] User logged in, allowing dropdown to open');
+              portalMenu.setAttribute('data-user-opened', 'true');
+            }
+          }, true); // Use capture phase
+        }
+        
         // CRITICAL: Only remove loading flag AFTER content is fully populated
         // This prevents dropdown from opening with incorrect content
         portalMenu.removeAttribute('data-loading');
@@ -3394,37 +3436,35 @@
         }, 100);
       }
 
-      // Function to check if user is logged in
+      // Function to check if user is logged in (synchronous only - no async operations)
       function checkUserLoggedIn() {
-        // Check multiple sources for auth state
+        // Check multiple sources for auth state - ALL SYNCHRONOUS
         let isLoggedIn = false;
         
         try {
-          // Check role manager first (most reliable)
+          // Check role manager first (most reliable) - synchronous
           if (window.thgRoleManager) {
             const state = window.thgRoleManager.getState();
-            isLoggedIn = !!(state.initialized && state.user && state.user.email);
-          }
-          
-          // Fallback: check Supabase auth session
-          if (!isLoggedIn && window.supabase && window.supabase.auth) {
-            window.supabase.auth.getSession().then(function(result) {
-              if (result && result.data && result.data.session && result.data.session.user) {
-                isLoggedIn = true;
-              }
-            }).catch(function() {});
-          }
-          
-          // Fallback: check global auth state
-          if (!isLoggedIn) {
-            if (window.__thgAuthState && window.__thgAuthState.user && window.__thgAuthState.user.email) {
+            if (state && state.initialized && state.user && state.user.email) {
               isLoggedIn = true;
-            } else if (window.__authGateLoggedIn === true) {
-              isLoggedIn = true;
+              return isLoggedIn; // Early return if found
             }
           }
+          
+          // Fallback: check global auth state - synchronous
+          if (window.__thgAuthState && window.__thgAuthState.user && window.__thgAuthState.user.email) {
+            isLoggedIn = true;
+            return isLoggedIn;
+          }
+          
+          // Fallback: check auth gate logged in flag - synchronous
+          if (window.__authGateLoggedIn === true) {
+            isLoggedIn = true;
+            return isLoggedIn;
+          }
         } catch(e) {
-          // Ignore errors
+          // Ignore errors - assume not logged in
+          console.debug('[Portal] Auth check error:', e);
         }
         
         return isLoggedIn;
@@ -3445,8 +3485,11 @@
             summary.parentNode.replaceChild(newSummary, summary);
             
             newSummary.addEventListener('click', function(e) {
+              console.log('[Portal] Summary clicked');
+              
               // First check if loading
               if (portalMenu.hasAttribute('data-loading')) {
+                console.log('[Portal] Menu is loading, preventing open');
                 e.preventDefault();
                 e.stopPropagation();
                 portalMenu.removeAttribute('open');
@@ -3458,23 +3501,27 @@
                 return false;
               }
               
-              // Check if user is logged in
+              // Check if user is logged in (synchronous check)
               const isLoggedIn = checkUserLoggedIn();
+              console.log('[Portal] User logged in:', isLoggedIn);
               
               if (!isLoggedIn) {
                 // User not logged in - prevent dropdown from opening and show login modal
+                console.log('[Portal] User not logged in, showing login modal');
                 e.preventDefault();
                 e.stopPropagation();
+                e.stopImmediatePropagation();
                 portalMenu.removeAttribute('open');
                 // Show beautiful login prompt modal
                 showLoginPromptModal();
                 return false;
               } else {
                 // User is logged in - allow dropdown to open normally
+                console.log('[Portal] User logged in, allowing dropdown to open');
                 // Mark that user manually opened the dropdown
                 portalMenu.setAttribute('data-user-opened', 'true');
               }
-            });
+            }, true); // Use capture phase to intercept early
           }
           
           // Track when dropdown closes to reset user-opened flag

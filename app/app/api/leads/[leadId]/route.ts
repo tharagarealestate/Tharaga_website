@@ -101,6 +101,7 @@ export async function GET(
   // Use secureApiRoute wrapper for auth and rate limiting
   const handler = secureApiRoute(
     async (req: NextRequest, user) => {
+    try {
     const cookieStore = cookies();
     const supabase = await createClient();
     

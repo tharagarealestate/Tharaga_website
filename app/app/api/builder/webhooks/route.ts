@@ -43,10 +43,10 @@ export async function GET(req: NextRequest) {
       user.id
     );
 
-    return NextResponse.json({ webhooks })
+    return NextResponse.json({ webhooks });
   } catch (error) {
     console.error('[API/Webhooks] GET error:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
 

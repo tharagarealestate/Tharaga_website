@@ -6,6 +6,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
 import { cookies } from 'next/headers';
 import { classifySupabaseError, classifyHttpError } from '@/lib/error-handler';
+import { secureApiRoute } from '@/lib/security/api-security';
+import { Permissions } from '@/lib/security/permissions';
+import { AuditActions, AuditResourceTypes } from '@/lib/security/audit';
 
 // =============================================
 // TYPES
@@ -97,44 +100,14 @@ interface LeadWithDetails {
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-export async function GET(request: NextRequest) {
-  try {
+// Secure GET handler with authentication, rate limiting, and permissions
+export const GET = secureApiRoute(
+  async (request: NextRequest, user) => {
     const supabase = createRouteHandlerClient({ cookies });
     
-    // =============================================
-    // AUTHENTICATION
-    // =============================================
-    
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    
-    if (authError || !user) {
-      return NextResponse.json({
-        success: false,
-        error: 'Unauthorized',
-        errorType: 'AUTH_ERROR',
-        message: 'Please log in to continue.'
-      }, { status: 401 });
-    }
-    
-    // Verify user is a builder
-    const { data: profile, error: profileError } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', user.id)
-      .single();
-    
-    if (profileError) {
-      const classifiedError = classifySupabaseError(profileError);
-      return NextResponse.json({
-        success: false,
-        error: classifiedError.message,
-        errorType: classifiedError.type,
-        message: classifiedError.userMessage,
-        retryable: classifiedError.retryable,
-      }, { status: classifiedError.statusCode || 500 });
-    }
-    
-    if (profile?.role !== 'builder') {
+    // User is already authenticated and has required role/permission via secureApiRoute
+    // Additional builder check if needed
+    if (user.role !== 'builder' && user.role !== 'admin') {
       return NextResponse.json({
         success: false,
         error: 'Forbidden',
@@ -227,6 +200,35 @@ export async function GET(request: NextRequest) {
         retryable: classifiedError.retryable,
         technicalDetails: classifiedError.technicalDetails,
       }, { status: classifiedError.statusCode || 500 });
+    }
+    
+    if (!leadsData) {
+      return NextResponse.json({
+        success: true,
+        data: {
+          leads: [],
+          pagination: {
+            page: query.page,
+            limit: query.limit,
+            total: 0,
+            total_pages: 0,
+            has_next: false,
+            has_prev: false,
+          },
+          stats: {
+            total_leads: 0,
+            hot_leads: 0,
+            warm_leads: 0,
+            developing_leads: 0,
+            cold_leads: 0,
+            average_score: 0,
+            pending_interactions: 0,
+            no_response_leads: 0,
+          },
+          filters_applied: query,
+        },
+        isEmpty: true,
+      });
     }
     
     // =============================================
@@ -530,18 +532,13 @@ export async function GET(request: NextRequest) {
       },
       isEmpty: !hasData,
     });
-    
-  } catch (error: any) {
-    console.error('[API/Leads] Server error:', error);
-    const classifiedError = classifySupabaseError(error);
-    
-    return NextResponse.json({
-      success: false,
-      error: classifiedError.message,
-      errorType: classifiedError.type,
-      message: classifiedError.userMessage,
-      retryable: classifiedError.retryable,
-      technicalDetails: classifiedError.technicalDetails,
-    }, { status: classifiedError.statusCode || 500 });
+  },
+  {
+    requireAuth: true,
+    requireRole: ['builder', 'admin'],
+    requirePermission: Permissions.LEAD_VIEW,
+    rateLimit: 'api',
+    auditAction: AuditActions.VIEW,
+    auditResourceType: AuditResourceTypes.LEAD
   }
-}
+)

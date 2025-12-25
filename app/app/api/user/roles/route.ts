@@ -1,6 +1,9 @@
 import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
 import { cookies } from 'next/headers';
 import { NextRequest, NextResponse } from 'next/server';
+import { secureApiRoute } from '@/lib/security/api-security';
+import { Permissions } from '@/lib/security/permissions';
+import { AuditActions, AuditResourceTypes } from '@/lib/security/audit';
 
 /**
  * GET /api/user/roles
@@ -8,19 +11,9 @@ import { NextRequest, NextResponse } from 'next/server';
  * Returns array of roles with is_primary flag
  * Format expected by role-manager-v2.js
  */
-export async function GET(request: NextRequest) {
-  try {
+export const GET = secureApiRoute(
+  async (request: NextRequest, user) => {
     const supabase = createRouteHandlerClient({ cookies });
-    
-    // Get authenticated user
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    
-    if (authError || !user) {
-      return NextResponse.json(
-        { error: 'Unauthorized. Please sign in.' },
-        { status: 401 }
-      );
-    }
 
     // Fetch user roles from user_roles table with is_primary flag
     const { data: userRoles, error: rolesError } = await supabase
@@ -100,14 +93,15 @@ export async function GET(request: NextRequest) {
       has_builder_profile: hasBuilderProfile,
       has_buyer_profile: hasBuyerProfile,
     });
-  } catch (error) {
-    console.error('Roles API error:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+  },
+  {
+    requireAuth: true,
+    requirePermission: Permissions.USER_VIEW,
+    rateLimit: 'api',
+    auditAction: AuditActions.VIEW,
+    auditResourceType: AuditResourceTypes.USER
   }
-}
+)
 
 
 

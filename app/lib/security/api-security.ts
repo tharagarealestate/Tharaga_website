@@ -1,24 +1,9 @@
 // API security utilities and middleware wrappers
 
 import { NextRequest, NextResponse } from 'next/server'
-import { verifyAuthToken } from './auth'
-
-/**
- * Extract IP address from request
- */
-function getClientIp(req: NextRequest): string {
-  const forwarded = req.headers.get('x-forwarded-for')
-  const realIp = req.headers.get('x-real-ip')
-  const cfConnectingIp = req.headers.get('cf-connecting-ip')
-  return cfConnectingIp || realIp || forwarded?.split(',')[0] || 'unknown'
-}
-
-/**
- * Get user agent from request
- */
-function getUserAgent(req: NextRequest): string {
-  return req.headers.get('user-agent') || 'unknown'
-}
+import { cookies } from 'next/headers'
+import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
+import { verifyAuthToken, withAuth, getClientIp, getUserAgent } from './auth'
 import { withRateLimitWrapper, rateLimiters } from './rate-limit-enhanced'
 import { validateInput } from './validation'
 import { logSecurityEvent, AuditActions, AuditResourceTypes } from './audit'
@@ -48,20 +33,25 @@ export function secureApiRoute<T extends z.ZodSchema>(
         : rateLimiters.api
 
       const rateLimitedHandler = async () => {
-        // 2. Authentication
+        // 2. Authentication - Support both Bearer token and cookie-based auth
         let user: { id: string; email?: string; role?: string } | null = null
 
         if (options.requireAuth !== false) {
           const authHeader = req.headers.get('authorization')
-          if (!authHeader?.startsWith('Bearer ')) {
-            return NextResponse.json(
-              { error: 'Unauthorized', message: 'Missing or invalid authorization header' },
-              { status: 401 }
-            )
+          
+          // Try Bearer token first
+          if (authHeader?.startsWith('Bearer ')) {
+            const token = authHeader.substring(7)
+            user = await verifyAuthToken(token)
+          } else {
+            // Fall back to cookie-based auth (Supabase default for Next.js)
+            try {
+              user = await withAuth(req)
+            } catch (error) {
+              // Auth failed
+              user = null
+            }
           }
-
-          const token = authHeader.substring(7)
-          user = await verifyAuthToken(token)
 
           if (!user) {
             // Log failed auth attempt
@@ -71,11 +61,11 @@ export function secureApiRoute<T extends z.ZodSchema>(
               AuditResourceTypes.AUTH,
               undefined,
               undefined,
-              { reason: 'Invalid token', ip: getClientIp(req) }
+              { reason: 'Invalid token or session', ip: getClientIp(req) }
             )
 
             return NextResponse.json(
-              { error: 'Unauthorized', message: 'Invalid or expired token' },
+              { error: 'Unauthorized', message: 'Invalid or expired authentication' },
               { status: 401 }
             )
           }

@@ -49,33 +49,38 @@ export async function verifyAuthToken(token: string): Promise<AuthUser | null> {
 
 /**
  * Get authenticated user from request (uses cookies in Next.js)
+ * Returns null if not authenticated (doesn't throw)
  */
-export async function withAuth(req: NextRequest): Promise<AuthUser> {
-  const supabase = createRouteHandlerClient({ cookies })
-  const { data: { user }, error } = await supabase.auth.getUser()
-  
-  if (error || !user) {
-    throw new Error('Unauthorized')
-  }
-  
-  // Get user role
-  let role: string | undefined
+export async function withAuth(req: NextRequest): Promise<AuthUser | null> {
   try {
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', user.id)
-      .single()
+    const supabase = createRouteHandlerClient({ cookies })
+    const { data: { user }, error } = await supabase.auth.getUser()
     
-    role = profile?.role
+    if (error || !user) {
+      return null
+    }
+    
+    // Get user role
+    let role: string | undefined
+    try {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', user.id)
+        .single()
+      
+      role = profile?.role
+    } catch {
+      // User might not have a profile yet
+    }
+    
+    return {
+      id: user.id,
+      email: user.email,
+      role
+    }
   } catch {
-    // User might not have a profile yet
-  }
-  
-  return {
-    id: user.id,
-    email: user.email,
-    role
+    return null
   }
 }
 

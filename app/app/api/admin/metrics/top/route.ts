@@ -2,9 +2,13 @@ import { NextRequest, NextResponse } from 'next/server'
 export const runtime = 'edge'
 export const dynamic = 'force-dynamic'
 import { getSupabase } from '@/lib/supabase'
+import { secureApiRoute } from '@/lib/security/api-security'
+import { Permissions } from '@/lib/security/permissions'
+import { AuditActions, AuditResourceTypes } from '@/lib/security/audit'
 
-export async function GET(_req: NextRequest) {
-  const supabase = getSupabase()
+export const GET = secureApiRoute(
+  async (_req: NextRequest, user) => {
+    const supabase = getSupabase()
 
   // Active users now (last 5 minutes) + sparkline last hour
   const { data: activeRows, error: activeErr } = await supabase
@@ -69,10 +73,19 @@ export async function GET(_req: NextRequest) {
     growthVsLastMonth: prevMonthValue>0 ? (revenueMtdValue - prevMonthValue)/prevMonthValue : 0,
   }
 
-  return NextResponse.json({
-    activeUsersNow: { value: activeUsersNow, series },
-    leadsToday,
-    trialConversionsWeek,
-    revenueMtd,
-  })
-}
+    return NextResponse.json({
+      activeUsersNow: { value: activeUsersNow, series },
+      leadsToday,
+      trialConversionsWeek,
+      revenueMtd,
+    })
+  },
+  {
+    requireAuth: true,
+    requireRole: ['admin'],
+    requirePermission: Permissions.ADMIN_ACCESS,
+    rateLimit: 'api',
+    auditAction: AuditActions.VIEW,
+    auditResourceType: AuditResourceTypes.ADMIN
+  }
+)

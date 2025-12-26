@@ -3266,6 +3266,10 @@
           newSummary.addEventListener('click', function(e) {
             console.log('[Portal] Summary clicked (handler from updatePortalMenu)');
             
+            // REAL-TIME: Always check auth state on click (not cached)
+            const isLoggedIn = checkUserLoggedIn();
+            console.log('[Portal] Real-time auth check - User logged in:', isLoggedIn);
+            
             // First check if loading
             if (portalMenu.hasAttribute('data-loading')) {
               console.log('[Portal] Menu is loading, preventing open');
@@ -3275,17 +3279,18 @@
               return false;
             }
             
-            // Check if user is logged in (synchronous check)
-            const isLoggedIn = checkUserLoggedIn();
-            console.log('[Portal] User logged in:', isLoggedIn, 'thgRoleManager:', !!window.thgRoleManager, '__authGateLoggedIn:', window.__authGateLoggedIn);
-            
+            // REAL-TIME: Check if user is logged in (always fresh check, not cached)
             if (!isLoggedIn) {
               // User not logged in - prevent dropdown from opening and show login modal
-              console.log('[Portal] User not logged in, showing login modal');
+              console.log('[Portal] User not logged in, preventing dropdown and showing login modal');
               e.preventDefault();
               e.stopPropagation();
               e.stopImmediatePropagation();
               portalMenu.removeAttribute('open');
+              // Ensure dropdown stays closed
+              setTimeout(function() {
+                portalMenu.removeAttribute('open');
+              }, 0);
               // Show beautiful login prompt modal
               showLoginPromptModal();
               return false;
@@ -3580,12 +3585,21 @@
           });
           detailsObserver.observe(portalMenu, { attributes: true, attributeFilter: ['open'] });
           
-          // Also prevent toggle via attribute change
+          // Also prevent toggle via attribute change - REAL-TIME LOGOUT DETECTION
           const observer = new MutationObserver(function(mutations) {
             mutations.forEach(function(mutation) {
               if (mutation.type === 'attributes' && mutation.attributeName === 'open') {
+                // If loading, prevent opening
                 if (portalMenu.hasAttribute('data-loading') && portalMenu.hasAttribute('open')) {
                   portalMenu.removeAttribute('open');
+                }
+                // REAL-TIME: If user logged out, prevent opening
+                const isLoggedIn = checkUserLoggedIn();
+                if (!isLoggedIn && portalMenu.hasAttribute('open')) {
+                  console.log('[Portal] MutationObserver: User logged out, closing dropdown');
+                  portalMenu.removeAttribute('open');
+                  // Show login modal if it was trying to open
+                  showLoginPromptModal();
                 }
               }
             });

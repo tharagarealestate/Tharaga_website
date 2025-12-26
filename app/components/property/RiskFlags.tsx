@@ -180,27 +180,6 @@ export default function RiskFlags({ propertyId, priceINR, sqft, reraId }: RiskFl
 
   const severityColors = {
     high: {
-      bg: 'bg-red-100',
-      border: 'border-red-300',
-      text: 'text-red-800',
-      icon: AlertCircle,
-    },
-    medium: {
-      bg: 'bg-amber-100',
-      border: 'border-amber-300',
-      text: 'text-amber-800',
-      icon: AlertTriangle,
-    },
-    low: {
-      bg: 'bg-blue-100',
-      border: 'border-blue-300',
-      text: 'text-blue-800',
-      icon: Info,
-    },
-  }
-
-  const severityColors = {
-    high: {
       bg: 'bg-red-500/20',
       border: 'border-red-300',
       text: 'text-red-300',

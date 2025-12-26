@@ -25,12 +25,11 @@ export async function GET(request: NextRequest) {
       }, { status: 400 });
     }
 
-    // Get property data for the area
+    // Get property data for the area - try multiple column names for compatibility
     const { data: properties } = await supabase
       .from('properties')
-      .select('base_price, area_sqft, created_at, status')
-      .ilike('area', `%${area}%`)
-      .eq('status', 'available')
+      .select('price_inr, base_price, sqft, area_sqft, carpet_area, created_at, availability_status, status, locality, city')
+      .or(`locality.ilike.%${area}%,city.ilike.%${area}%`)
       .limit(100);
 
     if (!properties || properties.length === 0) {
@@ -50,7 +49,7 @@ export async function GET(request: NextRequest) {
     if (process.env.OPENAI_API_KEY) {
       const prompt = `Analyze the real estate market for ${area} based on this data:
 
-Properties: ${properties.length}
+Properties: ${validProperties.length}
 Average Price per Sqft: ₹${avgPricePerSqft.toFixed(0)}
 
 Provide market analysis with:

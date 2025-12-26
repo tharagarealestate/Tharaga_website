@@ -113,35 +113,44 @@ export default function RERAVerification({ propertyId, reraId }: RERAVerificatio
 
   if (!reraId && !registration) {
     return (
-      <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
-        <div className="flex items-center gap-2 text-amber-800">
-          <AlertCircle className="w-5 h-5" />
-          <span className="font-medium">RERA not available — manual verification recommended</span>
+      <div>
+        <h3 className="text-xl font-bold text-white mb-4">RERA Verification</h3>
+        <div className="bg-amber-500/20 border border-amber-300/50 rounded-lg p-4">
+          <div className="flex items-center gap-2 text-amber-300">
+            <AlertCircle className="w-5 h-5" />
+            <span className="font-bold">RERA not available — manual verification recommended</span>
+          </div>
+          <p className="text-sm text-amber-200 mt-2">
+            This property does not have a RERA registration number. We recommend verifying property documents manually.
+          </p>
         </div>
-        <p className="text-sm text-amber-700 mt-2">
-          This property does not have a RERA registration number. We recommend verifying property documents manually.
-        </p>
       </div>
     )
   }
 
   if (loading) {
     return (
-      <div className="flex items-center gap-2 text-gray-600">
-        <Clock className="w-5 h-5 animate-spin" />
-        <span>Loading RERA verification...</span>
+      <div>
+        <h3 className="text-xl font-bold text-white mb-4">RERA Verification</h3>
+        <div className="flex items-center gap-3">
+          <Clock className="w-5 h-5 animate-spin text-amber-300" />
+          <span className="text-slate-300">Loading RERA verification...</span>
+        </div>
       </div>
     )
   }
 
   if (error) {
     return (
-      <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-        <div className="flex items-center gap-2 text-red-800">
-          <AlertCircle className="w-5 h-5" />
-          <span className="font-medium">Error loading RERA data</span>
+      <div>
+        <h3 className="text-xl font-bold text-white mb-4">RERA Verification</h3>
+        <div className="bg-red-500/20 border border-red-300/50 rounded-lg p-4">
+          <div className="flex items-center gap-2 text-red-300">
+            <AlertCircle className="w-5 h-5" />
+            <span className="font-bold">Error loading RERA data</span>
+          </div>
+          <p className="text-sm text-red-200 mt-2">{error}</p>
         </div>
-        <p className="text-sm text-red-700 mt-2">{error}</p>
       </div>
     )
   }
@@ -151,6 +160,7 @@ export default function RERAVerification({ propertyId, reraId }: RERAVerificatio
 
   return (
     <div className="space-y-4">
+      <h3 className="text-xl font-bold text-white mb-4">RERA Verification</h3>
       {/* RERA Badge and Display */}
       <div className="flex items-center gap-4">
         <RERABadge
@@ -194,44 +204,44 @@ export default function RERAVerification({ propertyId, reraId }: RERAVerificatio
 
       {/* Additional RERA Details */}
       {registration && (
-        <div className="bg-gray-50 rounded-lg p-4 space-y-2 text-sm">
+        <div className="bg-slate-700/50 border border-amber-300/30 rounded-lg p-4 space-y-2 text-sm">
           {registration.project_name && (
             <div>
-              <span className="font-medium text-gray-700">Project:</span>{' '}
-              <span className="text-gray-900">{registration.project_name}</span>
+              <span className="font-bold text-slate-400">Project:</span>{' '}
+              <span className="text-white">{registration.project_name}</span>
             </div>
           )}
           {registration.promoter_name && (
             <div>
-              <span className="font-medium text-gray-700">Promoter:</span>{' '}
-              <span className="text-gray-900">{registration.promoter_name}</span>
+              <span className="font-bold text-slate-400">Promoter:</span>{' '}
+              <span className="text-white">{registration.promoter_name}</span>
             </div>
           )}
           {registration.status && (
             <div>
-              <span className="font-medium text-gray-700">Status:</span>{' '}
-              <span className="text-gray-900 capitalize">{registration.status}</span>
+              <span className="font-bold text-slate-400">Status:</span>{' '}
+              <span className="text-white capitalize">{registration.status}</span>
             </div>
           )}
           {registration.expiry_date && (
             <div>
-              <span className="font-medium text-gray-700">Expiry:</span>{' '}
-              <span className="text-gray-900">{new Date(registration.expiry_date).toLocaleDateString()}</span>
+              <span className="font-bold text-slate-400">Expiry:</span>{' '}
+              <span className="text-white">{new Date(registration.expiry_date).toLocaleDateString()}</span>
             </div>
           )}
           {registration.compliance_score !== null && (
             <div>
-              <span className="font-medium text-gray-700">Compliance Score:</span>{' '}
-              <span className="text-gray-900">{registration.compliance_score}%</span>
+              <span className="font-bold text-slate-400">Compliance Score:</span>{' '}
+              <span className="text-white">{registration.compliance_score}%</span>
             </div>
           )}
         </div>
       )}
 
       {/* Legal Disclaimer */}
-      <div className="bg-gray-50 border-l-4 border-gray-400 p-3 text-xs text-gray-700">
+      <div className="bg-slate-700/50 border-l-4 border-amber-300/50 p-3 text-xs text-slate-300">
         <p>{LEGAL_DISCLAIMER}</p>
-        <a href="/how-verification-works" className="text-primary-600 hover:text-primary-700 mt-2 inline-block">
+        <a href="/how-verification-works" className="text-amber-300 hover:text-amber-400 mt-2 inline-block transition-colors">
           How verification works →
         </a>
       </div>

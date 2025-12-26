@@ -1735,9 +1735,11 @@
 .thg-input::placeholder{ color:#6b7280; }
 .thg-input:focus{ outline:2px solid #facc15; outline-offset:2px; }
 
-/* Actions and links */
+/* Actions and links - clear visibility */
 .thg-actions{ display:flex; justify-content:space-between; align-items:center; margin:6px 0 12px; }
-.thg-link{ background:none; border:0; color:#22c55e; cursor:pointer; font-size:13px; padding:0; }
+.thg-link{ background:none; border:0; color:#1e40af !important; cursor:pointer; font-size:13px; padding:0; font-weight:600; transition:color 0.2s ease; }
+.thg-link:hover{ color:#3b82f6 !important; }
+.thg-hint{ color:#64748b !important; font-size:12px; }
 
 /* Primary CTA (yellow) */
 .thg-btn-primary{ width:100%; appearance:none; background:linear-gradient(180deg,#f8d34a,#f0b90b,#c89200); color:#111; border:1px solid rgba(250, 204, 21, .9); border-radius:12px; padding:12px 14px; font-weight:800; cursor:pointer; transition:transform .06s ease, box-shadow .06s ease, filter .12s ease; box-shadow:0 4px 0 rgba(250, 204, 21, .35); }
@@ -1751,10 +1753,10 @@
 .thg-oauth-btn .g-icon{ width:18px; height:18px; }
 .thg-oauth-btn.google{ border-color:rgba(30,64,175,.3); background:rgba(255,255,255,0.5); }
 
-/* Errors, hints, loading */
-.thg-error{ background:rgba(239,68,68,.12); color:#fecaca; border:1px solid rgba(239,68,68,.35); border-radius:10px; padding:10px 12px; font-size:13px; display:none; }
-.thg-hint{ font-size:12px; opacity:.8; }
-.thg-loading-bar{ height:2px; width:0; background:#7dd3fc; border-radius:2px; transition:width .2s ease; }
+/* Errors, hints, loading - clear visibility on glassy background */
+.thg-error{ background:rgba(239,68,68,.15); color:#dc2626 !important; border:1px solid rgba(239,68,68,.4); border-radius:10px; padding:10px 12px; font-size:13px; display:none; font-weight:600; }
+.thg-hint{ font-size:12px; color:#64748b !important; opacity:1 !important; }
+.thg-loading-bar{ height:2px; width:0; background:linear-gradient(90deg, #d4af37, #1e40af); border-radius:2px; transition:width .2s ease; }
 
 /* Confirm dialog */
 .thg-confirm{ position:fixed; inset:0; display:flex; align-items:center; justify-content:center; z-index:${Z_BASE+3}; background:rgba(0,0,0,.55); backdrop-filter:blur(3px); visibility:hidden; opacity:0; transition:opacity .16s ease, visibility 0s linear .16s; }
@@ -3609,39 +3611,6 @@
           }
         }
       })();
-
-      // CRITICAL: Real-time logout detection via BroadcastChannel (cross-tab)
-      if ('BroadcastChannel' in window) {
-        const authChannel = new BroadcastChannel('tharaga-auth');
-        authChannel.addEventListener('message', function(ev) {
-          try {
-            if (ev.data && ev.data.type === 'THARAGA_AUTH_SIGNED_OUT') {
-              console.log('[Portal] BroadcastChannel logout detected, updating Portal menu immediately');
-              const portalMenu = document.getElementById('portal-menu');
-              if (portalMenu) {
-                portalMenu.removeAttribute('open');
-                portalMenu.setAttribute('data-loading', 'true');
-                const portalMenuItems = document.getElementById('portal-menu-items');
-                if (portalMenuItems) {
-                  portalMenuItems.innerHTML = '';
-                }
-              }
-              // Force immediate update
-              updatePortalMenu();
-              // Clear role manager state
-              if (window.thgRoleManager && typeof window.thgRoleManager.clearState === 'function') {
-                try {
-                  window.thgRoleManager.clearState();
-                } catch(e) {
-                  console.debug('[Portal] Error clearing role manager state:', e);
-                }
-              }
-            }
-          } catch(e) {
-            console.debug('[Portal] BroadcastChannel error:', e);
-          }
-        });
-      }
 
       // Update portal menu when roles change
       if (window.thgRoleManager) {

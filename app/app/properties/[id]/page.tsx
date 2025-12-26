@@ -335,7 +335,7 @@ export default async function PropertyPage({ params }: { params: { id: string } 
   const { property: p, builder, similar, reviews } = data
 
   return (
-    <main className="min-h-screen">
+    <main className="min-h-screen bg-slate-950">
       <Breadcrumb items={[
         { label: 'Home', href: '/' },
         { label: 'Properties', href: '/property-listing' },
@@ -345,43 +345,43 @@ export default async function PropertyPage({ params }: { params: { id: string } 
         <ClientGallery images={p.images} tourUrl={p.tourUrl} brochureUrl={p.brochureUrl} propertyId={p.id} />
       </section>
       <div className="mx-auto max-w-7xl px-3 sm:px-4 py-4 sm:py-6 grid grid-cols-1 lg:grid-cols-10 gap-4 sm:gap-6" style={{ paddingLeft: 'max(12px, env(safe-area-inset-left))', paddingRight: 'max(12px, env(safe-area-inset-right))' }}>
-        <div className="lg:col-span-7">
+        <div className="lg:col-span-7 space-y-6">
           <Overview p={p} />
-          <div className="mt-6">
+          <div className="bg-slate-800/95 border-2 border-amber-300 rounded-lg p-6">
             <RERAVerification propertyId={p.id} reraId={p.reraId} />
           </div>
-          <div className="mt-6">
-            <RiskFlags propertyId={p.id} />
+          <div className="bg-slate-800/95 border-2 border-amber-300 rounded-lg p-6">
+            <RiskFlags propertyId={p.id} priceINR={p.priceINR} sqft={p.sqft} reraId={p.reraId} />
           </div>
           <Description text={p.description} />
           <Amenities items={p.amenities} />
           <FloorPlan images={p.floorPlans} />
           {p.city === 'Chennai' && (
-            <div className="mt-6">
+            <div className="bg-slate-800/95 border-2 border-amber-300 rounded-lg p-6">
               <ChennaiInsights propertyId={p.id} locality={p.locality || ''} />
             </div>
           )}
-          <div className="mt-6">
+          <div className="bg-slate-800/95 border-2 border-amber-300 rounded-lg p-6">
             <AppreciationPrediction propertyId={p.id} />
           </div>
           {(p.locality || p.city) && (
-            <div className="mt-6">
+            <div>
               <ClientMarketAnalysis area={p.locality || p.city || ''} propertyId={p.id} />
             </div>
           )}
           <LocationInsights p={p} />
           <Financials price={p.priceINR} sqft={p.sqft} />
           <BuilderInfo p={p} builder={builder} />
-          <div className="mt-6">
+          <div className="bg-slate-800/95 border-2 border-amber-300 rounded-lg p-6">
             <DocumentUpload propertyId={p.id} />
           </div>
           <LegalDocs p={p} />
           <SimilarProperties items={similar} />
           <Reviews items={reviews} />
         </div>
-        <div className="lg:col-span-3">
+        <div className="lg:col-span-3 space-y-4">
           <StickySidebar p={p} />
-          <div className="mt-4">
+          <div className="bg-slate-800/95 border-2 border-amber-300 rounded-lg p-6">
             <ClientMatchScore propertyId={p.id} />
           </div>
         </div>
@@ -428,8 +428,8 @@ function Spec({ icon, label, value }: { icon: React.ReactNode; label: string; va
 
 function Description({ text }: { text: string }) {
   return (
-    <div className="prose max-w-none mt-8">
-      <h2 className="text-2xl font-semibold">Description</h2>
+    <div className="bg-slate-800/95 border-2 border-amber-300 rounded-lg p-6 prose max-w-none">
+      <h2 className="text-2xl font-bold text-white mb-4">Description</h2>
       <ClientExpandableText text={text} maxWords={300} />
       <div className="mt-4 grid gap-2 md:grid-cols-3">
         <Highlight>Recently Price Reduced by ₹5L</Highlight>
@@ -441,7 +441,7 @@ function Description({ text }: { text: string }) {
 }
 
 function Highlight({ children }: { children: React.ReactNode }){
-  return <div className="rounded-md bg-yellow-50 text-yellow-900 border border-yellow-200 px-3 py-2 text-sm">{children}</div>
+  return <div className="rounded-lg bg-amber-500/20 text-amber-300 border border-amber-300/50 px-3 py-2 text-sm">{children}</div>
 }
 
 function Amenities({ items }: { items: string[] }){
@@ -467,19 +467,19 @@ function FloorPlan({ images }: { images: string[] }){
   if (!images?.length) return null
   const first = images[0]
   return (
-    <div className="mt-8">
-      <h2 className="text-2xl font-semibold mb-3">Floor Plan & Layout</h2>
-      <div className="relative h-80 border rounded">
+    <div className="bg-slate-800/95 border-2 border-amber-300 rounded-lg p-6">
+      <h2 className="text-2xl font-bold text-white mb-4">Floor Plan & Layout</h2>
+      <div className="relative h-80 bg-slate-700/50 border border-amber-300/30 rounded-lg">
         <Image src={first} alt="Floor plan" fill className="object-contain" loading="lazy" sizes="100vw" />
       </div>
-      <ul className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-2 text-sm text-gray-700">
-        <li>Living Room: 250 sqft</li>
-        <li>Master Bedroom: 180 sqft (with attached bath)</li>
-        <li>Bedroom 2: 150 sqft</li>
-        <li>Bedroom 3: 140 sqft</li>
-        <li>Kitchen: 120 sqft</li>
-        <li>Balconies: 100 sqft</li>
-        <li>Total Carpet Area: 1,640 sqft</li>
+      <ul className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
+        <li className="bg-slate-700/50 border border-amber-300/30 rounded-lg p-2 text-white">Living Room: 250 sqft</li>
+        <li className="bg-slate-700/50 border border-amber-300/30 rounded-lg p-2 text-white">Master Bedroom: 180 sqft (with attached bath)</li>
+        <li className="bg-slate-700/50 border border-amber-300/30 rounded-lg p-2 text-white">Bedroom 2: 150 sqft</li>
+        <li className="bg-slate-700/50 border border-amber-300/30 rounded-lg p-2 text-white">Bedroom 3: 140 sqft</li>
+        <li className="bg-slate-700/50 border border-amber-300/30 rounded-lg p-2 text-white">Kitchen: 120 sqft</li>
+        <li className="bg-slate-700/50 border border-amber-300/30 rounded-lg p-2 text-white">Balconies: 100 sqft</li>
+        <li className="bg-amber-500/20 border border-amber-300 rounded-lg p-2 text-amber-300 font-bold col-span-2">Total Carpet Area: 1,640 sqft</li>
       </ul>
     </div>
   )
@@ -487,14 +487,26 @@ function FloorPlan({ images }: { images: string[] }){
 
 function LocationInsights({ p }: { p: any }){
   return (
-    <div className="mt-8">
-      <h2 className="text-2xl font-semibold mb-3">Location Insights</h2>
+    <div className="bg-slate-800/95 border-2 border-amber-300 rounded-lg p-6">
+      <h2 className="text-2xl font-bold text-white mb-4">Location Insights</h2>
       <ClientInteractiveMap lat={p.lat} lng={p.lng} workplace={null} />
-      <div className="mt-3 grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
-        <div className="rounded border p-3">Connectivity: 8/10</div>
-        <div className="rounded border p-3">Social Infrastructure: 9/10</div>
-        <div className="rounded border p-3">Safety: 9/10</div>
-        <div className="rounded border p-3">Green Spaces: 7/10</div>
+      <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
+        <div className="bg-slate-700/50 border border-amber-300/30 rounded-lg p-3">
+          <div className="text-slate-400 text-xs uppercase font-semibold mb-1">Connectivity</div>
+          <div className="text-white font-bold">8/10</div>
+        </div>
+        <div className="bg-slate-700/50 border border-amber-300/30 rounded-lg p-3">
+          <div className="text-slate-400 text-xs uppercase font-semibold mb-1">Social Infrastructure</div>
+          <div className="text-white font-bold">9/10</div>
+        </div>
+        <div className="bg-slate-700/50 border border-amber-300/30 rounded-lg p-3">
+          <div className="text-slate-400 text-xs uppercase font-semibold mb-1">Safety</div>
+          <div className="text-white font-bold">9/10</div>
+        </div>
+        <div className="bg-slate-700/50 border border-amber-300/30 rounded-lg p-3">
+          <div className="text-slate-400 text-xs uppercase font-semibold mb-1">Green Spaces</div>
+          <div className="text-white font-bold">7/10</div>
+        </div>
       </div>
     </div>
   )
@@ -511,18 +523,18 @@ function Financials({ price, sqft }: { price?: number|null; sqft?: number|null }
   const stamp = Math.round(base * 0.06)
   const total = base + reg + stamp
   return (
-    <div className="mt-8">
-      <h2 className="text-2xl font-semibold mb-3">Financial Breakdown</h2>
+    <div className="bg-slate-800/95 border-2 border-amber-300 rounded-lg p-6">
+      <h2 className="text-2xl font-bold text-white mb-4">Financial Breakdown</h2>
       <div className="grid md:grid-cols-2 gap-4">
-        <div className="rounded border p-4 space-y-2">
+        <div className="bg-slate-700/50 border border-amber-300/30 rounded-lg p-4 space-y-2">
           <Row label="Base Price" value={formatINR(base)} />
           <Row label="Registration (5%)" value={formatINR(reg)} />
           <Row label="Stamp Duty (6%)" value={formatINR(stamp)} />
           <Row label="GST" value="₹0" />
-          <hr />
+          <hr className="border-amber-300/30" />
           <Row label="Total" value={formatINR(total)} bold />
         </div>
-        <div className="rounded border p-4">
+        <div className="bg-slate-700/50 border border-amber-300/30 rounded-lg p-4">
           <ClientEMICalculator defaultPrincipal={Math.min(base, Math.max(0, base - (base*0.2)))} />
         </div>
       </div>
@@ -533,8 +545,8 @@ function Financials({ price, sqft }: { price?: number|null; sqft?: number|null }
 function Row({ label, value, bold }: { label: string; value: React.ReactNode; bold?: boolean }){
   return (
     <div className="flex items-center justify-between py-1">
-      <div className="text-gray-600">{label}</div>
-      <div className={bold ? 'font-semibold text-gray-900' : 'text-gray-900'}>{value}</div>
+      <div className="text-slate-400 text-sm">{label}</div>
+      <div className={bold ? 'font-bold text-amber-300 text-lg' : 'font-medium text-white'}>{value}</div>
     </div>
   )
 }
@@ -608,19 +620,19 @@ function DocRow({ label, status }: { label: string; status?: string }){
 function SimilarProperties({ items }: { items: any[] }){
   if (!items?.length) return null
   return (
-    <div className="mt-8">
-      <h2 className="text-2xl font-semibold mb-3">You Might Also Like</h2>
+    <div className="bg-slate-800/95 border-2 border-amber-300 rounded-lg p-6">
+      <h2 className="text-2xl font-bold text-white mb-4">You Might Also Like</h2>
       <ClientCompareChart items={items} />
-      <div className="grid md:grid-cols-3 gap-4">
+      <div className="grid md:grid-cols-3 gap-4 mt-4">
         {items.slice(0, 6).map((it)=> (
-          <div key={it.id} className="rounded border overflow-hidden">
+          <div key={it.id} className="bg-slate-700/50 border border-amber-300/30 rounded-lg overflow-hidden hover:border-amber-300 transition-colors">
             <div className="relative h-40">
-              {it.image ? <Image src={it.image} alt={it.title} fill className="object-cover" /> : <div className="h-full bg-gray-100"/>}
+              {it.image ? <Image src={it.image} alt={it.title} fill className="object-cover" /> : <div className="h-full bg-slate-700"/>}
             </div>
             <div className="p-3">
-              <div className="font-medium text-gray-900 line-clamp-1">{it.title}</div>
-              <div className="text-sm text-gray-600">{it.locality || it.city || ''}</div>
-              <div className="text-sm text-gray-900 mt-1">{formatINR(it.priceINR)} {it.pricePerSqftINR ? <span className="text-gray-500">(₹{it.pricePerSqftINR}/sqft)</span> : null}</div>
+              <div className="font-bold text-white line-clamp-1">{it.title}</div>
+              <div className="text-sm text-slate-300">{it.locality || it.city || ''}</div>
+              <div className="text-sm text-amber-300 font-bold mt-1">{formatINR(it.priceINR)} {it.pricePerSqftINR ? <span className="text-slate-400">(₹{it.pricePerSqftINR}/sqft)</span> : null}</div>
             </div>
           </div>
         ))}
@@ -675,14 +687,14 @@ function avg(nums: Array<number|null|undefined>){
 function StickySidebar({ p }: { p: any }){
   return (
     <div className="lg:sticky lg:top-4">
-      <div className="rounded border p-4 space-y-3">
-        <div className="text-3xl font-bold text-yellow-700">{formatINR(p.priceINR)}</div>
-        {p.pricePerSqftINR ? <div className="text-sm text-gray-600">₹{p.pricePerSqftINR}/sqft</div> : null}
-        <div className="flex items-center gap-2 text-emerald-600 text-sm"><ShieldCheck size={16}/> RERA Approved</div>
-        <div className="flex items-center gap-1 text-yellow-600 text-sm"><Star size={16}/> Builder reputation: 5.0 (120 reviews)</div>
-        <div className="rounded bg-emerald-50 border border-emerald-200 text-emerald-900 p-3 text-sm">
-          <div className="font-medium">Verified by AI</div>
-          <ul className="list-disc ml-5">
+      <div className="bg-slate-800/95 border-2 border-amber-300 rounded-lg p-6 space-y-4">
+        <div className="text-3xl font-bold text-amber-300">{formatINR(p.priceINR)}</div>
+        {p.pricePerSqftINR ? <div className="text-sm text-slate-300">₹{p.pricePerSqftINR}/sqft</div> : null}
+        <div className="flex items-center gap-2 text-emerald-400 text-sm"><ShieldCheck size={16}/> RERA Approved</div>
+        <div className="flex items-center gap-1 text-amber-300 text-sm"><Star size={16}/> Builder reputation: 5.0 (120 reviews)</div>
+        <div className="rounded-lg bg-emerald-500/20 border border-emerald-300/50 text-emerald-300 p-3 text-sm">
+          <div className="font-bold mb-2">Verified by AI</div>
+          <ul className="list-disc ml-5 space-y-1">
             <li>✓ RERA Approved</li>
             <li>✓ Title Clear</li>
             <li>✓ Builder Verified</li>
@@ -699,10 +711,10 @@ function StickySidebar({ p }: { p: any }){
 
 function MobileBar({ p }: { p: any }){
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-40 bg-white border-t p-3 flex items-center justify-between lg:hidden">
-      <div className="font-semibold">{formatINR(p.priceINR)}</div>
-      <button className="rounded bg-yellow-600 text-white px-4 py-2">Schedule Visit</button>
-      <a href={`https://wa.me/?text=${encodeURIComponent(typeof location !== 'undefined' ? (location.href || '') : '')}`} className="fixed bottom-20 right-4 rounded-full bg-green-500 text-white w-12 h-12 flex items-center justify-center shadow-lg" aria-label="WhatsApp">WA</a>
+    <div className="fixed bottom-0 left-0 right-0 z-40 bg-slate-800/95 border-t-2 border-amber-300 p-3 flex items-center justify-between lg:hidden">
+      <div className="font-bold text-amber-300">{formatINR(p.priceINR)}</div>
+      <button className="rounded-lg bg-amber-500 hover:bg-amber-600 border-2 border-amber-300 text-slate-900 font-bold px-4 py-2 transition-colors">Schedule Visit</button>
+      <a href={`https://wa.me/?text=${encodeURIComponent(typeof location !== 'undefined' ? (location.href || '') : '')}`} className="fixed bottom-20 right-4 rounded-full bg-green-500 hover:bg-green-600 text-white w-12 h-12 flex items-center justify-center shadow-lg transition-colors" aria-label="WhatsApp">WA</a>
     </div>
   )
 }

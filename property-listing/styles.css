@@ -206,18 +206,23 @@ html, body {
   max-height: calc(100vh - 48px);
   overflow-y: auto;
   margin-left: 0;
-  /* Admin Dashboard card style */
-  background: rgba(30, 41, 59, 0.95); /* bg-slate-800/95 */
+  /* Enhanced Admin Dashboard card style with elegant effects */
+  background: linear-gradient(135deg, rgba(30, 41, 59, 0.98) 0%, rgba(15, 23, 42, 0.95) 100%);
   border: 2px solid rgb(252, 211, 77); /* border-amber-300 */
-  border-radius: 16px; /* rounded-lg */
-  padding: 24px;
-  transition: all 0.3s ease;
+  border-radius: 20px; /* slightly more rounded */
+  padding: 28px;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3),
-              0 0 40px rgba(252, 211, 77, 0.1); /* subtle amber glow */
+  box-shadow: 
+    0 8px 32px rgba(0, 0, 0, 0.4),
+    0 0 0 1px rgba(252, 211, 77, 0.1),
+    0 0 60px rgba(252, 211, 77, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05); /* elegant inner glow */
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
 }
 
-/* Shimmer effect overlay - subtle */
+/* Elegant shimmer effect overlay */
 .filter-sidebar::before {
   content: '';
   position: absolute;
@@ -226,14 +231,34 @@ html, body {
   width: 100%;
   height: 100%;
   background: linear-gradient(
-    90deg,
-    transparent,
-    rgba(252, 211, 77, 0.05),
-    transparent
+    105deg,
+    transparent 0%,
+    rgba(252, 211, 77, 0.08) 45%,
+    rgba(252, 211, 77, 0.12) 50%,
+    rgba(252, 211, 77, 0.08) 55%,
+    transparent 100%
   );
-  animation: shimmer 4s infinite;
+  animation: shimmer 5s infinite;
   pointer-events: none;
   z-index: 1;
+  border-radius: 20px;
+}
+
+/* Subtle pulsing border glow */
+.filter-sidebar::after {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  border-radius: 20px;
+  padding: 2px;
+  background: linear-gradient(135deg, rgba(252, 211, 77, 0.3), rgba(251, 191, 36, 0.2), rgba(252, 211, 77, 0.3));
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  opacity: 0.6;
+  animation: borderPulse 3s ease-in-out infinite;
+  pointer-events: none;
+  z-index: 0;
 }
 
 @keyframes shimmer {
@@ -245,10 +270,27 @@ html, body {
   }
 }
 
+@keyframes borderPulse {
+  0%, 100% {
+    opacity: 0.4;
+  }
+  50% {
+    opacity: 0.8;
+  }
+}
+
 .filter-sidebar:hover {
-  background: rgba(30, 41, 59, 0.98);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4),
-              0 0 60px rgba(252, 211, 77, 0.15); /* enhanced amber glow */
+  background: linear-gradient(135deg, rgba(30, 41, 59, 1) 0%, rgba(15, 23, 42, 0.98) 100%);
+  transform: translateY(-2px);
+  box-shadow: 
+    0 12px 48px rgba(0, 0, 0, 0.5),
+    0 0 0 1px rgba(252, 211, 77, 0.2),
+    0 0 80px rgba(252, 211, 77, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.filter-sidebar:hover::after {
+  opacity: 1;
 }
 
 /* Ensure filter content is above shimmer */
@@ -461,26 +503,54 @@ select[multiple] {
    PROPERTY CARDS - Admin Dashboard Design System
    ============================================ */
 .card {
-  background: rgba(30, 41, 59, 0.95); /* bg-slate-800/95 */
+  background: linear-gradient(135deg, rgba(30, 41, 59, 0.95) 0%, rgba(15, 23, 42, 0.9) 100%);
   border: 2px solid rgb(252, 211, 77); /* border-amber-300 */
-  border-radius: 16px; /* rounded-lg */
+  border-radius: 18px;
   overflow: hidden;
-  transition: all 0.3s ease;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3),
-              0 0 40px rgba(252, 211, 77, 0.1); /* subtle amber glow */
+  box-shadow: 
+    0 4px 20px rgba(0, 0, 0, 0.3),
+    0 0 0 1px rgba(252, 211, 77, 0.1),
+    0 0 40px rgba(252, 211, 77, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 18px;
+  padding: 2px;
+  background: linear-gradient(135deg, rgba(252, 211, 77, 0.2), rgba(251, 191, 36, 0.1), rgba(252, 211, 77, 0.2));
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  pointer-events: none;
+  z-index: 0;
 }
 
 .card:hover {
-  background: rgba(30, 41, 59, 0.98);
-  transform: translateY(-4px); /* subtle lift */
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4),
-              0 0 60px rgba(252, 211, 77, 0.15); /* enhanced amber glow */
+  background: linear-gradient(135deg, rgba(30, 41, 59, 1) 0%, rgba(15, 23, 42, 0.95) 100%);
+  transform: translateY(-6px) scale(1.01);
+  box-shadow: 
+    0 12px 40px rgba(0, 0, 0, 0.5),
+    0 0 0 1px rgba(252, 211, 77, 0.3),
+    0 0 80px rgba(252, 211, 77, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.card:hover::before {
+  opacity: 1;
 }
 
 .card-img {
   position: relative;
-  height: 200px;
+  height: 180px;
   overflow: hidden;
   background: rgba(51, 65, 85, 0.3); /* subtle background for no-image state */
 }
@@ -547,11 +617,13 @@ input[type="checkbox"]:focus {
 .card-img .ribbon,
 .card-img .score {
   position: absolute;
-  padding: 6px 12px;
-  border-radius: 8px;
-  font-size: 12px;
-  font-weight: 600;
+  padding: 5px 10px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 700;
   z-index: 2;
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
 }
 
 /* Verified badge - Real-time status */
@@ -777,15 +849,16 @@ input[type="checkbox"]:focus {
 .tag {
   display: inline-flex;
   align-items: center;
-  padding: 6px 12px;
-  border-radius: 999px;
-  border: 2px solid rgb(252, 211, 77); /* border-amber-300 */
-  background: rgba(51, 65, 85, 0.5); /* bg-slate-700/50 */
-  font-size: 12px;
-  color: rgb(255, 255, 255); /* text-white */
-  font-weight: 500;
+  padding: 4px 8px;
+  border-radius: 6px;
+  border: 1px solid rgba(252, 211, 77, 0.3); /* border-amber-300/30 */
+  background: rgba(51, 65, 85, 0.6); /* bg-slate-700/60 */
+  font-size: 11px;
+  color: rgb(226, 232, 240); /* text-slate-200 */
+  font-weight: 600;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
+  white-space: nowrap;
 }
 
 .chip, .chip-rem {

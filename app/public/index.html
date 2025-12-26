@@ -1715,11 +1715,12 @@
 .thg-auth-overlay[aria-hidden="false"]{ visibility:visible; opacity:1; transition:opacity .18s ease, visibility 0s linear 0s; }
 .thg-auth-modal{ width:100%; max-width:420px; background:linear-gradient(180deg, rgba(20,20,20,.98), rgba(12,12,12,.98)); color:#fff; border:1px solid rgba(255,255,255,.1); border-radius:16px; box-shadow:0 30px 60px rgba(0,0,0,.5); transform:translateY(10px) scale(.98); opacity:0; transition:transform .18s ease, opacity .18s ease; }
 .thg-auth-overlay[aria-hidden="false"] .thg-auth-modal{ transform:translateY(0) scale(1); opacity:1; }
-.thg-auth-header{ display:flex; align-items:center; justify-content:space-between; padding:16px 18px; border-bottom:1px solid rgba(255,255,255,.08); }
-.thg-auth-title{ font-weight:800; font-size:20px; }
-.thg-auth-close{ appearance:none; background:linear-gradient(180deg,#f3cd4a,#eab308,#c58a04); border:0; color:#111; cursor:pointer; font-weight:800; width:32px; height:32px; line-height:32px; border-radius:9999px; box-shadow:0 2px 6px rgba(0,0,0,.25); }
-.thg-auth-close:hover{ color:#fff; background:linear-gradient(180deg,#eab308,#c58a04,#7a5200); transform:scale(1.06); }
-.thg-auth-body{ padding:16px 18px 18px; }
+.thg-auth-modal::before{ content:""; position:absolute; top:0; left:0; right:0; height:2px; border-radius:24px 24px 0 0; background:linear-gradient(90deg, #d4af37, #1e40af); z-index:2; }
+.thg-auth-header{ display:flex; align-items:center; justify-content:space-between; padding:16px 18px; border-bottom:1px solid rgba(30,64,175,.12); position:relative; z-index:1; }
+.thg-auth-title{ font-weight:800; font-size:20px; color:#111 !important; }
+.thg-auth-close{ appearance:none; background:rgba(0,0,0,0.04); border:0; color:#64748b; cursor:pointer; font-weight:800; width:32px; height:32px; line-height:32px; border-radius:10px; transition:all 0.2s ease; }
+.thg-auth-close:hover{ background:rgba(0,0,0,0.08); color:#0f172a; }
+.thg-auth-body{ padding:16px 18px 18px; position:relative; z-index:1; }
 
 /* Tabs */
 .thg-tabs{ display:flex; gap:6px; background:rgba(255,255,255,.06); padding:4px; border-radius:9999px; margin-bottom:16px; }
@@ -1743,12 +1744,12 @@
 .thg-btn-primary:hover{ filter:brightness(1.03); }
 .thg-btn-primary:active{ transform:translateY(1px); box-shadow:none; }
 
-/* OAuth / secondary buttons */
+/* OAuth / secondary buttons - glassy design */
 .thg-oauth{ display:grid; grid-template-columns:1fr; gap:10px; margin-top:10px; }
-.thg-oauth-btn{ appearance:none; background:#0f0f0f; color:#fff; border:1px solid rgba(255,255,255,.12); border-radius:12px; padding:12px 14px; cursor:pointer; font-weight:800; display:flex; align-items:center; justify-content:center; gap:10px; }
-.thg-oauth-btn:hover{ background:#141414; }
+.thg-oauth-btn{ appearance:none; background:rgba(255,255,255,0.4); backdrop-filter:blur(8px); color:#111 !important; border:1px solid rgba(30,64,175,.2); border-radius:12px; padding:12px 14px; cursor:pointer; font-weight:800; display:flex; align-items:center; justify-content:center; gap:10px; transition:all 0.2s ease; }
+.thg-oauth-btn:hover{ background:rgba(255,255,255,0.6); border-color:#1e40af; }
 .thg-oauth-btn .g-icon{ width:18px; height:18px; }
-.thg-oauth-btn.google{ border-color:#333; background:#151515; }
+.thg-oauth-btn.google{ border-color:rgba(30,64,175,.3); background:rgba(255,255,255,0.5); }
 
 /* Errors, hints, loading */
 .thg-error{ background:rgba(239,68,68,.12); color:#fecaca; border:1px solid rgba(239,68,68,.35); border-radius:10px; padding:10px 12px; font-size:13px; display:none; }
@@ -2137,14 +2138,31 @@
               }
             }).catch(err => console.error('[thg-auth] Role manager init error:', err));
           } else if (event === 'SIGNED_OUT') {
-            // User logged out, clear Portal menu and close dropdown
+            // User logged out - REAL-TIME UPDATE
+            console.log('[Portal] SIGNED_OUT event detected, updating Portal menu immediately');
             const portalMenu = document.getElementById('portal-menu');
             if (portalMenu) {
               portalMenu.removeAttribute('open');
               portalMenu.setAttribute('data-loading', 'true');
+              // Clear menu items immediately
+              const portalMenuItems = document.getElementById('portal-menu-items');
+              if (portalMenuItems) {
+                portalMenuItems.innerHTML = '';
+              }
             }
+            // Force immediate update of Portal menu
             if (window.__updatePortalMenu) {
               window.__updatePortalMenu();
+            } else if (typeof updatePortalMenu === 'function') {
+              updatePortalMenu();
+            }
+            // Also clear role manager state if available
+            if (window.thgRoleManager && typeof window.thgRoleManager.clearState === 'function') {
+              try {
+                window.thgRoleManager.clearState();
+              } catch(e) {
+                console.debug('[Portal] Error clearing role manager state:', e);
+              }
             }
           }
 
@@ -3323,9 +3341,9 @@
         modal.setAttribute('role', 'dialog');
         modal.style.cssText = 'position: fixed; inset: 0; background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(8px) saturate(180%); display: flex; align-items: center; justify-content: center; z-index: 99999; visibility: visible; opacity: 1; transition: opacity 0.25s ease; padding: 20px;';
         
-        // Create modal content with beautiful design
+        // Create modal content with GLASSY design matching Portal dropdown
         const modalContent = document.createElement('div');
-        modalContent.style.cssText = 'width: 100%; max-width: 480px; background: linear-gradient(180deg, rgba(255,255,255,0.98), rgba(248,250,252,0.98)); color: #111; border: 2px solid rgba(212,175,55,0.3); border-radius: 24px; box-shadow: 0 32px 64px rgba(30,64,175,0.2), 0 0 0 1px rgba(212,175,55,0.1); transform: translateY(0) scale(1); opacity: 1; transition: transform 0.25s ease, opacity 0.25s ease; position: relative; overflow: hidden;';
+        modalContent.style.cssText = 'width: 100%; max-width: 480px; background: rgba(255, 255, 255, 0.95) !important; backdrop-filter: blur(24px) saturate(1.8) !important; -webkit-backdrop-filter: blur(24px) saturate(1.8) !important; color: #111; border: 1px solid rgba(255, 255, 255, 0.3) !important; border-radius: 24px !important; box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.25), 0 0 0 1px rgba(212, 175, 55, 0.2) !important; transform: translateY(0) scale(1); opacity: 1; transition: transform 0.25s ease, opacity 0.25s ease; position: relative; overflow: hidden;';
         
         // Gold gradient top border
         const topBorder = document.createElement('div');
@@ -3358,10 +3376,10 @@
         message.style.cssText = 'background: linear-gradient(135deg, rgba(30,64,175,0.08), rgba(59,130,246,0.06)); border: 1px solid rgba(30,64,175,0.12); border-radius: 16px; padding: 20px; margin-bottom: 24px; position: relative; overflow: hidden;';
         message.innerHTML = '<div style="position: absolute; top: -20px; right: -20px; width: 80px; height: 80px; background: radial-gradient(circle, rgba(212,175,55,0.15), transparent); border-radius: 50%;"></div><div style="position: relative; z-index: 1;"><div style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px;"><span style="font-size: 20px;">✨</span><span style="font-weight: 800; color: #0f172a; font-size: 16px;">Unlock Your Real Estate Potential</span></div><p style="margin: 0; color: #475569; font-size: 15px; line-height: 1.6;">Sign in to access exclusive dashboards, save properties, track leads, and connect directly with verified builders. Join thousands of smart investors!</p></div>';
         
-        // Features list
+        // Features list with glassy styling
         const features = document.createElement('div');
         features.style.cssText = 'margin-bottom: 24px;';
-        features.innerHTML = '<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px;"><div style="display: flex; align-items: center; gap: 8px; padding: 10px; background: rgba(255,255,255,0.6); border-radius: 10px;"><span style="font-size: 18px;">🏗️</span><span style="font-size: 13px; font-weight: 600; color: #0f172a;">Builder Portal</span></div><div style="display: flex; align-items: center; gap: 8px; padding: 10px; background: rgba(255,255,255,0.6); border-radius: 10px;"><span style="font-size: 18px;">🏠</span><span style="font-size: 13px; font-weight: 600; color: #0f172a;">Buyer Dashboard</span></div></div>';
+        features.innerHTML = '<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px;"><div style="display: flex; align-items: center; gap: 8px; padding: 10px; background: rgba(255,255,255,0.4); backdrop-filter: blur(8px); border: 1px solid rgba(255,255,255,0.2); border-radius: 10px;"><span style="font-size: 18px;">🏗️</span><span style="font-size: 13px; font-weight: 600; color: #0f172a;">Builder Portal</span></div><div style="display: flex; align-items: center; gap: 8px; padding: 10px; background: rgba(255,255,255,0.4); backdrop-filter: blur(8px); border: 1px solid rgba(255,255,255,0.2); border-radius: 10px;"><span style="font-size: 18px;">🏠</span><span style="font-size: 13px; font-weight: 600; color: #0f172a;">Buyer Dashboard</span></div></div>';
         
         // CTA Button
         const loginBtn = document.createElement('button');
@@ -3591,6 +3609,39 @@
           }
         }
       })();
+
+      // CRITICAL: Real-time logout detection via BroadcastChannel (cross-tab)
+      if ('BroadcastChannel' in window) {
+        const authChannel = new BroadcastChannel('tharaga-auth');
+        authChannel.addEventListener('message', function(ev) {
+          try {
+            if (ev.data && ev.data.type === 'THARAGA_AUTH_SIGNED_OUT') {
+              console.log('[Portal] BroadcastChannel logout detected, updating Portal menu immediately');
+              const portalMenu = document.getElementById('portal-menu');
+              if (portalMenu) {
+                portalMenu.removeAttribute('open');
+                portalMenu.setAttribute('data-loading', 'true');
+                const portalMenuItems = document.getElementById('portal-menu-items');
+                if (portalMenuItems) {
+                  portalMenuItems.innerHTML = '';
+                }
+              }
+              // Force immediate update
+              updatePortalMenu();
+              // Clear role manager state
+              if (window.thgRoleManager && typeof window.thgRoleManager.clearState === 'function') {
+                try {
+                  window.thgRoleManager.clearState();
+                } catch(e) {
+                  console.debug('[Portal] Error clearing role manager state:', e);
+                }
+              }
+            }
+          } catch(e) {
+            console.debug('[Portal] BroadcastChannel error:', e);
+          }
+        });
+      }
 
       // Update portal menu when roles change
       if (window.thgRoleManager) {

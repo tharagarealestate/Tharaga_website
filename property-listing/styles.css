@@ -129,7 +129,7 @@ html, body {
   gap: 8px;
   padding: 6px 14px;
   background: rgba(51, 65, 85, 0.5); /* bg-slate-700/50 */
-  border: 2px solid rgb(252, 211, 77); /* border-amber-300 */
+  border: 1px solid rgba(252, 211, 77, 0.25); box-shadow: 0 0 12px rgba(252, 211, 77, 0.08), 0 0 24px rgba(252, 211, 77, 0.05), inset 0 0 8px rgba(252, 211, 77, 0.03);
   border-radius: 999px;
   margin-bottom: 16px;
 }
@@ -208,16 +208,16 @@ html, body {
   margin-left: 0;
   /* Enhanced Admin Dashboard card style with elegant effects */
   background: linear-gradient(135deg, rgba(30, 41, 59, 0.98) 0%, rgba(15, 23, 42, 0.95) 100%);
-  border: 2px solid rgb(252, 211, 77); /* border-amber-300 */
+  border: 1px solid rgba(252, 211, 77, 0.25);
   border-radius: 20px; /* slightly more rounded */
   padding: 28px;
   transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
   box-shadow: 
-    0 8px 32px rgba(0, 0, 0, 0.4),
-    0 0 0 1px rgba(252, 211, 77, 0.1),
-    0 0 60px rgba(252, 211, 77, 0.12),
-    inset 0 1px 0 rgba(255, 255, 255, 0.05); /* elegant inner glow */
+    0 0 12px rgba(252, 211, 77, 0.08),
+    0 0 24px rgba(252, 211, 77, 0.05),
+    inset 0 0 8px rgba(252, 211, 77, 0.03),
+    0 8px 32px rgba(0, 0, 0, 0.4);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
 }
@@ -282,15 +282,12 @@ html, body {
 .filter-sidebar:hover {
   background: linear-gradient(135deg, rgba(30, 41, 59, 1) 0%, rgba(15, 23, 42, 0.98) 100%);
   transform: translateY(-2px);
+  border-color: rgba(252, 211, 77, 0.4);
   box-shadow: 
-    0 12px 48px rgba(0, 0, 0, 0.5),
-    0 0 0 1px rgba(252, 211, 77, 0.2),
-    0 0 80px rgba(252, 211, 77, 0.2),
-    inset 0 1px 0 rgba(255, 255, 255, 0.1);
-}
-
-.filter-sidebar:hover::after {
-  opacity: 1;
+    0 0 16px rgba(252, 211, 77, 0.12),
+    0 0 32px rgba(252, 211, 77, 0.08),
+    inset 0 0 12px rgba(252, 211, 77, 0.05),
+    0 12px 48px rgba(0, 0, 0, 0.5);
 }
 
 /* Ensure filter content is above shimmer */
@@ -320,7 +317,7 @@ html, body {
   text-align: center;
   padding: 12px 0;
   border-radius: 999px;
-  border: 2px solid rgb(252, 211, 77); /* border-amber-300 */
+  border: 1px solid rgba(252, 211, 77, 0.25); box-shadow: 0 0 12px rgba(252, 211, 77, 0.08), 0 0 24px rgba(252, 211, 77, 0.05), inset 0 0 8px rgba(252, 211, 77, 0.03);
   background: rgba(30, 41, 59, 0.95); /* bg-slate-800/95 */
   color: rgb(255, 255, 255); /* text-white */
   font-weight: 600;
@@ -395,7 +392,7 @@ html, body {
 .input, select, textarea {
   padding: 10px 12px;
   border-radius: 12px; /* rounded-lg */
-  border: 2px solid rgb(252, 211, 77); /* border-amber-300 */
+  border: 1px solid rgba(252, 211, 77, 0.25); box-shadow: 0 0 12px rgba(252, 211, 77, 0.08), 0 0 24px rgba(252, 211, 77, 0.05), inset 0 0 8px rgba(252, 211, 77, 0.03);
   background: rgba(30, 41, 59, 0.95); /* bg-slate-800/95 */
   outline: none;
   width: 100%;
@@ -462,8 +459,21 @@ select[multiple] {
   margin: 10px 0 16px;
   padding: 12px 16px;
   background: rgba(30, 41, 59, 0.95); /* bg-slate-800/95 */
-  border: 2px solid rgb(252, 211, 77); /* border-amber-300 */
+  border: 1px solid rgba(252, 211, 77, 0.25);
   border-radius: 16px; /* rounded-lg */
+  box-shadow: 
+    0 0 12px rgba(252, 211, 77, 0.08),
+    0 0 24px rgba(252, 211, 77, 0.05),
+    inset 0 0 8px rgba(252, 211, 77, 0.03);
+  transition: all 0.3s ease;
+}
+
+.filter-toolbar:hover {
+  border-color: rgba(252, 211, 77, 0.4);
+  box-shadow: 
+    0 0 16px rgba(252, 211, 77, 0.12),
+    0 0 32px rgba(252, 211, 77, 0.08),
+    inset 0 0 12px rgba(252, 211, 77, 0.05);
 }
 
 .toolbar-row {
@@ -504,48 +514,29 @@ select[multiple] {
    ============================================ */
 .card {
   background: linear-gradient(135deg, rgba(30, 41, 59, 0.95) 0%, rgba(15, 23, 42, 0.9) 100%);
-  border: 2px solid rgb(252, 211, 77); /* border-amber-300 */
+  border: 1px solid rgba(252, 211, 77, 0.25);
   border-radius: 18px;
   overflow: hidden;
   transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
   box-shadow: 
-    0 4px 20px rgba(0, 0, 0, 0.3),
-    0 0 0 1px rgba(252, 211, 77, 0.1),
-    0 0 40px rgba(252, 211, 77, 0.1),
-    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+    0 0 12px rgba(252, 211, 77, 0.08),
+    0 0 24px rgba(252, 211, 77, 0.05),
+    inset 0 0 8px rgba(252, 211, 77, 0.03),
+    0 4px 20px rgba(0, 0, 0, 0.3);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
-}
-
-.card::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: 18px;
-  padding: 2px;
-  background: linear-gradient(135deg, rgba(252, 211, 77, 0.2), rgba(251, 191, 36, 0.1), rgba(252, 211, 77, 0.2));
-  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-  -webkit-mask-composite: xor;
-  mask-composite: exclude;
-  opacity: 0;
-  transition: opacity 0.4s ease;
-  pointer-events: none;
-  z-index: 0;
 }
 
 .card:hover {
   background: linear-gradient(135deg, rgba(30, 41, 59, 1) 0%, rgba(15, 23, 42, 0.95) 100%);
   transform: translateY(-6px) scale(1.01);
+  border-color: rgba(252, 211, 77, 0.4);
   box-shadow: 
-    0 12px 40px rgba(0, 0, 0, 0.5),
-    0 0 0 1px rgba(252, 211, 77, 0.3),
-    0 0 80px rgba(252, 211, 77, 0.2),
-    inset 0 1px 0 rgba(255, 255, 255, 0.1);
-}
-
-.card:hover::before {
-  opacity: 1;
+    0 0 16px rgba(252, 211, 77, 0.12),
+    0 0 32px rgba(252, 211, 77, 0.08),
+    inset 0 0 12px rgba(252, 211, 77, 0.05),
+    0 12px 40px rgba(0, 0, 0, 0.5);
 }
 
 .card-img {
@@ -724,7 +715,7 @@ input[type="checkbox"]:focus {
 .btn:not(.secondary):not(.ghost) {
   background: rgb(245, 158, 11); /* bg-amber-500 */
   color: rgb(15, 23, 42); /* text-slate-900 */
-  border: 2px solid rgb(252, 211, 77); /* border-amber-300 */
+  border: 1px solid rgba(252, 211, 77, 0.25); box-shadow: 0 0 12px rgba(252, 211, 77, 0.08), 0 0 24px rgba(252, 211, 77, 0.05), inset 0 0 8px rgba(252, 211, 77, 0.03);
   transition: all 0.3s ease;
 }
 
@@ -736,7 +727,7 @@ input[type="checkbox"]:focus {
 .btn.secondary {
   background: rgba(30, 41, 59, 0.95); /* bg-slate-800/95 */
   color: rgb(226, 232, 240); /* text-slate-200 */
-  border: 2px solid rgb(252, 211, 77); /* border-amber-300 */
+  border: 1px solid rgba(252, 211, 77, 0.25); box-shadow: 0 0 12px rgba(252, 211, 77, 0.08), 0 0 24px rgba(252, 211, 77, 0.05), inset 0 0 8px rgba(252, 211, 77, 0.03);
   transition: all 0.3s ease;
 }
 
@@ -747,7 +738,7 @@ input[type="checkbox"]:focus {
 .btn.ghost {
   background: transparent;
   color: rgb(226, 232, 240); /* text-slate-200 */
-  border: 2px solid rgb(252, 211, 77); /* border-amber-300 */
+  border: 1px solid rgba(252, 211, 77, 0.25); box-shadow: 0 0 12px rgba(252, 211, 77, 0.08), 0 0 24px rgba(252, 211, 77, 0.05), inset 0 0 8px rgba(252, 211, 77, 0.03);
   transition: all 0.3s ease;
 }
 
@@ -867,7 +858,7 @@ input[type="checkbox"]:focus {
   gap: 6px;
   padding: 6px 12px;
   border-radius: 999px;
-  border: 2px solid rgb(252, 211, 77); /* border-amber-300 */
+  border: 1px solid rgba(252, 211, 77, 0.25); box-shadow: 0 0 12px rgba(252, 211, 77, 0.08), 0 0 24px rgba(252, 211, 77, 0.05), inset 0 0 8px rgba(252, 211, 77, 0.03);
   background: rgba(51, 65, 85, 0.5); /* bg-slate-700/50 */
   font-size: 12px;
   color: rgb(255, 255, 255); /* text-white */
@@ -914,7 +905,7 @@ input[type="checkbox"]:focus {
 .pager .page {
   padding: 10px 16px;
   border-radius: 12px;
-  border: 2px solid rgb(252, 211, 77); /* border-amber-300 */
+  border: 1px solid rgba(252, 211, 77, 0.25); box-shadow: 0 0 12px rgba(252, 211, 77, 0.08), 0 0 24px rgba(252, 211, 77, 0.05), inset 0 0 8px rgba(252, 211, 77, 0.03);
   background: rgba(30, 41, 59, 0.95); /* bg-slate-800/95 */
   color: rgb(226, 232, 240); /* text-slate-200 */
   cursor: pointer;
@@ -938,7 +929,7 @@ input[type="checkbox"]:focus {
   padding: 12px 16px;
   border-radius: 12px;
   background: rgba(51, 65, 85, 0.5); /* bg-slate-700/50 */
-  border: 2px solid rgb(252, 211, 77); /* border-amber-300 */
+  border: 1px solid rgba(252, 211, 77, 0.25); box-shadow: 0 0 12px rgba(252, 211, 77, 0.08), 0 0 24px rgba(252, 211, 77, 0.05), inset 0 0 8px rgba(252, 211, 77, 0.03);
   color: rgb(255, 255, 255); /* text-white */
   font-weight: 600;
   font-size: 14px;
@@ -954,7 +945,7 @@ input[type="checkbox"]:focus {
   padding: 12px 20px;
   border-radius: 12px;
   z-index: 1000;
-  border: 2px solid rgb(252, 211, 77); /* border-amber-300 */
+  border: 1px solid rgba(252, 211, 77, 0.25); box-shadow: 0 0 12px rgba(252, 211, 77, 0.08), 0 0 24px rgba(252, 211, 77, 0.05), inset 0 0 8px rgba(252, 211, 77, 0.03);
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
 }
@@ -968,7 +959,7 @@ input[type="checkbox"]:focus {
   border-radius: 999px;
   background: rgba(30, 41, 59, 0.95); /* bg-slate-800/95 */
   color: rgb(255, 255, 255); /* text-white */
-  border: 2px solid rgb(252, 211, 77); /* border-amber-300 */
+  border: 1px solid rgba(252, 211, 77, 0.25); box-shadow: 0 0 12px rgba(252, 211, 77, 0.08), 0 0 24px rgba(252, 211, 77, 0.05), inset 0 0 8px rgba(252, 211, 77, 0.03);
   z-index: 1000;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -987,7 +978,7 @@ input[type="checkbox"]:focus {
 .skeleton-card {
   background: rgba(30, 41, 59, 0.95); /* bg-slate-800/95 */
   border-radius: 16px; /* rounded-lg */
-  border: 2px solid rgb(252, 211, 77); /* border-amber-300 */
+  border: 1px solid rgba(252, 211, 77, 0.25); box-shadow: 0 0 12px rgba(252, 211, 77, 0.08), 0 0 24px rgba(252, 211, 77, 0.05), inset 0 0 8px rgba(252, 211, 77, 0.03);
   overflow: hidden;
   position: relative;
 }
@@ -1519,7 +1510,7 @@ body > .container {
   padding: 8px 16px;
   border-radius: 12px;
   background: rgba(30, 41, 59, 0.95); /* bg-slate-800/95 */
-  border: 2px solid rgb(252, 211, 77); /* border-amber-300 */
+  border: 1px solid rgba(252, 211, 77, 0.25); box-shadow: 0 0 12px rgba(252, 211, 77, 0.08), 0 0 24px rgba(252, 211, 77, 0.05), inset 0 0 8px rgba(252, 211, 77, 0.03);
   color: rgb(255, 255, 255); /* text-white */
   font-weight: 600;
   font-size: 14px;
@@ -1552,7 +1543,7 @@ body > .container {
 .card section.card,
 .card aside.card {
   background: rgba(30, 41, 59, 0.95); /* bg-slate-800/95 */
-  border: 2px solid rgb(252, 211, 77); /* border-amber-300 */
+  border: 1px solid rgba(252, 211, 77, 0.25); box-shadow: 0 0 12px rgba(252, 211, 77, 0.08), 0 0 24px rgba(252, 211, 77, 0.05), inset 0 0 8px rgba(252, 211, 77, 0.03);
   border-radius: 16px; /* rounded-lg */
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3),
               0 0 40px rgba(252, 211, 77, 0.1);
@@ -1561,7 +1552,7 @@ body > .container {
 /* Main property card on details page */
 #prop.card {
   background: rgba(30, 41, 59, 0.95); /* bg-slate-800/95 */
-  border: 2px solid rgb(252, 211, 77); /* border-amber-300 */
+  border: 1px solid rgba(252, 211, 77, 0.25); box-shadow: 0 0 12px rgba(252, 211, 77, 0.08), 0 0 24px rgba(252, 211, 77, 0.05), inset 0 0 8px rgba(252, 211, 77, 0.03);
   border-radius: 16px; /* rounded-lg */
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3),
               0 0 40px rgba(252, 211, 77, 0.1);

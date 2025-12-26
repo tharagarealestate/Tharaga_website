@@ -347,21 +347,21 @@ export default async function PropertyPage({ params }: { params: { id: string } 
       <div className="mx-auto max-w-7xl px-3 sm:px-4 py-4 sm:py-6 grid grid-cols-1 lg:grid-cols-10 gap-4 sm:gap-6" style={{ paddingLeft: 'max(12px, env(safe-area-inset-left))', paddingRight: 'max(12px, env(safe-area-inset-right))' }}>
         <div className="lg:col-span-7 space-y-6">
           <Overview p={p} />
-          <div className="bg-slate-800/95 border-2 border-amber-300 rounded-lg p-6">
+          <div className="bg-slate-800/95 glow-border rounded-lg p-6">
             <RERAVerification propertyId={p.id} reraId={p.reraId} />
           </div>
-          <div className="bg-slate-800/95 border-2 border-amber-300 rounded-lg p-6">
+          <div className="bg-slate-800/95 glow-border rounded-lg p-6">
             <RiskFlags propertyId={p.id} priceINR={p.priceINR} sqft={p.sqft} reraId={p.reraId} />
           </div>
           <Description text={p.description} />
           <Amenities items={p.amenities} />
           <FloorPlan images={p.floorPlans} />
           {p.city === 'Chennai' && (
-            <div className="bg-slate-800/95 border-2 border-amber-300 rounded-lg p-6">
+            <div className="bg-slate-800/95 glow-border rounded-lg p-6">
               <ChennaiInsights propertyId={p.id} locality={p.locality || ''} />
             </div>
           )}
-          <div className="bg-slate-800/95 border-2 border-amber-300 rounded-lg p-6">
+          <div className="bg-slate-800/95 glow-border rounded-lg p-6">
             <AppreciationPrediction propertyId={p.id} />
           </div>
           {(p.locality || p.city) && (
@@ -381,7 +381,7 @@ export default async function PropertyPage({ params }: { params: { id: string } 
         </div>
         <div className="lg:col-span-3 space-y-4">
           <StickySidebar p={p} />
-          <div className="bg-slate-800/95 border-2 border-amber-300 rounded-lg p-6">
+          <div className="bg-slate-800/95 glow-border rounded-lg p-6">
             <ClientMatchScore propertyId={p.id} />
           </div>
         </div>
@@ -396,11 +396,11 @@ export default async function PropertyPage({ params }: { params: { id: string } 
 
 function Overview({ p }: { p: any }) {
   return (
-    <div className="space-y-3">
-      <h1 className="text-3xl font-bold text-gray-900">{p.title}</h1>
-      <div className="flex items-center gap-2 text-primary-600">
+    <div className="bg-slate-800/95 glow-border rounded-lg p-6 space-y-4">
+      <h1 className="text-3xl font-bold text-white">{p.title}</h1>
+      <div className="flex items-center gap-2 text-amber-300">
         <MapPin size={18} />
-        <a className="hover:underline" href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(p.address || `${p.locality||''} ${p.city||''}`)}`} target="_blank" rel="noreferrer">
+        <a className="hover:underline text-slate-200 hover:text-amber-300 transition-colors" href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(p.address || `${p.locality||''} ${p.city||''}`)}`} target="_blank" rel="noreferrer">
           {p.address || `${p.locality || ''}, ${p.city || ''}`}
         </a>
       </div>
@@ -418,17 +418,17 @@ function Overview({ p }: { p: any }) {
 
 function Spec({ icon, label, value }: { icon: React.ReactNode; label: string; value: React.ReactNode }) {
   return (
-    <div className="rounded border p-3 flex items-center gap-2 text-sm">
-      {icon}
-      <div className="text-gray-600">{label}</div>
-      <div className="ml-auto font-medium text-gray-900">{value}</div>
+    <div className="bg-slate-700/50 border border-amber-300/30 rounded-lg p-3 flex items-center gap-2 text-sm">
+      <div className="text-amber-300">{icon}</div>
+      <div className="text-slate-400 text-xs uppercase font-semibold">{label}</div>
+      <div className="ml-auto font-medium text-white">{value}</div>
     </div>
   )
 }
 
 function Description({ text }: { text: string }) {
   return (
-    <div className="bg-slate-800/95 border-2 border-amber-300 rounded-lg p-6 prose max-w-none">
+    <div className="bg-slate-800/95 glow-border rounded-lg p-6 prose max-w-none">
       <h2 className="text-2xl font-bold text-white mb-4">Description</h2>
       <ClientExpandableText text={text} maxWords={300} />
       <div className="mt-4 grid gap-2 md:grid-cols-3">
@@ -448,14 +448,14 @@ function Amenities({ items }: { items: string[] }){
   if (!items?.length) return null
   const premium = new Set(['swimming pool','pool','gym','clubhouse','garden'])
   return (
-    <div className="mt-8">
-      <h2 className="text-2xl font-semibold mb-3">Amenities</h2>
+    <div className="bg-slate-800/95 glow-border rounded-lg p-6">
+      <h2 className="text-2xl font-bold text-white mb-4">Amenities</h2>
       <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-2">
         {items.map((a, i)=> {
           const label = String(a || '')
           const isPremium = premium.has(label.toLowerCase())
           return (
-            <div key={i} className={isPremium ? 'rounded border px-3 py-2 text-sm text-yellow-700 border-yellow-300 bg-yellow-50' : 'rounded border px-3 py-2 text-sm text-gray-700'}>{label}</div>
+            <div key={i} className={isPremium ? 'rounded-lg border-2 border-amber-300 bg-amber-500/20 px-3 py-2 text-sm text-amber-300 font-medium' : 'rounded-lg border border-amber-300/30 bg-slate-700/50 px-3 py-2 text-sm text-slate-200'}>{label}</div>
           )
         })}
       </div>
@@ -467,7 +467,7 @@ function FloorPlan({ images }: { images: string[] }){
   if (!images?.length) return null
   const first = images[0]
   return (
-    <div className="bg-slate-800/95 border-2 border-amber-300 rounded-lg p-6">
+    <div className="bg-slate-800/95 glow-border rounded-lg p-6">
       <h2 className="text-2xl font-bold text-white mb-4">Floor Plan & Layout</h2>
       <div className="relative h-80 bg-slate-700/50 border border-amber-300/30 rounded-lg">
         <Image src={first} alt="Floor plan" fill className="object-contain" loading="lazy" sizes="100vw" />
@@ -487,7 +487,7 @@ function FloorPlan({ images }: { images: string[] }){
 
 function LocationInsights({ p }: { p: any }){
   return (
-    <div className="bg-slate-800/95 border-2 border-amber-300 rounded-lg p-6">
+    <div className="bg-slate-800/95 glow-border rounded-lg p-6">
       <h2 className="text-2xl font-bold text-white mb-4">Location Insights</h2>
       <ClientInteractiveMap lat={p.lat} lng={p.lng} workplace={null} />
       <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
@@ -523,7 +523,7 @@ function Financials({ price, sqft }: { price?: number|null; sqft?: number|null }
   const stamp = Math.round(base * 0.06)
   const total = base + reg + stamp
   return (
-    <div className="bg-slate-800/95 border-2 border-amber-300 rounded-lg p-6">
+    <div className="bg-slate-800/95 glow-border rounded-lg p-6">
       <h2 className="text-2xl font-bold text-white mb-4">Financial Breakdown</h2>
       <div className="grid md:grid-cols-2 gap-4">
         <div className="bg-slate-700/50 border border-amber-300/30 rounded-lg p-4 space-y-2">
@@ -620,7 +620,7 @@ function DocRow({ label, status }: { label: string; status?: string }){
 function SimilarProperties({ items }: { items: any[] }){
   if (!items?.length) return null
   return (
-    <div className="bg-slate-800/95 border-2 border-amber-300 rounded-lg p-6">
+    <div className="bg-slate-800/95 glow-border rounded-lg p-6">
       <h2 className="text-2xl font-bold text-white mb-4">You Might Also Like</h2>
       <ClientCompareChart items={items} />
       <div className="grid md:grid-cols-3 gap-4 mt-4">
@@ -711,9 +711,9 @@ function StickySidebar({ p }: { p: any }){
 
 function MobileBar({ p }: { p: any }){
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-40 bg-slate-800/95 border-t-2 border-amber-300 p-3 flex items-center justify-between lg:hidden">
+    <div className="fixed bottom-0 left-0 right-0 z-40 bg-slate-800/95 border-t border-amber-300/30 p-3 flex items-center justify-between lg:hidden" style={{ boxShadow: '0 -4px 20px rgba(252, 211, 77, 0.1)' }}>
       <div className="font-bold text-amber-300">{formatINR(p.priceINR)}</div>
-      <button className="rounded-lg bg-amber-500 hover:bg-amber-600 border-2 border-amber-300 text-slate-900 font-bold px-4 py-2 transition-colors">Schedule Visit</button>
+      <button className="rounded-lg bg-amber-500 hover:bg-amber-600 border border-amber-300/50 text-slate-900 font-bold px-4 py-2 transition-colors" style={{ boxShadow: '0 0 15px rgba(252, 211, 77, 0.3)' }}>Schedule Visit</button>
       <a href={`https://wa.me/?text=${encodeURIComponent(typeof location !== 'undefined' ? (location.href || '') : '')}`} className="fixed bottom-20 right-4 rounded-full bg-green-500 hover:bg-green-600 text-white w-12 h-12 flex items-center justify-center shadow-lg transition-colors" aria-label="WhatsApp">WA</a>
     </div>
   )

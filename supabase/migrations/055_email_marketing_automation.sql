@@ -415,3 +415,4 @@ COMMENT ON TABLE public.email_health_metrics IS 'Email delivery health monitorin
 COMMENT ON TABLE public.builder_alerts IS 'Alerts and notifications for builders (quota, delivery issues, etc.)';
 COMMENT ON TABLE public.property_viewings IS 'Scheduled property viewings with reminder automation';
 
+

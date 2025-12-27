@@ -2531,7 +2531,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               
               // Create modal content with beautiful design
               const modalContent = document.createElement('div');
-              modalContent.style.cssText = 'width: 100%; max-width: 480px; background: linear-gradient(180deg, rgba(255,255,255,0.98), rgba(248,250,252,0.98)); color: #111; border: 2px solid rgba(212,175,55,0.3); border-radius: 24px; box-shadow: 0 32px 64px rgba(30,64,175,0.2), 0 0 0 1px rgba(212,175,55,0.1); transform: translateY(0) scale(1); opacity: 1; transition: transform 0.25s ease, opacity 0.25s ease; position: relative; overflow: hidden;';
+              modalContent.style.cssText = 'width: 100%; max-width: 480px; background: rgba(255, 255, 255, 0.95) !important; backdrop-filter: blur(24px) saturate(1.8) !important; -webkit-backdrop-filter: blur(24px) saturate(1.8) !important; color: #111; border: 1px solid rgba(252, 211, 77, 0.25) !important; border-radius: 24px !important; box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.25), 0 0 12px rgba(252, 211, 77, 0.08), 0 0 24px rgba(252, 211, 77, 0.05), inset 0 0 8px rgba(252, 211, 77, 0.03) !important; transform: translateY(0) scale(1); opacity: 1; transition: transform 0.25s ease, opacity 0.25s ease, border-color 0.3s ease, box-shadow 0.3s ease; position: relative; overflow: hidden;';
               
               // Gold gradient top border
               const topBorder = document.createElement('div');
@@ -2554,6 +2554,16 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               
               header.appendChild(headerLeft);
               header.appendChild(closeBtn);
+              
+              // Add hover effect for elegant glowing border
+              modalContent.addEventListener('mouseenter', function() {
+                modalContent.style.borderColor = 'rgba(252, 211, 77, 0.4)';
+                modalContent.style.boxShadow = '0 8px 32px 0 rgba(31, 38, 135, 0.25), 0 0 16px rgba(252, 211, 77, 0.12), 0 0 32px rgba(252, 211, 77, 0.08), inset 0 0 12px rgba(252, 211, 77, 0.05)';
+              });
+              modalContent.addEventListener('mouseleave', function() {
+                modalContent.style.borderColor = 'rgba(252, 211, 77, 0.25)';
+                modalContent.style.boxShadow = '0 8px 32px 0 rgba(31, 38, 135, 0.25), 0 0 12px rgba(252, 211, 77, 0.08), 0 0 24px rgba(252, 211, 77, 0.05), inset 0 0 8px rgba(252, 211, 77, 0.03)';
+              });
               
               // Body section
               const body = document.createElement('div');

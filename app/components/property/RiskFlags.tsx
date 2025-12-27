@@ -156,7 +156,7 @@ export default function RiskFlags({ propertyId, priceINR, sqft, reraId }: RiskFl
     return (
       <div className="flex items-center gap-3">
         <div className="animate-spin rounded-full h-5 w-5 border-2 border-amber-300 border-t-transparent"></div>
-        <span className="text-slate-300">Assessing risks...</span>
+        <span className="text-white">Assessing risks...</span>
       </div>
     )
   }
@@ -204,7 +204,7 @@ export default function RiskFlags({ propertyId, priceINR, sqft, reraId }: RiskFl
       <div className="flex items-center justify-between mb-4">
         <div>
           <h3 className="text-xl font-bold text-white">Risk Assessment</h3>
-          <p className="text-sm text-slate-300 mt-1">Real-time risk analysis with actionable recommendations</p>
+          <p className="text-sm text-white mt-1">Real-time risk analysis with actionable recommendations</p>
         </div>
         <div className="flex items-center gap-2">
           <div className="px-3 py-1 rounded-full bg-red-500/20 border border-red-300 text-red-300 text-sm font-bold">
@@ -225,7 +225,7 @@ export default function RiskFlags({ propertyId, priceINR, sqft, reraId }: RiskFl
           return (
             <div
               key={flag.id}
-              className={`${severity.bg} ${severity.border} border-2 rounded-lg p-4 transition-all cursor-pointer hover:shadow-lg hover:shadow-amber-300/10`}
+              className={`${severity.bg} ${severity.border} border rounded-lg p-4 transition-all cursor-pointer hover:shadow-lg hover:shadow-amber-300/10`}
               onClick={() => toggleExpand(flag.id)}
             >
               <div className="flex items-start justify-between gap-3">
@@ -247,8 +247,8 @@ export default function RiskFlags({ propertyId, priceINR, sqft, reraId }: RiskFl
                         )}
                         {flag.actionable_steps && (
                           <div className={`mt-3 p-3 rounded-lg bg-slate-800/50 border ${severity.border}/50`}>
-                            <p className="text-xs font-bold mb-1 text-slate-300">Recommended Actions:</p>
-                            <p className="text-sm text-slate-200 whitespace-pre-line">{flag.actionable_steps}</p>
+                            <p className="text-xs font-bold mb-1 text-white">Recommended Actions:</p>
+                            <p className="text-sm text-white whitespace-pre-line">{flag.actionable_steps}</p>
                           </div>
                         )}
                       </div>
@@ -271,7 +271,7 @@ export default function RiskFlags({ propertyId, priceINR, sqft, reraId }: RiskFl
         <div className="flex items-start gap-3">
           <Shield className="w-5 h-5 text-amber-300 flex-shrink-0 mt-0.5" />
           <div className="flex-1">
-            <p className="text-xs text-slate-300 leading-relaxed">{LEGAL_DISCLAIMER}</p>
+            <p className="text-xs text-white leading-relaxed">{LEGAL_DISCLAIMER}</p>
             <a href="/how-verification-works" className="text-amber-300 hover:text-amber-400 text-xs mt-2 inline-block transition-colors">
               How verification works →
             </a>

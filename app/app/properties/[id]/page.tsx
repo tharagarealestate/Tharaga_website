@@ -349,7 +349,7 @@ export default async function PropertyPage({ params }: { params: { id: string } 
             <RERAVerification propertyId={p.id} reraId={p.reraId} />
           </div>
           <div className="bg-slate-800/95 glow-border rounded-lg p-6">
-            <RiskFlags propertyId={p.id} />
+            <RiskFlags propertyId={p.id} priceINR={p.priceINR} sqft={p.sqft} reraId={p.reraId} />
           </div>
           <Description text={p.description} />
           <Amenities items={p.amenities} />

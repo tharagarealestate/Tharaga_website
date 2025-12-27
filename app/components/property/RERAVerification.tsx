@@ -134,7 +134,7 @@ export default function RERAVerification({ propertyId, reraId }: RERAVerificatio
         <h3 className="text-xl font-bold text-white mb-4">RERA Verification</h3>
         <div className="flex items-center gap-3">
           <Clock className="w-5 h-5 animate-spin text-amber-300" />
-          <span className="text-slate-300">Loading RERA verification...</span>
+          <span className="text-white">Loading RERA verification...</span>
         </div>
       </div>
     )
@@ -207,31 +207,31 @@ export default function RERAVerification({ propertyId, reraId }: RERAVerificatio
         <div className="bg-slate-700/50 border border-amber-300/30 rounded-lg p-4 space-y-2 text-sm">
           {registration.project_name && (
             <div>
-              <span className="font-bold text-slate-400">Project:</span>{' '}
+              <span className="font-bold text-white">Project:</span>{' '}
               <span className="text-white">{registration.project_name}</span>
             </div>
           )}
           {registration.promoter_name && (
             <div>
-              <span className="font-bold text-slate-400">Promoter:</span>{' '}
+              <span className="font-bold text-white">Promoter:</span>{' '}
               <span className="text-white">{registration.promoter_name}</span>
             </div>
           )}
           {registration.status && (
             <div>
-              <span className="font-bold text-slate-400">Status:</span>{' '}
+              <span className="font-bold text-white">Status:</span>{' '}
               <span className="text-white capitalize">{registration.status}</span>
             </div>
           )}
           {registration.expiry_date && (
             <div>
-              <span className="font-bold text-slate-400">Expiry:</span>{' '}
+              <span className="font-bold text-white">Expiry:</span>{' '}
               <span className="text-white">{new Date(registration.expiry_date).toLocaleDateString()}</span>
             </div>
           )}
           {registration.compliance_score !== null && (
             <div>
-              <span className="font-bold text-slate-400">Compliance Score:</span>{' '}
+              <span className="font-bold text-white">Compliance Score:</span>{' '}
               <span className="text-white">{registration.compliance_score}%</span>
             </div>
           )}
@@ -239,7 +239,7 @@ export default function RERAVerification({ propertyId, reraId }: RERAVerificatio
       )}
 
       {/* Legal Disclaimer */}
-      <div className="bg-slate-700/50 border-l-4 border-amber-300/50 p-3 text-xs text-slate-300">
+      <div className="bg-slate-700/50 border-l-4 border-amber-300/50 p-3 text-xs text-white">
         <p>{LEGAL_DISCLAIMER}</p>
         <a href="/how-verification-works" className="text-amber-300 hover:text-amber-400 mt-2 inline-block transition-colors">
           How verification works →

@@ -305,7 +305,7 @@ export function FilterCollections() {
                           <button
                             onClick={() => setDefaultFilter(filter.id)}
                             disabled={filter.is_default}
-                            className="inline-flex items-center gap-1 rounded-lg border border-gold-400/40 bg-gold-400/10 px-3 py-1.5 text-[11px] font-medium text-gold-100 transition-colors hover:bg-gold-400/20 disabled:cursor-not-allowed disabled:opacity-60"
+                            className="inline-flex items-center gap-1 rounded-lg glow-border bg-gold-400/10 px-3 py-1.5 text-[11px] font-medium text-gold-100 transition-colors hover:bg-gold-400/20 disabled:cursor-not-allowed disabled:opacity-60"
                           >
                             <Star className="h-3 w-3" />
                             Default

@@ -334,7 +334,7 @@ export function AdvancedAISidebar() {
           "fixed left-0 top-0 bottom-0 z-[1000]",
           "flex flex-col",
           "bg-slate-900/95 backdrop-blur-2xl",
-          "border-r-2 border-amber-300/20",
+          "border-r glow-border border-r-amber-300/25",
           "shadow-[0_0_60px_rgba(251,191,36,0.1)]",
           "hidden lg:flex"
         )}
@@ -352,7 +352,7 @@ export function AdvancedAISidebar() {
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className="flex-shrink-0 px-4 py-5 border-b-2 border-amber-300/10"
+            className="flex-shrink-0 px-4 py-5 border-b glow-border border-b-amber-300/25"
           >
             {/* Brand Logo with AI Glow */}
             <div className="flex items-center gap-3 mb-4">
@@ -394,7 +394,7 @@ export function AdvancedAISidebar() {
                   "border-2 rounded-xl text-white placeholder:text-slate-400 text-sm",
                   "focus:outline-none transition-all duration-300",
                   isSearchFocused 
-                    ? "border-amber-300/50 shadow-[0_0_20px_rgba(251,191,36,0.2)] bg-slate-800/70" 
+                    ? "glow-border shadow-[0_0_20px_rgba(251,191,36,0.2)] bg-slate-800/70" 
                     : "border-slate-700/50 hover:border-slate-600/50"
                 )}
               />
@@ -638,7 +638,7 @@ export function AdvancedAISidebar() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.5 }}
-            className="flex-shrink-0 border-t-2 border-amber-300/10 px-4 py-4"
+            className="flex-shrink-0 border-t glow-border border-t-amber-300/25 px-4 py-4"
           >
             {isTrial && (
               <motion.div
@@ -705,7 +705,7 @@ export function AdvancedAISidebar() {
         whileHover={{ scale: 1.1 }}
         whileTap={{ scale: 0.9 }}
         onClick={() => setMobileMenuOpen(true)}
-        className="fixed top-4 left-4 z-[1001] lg:hidden p-3 rounded-xl bg-slate-900/95 backdrop-blur-xl border-2 border-amber-300/30 text-white shadow-lg"
+        className="fixed top-4 left-4 z-[1001] lg:hidden p-3 rounded-xl bg-slate-900/95 backdrop-blur-xl glow-border text-white shadow-lg"
         aria-label="Open menu"
       >
         <Menu className="w-6 h-6" />
@@ -729,12 +729,12 @@ export function AdvancedAISidebar() {
               transition={{ type: 'spring', damping: 30, stiffness: 300 }}
               className={cn(
                 "fixed left-0 top-0 bottom-0 z-[1001] w-[280px] flex flex-col",
-                "bg-slate-900/95 backdrop-blur-2xl border-r-2 border-amber-300/20",
+                "bg-slate-900/95 backdrop-blur-2xl border-r glow-border border-r-amber-300/25",
                 "lg:hidden"
               )}
             >
               {/* Mobile content - same structure as desktop */}
-              <div className="flex items-center justify-between px-4 py-4 border-b-2 border-amber-300/10">
+              <div className="flex items-center justify-between px-4 py-4 border-b glow-border border-b-amber-300/25">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center shadow-lg shadow-amber-500/50">
                     <Zap className="w-5 h-5 text-slate-900" />

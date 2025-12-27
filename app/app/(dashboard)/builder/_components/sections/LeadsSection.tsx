@@ -32,14 +32,14 @@ export function LeadsSection({ onNavigate }: LeadsSectionProps) {
       <div className="flex items-center gap-3">
         <button
           onClick={() => onNavigate?.('pipeline')}
-          className="px-4 py-2 border-2 border-amber-300 bg-slate-800/95 text-slate-200 hover:bg-slate-700/50 rounded-lg text-sm font-semibold transition-colors"
+          className="px-4 py-2 glow-border bg-slate-800/95 text-slate-200 hover:bg-slate-700/50 rounded-lg text-sm font-semibold transition-colors"
         >
           View Pipeline Overview
         </button>
       </div>
 
       {/* Main Content - Admin Design System */}
-      <div className="bg-slate-800/95 border-2 border-amber-300 rounded-lg p-6">
+      <div className="bg-slate-800/95 glow-border rounded-lg p-6">
         <FilterProvider>
           <div className="space-y-6">
             <AdvancedFilters />

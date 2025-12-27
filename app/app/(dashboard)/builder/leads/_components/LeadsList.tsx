@@ -480,7 +480,7 @@ export function LeadsList({ onSelectLead, initialFilters, showInlineFilters = tr
               setError(null);
               fetchLeads();
             }}
-            className="px-6 py-2 bg-amber-500 hover:bg-amber-600 border-2 border-amber-300 text-slate-900 font-semibold rounded-lg transition-colors"
+            className="px-6 py-2 bg-amber-500 hover:bg-amber-600 glow-border text-slate-900 font-semibold rounded-lg transition-colors"
           >
             Try Again
           </button>
@@ -514,7 +514,7 @@ export function LeadsList({ onSelectLead, initialFilters, showInlineFilters = tr
         />
       </div>
 
-      <div className="bg-slate-800/95 border-2 border-amber-300 rounded-lg p-6">
+      <div className="bg-slate-800/95 glow-border rounded-lg p-6">
         <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center justify-between">
           <div className="relative flex-1 w-full lg:max-w-md">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
@@ -523,14 +523,14 @@ export function LeadsList({ onSelectLead, initialFilters, showInlineFilters = tr
               placeholder="Search by name, email, or phone..."
               value={searchQuery}
               onChange={(event) => setSearchQuery(event.target.value)}
-              className="w-full pl-12 pr-4 py-3 bg-slate-700/50 border-2 border-amber-300 rounded-lg text-white placeholder:text-slate-400 focus:outline-none focus:border-amber-400 transition-all"
+              className="w-full pl-12 pr-4 py-3 bg-slate-700/50 glow-border rounded-lg text-white placeholder:text-slate-400 focus:outline-none focus:glow-border transition-all"
             />
           </div>
 
           <div className="flex gap-3 w-full lg:w-auto">
             <button
               onClick={() => setIsFilterPanelOpen(!isFilterPanelOpen)}
-              className="flex-1 lg:flex-initial px-4 py-2 border-2 border-amber-300 bg-slate-800/95 text-slate-200 hover:bg-slate-700/50 rounded-lg text-sm font-semibold transition-colors flex items-center justify-center gap-2 relative"
+              className="flex-1 lg:flex-initial px-4 py-2 glow-border bg-slate-800/95 text-slate-200 hover:bg-slate-700/50 rounded-lg text-sm font-semibold transition-colors flex items-center justify-center gap-2 relative"
             >
               <Filter className="w-4 h-4" />
               <span>Filters</span>
@@ -543,7 +543,7 @@ export function LeadsList({ onSelectLead, initialFilters, showInlineFilters = tr
 
             <button
               onClick={handleExport}
-              className="flex-1 lg:flex-initial px-4 py-2 bg-amber-500 hover:bg-amber-600 border-2 border-amber-300 text-slate-900 font-semibold rounded-lg transition-colors flex items-center justify-center gap-2"
+              className="flex-1 lg:flex-initial px-4 py-2 bg-amber-500 hover:bg-amber-600 glow-border text-slate-900 font-semibold rounded-lg transition-colors flex items-center justify-center gap-2"
             >
               <Download className="w-4 h-4" />
               <span className="hidden lg:inline">Export</span>
@@ -560,13 +560,13 @@ export function LeadsList({ onSelectLead, initialFilters, showInlineFilters = tr
               transition={{ duration: 0.3 }}
               className="overflow-hidden"
             >
-              <div className="mt-6 pt-6 border-t-2 border-amber-300 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="mt-6 pt-6 border-t glow-border border-t-amber-300/25 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 <div>
                   <label className="block text-xs font-bold text-slate-400 uppercase mb-2">Category</label>
                   <select
                     value={filters.category ?? ''}
                     onChange={(event) => updateFilter('category', event.target.value)}
-                    className="w-full px-4 py-2.5 bg-slate-700/50 border-2 border-amber-300 rounded-lg text-white focus:outline-none focus:border-amber-400 transition-all"
+                    className="w-full px-4 py-2.5 bg-slate-700/50 glow-border rounded-lg text-white focus:outline-none focus:glow-border transition-all"
                   >
                     <option value="">All Categories</option>
                     <option value="Hot Lead">🔥 Hot Lead</option>
@@ -940,7 +940,7 @@ interface StatsCardProps {
 
 function StatsCard({ title, value, icon }: StatsCardProps) {
   return (
-    <div className="bg-slate-800/95 border-2 border-amber-300 rounded-lg p-4">
+    <div className="bg-slate-800/95 glow-border rounded-lg p-4">
       <h3 className="text-xs font-bold text-slate-400 uppercase mb-2">{title}</h3>
       <div className="flex items-center gap-3">
         <div className="w-10 h-10 rounded-lg bg-slate-700/50 flex items-center justify-center text-amber-300">

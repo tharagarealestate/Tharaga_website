@@ -220,15 +220,15 @@ export default function AdminDashboardPage() {
 
       {/* Controls */}
       <div className="flex items-center gap-3">
-        <Select value={range} onChange={(e) => setRange(e.target.value as DateRange)} className="w-[160px] bg-slate-800/95 text-white border-2 border-amber-300">
+        <Select value={range} onChange={(e) => setRange(e.target.value as DateRange)} className="w-[160px] bg-slate-800/95 text-white glow-border">
           <option value="7d">Last 7 days</option>
           <option value="30d">Last 30 days</option>
           <option value="90d">Last 90 days</option>
         </Select>
-        <Button onClick={exportCSV} className="bg-amber-500 hover:bg-amber-600 border-2 border-amber-300 text-slate-900">Export CSV</Button>
+        <Button onClick={exportCSV} className="bg-amber-500 hover:bg-amber-600 glow-border text-slate-900">Export CSV</Button>
         <Button
           variant="secondary"
-          className="border-2 border-amber-300 bg-slate-800/95 text-slate-200 hover:bg-slate-700/50"
+          className="glow-border bg-slate-800/95 text-slate-200 hover:bg-slate-700/50"
           onClick={async () => {
             const emails = window.prompt('Enter recipient emails (comma separated)') || ''
             if (!emails.trim()) return

@@ -94,7 +94,7 @@ export default function AdminSettingsPage() {
       </div>
 
       {msg && (
-        <div className="bg-slate-800/95 border-2 border-amber-300 rounded-lg p-4 text-sm text-slate-200">
+        <div className="bg-slate-800/95 glow-border rounded-lg p-4 text-sm text-slate-200">
           {msg}
         </div>
       )}
@@ -107,29 +107,29 @@ export default function AdminSettingsPage() {
         {rows.map((r, idx) => (
           <div
             key={r.id}
-            className="bg-slate-800/95 border-2 border-amber-300 rounded-lg p-4 grid grid-cols-5 gap-3 items-center hover:bg-slate-700/50 transition-colors"
+            className="bg-slate-800/95 glow-border rounded-lg p-4 grid grid-cols-5 gap-3 items-center hover:bg-slate-700/50 transition-colors"
           >
             <input
-              className="col-span-1 px-3 py-2 bg-slate-700/50 border-2 border-amber-300 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:border-amber-400"
+              className="col-span-1 px-3 py-2 bg-slate-700/50 glow-border rounded-lg text-white placeholder-slate-400 focus:outline-none focus:border-amber-400"
               value={r.name || ''}
               onChange={(e) => setRows(s => s.map((x, i) => i === idx ? { ...x, name: e.target.value } : x))}
               placeholder="Name"
             />
             <input
-              className="col-span-2 px-3 py-2 bg-slate-700/50 border-2 border-amber-300 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:border-amber-400"
+              className="col-span-2 px-3 py-2 bg-slate-700/50 glow-border rounded-lg text-white placeholder-slate-400 focus:outline-none focus:border-amber-400"
               placeholder="email"
               value={r.email || ''}
               onChange={(e) => setRows(s => s.map((x, i) => i === idx ? { ...x, email: e.target.value } : x))}
             />
             <input
-              className="col-span-1 px-3 py-2 bg-slate-700/50 border-2 border-amber-300 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:border-amber-400"
+              className="col-span-1 px-3 py-2 bg-slate-700/50 glow-border rounded-lg text-white placeholder-slate-400 focus:outline-none focus:border-amber-400"
               placeholder="phone"
               value={r.phone || ''}
               onChange={(e) => setRows(s => s.map((x, i) => i === idx ? { ...x, phone: e.target.value } : x))}
             />
             <div className="col-span-1 flex gap-2 justify-end">
               <button
-                className="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-slate-900 font-bold rounded-lg transition-colors border-2 border-amber-300"
+                className="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-slate-900 font-bold rounded-lg transition-colors glow-border"
                 onClick={() => save(rows[idx])}
               >
                 Save

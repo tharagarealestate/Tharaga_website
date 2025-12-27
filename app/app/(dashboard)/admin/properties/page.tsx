@@ -112,7 +112,7 @@ export default function AdminPropertiesPage() {
       </div>
 
       {msg && (
-        <div className="bg-slate-800/95 border-2 border-amber-300 rounded-lg p-4 text-sm text-slate-200">
+        <div className="bg-slate-800/95 glow-border rounded-lg p-4 text-sm text-slate-200">
           {msg}
         </div>
       )}
@@ -125,7 +125,7 @@ export default function AdminPropertiesPage() {
         {rows.map((r) => (
           <div
             key={r.id}
-            className="bg-slate-800/95 border-2 border-amber-300 rounded-lg p-4 flex items-center justify-between hover:bg-slate-700/50 transition-colors"
+            className="bg-slate-800/95 glow-border rounded-lg p-4 flex items-center justify-between hover:bg-slate-700/50 transition-colors"
           >
             <div>
               <div className="font-semibold text-white">{r.title}</div>
@@ -135,7 +135,7 @@ export default function AdminPropertiesPage() {
             </div>
             <button
               onClick={() => verify(r.id)}
-              className="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-slate-900 font-bold rounded-lg transition-colors border-2 border-amber-300"
+              className="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-slate-900 font-bold rounded-lg transition-colors glow-border"
             >
               Verify
             </button>

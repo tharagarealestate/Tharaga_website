@@ -261,27 +261,27 @@ export default function AdminVerifyPage() {
     <div className="space-y-6">
       {/* Stats Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4">
-        <div className="bg-slate-800/95 border-2 border-amber-300 rounded-lg p-4">
+        <div className="bg-slate-800/95 glow-border rounded-lg p-4">
           <h3 className="text-xs font-bold text-slate-400 uppercase mb-2">Total Users</h3>
           <div className="text-2xl font-bold text-white">{stats?.total_users || 0}</div>
         </div>
-        <div className="bg-slate-800/95 border-2 border-amber-300 rounded-lg p-4">
+        <div className="bg-slate-800/95 glow-border rounded-lg p-4">
           <h3 className="text-xs font-bold text-slate-400 uppercase mb-2">Total Buyers</h3>
           <div className="text-2xl font-bold text-white">{stats?.total_buyers || 0}</div>
         </div>
-        <div className="bg-slate-800/95 border-2 border-amber-300 rounded-lg p-4">
+        <div className="bg-slate-800/95 glow-border rounded-lg p-4">
           <h3 className="text-xs font-bold text-slate-400 uppercase mb-2">Total Builders</h3>
           <div className="text-2xl font-bold text-white">{stats?.total_builders || 0}</div>
         </div>
-        <div className="bg-slate-800/95 border-2 border-amber-300 rounded-lg p-4">
+        <div className="bg-slate-800/95 glow-border rounded-lg p-4">
           <h3 className="text-xs font-bold text-slate-400 uppercase mb-2">Pending Review</h3>
           <div className="text-2xl font-bold text-white">{stats?.pending_verifications || 0}</div>
         </div>
-        <div className="bg-slate-800/95 border-2 border-amber-300 rounded-lg p-4">
+        <div className="bg-slate-800/95 glow-border rounded-lg p-4">
           <h3 className="text-xs font-bold text-slate-400 uppercase mb-2">Verified</h3>
           <div className="text-2xl font-bold text-white">{stats?.verified_builders || 0}</div>
         </div>
-        <div className="bg-slate-800/95 border-2 border-amber-300 rounded-lg p-4">
+        <div className="bg-slate-800/95 glow-border rounded-lg p-4">
           <h3 className="text-xs font-bold text-slate-400 uppercase mb-2">Rejected</h3>
           <div className="text-2xl font-bold text-white">{stats?.rejected_builders || 0}</div>
         </div>
@@ -291,7 +291,7 @@ export default function AdminVerifyPage() {
       <div className="flex gap-3 flex-wrap">
         <input
           type="text"
-          className="flex-1 min-w-[250px] px-4 py-2 bg-slate-800/95 border-2 border-amber-300 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:border-amber-400"
+          className="flex-1 min-w-[250px] px-4 py-2 bg-slate-800/95 glow-border rounded-lg text-white placeholder-slate-400 focus:outline-none focus:border-amber-400"
           placeholder="🔍 Search by company name, email, GSTIN..."
           value={searchQuery}
           onChange={(e) => {
@@ -301,7 +301,7 @@ export default function AdminVerifyPage() {
         />
         <button
           onClick={exportData}
-          className="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-slate-900 font-bold rounded-lg transition-colors border-2 border-amber-300"
+          className="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-slate-900 font-bold rounded-lg transition-colors glow-border"
         >
           📥 Export CSV
         </button>
@@ -334,7 +334,7 @@ export default function AdminVerifyPage() {
       </div>
 
       {/* Table */}
-      <div className="bg-slate-800/95 border-2 border-amber-300 rounded-lg overflow-hidden">
+      <div className="bg-slate-800/95 glow-border rounded-lg overflow-hidden">
         {paginatedBuilders.length === 0 ? (
           <div className="text-center py-12 text-slate-400">
             <p>No {activeTab === 'all' ? '' : activeTab} builders found.</p>
@@ -407,7 +407,7 @@ export default function AdminVerifyPage() {
 
             {/* Pagination */}
             {totalPages > 1 && (
-              <div className="flex justify-between items-center px-4 py-4 border-t-2 border-amber-300">
+              <div className="flex justify-between items-center px-4 py-4 border-t-2 border-amber-300/25">
                 <div className="text-sm text-slate-300">
                   Showing {startIdx + 1}-{Math.min(endIdx, filteredBuilders.length)} of {filteredBuilders.length} builders
                 </div>
@@ -415,7 +415,7 @@ export default function AdminVerifyPage() {
                   <button
                     onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
                     disabled={currentPage === 1}
-                    className="px-3 py-1 border-2 border-amber-300 bg-slate-800/95 text-slate-200 rounded text-sm font-semibold disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-700/50"
+                    className="px-3 py-1 glow-border bg-slate-800/95 text-slate-200 rounded text-sm font-semibold disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-700/50"
                   >
                     ← Previous
                   </button>
@@ -425,10 +425,10 @@ export default function AdminVerifyPage() {
                       <button
                         key={pageNum}
                         onClick={() => setCurrentPage(pageNum)}
-                        className={`px-3 py-1 border-2 rounded text-sm font-semibold ${
+                        className={`px-3 py-1 rounded text-sm font-semibold ${
                           currentPage === pageNum
-                            ? 'bg-amber-300 text-slate-900 border-amber-300'
-                            : 'border-amber-300 bg-slate-800/95 text-slate-200 hover:bg-slate-700/50'
+                            ? 'bg-amber-300 text-slate-900 glow-border'
+                            : 'glow-border bg-slate-800/95 text-slate-200 hover:bg-slate-700/50'
                         }`}
                       >
                         {pageNum}
@@ -438,7 +438,7 @@ export default function AdminVerifyPage() {
                   <button
                     onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
                     disabled={currentPage === totalPages}
-                    className="px-3 py-1 border-2 border-amber-300 bg-slate-800/95 text-slate-200 rounded text-sm font-semibold disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-700/50"
+                    className="px-3 py-1 glow-border bg-slate-800/95 text-slate-200 rounded text-sm font-semibold disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-700/50"
                   >
                     Next →
                   </button>
@@ -452,8 +452,8 @@ export default function AdminVerifyPage() {
       {/* View Modal */}
       {showViewModal && selectedBuilder && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => setShowViewModal(false)}>
-          <div className="bg-slate-800/95 border-2 border-amber-300 rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
-            <div className="flex justify-between items-center p-6 border-b-2 border-amber-300">
+          <div className="bg-slate-800/95 glow-border rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+            <div className="flex justify-between items-center p-6 border-b-2 border-amber-300/25">
               <h2 className="text-2xl font-bold text-white">Builder Details</h2>
               <button
                 onClick={() => setShowViewModal(false)}
@@ -517,8 +517,8 @@ export default function AdminVerifyPage() {
       {/* Reject Modal */}
       {showRejectModal && selectedBuilder && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => setShowRejectModal(false)}>
-          <div className="bg-slate-800/95 border-2 border-amber-300 rounded-lg max-w-2xl w-full" onClick={(e) => e.stopPropagation()}>
-            <div className="flex justify-between items-center p-6 border-b-2 border-amber-300">
+          <div className="bg-slate-800/95 glow-border rounded-lg max-w-2xl w-full" onClick={(e) => e.stopPropagation()}>
+            <div className="flex justify-between items-center p-6 border-b-2 border-amber-300/25">
               <h2 className="text-2xl font-bold text-white">Reject Builder Application</h2>
               <button
                 onClick={() => setShowRejectModal(false)}
@@ -534,13 +534,13 @@ export default function AdminVerifyPage() {
                   value={rejectionReason}
                   onChange={(e) => setRejectionReason(e.target.value)}
                   placeholder="Please provide a clear reason for rejection..."
-                  className="w-full px-4 py-3 bg-slate-700/50 border-2 border-amber-300 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:border-amber-400 min-h-[120px] resize-y"
+                  className="w-full px-4 py-3 bg-slate-700/50 glow-border rounded-lg text-white placeholder-slate-400 focus:outline-none focus:border-amber-400 min-h-[120px] resize-y"
                 />
               </div>
               <div className="flex gap-3 justify-end">
                 <button
                   onClick={() => setShowRejectModal(false)}
-                  className="px-4 py-2 bg-slate-700/50 hover:bg-slate-700/70 text-slate-200 rounded-lg font-bold transition-colors border-2 border-amber-300"
+                  className="px-4 py-2 bg-slate-700/50 hover:bg-slate-700/70 text-slate-200 rounded-lg font-bold transition-colors glow-border"
                 >
                   Cancel
                 </button>

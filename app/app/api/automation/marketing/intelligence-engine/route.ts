@@ -214,6 +214,10 @@ Generate a JSON response with:
       { name: 'image_processing', webhook: '/api/automation/marketing/image-processing', priority: 'critical', delay: 0 },
       { name: 'landing_page', webhook: '/api/automation/marketing/landing-page', priority: 'high', delay: 30 },
       { name: 'social_media', webhook: '/api/automation/marketing/social-media', priority: 'high', delay: 60 },
+      { name: 'paid_ads', webhook: '/api/automation/marketing/paid-ads', priority: 'high', delay: 120 },
+      { name: 'seo_content', webhook: '/api/automation/marketing/seo-content', priority: 'medium', delay: 300 },
+      { name: 'influencer_outreach', webhook: '/api/automation/marketing/influencer-outreach', priority: 'medium', delay: 600 },
+      { name: 'whatsapp_broadcast', webhook: '/api/automation/marketing/whatsapp-broadcast', priority: 'high', delay: 90 },
     ]
 
     // Fire webhooks with delays (non-blocking)

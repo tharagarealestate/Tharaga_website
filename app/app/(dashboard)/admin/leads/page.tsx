@@ -76,7 +76,7 @@ export default function AdminLeadsPage() {
       </div>
 
       {msg && (
-        <div className="bg-slate-800/95 border-2 border-amber-300 rounded-lg p-4 text-sm text-slate-200">
+        <div className="bg-slate-800/95 glow-border rounded-lg p-4 text-sm text-slate-200">
           {msg}
         </div>
       )}
@@ -85,7 +85,7 @@ export default function AdminLeadsPage() {
         <div className="text-sm text-slate-400">Loading…</div>
       )}
 
-      <div className="bg-slate-800/95 border-2 border-amber-300 rounded-lg overflow-hidden">
+      <div className="bg-slate-800/95 glow-border rounded-lg overflow-hidden">
         <div className="overflow-x-auto">
           <table className="min-w-full text-sm">
             <thead className="bg-slate-700/50">

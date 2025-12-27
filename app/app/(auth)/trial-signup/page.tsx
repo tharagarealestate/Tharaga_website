@@ -248,11 +248,14 @@ export default function TrialSignupPage() {
         }
         const userId = data.user?.id;
         if (userId) {
-          // Create trial subscription row
+          // Create trial subscription row using new subscription manager
           const r = await fetch("/api/trial/subscribe", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ builderId: userId }),
+            body: JSON.stringify({ 
+              builderId: userId,
+              email: form.email 
+            }),
           }).catch(() => undefined);
           if (r && !r.ok) {
             // Non-blocking error; surface info but continue

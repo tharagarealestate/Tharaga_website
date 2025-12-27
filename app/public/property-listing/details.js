@@ -4,7 +4,12 @@
 function qs(n){ return document.querySelector(n); }
 function el(html){ const t = document.createElement('template'); t.innerHTML = html.trim(); return t.content.firstChild; }
 
-function row(k,v){ return `<div class="spec-row"><div style="color:rgb(148, 163, 184)">${k}</div><div style="color:rgb(226, 232, 240)">${v||'—'}</div></div>`; }
+function row(k,v){ 
+  return `<div class="spec-row">
+    <div style="color:rgb(148, 163, 184);font-weight:500;font-size:13px">${k}</div>
+    <div style="color:rgb(255, 255, 255);font-weight:600;text-align:right">${v||'—'}</div>
+  </div>`; 
+}
 
 function smartSummary(p){
   const bits = [];
@@ -21,10 +26,10 @@ function cardMini(p){
   const price = p.priceDisplay || (p.priceINR? App.currency(p.priceINR) : '—');
   return `<a class="card" href="./details.html?id=${encodeURIComponent(p.id)}" style="overflow:hidden">
     <div class="card-img"><img src="${img}" alt="${p.title}"></div>
-    <div style="padding:10px">
-      <div style="font-weight:600">${p.title}</div>
-      <div style="color:rgb(148, 163, 184);font-size:12px">${(p.locality||'')}${p.city? ', '+p.city:''}</div>
-      <div style="margin-top:6px;font-weight:700">${price}</div>
+    <div style="padding:14px">
+      <div style="font-weight:600;color:rgb(255, 255, 255);font-size:14px">${p.title}</div>
+      <div style="color:rgb(226, 232, 240);font-size:12px">${(p.locality||'')}${p.city? ', '+p.city:''}</div>
+      <div style="margin-top:6px;font-weight:700;color:rgb(252, 211, 77);font-size:16px">${price}</div>
     </div>
   </a>`;
 }
@@ -51,10 +56,14 @@ async function init(){
 
   // Headline & meta
   qs('#title').textContent = `${p.id} — ${p.title}`;
+  qs('#title').style.color = 'rgb(255, 255, 255)'; /* text-white */
   qs('#meta').textContent = `${p.type||''} • ${p.category||''} • ${(p.locality||'')}${p.city?', '+p.city:''}`;
   qs('#price').textContent = p.priceDisplay || (p.priceINR? App.currency(p.priceINR) : 'Price on request');
+  qs('#price').style.color = 'rgb(252, 211, 77)'; /* text-amber-300 */
   qs('#pps').textContent = p.pricePerSqftINR? `₹${p.pricePerSqftINR.toLocaleString('en-IN')}/sqft` : '';
+  qs('#pps').style.color = 'rgb(226, 232, 240)'; /* text-slate-200 */
   qs('#match').textContent = `Match ${Math.round(Math.random()*20+80)}%`;
+  qs('#match').style.color = 'rgb(255, 255, 255)'; /* text-white */
 
   // Tags
   const tags = [`${p.bhk||''} BHK`, `${p.carpetAreaSqft||'-'} sqft`, p.furnished||'', p.facing?`Facing ${p.facing}`:'', p.floor&&p.floorsTotal?`Floor ${p.floor}/${p.floorsTotal}`:'' ]
@@ -73,8 +82,16 @@ async function init(){
   ].join('');
 
   // Summary + Smart Summary
-  qs('#summary').textContent = p.summary || '';
-  qs('#smartSummary').textContent = smartSummary(p);
+  const summaryEl = qs('#summary');
+  if (summaryEl) {
+    summaryEl.textContent = p.summary || '';
+    summaryEl.style.color = 'rgb(226, 232, 240)'; /* text-slate-200 */
+  }
+  const smartSummaryEl = qs('#smartSummary');
+  if (smartSummaryEl) {
+    smartSummaryEl.textContent = smartSummary(p);
+    smartSummaryEl.style.color = 'rgb(148, 163, 184)'; /* text-slate-400 */
+  }
 
   // Docs
   if(p.docsLink){
@@ -115,7 +132,12 @@ async function init(){
     if (propField) propField.value = p.id;
     if (modal) modal.classList.remove('hidden');
   });
-  if (closeModal) closeModal.addEventListener('click', ()=> modal && modal.classList.add('hidden'));
+  const closeModalHandler = ()=> {
+    if (modal) modal.classList.add('hidden');
+  };
+  if (closeModal) closeModal.addEventListener('click', closeModalHandler);
+  const closeModalBottom = document.querySelector('#closeModalBottom');
+  if (closeModalBottom) closeModalBottom.addEventListener('click', closeModalHandler);
 
   // EMI calc
   const calc = ()=> {
@@ -126,7 +148,10 @@ async function init(){
       const emi = (P*r*Math.pow(1+r,n))/(Math.pow(1+r,n)-1);
       document.querySelector('#emi').textContent = 'Estimated EMI: ' + App.currency(Math.round(emi));
     } else {
-      document.querySelector('#emi').textContent = '';
+      const emiEl = document.querySelector('#emi');
+      if (emiEl) {
+        emiEl.textContent = '';
+      }
     }
   };
   ['loan','rate','tenure'].forEach(id=> {

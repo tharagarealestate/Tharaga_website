@@ -827,7 +827,7 @@ function TeamSettings() {
         </button>
       </div>
       <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4'>
-        <div className='bg-gradient-to-br from-gold-600/10 to-gold-500/5 backdrop-blur-md border border-gold-500/20 rounded-xl p-4'>
+        <div className='bg-gradient-to-br from-gold-600/10 to-gold-500/5 backdrop-blur-md glow-border rounded-xl p-4'>
           <div className='text-2xl font-bold text-gray-900'>4</div>
           <div className='text-sm text-gray-600'>Total Members</div>
         </div>

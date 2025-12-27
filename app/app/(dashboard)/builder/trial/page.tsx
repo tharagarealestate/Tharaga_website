@@ -262,7 +262,7 @@ export default function TrialDashboardPage() {
         )}
       </AnimatePresence>
       {/* Sticky top banner - positioned below static header */}
-      <div className="sticky top-[60px] z-30 -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 py-3 bg-white/90 backdrop-blur border-b border-gold-500/20">
+      <div className="sticky top-[60px] z-30 -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 py-3 bg-white/90 backdrop-blur border-b glow-border">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
           <div className="flex items-center gap-3">
             <Crown className="w-5 h-5 text-gold-500" />
@@ -400,7 +400,7 @@ export default function TrialDashboardPage() {
 
           <AnimatePresence>
             {showPropertyCapBanner && (
-              <motion.div initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }} className="rounded-lg border border-gold-500/30 bg-amber-50 text-amber-900 p-4">
+              <motion.div initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }} className="rounded-lg glow-border bg-amber-50 text-amber-900 p-4">
                 You’ve hit the free property limit. Upgrade to unlock unlimited listings.
               </motion.div>
             )}

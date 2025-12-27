@@ -127,7 +127,7 @@ export default function DistributionPage() {
                       onClick={() => setSelectedProperty(property)}
                       className={`w-full text-left p-3 rounded-xl transition-all ${
                         selectedProperty?.id === property.id
-                          ? 'bg-gold-500/20 border-2 border-gold-500 text-white'
+                          ? 'bg-gold-500/20 glow-border text-white'
                           : 'bg-white/5 border border-white/10 text-gray-300 hover:bg-white/10'
                       }`}
                     >

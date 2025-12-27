@@ -289,7 +289,7 @@ export default function RERACompliancePage() {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-slate-800 rounded-xl border-2 border-amber-300 p-6"
+            className="bg-slate-800 rounded-xl glow-border p-6"
           >
             <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
               <AlertTriangle className="w-6 h-6 text-amber-400" />
@@ -332,7 +332,7 @@ export default function RERACompliancePage() {
         )}
 
         {/* RERA Registrations Table */}
-        <div className="bg-slate-800 rounded-xl border-2 border-amber-300 p-6">
+        <div className="bg-slate-800 rounded-xl glow-border p-6">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-xl font-bold text-white">RERA Registrations</h2>
             <button
@@ -457,7 +457,7 @@ export default function RERACompliancePage() {
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="bg-slate-800 rounded-xl border-2 border-amber-300 p-6 max-w-md w-full"
+            className="bg-slate-800 rounded-xl glow-border p-6 max-w-md w-full"
           >
             <h2 className="text-2xl font-bold text-white mb-4">Verify RERA Number</h2>
             
@@ -468,7 +468,7 @@ export default function RERACompliancePage() {
                   type="text"
                   value={verifyForm.reraNumber}
                   onChange={(e) => setVerifyForm({ ...verifyForm, reraNumber: e.target.value })}
-                  className="w-full px-4 py-2 bg-slate-700 text-white rounded-lg border-2 border-amber-300 focus:outline-none focus:ring-2 focus:ring-amber-400"
+                  className="w-full px-4 py-2 bg-slate-700 text-white rounded-lg glow-border focus:outline-none focus:ring-2 focus:ring-amber-400"
                   placeholder="TN/01/Building/0001/2016"
                 />
               </div>
@@ -478,7 +478,7 @@ export default function RERACompliancePage() {
                 <select
                   value={verifyForm.state}
                   onChange={(e) => setVerifyForm({ ...verifyForm, state: e.target.value })}
-                  className="w-full px-4 py-2 bg-slate-700 text-white rounded-lg border-2 border-amber-300 focus:outline-none focus:ring-2 focus:ring-amber-400"
+                  className="w-full px-4 py-2 bg-slate-700 text-white rounded-lg glow-border focus:outline-none focus:ring-2 focus:ring-amber-400"
                 >
                   <option>Tamil Nadu</option>
                   <option>Karnataka</option>
@@ -494,7 +494,7 @@ export default function RERACompliancePage() {
                   type="text"
                   value={verifyForm.projectName}
                   onChange={(e) => setVerifyForm({ ...verifyForm, projectName: e.target.value })}
-                  className="w-full px-4 py-2 bg-slate-700 text-white rounded-lg border-2 border-amber-300 focus:outline-none focus:ring-2 focus:ring-amber-400"
+                  className="w-full px-4 py-2 bg-slate-700 text-white rounded-lg glow-border focus:outline-none focus:ring-2 focus:ring-amber-400"
                 />
               </div>
 
@@ -504,7 +504,7 @@ export default function RERACompliancePage() {
                   type="text"
                   value={verifyForm.promoterName}
                   onChange={(e) => setVerifyForm({ ...verifyForm, promoterName: e.target.value })}
-                  className="w-full px-4 py-2 bg-slate-700 text-white rounded-lg border-2 border-amber-300 focus:outline-none focus:ring-2 focus:ring-amber-400"
+                  className="w-full px-4 py-2 bg-slate-700 text-white rounded-lg glow-border focus:outline-none focus:ring-2 focus:ring-amber-400"
                 />
               </div>
             </div>
@@ -538,7 +538,7 @@ function StatCard({ icon: Icon, label, value, color }: {
   color: string;
 }) {
   return (
-    <div className="bg-slate-800 rounded-xl border-2 border-amber-300 p-4">
+    <div className="bg-slate-800 rounded-xl glow-border p-4">
       <div className="flex items-center justify-between mb-2">
         <Icon className={`w-6 h-6 ${color}`} />
         <span className="text-2xl font-bold text-white">{value}</span>

@@ -508,7 +508,7 @@ export function BuilderSidebar() {
                         "flex items-center rounded-lg px-2 py-2 text-xs transition-all duration-150 group relative",
                         "hover:bg-white/5",
                         isActive
-                          ? "bg-gold-500/20 text-white border-l-2 border-gold-500"
+                          ? "bg-gold-500/20 text-white border-l-2 glow-border"
                           : "text-gray-400 hover:text-white",
                         isLocked && "opacity-50 cursor-not-allowed",
                         "gap-2"
@@ -897,7 +897,7 @@ export function BuilderSidebar() {
               {isTrial && (
                 <Link
                   href="/pricing"
-                  className="block p-3 rounded-xl bg-gold-500/15 border border-gold-500/30"
+                  className="block p-3 rounded-xl bg-gold-500/15 glow-border"
                   onClick={() => setMobileMenuOpen(false)}
                 >
                   <div className="flex items-center gap-2 mb-1">

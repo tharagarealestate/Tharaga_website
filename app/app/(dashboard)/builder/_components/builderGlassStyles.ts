@@ -20,7 +20,7 @@ export const builderGlassInteractive =
 
 // Small pill badges
 export const builderGlassBadge =
-  'backdrop-blur-sm bg-gold-500/20 border border-gold-500/30 rounded-full px-4 py-2 text-xs font-medium text-gold-300'
+  'backdrop-blur-sm bg-gold-500/20 glow-border rounded-full px-4 py-2 text-xs font-medium text-gold-300'
 
 // Section-level analytic panels (used by Ultra Automation components)
 export const builderGlassPanel =

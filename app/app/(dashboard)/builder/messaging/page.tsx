@@ -336,7 +336,7 @@ export default function MessagingPage() {
                   onClick={() => setSendForm({ ...sendForm, type: 'sms' })}
                   className={`flex-1 p-4 rounded-xl transition-all ${
                     sendForm.type === 'sms'
-                      ? 'bg-gold-500/20 border-2 border-gold-500 text-white'
+                      ? 'bg-gold-500/20 glow-border text-white'
                       : 'bg-white/5 border border-white/10 text-gray-400 hover:bg-white/10'
                   }`}
                 >
@@ -455,7 +455,7 @@ export default function MessagingPage() {
                   onClick={() => setSelectedType('sms')}
                   className={`px-4 py-2 rounded-xl transition-all ${
                     selectedType === 'sms'
-                      ? 'bg-gold-500/20 border-2 border-gold-500 text-white'
+                      ? 'bg-gold-500/20 glow-border text-white'
                       : 'bg-white/5 border border-white/10 text-gray-400 hover:bg-white/10'
                   }`}
                 >
@@ -494,7 +494,7 @@ export default function MessagingPage() {
               {getPreBuiltTemplates().map((template) => (
                 <div
                   key={`${template.type}-${template.name}`}
-                  className='backdrop-blur-xl bg-white/10 border border-white/20 rounded-2xl p-6 hover:border-gold-500/50 transition-all relative group'
+                  className='backdrop-blur-xl bg-white/10 border border-white/20 rounded-2xl p-6 hover:glow-border transition-all relative group'
                 >
                   <div className='flex items-start justify-between mb-4'>
                     <div className='flex-1'>
@@ -570,7 +570,7 @@ export default function MessagingPage() {
               {templates.map((template) => (
                 <div
                   key={template.id}
-                  className='backdrop-blur-xl bg-white/10 border border-white/20 rounded-2xl p-6 hover:border-gold-500/50 transition-all'
+                  className='backdrop-blur-xl bg-white/10 border border-white/20 rounded-2xl p-6 hover:glow-border transition-all'
                 >
                   <div className='flex items-start justify-between mb-4'>
                     <div>
@@ -735,7 +735,7 @@ export default function MessagingPage() {
                     onClick={() => setTemplateForm({ ...templateForm, type: 'sms' })}
                     className={`flex-1 p-3 rounded-xl transition-all ${
                       templateForm.type === 'sms'
-                        ? 'bg-gold-500/20 border-2 border-gold-500 text-white'
+                        ? 'bg-gold-500/20 glow-border text-white'
                         : 'bg-white/5 border border-white/10 text-gray-400'
                     }`}
                   >

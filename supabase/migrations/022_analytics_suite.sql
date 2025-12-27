@@ -317,7 +317,7 @@ CREATE POLICY "AB test results viewable by admins"
 -- FUNCTIONS
 -- =====================================================
 
--- Function to calculate MRR
+-- Function to calculate MRR (Updated to use new single-tier pricing)
 CREATE OR REPLACE FUNCTION calculate_mrr()
 RETURNS BIGINT AS $$
 DECLARE
@@ -325,20 +325,19 @@ DECLARE
 BEGIN
     SELECT COALESCE(SUM(
         CASE 
-            WHEN us.billing_cycle = 'monthly' THEN CAST(pp.base_price_monthly * 100 AS BIGINT)
-            WHEN us.billing_cycle = 'yearly' THEN CAST((pp.base_price_yearly / 12) * 100 AS BIGINT)
+            WHEN bs.billing_cycle = 'monthly' THEN bs.current_price
+            WHEN bs.billing_cycle = 'yearly' THEN (bs.current_price / 12)
             ELSE 0
         END
     ), 0) INTO v_mrr
-    FROM user_subscriptions us
-    JOIN pricing_plans pp ON us.plan_id = pp.id
-    WHERE us.status = 'active';
+    FROM builder_subscriptions bs
+    WHERE bs.status = 'active' AND bs.is_trial = false;
     
     RETURN v_mrr;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
--- Function to calculate churn rate
+-- Function to calculate churn rate (Updated to use new single-tier pricing)
 CREATE OR REPLACE FUNCTION calculate_churn_rate(
     p_period_days INTEGER DEFAULT 30
 )
@@ -350,14 +349,14 @@ DECLARE
 BEGIN
     -- Count active subscriptions at start of period
     SELECT COUNT(*) INTO v_start_count
-    FROM user_subscriptions
-    WHERE status = 'active'
+    FROM builder_subscriptions
+    WHERE status = 'active' AND is_trial = false
     AND current_period_start <= NOW() - (p_period_days || ' days')::INTERVAL;
     
     -- Count subscriptions that churned during period
     SELECT COUNT(*) INTO v_churned_count
-    FROM user_subscriptions
-    WHERE status = 'canceled'
+    FROM builder_subscriptions
+    WHERE status = 'cancelled'
     AND updated_at >= NOW() - (p_period_days || ' days')::INTERVAL
     AND updated_at <= NOW();
     

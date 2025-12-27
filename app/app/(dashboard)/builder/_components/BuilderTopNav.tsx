@@ -368,7 +368,7 @@ export function BuilderTopNav() {
                       className={cn(
                         "relative flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 cursor-pointer group",
                         active
-                          ? "text-white bg-gradient-to-r from-[rgba(212,175,55,0.15)] to-[rgba(212,175,55,0.05)] border-l-3 border-[#D4AF37] shadow-[inset_0_0_20px_rgba(212,175,55,0.1)]"
+                          ? "text-white bg-gradient-to-r from-[rgba(212,175,55,0.15)] to-[rgba(212,175,55,0.05)] border-l-3 glow-border shadow-[inset_0_0_20px_rgba(212,175,55,0.1)]"
                           : "text-gray-400 hover:text-white hover:bg-white/[0.04]"
                       )}
                       title={`${item.label} (Press ${navItems.indexOf(item) + 1})`}
@@ -417,7 +417,7 @@ export function BuilderTopNav() {
                       ? "bg-red-500/20 text-red-300 border border-red-500/30"
                       : (subscription.days_remaining ?? 0) <= 3
                       ? "bg-amber-500/20 text-amber-300 border border-amber-500/30 animate-pulse"
-                      : "bg-[#D4AF37]/20 text-[#D4AF37] border border-[#D4AF37]/30"
+                      : "bg-[#D4AF37]/20 text-[#D4AF37] glow-border"
                   )}
                 >
                   Trial • {(subscription.days_remaining ?? 0) === 0 ? 'Expired' : `${subscription.days_remaining} days left`}
@@ -584,7 +584,7 @@ export function BuilderTopNav() {
                         className={cn(
                           "w-full flex items-center gap-3 px-4 py-3.5 rounded-xl text-base font-medium transition-all duration-200 text-left active:scale-[0.98] group hover:scale-[1.02] focus:outline-none focus:ring-2 focus:ring-blue-500",
                           active
-                            ? "text-white bg-gradient-to-r from-[rgba(212,175,55,0.15)] to-[rgba(212,175,55,0.05)] border-l-3 border-[#D4AF37] shadow-[inset_0_0_20px_rgba(212,175,55,0.1)]"
+                            ? "text-white bg-gradient-to-r from-[rgba(212,175,55,0.15)] to-[rgba(212,175,55,0.05)] border-l-3 glow-border shadow-[inset_0_0_20px_rgba(212,175,55,0.1)]"
                             : "text-gray-300 hover:text-white hover:bg-white/5"
                         )}
                         title={`${item.label} (Press ${index + 1})`}
@@ -606,7 +606,7 @@ export function BuilderTopNav() {
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: navItems.length * 0.05 + 0.1, duration: 0.3 }}
-                      className="mt-6 p-4 bg-[#D4AF37]/10 backdrop-blur-[12px] border border-[#D4AF37]/20 rounded-xl"
+                      className="mt-6 p-4 bg-[#D4AF37]/10 backdrop-blur-[12px] glow-border rounded-xl"
                     >
                       <div className="flex items-center gap-2 mb-2">
                         <Clock className="w-4 h-4 text-[#D4AF37]" />

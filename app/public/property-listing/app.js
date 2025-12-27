@@ -334,22 +334,18 @@ function cardHTML(p, s) {
       ${verificationBadge}
       ${matchBadge}
     </div>
-    <div style="padding:14px;display:flex;gap:12px;flex-direction:column">
+    <div style="padding:12px;display:flex;gap:8px;flex-direction:column">
       <div>
-        <div class="loc-loud">${escapeHtml((p.locality||'') + (p.city ? ', ' + p.city : ''))}</div>
-        <div style="color:rgb(255, 255, 255);font-size:13px;font-weight:500">${escapeHtml(p.title)}</div>
+        <div class="loc-loud" style="font-size:13px;line-height:1.3;margin-bottom:4px">${escapeHtml((p.locality||'') + (p.city ? ', ' + p.city : '')).substring(0, 35)}</div>
+        <div style="color:rgb(226, 232, 240);font-size:14px;font-weight:600;line-height:1.3;max-height:2.6em;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical">${escapeHtml(p.title)}</div>
       </div>
-      <div class="row" style="justify-content:space-between">
-        <div class="price-loud">${escapeHtml(price)}</div>
-        <div style="color:rgb(255, 255, 255);font-size:12px;opacity:0.9">${escapeHtml(pps)}</div>
+      <div class="row" style="justify-content:space-between;align-items:baseline;margin-top:6px">
+        <div class="price-loud" style="font-size:18px;line-height:1.2">${escapeHtml(price)}</div>
+        ${pps ? `<div style="color:rgb(148, 163, 184);font-size:11px;opacity:0.9">${escapeHtml(pps)}</div>` : ''}
       </div>
-      <div class="row" style="gap:8px;flex-wrap:wrap">${tags}</div>
-      <div class="explain-inline" aria-hidden="true"></div>
+      <div class="row" style="gap:6px;flex-wrap:wrap;margin-top:6px">${tags}</div>
       <div style="display:flex;gap:8px;margin-top:10px">
-        <a class="btn" href="/properties/${encodeURIComponent(p.id)}">View details</a>
-        <button class="btn" data-lead-id="${encodeURIComponent(p.id)}">Request details</button>
-      </div>
-    </div>
+        <a class="btn" href="/properties/${encodeURIComponent(p.id)}" style="flex:1;text-align:center;padding:10px 16px">View</a>
   </article>`;
 }
 

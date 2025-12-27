@@ -81,8 +81,8 @@ export default function AppreciationPrediction({ propertyId }: AppreciationPredi
 
   if (loading) {
     return (
-      <div className="flex items-center gap-2 text-gray-600">
-        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-gray-400"></div>
+      <div className="flex items-center gap-2 text-white">
+        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-amber-300"></div>
         <span>Loading appreciation prediction...</span>
       </div>
     )

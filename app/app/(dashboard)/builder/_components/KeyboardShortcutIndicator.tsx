@@ -42,10 +42,10 @@ export function KeyboardShortcutIndicator({ keys, description }: KeyboardShortcu
           initial={{ opacity: 0, y: 20, scale: 0.9 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: 20, scale: 0.9 }}
-          className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-white/[0.08] backdrop-blur-[16px] border border-[#D4AF37]/30 rounded-xl px-4 py-2 shadow-lg"
+          className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-white/[0.08] backdrop-blur-[16px] glow-border rounded-xl px-4 py-2 shadow-lg"
         >
           <div className="flex items-center gap-2">
-            <kbd className="px-2 py-1 bg-[#D4AF37]/20 border border-[#D4AF37]/40 rounded text-xs font-mono font-semibold text-[#D4AF37]">
+            <kbd className="px-2 py-1 bg-[#D4AF37]/20 glow-border rounded text-xs font-mono font-semibold text-[#D4AF37]">
               {keys}
             </kbd>
             <span className="text-sm text-white">{description}</span>

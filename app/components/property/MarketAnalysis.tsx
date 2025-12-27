@@ -71,7 +71,7 @@ export function MarketAnalysis({ area, propertyId, className = '' }: MarketAnaly
         </div>
         <div className="flex items-center justify-center py-8">
           <Loader2 className="h-6 w-6 text-amber-300 animate-spin" />
-          <span className="ml-3 text-slate-300">Analyzing market trends...</span>
+          <span className="ml-3 text-white">Analyzing market trends...</span>
         </div>
       </div>
     )
@@ -119,7 +119,7 @@ export function MarketAnalysis({ area, propertyId, className = '' }: MarketAnaly
       <div className="flex items-center gap-3 mb-6">
         <TrendingUp className="h-5 w-5 text-amber-300" />
         <h2 className="text-2xl font-semibold text-white">Market Analysis</h2>
-        <div className="ml-auto flex items-center gap-2 text-sm text-slate-300">
+        <div className="ml-auto flex items-center gap-2 text-sm text-white">
           <MapPin className="h-4 w-4" />
           <span>{data.area}</span>
         </div>
@@ -154,7 +154,7 @@ export function MarketAnalysis({ area, propertyId, className = '' }: MarketAnaly
       {/* Future Potential */}
       <div className="mb-6 rounded-lg border border-amber-300/30 bg-slate-800/50 p-4">
         <div className="flex items-center justify-between mb-2">
-          <span className="text-sm font-medium text-slate-300">Future Investment Potential</span>
+          <span className="text-sm font-medium text-white">Future Investment Potential</span>
           <span className={`text-lg font-bold ${potentialColor}`}>
             {data.futurePotential || 0}/100
           </span>
@@ -171,7 +171,7 @@ export function MarketAnalysis({ area, propertyId, className = '' }: MarketAnaly
             style={{ width: `${data.futurePotential || 0}%` }}
           />
         </div>
-        <p className="text-xs text-slate-400 mt-2">
+        <p className="text-xs text-white mt-2">
           Based on market trends, infrastructure development, and growth indicators
         </p>
       </div>
@@ -198,7 +198,7 @@ export function MarketAnalysis({ area, propertyId, className = '' }: MarketAnaly
           </h3>
           <ul className="space-y-2">
             {data.nearbyDevelopments.slice(0, 3).map((dev, idx) => (
-              <li key={idx} className="flex items-start gap-2 text-sm text-slate-300">
+              <li key={idx} className="flex items-start gap-2 text-sm text-white">
                 <span className="text-amber-300 mt-1">•</span>
                 <span>{dev}</span>
               </li>
@@ -209,7 +209,7 @@ export function MarketAnalysis({ area, propertyId, className = '' }: MarketAnaly
 
       {/* Market Trend Indicator */}
       <div className="mt-4 pt-4 border-t border-amber-300/20">
-        <div className="flex items-center justify-between text-xs text-slate-400">
+        <div className="flex items-center justify-between text-xs text-white">
           <span>Market data powered by AI analysis</span>
           <span>Last updated: {new Date().toLocaleDateString()}</span>
         </div>
@@ -239,7 +239,7 @@ function MetricCard({
     >
       <div className="flex items-center gap-2 mb-2">
         {icon}
-        <span className="text-xs text-slate-400 uppercase tracking-wide">{label}</span>
+        <span className="text-xs text-white uppercase tracking-wide">{label}</span>
       </div>
       <div className={`text-xl font-bold ${highlight ? 'text-emerald-300' : 'text-white'}`}>
         {value}

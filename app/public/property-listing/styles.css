@@ -58,14 +58,16 @@ html, body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
+  background: rgb(2, 6, 23); /* bg-slate-950 */
+  color: rgb(255, 255, 255); /* text-white */
 }
 
 /* ============================================
-   MAIN WRAPPER - Dark Theme
+   MAIN WRAPPER - Admin Dashboard Design System
    ============================================ */
 .pricing-page-wrapper {
   min-height: 100vh;
-  background: rgba(15, 23, 42, 0.95); /* bg-slate-900/95 */
+  background: rgb(2, 6, 23); /* bg-slate-950 */
   position: relative;
   overflow: hidden;
 }
@@ -120,14 +122,14 @@ html, body {
   margin: 0 auto;
 }
 
-/* Badge - Dark Theme */
+/* Badge - Admin Dashboard Design System */
 .hero-badge {
   display: inline-flex;
   align-items: center;
   gap: 8px;
   padding: 6px 14px;
   background: rgba(51, 65, 85, 0.5); /* bg-slate-700/50 */
-  border: 1px solid rgba(148, 163, 184, 0.3); /* subtle border */
+  border: 1px solid rgba(252, 211, 77, 0.25); box-shadow: 0 0 12px rgba(252, 211, 77, 0.08), 0 0 24px rgba(252, 211, 77, 0.05), inset 0 0 8px rgba(252, 211, 77, 0.03);
   border-radius: 999px;
   margin-bottom: 16px;
 }
@@ -135,9 +137,18 @@ html, body {
 .hero-badge-dot {
   width: 8px;
   height: 8px;
-  background: rgb(var(--gold-500));
+  background: rgb(252, 211, 77); /* amber-300 */
   border-radius: 50%;
   animation: pulse-slow 2s ease-in-out infinite;
+}
+
+@keyframes pulse-slow {
+  0%, 100% { 
+    opacity: 1; 
+  }
+  50% { 
+    opacity: 0.6; 
+  }
 }
 
 .hero-badge-text {
@@ -185,7 +196,7 @@ html, body {
 }
 
 /* ============================================
-   FILTER SIDEBAR - Dark Theme with Shimmer & Glow
+   FILTER SIDEBAR - Admin Dashboard Design System
    ============================================ */
 .filter-sidebar {
   flex: 0 0 400px;
@@ -195,21 +206,23 @@ html, body {
   max-height: calc(100vh - 48px);
   overflow-y: auto;
   margin-left: 0;
-  /* Dark theme card with shimmer effect */
-  background: rgba(30, 41, 59, 0.95); /* bg-slate-800/95 */
-  border: 1px solid rgba(148, 163, 184, 0.2); /* subtle border */
-  border-radius: 24px;
-  padding: 24px;
-  transition: all 0.3s ease;
+  /* Enhanced Admin Dashboard card style with elegant effects */
+  background: linear-gradient(135deg, rgba(30, 41, 59, 0.98) 0%, rgba(15, 23, 42, 0.95) 100%);
+  border: 1px solid rgba(252, 211, 77, 0.25);
+  border-radius: 20px; /* slightly more rounded */
+  padding: 28px;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3),
-              0 0 0 1px rgba(255, 255, 255, 0.05),
-              0 0 30px rgba(59, 130, 246, 0.1),
-              inset 0 1px 0 rgba(255, 255, 255, 0.05);
-  overflow: hidden;
+  box-shadow: 
+    0 0 12px rgba(252, 211, 77, 0.08),
+    0 0 24px rgba(252, 211, 77, 0.05),
+    inset 0 0 8px rgba(252, 211, 77, 0.03),
+    0 8px 32px rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
 }
 
-/* Shimmer effect overlay */
+/* Elegant shimmer effect overlay */
 .filter-sidebar::before {
   content: '';
   position: absolute;
@@ -218,14 +231,34 @@ html, body {
   width: 100%;
   height: 100%;
   background: linear-gradient(
-    90deg,
-    transparent,
-    rgba(255, 255, 255, 0.03),
-    transparent
+    105deg,
+    transparent 0%,
+    rgba(252, 211, 77, 0.08) 45%,
+    rgba(252, 211, 77, 0.12) 50%,
+    rgba(252, 211, 77, 0.08) 55%,
+    transparent 100%
   );
-  animation: shimmer 3s infinite;
+  animation: shimmer 5s infinite;
   pointer-events: none;
   z-index: 1;
+  border-radius: 20px;
+}
+
+/* Subtle pulsing border glow */
+.filter-sidebar::after {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  border-radius: 20px;
+  padding: 2px;
+  background: linear-gradient(135deg, rgba(252, 211, 77, 0.3), rgba(251, 191, 36, 0.2), rgba(252, 211, 77, 0.3));
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  opacity: 0.6;
+  animation: borderPulse 3s ease-in-out infinite;
+  pointer-events: none;
+  z-index: 0;
 }
 
 @keyframes shimmer {
@@ -237,12 +270,24 @@ html, body {
   }
 }
 
+@keyframes borderPulse {
+  0%, 100% {
+    opacity: 0.4;
+  }
+  50% {
+    opacity: 0.8;
+  }
+}
+
 .filter-sidebar:hover {
-  background: rgba(51, 65, 85, 0.7); /* hover state */
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4),
-              0 0 0 1px rgba(255, 255, 255, 0.1),
-              0 0 50px rgba(59, 130, 246, 0.2),
-              inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  background: linear-gradient(135deg, rgba(30, 41, 59, 1) 0%, rgba(15, 23, 42, 0.98) 100%);
+  transform: translateY(-2px);
+  border-color: rgba(252, 211, 77, 0.4);
+  box-shadow: 
+    0 0 16px rgba(252, 211, 77, 0.12),
+    0 0 32px rgba(252, 211, 77, 0.08),
+    inset 0 0 12px rgba(252, 211, 77, 0.05),
+    0 12px 48px rgba(0, 0, 0, 0.5);
 }
 
 /* Ensure filter content is above shimmer */
@@ -272,7 +317,7 @@ html, body {
   text-align: center;
   padding: 12px 0;
   border-radius: 999px;
-  border: 1px solid rgba(148, 163, 184, 0.2); /* subtle border */
+  border: 1px solid rgba(252, 211, 77, 0.25); box-shadow: 0 0 12px rgba(252, 211, 77, 0.08), 0 0 24px rgba(252, 211, 77, 0.05), inset 0 0 8px rgba(252, 211, 77, 0.03);
   background: rgba(30, 41, 59, 0.95); /* bg-slate-800/95 */
   color: rgb(255, 255, 255); /* text-white */
   font-weight: 600;
@@ -284,13 +329,13 @@ html, body {
 
 .filter-pill:hover {
   background: rgba(51, 65, 85, 0.7);
-  color: rgb(255, 255, 255); /* text-white */
+  color: rgb(255, 255, 255);
 }
 
 .filter-pill.active {
-  background: rgba(59, 130, 246, 0.8); /* blue-500 with opacity */
-  color: rgb(255, 255, 255); /* text-white */
-  border-color: rgb(59, 130, 246);
+  background: rgb(245, 158, 11); /* bg-amber-500 */
+  color: rgb(15, 23, 42); /* text-slate-900 */
+  border-color: rgb(252, 211, 77); /* border-amber-300 */
 }
 
 /* Top Row */
@@ -335,18 +380,20 @@ html, body {
 .filter-grid label {
   font-weight: 600;
   font-size: 13px;
-  color: rgb(255, 255, 255); /* text-white for better visibility */
+  color: rgb(148, 163, 184); /* text-slate-400 - labels */
   display: block;
   margin-bottom: 8px;
   letter-spacing: 0.02em;
+  text-transform: uppercase;
+  font-size: 12px;
 }
 
-/* Inputs and Selects - Dark Theme */
+/* Inputs and Selects - Admin Dashboard Design System */
 .input, select, textarea {
   padding: 10px 12px;
-  border-radius: 12px;
-  border: 1px solid rgba(148, 163, 184, 0.3); /* subtle border */
-  background: rgba(51, 65, 85, 0.5); /* bg-slate-700/50 */
+  border-radius: 12px; /* rounded-lg */
+  border: 1px solid rgba(252, 211, 77, 0.25); box-shadow: 0 0 12px rgba(252, 211, 77, 0.08), 0 0 24px rgba(252, 211, 77, 0.05), inset 0 0 8px rgba(252, 211, 77, 0.03);
+  background: rgba(30, 41, 59, 0.95); /* bg-slate-800/95 */
   outline: none;
   width: 100%;
   font-size: 14px;
@@ -357,15 +404,15 @@ html, body {
 }
 
 .input:focus, select:focus, textarea:focus {
-  border-color: rgba(59, 130, 246, 0.6); /* blue-500 on focus */
-  background: rgba(51, 65, 85, 0.7);
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1),
-              0 0 20px rgba(59, 130, 246, 0.15);
+  border-color: rgb(251, 191, 36); /* border-amber-400 on focus */
+  background: rgba(30, 41, 59, 1);
+  box-shadow: 0 0 0 3px rgba(252, 211, 77, 0.1),
+              0 0 20px rgba(252, 211, 77, 0.15);
 }
 
 .input:hover, select:hover, textarea:hover {
-  border-color: rgba(148, 163, 184, 0.5);
-  background: rgba(51, 65, 85, 0.6);
+  border-color: rgb(252, 211, 77); /* border-amber-300 */
+  background: rgba(51, 65, 85, 0.7);
 }
 
 select[multiple] {
@@ -385,7 +432,7 @@ select[multiple] {
 
 .metro-label {
   font-size: 12px;
-  color: rgb(255, 255, 255); /* text-white */
+  color: rgb(226, 232, 240); /* text-slate-200 - secondary text */
   font-weight: 500;
 }
 
@@ -410,6 +457,23 @@ select[multiple] {
 
 .filter-toolbar {
   margin: 10px 0 16px;
+  padding: 12px 16px;
+  background: rgba(30, 41, 59, 0.95); /* bg-slate-800/95 */
+  border: 1px solid rgba(252, 211, 77, 0.25);
+  border-radius: 16px; /* rounded-lg */
+  box-shadow: 
+    0 0 12px rgba(252, 211, 77, 0.08),
+    0 0 24px rgba(252, 211, 77, 0.05),
+    inset 0 0 8px rgba(252, 211, 77, 0.03);
+  transition: all 0.3s ease;
+}
+
+.filter-toolbar:hover {
+  border-color: rgba(252, 211, 77, 0.4);
+  box-shadow: 
+    0 0 16px rgba(252, 211, 77, 0.12),
+    0 0 32px rgba(252, 211, 77, 0.08),
+    inset 0 0 12px rgba(252, 211, 77, 0.05);
 }
 
 .toolbar-row {
@@ -424,6 +488,13 @@ select[multiple] {
   gap: 8px;
   align-items: center;
   flex-wrap: wrap;
+  padding: 8px 0;
+}
+
+.stats-row #count {
+  font-weight: 600;
+  color: rgb(255, 255, 255); /* text-white */
+  font-size: 14px;
 }
 
 .results-grid {
@@ -439,32 +510,38 @@ select[multiple] {
 }
 
 /* ============================================
-   PROPERTY CARDS - Dark Theme with Subtle Glow
+   PROPERTY CARDS - Admin Dashboard Design System
    ============================================ */
 .card {
-  background: rgba(30, 41, 59, 0.95); /* bg-slate-800/95 */
-  border: 1px solid rgba(148, 163, 184, 0.2); /* subtle border */
-  border-radius: 24px;
+  background: linear-gradient(135deg, rgba(30, 41, 59, 0.95) 0%, rgba(15, 23, 42, 0.9) 100%);
+  border: 1px solid rgba(252, 211, 77, 0.25);
+  border-radius: 18px;
   overflow: hidden;
-  transition: all 0.3s ease;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3), 
-              0 0 0 1px rgba(255, 255, 255, 0.05),
-              inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  box-shadow: 
+    0 0 12px rgba(252, 211, 77, 0.08),
+    0 0 24px rgba(252, 211, 77, 0.05),
+    inset 0 0 8px rgba(252, 211, 77, 0.03),
+    0 4px 20px rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
 }
 
 .card:hover {
-  background: rgba(51, 65, 85, 0.7); /* hover state */
-  transform: translateY(-4px); /* subtle lift, no scale */
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4),
-              0 0 0 1px rgba(255, 255, 255, 0.1),
-              0 0 40px rgba(59, 130, 246, 0.15),
-              inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  background: linear-gradient(135deg, rgba(30, 41, 59, 1) 0%, rgba(15, 23, 42, 0.95) 100%);
+  transform: translateY(-6px) scale(1.01);
+  border-color: rgba(252, 211, 77, 0.4);
+  box-shadow: 
+    0 0 16px rgba(252, 211, 77, 0.12),
+    0 0 32px rgba(252, 211, 77, 0.08),
+    inset 0 0 12px rgba(252, 211, 77, 0.05),
+    0 12px 40px rgba(0, 0, 0, 0.5);
 }
 
 .card-img {
   position: relative;
-  height: 200px;
+  height: 180px;
   overflow: hidden;
   background: rgba(51, 65, 85, 0.3); /* subtle background for no-image state */
 }
@@ -478,6 +555,37 @@ select[multiple] {
 
 .card-img img.img-error {
   display: none;
+}
+
+/* Checkbox styling - Admin Dashboard Design System */
+input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+  accent-color: rgb(252, 211, 77); /* amber-300 */
+  border: 2px solid rgb(252, 211, 77);
+  border-radius: 4px;
+  background: rgba(30, 41, 59, 0.95);
+}
+
+input[type="checkbox"]:checked {
+  background: rgb(252, 211, 77);
+  border-color: rgb(252, 211, 77);
+}
+
+input[type="checkbox"]:focus {
+  outline: 2px solid rgba(252, 211, 77, 0.3);
+  outline-offset: 2px;
+}
+
+/* Empty state */
+.empty {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 48px 24px;
+  color: rgb(226, 232, 240); /* text-slate-200 */
+  font-size: 16px;
+  font-weight: 500;
 }
 
 /* No image text styling */
@@ -500,10 +608,10 @@ select[multiple] {
 .card-img .ribbon,
 .card-img .score {
   position: absolute;
-  padding: 6px 12px;
-  border-radius: 8px;
-  font-size: 12px;
-  font-weight: 600;
+  padding: 5px 10px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 700;
   z-index: 2;
   backdrop-filter: blur(4px);
   -webkit-backdrop-filter: blur(4px);
@@ -570,14 +678,14 @@ select[multiple] {
 .price-loud {
   font-weight: 800;
   font-size: 24px;
-  color: rgb(252, 211, 77); /* text-amber-300 */
+  color: rgb(252, 211, 77); /* text-amber-300 - accent text */
   margin-bottom: 8px;
 }
 
 .loc-loud {
   font-weight: 700;
   font-size: 16px;
-  color: rgb(255, 255, 255); /* text-white for better visibility */
+  color: rgb(255, 255, 255); /* text-white - primary text */
   margin-bottom: 12px;
 }
 
@@ -601,37 +709,41 @@ select[multiple] {
   text-rendering: optimizeLegibility;
 }
 
+/* ============================================
+   BUTTONS - Admin Dashboard Design System
+   ============================================ */
 .btn:not(.secondary):not(.ghost) {
-  background: rgba(59, 130, 246, 0.9); /* blue-500 */
-  color: rgb(255, 255, 255); /* text-white */
-  border: 1px solid rgb(59, 130, 246);
+  background: rgb(245, 158, 11); /* bg-amber-500 */
+  color: rgb(15, 23, 42); /* text-slate-900 */
+  border: 1px solid rgba(252, 211, 77, 0.25); box-shadow: 0 0 12px rgba(252, 211, 77, 0.08), 0 0 24px rgba(252, 211, 77, 0.05), inset 0 0 8px rgba(252, 211, 77, 0.03);
+  transition: all 0.3s ease;
 }
 
 .btn:not(.secondary):not(.ghost):hover {
-  background: rgb(59, 130, 246); /* solid blue on hover */
+  background: rgb(217, 119, 6); /* hover:bg-amber-600 */
   transform: translateY(-2px);
 }
 
 .btn.secondary {
   background: rgba(30, 41, 59, 0.95); /* bg-slate-800/95 */
   color: rgb(226, 232, 240); /* text-slate-200 */
-  border: 1px solid rgba(148, 163, 184, 0.3); /* subtle border */
+  border: 1px solid rgba(252, 211, 77, 0.25); box-shadow: 0 0 12px rgba(252, 211, 77, 0.08), 0 0 24px rgba(252, 211, 77, 0.05), inset 0 0 8px rgba(252, 211, 77, 0.03);
+  transition: all 0.3s ease;
 }
 
 .btn.secondary:hover {
-  background: rgba(51, 65, 85, 0.7);
-  border-color: rgba(148, 163, 184, 0.5);
+  background: rgba(51, 65, 85, 0.7); /* hover:bg-slate-700/50 */
 }
 
 .btn.ghost {
   background: transparent;
   color: rgb(226, 232, 240); /* text-slate-200 */
-  border: 1px solid rgba(148, 163, 184, 0.3); /* subtle border */
+  border: 1px solid rgba(252, 211, 77, 0.25); box-shadow: 0 0 12px rgba(252, 211, 77, 0.08), 0 0 24px rgba(252, 211, 77, 0.05), inset 0 0 8px rgba(252, 211, 77, 0.03);
+  transition: all 0.3s ease;
 }
 
 .btn.ghost:hover {
   background: rgba(51, 65, 85, 0.5);
-  border-color: rgba(148, 163, 184, 0.5);
 }
 
 .btn:disabled {
@@ -668,7 +780,7 @@ select[multiple] {
   bottom: 0;
   left: 0;
   right: 0;
-  background: rgba(59, 130, 246, 0.6); /* blue-500 with opacity */
+  background: rgb(252, 211, 77); /* amber-300 */
   border-radius: 999px;
 }
 
@@ -690,8 +802,8 @@ select[multiple] {
   height: var(--thumb-size);
   border-radius: 50%;
   background: white;
-  border: 3px solid rgb(var(--gold-500));
-  box-shadow: 0 2px 8px rgba(212, 175, 55, 0.3);
+  border: 3px solid rgb(252, 211, 77); /* border-amber-300 */
+  box-shadow: 0 2px 8px rgba(252, 211, 77, 0.3);
   cursor: pointer;
 }
 
@@ -701,8 +813,8 @@ select[multiple] {
   height: var(--thumb-size);
   border-radius: 50%;
   background: white;
-  border: 3px solid rgb(var(--gold-500));
-  box-shadow: 0 2px 8px rgba(212, 175, 55, 0.3);
+  border: 3px solid rgb(252, 211, 77); /* border-amber-300 */
+  box-shadow: 0 2px 8px rgba(252, 211, 77, 0.3);
   cursor: pointer;
 }
 
@@ -723,20 +835,21 @@ select[multiple] {
 }
 
 /* ============================================
-   TAGS & CHIPS - Dark Theme
+   TAGS & CHIPS - Admin Dashboard Design System
    ============================================ */
 .tag {
   display: inline-flex;
   align-items: center;
-  padding: 6px 12px;
-  border-radius: 999px;
-  border: 1px solid rgba(148, 163, 184, 0.3); /* subtle border */
-  background: rgba(51, 65, 85, 0.5); /* bg-slate-700/50 */
-  font-size: 12px;
-  color: rgb(255, 255, 255); /* text-white */
-  font-weight: 500;
+  padding: 4px 8px;
+  border-radius: 6px;
+  border: 1px solid rgba(252, 211, 77, 0.3); /* border-amber-300/30 */
+  background: rgba(51, 65, 85, 0.6); /* bg-slate-700/60 */
+  font-size: 11px;
+  color: rgb(226, 232, 240); /* text-slate-200 */
+  font-weight: 600;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
+  white-space: nowrap;
 }
 
 .chip, .chip-rem {
@@ -745,7 +858,7 @@ select[multiple] {
   gap: 6px;
   padding: 6px 12px;
   border-radius: 999px;
-  border: 1px solid rgba(148, 163, 184, 0.3); /* subtle border */
+  border: 1px solid rgba(252, 211, 77, 0.25); box-shadow: 0 0 12px rgba(252, 211, 77, 0.08), 0 0 24px rgba(252, 211, 77, 0.05), inset 0 0 8px rgba(252, 211, 77, 0.03);
   background: rgba(51, 65, 85, 0.5); /* bg-slate-700/50 */
   font-size: 12px;
   color: rgb(255, 255, 255); /* text-white */
@@ -758,7 +871,6 @@ select[multiple] {
 
 .chip:hover, .chip-rem:hover {
   background: rgba(51, 65, 85, 0.7);
-  border-color: rgba(148, 163, 184, 0.5);
 }
 
 /* ============================================
@@ -793,9 +905,9 @@ select[multiple] {
 .pager .page {
   padding: 10px 16px;
   border-radius: 12px;
-  border: 1px solid rgba(148, 163, 184, 0.3); /* subtle border */
+  border: 1px solid rgba(252, 211, 77, 0.25); box-shadow: 0 0 12px rgba(252, 211, 77, 0.08), 0 0 24px rgba(252, 211, 77, 0.05), inset 0 0 8px rgba(252, 211, 77, 0.03);
   background: rgba(30, 41, 59, 0.95); /* bg-slate-800/95 */
-  color: rgb(255, 255, 255); /* text-white */
+  color: rgb(226, 232, 240); /* text-slate-200 */
   cursor: pointer;
   transition: all 0.2s ease;
   font-size: 14px;
@@ -803,14 +915,13 @@ select[multiple] {
 }
 
 .pager .page:hover {
-  background: rgba(51, 65, 85, 0.7);
-  border-color: rgba(148, 163, 184, 0.5);
+  background: rgba(51, 65, 85, 0.7); /* hover:bg-slate-700/50 */
 }
 
 .pager .active {
-  background: rgba(59, 130, 246, 0.8); /* blue-500 */
-  color: rgb(255, 255, 255); /* text-white */
-  border-color: rgb(59, 130, 246);
+  background: rgb(252, 211, 77); /* bg-amber-300 */
+  color: rgb(15, 23, 42); /* text-slate-900 */
+  border-color: rgb(252, 211, 77); /* border-amber-300 */
 }
 
 .result-notice {
@@ -818,7 +929,7 @@ select[multiple] {
   padding: 12px 16px;
   border-radius: 12px;
   background: rgba(51, 65, 85, 0.5); /* bg-slate-700/50 */
-  border: 1px solid rgba(148, 163, 184, 0.3); /* subtle border */
+  border: 1px solid rgba(252, 211, 77, 0.25); box-shadow: 0 0 12px rgba(252, 211, 77, 0.08), 0 0 24px rgba(252, 211, 77, 0.05), inset 0 0 8px rgba(252, 211, 77, 0.03);
   color: rgb(255, 255, 255); /* text-white */
   font-weight: 600;
   font-size: 14px;
@@ -834,7 +945,7 @@ select[multiple] {
   padding: 12px 20px;
   border-radius: 12px;
   z-index: 1000;
-  border: 1px solid rgba(148, 163, 184, 0.3); /* subtle border */
+  border: 1px solid rgba(252, 211, 77, 0.25); box-shadow: 0 0 12px rgba(252, 211, 77, 0.08), 0 0 24px rgba(252, 211, 77, 0.05), inset 0 0 8px rgba(252, 211, 77, 0.03);
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
 }
@@ -848,7 +959,7 @@ select[multiple] {
   border-radius: 999px;
   background: rgba(30, 41, 59, 0.95); /* bg-slate-800/95 */
   color: rgb(255, 255, 255); /* text-white */
-  border: 1px solid rgba(148, 163, 184, 0.3); /* subtle border */
+  border: 1px solid rgba(252, 211, 77, 0.25); box-shadow: 0 0 12px rgba(252, 211, 77, 0.08), 0 0 24px rgba(252, 211, 77, 0.05), inset 0 0 8px rgba(252, 211, 77, 0.03);
   z-index: 1000;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -866,8 +977,8 @@ select[multiple] {
    ============================================ */
 .skeleton-card {
   background: rgba(30, 41, 59, 0.95); /* bg-slate-800/95 */
-  border-radius: 24px;
-  border: 1px solid rgba(148, 163, 184, 0.2); /* subtle border */
+  border-radius: 16px; /* rounded-lg */
+  border: 1px solid rgba(252, 211, 77, 0.25); box-shadow: 0 0 12px rgba(252, 211, 77, 0.08), 0 0 24px rgba(252, 211, 77, 0.05), inset 0 0 8px rgba(252, 211, 77, 0.03);
   overflow: hidden;
   position: relative;
 }
@@ -1336,4 +1447,181 @@ select[multiple] {
     width: 24px;
     height: 24px;
   }
+}
+
+/* ============================================
+   PROPERTY DETAILS PAGE - Admin Dashboard Design System
+   ============================================ */
+
+/* Header */
+.header {
+  background: rgba(30, 41, 59, 0.95); /* bg-slate-800/95 */
+  border-bottom: 2px solid rgb(252, 211, 77); /* border-amber-300 */
+  padding: 16px 24px;
+  margin-bottom: 24px;
+}
+
+.header .inner.container {
+  max-width: 1280px;
+  margin: 0 auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.header .brand {
+  font-weight: 800;
+  font-size: 20px;
+  color: rgb(255, 255, 255); /* text-white */
+  letter-spacing: 0.05em;
+}
+
+.header .badge {
+  font-size: 12px;
+  color: rgb(226, 232, 240); /* text-slate-200 */
+  font-weight: 500;
+}
+
+/* Main container for details page */
+body > .container {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 24px 48px;
+}
+
+/* Details hero (gallery) */
+.details-hero {
+  width: 100%;
+  height: 400px;
+  border-radius: 16px 16px 0 0;
+  overflow: hidden;
+  background: rgba(51, 65, 85, 0.3);
+  position: relative;
+}
+
+/* KPI pills section */
+.kpi {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.kpi .pill {
+  padding: 8px 16px;
+  border-radius: 12px;
+  background: rgba(30, 41, 59, 0.95); /* bg-slate-800/95 */
+  border: 1px solid rgba(252, 211, 77, 0.25); box-shadow: 0 0 12px rgba(252, 211, 77, 0.08), 0 0 24px rgba(252, 211, 77, 0.05), inset 0 0 8px rgba(252, 211, 77, 0.03);
+  color: rgb(255, 255, 255); /* text-white */
+  font-weight: 600;
+  font-size: 14px;
+}
+
+/* Details page headings */
+.card h3 {
+  color: rgb(255, 255, 255); /* text-white */
+  font-weight: 700;
+  font-size: 18px;
+  margin-bottom: 12px;
+  margin-top: 0;
+}
+
+.card h4 {
+  color: rgb(226, 232, 240); /* text-slate-200 */
+  font-weight: 600;
+  font-size: 14px;
+  margin-bottom: 8px;
+  margin-top: 0;
+}
+
+.card p {
+  color: rgb(226, 232, 240); /* text-slate-200 */
+  line-height: 1.6;
+  margin: 0;
+}
+
+/* Details page card sections */
+.card section.card,
+.card aside.card {
+  background: rgba(30, 41, 59, 0.95); /* bg-slate-800/95 */
+  border: 1px solid rgba(252, 211, 77, 0.25); box-shadow: 0 0 12px rgba(252, 211, 77, 0.08), 0 0 24px rgba(252, 211, 77, 0.05), inset 0 0 8px rgba(252, 211, 77, 0.03);
+  border-radius: 16px; /* rounded-lg */
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3),
+              0 0 40px rgba(252, 211, 77, 0.1);
+}
+
+/* Main property card on details page */
+#prop.card {
+  background: rgba(30, 41, 59, 0.95); /* bg-slate-800/95 */
+  border: 1px solid rgba(252, 211, 77, 0.25); box-shadow: 0 0 12px rgba(252, 211, 77, 0.08), 0 0 24px rgba(252, 211, 77, 0.05), inset 0 0 8px rgba(252, 211, 77, 0.03);
+  border-radius: 16px; /* rounded-lg */
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3),
+              0 0 40px rgba(252, 211, 77, 0.1);
+}
+
+/* Modal overlay - Admin Dashboard style */
+#modal:not(.hidden) {
+  position: fixed !important;
+  inset: 0 !important;
+  background: rgba(0, 0, 0, 0.6) !important; /* bg-black/60 */
+  backdrop-filter: blur(4px) !important;
+  -webkit-backdrop-filter: blur(4px) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 16px !important;
+  z-index: 50 !important;
+}
+
+#modal form.card {
+  background: rgba(30, 41, 59, 0.95) !important; /* bg-slate-800/95 */
+  border: 2px solid rgb(252, 211, 77) !important; /* border-amber-300 */
+  border-radius: 16px !important; /* rounded-lg */
+  max-width: 520px !important;
+  width: 100% !important;
+  padding: 24px !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4) !important;
+}
+
+#modal form.card h3 {
+  color: rgb(255, 255, 255) !important; /* text-white */
+  margin-bottom: 16px !important;
+  font-size: 18px !important;
+  font-weight: 700 !important;
+}
+
+#modal form.card .input {
+  color: rgb(255, 255, 255) !important; /* text-white */
+}
+
+#modal form.card label {
+  color: rgb(148, 163, 184) !important; /* text-slate-400 */
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  text-transform: uppercase !important;
+  margin-bottom: 8px !important;
+  display: block !important;
+}
+
+/* Spec rows in overview */
+.spec-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(51, 65, 85, 0.5); /* subtle divider */
+}
+
+.spec-row:last-child {
+  border-bottom: none;
+}
+
+.spec-row > div:first-child {
+  color: rgb(148, 163, 184); /* text-slate-400 */
+  font-weight: 500;
+  font-size: 13px;
+}
+
+.spec-row > div:last-child {
+  color: rgb(255, 255, 255); /* text-white */
+  font-weight: 600;
+  text-align: right;
 }

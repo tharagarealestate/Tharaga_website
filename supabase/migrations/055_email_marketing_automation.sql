@@ -416,3 +416,6 @@ COMMENT ON TABLE public.builder_alerts IS 'Alerts and notifications for builders
 COMMENT ON TABLE public.property_viewings IS 'Scheduled property viewings with reminder automation';
 
 
+
+
+

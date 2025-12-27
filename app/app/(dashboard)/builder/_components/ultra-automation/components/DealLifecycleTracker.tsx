@@ -78,7 +78,7 @@ export function DealLifecycleTracker({ builderId }: DealLifecycleTrackerProps) {
         <p className="text-gray-400 mb-4">Failed to load deal lifecycles</p>
         <button
           onClick={() => window.location.reload()}
-          className="px-4 py-2 bg-gold-500/20 border border-gold-500/40 text-gold-400 rounded-lg hover:bg-gold-500/30 transition-colors"
+          className="px-4 py-2 bg-gold-500/20 glow-border text-gold-400 rounded-lg hover:bg-gold-500/30 transition-colors"
         >
           Try Again
         </button>

@@ -220,7 +220,7 @@ export function Sidebar() {
       {isTrial && (
         <Link 
           href="/pricing"
-          className="mx-3 mt-3 p-3 rounded-xl bg-gold-500/15 backdrop-blur-sm border border-gold-500/30 hover:bg-gold-500/20 transition-colors cursor-pointer"
+          className="mx-3 mt-3 p-3 rounded-xl bg-gold-500/15 backdrop-blur-sm glow-border hover:bg-gold-500/20 transition-colors cursor-pointer"
         >
           <div className="flex items-center gap-2 mb-1">
             <Clock className="w-3.5 h-3.5 text-gold-300" />

@@ -609,9 +609,8 @@ export function LeadsList({ onSelectLead, initialFilters, showInlineFilters = tr
                     type="text"
                     placeholder="e.g. Bangalore, Mumbai"
                     value={filters.location ?? ''}
-                    className="w-full px-4 py-2.5 bg-slate-700/50 border-2 border-amber-300 rounded-lg text-white placeholder:text-slate-400 focus:outline-none focus:border-amber-400 transition-all"
                     onChange={(event) => updateFilter('location', event.target.value)}
-                    className="w-full px-4 py-2.5 bg-[#0A1628]/50 border border-blue-500/20 rounded-xl text-white placeholder:text-gray-400 focus:outline-none focus:border-blue-500/50 transition-all"
+                    className="w-full px-4 py-2.5 bg-slate-700/50 glow-border rounded-lg text-white placeholder:text-slate-400 focus:outline-none focus:border-amber-400 transition-all"
                   />
                 </div>
 

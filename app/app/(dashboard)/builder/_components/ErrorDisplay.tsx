@@ -95,7 +95,7 @@ export function ErrorDisplay({
       {retryable && onRetry && (
         <button
           onClick={onRetry}
-          className="mt-4 px-4 py-2 bg-gold-500/20 border border-gold-500/40 text-gold-400 rounded-lg hover:bg-gold-500/30 transition-colors flex items-center gap-2 mx-auto"
+          className="mt-4 px-4 py-2 bg-gold-500/20 glow-border text-gold-400 rounded-lg hover:bg-gold-500/30 transition-colors flex items-center gap-2 mx-auto"
         >
           <RefreshCw className="w-4 h-4" />
           Try Again

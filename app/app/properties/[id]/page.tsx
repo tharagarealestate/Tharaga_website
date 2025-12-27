@@ -1,22 +1,21 @@
 import Image from 'next/image'
-import { Metadata, ResolvingMetadata } from 'next'
+import { Metadata } from 'next'
 import { notFound } from 'next/navigation'
-import { Suspense } from 'react'
 import { MapPin, Bed, Maximize, Car, Building2, Compass, Calendar, Star, ShieldCheck } from 'lucide-react'
 import Breadcrumb from '@/components/Breadcrumb'
 import ClientGallery from '@/components/property/ClientGallery'
 import ClientEMICalculator from '@/components/property/ClientEMICalculator'
 import ClientExpandableText from '@/components/property/ClientExpandableText'
 import ClientCompareChart from '@/components/property/ClientCompareChart'
-import ClientInteractiveMap from '@/components/property/ClientInteractiveMap'
 import ClientMatchScore from '@/components/property/ClientMatchScore'
 import { ContactForm as ContactFormClient } from '@/components/property/ContactForm'
 import RERAVerification from '@/components/property/RERAVerification'
 import RiskFlags from '@/components/property/RiskFlags'
-import DocumentUpload from '@/components/property/DocumentUpload'
 import ChennaiInsights from '@/components/property/ChennaiInsights'
 import AppreciationPrediction from '@/components/property/AppreciationPrediction'
 import ClientMarketAnalysis from '@/components/property/ClientMarketAnalysis'
+import PropertyDocuments from '@/components/property/PropertyDocuments'
+import LocationInsights from '@/components/property/LocationInsights'
 import { getSupabase } from '@/lib/supabase'
 
 export const revalidate = 300 // ISR: 5 minutes
@@ -254,8 +253,7 @@ async function fetchReviews(supabase: ReturnType<typeof getSupabase>, propertyId
 }
 
 export async function generateMetadata(
-  { params }: { params: { id: string } },
-  parent: ResolvingMetadata,
+  { params }: { params: { id: string } }
 ): Promise<Metadata> {
   const data = await fetchProperty(params.id)
   if (!data?.property) return {}
@@ -351,7 +349,7 @@ export default async function PropertyPage({ params }: { params: { id: string } 
             <RERAVerification propertyId={p.id} reraId={p.reraId} />
           </div>
           <div className="bg-slate-800/95 glow-border rounded-lg p-6">
-            <RiskFlags propertyId={p.id} priceINR={p.priceINR} sqft={p.sqft} reraId={p.reraId} />
+            <RiskFlags propertyId={p.id} />
           </div>
           <Description text={p.description} />
           <Amenities items={p.amenities} />
@@ -369,13 +367,10 @@ export default async function PropertyPage({ params }: { params: { id: string } 
               <ClientMarketAnalysis area={p.locality || p.city || ''} propertyId={p.id} />
             </div>
           )}
-          <LocationInsights p={p} />
+          <LocationInsights propertyId={p.id} lat={p.lat} lng={p.lng} />
           <Financials price={p.priceINR} sqft={p.sqft} />
-          <BuilderInfo p={p} builder={builder} />
-          <div className="bg-slate-800/95 border-2 border-amber-300 rounded-lg p-6">
-            <DocumentUpload propertyId={p.id} />
-          </div>
-          <LegalDocs p={p} />
+          <BuilderInfo builder={builder} p={p} />
+          <PropertyDocuments propertyId={p.id} />
           <SimilarProperties items={similar} />
           <Reviews items={reviews} />
         </div>
@@ -400,7 +395,7 @@ function Overview({ p }: { p: any }) {
       <h1 className="text-3xl font-bold text-white">{p.title}</h1>
       <div className="flex items-center gap-2 text-amber-300">
         <MapPin size={18} />
-        <a className="hover:underline text-slate-200 hover:text-amber-300 transition-colors" href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(p.address || `${p.locality||''} ${p.city||''}`)}`} target="_blank" rel="noreferrer">
+        <a className="hover:underline text-white hover:text-amber-300 transition-colors" href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(p.address || `${p.locality||''} ${p.city||''}`)}`} target="_blank" rel="noreferrer">
           {p.address || `${p.locality || ''}, ${p.city || ''}`}
         </a>
       </div>
@@ -431,17 +426,8 @@ function Description({ text }: { text: string }) {
     <div className="bg-slate-800/95 glow-border rounded-lg p-6 prose max-w-none">
       <h2 className="text-2xl font-bold text-white mb-4">Description</h2>
       <ClientExpandableText text={text} maxWords={300} />
-      <div className="mt-4 grid gap-2 md:grid-cols-3">
-        <Highlight>Recently Price Reduced by ₹5L</Highlight>
-        <Highlight>High Demand - 50 views this week</Highlight>
-        <Highlight>Similar properties selling fast</Highlight>
-      </div>
     </div>
   )
-}
-
-function Highlight({ children }: { children: React.ReactNode }){
-  return <div className="rounded-lg bg-amber-500/20 text-amber-300 border border-amber-300/50 px-3 py-2 text-sm">{children}</div>
 }
 
 function Amenities({ items }: { items: string[] }){
@@ -455,7 +441,7 @@ function Amenities({ items }: { items: string[] }){
           const label = String(a || '')
           const isPremium = premium.has(label.toLowerCase())
           return (
-            <div key={i} className={isPremium ? 'rounded-lg border-2 border-amber-300 bg-amber-500/20 px-3 py-2 text-sm text-amber-300 font-medium' : 'rounded-lg border border-amber-300/30 bg-slate-700/50 px-3 py-2 text-sm text-slate-200'}>{label}</div>
+            <div key={i} className={isPremium ? 'rounded-lg border-2 border-amber-300 bg-amber-500/20 px-3 py-2 text-sm text-amber-300 font-medium' : 'rounded-lg border border-amber-300/30 bg-slate-700/50 px-3 py-2 text-sm text-white'}>{label}</div>
           )
         })}
       </div>
@@ -469,55 +455,20 @@ function FloorPlan({ images }: { images: string[] }){
   return (
     <div className="bg-slate-800/95 glow-border rounded-lg p-6">
       <h2 className="text-2xl font-bold text-white mb-4">Floor Plan & Layout</h2>
-      <div className="relative h-80 bg-slate-700/50 border border-amber-300/30 rounded-lg">
+      <div className="relative h-80 bg-slate-700/50 border border-amber-300/30 rounded-lg overflow-hidden">
         <Image src={first} alt="Floor plan" fill className="object-contain" loading="lazy" sizes="100vw" />
       </div>
-      <ul className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
-        <li className="bg-slate-700/50 border border-amber-300/30 rounded-lg p-2 text-white">Living Room: 250 sqft</li>
-        <li className="bg-slate-700/50 border border-amber-300/30 rounded-lg p-2 text-white">Master Bedroom: 180 sqft (with attached bath)</li>
-        <li className="bg-slate-700/50 border border-amber-300/30 rounded-lg p-2 text-white">Bedroom 2: 150 sqft</li>
-        <li className="bg-slate-700/50 border border-amber-300/30 rounded-lg p-2 text-white">Bedroom 3: 140 sqft</li>
-        <li className="bg-slate-700/50 border border-amber-300/30 rounded-lg p-2 text-white">Kitchen: 120 sqft</li>
-        <li className="bg-slate-700/50 border border-amber-300/30 rounded-lg p-2 text-white">Balconies: 100 sqft</li>
-        <li className="bg-amber-500/20 border border-amber-300 rounded-lg p-2 text-amber-300 font-bold col-span-2">Total Carpet Area: 1,640 sqft</li>
-      </ul>
     </div>
   )
 }
 
-function LocationInsights({ p }: { p: any }){
-  return (
-    <div className="bg-slate-800/95 glow-border rounded-lg p-6">
-      <h2 className="text-2xl font-bold text-white mb-4">Location Insights</h2>
-      <ClientInteractiveMap lat={p.lat} lng={p.lng} workplace={null} />
-      <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
-        <div className="bg-slate-700/50 border border-amber-300/30 rounded-lg p-3">
-          <div className="text-slate-400 text-xs uppercase font-semibold mb-1">Connectivity</div>
-          <div className="text-white font-bold">8/10</div>
-        </div>
-        <div className="bg-slate-700/50 border border-amber-300/30 rounded-lg p-3">
-          <div className="text-slate-400 text-xs uppercase font-semibold mb-1">Social Infrastructure</div>
-          <div className="text-white font-bold">9/10</div>
-        </div>
-        <div className="bg-slate-700/50 border border-amber-300/30 rounded-lg p-3">
-          <div className="text-slate-400 text-xs uppercase font-semibold mb-1">Safety</div>
-          <div className="text-white font-bold">9/10</div>
-        </div>
-        <div className="bg-slate-700/50 border border-amber-300/30 rounded-lg p-3">
-          <div className="text-slate-400 text-xs uppercase font-semibold mb-1">Green Spaces</div>
-          <div className="text-white font-bold">7/10</div>
-        </div>
-      </div>
-    </div>
-  )
-}
 
 function formatINR(n?: number | null){
   if (!n) return '—'
   return `₹${Math.round(n).toLocaleString('en-IN')}`
 }
 
-function Financials({ price, sqft }: { price?: number|null; sqft?: number|null }){
+function Financials({ price }: { price?: number|null; sqft?: number|null }){
   const base = price || 0
   const reg = Math.round(base * 0.05)
   const stamp = Math.round(base * 0.06)
@@ -545,7 +496,7 @@ function Financials({ price, sqft }: { price?: number|null; sqft?: number|null }
 function Row({ label, value, bold }: { label: string; value: React.ReactNode; bold?: boolean }){
   return (
     <div className="flex items-center justify-between py-1">
-      <div className="text-slate-400 text-sm">{label}</div>
+      <div className="text-white text-sm">{label}</div>
       <div className={bold ? 'font-bold text-amber-300 text-lg' : 'font-medium text-white'}>{value}</div>
     </div>
   )
@@ -553,69 +504,29 @@ function Row({ label, value, bold }: { label: string; value: React.ReactNode; bo
 
 // EMI calculator moved to client component
 
-function BuilderInfo({ p, builder }: { p: any; builder: any }){
+function BuilderInfo({ builder }: { p: any; builder: any }){
   if (!builder) return null
   return (
-    <div className="mt-8">
-      <h2 className="text-2xl font-semibold mb-3">Builder Information</h2>
-      <div className="rounded border p-4 flex items-center gap-4">
+    <div className="bg-slate-800/95 glow-border rounded-lg p-6">
+      <h2 className="text-2xl font-bold text-white mb-4">Builder Information</h2>
+      <div className="bg-slate-700/50 border border-amber-300/30 rounded-lg p-4 flex items-center gap-4">
         {builder.logoUrl ? (
           <div className="relative w-24 h-24">
             <Image src={builder.logoUrl} alt={builder.name} fill className="object-contain" />
           </div>
         ) : null}
         <div className="space-y-1">
-          <div className="text-xl font-semibold">{builder.name}</div>
-          <div className="text-sm text-gray-700">Founded: {builder.founded || '—'}</div>
-          <div className="text-sm text-gray-700">Total Projects: {builder.totalProjects || '—'}</div>
-          <div className="flex items-center gap-1 text-yellow-600"><Star size={16}/> <span className="font-medium">{builder.reputationScore || '4.7'}/5</span> <span className="text-gray-500">({builder.reviewsCount || 120} reviews)</span></div>
-          <a href={`/builders?name=${encodeURIComponent(builder.name)}`} className="text-primary-600 text-sm hover:underline">View All Properties by Builder</a>
+          <div className="text-xl font-semibold text-white">{builder.name}</div>
+          <div className="text-sm text-white">Founded: {builder.founded || '—'}</div>
+          <div className="text-sm text-white">Total Projects: {builder.totalProjects || '—'}</div>
+          <div className="flex items-center gap-1 text-amber-300"><Star size={16}/> <span className="font-medium">{builder.reputationScore || '4.7'}/5</span> <span className="text-white">({builder.reviewsCount || 120} reviews)</span></div>
+          <a href={`/builders?name=${encodeURIComponent(builder.name)}`} className="text-amber-300 text-sm hover:underline">View All Properties by Builder</a>
         </div>
       </div>
     </div>
   )
 }
 
-function LegalDocs({ p }: { p: any }){
-  return (
-    <div className="mt-8">
-      <h2 className="text-2xl font-semibold mb-3">RERA & Legal Documents</h2>
-      <div className="rounded border divide-y">
-        <DocRow label="RERA Certificate" status="Verified" />
-        <DocRow label="Building Plan Approval" />
-        <DocRow label="Occupancy Certificate" />
-        <DocRow label="Sale Deed Sample" />
-        <DocRow label="Payment Schedule" />
-        <DocRow label="Amenities List" />
-      </div>
-      <div className="mt-3 rounded border p-3 text-sm text-gray-700">
-        <div>Verification artifacts:</div>
-        <ul className="list-disc ml-5">
-          <li>Document snapshots: Available with cryptographic hashes</li>
-          <li>RERA verification: See RERA snapshot below</li>
-          <li>Risk assessment: See risk flags below</li>
-          <li>Legal disclaimer: See disclaimer below</li>
-        </ul>
-        <p className="text-xs text-gray-600 mt-2 italic">
-          These artifacts are automated snapshots for informational purposes only.
-          For formal legal confirmation, consult a licensed property lawyer.
-        </p>
-      </div>
-    </div>
-  )
-}
-
-function DocRow({ label, status }: { label: string; status?: string }){
-  return (
-    <div className="flex items-center justify-between p-3">
-      <div className="text-gray-800">{label}</div>
-      <div className="flex items-center gap-2">
-        {status ? <span className="text-emerald-600 text-sm">✓ {status}</span> : null}
-        <a href="#" className="text-primary-600 text-sm">Download</a>
-      </div>
-    </div>
-  )
-}
 
 function SimilarProperties({ items }: { items: any[] }){
   if (!items?.length) return null
@@ -631,8 +542,8 @@ function SimilarProperties({ items }: { items: any[] }){
             </div>
             <div className="p-3">
               <div className="font-bold text-white line-clamp-1">{it.title}</div>
-              <div className="text-sm text-slate-300">{it.locality || it.city || ''}</div>
-              <div className="text-sm text-amber-300 font-bold mt-1">{formatINR(it.priceINR)} {it.pricePerSqftINR ? <span className="text-slate-400">(₹{it.pricePerSqftINR}/sqft)</span> : null}</div>
+              <div className="text-sm text-white">{it.locality || it.city || ''}</div>
+              <div className="text-sm text-amber-300 font-bold mt-1">{formatINR(it.priceINR)} {it.pricePerSqftINR ? <span className="text-white">(₹{it.pricePerSqftINR}/sqft)</span> : null}</div>
             </div>
           </div>
         ))}
@@ -649,13 +560,13 @@ function Reviews({ items }: { items: any[] }){
   const qualAvg = avg(items.map(i=> i.categories?.quality))
   const ameAvg = avg(items.map(i=> i.categories?.amenities))
   return (
-    <div className="mt-8">
-      <h2 className="text-2xl font-semibold mb-3">Reviews & Ratings</h2>
-      <div className="rounded border p-4">
-        <div className="flex items-center gap-2 text-yellow-600">
-          <Star/> <span className="text-xl font-semibold">{overall}/5</span> <span className="text-gray-500">(from {items.length} reviews)</span>
+    <div className="bg-slate-800/95 glow-border rounded-lg p-6">
+      <h2 className="text-2xl font-bold text-white mb-4">Reviews & Ratings</h2>
+      <div className="bg-slate-700/50 border border-amber-300/30 rounded-lg p-4">
+        <div className="flex items-center gap-2 text-amber-300">
+          <Star/> <span className="text-xl font-semibold text-white">{overall}/5</span> <span className="text-white">(from {items.length} reviews)</span>
         </div>
-        <div className="mt-3 grid md:grid-cols-4 gap-2 text-sm">
+        <div className="mt-3 grid md:grid-cols-4 gap-2 text-sm text-white">
           <div>Location: {locAvg || '—'}/5</div>
           <div>Value for Money: {valAvg || '—'}/5</div>
           <div>Builder Quality: {qualAvg || '—'}/5</div>
@@ -663,13 +574,13 @@ function Reviews({ items }: { items: any[] }){
         </div>
         <div className="mt-4 space-y-3">
           {items.map((r)=> (
-            <div key={r.id} className="border-t pt-3">
+            <div key={r.id} className="border-t border-amber-300/30 pt-3">
               <div className="flex items-center gap-2">
-                {r.avatar ? <Image src={r.avatar} alt={r.name} width={32} height={32} className="rounded-full" /> : <div className="w-8 h-8 rounded-full bg-gray-200"/>}
-                <div className="font-medium">{r.name}</div>
-                <div className="ml-auto text-sm text-gray-600">{r.date ? new Date(r.date).toLocaleDateString() : ''}</div>
+                {r.avatar ? <Image src={r.avatar} alt={r.name} width={32} height={32} className="rounded-full" /> : <div className="w-8 h-8 rounded-full bg-slate-600"/>}
+                <div className="font-medium text-white">{r.name}</div>
+                <div className="ml-auto text-sm text-white">{r.date ? new Date(r.date).toLocaleDateString() : ''}</div>
               </div>
-              <div className="text-sm text-gray-700 mt-1">{r.text}</div>
+              <div className="text-sm text-white mt-1">{r.text}</div>
             </div>
           ))}
         </div>
@@ -689,9 +600,9 @@ function StickySidebar({ p }: { p: any }){
     <div className="lg:sticky lg:top-4">
       <div className="bg-slate-800/95 border-2 border-amber-300 rounded-lg p-6 space-y-4">
         <div className="text-3xl font-bold text-amber-300">{formatINR(p.priceINR)}</div>
-        {p.pricePerSqftINR ? <div className="text-sm text-slate-300">₹{p.pricePerSqftINR}/sqft</div> : null}
+        {p.pricePerSqftINR ? <div className="text-sm text-white">₹{p.pricePerSqftINR}/sqft</div> : null}
         <div className="flex items-center gap-2 text-emerald-400 text-sm"><ShieldCheck size={16}/> RERA Approved</div>
-        <div className="flex items-center gap-1 text-amber-300 text-sm"><Star size={16}/> Builder reputation: 5.0 (120 reviews)</div>
+        <div className="flex items-center gap-1 text-amber-300 text-sm"><Star size={16}/> <span className="text-white">Builder reputation: 5.0 (120 reviews)</span></div>
         <div className="rounded-lg bg-emerald-500/20 border border-emerald-300/50 text-emerald-300 p-3 text-sm">
           <div className="font-bold mb-2">Verified by AI</div>
           <ul className="list-disc ml-5 space-y-1">

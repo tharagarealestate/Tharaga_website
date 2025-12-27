@@ -21,7 +21,7 @@ export async function POST(request: NextRequest) {
     if (!webhookSecret) {
       console.error('RAZORPAY_WEBHOOK_SECRET not configured');
       return NextResponse.json({ error: 'Webhook secret not configured' }, { status: 500 });
-    }
+  }
 
     const expectedSignature = crypto
       .createHmac('sha256', webhookSecret)
@@ -105,7 +105,7 @@ async function handleSubscriptionActivated(subscription: any) {
 async function handlePaymentSuccess(payment: any) {
   const builderId = payment.notes?.builder_id;
   if (!builderId) return;
-
+  
   // Get subscription ID
   const { data: subscription } = await supabase
     .from('builder_subscriptions')
@@ -124,7 +124,7 @@ async function handlePaymentSuccess(payment: any) {
     razorpay_response: payment,
     paid_at: new Date(payment.created_at * 1000).toISOString()
   });
-
+  
   // Update subscription period
   if (subscription) {
     const periodEnd = new Date();
@@ -138,7 +138,7 @@ async function handlePaymentSuccess(payment: any) {
       })
       .eq('id', subscription.id);
   }
-
+  
   // Log event
   if (subscription) {
     await supabase.from('subscription_events').insert({
@@ -154,11 +154,11 @@ async function handlePaymentSuccess(payment: any) {
 async function handleSubscriptionCancelled(subscription: any) {
   await supabase
     .from('builder_subscriptions')
-    .update({ 
+      .update({
       status: 'cancelled',
       cancelled_at: new Date().toISOString()
-    })
-    .eq('razorpay_subscription_id', subscription.id);
+      })
+      .eq('razorpay_subscription_id', subscription.id);
 
   const { data: sub } = await supabase
     .from('builder_subscriptions')
@@ -194,7 +194,7 @@ async function handleSubscriptionResumed(subscription: any) {
 async function handlePaymentFailed(payment: any) {
   const builderId = payment.notes?.builder_id;
   if (!builderId) return;
-
+  
   // Get subscription
   const { data: subscription } = await supabase
     .from('builder_subscriptions')

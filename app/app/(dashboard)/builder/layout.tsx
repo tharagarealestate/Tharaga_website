@@ -6,7 +6,6 @@ import { DemoDataProvider } from './_components/DemoDataProvider'
 import { AdvancedAISidebar } from './_components/AdvancedAISidebar'
 import { TrialUpgradeBanner } from './_components/TrialUpgradeBanner'
 import { AIAssistant } from './_components/AIAssistant'
-import { KeyboardShortcutsHelp } from './_components/KeyboardShortcutsHelp'
 
 export default function BuilderDashboardLayout({ children }: { children: ReactNode }) {
 
@@ -39,9 +38,6 @@ export default function BuilderDashboardLayout({ children }: { children: ReactNo
         
         {/* AI Assistant */}
         <AIAssistant />
-        
-        {/* Keyboard Shortcuts Help */}
-        <KeyboardShortcutsHelp />
         </div>
       </DemoDataProvider>
     </ReactQueryProvider>

@@ -159,13 +159,29 @@ export async function middleware(req: NextRequest) {
             const primaryRoleData = userRoles?.find(r => r.is_primary)
             const primaryRole = primaryRoleData?.role || roles[0] || null
 
-            // Check if user has required role in user_roles table
-            if (!roles.includes(requiredRole) && requiredRole !== 'admin') {
-              // User doesn't have the required role - redirect to home with error
-              const homeUrl = new URL('/', req.url)
-              homeUrl.searchParams.set('error', 'unauthorized')
-              homeUrl.searchParams.set('message', `You need ${requiredRole} role to access this page`)
-              return NextResponse.redirect(homeUrl, { status: 403 })
+            // ADVANCED SECURITY: Admin access is restricted to tharagarealestate@gmail.com ONLY
+            const userEmail = session.user.email || ''
+            const isAdminOwner = userEmail === 'tharagarealestate@gmail.com'
+            
+            // For admin routes, verify admin email access
+            if (requiredRole === 'admin') {
+              if (!isAdminOwner) {
+                // User is not admin owner - deny access
+                const homeUrl = new URL('/', req.url)
+                homeUrl.searchParams.set('error', 'unauthorized')
+                homeUrl.searchParams.set('message', 'Admin Panel is only accessible to authorized administrators')
+                return NextResponse.redirect(homeUrl, { status: 403 })
+              }
+              // Admin owner has access - continue
+            } else {
+              // Check if user has required role in user_roles table
+              if (!roles.includes(requiredRole) && !isAdminOwner) {
+                // User doesn't have the required role and is not admin owner - redirect to home with error
+                const homeUrl = new URL('/', req.url)
+                homeUrl.searchParams.set('error', 'unauthorized')
+                homeUrl.searchParams.set('message', `You need ${requiredRole} role to access this page`)
+                return NextResponse.redirect(homeUrl, { status: 403 })
+              }
             }
           } catch (roleCheckError) {
             console.warn('Middleware: Role check exception, allowing through:', roleCheckError)

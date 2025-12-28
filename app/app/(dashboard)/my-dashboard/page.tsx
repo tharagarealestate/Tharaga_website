@@ -59,28 +59,78 @@ function BuyerDashboardContent() {
     else setGreeting('Good Evening');
   }, []);
 
-  // Non-blocking auth check - render immediately like admin dashboard
+  // ADVANCED SECURITY: Enhanced auth check with role verification
   useEffect(() => {
     // Only run in browser (prevent SSR errors)
     if (typeof window === 'undefined') return;
 
-    // Try to initialize Supabase and get user - non-blocking
-    try {
-      const supabase = getSupabase();
-      supabase.auth.getUser()
-        .then(({ data, error }: any) => {
-          if (data?.user) {
-            setUser(data.user);
-            const name = data.user.user_metadata?.full_name || data.user.email || 'Buyer';
-            setUserName(name.split(' ')[0].split('@')[0]);
+    async function checkAuthAndRole() {
+      try {
+        const supabase = getSupabase();
+        const { data: { user }, error: userError } = await supabase.auth.getUser();
+
+        if (userError || !user) {
+          // User not authenticated - redirect to home and show login modal
+          console.log('[Buyer] User not authenticated, redirecting to home');
+          if (typeof window !== 'undefined') {
+            window.location.href = '/';
+            // Trigger login modal on homepage
+            setTimeout(() => {
+              if (window.__thgOpenAuthModal) {
+                window.__thgOpenAuthModal({ next: '/my-dashboard' });
+              } else if (window.showLoginPromptModal) {
+                window.showLoginPromptModal();
+              }
+            }, 100);
           }
-        })
-        .catch((err: any) => {
-          console.error('[Buyer] Auth error:', err);
-        });
-    } catch (err) {
-      console.error('[Buyer] Supabase init failed:', err);
+          return;
+        }
+
+        // ADVANCED: Verify user has buyer role or is admin owner
+        const userEmail = user.email || '';
+        const isAdminOwner = userEmail === 'tharagarealestate@gmail.com';
+        
+        if (!isAdminOwner) {
+          // Check if user has buyer role
+          try {
+            const { data: roles, error: rolesError } = await supabase
+              .from('user_roles')
+              .select('role')
+              .eq('user_id', user.id)
+              .eq('role', 'buyer');
+
+            if (rolesError || !roles || roles.length === 0) {
+              // User doesn't have buyer role - redirect to home
+              console.log('[Buyer] User does not have buyer role, redirecting');
+              if (typeof window !== 'undefined') {
+                window.location.href = '/?error=unauthorized&message=You need buyer role to access Buyer Dashboard';
+              }
+              return;
+            }
+          } catch (roleError) {
+            console.error('[Buyer] Role check error:', roleError);
+            // On error, redirect to home for security
+            if (typeof window !== 'undefined') {
+              window.location.href = '/?error=unauthorized&message=Unable to verify buyer role';
+            }
+            return;
+          }
+        }
+
+        // User is authenticated and has buyer role (or is admin owner)
+        setUser(user);
+        const name = user.user_metadata?.full_name || user.email || 'Buyer';
+        setUserName(name.split(' ')[0].split('@')[0]);
+      } catch (err) {
+        console.error('[Buyer] Auth check failed:', err);
+        // On error, redirect to home for security
+        if (typeof window !== 'undefined') {
+          window.location.href = '/?error=auth_error';
+        }
+      }
     }
+
+    checkAuthAndRole();
   }, []);
 
   // Load saved properties from Supabase

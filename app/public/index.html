@@ -2141,31 +2141,55 @@
               }
             }).catch(err => console.error('[thg-auth] Role manager init error:', err));
           } else if (event === 'SIGNED_OUT') {
-            // User logged out - REAL-TIME UPDATE
-            console.log('[Portal] SIGNED_OUT event detected, updating Portal menu immediately');
+            // ADVANCED SECURITY: User logged out - COMPLETE STATE RESET
+            console.log('[Portal] SIGNED_OUT event detected, performing complete security reset');
             const portalMenu = document.getElementById('portal-menu');
             if (portalMenu) {
+              // Force close dropdown immediately
               portalMenu.removeAttribute('open');
               portalMenu.setAttribute('data-loading', 'true');
+              portalMenu.removeAttribute('data-user-opened');
+              
               // Clear menu items immediately
               const portalMenuItems = document.getElementById('portal-menu-items');
               if (portalMenuItems) {
                 portalMenuItems.innerHTML = '';
               }
             }
-            // Force immediate update of Portal menu
-            if (window.__updatePortalMenu) {
-              window.__updatePortalMenu();
-            } else if (typeof updatePortalMenu === 'function') {
-              updatePortalMenu();
+            
+            // Clear all auth-related global state
+            if (window.__thgAuthState) {
+              window.__thgAuthState.user = null;
             }
-            // Also clear role manager state if available
+            if (window.__authGateLoggedIn !== undefined) {
+              window.__authGateLoggedIn = false;
+            }
+            
+            // Clear role manager state completely
             if (window.thgRoleManager && typeof window.thgRoleManager.clearState === 'function') {
               try {
                 window.thgRoleManager.clearState();
               } catch(e) {
                 console.debug('[Portal] Error clearing role manager state:', e);
               }
+            }
+            
+            // Force immediate update of Portal menu (will show empty menu for logged out users)
+            if (window.__updatePortalMenu) {
+              window.__updatePortalMenu();
+            } else if (typeof updatePortalMenu === 'function') {
+              updatePortalMenu();
+            }
+            
+            // ADVANCED: Clear any cached Supabase session data
+            try {
+              if (window.supabase && window.supabase.auth) {
+                // Clear session storage
+                const sessionKeys = Object.keys(sessionStorage).filter(key => key.includes('supabase') || key.includes('auth'));
+                sessionKeys.forEach(key => sessionStorage.removeItem(key));
+              }
+            } catch(e) {
+              console.debug('[Portal] Error clearing session storage:', e);
             }
           }
 
@@ -3205,51 +3229,75 @@
             menuHTML += `<a href="/builder" class="portal-link" data-portal-type="builder">🏗️ Builder Dashboard${active}${verified}</a>`;
           }
 
-          // Show Admin Panel ONLY if user has admin role or is admin owner
-          const hasAdminRole = userRoles.includes('admin') || isAdminOwner;
-          if (hasAdminRole) {
-            const shouldShowTick = isAdminOwner || primaryRole === 'admin';
-            const active = shouldShowTick ? ' <span style="color:#10b981">✓</span>' : '';
+          // Show Admin Panel ONLY if user is admin owner (strict email check)
+          // CRITICAL: Admin access is restricted to tharagarealestate@gmail.com only
+          if (isAdminOwner) {
+            const active = primaryRole === 'admin' ? ' <span style="color:#10b981">✓</span>' : '';
             menuHTML += `<a href="/admin" class="portal-link" data-portal-type="admin" style="border-top:1px solid rgba(255,255,255,0.1);margin-top:8px;padding-top:8px;">⚙️ Admin Panel${active}</a>`;
           }
         }
 
-        // Set the final HTML
-        portalMenuItems.innerHTML = menuHTML || '<a href="/my-dashboard" class="portal-link" data-portal-type="buyer">🏠 Buyer Dashboard</a><a href="/builder" class="portal-link" data-portal-type="builder">🏗️ Builder Dashboard</a>';
-        
-        // Add click handlers to portal links
-        const portalLinks = portalMenuItems.querySelectorAll('.portal-link');
-        portalLinks.forEach(function(link) {
-          link.addEventListener('click', function(e) {
-            // If user is not logged in, prevent navigation and show login modal
-            if (!isLoggedIn) {
-              e.preventDefault();
-              e.stopPropagation();
+        // Set the final HTML - only if user is logged in (menuHTML will be empty if not logged in)
+        if (menuHTML) {
+          portalMenuItems.innerHTML = menuHTML;
+          
+          // Add click handlers to portal links with ADVANCED SECURITY
+          const portalLinks = portalMenuItems.querySelectorAll('.portal-link');
+          portalLinks.forEach(function(link) {
+            link.addEventListener('click', function(e) {
+              // CRITICAL: Always re-check auth state on link click (not cached)
+              const currentAuthState = checkUserLoggedIn();
               
-              // Open login modal using existing auth system
-              try {
-                const next = link.getAttribute('href') || '/';
-                if (window.authGate && typeof window.authGate.openLoginModal === 'function') {
-                  window.authGate.openLoginModal({ next: next });
-                } else if (typeof window.__thgOpenAuthModal === 'function') {
-                  window.__thgOpenAuthModal({ next: next });
-                } else {
-                  // Fallback: redirect to login page
-                  window.location.href = '/login?next=' + encodeURIComponent(next);
-                }
-              } catch(err) {
-                console.error('[Portal] Error opening login modal:', err);
-                // Fallback: redirect to login page
-                window.location.href = '/login';
+              // If user is not logged in, prevent navigation and show login modal
+              if (!currentAuthState) {
+                console.log('[Portal] SECURITY: User not logged in on link click, showing login modal');
+                e.preventDefault();
+                e.stopPropagation();
+                e.stopImmediatePropagation();
+                
+                // Close dropdown immediately
+                portalMenu.removeAttribute('open');
+                
+                // Show login prompt modal (the beautiful one we created)
+                showLoginPromptModal();
+                
+                return false;
               }
               
-              // Close dropdown
+              // ADVANCED: For admin links, verify admin email access
+              const portalType = link.getAttribute('data-portal-type');
+              if (portalType === 'admin') {
+                // Get current user email
+                let userEmail = '';
+                if (window.thgRoleManager) {
+                  const state = window.thgRoleManager.getState();
+                  userEmail = state.user?.email || '';
+                }
+                
+                // CRITICAL: Admin access is restricted to tharagarealestate@gmail.com ONLY
+                if (userEmail !== 'tharagarealestate@gmail.com') {
+                  console.log('[Portal] SECURITY: Unauthorized admin access attempt by:', userEmail);
+                  e.preventDefault();
+                  e.stopPropagation();
+                  e.stopImmediatePropagation();
+                  portalMenu.removeAttribute('open');
+                  
+                  // Show error message
+                  alert('Access Denied: Admin Panel is only accessible to authorized administrators.');
+                  return false;
+                }
+              }
+              
+              // If logged in and authorized, allow normal navigation
               portalMenu.removeAttribute('open');
-              return false;
-            }
-            // If logged in, allow normal navigation
+              return true;
+            });
           });
-        });
+        } else {
+          // Fallback: if somehow we get here without menuHTML, ensure dropdown stays closed
+          portalMenuItems.innerHTML = '';
+          portalMenu.removeAttribute('open');
+        }
         
         // CRITICAL: Always re-attach click handler after menu update
         // This ensures handler is present even if summary was recreated
@@ -3267,7 +3315,8 @@
           newSummary.addEventListener('click', function(e) {
             console.log('[Portal] Summary clicked (handler from updatePortalMenu)');
             
-            // REAL-TIME: Always check auth state on click (not cached)
+            // ADVANCED SECURITY: Always check auth state on click (not cached)
+            // This is the PRIMARY security check - must be reliable
             const isLoggedIn = checkUserLoggedIn();
             console.log('[Portal] Real-time auth check - User logged in:', isLoggedIn);
             
@@ -3276,23 +3325,28 @@
               console.log('[Portal] Menu is loading, preventing open');
               e.preventDefault();
               e.stopPropagation();
+              e.stopImmediatePropagation();
               portalMenu.removeAttribute('open');
               return false;
             }
             
-            // REAL-TIME: Check if user is logged in (always fresh check, not cached)
+            // CRITICAL SECURITY: If user is NOT logged in, ALWAYS prevent dropdown and show login modal
+            // This is a hard requirement for user privacy - dashboards must be authenticated
             if (!isLoggedIn) {
               // User not logged in - prevent dropdown from opening and show login modal
-              console.log('[Portal] User not logged in, preventing dropdown and showing login modal');
+              console.log('[Portal] SECURITY: User not logged in, preventing dropdown and showing login modal');
               e.preventDefault();
               e.stopPropagation();
               e.stopImmediatePropagation();
               portalMenu.removeAttribute('open');
-              // Ensure dropdown stays closed
+              // Ensure dropdown stays closed with multiple failsafes
               setTimeout(function() {
                 portalMenu.removeAttribute('open');
               }, 0);
-              // Show beautiful login prompt modal
+              setTimeout(function() {
+                portalMenu.removeAttribute('open');
+              }, 10);
+              // Show beautiful login prompt modal immediately
               showLoginPromptModal();
               return false;
             } else {
@@ -3497,7 +3551,8 @@
 
       // Function to check if user is logged in (synchronous only - no async operations)
       function checkUserLoggedIn() {
-        // Check multiple sources for auth state - ALL SYNCHRONOUS
+        // ADVANCED: Check multiple sources for auth state - ALL SYNCHRONOUS
+        // This function is critical for security - must be reliable
         let isLoggedIn = false;
         
         try {
@@ -3521,8 +3576,30 @@
             isLoggedIn = true;
             return isLoggedIn;
           }
+          
+          // ADVANCED: Also check Supabase session directly (if available synchronously)
+          // Note: This is a best-effort check - async getSession() would be ideal but we need synchronous
+          if (window.supabase && window.supabase.auth) {
+            try {
+              // Check if there's a cached session in localStorage (Supabase stores it there)
+              const supabaseSession = localStorage.getItem('sb-' + (window.supabase.supabaseUrl?.split('//')[1]?.split('.')[0] || 'default') + '-auth-token');
+              if (supabaseSession) {
+                try {
+                  const sessionData = JSON.parse(supabaseSession);
+                  if (sessionData && sessionData.access_token && sessionData.user) {
+                    isLoggedIn = true;
+                    return isLoggedIn;
+                  }
+                } catch(e) {
+                  // Invalid session data - ignore
+                }
+              }
+            } catch(e) {
+              // Ignore localStorage errors
+            }
+          }
         } catch(e) {
-          // Ignore errors - assume not logged in
+          // Ignore errors - assume not logged in (fail secure)
           console.debug('[Portal] Auth check error:', e);
         }
         
@@ -3544,13 +3621,18 @@
             summary.parentNode.replaceChild(newSummary, summary);
             
             newSummary.addEventListener('click', function(e) {
-              console.log('[Portal] Summary clicked');
+              console.log('[Portal] Summary clicked (secondary handler)');
+              
+              // ADVANCED SECURITY: Always check auth state on click (not cached)
+              const isLoggedIn = checkUserLoggedIn();
+              console.log('[Portal] Real-time auth check - User logged in:', isLoggedIn);
               
               // First check if loading
               if (portalMenu.hasAttribute('data-loading')) {
                 console.log('[Portal] Menu is loading, preventing open');
                 e.preventDefault();
                 e.stopPropagation();
+                e.stopImmediatePropagation();
                 portalMenu.removeAttribute('open');
                 // Show loading message
                 const portalMenuItems = document.getElementById('portal-menu-items');
@@ -3560,18 +3642,23 @@
                 return false;
               }
               
-              // Check if user is logged in (synchronous check)
-              const isLoggedIn = checkUserLoggedIn();
-              console.log('[Portal] User logged in:', isLoggedIn);
-              
+              // CRITICAL SECURITY: If user is NOT logged in, ALWAYS prevent dropdown and show login modal
+              // This is a hard requirement for user privacy - dashboards must be authenticated
               if (!isLoggedIn) {
                 // User not logged in - prevent dropdown from opening and show login modal
-                console.log('[Portal] User not logged in, showing login modal');
+                console.log('[Portal] SECURITY: User not logged in, preventing dropdown and showing login modal');
                 e.preventDefault();
                 e.stopPropagation();
                 e.stopImmediatePropagation();
                 portalMenu.removeAttribute('open');
-                // Show beautiful login prompt modal
+                // Ensure dropdown stays closed with multiple failsafes
+                setTimeout(function() {
+                  portalMenu.removeAttribute('open');
+                }, 0);
+                setTimeout(function() {
+                  portalMenu.removeAttribute('open');
+                }, 10);
+                // Show beautiful login prompt modal immediately
                 showLoginPromptModal();
                 return false;
               } else {
@@ -3604,13 +3691,17 @@
                 if (portalMenu.hasAttribute('data-loading') && portalMenu.hasAttribute('open')) {
                   portalMenu.removeAttribute('open');
                 }
-                // REAL-TIME: If user logged out, prevent opening
+                // ADVANCED SECURITY: If user logged out, prevent opening and show login modal
                 const isLoggedIn = checkUserLoggedIn();
-                if (!isLoggedIn && portalMenu.hasAttribute('open')) {
-                  console.log('[Portal] MutationObserver: User logged out, closing dropdown');
-                  portalMenu.removeAttribute('open');
-                  // Show login modal if it was trying to open
-                  showLoginPromptModal();
+                if (!isLoggedIn) {
+                  if (portalMenu.hasAttribute('open')) {
+                    console.log('[Portal] MutationObserver: User logged out, closing dropdown');
+                    portalMenu.removeAttribute('open');
+                    // Show login modal immediately
+                    showLoginPromptModal();
+                  }
+                  // Also prevent any future opening attempts
+                  portalMenu.setAttribute('data-loading', 'true');
                 }
               }
             });

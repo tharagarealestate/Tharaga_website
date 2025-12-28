@@ -77,16 +77,14 @@ export default function AdminVerifyPage() {
         return;
       }
 
-      // Check admin role
-      const { data: roleData } = await supabase
-        .from('user_roles')
-        .select('role')
-        .eq('user_id', user.id)
-        .eq('role', 'admin')
-        .single();
-
-      if (!roleData) {
-        router.push('/unauthorized');
+      // ADVANCED SECURITY: Admin access is restricted to tharagarealestate@gmail.com ONLY
+      const userEmail = user.email || '';
+      const isAdminOwner = userEmail === 'tharagarealestate@gmail.com';
+      
+      if (!isAdminOwner) {
+        // User is not admin owner - deny access
+        console.log('[Admin] Unauthorized admin access attempt by:', userEmail);
+        router.push('/?error=unauthorized&message=Admin Panel is only accessible to authorized administrators');
         return;
       }
 

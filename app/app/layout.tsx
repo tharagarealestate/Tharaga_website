@@ -2533,9 +2533,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               const modalContent = document.createElement('div');
               modalContent.style.cssText = 'width: 100%; max-width: 480px; background: rgba(255, 255, 255, 0.95) !important; backdrop-filter: blur(24px) saturate(1.8) !important; -webkit-backdrop-filter: blur(24px) saturate(1.8) !important; color: #111; border: 1px solid rgba(252, 211, 77, 0.25) !important; border-radius: 24px !important; box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.25), 0 0 12px rgba(252, 211, 77, 0.08), 0 0 24px rgba(252, 211, 77, 0.05), inset 0 0 8px rgba(252, 211, 77, 0.03) !important; transform: translateY(0) scale(1); opacity: 1; transition: transform 0.25s ease, opacity 0.25s ease, border-color 0.3s ease, box-shadow 0.3s ease; position: relative; overflow: hidden;';
               
-              // Gold gradient top border
+              // Gold gradient top border (2px to match main modal exactly)
               const topBorder = document.createElement('div');
-              topBorder.style.cssText = 'position: absolute; top: 0; left: 0; right: 0; height: 4px; background: linear-gradient(90deg, #d4af37, #f5d779, #d4af37);';
+              topBorder.style.cssText = 'position: absolute; top: 0; left: 0; right: 0; height: 2px; border-radius: 24px 24px 0 0; background: linear-gradient(90deg, #d4af37, #1e40af); z-index: 2;';
               modalContent.appendChild(topBorder);
               
               // Header section

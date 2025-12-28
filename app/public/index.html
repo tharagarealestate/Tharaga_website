@@ -1713,7 +1713,8 @@
 /* Modal */
 .thg-auth-overlay{ position:fixed; inset:0; background:rgba(0,0,0,.55); backdrop-filter:saturate(140%) blur(6px); display:flex; align-items:center; justify-content:center; z-index:${Z_BASE+2}; visibility:hidden; opacity:0; transition:opacity .18s ease, visibility 0s linear .18s; }
 .thg-auth-overlay[aria-hidden="false"]{ visibility:visible; opacity:1; transition:opacity .18s ease, visibility 0s linear 0s; }
-.thg-auth-modal{ width:100%; max-width:420px; background:rgba(255, 255, 255, 0.95) !important; backdrop-filter: blur(24px) saturate(1.8) !important; -webkit-backdrop-filter: blur(24px) saturate(1.8) !important; color:#111 !important; border:1px solid rgba(255, 255, 255, 0.3) !important; border-radius:24px !important; box-shadow:0 8px 32px 0 rgba(31, 38, 135, 0.25), 0 0 0 1px rgba(212, 175, 55, 0.2) !important; transform:translateY(10px) scale(.98); opacity:0; transition:transform .18s ease, opacity .18s ease; position:relative; overflow:hidden; }
+.thg-auth-modal{ width:100%; max-width:420px; background:rgba(255, 255, 255, 0.95) !important; backdrop-filter: blur(24px) saturate(1.8) !important; -webkit-backdrop-filter: blur(24px) saturate(1.8) !important; color:#111 !important; border:1px solid rgba(252, 211, 77, 0.25) !important; border-radius:24px !important; box-shadow:0 8px 32px 0 rgba(31, 38, 135, 0.25), 0 0 12px rgba(252, 211, 77, 0.08), 0 0 24px rgba(252, 211, 77, 0.05), inset 0 0 8px rgba(252, 211, 77, 0.03) !important; transform:translateY(10px) scale(.98); opacity:0; transition:transform .18s ease, opacity .18s ease, border-color 0.3s ease, box-shadow 0.3s ease; position:relative; overflow:hidden; }
+.thg-auth-modal:hover{ border-color:rgba(252, 211, 77, 0.4) !important; box-shadow:0 8px 32px 0 rgba(31, 38, 135, 0.25), 0 0 16px rgba(252, 211, 77, 0.12), 0 0 32px rgba(252, 211, 77, 0.08), inset 0 0 12px rgba(252, 211, 77, 0.05) !important; }
 .thg-auth-overlay[aria-hidden="false"] .thg-auth-modal{ transform:translateY(0) scale(1); opacity:1; }
 .thg-auth-modal::before{ content:""; position:absolute; top:0; left:0; right:0; height:2px; border-radius:24px 24px 0 0; background:linear-gradient(90deg, #d4af37, #1e40af); z-index:2; }
 .thg-auth-header{ display:flex; align-items:center; justify-content:space-between; padding:16px 18px; border-bottom:1px solid rgba(30,64,175,.12); position:relative; z-index:1; }
@@ -3352,10 +3353,20 @@
         const modalContent = document.createElement('div');
         modalContent.style.cssText = 'width: 100%; max-width: 480px; background: rgba(255, 255, 255, 0.95) !important; backdrop-filter: blur(24px) saturate(1.8) !important; -webkit-backdrop-filter: blur(24px) saturate(1.8) !important; color: #111; border: 1px solid rgba(252, 211, 77, 0.25) !important; border-radius: 24px !important; box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.25), 0 0 12px rgba(252, 211, 77, 0.08), 0 0 24px rgba(252, 211, 77, 0.05), inset 0 0 8px rgba(252, 211, 77, 0.03) !important; transform: translateY(0) scale(1); opacity: 1; transition: transform 0.25s ease, opacity 0.25s ease, border-color 0.3s ease, box-shadow 0.3s ease; position: relative; overflow: hidden;';
         
-        // Gold gradient top border
+        // Gold gradient top border (2px to match main modal exactly)
         const topBorder = document.createElement('div');
-        topBorder.style.cssText = 'position: absolute; top: 0; left: 0; right: 0; height: 4px; background: linear-gradient(90deg, #d4af37, #f5d779, #d4af37);';
+        topBorder.style.cssText = 'position: absolute; top: 0; left: 0; right: 0; height: 2px; border-radius: 24px 24px 0 0; background: linear-gradient(90deg, #d4af37, #1e40af); z-index: 2;';
         modalContent.appendChild(topBorder);
+        
+        // Add hover effect for elegant glowing border
+        modalContent.addEventListener('mouseenter', function() {
+          modalContent.style.borderColor = 'rgba(252, 211, 77, 0.4)';
+          modalContent.style.boxShadow = '0 8px 32px 0 rgba(31, 38, 135, 0.25), 0 0 16px rgba(252, 211, 77, 0.12), 0 0 32px rgba(252, 211, 77, 0.08), inset 0 0 12px rgba(252, 211, 77, 0.05)';
+        });
+        modalContent.addEventListener('mouseleave', function() {
+          modalContent.style.borderColor = 'rgba(252, 211, 77, 0.25)';
+          modalContent.style.boxShadow = '0 8px 32px 0 rgba(31, 38, 135, 0.25), 0 0 12px rgba(252, 211, 77, 0.08), 0 0 24px rgba(252, 211, 77, 0.05), inset 0 0 8px rgba(252, 211, 77, 0.03)';
+        });
         
         // Header section
         const header = document.createElement('div');
@@ -3407,16 +3418,6 @@
         modalContent.appendChild(header);
         modalContent.appendChild(body);
         modal.appendChild(modalContent);
-        
-        // Add hover effect for elegant glowing border
-        modalContent.addEventListener('mouseenter', function() {
-          modalContent.style.borderColor = 'rgba(252, 211, 77, 0.4)';
-          modalContent.style.boxShadow = '0 8px 32px 0 rgba(31, 38, 135, 0.25), 0 0 16px rgba(252, 211, 77, 0.12), 0 0 32px rgba(252, 211, 77, 0.08), inset 0 0 12px rgba(252, 211, 77, 0.05)';
-        });
-        modalContent.addEventListener('mouseleave', function() {
-          modalContent.style.borderColor = 'rgba(252, 211, 77, 0.25)';
-          modalContent.style.boxShadow = '0 8px 32px 0 rgba(31, 38, 135, 0.25), 0 0 12px rgba(252, 211, 77, 0.08), 0 0 24px rgba(252, 211, 77, 0.05), inset 0 0 8px rgba(252, 211, 77, 0.03)';
-        });
         
         document.body.appendChild(modal);
         document.body.style.overflow = 'hidden';

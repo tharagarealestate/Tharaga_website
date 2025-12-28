@@ -1,12 +1,12 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Zap, CheckCircle2, AlertCircle, X } from 'lucide-react'
 import { motion } from 'framer-motion'
 
-export default function IntegrationsPage() {
+function IntegrationsPageContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [calendarStatus, setCalendarStatus] = useState<{
@@ -405,6 +405,24 @@ export default function IntegrationsPage() {
         </div>
       </motion.div>
     </div>
+  )
+}
+
+export default function IntegrationsPage() {
+  return (
+    <Suspense fallback={
+      <div className="w-full">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-white mb-2">Integrations</h1>
+          <p className="text-slate-400">Connect your favorite tools and services</p>
+        </div>
+        <div className="flex min-h-[300px] items-center justify-center">
+          <div className="animate-spin h-8 w-8 border-2 border-amber-300 border-t-transparent rounded-full" />
+        </div>
+      </div>
+    }>
+      <IntegrationsPageContent />
+    </Suspense>
   )
 }
 

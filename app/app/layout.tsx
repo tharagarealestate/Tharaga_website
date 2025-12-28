@@ -535,17 +535,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       document.body.appendChild(overlay);
     }
 
-    let confirmEl = document.querySelector('.thg-confirm');
-    if (!confirmEl){
-      confirmEl = createEl('div','thg-confirm',{'aria-hidden':'true','role':'dialog','aria-modal':'true'});
-      confirmEl.innerHTML = '<div class="thg-confirm-card" role="document">' +
-        '<div class="thg-confirm-msg">Are you sure you want to log out?</div>' +
-        '<div class="thg-confirm-actions">' +
-        '<button type="button" class="thg-btn thg-confirm-cancel">Cancel</button>' +
-        '<button type="button" class="thg-btn thg-btn-danger thg-confirm-ok">Log out</button>' +
-        '</div></div>';
-      document.body.appendChild(confirmEl);
-    }
+    // Logout confirmation dialog removed - logout happens directly
+    let confirmEl = null;
 
     // Respect global flag to hide the header button completely
     try {
@@ -633,7 +624,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       // Also check on popstate (back/forward)
       window.addEventListener('popstate', checkAndHideOnMobile);
     } catch(_){}
-    return { wrap, btn, menu, overlay, confirmEl };
+    return { wrap, btn, menu, overlay, confirmEl: null };
   }
 
   const state = { user: null, loading: true, nextUrl: null, supabaseReady: false, sub: null };
@@ -734,7 +725,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       }, 100);
     }
   };
-  function openConfirm(ui){ ui.confirmEl.setAttribute('aria-hidden','false'); }
+  // Logout confirmation removed - logout happens directly
   // Broadcast current auth state (email only) to child iframes, sibling tabs, and embedded forms
   function broadcastAuth(user){
     var loggedIn = !!(user && user.email);
@@ -760,12 +751,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       try { if (window.parent && window.parent !== window) window.parent.postMessage(payload, '*'); } catch(__) {}
     } catch(_) {}
   }
-  function closeConfirm(ui){ ui.confirmEl.setAttribute('aria-hidden','true'); }
+  // closeConfirm function removed - logout happens directly
 
   function bindUI(ui){
     ui.btn.addEventListener('click', function(e){ e.preventDefault(); if (state.user && state.user.email){ toggleMenu(ui); } else { openAuthModal(ui, { next: location.pathname + location.search }); } });
     ui.btn.addEventListener('keydown', function(e){ if ((e.key === 'ArrowDown' || e.key === 'Enter') && state.user && state.user.email){ e.preventDefault(); openMenu(ui); } });
-    ui.menu.addEventListener('click', function(e){ const item = e.target.closest('.thg-auth-item[role="menuitem"]'); if (!item) return; const act = item.getAttribute('data-action'); if (act === 'profile'){ closeMenu(ui); location.href = AUTH_NAV.profile; return; } if (act === 'dashboard'){ closeMenu(ui); location.href = AUTH_NAV.dashboard; return; } if (act === 'settings' && AUTH_NAV.settings){ closeMenu(ui); location.href = AUTH_NAV.settings; return; } if (act === 'logout'){ closeMenu(ui); openConfirm(ui); } });
+    ui.menu.addEventListener('click', function(e){ const item = e.target.closest('.thg-auth-item[role="menuitem"]'); if (!item) return; const act = item.getAttribute('data-action'); if (act === 'profile'){ closeMenu(ui); location.href = AUTH_NAV.profile; return; } if (act === 'dashboard'){ closeMenu(ui); location.href = AUTH_NAV.dashboard; return; } if (act === 'settings' && AUTH_NAV.settings){ closeMenu(ui); location.href = AUTH_NAV.settings; return; } if (act === 'logout'){ closeMenu(ui); (async function(){ try { await window.supabase?.auth?.signOut?.(); } catch(_){ } try { broadcastAuth(null); } catch(_){ } })(); } });
     ui.menu.addEventListener('keydown', function(e){ if (e.key === 'Escape'){ e.preventDefault(); closeMenu(ui); ui.btn.focus(); return; } if (['ArrowDown','ArrowUp','Home','End'].indexOf(e.key) === -1) return; e.preventDefault(); const items = Array.prototype.slice.call(ui.menu.querySelectorAll('.thg-auth-item[role="menuitem"]')); const idx = items.indexOf(document.activeElement); if (!items.length) return; if (e.key === 'Home'){ items[0].focus(); return; } if (e.key === 'End'){ items[items.length - 1].focus(); return; } const next = e.key === 'ArrowDown' ? (idx + 1 + items.length) % items.length : (idx - 1 + items.length) % items.length; items[next].focus(); });
     document.addEventListener('click', function(e){ if (ui.menu.getAttribute('aria-hidden') === 'true') return; if (!ui.menu.contains(e.target) && e.target !== ui.btn && !ui.btn.contains(e.target)){ closeMenu(ui); } });
     
@@ -812,14 +803,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       if (updateBtn) updateBtn.addEventListener('click', async function(){ if (!state.supabaseReady){ showError(ui.overlay, 'Authentication is not initialized.'); return; } const passwordEl = ui.overlay.querySelector('#thg-up-password'); if (!passwordEl) return; const password = passwordEl.value; if (!password || password.length < 8) { showError(ui.overlay, 'Password must be at least 8 characters.'); return; } clearError(ui.overlay); setModalLoading(ui.overlay, true); try{ const { error } = await window.supabase.auth.updateUser({ password }); if (error) { showError(ui.overlay, error.message || 'Failed to update password.'); } else { showPanel(ui.overlay, 'signin', 'Sign in'); showError(ui.overlay, 'Password updated. Please sign in.'); } } catch(ex){ showError(ui.overlay, 'Network error. Please try again.'); } finally { setModalLoading(ui.overlay, false); } });
     }
     
-    ui.confirmEl.querySelector('.thg-confirm-cancel').addEventListener('click', function(){ closeConfirm(ui); });
-    ui.confirmEl.addEventListener('click', function(e){ if (e.target === ui.confirmEl) closeConfirm(ui); });
-    ui.confirmEl.querySelector('.thg-confirm-ok').addEventListener('click', async function(){
-      try { await window.supabase?.auth?.signOut?.(); } catch(_){ }
-      // Proactively broadcast sign-out so embedded forms unlock immediately
-      try { broadcastAuth(null); } catch(_){ }
-      closeConfirm(ui);
-    });
+    // Logout confirmation dialog event listeners removed - logout happens directly
     window.__thgOpenAuthModal = function(opts){ openAuthModal(ui, opts); };
     // Expose UI globally for external access
     window.__thgAuthUI = ui;

@@ -2123,19 +2123,11 @@
               }
             }
             
-            // Initialize role manager and fetch roles immediately
-            window.thgRoleManager.init(state.user, ui).then(async () => {
-              // CRITICAL: Fetch roles immediately after init to ensure they're ready
-              if (window.thgRoleManager && window.thgRoleManager.fetchRoles) {
-                try {
-                  await window.thgRoleManager.fetchRoles(true); // Force fetch
-                  console.log('[thg-auth] Roles fetched, updating Portal menu');
-                } catch (err) {
-                  console.error('[thg-auth] Error fetching roles:', err);
-                }
-              }
-              
-              // CRITICAL: Update Portal menu immediately after roles are fetched
+            // Initialize role manager - init() already fetches roles internally, no need for redundant fetch
+            window.thgRoleManager.init(state.user, ui).then(() => {
+              // CRITICAL: Update Portal menu IMMEDIATELY after init completes (roles are already fetched by init)
+              // This ensures instant dropdown availability - no waiting for redundant fetchRoles()
+              console.log('[thg-auth] Role manager initialized, updating Portal menu instantly');
               if (window.__updatePortalMenu) {
                 window.__updatePortalMenu();
               }
@@ -3203,6 +3195,12 @@
           return;
         }
 
+        // CRITICAL: Remove loading flag IMMEDIATELY at START when user is logged in and roles are ready
+        // This ensures Portal dropdown can open instantly after login - no delay waiting for menu HTML to be set
+        if (isLoggedIn) {
+          portalMenu.removeAttribute('data-loading');
+        }
+
         // Show portal menu
         portalMenu.style.display = '';
         
@@ -3357,8 +3355,11 @@
           }, true); // Use capture phase for early interception
         }
         
-        // CRITICAL: Only remove loading flag AFTER content is fully populated
-        portalMenu.removeAttribute('data-loading');
+        // CRITICAL: Loading flag already removed at START for logged-in users (instant dropdown availability)
+        // For logged-out users, ensure loading flag is removed if menu content is ready
+        if (!isLoggedIn && menuHTML) {
+          portalMenu.removeAttribute('data-loading');
+        }
         
         // CRITICAL: Don't automatically close dropdown - let user control it
         if (!portalMenu.hasAttribute('data-user-opened')) {
@@ -3709,10 +3710,12 @@
           observer.observe(portalMenu, { attributes: true, attributeFilter: ['open'] });
           
           // CRITICAL: Listen for auth state changes - REAL-TIME LOGOUT DETECTION
+          // NOTE: This is a secondary handler - main handler at line 2103 handles most logic
+          // This handler ensures immediate menu update for instant dropdown availability
           if (window.supabase && window.supabase.auth) {
             window.supabase.auth.onAuthStateChange((event, session) => {
               if (event === 'SIGNED_IN' && session?.user) {
-                // Set loading state to prevent opening with wrong content
+                // Set loading state temporarily to prevent opening with wrong content
                 portalMenu.setAttribute('data-loading', 'true');
                 const portalMenuItems = document.getElementById('portal-menu-items');
                 if (portalMenuItems) {
@@ -3721,6 +3724,16 @@
                 // Only close if user hasn't manually opened it
                 if (!portalMenu.hasAttribute('data-user-opened')) {
                   portalMenu.removeAttribute('open');
+                }
+                // CRITICAL: Trigger immediate menu update (main handler will also update, but this ensures no delay)
+                // updatePortalMenu() will remove data-loading immediately when roles are ready
+                if (window.__updatePortalMenu) {
+                  // Use setTimeout(0) to ensure this runs after main handler's init() starts
+                  setTimeout(() => {
+                    if (window.__updatePortalMenu) {
+                      window.__updatePortalMenu();
+                    }
+                  }, 0);
                 }
               } else if (event === 'SIGNED_OUT') {
                 // REAL-TIME: User logged out - immediately prevent dropdown from opening

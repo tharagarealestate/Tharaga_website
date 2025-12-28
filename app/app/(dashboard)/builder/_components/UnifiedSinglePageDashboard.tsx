@@ -13,7 +13,6 @@ import { PipelineSection } from './sections/PipelineSection'
 import { PropertiesSection } from './sections/PropertiesSection'
 import { ClientOutreachSection } from './sections/ClientOutreachSection'
 import { BehaviorAnalyticsSection } from './sections/BehaviorAnalyticsSection'
-import { SettingsSection } from './sections/SettingsSection'
 import { ViewingsSection } from './sections/ViewingsSection'
 import { NegotiationsSection } from './sections/NegotiationsSection'
 import { ContractsSection } from './sections/ContractsSection'
@@ -68,7 +67,6 @@ export function UnifiedSinglePageDashboard({ activeSection, onSectionChange }: U
     contracts: ContractsSection,
     'deal-lifecycle': DealLifecycleSection,
     'ultra-automation-analytics': UltraAutomationAnalyticsSection,
-    settings: SettingsSection,
   }
 
   const ActiveComponent = sectionComponents[activeSection] || OverviewSection

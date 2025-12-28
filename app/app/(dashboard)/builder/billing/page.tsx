@@ -1,11 +1,11 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { motion } from 'framer-motion';
 import { QuotaUsageWidget } from '@/components/pricing/QuotaUsageWidget';
 import { PlanSelector } from '@/components/pricing/PlanSelector';
 import { UsageAnalytics } from '@/components/pricing/UsageAnalytics';
 import { UpgradePrompt } from '@/components/pricing/UpgradePrompt';
-import { BuilderPageWrapper } from '../_components/BuilderPageWrapper';
 
 interface Subscription {
   id: string;
@@ -100,23 +100,32 @@ export default function BillingPage() {
 
   if (loading) {
     return (
-      <BuilderPageWrapper
-        title="Billing & Usage"
-        description="Manage your subscription and view usage analytics"
-      >
-        <div className="flex min-h-[300px] items-center justify-center">
-          <div className="animate-spin h-8 w-8 border-2 border-[#D4AF37] border-t-transparent rounded-full" />
+      <div className="w-full">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-white mb-2">Billing & Usage</h1>
+          <p className="text-slate-400">Manage your subscription and view usage analytics</p>
         </div>
-      </BuilderPageWrapper>
+        <div className="flex min-h-[300px] items-center justify-center">
+          <div className="animate-spin h-8 w-8 border-2 border-amber-300 border-t-transparent rounded-full" />
+        </div>
+      </div>
     );
   }
 
   return (
-    <BuilderPageWrapper
-      title="Billing & Usage"
-      description="Manage your subscription and view usage analytics"
-      noContainer
-    >
+    <div className="w-full">
+      {/* Header */}
+      <div className="mb-8">
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4 }}
+        >
+          <h1 className="text-3xl font-bold text-white mb-2">Billing & Usage</h1>
+          <p className="text-slate-400">Manage your subscription and view usage analytics</p>
+        </motion.div>
+      </div>
+
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Quota Widget */}
         <div className="mb-8">
@@ -130,9 +139,17 @@ export default function BillingPage() {
 
         {/* Plan Selector */}
         <div className="mb-8">
-          <h2 className="text-2xl font-bold text-slate-900 mb-6">
-            Available Plans
-          </h2>
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-2xl font-bold text-slate-900">
+              Available Plans
+            </h2>
+            <a
+              href="/pricing"
+              className="text-sm font-medium text-amber-300 hover:text-amber-200 transition-colors"
+            >
+              View Full Pricing →
+            </a>
+          </div>
           <PlanSelector currentPlanId={subscription?.plan_id} />
         </div>
 
@@ -179,7 +196,7 @@ export default function BillingPage() {
           />
         )}
       </div>
-    </BuilderPageWrapper>
+    </div>
   );
 }
 

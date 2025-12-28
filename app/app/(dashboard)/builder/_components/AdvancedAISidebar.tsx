@@ -28,7 +28,8 @@ import {
   Zap,
   BarChart3,
   Building,
-  Clock
+  Clock,
+  CreditCard
 } from 'lucide-react'
 
 interface SubscriptionData {
@@ -72,7 +73,6 @@ export function AdvancedAISidebar() {
     '/builder/properties': 'properties',
     '/builder/messaging': 'client-outreach',
     '/behavior-tracking': 'behavior-analytics',
-    '/builder/settings': 'settings',
   }
   
   const getSectionFromHref = (href: string): string | null => {
@@ -298,8 +298,20 @@ export function AdvancedAISidebar() {
         ]
       },
       {
+        label: 'Settings',
         items: [
-          { href: createSectionUrl('settings'), label: 'Settings', icon: Settings, requiresPro: false },
+          { 
+            href: '/builder/integrations', 
+            label: 'Integrations', 
+            icon: Zap, 
+            requiresPro: false,
+          },
+          { 
+            href: '/builder/billing', 
+            label: 'Billing', 
+            icon: CreditCard, 
+            requiresPro: false,
+          },
         ]
       },
     ]

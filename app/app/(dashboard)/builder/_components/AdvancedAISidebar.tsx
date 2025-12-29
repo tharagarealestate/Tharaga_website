@@ -244,14 +244,15 @@ export function AdvancedAISidebar() {
       {
         label: 'Properties',
         items: [
-          { 
-            href: createSectionUrl('properties'), 
-            label: 'Properties', 
-            icon: Building2, 
+          {
+            href: '/builder/properties',
+            label: 'Properties',
+            icon: Building2,
             requiresPro: false,
             submenu: [
-              { href: createSectionUrl('properties'), label: 'Manage' },
+              { href: '/builder/properties', label: 'All Properties' },
               { href: '/builder/properties/performance', label: 'Performance' },
+              { href: '/builder/properties/distribution', label: 'Distribution' },
             ]
           },
         ]
@@ -259,14 +260,14 @@ export function AdvancedAISidebar() {
       {
         label: 'Communication',
         items: [
-          { 
-            href: createSectionUrl('client-outreach'), 
-            label: 'Client Outreach', 
-            icon: MessageSquare, 
+          {
+            href: '/builder/communications',
+            label: 'Communications',
+            icon: MessageSquare,
             requiresPro: false,
             submenu: [
-              { href: createSectionUrl('client-outreach'), label: 'Send Messages' },
-              { href: '/builder/communications', label: 'Communications' },
+              { href: '/builder/communications', label: 'All Messages' },
+              { href: createSectionUrl('client-outreach'), label: 'Client Outreach' },
             ]
           },
         ]
@@ -274,8 +275,8 @@ export function AdvancedAISidebar() {
       {
         label: 'Analytics & Insights',
         items: [
-          { href: createSectionUrl('behavior-analytics'), label: 'Behavior Analytics', icon: BarChart3, requiresPro: false },
           { href: '/builder/analytics', label: 'Analytics', icon: TrendingUp, requiresPro: false },
+          { href: createSectionUrl('behavior-analytics'), label: 'Behavior Analytics', icon: BarChart3, requiresPro: false },
           { href: createSectionUrl('deal-lifecycle'), label: 'Deal Lifecycle', icon: Activity, requiresPro: false },
           { href: createSectionUrl('ultra-automation-analytics'), label: 'Automation Analytics', icon: Sparkles, requiresPro: false },
         ]
@@ -472,15 +473,15 @@ export function AdvancedAISidebar() {
                                 window.location.href = '/pricing'
                                 return
                               }
-                              
+
                               if (shouldUseUnifiedDashboard(item.href)) {
                                 e.preventDefault()
                                 const unifiedUrl = getUnifiedDashboardUrl(item.href)
                                 router.push(unifiedUrl)
                                 return
                               }
-                              
-                              // For direct routes like /builder/integrations and /builder/billing
+
+                              // For direct routes like /builder/leads, /builder/integrations, /builder/billing
                               // Let the Link component handle navigation normally
                             }}
                             className={cn(
@@ -619,8 +620,10 @@ export function AdvancedAISidebar() {
                                           if (shouldUseUnifiedDashboard(sub.href)) {
                                             e.preventDefault()
                                             const unifiedUrl = getUnifiedDashboardUrl(sub.href)
-                                            window.location.href = unifiedUrl
+                                            router.push(unifiedUrl)
                                           }
+                                          // For direct routes like /builder/leads and /builder/leads/pipeline
+                                          // Let the Link component handle navigation normally
                                         }}
                                         className={cn(
                                           "block px-3 py-1.5 text-xs rounded-lg transition-all duration-200",

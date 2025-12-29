@@ -66,10 +66,9 @@ export function AdvancedAISidebar() {
   const router = useRouter()
   
   // Map routes to unified dashboard sections
+  // Note: /builder/leads and /builder/leads/pipeline are now direct routes, not unified dashboard sections
   const routeToSectionMap: Record<string, string> = {
     '/builder': 'overview',
-    '/builder/leads': 'leads',
-    '/builder/leads/pipeline': 'pipeline',
     '/builder/properties': 'properties',
     '/builder/messaging': 'client-outreach',
     '/behavior-tracking': 'behavior-analytics',
@@ -226,15 +225,15 @@ export function AdvancedAISidebar() {
       {
         label: 'Sales & Leads',
         items: [
-          { 
-            href: createSectionUrl('leads'), 
-            label: 'Leads', 
-            icon: Users, 
-            badge: isLoadingCount ? null : (leadCount?.total ?? 0), 
+          {
+            href: '/builder/leads',
+            label: 'Leads',
+            icon: Users,
+            badge: isLoadingCount ? null : (leadCount?.total ?? 0),
             requiresPro: false,
             submenu: [
-              { href: createSectionUrl('leads'), label: 'All Leads' },
-              { href: createSectionUrl('pipeline'), label: 'Pipeline' },
+              { href: '/builder/leads', label: 'All Leads' },
+              { href: '/builder/leads/pipeline', label: 'Pipeline' },
             ]
           },
           { href: createSectionUrl('viewings'), label: 'Viewings', icon: Calendar, requiresPro: false },

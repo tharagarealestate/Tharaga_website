@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { createClient } from '@/lib/supabase/client';
+import { getSupabase } from '@/lib/supabase';
 import { motion } from 'framer-motion';
 import { CheckCircle2, XCircle, RefreshCw, Link2, Settings, Activity, Loader2, AlertCircle } from 'lucide-react';
 
@@ -14,7 +14,7 @@ export default function ZohoCRMIntegration() {
   const [dataCenter, setDataCenter] = useState('in');
   const [error, setError] = useState('');
   
-  const supabase = createClient();
+  const supabase = getSupabase();
   
   useEffect(() => {
     fetchConnection();

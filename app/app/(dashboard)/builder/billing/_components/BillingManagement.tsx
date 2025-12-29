@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { createClient } from '@/lib/supabase/client';
+import { getSupabase } from '@/lib/supabase';
 import { motion } from 'framer-motion';
 import { 
   CreditCard, 
@@ -102,7 +102,7 @@ export default function BillingManagement() {
   const [error, setError] = useState('');
   const [activeTab, setActiveTab] = useState('overview');
   
-  const supabase = createClient();
+  const supabase = getSupabase();
   
   useEffect(() => {
     loadRazorpayScript();

@@ -66,12 +66,11 @@ export function AdvancedAISidebar() {
   const router = useRouter()
   
   // Map routes to unified dashboard sections
-  // Note: /builder/leads and /builder/leads/pipeline are now direct routes, not unified dashboard sections
+  // Note: Direct routes like /builder/leads, /builder/properties, /builder/analytics, etc. are NOT in this map
+  // Only unified dashboard sections that use ?section= parameter should be here
   const routeToSectionMap: Record<string, string> = {
     '/builder': 'overview',
-    '/builder/properties': 'properties',
-    '/builder/messaging': 'client-outreach',
-    '/behavior-tracking': 'behavior-analytics',
+    // All other routes are now direct routes (standalone pages)
   }
   
   const getSectionFromHref = (href: string): string | null => {

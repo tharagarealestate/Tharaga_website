@@ -59,7 +59,7 @@ export async function POST(request: NextRequest) {
       );
     }
     
-    const planDetails = plan.pricing[billingCycle];
+    const planDetails = plan.pricing[billing_cycle];
     const amount = planDetails.amount; // in paise
     
     // Create or get Razorpay customer
@@ -93,7 +93,7 @@ export async function POST(request: NextRequest) {
     
     // Create Razorpay subscription
     const subscription = await razorpay.subscriptions.create({
-      plan_id: planDetails.razorpay_plan_id || `plan_${plan_type}_${billingCycle}`, // You'll need to create these in Razorpay
+      plan_id: planDetails.razorpay_plan_id || `plan_${plan_type}_${billing_cycle}`, // You'll need to create these in Razorpay
       customer_id: customerId,
       total_count: billing_cycle === 'yearly' ? 1 : billing_cycle === 'quarterly' ? 1 : 1,
       quantity: 1,
@@ -112,7 +112,7 @@ export async function POST(request: NextRequest) {
       .upsert({
         builder_id: builder.id,
         razorpay_subscription_id: subscription.id,
-        razorpay_plan_id: planDetails.razorpay_plan_id || `plan_${plan_type}_${billingCycle}`,
+        razorpay_plan_id: planDetails.razorpay_plan_id || `plan_${plan_type}_${billing_cycle}`,
         razorpay_customer_id: customerId,
         plan_type: plan_type,
         billing_cycle: billing_cycle,

@@ -52,6 +52,7 @@ interface LeadsListProps {
   onSelectLead?: (lead: Lead) => void;
   initialFilters?: Partial<FilterConfig>;
   showInlineFilters?: boolean;
+  onStatsUpdate?: (stats: StatsSummary) => void;
 }
 
 interface StatsSummary {
@@ -62,7 +63,7 @@ interface StatsSummary {
   average_score: number;
 }
 
-export function LeadsList({ onSelectLead, initialFilters, showInlineFilters = true }: LeadsListProps) {
+export function LeadsList({ onSelectLead, initialFilters, showInlineFilters = true, onStatsUpdate }: LeadsListProps) {
   const supabase = useMemo(() => getSupabase(), []);
   const { trackBehavior } = useBehaviorTracking();
   const {
@@ -277,14 +278,20 @@ export function LeadsList({ onSelectLead, initialFilters, showInlineFilters = tr
           }
 
           setLeads(leadsData);
-          setStats({
+          const newStats = {
             total_leads: statsData.total_leads ?? 0,
             hot_leads: statsData.hot_leads ?? 0,
             warm_leads: statsData.warm_leads ?? 0,
             pending_interactions: statsData.pending_interactions ?? 0,
             average_score: statsData.average_score ?? 0,
-          });
+          };
+          setStats(newStats);
           setTotalPages(Math.max(1, pagination.total_pages ?? 1));
+
+          // Notify parent of stats update
+          if (onStatsUpdate) {
+            onStatsUpdate(newStats);
+          }
 
           const activeFilters = Object.entries(filters)
             .filter(([key, value]) => {

@@ -1,224 +1,271 @@
-# ✅ SmartScore Feature 3 - Implementation Complete
+# Zoho CRM & Advanced Billing Implementation Summary
 
-## 🎯 Status: 100% COMPLETE
+## ✅ Completed Implementation
 
-All missing components for **Feature 3: SmartScore™ Lead Qualification** have been successfully implemented and pushed to production.
+### 1. Database Schema ✅
+**File**: `supabase/migrations/060_advanced_zoho_billing.sql`
 
----
+**Tables Created**:
+- `zoho_crm_connections` - OAuth connections with encrypted tokens
+- `zoho_sync_logs` - Comprehensive sync logging
+- `zoho_webhook_events` - Webhook event processing
+- `billing_subscriptions` - Razorpay subscription management
+- `billing_invoices` - Invoice generation and tracking
+- `billing_payments` - Payment records
+- `billing_usage_events` - Usage tracking for metered billing
 
-## 🆕 Newly Implemented Components
+**⚠️ ACTION REQUIRED**: Execute this SQL migration in your Supabase dashboard:
+1. Go to Supabase Dashboard → SQL Editor
+2. Copy contents of `supabase/migrations/060_advanced_zoho_billing.sql`
+3. Execute the SQL
+4. Verify all tables are created successfully
 
-### 1. **SmartScoreHistory Component** ✅
-**Location**: `app/components/leads/SmartScoreHistory.tsx`
+### 2. Zoho CRM API Routes ✅
 
-**Features**:
-- ✅ Real-time trend visualization with Recharts AreaChart
-- ✅ Score over time graph with trend lines
-- ✅ Conversion probability trends
-- ✅ Churn risk trends
-- ✅ Historical comparison with trend indicators (improving/declining/stable)
-- ✅ Period selection (7d, 30d, 90d)
-- ✅ Real-time Supabase subscriptions for live updates
-- ✅ Glassmorphic design with shimmer effects matching existing design system
-- ✅ Production-ready error handling and loading states
+#### Connect Route
+- **File**: `app/app/api/integrations/zoho/connect/route.ts`
+- **Endpoint**: `POST /api/integrations/zoho/connect`
+- **Features**: OAuth initiation with secure state parameter
 
-**Real-time Updates**:
-- Subscribes to `smartscore_history` table INSERT events
-- Subscribes to `leads` table UPDATE events (when scores change)
-- Auto-refreshes history when new data arrives
+#### OAuth Callback
+- **File**: `app/app/api/integrations/zoho/oauth/route.ts`
+- **Endpoint**: `GET /api/integrations/zoho/oauth`
+- **Features**: 
+  - Token exchange
+  - Encrypted token storage
+  - Field mapping initialization
+  - Organization info retrieval
 
----
+#### Status Route
+- **File**: `app/app/api/integrations/zoho/status/route.ts`
+- **Endpoint**: `GET /api/integrations/zoho/status`
+- **Features**: Connection status, sync statistics, health score
 
-### 2. **SmartScoreAnalyticsDashboard Component** ✅
-**Location**: `app/components/leads/SmartScoreAnalyticsDashboard.tsx`
+#### Sync Route
+- **File**: `app/app/api/integrations/zoho/sync/route.ts`
+- **Endpoint**: `POST /api/integrations/zoho/sync`
+- **Features**:
+  - Full sync
+  - Incremental sync
+  - Single lead sync
+  - Automatic token refresh
+  - Batch processing (100 records per batch)
+  - Comprehensive error logging
 
-**Features**:
-- ✅ Comprehensive analytics dashboard
-- ✅ Score distribution charts (BarChart)
-- ✅ Tier distribution pie chart
-- ✅ Churn risk analysis visualization
-- ✅ Trends over time (AreaChart)
-- ✅ High-value leads table (Top 10)
-- ✅ Overview cards (Total Leads, Avg Score, Conversion Prob, Predicted Revenue)
-- ✅ Period selection (7d, 30d, 90d, 1y)
-- ✅ Export functionality (JSON download)
-- ✅ Real-time Supabase subscriptions
-- ✅ Glassmorphic design with shimmer effects
-- ✅ Production-ready error handling
+### 3. Authentication Fixes ✅
 
-**Real-time Updates**:
-- Subscribes to `leads` table UPDATE events (when scores/tiers change)
-- Subscribes to `smartscore_history` table INSERT events
-- Auto-refreshes analytics when data changes
+**Problem**: "Unauthorized. Please log in." error
 
----
+**Solution**: All API routes now:
+1. ✅ Authenticate user via Supabase
+2. ✅ Lookup builder profile using `user.id`
+3. ✅ Verify builder ownership before operations
+4. ✅ Return proper error messages
 
-### 3. **LeadTierManager Component** ✅
-**Location**: `app/components/leads/LeadTierManager.tsx`
+**Fixed Routes**:
+- `/api/integrations/zoho/connect`
+- `/api/integrations/zoho/oauth`
+- `/api/integrations/zoho/status`
+- `/api/integrations/zoho/sync`
 
-**Features**:
-- ✅ Visual tier filter/selector (Platinum, Gold, Silver, Bronze, Standard)
-- ✅ Bulk tier assignment
-- ✅ Search functionality (name, email, phone, ID)
-- ✅ Lead selection (single/multiple)
-- ✅ Tier statistics display
-- ✅ Real-time Supabase subscriptions
-- ✅ Glassmorphic design with shimmer effects
-- ✅ Production-ready error handling
+### 4. Frontend Components ✅
 
-**Real-time Updates**:
-- Subscribes to `leads` table UPDATE events (when tiers/scores change)
-- Subscribes to `leads` table INSERT events (new leads)
-- Auto-refreshes lead list when data changes
+#### Zoho CRM Integration Component
+- **File**: `app/app/(dashboard)/builder/integrations/_components/ZohoCRMIntegration.tsx`
+- **Features**:
+  - Connection status display
+  - OAuth connection flow
+  - Data center selection
+  - Sync management
+  - Sync logs display
+  - Disconnect functionality
 
----
+#### Updated Integrations Page
+- **File**: `app/app/(dashboard)/builder/integrations/page.tsx`
+- **Changes**:
+  - Integrated Zoho CRM component
+  - Fixed status API endpoint
+  - Added inline Zoho integration display
+  - Improved error handling
 
-## 📍 New Page Routes
+### 5. Billing API Routes ✅
 
-### 1. Lead SmartScore Detail Page ✅
-**Location**: `app/app/(dashboard)/builder/leads/[leadId]/smartscore/page.tsx`
-- **Route**: `/builder/leads/[leadId]/smartscore`
-- **Displays**: SmartScoreCard + SmartScoreHistory
-- **Features**: Real-time updates enabled
+#### Plans Route
+- **File**: `app/app/api/billing/plans/route.ts`
+- **Endpoint**: `GET /api/billing/plans`
+- **Features**: Returns all subscription plans with pricing and features
 
-### 2. Analytics Dashboard Page ✅
-**Location**: `app/app/(dashboard)/builder/analytics/smartscore/page.tsx`
-- **Route**: `/builder/analytics/smartscore`
-- **Displays**: SmartScoreAnalyticsDashboard + LeadTierManager
-- **Features**: Real-time updates enabled
+## 🔄 Pending Implementation
 
----
+### 1. Billing Subscription Route
+**Status**: Pending
+**File**: `app/app/api/billing/subscribe/route.ts`
+**Required**:
+- Create Razorpay subscription
+- Store in database
+- Handle customer creation
+- Return subscription URL
 
-## 🔄 Real-time Synchronization
+### 2. Billing Webhook Handler
+**Status**: Pending
+**File**: `app/app/api/billing/webhook/route.ts`
+**Required**:
+- Verify webhook signatures
+- Handle subscription events
+- Update subscription status
+- Generate invoices
+- Record payments
 
-All components implement **Supabase Realtime subscriptions** for:
-- ✅ Live score updates
-- ✅ Real-time tier changes
-- ✅ Instant history updates
-- ✅ Automatic analytics refresh
-- ✅ Proper subscription cleanup on unmount
-- ✅ Graceful error handling and fallback
+### 3. Billing UI Component
+**Status**: Pending
+**File**: `app/app/(dashboard)/builder/billing/_components/BillingManagement.tsx`
+**Required**:
+- Plan selection interface
+- Subscription management
+- Invoice viewing
+- Payment history
+- Usage tracking display
 
----
+## 📋 Setup Instructions
 
-## 🎨 Design System Compliance
+### 1. Environment Variables
+Add these to your `.env` file:
 
-All components follow the existing design system:
-- ✅ Glassmorphic cards with frosted glass effects
-- ✅ Shimmer animations on hover
-- ✅ Champagne gold accents (`gold-500`, `gold-600`)
-- ✅ Emerald green accents (`emerald-500`, `emerald-600`)
-- ✅ Gradient backgrounds matching pricing page
-- ✅ Smooth animations and transitions
-- ✅ Mobile-responsive layouts
+```env
+# Zoho CRM
+ZOHO_CLIENT_ID=your_zoho_client_id
+ZOHO_CLIENT_SECRET=your_zoho_client_secret
+ZOHO_REDIRECT_URI=https://your-domain.com/api/integrations/zoho/oauth
 
----
+# Razorpay
+RAZORPAY_KEY_ID=your_razorpay_key_id
+RAZORPAY_KEY_SECRET=your_razorpay_key_secret
+RAZORPAY_WEBHOOK_SECRET=your_webhook_secret
 
-## 🚀 Production Readiness
-
-### Error Handling ✅
-- ✅ Try-catch blocks for all async operations
-- ✅ Graceful error messages
-- ✅ Loading states
-- ✅ Empty states
-- ✅ Fallback mechanisms
-
-### Performance ✅
-- ✅ Lazy loading with Suspense
-- ✅ Efficient data fetching
-- ✅ Proper memoization with useCallback
-- ✅ Optimized re-renders
-- ✅ Subscription cleanup
-
-### Security ✅
-- ✅ Authentication checks (via API routes)
-- ✅ Authorization (builder/admin only)
-- ✅ Input validation
-- ✅ SQL injection prevention (via Supabase)
-
-### Real-time Reliability ✅
-- ✅ Subscription cleanup on unmount
-- ✅ Error recovery
-- ✅ Connection state handling
-- ✅ Fallback mechanisms
-
----
-
-## 📊 Complete Feature Checklist
-
-### Backend & Database ✅
-- [x] Database schema
-- [x] SQL functions & triggers
-- [x] Backend ML service
-- [x] API routes (calculate, history, analytics, batch)
-
-### Frontend Components ✅
-- [x] SmartScoreCard component
-- [x] SmartScoreHistory component ⭐ **NEW**
-- [x] SmartScoreAnalyticsDashboard component ⭐ **NEW**
-- [x] LeadTierManager component ⭐ **NEW**
-
-### React Hooks ✅
-- [x] useSmartScore (single lead operations)
-- [x] useSmartScores (bulk operations)
-- [x] useSmartScoreAnalytics (dashboard analytics)
-
-### Page Routes ✅
-- [x] `/builder/leads/[leadId]/smartscore` ⭐ **NEW**
-- [x] `/builder/analytics/smartscore` ⭐ **NEW**
-
-### Real-time Features ✅
-- [x] Supabase Realtime subscriptions
-- [x] Auto-refresh on data changes
-- [x] Proper cleanup and error handling
-
-### Production Readiness ✅
-- [x] Comprehensive error handling
-- [x] Loading states
-- [x] Empty states
-- [x] Mobile responsive
-- [x] Design system compliance
-- [x] Performance optimized
-
----
-
-## ✅ Overall Progress: 100% COMPLETE
-
-**Feature 3: SmartScore™ Lead Qualification** is now **fully implemented** with:
-- ✅ All backend infrastructure
-- ✅ All API routes
-- ✅ All React components
-- ✅ All page routes
-- ✅ Real-time synchronization
-- ✅ Production-ready code
-
-**Status**: 🚀 **READY FOR PRODUCTION**
-
----
-
-## 📝 Usage
-
-### View Lead SmartScore
-Navigate to: `/builder/leads/[leadId]/smartscore`
-
-### View Analytics Dashboard
-Navigate to: `/builder/analytics/smartscore`
-
-### Use Components in Other Pages
-```tsx
-import SmartScoreCard from '@/components/leads/SmartScoreCard'
-import SmartScoreHistory from '@/components/leads/SmartScoreHistory'
-import SmartScoreAnalyticsDashboard from '@/components/leads/SmartScoreAnalyticsDashboard'
-import LeadTierManager from '@/components/leads/LeadTierManager'
+# Encryption
+ENCRYPTION_KEY=your_32_character_encryption_key
 ```
 
----
+### 2. Database Migration
+**⚠️ CRITICAL**: Execute the SQL migration in Supabase:
+1. Open Supabase Dashboard
+2. Navigate to SQL Editor
+3. Execute `supabase/migrations/060_advanced_zoho_billing.sql`
+4. Verify all 7 tables are created
+5. Check RLS policies are enabled
 
-## 🎯 Next Steps
+### 3. Zoho CRM Setup
+1. Create Zoho CRM application at https://api-console.zoho.com
+2. Set redirect URI: `https://your-domain.com/api/integrations/zoho/oauth`
+3. Copy Client ID and Client Secret
+4. Add to environment variables
 
-All components are implemented and pushed to production. The system is ready for:
-1. ✅ User testing
-2. ✅ Production deployment
-3. ✅ Integration with other features
+### 4. Razorpay Setup
+1. Create Razorpay account
+2. Get API keys from dashboard
+3. Set up webhook endpoint: `https://your-domain.com/api/billing/webhook`
+4. Configure webhook secret
+5. Add to environment variables
 
-**No further implementation required for Feature 3.**
+## 🧪 Testing Checklist
+
+### Zoho CRM Integration
+- [ ] Execute database migration
+- [ ] Set environment variables
+- [ ] Test OAuth connection flow
+- [ ] Verify token storage (encrypted)
+- [ ] Test lead sync to Zoho
+- [ ] Test incremental sync
+- [ ] Verify sync logs
+- [ ] Test disconnect functionality
+- [ ] Test error handling
+
+### Billing Integration
+- [ ] Test plans API endpoint
+- [ ] Implement subscription creation
+- [ ] Test webhook handling
+- [ ] Verify invoice generation
+- [ ] Test payment tracking
+
+## 🔒 Security Features
+
+1. **Token Encryption**: All OAuth tokens encrypted with AES-256-GCM
+2. **RLS Policies**: Row-level security on all tables
+3. **Webhook Verification**: HMAC signature verification
+4. **CSRF Protection**: State parameter with nonce
+5. **Builder Verification**: All operations verify ownership
+
+## 📊 Database Schema Overview
+
+```
+zoho_crm_connections
+├── OAuth tokens (encrypted)
+├── Zoho account info
+├── Sync configuration
+└── Field mappings
+
+zoho_sync_logs
+├── Sync operations
+├── Performance metrics
+└── Error tracking
+
+billing_subscriptions
+├── Razorpay details
+├── Subscription info
+├── Usage limits
+└── Usage tracking
+
+billing_invoices
+├── Invoice details
+├── Payment tracking
+└── PDF generation
+
+billing_payments
+├── Payment methods
+├── Status tracking
+└── Error handling
+```
+
+## 🚀 Next Steps
+
+1. **Execute SQL Migration** (CRITICAL)
+2. **Set Environment Variables**
+3. **Test Zoho CRM Integration**
+4. **Implement Billing Subscription Route**
+5. **Implement Billing Webhook Handler**
+6. **Create Billing UI Component**
+7. **Add Usage Tracking**
+8. **Test End-to-End Flow**
+
+## 📝 Notes
+
+- All authentication issues have been fixed
+- The old Zoho implementation can be removed after testing
+- The new implementation uses proper builder_id lookup
+- All tokens are encrypted before storage
+- Comprehensive error logging is in place
+- Sync operations are batched for performance
+
+## 🐛 Troubleshooting
+
+### "Unauthorized. Please log in." Error
+- ✅ Fixed: All routes now properly authenticate and lookup builder
+
+### Token Refresh Issues
+- ✅ Fixed: Automatic token refresh implemented
+
+### Sync Failures
+- Check sync logs in `zoho_sync_logs` table
+- Verify field mappings
+- Check Zoho API rate limits
+
+### Database Errors
+- Verify migration executed successfully
+- Check RLS policies
+- Verify builder_id relationships
+
+## 📚 Documentation
+
+- **Implementation Guide**: `ZOHO_BILLING_IMPLEMENTATION_GUIDE.md`
+- **Database Schema**: `supabase/migrations/060_advanced_zoho_billing.sql`
+- **API Routes**: See `app/app/api/integrations/zoho/` and `app/app/api/billing/`

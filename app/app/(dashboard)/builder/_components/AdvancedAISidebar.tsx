@@ -477,9 +477,12 @@ export function AdvancedAISidebar() {
                               if (shouldUseUnifiedDashboard(item.href)) {
                                 e.preventDefault()
                                 const unifiedUrl = getUnifiedDashboardUrl(item.href)
-                                window.location.href = unifiedUrl
+                                router.push(unifiedUrl)
                                 return
                               }
+                              
+                              // For direct routes like /builder/integrations and /builder/billing
+                              // Let the Link component handle navigation normally
                             }}
                             className={cn(
                               "relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-all duration-300 group",
@@ -581,8 +584,7 @@ export function AdvancedAISidebar() {
 
                             {isLocked && (
                               <Lock 
-                                className="ml-auto w-4 h-4 text-slate-500 shrink-0" 
-                                title="Upgrade to Pro"
+                                className="ml-auto w-4 h-4 text-slate-500 shrink-0"
                               />
                             )}
                           </Link>

@@ -35,7 +35,8 @@
       "Bash(bash fix-buyer-components.sh:*)",
       "Bash(wc:*)",
       "Bash(npx tsc:*)",
-      "Bash(grep:*)"
+      "Bash(grep:*)",
+      "Bash(git restore:*)"
     ],
     "deny": [],
     "ask": []

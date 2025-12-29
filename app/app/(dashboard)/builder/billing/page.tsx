@@ -1,7 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { BuilderPageWrapper } from '../../_components/BuilderPageWrapper';
+import { BuilderPageWrapper } from '../_components/BuilderPageWrapper';
 import BillingManagement from './_components/BillingManagement';
 
 export default function BillingPage() {

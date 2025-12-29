@@ -1,58 +1,82 @@
-// =============================================
-// ZOHO CRM CONNECT API
-// GET /api/integrations/zoho/connect
-// Initiates OAuth flow
-// =============================================
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import { zohoClient } from '@/lib/integrations/crm/zohoClient';
+import { randomBytes } from 'crypto';
+
+const ZOHO_OAUTH_CONFIG = {
+  com: 'https://accounts.zoho.com',
+  eu: 'https://accounts.zoho.eu',
+  in: 'https://accounts.zoho.in',
+  'com.au': 'https://accounts.zoho.com.au',
+  jp: 'https://accounts.zoho.jp'
+};
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-export async function GET(request: NextRequest) {
+export async function POST(request: NextRequest) {
   try {
     const supabase = await createClient();
-    
-    // Get authenticated user
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     
     if (authError || !user) {
       return NextResponse.json(
-        { error: 'Unauthorized' },
+        { error: 'Unauthorized. Please log in.' },
         { status: 401 }
       );
     }
-
-    // Get builder_id from query params or use user.id
-    const searchParams = request.nextUrl.searchParams;
-    const builder_id = searchParams.get('builder_id') || user.id;
-
-    // Generate OAuth URL
-    const authUrl = zohoClient.getAuthUrl(builder_id);
-
+    
+    // Get builder profile
+    const { data: builder, error: builderError } = await supabase
+      .from('builders')
+      .select('id')
+      .eq('user_id', user.id)
+      .single();
+    
+    if (builderError || !builder) {
+      return NextResponse.json(
+        { error: 'Builder profile not found' },
+        { status: 404 }
+      );
+    }
+    
+    const { data_center = 'in' } = await request.json();
+    
+    // Validate data center
+    if (!ZOHO_OAUTH_CONFIG[data_center as keyof typeof ZOHO_OAUTH_CONFIG]) {
+      return NextResponse.json(
+        { error: 'Invalid data center' },
+        { status: 400 }
+      );
+    }
+    
+    // Generate secure state parameter
+    const nonce = randomBytes(16).toString('hex');
+    const state = Buffer.from(JSON.stringify({
+      builder_id: builder.id,
+      data_center: data_center,
+      nonce: nonce,
+      timestamp: Date.now()
+    })).toString('base64');
+    
+    // Build authorization URL
+    const authUrl = new URL(`${ZOHO_OAUTH_CONFIG[data_center as keyof typeof ZOHO_OAUTH_CONFIG]}/oauth/v2/auth`);
+    authUrl.searchParams.append('scope', 'ZohoCRM.modules.ALL,ZohoCRM.settings.ALL,ZohoCRM.users.READ');
+    authUrl.searchParams.append('client_id', process.env.ZOHO_CLIENT_ID!);
+    authUrl.searchParams.append('response_type', 'code');
+    authUrl.searchParams.append('access_type', 'offline');
+    authUrl.searchParams.append('redirect_uri', `${process.env.NEXT_PUBLIC_APP_URL}/api/integrations/zoho/oauth`);
+    authUrl.searchParams.append('state', state);
+    authUrl.searchParams.append('prompt', 'consent');
+    
     return NextResponse.json({
-      success: true,
-      auth_url: authUrl,
+      authorization_url: authUrl.toString()
     });
+    
   } catch (error: any) {
-    console.error('Error generating Zoho OAuth URL:', error);
+    console.error('Zoho connect error:', error);
     return NextResponse.json(
-      { error: error.message || 'Failed to generate OAuth URL' },
+      { error: error.message || 'Failed to initiate connection' },
       { status: 500 }
     );
   }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-

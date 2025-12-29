@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Zap, CheckCircle2, AlertCircle, X } from 'lucide-react'
 import { motion } from 'framer-motion'
+import ZohoCRMIntegration from './_components/ZohoCRMIntegration'
 
 function IntegrationsPageContent() {
   const router = useRouter()
@@ -28,6 +29,7 @@ function IntegrationsPageContent() {
     total_synced?: number
   } | null>(null)
   const [loadingZoho, setLoadingZoho] = useState(true)
+  const [showZohoIntegration, setShowZohoIntegration] = useState(false)
 
   // Check for calendar and Zoho callback messages
   useEffect(() => {
@@ -97,14 +99,14 @@ function IntegrationsPageContent() {
     const fetchZohoStatus = async () => {
       try {
         setLoadingZoho(true)
-        const response = await fetch('/api/crm/zoho/status', {
+        const response = await fetch('/api/integrations/zoho/status', {
           credentials: 'include',
         })
         
         if (!response.ok) {
           if (response.status === 401) {
             const errorData = await response.json().catch(() => ({ error: 'Unauthorized' }))
-            if (errorData.error && errorData.error === 'Unauthorized' && errorData.success === false) {
+            if (errorData.error && errorData.error === 'Unauthorized. Please log in.' && errorData.success === false) {
               console.warn('Authentication error when fetching Zoho status')
             }
           }
@@ -155,7 +157,7 @@ function IntegrationsPageContent() {
       desc: 'Sync leads and deals with Zoho CRM for seamless management',
       status: zohoStatus?.connected ? 'connected' : 'available',
       icon: '🔗',
-      href: '/builder/settings/zoho',
+      href: '/builder/integrations',
       zohoStatus,
     },
     {
@@ -363,6 +365,17 @@ function IntegrationsPageContent() {
                       </button>
                     )}
                   </div>
+                ) : integration.name === 'Zoho CRM' ? (
+                  <button
+                    onClick={() => setShowZohoIntegration(!showZohoIntegration)}
+                    className={`px-4 py-2 text-sm font-medium rounded-lg transition-all ${
+                      integration.status === 'connected'
+                        ? 'bg-white/10 text-white hover:bg-white/20 border border-white/20'
+                        : 'bg-gradient-to-r from-amber-600 to-amber-500 text-white hover:shadow-lg hover:shadow-amber-500/30 hover:-translate-y-1'
+                    }`}
+                  >
+                    {integration.status === 'connected' ? 'Manage' : 'Connect'}
+                  </button>
                 ) : (
                   <Link
                     href={integration.href}
@@ -380,6 +393,18 @@ function IntegrationsPageContent() {
           </motion.div>
         ))}
       </div>
+
+      {/* Zoho CRM Integration Component */}
+      {showZohoIntegration && (
+        <motion.div
+          initial={{ opacity: 0, height: 0 }}
+          animate={{ opacity: 1, height: 'auto' }}
+          exit={{ opacity: 0, height: 0 }}
+          className="mb-8"
+        >
+          <ZohoCRMIntegration />
+        </motion.div>
+      )}
 
       {/* API Access Section */}
       <motion.div

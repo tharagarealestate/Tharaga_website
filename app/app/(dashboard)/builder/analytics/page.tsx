@@ -27,6 +27,7 @@ import {
   XCircle,
 } from 'lucide-react';
 import { GlassLoadingOverlay } from '@/components/ui/loading-spinner';
+import { DashboardPageHeader, StatCard, StatsGrid, PrimaryButton, SecondaryButton } from '../_components/ui/DashboardDesignSystem';
 import {
   ResponsiveContainer,
   PieChart,
@@ -290,57 +291,46 @@ export default function AnalyticsDashboard({
   }));
   
   return (
-    <div className="space-y-6 p-6">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Analytics Dashboard</h1>
-          <p className="text-gray-600">Comprehensive insights and performance metrics</p>
-          {showComparison && (
-            <p className="mt-2 inline-flex items-center gap-2 text-sm text-emerald-600 bg-emerald-50 px-3 py-1 rounded-full">
-              <ArrowUpRight className="w-4 h-4" />
-              Comparing against previous period
-            </p>
-          )}
-        </div>
-        <div className="flex flex-wrap items-center gap-3">
-          <select
-            value={selectedPeriod}
-            onChange={(event) => setSelectedPeriod(event.target.value)}
-            className="px-4 py-2 bg-white border border-gray-200 rounded-lg text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-          >
-            <option value="7d">Last 7 Days</option>
-            <option value="30d">Last 30 Days</option>
-            <option value="90d">Last 90 Days</option>
-            <option value="1y">Last Year</option>
-            <option value="this_month">This Month</option>
-            <option value="last_month">Last Month</option>
-          </select>
-          <label className="inline-flex items-center gap-2 px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm text-gray-700 shadow-sm">
-            <input
-              type="checkbox"
-              checked={showComparison}
-              onChange={(event) => setShowComparison(event.target.checked)}
-              className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-            />
-            Compare
-          </label>
-          <button
-            onClick={() => fetchAnalytics(true)}
-            disabled={refreshing}
-            className="px-4 py-2 bg-gradient-to-r from-blue-600 to-blue-500 text-white rounded-lg shadow-md hover:shadow-lg transition-all duration-200 disabled:opacity-50 flex items-center gap-2"
-          >
-            <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
-            Refresh
-          </button>
-          <button
-            onClick={handleExport}
-            className="px-4 py-2 bg-white border border-gray-200 rounded-lg shadow-sm hover:bg-gray-50 transition-colors flex items-center gap-2"
-          >
-            <Download className="w-4 h-4" />
-            Export
-          </button>
-        </div>
-      </div>
+    <div className="space-y-6">
+      {/* Page Header using Design System */}
+      <DashboardPageHeader
+        title="Analytics Dashboard"
+        subtitle={showComparison ? "Comprehensive insights and performance metrics • Comparing against previous period" : "Comprehensive insights and performance metrics"}
+        emoji="📊"
+        action={
+          <div className="flex flex-wrap items-center gap-3">
+            <select
+              value={selectedPeriod}
+              onChange={(event) => setSelectedPeriod(event.target.value)}
+              className="px-4 py-2 bg-slate-700/50 border border-slate-600/50 rounded-lg text-sm text-white focus:outline-none focus:ring-2 focus:ring-amber-500"
+            >
+              <option value="7d">Last 7 Days</option>
+              <option value="30d">Last 30 Days</option>
+              <option value="90d">Last 90 Days</option>
+              <option value="1y">Last Year</option>
+              <option value="this_month">This Month</option>
+              <option value="last_month">Last Month</option>
+            </select>
+            <label className="inline-flex items-center gap-2 px-3 py-2 bg-slate-700/50 border border-slate-600/50 rounded-lg text-sm text-white">
+              <input
+                type="checkbox"
+                checked={showComparison}
+                onChange={(event) => setShowComparison(event.target.checked)}
+                className="h-4 w-4 rounded border-slate-600 text-amber-500 focus:ring-amber-500"
+              />
+              Compare
+            </label>
+            <PrimaryButton onClick={() => fetchAnalytics(true)} disabled={refreshing}>
+              <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
+              Refresh
+            </PrimaryButton>
+            <SecondaryButton onClick={handleExport}>
+              <Download className="w-4 h-4" />
+              Export
+            </SecondaryButton>
+          </div>
+        }
+      />
       
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <motion.div

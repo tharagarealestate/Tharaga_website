@@ -6,6 +6,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { Zap, CheckCircle2, AlertCircle, X } from 'lucide-react'
 import { motion } from 'framer-motion'
 import ZohoCRMIntegration from './_components/ZohoCRMIntegration'
+import { DashboardPageHeader } from '../_components/ui/DashboardDesignSystem'
 
 function IntegrationsPageContent() {
   const router = useRouter()
@@ -235,18 +236,13 @@ function IntegrationsPageContent() {
   }
 
   return (
-    <div className="w-full">
-      {/* Header */}
-      <div className="mb-8">
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4 }}
-        >
-          <h1 className="text-3xl font-bold text-white mb-2">Integrations</h1>
-          <p className="text-slate-400">Connect your favorite tools and services</p>
-        </motion.div>
-      </div>
+    <div className="w-full space-y-6">
+      {/* Header using Design System */}
+      <DashboardPageHeader
+        title="Integrations"
+        subtitle="Connect your favorite tools and services"
+        emoji="⚡"
+      />
 
       {/* Status Message */}
       {calendarMessage && (

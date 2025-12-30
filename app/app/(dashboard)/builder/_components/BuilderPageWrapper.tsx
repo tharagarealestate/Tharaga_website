@@ -1,48 +1,51 @@
 "use client"
 
 import { ReactNode } from 'react'
+import { DashboardPageHeader, ContentCard } from './ui/DashboardDesignSystem'
 
 interface BuilderPageWrapperProps {
   children: ReactNode
   title?: string
   description?: string
+  emoji?: string
+  action?: ReactNode
   className?: string
   noContainer?: boolean
 }
 
 /**
  * Consistent page wrapper for all builder dashboard pages
- * Note: Background is handled by layout.tsx, this wrapper just provides consistent content structure
+ * Updated to use the new design system (dark slate + amber theme)
  * Ensures uniform design, spacing, and styling across all pages
  */
-export function BuilderPageWrapper({ 
-  children, 
-  title, 
-  description, 
+export function BuilderPageWrapper({
+  children,
+  title,
+  description,
+  emoji,
+  action,
   className = "",
-  noContainer = false 
+  noContainer = false
 }: BuilderPageWrapperProps) {
   return (
-    <div className={`relative z-10 ${className}`}>
-      {/* Page Header (optional) */}
+    <div className={`space-y-6 ${className}`}>
+      {/* Page Header using Design System */}
       {(title || description) && (
-        <div className="mb-6">
-          {title && (
-            <h1 className="text-3xl font-bold text-white mb-2">{title}</h1>
-          )}
-          {description && (
-            <p className="text-gray-300 text-lg">{description}</p>
-          )}
-        </div>
+        <DashboardPageHeader
+          title={title || ''}
+          subtitle={description}
+          emoji={emoji}
+          action={action}
+        />
       )}
 
-      {/* Page Content */}
+      {/* Page Content using Design System */}
       {noContainer ? (
         children
       ) : (
-        <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-6 shadow-lg">
+        <ContentCard>
           {children}
-        </div>
+        </ContentCard>
       )}
     </div>
   )

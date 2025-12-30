@@ -36,7 +36,10 @@
       "Bash(wc:*)",
       "Bash(npx tsc:*)",
       "Bash(grep:*)",
-      "Bash(git restore:*)"
+      "Bash(git restore:*)",
+      "Bash(git check-ignore:*)",
+      "Bash(head:*)",
+      "Bash(git revert:*)"
     ],
     "deny": [],
     "ask": []

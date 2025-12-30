@@ -1,23 +1,161 @@
 "use client"
 
-import dynamic from 'next/dynamic'
-import { SectionLoader } from './SectionLoader'
+import { SectionWrapper } from './SectionWrapper'
+import { Building2, MapPin, Eye, TrendingUp, Plus } from 'lucide-react'
+import { useQuery } from '@tanstack/react-query'
+import { useDemoMode, DEMO_DATA } from '../DemoDataProvider'
 
 interface PropertiesSectionProps {
   onNavigate?: (section: string) => void
 }
 
-const BuilderPropertiesPage = dynamic(() => import('../../properties/page').then(mod => ({ default: mod.default })), {
-  ssr: false,
-  loading: () => <SectionLoader section="properties" />
-})
+interface Property {
+  id: string
+  title: string
+  locality?: string
+  city?: string
+  priceINR?: number
+  status?: string
+  views?: number
+  inquiries?: number
+}
 
-import { SectionWrapper } from './SectionWrapper'
+async function fetchProperties() {
+  const res = await fetch('/api/builder/properties', { cache: 'no-store' })
+  if (!res.ok) throw new Error('Failed to fetch properties')
+  const data = await res.json()
+  return (data?.items || []) as Property[]
+}
 
 export function PropertiesSection({ onNavigate }: PropertiesSectionProps) {
+  const { isDemoMode } = useDemoMode()
+
+  const { data: properties = [], isLoading } = useQuery({
+    queryKey: ['builder-properties'],
+    queryFn: fetchProperties,
+    enabled: !isDemoMode,
+  })
+
+  const displayProperties = isDemoMode ? DEMO_DATA.properties : properties
+
   return (
     <SectionWrapper>
-      <BuilderPropertiesPage />
+      <div className="w-full max-w-7xl mx-auto space-y-6 py-6">
+        <header className="flex items-center justify-between">
+          <div className="space-y-2">
+            <h1 className="font-display text-4xl font-bold text-white sm:text-5xl">
+              Properties
+            </h1>
+            <p className="text-base text-slate-300 sm:text-lg max-w-2xl">
+              Manage your property listings and track performance metrics.
+            </p>
+          </div>
+          <button
+            onClick={() => window.location.href = '/builders/add-property'}
+            className="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-slate-900 font-semibold rounded-lg transition-all flex items-center gap-2"
+          >
+            <Plus className="w-4 h-4" />
+            Add Property
+          </button>
+        </header>
+
+        {/* Stats */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="bg-slate-800/95 rounded-lg p-4 border border-slate-700/50">
+            <div className="flex items-center justify-between mb-2">
+              <Building2 className="w-5 h-5 text-amber-400" />
+            </div>
+            <div className="text-2xl font-bold text-white">{displayProperties.length}</div>
+            <div className="text-sm text-slate-400">Total Properties</div>
+          </div>
+          <div className="bg-slate-800/95 rounded-lg p-4 border border-slate-700/50">
+            <div className="flex items-center justify-between mb-2">
+              <TrendingUp className="w-5 h-5 text-emerald-400" />
+            </div>
+            <div className="text-2xl font-bold text-white">
+              {displayProperties.filter(p => p.status === 'active').length}
+            </div>
+            <div className="text-sm text-slate-400">Active Listings</div>
+          </div>
+          <div className="bg-slate-800/95 rounded-lg p-4 border border-slate-700/50">
+            <div className="flex items-center justify-between mb-2">
+              <Eye className="w-5 h-5 text-blue-400" />
+            </div>
+            <div className="text-2xl font-bold text-white">
+              {displayProperties.reduce((sum, p) => sum + (p.views || 0), 0)}
+            </div>
+            <div className="text-sm text-slate-400">Total Views</div>
+          </div>
+          <div className="bg-slate-800/95 rounded-lg p-4 border border-slate-700/50">
+            <div className="flex items-center justify-between mb-2">
+              <MapPin className="w-5 h-5 text-purple-400" />
+            </div>
+            <div className="text-2xl font-bold text-white">
+              {displayProperties.reduce((sum, p) => sum + (p.inquiries || 0), 0)}
+            </div>
+            <div className="text-sm text-slate-400">Inquiries</div>
+          </div>
+        </div>
+
+        {/* Properties Grid */}
+        <div className="bg-slate-800/95 rounded-lg border border-slate-700/50 p-6">
+          <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+            <Building2 className="w-5 h-5 text-amber-400" />
+            Your Properties
+          </h2>
+
+          {isLoading && !isDemoMode ? (
+            <div className="text-center py-12">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-amber-300 mx-auto mb-4"></div>
+              <p className="text-slate-400">Loading properties...</p>
+            </div>
+          ) : displayProperties.length === 0 ? (
+            <div className="text-center py-12">
+              <Building2 className="w-12 h-12 mx-auto mb-3 text-slate-400" />
+              <p className="text-white mb-2">No properties yet</p>
+              <p className="text-sm text-slate-400 mb-4">Add your first property to start receiving inquiries</p>
+              <button
+                onClick={() => window.location.href = '/builders/add-property'}
+                className="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-slate-900 font-semibold rounded-lg transition-all"
+              >
+                Add Property
+              </button>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {displayProperties.map((property) => (
+                <div
+                  key={property.id}
+                  className="bg-slate-700/50 hover:bg-slate-700/70 border border-slate-600/50 rounded-lg p-4 transition-all cursor-pointer"
+                  onClick={() => {
+                    window.dispatchEvent(new CustomEvent('open-property-detail', { detail: { propertyId: property.id } }))
+                  }}
+                >
+                  <h3 className="font-semibold text-white mb-2 truncate">{property.title}</h3>
+                  <div className="flex items-center gap-1.5 text-xs text-slate-300 mb-2">
+                    <MapPin className="w-3 h-3" />
+                    <span className="truncate">{property.locality || property.city || 'Location'}</span>
+                  </div>
+                  {property.priceINR && (
+                    <div className="text-lg font-bold text-amber-400 mb-2">
+                      ₹{(property.priceINR / 10000000).toFixed(2)}Cr
+                    </div>
+                  )}
+                  <div className="flex items-center justify-between text-xs text-slate-400">
+                    <div className="flex items-center gap-1">
+                      <Eye className="w-3 h-3" />
+                      <span>{property.views || 0}</span>
+                    </div>
+                    <div className="px-2 py-1 bg-emerald-500/10 text-emerald-300 rounded">
+                      {property.status || 'active'}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
     </SectionWrapper>
   )
 }

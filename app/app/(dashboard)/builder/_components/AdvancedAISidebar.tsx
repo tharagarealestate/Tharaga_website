@@ -66,13 +66,14 @@ export function AdvancedAISidebar() {
   const router = useRouter()
   
   // Map routes to unified dashboard sections
-  // IMPORTANT: Only unified dashboard sections go here, NOT direct routes
-  // Direct routes like /builder/leads, /builder/properties, /builder/analytics are standalone pages
+  // This is the WORKING configuration from commit 64ed06f
   const routeToSectionMap: Record<string, string> = {
     '/builder': 'overview',
-    // All other routes are either:
-    // 1. Direct routes (e.g., /builder/leads, /builder/properties, /builder/analytics, /builder/communications, /builder/integrations, /builder/billing)
-    // 2. Section-based routes (e.g., /builder?section=viewings, /builder?section=negotiations)
+    '/builder/leads': 'leads',
+    '/builder/leads/pipeline': 'pipeline',
+    '/builder/properties': 'properties',
+    '/builder/messaging': 'client-outreach',
+    '/behavior-tracking': 'behavior-analytics',
   }
   
   const getSectionFromHref = (href: string): string | null => {
@@ -227,14 +228,14 @@ export function AdvancedAISidebar() {
         label: 'Sales & Leads',
         items: [
           {
-            href: '/builder/leads',
+            href: createSectionUrl('leads'),
             label: 'Leads',
             icon: Users,
             badge: isLoadingCount ? null : (leadCount?.total ?? 0),
             requiresPro: false,
             submenu: [
-              { href: '/builder/leads', label: 'All Leads' },
-              { href: '/builder/leads/pipeline', label: 'Pipeline' },
+              { href: createSectionUrl('leads'), label: 'All Leads' },
+              { href: createSectionUrl('pipeline'), label: 'Pipeline' },
             ]
           },
           { href: createSectionUrl('viewings'), label: 'Viewings', icon: Calendar, requiresPro: false },
@@ -246,14 +247,13 @@ export function AdvancedAISidebar() {
         label: 'Properties',
         items: [
           {
-            href: '/builder/properties',
+            href: createSectionUrl('properties'),
             label: 'Properties',
             icon: Building2,
             requiresPro: false,
             submenu: [
-              { href: '/builder/properties', label: 'All Properties' },
+              { href: createSectionUrl('properties'), label: 'Manage' },
               { href: '/builder/properties/performance', label: 'Performance' },
-              { href: '/builder/properties/distribution', label: 'Distribution' },
             ]
           },
         ]

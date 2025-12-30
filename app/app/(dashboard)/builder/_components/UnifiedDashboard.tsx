@@ -387,7 +387,7 @@ export function UnifiedDashboard({ onNavigate }: UnifiedDashboardProps) {
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                onClick={() => router.push('/builder/leads')}
+                onClick={() => onNavigate?.('leads')}
                 className="px-4 py-2 bg-amber-500 hover:bg-amber-600 glow-border text-slate-900 font-semibold rounded-lg transition-all text-sm shadow-lg shadow-amber-500/20 hover:shadow-amber-500/40"
               >
                 View All
@@ -412,7 +412,7 @@ export function UnifiedDashboard({ onNavigate }: UnifiedDashboardProps) {
             ) : (
               <div className="space-y-3">
                 {mergedLeads.slice(0, 6).map((lead: any) => (
-                  <LeadCard key={lead.id} lead={lead} />
+                  <LeadCard key={lead.id} lead={lead} onNavigate={onNavigate} />
                 ))}
               </div>
             )}
@@ -435,7 +435,7 @@ export function UnifiedDashboard({ onNavigate }: UnifiedDashboardProps) {
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                onClick={() => router.push('/builder/properties')}
+                onClick={() => onNavigate?.('properties')}
                 className="px-4 py-2 bg-amber-500 hover:bg-amber-600 glow-border text-slate-900 font-semibold rounded-lg transition-all text-sm shadow-lg shadow-amber-500/20 hover:shadow-amber-500/40"
               >
                 View All
@@ -456,7 +456,7 @@ export function UnifiedDashboard({ onNavigate }: UnifiedDashboardProps) {
                 <Building2 className="w-12 h-12 mx-auto mb-3 text-slate-400" />
                 <p className="text-white mb-2">No properties yet</p>
                 <button
-                  onClick={() => router.push('/builder/properties')}
+                  onClick={() => onNavigate?.('properties')}
                   className="px-4 py-2 bg-amber-500 hover:bg-amber-600 glow-border text-slate-900 font-semibold rounded-lg transition-colors text-sm mt-2"
                 >
                   Add your first property →
@@ -465,7 +465,7 @@ export function UnifiedDashboard({ onNavigate }: UnifiedDashboardProps) {
             ) : (
               <div className="space-y-3">
                 {mergedProperties.slice(0, 6).map((property: any) => (
-                  <PropertyCard key={property.id} property={property} />
+                  <PropertyCard key={property.id} property={property} onNavigate={onNavigate} />
                 ))}
               </div>
             )}
@@ -482,14 +482,14 @@ export function UnifiedDashboard({ onNavigate }: UnifiedDashboardProps) {
           </div>
           <div className="flex flex-wrap items-center gap-3">
             <button
-              onClick={() => router.push('/builder/leads')}
+              onClick={() => onNavigate?.('leads')}
               className="px-4 py-2 glow-border bg-slate-800/95 text-slate-200 hover:bg-slate-700/50 rounded-lg text-sm font-semibold transition-colors flex items-center gap-2"
             >
               <Users className="w-4 h-4" />
               <span className="hidden sm:inline">Manage </span>Leads
             </button>
             <button
-              onClick={() => router.push('/builder/properties')}
+              onClick={() => onNavigate?.('properties')}
               className="px-4 py-2 glow-border bg-slate-800/95 text-slate-200 hover:bg-slate-700/50 rounded-lg text-sm font-semibold transition-colors flex items-center gap-2"
             >
               <Building2 className="w-4 h-4" />
@@ -601,8 +601,7 @@ function StatCard({
 }
 
 // Lead Card - Admin Design System with Advanced Animations
-function LeadCard({ lead }: { lead: Lead }) {
-  const router = useRouter()
+function LeadCard({ lead, onNavigate }: { lead: Lead; onNavigate?: (section: string) => void }) {
   const score = lead.score || 0
   const isHot = score >= 70
   const isWarm = score >= 40 && score < 70
@@ -612,11 +611,8 @@ function LeadCard({ lead }: { lead: Lead }) {
       whileHover={{ scale: 1.02, x: 4 }}
       whileTap={{ scale: 0.98 }}
       onClick={() => {
-        router.push('/builder/leads')
-        // Optional: dispatch event for lead detail modal if implemented
-        setTimeout(() => {
-          window.dispatchEvent(new CustomEvent('open-lead-detail', { detail: { leadId: lead.id } }))
-        }, 100)
+        onNavigate?.('leads')
+        window.dispatchEvent(new CustomEvent('open-lead-detail', { detail: { leadId: lead.id } }))
       }}
       className="w-full p-4 bg-slate-700/50 hover:bg-slate-700/70 border border-slate-600/50 hover:glow-border rounded-lg transition-all text-left relative overflow-hidden group"
     >
@@ -655,19 +651,14 @@ function LeadCard({ lead }: { lead: Lead }) {
 }
 
 // Property Card - Admin Design System with Advanced Animations
-function PropertyCard({ property }: { property: Property }) {
-  const router = useRouter()
-
+function PropertyCard({ property, onNavigate }: { property: Property; onNavigate?: (section: string) => void }) {
   return (
     <motion.button
       whileHover={{ scale: 1.02, x: 4 }}
       whileTap={{ scale: 0.98 }}
       onClick={() => {
-        router.push('/builder/properties')
-        // Optional: dispatch event for property detail modal if implemented
-        setTimeout(() => {
-          window.dispatchEvent(new CustomEvent('open-property-detail', { detail: { propertyId: property.id } }))
-        }, 100)
+        onNavigate?.('properties')
+        window.dispatchEvent(new CustomEvent('open-property-detail', { detail: { propertyId: property.id } }))
       }}
       className="w-full p-4 bg-slate-700/50 hover:bg-slate-700/70 border border-slate-600/50 hover:glow-border rounded-lg transition-all text-left relative overflow-hidden group"
     >

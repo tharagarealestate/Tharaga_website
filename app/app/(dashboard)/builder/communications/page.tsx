@@ -5,8 +5,6 @@ import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { TextArea } from '@/components/ui/TextArea'
 import { Badge } from '@/components/ui/Badge'
-import { DashboardPageHeader, StatCard, StatsGrid, PrimaryButton, SecondaryButton } from '../_components/ui/DashboardDesignSystem'
-import { Webhook, Send, CheckCircle2, XCircle } from 'lucide-react'
 
 type WebhookRow = {
   id: string
@@ -48,6 +46,9 @@ const EVENT_OPTIONS: Array<{ value: string; label: string; description: string }
   { value: 'campaign.email.sent', label: 'Email Sent', description: 'Email campaign dispatched to a contact' },
   { value: 'campaign.email.opened', label: 'Email Opened', description: 'Recipient opened the email campaign' },
 ]
+
+const gradientBackground =
+  'before:absolute before:inset-0 before:bg-[radial-gradient(circle_at_top,_rgba(56,189,248,0.12),_transparent_60%),radial-gradient(circle_at_bottom,_rgba(245,158,11,0.08),_transparent_55%)] before:pointer-events-none'
 
 export default function BuilderCommunicationsPage() {
   const [webhooks, setWebhooks] = useState<WebhookRow[]>([])
@@ -334,40 +335,44 @@ export default function BuilderCommunicationsPage() {
   }, [webhooks])
 
   return (
-    <div className="space-y-6">
-      {/* Page Header using Design System */}
-      <DashboardPageHeader
-        title="Real-Time Integrations"
-        subtitle="Manage webhook endpoints, monitor delivery health, and automate retries for mission-critical automations"
-        emoji="🔗"
-        action={
-          <div className="flex flex-wrap gap-3">
-            <SecondaryButton onClick={() => setShowCreateForm((prev) => !prev)}>
-              {showCreateForm ? 'Close Webhook Form' : 'Register New Webhook'}
-            </SecondaryButton>
-            <PrimaryButton onClick={() => fetchWebhooks()} disabled={loading}>
-              Refresh
-            </PrimaryButton>
+    <div className={`relative min-h-screen bg-[#030712] text-white ${gradientBackground}`}>
+      <div className="relative z-10 mx-auto max-w-6xl px-6 py-10 space-y-10">
+        <header className="flex flex-col gap-4">
+          <div className="flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between">
+            <div>
+              <span className="inline-flex items-center rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs uppercase tracking-wide text-white/70">
+                Webhook Delivery Control Center
+              </span>
+              <h1 className="mt-4 text-3xl font-semibold sm:text-4xl">Real-Time Integrations Dashboard</h1>
+              <p className="mt-3 max-w-2xl text-sm text-white/70">
+                Manage webhook endpoints, monitor delivery health, and automate retries with the same clarity as our
+                pricing experience. Built for mission-critical automations.
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-3">
+              <Button variant="secondary" onClick={() => setShowCreateForm((prev) => !prev)}>
+                {showCreateForm ? 'Close Webhook Form' : 'Register New Webhook'}
+              </Button>
+              <Button variant="primary" onClick={() => fetchWebhooks()} disabled={loading}>
+                Refresh
+              </Button>
+            </div>
           </div>
-        }
-      />
-
-      <div className="space-y-6">
-        {/* Banner Messages */}
-        {banner && (
-          <div
-            className={`rounded-lg border px-4 py-3 text-sm shadow ${
-              banner.type === 'success'
-                ? 'border-emerald-300/40 bg-emerald-500/10 text-emerald-100'
-                : 'border-rose-400/40 bg-rose-500/10 text-rose-100'
-            }`}
-          >
-            {banner.message}
-          </div>
-        )}
+          {banner && (
+            <div
+              className={`rounded-lg border px-4 py-3 text-sm shadow ${
+                banner.type === 'success'
+                  ? 'border-emerald-300/40 bg-emerald-500/10 text-emerald-100'
+                  : 'border-rose-400/40 bg-rose-500/10 text-rose-100'
+              }`}
+            >
+              {banner.message}
+            </div>
+          )}
+        </header>
 
         {showCreateForm && (
-          <section className="rounded-lg bg-slate-800/95 glow-border p-6 space-y-6">
+          <section className="rounded-2xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-6 space-y-6 shadow-lg shadow-slate-900/20">
             <div>
               <h2 className="text-xl font-semibold">Webhook Registration</h2>
               <p className="text-sm text-white/70">
@@ -467,36 +472,30 @@ export default function BuilderCommunicationsPage() {
           </section>
         )}
 
-        {/* Stats Grid using Design System */}
-        <StatsGrid cols={4}>
-          <StatCard
-            icon={Webhook}
-            label="Active Webhooks"
-            value={webhooks.filter((hook) => hook.is_active).length}
-          />
-          <StatCard
-            icon={Send}
-            label="Total Deliveries"
-            value={totalStats.total}
-          />
-          <StatCard
-            icon={CheckCircle2}
-            label="Success Rate"
-            value={`${totalStats.pct}%`}
-          />
-          <StatCard
-            icon={XCircle}
-            label="Failed Deliveries"
-            value={totalStats.failed}
-          />
-        </StatsGrid>
+        <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="rounded-2xl border border-white/10 bg-white/[0.06] p-4 shadow-inner shadow-slate-900/30">
+            <div className="text-xs uppercase text-white/60">Active Webhooks</div>
+            <div className="mt-2 text-2xl font-semibold">{webhooks.filter((hook) => hook.is_active).length}</div>
+          </div>
+          <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-4">
+            <div className="text-xs uppercase text-white/60">Deliveries</div>
+            <div className="mt-2 text-2xl font-semibold">{totalStats.total}</div>
+          </div>
+          <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-4">
+            <div className="text-xs uppercase text-white/60">Success Rate</div>
+            <div className="mt-2 text-2xl font-semibold">{totalStats.pct}%</div>
+          </div>
+          <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-4">
+            <div className="text-xs uppercase text-white/60">Failed Deliveries</div>
+            <div className="mt-2 text-2xl font-semibold">{totalStats.failed}</div>
+          </div>
+        </section>
 
-        {/* Webhooks Table */}
-        <section className="rounded-lg bg-slate-800/95 glow-border overflow-hidden">
+        <section className="rounded-2xl border border-white/10 bg-white/[0.03] shadow-xl shadow-slate-900/30 backdrop-blur">
           <div className="overflow-auto">
             <table className="min-w-[820px] w-full text-sm text-white/90">
               <thead>
-                <tr className="bg-slate-700/50 text-slate-400 uppercase text-xs">
+                <tr className="bg-white/[0.05] text-white/60 uppercase text-xs">
                   <th className="px-4 py-3 text-left">Webhook</th>
                   <th className="px-4 py-3 text-left">Events</th>
                   <th className="px-4 py-3 text-left">Status</th>
@@ -585,38 +584,38 @@ export default function BuilderCommunicationsPage() {
 
         {selectedWebhook && (
           <section className="grid gap-6 lg:grid-cols-[2.2fr_1fr]">
-            <div className="rounded-lg bg-slate-800/95 glow-border p-6 space-y-4">
+            <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-6 space-y-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <h2 className="text-lg font-semibold text-white">{selectedWebhook.name}</h2>
-                  <p className="text-xs text-slate-400">Delivery history & retries</p>
+                  <h2 className="text-lg font-semibold">{selectedWebhook.name}</h2>
+                  <p className="text-xs text-white/60">Delivery history & retries</p>
                 </div>
                 <Badge tone="default">Webhook ID • {selectedWebhook.id.slice(0, 8)}...</Badge>
               </div>
 
               <div className="grid gap-4 sm:grid-cols-3">
-                <div className="rounded-lg bg-slate-700/50 border border-slate-600/50 p-4">
-                  <div className="text-xs uppercase text-slate-400">Total Deliveries</div>
-                  <div className="mt-2 text-xl font-semibold text-white">{selectedWebhook.total_deliveries ?? 0}</div>
+                <div className="rounded-xl border border-white/10 bg-white/[0.04] p-4">
+                  <div className="text-xs uppercase text-white/60">Total Deliveries</div>
+                  <div className="mt-2 text-xl font-semibold">{selectedWebhook.total_deliveries ?? 0}</div>
                 </div>
-                <div className="rounded-lg bg-slate-700/50 border border-slate-600/50 p-4">
-                  <div className="text-xs uppercase text-slate-400">Success</div>
+                <div className="rounded-xl border border-white/10 bg-white/[0.04] p-4">
+                  <div className="text-xs uppercase text-white/60">Success</div>
                   <div className="mt-2 text-xl font-semibold text-emerald-300">
                     {selectedWebhook.successful_deliveries ?? 0}
                   </div>
                 </div>
-                <div className="rounded-lg bg-slate-700/50 border border-slate-600/50 p-4">
-                  <div className="text-xs uppercase text-slate-400">Failures</div>
+                <div className="rounded-xl border border-white/10 bg-white/[0.04] p-4">
+                  <div className="text-xs uppercase text-white/60">Failures</div>
                   <div className="mt-2 text-xl font-semibold text-rose-300">
                     {selectedWebhook.failed_deliveries ?? 0}
                   </div>
                 </div>
               </div>
 
-              <div className="rounded-lg bg-slate-900/50 border border-slate-700/50">
+              <div className="rounded-xl border border-white/10 bg-white/[0.03]">
                 <div className="overflow-hidden">
                   <table className="min-w-full text-sm text-white/80">
-                    <thead className="bg-slate-700/50 text-xs uppercase text-slate-400">
+                    <thead className="bg-white/[0.05] text-xs uppercase text-white/60">
                       <tr>
                         <th className="px-3 py-2 text-left">Event</th>
                         <th className="px-3 py-2 text-left">Status</th>
@@ -677,7 +676,7 @@ export default function BuilderCommunicationsPage() {
               </div>
             </div>
 
-            <aside className="rounded-lg bg-slate-800/95 glow-border p-6 space-y-4">
+            <aside className="rounded-2xl border border-white/10 bg-white/[0.02] p-6 space-y-4">
               <div>
                 <h3 className="text-lg font-semibold">Endpoint configuration</h3>
                 <p className="text-xs text-white/60">Keep this information in sync with your downstream integrations.</p>

@@ -9,7 +9,6 @@ export default function BillingPage() {
     <BuilderPageWrapper
       title="Billing & Subscription"
       description="Manage your subscription, view invoices, and track usage"
-      emoji="💳"
     >
       <BillingManagement />
     </BuilderPageWrapper>

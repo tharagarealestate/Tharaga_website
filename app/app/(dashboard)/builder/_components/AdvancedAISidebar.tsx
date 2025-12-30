@@ -66,12 +66,9 @@ export function AdvancedAISidebar() {
   const router = useRouter()
   
   // Map routes to unified dashboard sections
-  // This is the WORKING configuration from commit 64ed06f
+  // Note: /builder/leads and /builder/properties pages were deleted - navigation goes directly to sections
   const routeToSectionMap: Record<string, string> = {
     '/builder': 'overview',
-    '/builder/leads': 'leads',
-    '/builder/leads/pipeline': 'pipeline',
-    '/builder/properties': 'properties',
     '/builder/messaging': 'client-outreach',
     '/behavior-tracking': 'behavior-analytics',
   }
@@ -467,7 +464,7 @@ export function AdvancedAISidebar() {
                           onHoverEnd={() => setHoveredItem(null)}
                         >
                           <Link
-                            href={isLocked ? '#' : item.href}
+                            href={isLocked ? '#' : (shouldUseUnifiedDashboard(item.href) ? getUnifiedDashboardUrl(item.href) : item.href)}
                             onClick={(e) => {
                               if (isLocked) {
                                 e.preventDefault()
@@ -475,14 +472,15 @@ export function AdvancedAISidebar() {
                                 return
                               }
 
+                              // For unified dashboard sections, use window.location.href for reliable navigation
                               if (shouldUseUnifiedDashboard(item.href)) {
                                 e.preventDefault()
                                 const unifiedUrl = getUnifiedDashboardUrl(item.href)
-                                router.push(unifiedUrl)
+                                window.location.href = unifiedUrl
                                 return
                               }
 
-                              // For direct routes like /builder/leads, /builder/integrations, /builder/billing
+                              // For direct routes like /builder/integrations, /builder/billing
                               // Let the Link component handle navigation normally
                             }}
                             className={cn(
@@ -616,14 +614,15 @@ export function AdvancedAISidebar() {
                                       transition={{ delay: subIndex * 0.05 }}
                                     >
                                       <Link
-                                        href={sub.href}
+                                        href={shouldUseUnifiedDashboard(sub.href) ? getUnifiedDashboardUrl(sub.href) : sub.href}
                                         onClick={(e) => {
+                                          // For unified dashboard sections, use window.location.href for reliable navigation
                                           if (shouldUseUnifiedDashboard(sub.href)) {
                                             e.preventDefault()
                                             const unifiedUrl = getUnifiedDashboardUrl(sub.href)
-                                            router.push(unifiedUrl)
+                                            window.location.href = unifiedUrl
                                           }
-                                          // For direct routes like /builder/leads and /builder/leads/pipeline
+                                          // For direct routes like /builder/properties/performance
                                           // Let the Link component handle navigation normally
                                         }}
                                         className={cn(

@@ -173,7 +173,7 @@ const formatDuration = (minutes: number): string => {
 const getTrendIcon = (change: number) => {
   if (change > 0) return <ArrowUpRight className="w-4 h-4 text-emerald-600" />;
   if (change < 0) return <ArrowDownRight className="w-4 h-4 text-red-600" />;
-  return <Minus className="w-4 h-4 text-gray-500" />;
+  return <Minus className="w-4 h-4 text-slate-400" />;
 };
 
 const getTrendColor = (change: number, reverse = false) => {
@@ -184,7 +184,7 @@ const getTrendColor = (change: number, reverse = false) => {
     if (change > 0) return 'text-emerald-600';
     if (change < 0) return 'text-red-600';
   }
-  return 'text-gray-600';
+  return 'text-slate-400';
 };
 
 export default function AnalyticsDashboard({
@@ -257,7 +257,7 @@ export default function AnalyticsDashboard({
     return (
       <div className="space-y-6 p-6">
         {[1, 2, 3, 4].map((i) => (
-          <div key={i} className="glass-card p-6 rounded-2xl relative">
+          <div key={i} className="bg-slate-800/95 glow-border p-6 rounded-2xl relative">
             <GlassLoadingOverlay />
           </div>
         ))}
@@ -270,7 +270,7 @@ export default function AnalyticsDashboard({
       <div className="flex items-center justify-center h-96">
         <div className="text-center">
           <Activity className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-          <p className="text-gray-600">No analytics data available</p>
+          <p className="text-slate-400">No analytics data available</p>
         </div>
       </div>
     );
@@ -337,7 +337,7 @@ export default function AnalyticsDashboard({
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className="glass-card p-6 rounded-2xl relative overflow-hidden group hover:shadow-2xl transition-shadow duration-300"
+          className="bg-slate-800/95 glow-border p-6 rounded-2xl relative overflow-hidden group hover:shadow-2xl transition-shadow duration-300"
         >
           <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-blue-500/10 to-transparent rounded-full -mr-16 -mt-16" />
           <div className="relative space-y-2">
@@ -346,8 +346,8 @@ export default function AnalyticsDashboard({
               {showChangeIndicators && getTrendIcon(data.overview.new_leads_change)}
             </div>
             <div>
-              <h3 className="text-gray-600 text-sm font-medium mb-1">Total Leads</h3>
-              <p className="text-3xl font-bold text-gray-900 mb-2">
+              <h3 className="text-slate-400 text-sm font-medium mb-1">Total Leads</h3>
+              <p className="text-3xl font-bold text-white mb-2">
                 {formatNumber(data.overview.total_leads)}
               </p>
           </div>
@@ -358,7 +358,7 @@ export default function AnalyticsDashboard({
                   {data.overview.new_leads_change.toFixed(1)}%
                 </span>
               )}
-              <span className="text-gray-500">
+              <span className="text-slate-400">
                 +{formatNumber(data.overview.new_leads_this_period)} this period
               </span>
           </div>
@@ -369,7 +369,7 @@ export default function AnalyticsDashboard({
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.1 }}
-          className="glass-card p-6 rounded-2xl relative overflow-hidden group hover:shadow-2xl transition-shadow duration-300"
+          className="bg-slate-800/95 glow-border p-6 rounded-2xl relative overflow-hidden group hover:shadow-2xl transition-shadow duration-300"
         >
           <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-red-500/10 to-transparent rounded-full -mr-16 -mt-16" />
           <div className="relative space-y-2">
@@ -378,8 +378,8 @@ export default function AnalyticsDashboard({
               {showChangeIndicators && getTrendIcon(data.overview.hot_leads_change)}
             </div>
             <div>
-              <h3 className="text-gray-600 text-sm font-medium mb-1">Hot Leads</h3>
-              <p className="text-3xl font-bold text-gray-900 mb-2">
+              <h3 className="text-slate-400 text-sm font-medium mb-1">Hot Leads</h3>
+              <p className="text-3xl font-bold text-white mb-2">
                 {formatNumber(data.overview.hot_leads)}
               </p>
             </div>
@@ -389,7 +389,7 @@ export default function AnalyticsDashboard({
                   {data.overview.hot_leads_change > 0 ? '+' : ''}
                   {data.overview.hot_leads_change.toFixed(1)}%
                 </span>
-                <span className="text-gray-500">vs previous period</span>
+                <span className="text-slate-400">vs previous period</span>
               </div>
             )}
           </div>
@@ -399,7 +399,7 @@ export default function AnalyticsDashboard({
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.2 }}
-          className="glass-card p-6 rounded-2xl relative overflow-hidden group hover:shadow-2xl transition-shadow duration-300"
+          className="bg-slate-800/95 glow-border p-6 rounded-2xl relative overflow-hidden group hover:shadow-2xl transition-shadow duration-300"
         >
           <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-emerald-500/10 to-transparent rounded-full -mr-16 -mt-16" />
           <div className="relative space-y-2">
@@ -408,8 +408,8 @@ export default function AnalyticsDashboard({
               {showChangeIndicators && getTrendIcon(data.overview.conversion_rate_change)}
             </div>
             <div>
-              <h3 className="text-gray-600 text-sm font-medium mb-1">Conversion Rate</h3>
-              <p className="text-3xl font-bold text-gray-900 mb-2">
+              <h3 className="text-slate-400 text-sm font-medium mb-1">Conversion Rate</h3>
+              <p className="text-3xl font-bold text-white mb-2">
                 {data.overview.conversion_rate.toFixed(1)}%
               </p>
             </div>
@@ -419,7 +419,7 @@ export default function AnalyticsDashboard({
                   {data.overview.conversion_rate_change > 0 ? '+' : ''}
                   {data.overview.conversion_rate_change.toFixed(1)}%
                 </span>
-                <span className="text-gray-500">change</span>
+                <span className="text-slate-400">change</span>
               </div>
             )}
           </div>
@@ -429,7 +429,7 @@ export default function AnalyticsDashboard({
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.3 }}
-          className="glass-card p-6 rounded-2xl relative overflow-hidden group hover:shadow-2xl transition-shadow duration-300"
+          className="bg-slate-800/95 glow-border p-6 rounded-2xl relative overflow-hidden group hover:shadow-2xl transition-shadow duration-300"
         >
           <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-amber-500/10 to-transparent rounded-full -mr-16 -mt-16" />
           <div className="relative space-y-2">
@@ -438,8 +438,8 @@ export default function AnalyticsDashboard({
               {showChangeIndicators && getTrendIcon(data.overview.response_time_change)}
             </div>
             <div>
-              <h3 className="text-gray-600 text-sm font-medium mb-1">Avg Response Time</h3>
-              <p className="text-3xl font-bold text-gray-900 mb-2">
+              <h3 className="text-slate-400 text-sm font-medium mb-1">Avg Response Time</h3>
+              <p className="text-3xl font-bold text-white mb-2">
                 {formatDuration(data.overview.avg_response_time)}
               </p>
             </div>
@@ -449,7 +449,7 @@ export default function AnalyticsDashboard({
                   {data.overview.response_time_change > 0 ? '+' : ''}
                   {data.overview.response_time_change.toFixed(1)}%
                 </span>
-                <span className="text-gray-500">
+                <span className="text-slate-400">
                   {data.overview.response_time_change < 0 ? 'faster' : 'slower'}
                 </span>
               </div>
@@ -463,12 +463,12 @@ export default function AnalyticsDashboard({
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.4 }}
-          className="glass-card p-6 rounded-2xl"
+          className="bg-slate-800/95 glow-border p-6 rounded-2xl"
         >
           <div className="flex items-center justify-between mb-6">
             <div>
-              <h3 className="text-lg font-bold text-gray-900">Lead Quality Distribution</h3>
-              <p className="text-sm text-gray-600">Score-based categorization</p>
+              <h3 className="text-lg font-bold text-white">Lead Quality Distribution</h3>
+              <p className="text-sm text-slate-400">Score-based categorization</p>
             </div>
             <PieChartIcon className="w-6 h-6 text-gray-400" />
           </div>
@@ -516,7 +516,7 @@ export default function AnalyticsDashboard({
             ].map((quality) => (
               <div key={quality.label} className="flex items-center gap-2">
                 <div className="w-3 h-3 rounded-full" style={{ backgroundColor: quality.color }} />
-                <span className="text-sm text-gray-700">
+                <span className="text-sm text-slate-300">
                   {quality.label}: <strong>{formatNumber(quality.count)}</strong> (
                   {quality.percentage.toFixed(1)}%)
                 </span>
@@ -529,12 +529,12 @@ export default function AnalyticsDashboard({
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.5 }}
-          className="glass-card p-6 rounded-2xl"
+          className="bg-slate-800/95 glow-border p-6 rounded-2xl"
         >
           <div className="flex items-center justify-between mb-6">
             <div>
-              <h3 className="text-lg font-bold text-gray-900">Conversion Funnel</h3>
-              <p className="text-sm text-gray-600">
+              <h3 className="text-lg font-bold text-white">Conversion Funnel</h3>
+              <p className="text-sm text-slate-400">
                 Overall conversion: <strong>{data.funnel.overall_conversion.toFixed(1)}%</strong>
               </p>
             </div>
@@ -549,8 +549,8 @@ export default function AnalyticsDashboard({
               return (
                 <div key={stage.name} className="relative">
           <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm font-medium text-gray-700">{stage.name}</span>
-                    <span className="text-sm text-gray-600">
+                    <span className="text-sm font-medium text-slate-300">{stage.name}</span>
+                    <span className="text-sm text-slate-400">
                       {formatNumber(stage.value)} ({stage.conversion_rate.toFixed(1)}%)
                     </span>
                   </div>
@@ -583,12 +583,12 @@ export default function AnalyticsDashboard({
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, delay: 0.6 }}
-        className="glass-card p-6 rounded-2xl"
+        className="bg-slate-800/95 glow-border p-6 rounded-2xl"
       >
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h3 className="text-lg font-bold text-gray-900">Lead Score Trends</h3>
-            <p className="text-sm text-gray-600">Average scores and lead counts over time</p>
+            <h3 className="text-lg font-bold text-white">Lead Score Trends</h3>
+            <p className="text-sm text-slate-400">Average scores and lead counts over time</p>
           </div>
           <LineChartIcon className="w-6 h-6 text-gray-400" />
         </div>
@@ -650,12 +650,12 @@ export default function AnalyticsDashboard({
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.7 }}
-            className="glass-card p-6 rounded-2xl"
+            className="bg-slate-800/95 glow-border p-6 rounded-2xl"
           >
             <div className="flex items-center justify-between mb-6">
               <div>
-                <h3 className="text-lg font-bold text-gray-900">Top Performing Properties</h3>
-                <p className="text-sm text-gray-600">Highest engagement and conversions</p>
+                <h3 className="text-lg font-bold text-white">Top Performing Properties</h3>
+                <p className="text-sm text-slate-400">Highest engagement and conversions</p>
               </div>
               <Star className="w-6 h-6 text-gray-400" />
             </div>
@@ -669,8 +669,8 @@ export default function AnalyticsDashboard({
                     {index + 1}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="font-medium text-gray-900 truncate">{property.property_title}</p>
-                    <div className="flex flex-wrap items-center gap-4 mt-1 text-xs text-gray-600">
+                    <p className="font-medium text-white truncate">{property.property_title}</p>
+                    <div className="flex flex-wrap items-center gap-4 mt-1 text-xs text-slate-400">
                       <span className="flex items-center gap-1">
                         <Eye className="w-3 h-3" />
                         {formatNumber(property.view_count)} views
@@ -686,8 +686,8 @@ export default function AnalyticsDashboard({
                     </div>
           </div>
                   <div className="text-right">
-                    <p className="text-sm font-bold text-gray-900">{formatNumber(property.lead_count)}</p>
-                    <p className="text-xs text-gray-600">leads</p>
+                    <p className="text-sm font-bold text-white">{formatNumber(property.lead_count)}</p>
+                    <p className="text-xs text-slate-400">leads</p>
           </div>
         </div>
               ))}
@@ -700,12 +700,12 @@ export default function AnalyticsDashboard({
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.8 }}
-            className="glass-card p-6 rounded-2xl"
+            className="bg-slate-800/95 glow-border p-6 rounded-2xl"
           >
             <div className="flex items-center justify-between mb-6">
               <div>
-                <h3 className="text-lg font-bold text-gray-900">Lead Sources</h3>
-                <p className="text-sm text-gray-600">Marketing channel performance</p>
+                <h3 className="text-lg font-bold text-white">Lead Sources</h3>
+                <p className="text-sm text-slate-400">Marketing channel performance</p>
               </div>
               <Activity className="w-6 h-6 text-gray-400" />
             </div>
@@ -738,9 +738,9 @@ export default function AnalyticsDashboard({
                       className="w-2 h-2 rounded-full"
                       style={{ backgroundColor: SOURCE_COLORS[index % SOURCE_COLORS.length] }}
                     />
-                    <span className="font-medium text-gray-700">{source.source}</span>
+                    <span className="font-medium text-slate-300">{source.source}</span>
           </div>
-                  <div className="flex flex-wrap items-center gap-4 text-xs text-gray-600">
+                  <div className="flex flex-wrap items-center gap-4 text-xs text-slate-400">
                     <span>Quality: {source.avg_quality.toFixed(1)}/10</span>
                     <span>CVR: {source.conversion_rate.toFixed(1)}%</span>
                     <span className={source.roi > 0 ? 'text-emerald-600' : 'text-red-600'}>
@@ -759,12 +759,12 @@ export default function AnalyticsDashboard({
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.9 }}
-          className="glass-card p-6 rounded-2xl"
+          className="bg-slate-800/95 glow-border p-6 rounded-2xl"
         >
           <div className="flex items-center justify-between mb-6">
             <div>
-              <h3 className="text-lg font-bold text-gray-900">Revenue Projections</h3>
-              <p className="text-sm text-gray-600">Pipeline value and forecasts</p>
+              <h3 className="text-lg font-bold text-white">Revenue Projections</h3>
+              <p className="text-sm text-slate-400">Pipeline value and forecasts</p>
             </div>
             <DollarSign className="w-6 h-6 text-gray-400" />
           </div>
@@ -777,28 +777,28 @@ export default function AnalyticsDashboard({
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="p-4 bg-gray-50 rounded-xl">
-                <p className="text-xs text-gray-600 mb-1">Expected Revenue</p>
-                <p className="text-lg font-bold text-gray-900">
+                <p className="text-xs text-slate-400 mb-1">Expected Revenue</p>
+                <p className="text-lg font-bold text-white">
                   {formatCurrency(data.revenue.expected_revenue)}
                 </p>
               </div>
               <div className="p-4 bg-gray-50 rounded-xl">
-                <p className="text-xs text-gray-600 mb-1">Closed Deals</p>
-                <p className="text-lg font-bold text-gray-900">
+                <p className="text-xs text-slate-400 mb-1">Closed Deals</p>
+                <p className="text-lg font-bold text-white">
                   {formatCurrency(data.revenue.closed_deals_value)}
                 </p>
               </div>
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="p-4 bg-gray-50 rounded-xl">
-                <p className="text-xs text-gray-600 mb-1">Avg Deal Size</p>
-                <p className="text-lg font-bold text-gray-900">
+                <p className="text-xs text-slate-400 mb-1">Avg Deal Size</p>
+                <p className="text-lg font-bold text-white">
                   {formatCurrency(data.revenue.avg_deal_size)}
                 </p>
           </div>
               <div className="p-4 bg-gray-50 rounded-xl">
-                <p className="text-xs text-gray-600 mb-1">Projected Monthly</p>
-                <p className="text-lg font-bold text-gray-900">
+                <p className="text-xs text-slate-400 mb-1">Projected Monthly</p>
+                <p className="text-lg font-bold text-white">
                   {formatCurrency(data.revenue.projected_monthly)}
                 </p>
           </div>
@@ -810,20 +810,20 @@ export default function AnalyticsDashboard({
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 1.0 }}
-          className="glass-card p-6 rounded-2xl"
+          className="bg-slate-800/95 glow-border p-6 rounded-2xl"
         >
           <div className="flex items-center justify-between mb-6">
             <div>
-              <h3 className="text-lg font-bold text-gray-900">Response Performance</h3>
-              <p className="text-sm text-gray-600">Builder response metrics</p>
+              <h3 className="text-lg font-bold text-white">Response Performance</h3>
+              <p className="text-sm text-slate-400">Builder response metrics</p>
             </div>
             <MessageCircle className="w-6 h-6 text-gray-400" />
           </div>
           <div className="space-y-4">
             <div className="p-4 bg-gray-50 rounded-xl">
               <div className="flex items-center justify-between mb-2">
-                <span className="text-sm text-gray-700">Response Rate</span>
-                <span className="text-lg font-bold text-gray-900">
+                <span className="text-sm text-slate-300">Response Rate</span>
+                <span className="text-lg font-bold text-white">
                   {data.response_metrics.response_rate.toFixed(1)}%
                 </span>
               </div>
@@ -839,19 +839,19 @@ export default function AnalyticsDashboard({
             <div className="grid grid-cols-2 gap-4">
               <div className="p-4 bg-gray-50 rounded-xl">
                 <div className="flex items-center gap-2 mb-1">
-                  <Clock className="w-4 h-4 text-gray-600" />
-                  <p className="text-xs text-gray-600">First Response</p>
+                  <Clock className="w-4 h-4 text-slate-400" />
+                  <p className="text-xs text-slate-400">First Response</p>
                 </div>
-                <p className="text-lg font-bold text-gray-900">
+                <p className="text-lg font-bold text-white">
                   {formatDuration(data.response_metrics.avg_first_response)}
                 </p>
               </div>
               <div className="p-4 bg-gray-50 rounded-xl">
                 <div className="flex items-center gap-2 mb-1">
-                  <Clock className="w-4 h-4 text-gray-600" />
-                  <p className="text-xs text-gray-600">Avg Response</p>
+                  <Clock className="w-4 h-4 text-slate-400" />
+                  <p className="text-xs text-slate-400">Avg Response</p>
                 </div>
-                <p className="text-lg font-bold text-gray-900">
+                <p className="text-lg font-bold text-white">
                   {formatDuration(data.response_metrics.avg_response_time)}
                 </p>
         </div>
@@ -884,12 +884,12 @@ export default function AnalyticsDashboard({
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, delay: 1.1 }}
-        className="glass-card p-6 rounded-2xl"
+        className="bg-slate-800/95 glow-border p-6 rounded-2xl"
       >
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h3 className="text-lg font-bold text-gray-900">Activity Heatmap</h3>
-            <p className="text-sm text-gray-600">
+            <h3 className="text-lg font-bold text-white">Activity Heatmap</h3>
+            <p className="text-sm text-slate-400">
               Peak activity: <strong>{data.activity_heatmap.peak_day}</strong> at{' '}
               <strong>{data.activity_heatmap.peak_hour}:00</strong>
             </p>
@@ -897,7 +897,7 @@ export default function AnalyticsDashboard({
           <BarChart3 className="w-6 h-6 text-gray-400" />
         </div>
         <div className="mb-8">
-          <p className="text-sm font-medium text-gray-700 mb-3">Activity by Hour</p>
+          <p className="text-sm font-medium text-slate-300 mb-3">Activity by Hour</p>
           <div className="grid grid-cols-12 gap-2">
             {Object.entries(data.activity_heatmap.by_hour)
               .sort(([a], [b]) => Number(a) - Number(b))
@@ -921,7 +921,7 @@ export default function AnalyticsDashboard({
                         {count} activities
                       </div>
                     </motion.div>
-                    <p className="text-xs text-gray-600 mt-1">{hour}:00</p>
+                    <p className="text-xs text-slate-400 mt-1">{hour}:00</p>
                   </div>
                 );
               })}
@@ -929,14 +929,14 @@ export default function AnalyticsDashboard({
       </div>
       
         <div>
-          <p className="text-sm font-medium text-gray-700 mb-3">Activity by Day</p>
+          <p className="text-sm font-medium text-slate-300 mb-3">Activity by Day</p>
           <div className="grid grid-cols-7 gap-4">
             {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((day) => {
               const count = data.activity_heatmap.by_day[day] || 0;
               const percentage = maxDayCount > 0 ? (count / maxDayCount) * 100 : 0;
               return (
                 <div key={day} className="text-center">
-                  <p className="text-sm font-medium text-gray-700 mb-2">{day}</p>
+                  <p className="text-sm font-medium text-slate-300 mb-2">{day}</p>
                   <motion.div
                     initial={{ height: 0 }}
                     animate={{ height: `${Math.max(percentage, 10)}%` }}
@@ -956,43 +956,43 @@ export default function AnalyticsDashboard({
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, delay: 1.2 }}
-        className="glass-card p-6 rounded-2xl"
+        className="bg-slate-800/95 glow-border p-6 rounded-2xl"
       >
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h3 className="text-lg font-bold text-gray-900">User Engagement Metrics</h3>
-            <p className="text-sm text-gray-600">Session and behavior analytics</p>
+            <h3 className="text-lg font-bold text-white">User Engagement Metrics</h3>
+            <p className="text-sm text-slate-400">Session and behavior analytics</p>
           </div>
           <Activity className="w-6 h-6 text-gray-400" />
         </div>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
           <div className="text-center p-4 bg-gray-50 rounded-xl">
             <Clock className="w-8 h-8 text-blue-600 mx-auto mb-2" />
-            <p className="text-2xl font-bold text-gray-900 mb-1">
+            <p className="text-2xl font-bold text-white mb-1">
               {formatDuration(data.engagement.avg_session_duration)}
             </p>
-            <p className="text-xs text-gray-600">Avg Session</p>
+            <p className="text-xs text-slate-400">Avg Session</p>
           </div>
           <div className="text-center p-4 bg-gray-50 rounded-xl">
             <Eye className="w-8 h-8 text-purple-600 mx-auto mb-2" />
-            <p className="text-2xl font-bold text-gray-900 mb-1">
+            <p className="text-2xl font-bold text-white mb-1">
               {data.engagement.avg_pages_per_session.toFixed(1)}
             </p>
-            <p className="text-xs text-gray-600">Pages/Session</p>
+            <p className="text-xs text-slate-400">Pages/Session</p>
           </div>
           <div className="text-center p-4 bg-gray-50 rounded-xl">
             <Target className="w-8 h-8 text-red-600 mx-auto mb-2" />
-            <p className="text-2xl font-bold text-gray-900 mb-1">
+            <p className="text-2xl font-bold text-white mb-1">
               {data.engagement.bounce_rate.toFixed(1)}%
             </p>
-            <p className="text-xs text-gray-600">Bounce Rate</p>
+            <p className="text-xs text-slate-400">Bounce Rate</p>
           </div>
           <div className="text-center p-4 bg-gray-50 rounded-xl">
             <Users className="w-8 h-8 text-emerald-600 mx-auto mb-2" />
-            <p className="text-2xl font-bold text-gray-900 mb-1">
+            <p className="text-2xl font-bold text-white mb-1">
               {formatNumber(data.engagement.repeat_visitors)}
             </p>
-            <p className="text-xs text-gray-600">Repeat Visitors</p>
+            <p className="text-xs text-slate-400">Repeat Visitors</p>
           </div>
         </div>
       </motion.div>

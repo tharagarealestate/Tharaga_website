@@ -186,44 +186,45 @@ export function ClientOutreachSection({ onNavigate }: ClientOutreachSectionProps
               className="bg-gradient-to-br from-slate-800/95 via-slate-800/95 to-slate-900/95 glow-border rounded-xl overflow-hidden shadow-2xl"
             >
               <div className="p-6 sm:p-8 space-y-6">
-            <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-slate-300 mb-2">Recipient</label>
-                  <input
-                    type="text"
-                    value={sendForm.to}
-                    onChange={(e) => setSendForm({ ...sendForm, to: e.target.value })}
-                    placeholder="Phone number (e.g., +91 9876543210)"
-                    className="w-full px-4 py-2.5 bg-slate-700/50 glow-border rounded-lg text-white placeholder:text-slate-400 focus:outline-none focus:glow-border transition-all"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-slate-300 mb-2">Message</label>
-                  <textarea
-                    value={sendForm.body}
-                    onChange={(e) => setSendForm({ ...sendForm, body: e.target.value })}
-                    placeholder="Type your message here..."
-                    rows={6}
-                    className="w-full px-4 py-2.5 bg-slate-700/50 glow-border rounded-lg text-white placeholder:text-slate-400 focus:outline-none focus:glow-border transition-all resize-none"
-                  />
-                {validation && (
-                  <div className="mt-2 space-y-1">
-                    {validation.errors.map((error, i) => (
-                      <p key={i} className="text-sm text-rose-300">{error}</p>
-                    ))}
-                    {validation.warnings.map((warning, i) => (
-                      <p key={i} className="text-sm text-amber-300">{warning}</p>
-                    ))}
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-slate-300 mb-2">Recipient</label>
+                    <input
+                      type="text"
+                      value={sendForm.to}
+                      onChange={(e) => setSendForm({ ...sendForm, to: e.target.value })}
+                      placeholder="Phone number (e.g., +91 9876543210)"
+                      className="w-full px-4 py-2.5 bg-slate-700/50 glow-border rounded-lg text-white placeholder:text-slate-400 focus:outline-none focus:glow-border transition-all"
+                    />
                   </div>
-                )}
-              </div>
-              <button
-                onClick={handleSendMessage}
-                disabled={loading || !sendForm.to || !sendForm.body}
-                className="w-full px-6 py-3 bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 glow-border text-slate-900 font-semibold rounded-lg transition-all duration-300 shadow-lg hover:shadow-xl hover:shadow-amber-500/30 hover:-translate-y-1 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {loading ? 'Sending...' : 'Send Message'}
-              </button>
+                  <div>
+                    <label className="block text-sm font-medium text-slate-300 mb-2">Message</label>
+                    <textarea
+                      value={sendForm.body}
+                      onChange={(e) => setSendForm({ ...sendForm, body: e.target.value })}
+                      placeholder="Type your message here..."
+                      rows={6}
+                      className="w-full px-4 py-2.5 bg-slate-700/50 glow-border rounded-lg text-white placeholder:text-slate-400 focus:outline-none focus:glow-border transition-all resize-none"
+                    />
+                    {validation && (
+                      <div className="mt-2 space-y-1">
+                        {validation.errors.map((error, i) => (
+                          <p key={i} className="text-sm text-rose-300">{error}</p>
+                        ))}
+                        {validation.warnings.map((warning, i) => (
+                          <p key={i} className="text-sm text-amber-300">{warning}</p>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+                <button
+                  onClick={handleSendMessage}
+                  disabled={loading || !sendForm.to || !sendForm.body}
+                  className="w-full px-6 py-3 bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 glow-border text-slate-900 font-semibold rounded-lg transition-all duration-300 shadow-lg hover:shadow-xl hover:shadow-amber-500/30 hover:-translate-y-1 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {loading ? 'Sending...' : 'Send Message'}
+                </button>
               </div>
             </motion.div>
           )}

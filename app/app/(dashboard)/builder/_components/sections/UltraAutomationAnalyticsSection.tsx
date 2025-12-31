@@ -161,8 +161,6 @@ export function UltraAutomationAnalyticsSection({ onNavigate }: UltraAutomationA
       >
         <div className="p-6 sm:p-8">
           <div className="flex items-center gap-2">
-          <div className="flex items-center gap-2">
-            {(['7d', '30d', '90d', 'all'] as const).map((p) => (
             {(['7d', '30d', '90d', 'all'] as const).map((p) => (
               <button
                 key={p}

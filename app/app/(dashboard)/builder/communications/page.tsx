@@ -337,8 +337,8 @@ export default function BuilderCommunicationsPage() {
   }, [webhooks])
 
   return (
-    <BuilderPageWrapper 
-      title="Real-Time Integrations Dashboard" 
+    <BuilderPageWrapper
+      title="Real-Time Integrations Dashboard"
       description="Manage webhooks and monitor delivery status"
       noContainer
     >

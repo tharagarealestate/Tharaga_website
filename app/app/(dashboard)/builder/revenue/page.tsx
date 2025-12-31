@@ -171,40 +171,40 @@ export default function RevenuePage() {
             <Lock className="w-10 h-10 text-gold-400" />
           </div>
           <h2 className="text-3xl font-bold text-white mb-3">Revenue Dashboard</h2>
-          <p className="text-lg text-gray-300 mb-2 max-w-md">
+          <p className="text-lg text-slate-300 mb-2 max-w-md">
             Access real-time revenue tracking, commission management, and financial insights
           </p>
-          <p className="text-sm text-gray-400 mb-8">
+          <p className="text-sm text-slate-400 mb-8">
             Upgrade to Builder Pro to unlock this premium feature
           </p>
           <Link
             href="/pricing"
-            className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-gold-600 to-gold-500 text-primary-950 font-bold rounded-lg hover:shadow-lg hover:shadow-gold-500/30 transition-all"
+            className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 glow-border text-slate-900 font-semibold rounded-lg transition-all duration-300 shadow-lg hover:shadow-xl hover:shadow-amber-500/30"
           >
             <Sparkles className="w-5 h-5" />
             Upgrade to Pro
           </Link>
-          <div className="mt-8 p-6 backdrop-blur-xl bg-white/5 border border-white/20 rounded-2xl max-w-lg">
+          <div className="mt-8 p-6 bg-gradient-to-br from-slate-800/95 via-slate-800/95 to-slate-900/95 glow-border rounded-xl max-w-lg">
             <h3 className="text-lg font-semibold text-white mb-4">What you'll get:</h3>
-            <ul className="text-left space-y-2 text-gray-300">
+            <ul className="text-left space-y-2 text-slate-300">
               <li className="flex items-center gap-2">
-                <span className="text-gold-400">✓</span>
+                <span className="text-amber-300">✓</span>
                 Real-time revenue tracking from all sources
               </li>
               <li className="flex items-center gap-2">
-                <span className="text-gold-400">✓</span>
+                <span className="text-amber-300">✓</span>
                 Commission transaction management
               </li>
               <li className="flex items-center gap-2">
-                <span className="text-gold-400">✓</span>
+                <span className="text-amber-300">✓</span>
                 Revenue forecasting and predictions
               </li>
               <li className="flex items-center gap-2">
-                <span className="text-gold-400">✓</span>
+                <span className="text-amber-300">✓</span>
                 Payment history and invoice management
               </li>
               <li className="flex items-center gap-2">
-                <span className="text-gold-400">✓</span>
+                <span className="text-amber-300">✓</span>
                 Pipeline value calculations
               </li>
             </ul>
@@ -218,10 +218,10 @@ export default function RevenuePage() {
     return (
       <BuilderPageWrapper title="Revenue Dashboard" description="Track your real-time revenue and commissions">
         <div className="text-center py-12">
-          <p className="text-red-400 mb-4">{error}</p>
+          <p className="text-rose-300 mb-4">{error}</p>
           <button
             onClick={() => fetchRevenue()}
-            className="px-4 py-2 bg-gold-500/20 text-gold-300 rounded-lg hover:bg-gold-500/30 transition-colors"
+            className="px-4 py-2.5 bg-amber-500/20 glow-border text-amber-300 rounded-lg hover:bg-amber-500/30 transition-all"
           >
             Retry
           </button>
@@ -233,8 +233,12 @@ export default function RevenuePage() {
   if (!revenueData) {
     return (
       <BuilderPageWrapper title="Revenue Dashboard" description="Track your real-time revenue and commissions">
-        <div className="text-center py-12">
-          <p className="text-gray-400">No revenue data available</p>
+        <div className="text-center py-16 px-6">
+          <div className="p-4 bg-slate-700/30 rounded-full w-20 h-20 mx-auto mb-6 flex items-center justify-center">
+            <DollarSign className="h-10 w-10 text-slate-500" />
+          </div>
+          <h4 className="text-xl font-semibold text-white mb-2">No revenue data available</h4>
+          <p className="text-slate-400">Revenue data will appear here once you have transactions</p>
         </div>
       </BuilderPageWrapper>
     )
@@ -253,204 +257,221 @@ export default function RevenuePage() {
         {/* Header with Refresh */}
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-sm text-gray-400">
+            <p className="text-sm text-slate-400">
               Last updated: {lastUpdated.toLocaleTimeString('en-IN')}
             </p>
           </div>
           <button
             onClick={() => fetchRevenue(true)}
             disabled={refreshing}
-            className="flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-white/10 rounded-lg transition-colors disabled:opacity-50"
+            className="flex items-center gap-2 px-4 py-2.5 bg-slate-700/50 glow-border text-slate-200 hover:bg-slate-700 rounded-lg transition-all disabled:opacity-50"
           >
-            <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
+            <RefreshCw className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
             <span className="text-sm">Refresh</span>
           </button>
         </div>
 
-        {/* Main Revenue Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        {/* Main Revenue Cards - Design System Statistics Cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {/* Total Revenue */}
-          <div className="backdrop-blur-xl bg-white/10 border border-white/20 rounded-2xl p-6 shadow-lg">
-            <div className="flex items-center justify-between mb-4">
-              <div className="w-12 h-12 rounded-xl bg-gold-500/20 flex items-center justify-center">
-                <DollarSign className="w-6 h-6 text-gold-400" />
-              </div>
-              <span className="text-xs text-gray-400">Total</span>
+          <div className="p-6 bg-slate-800/95 glow-border rounded-lg border border-slate-700/50 relative overflow-hidden group">
+            <div className="absolute top-6 right-6 opacity-10 group-hover:opacity-20 transition-opacity">
+              <DollarSign className="w-16 h-16 text-amber-300" />
             </div>
-            <div className="space-y-1">
-              <h3 className="text-3xl font-bold text-white">
+            <div className="relative z-10">
+              <div className="flex items-center justify-between mb-4">
+                <DollarSign className="h-8 w-8 text-amber-300" />
+                <span className="text-xs text-slate-400">Total</span>
+              </div>
+              <h3 className="text-xs font-bold text-slate-400 uppercase mb-2 tracking-wide">Total Revenue</h3>
+              <p className="text-3xl font-bold text-white mb-1 tabular-nums">
                 {formatCurrency(revenueData.totalRevenue)}
-              </h3>
-              <p className="text-sm text-gray-400">All-time revenue</p>
+              </p>
+              <p className="text-sm text-slate-400">All-time revenue</p>
             </div>
           </div>
 
           {/* Monthly Revenue */}
-          <div className="backdrop-blur-xl bg-white/10 border border-white/20 rounded-2xl p-6 shadow-lg">
-            <div className="flex items-center justify-between mb-4">
-              <div className="w-12 h-12 rounded-xl bg-emerald-500/20 flex items-center justify-center">
-                <Calendar className="w-6 h-6 text-emerald-400" />
-              </div>
-              <div className={`flex items-center gap-1 ${growthColor}`}>
-                {growthIcon}
-                <span className="text-xs font-medium">
-                  {revenueData.monthlyGrowth >= 0 ? '+' : ''}{revenueData.monthlyGrowth.toFixed(1)}%
-                </span>
-              </div>
+          <div className="p-6 bg-slate-800/95 glow-border rounded-lg border border-slate-700/50 relative overflow-hidden group">
+            <div className="absolute top-6 right-6 opacity-10 group-hover:opacity-20 transition-opacity">
+              <Calendar className="w-16 h-16 text-emerald-300" />
             </div>
-            <div className="space-y-1">
-              <h3 className="text-3xl font-bold text-white">
+            <div className="relative z-10">
+              <div className="flex items-center justify-between mb-4">
+                <Calendar className="h-8 w-8 text-emerald-300" />
+                <div className={`flex items-center gap-1 ${growthColor.replace('text-emerald-400', 'text-emerald-300').replace('text-red-400', 'text-rose-300')}`}>
+                  {growthIcon}
+                  <span className="text-xs font-medium">
+                    {revenueData.monthlyGrowth >= 0 ? '+' : ''}{revenueData.monthlyGrowth.toFixed(1)}%
+                  </span>
+                </div>
+              </div>
+              <h3 className="text-xs font-bold text-slate-400 uppercase mb-2 tracking-wide">Monthly Revenue</h3>
+              <p className="text-3xl font-bold text-white mb-1 tabular-nums">
                 {formatCurrency(revenueData.monthlyRevenue)}
-              </h3>
-              <p className="text-sm text-gray-400">This month</p>
+              </p>
+              <p className="text-sm text-slate-400">This month</p>
             </div>
           </div>
 
           {/* Pending Revenue */}
-          <div className="backdrop-blur-xl bg-white/10 border border-white/20 rounded-2xl p-6 shadow-lg">
-            <div className="flex items-center justify-between mb-4">
-              <div className="w-12 h-12 rounded-xl bg-amber-500/20 flex items-center justify-center">
-                <Clock className="w-6 h-6 text-amber-400" />
-              </div>
-              <span className="text-xs text-gray-400">Pending</span>
+          <div className="p-6 bg-slate-800/95 glow-border rounded-lg border border-slate-700/50 relative overflow-hidden group">
+            <div className="absolute top-6 right-6 opacity-10 group-hover:opacity-20 transition-opacity">
+              <Clock className="w-16 h-16 text-amber-300" />
             </div>
-            <div className="space-y-1">
-              <h3 className="text-3xl font-bold text-white">
+            <div className="relative z-10">
+              <div className="flex items-center justify-between mb-4">
+                <Clock className="h-8 w-8 text-amber-300" />
+                <span className="text-xs text-slate-400">Pending</span>
+              </div>
+              <h3 className="text-xs font-bold text-slate-400 uppercase mb-2 tracking-wide">Pending Revenue</h3>
+              <p className="text-3xl font-bold text-white mb-1 tabular-nums">
                 {formatCurrency(revenueData.pendingRevenue)}
-              </h3>
-              <p className="text-sm text-gray-400">Awaiting payment</p>
+              </p>
+              <p className="text-sm text-slate-400">Awaiting payment</p>
             </div>
           </div>
 
           {/* Pipeline Value */}
-          <div className="backdrop-blur-xl bg-white/10 border border-white/20 rounded-2xl p-6 shadow-lg">
-            <div className="flex items-center justify-between mb-4">
-              <div className="w-12 h-12 rounded-xl bg-blue-500/20 flex items-center justify-center">
-                <BarChart3 className="w-6 h-6 text-blue-400" />
-              </div>
-              <span className="text-xs text-gray-400">Potential</span>
+          <div className="p-6 bg-slate-800/95 glow-border rounded-lg border border-slate-700/50 relative overflow-hidden group">
+            <div className="absolute top-6 right-6 opacity-10 group-hover:opacity-20 transition-opacity">
+              <BarChart3 className="w-16 h-16 text-blue-300" />
             </div>
-            <div className="space-y-1">
-              <h3 className="text-3xl font-bold text-white">
+            <div className="relative z-10">
+              <div className="flex items-center justify-between mb-4">
+                <BarChart3 className="h-8 w-8 text-blue-300" />
+                <span className="text-xs text-slate-400">Potential</span>
+              </div>
+              <h3 className="text-xs font-bold text-slate-400 uppercase mb-2 tracking-wide">Pipeline Value</h3>
+              <p className="text-3xl font-bold text-white mb-1 tabular-nums">
                 {formatCurrency(revenueData.pipelineValue)}
-              </h3>
-              <p className="text-sm text-gray-400">{revenueData.pipelineLeads} hot/warm leads</p>
+              </p>
+              <p className="text-sm text-slate-400">{revenueData.pipelineLeads} hot/warm leads</p>
             </div>
           </div>
         </div>
 
-        {/* Breakdown Section */}
+        {/* Breakdown Section - Design System Containers */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Revenue Breakdown */}
-          <div className="backdrop-blur-xl bg-white/10 border border-white/20 rounded-2xl p-6 shadow-lg">
-            <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
-              <PieChart className="w-5 h-5 text-gold-400" />
-              Revenue Breakdown
-            </h3>
-            <div className="space-y-4">
-              <div className="flex items-center justify-between p-3 bg-white/5 rounded-lg">
-                <div className="flex items-center gap-3">
-                  <div className="w-2 h-2 rounded-full bg-gold-400" />
-                  <span className="text-gray-300">Commissions</span>
+          <div className="bg-gradient-to-br from-slate-800/95 via-slate-800/95 to-slate-900/95 glow-border rounded-xl overflow-hidden shadow-2xl">
+            <div className="p-6 sm:p-8">
+              <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
+                <PieChart className="w-5 h-5 text-amber-300" />
+                Revenue Breakdown
+              </h3>
+              <div className="space-y-4">
+                <div className="flex items-center justify-between p-3 bg-slate-700/30 rounded-lg">
+                  <div className="flex items-center gap-3">
+                    <div className="w-2 h-2 rounded-full bg-amber-300" />
+                    <span className="text-slate-300">Commissions</span>
+                  </div>
+                  <span className="font-semibold text-white">{formatCurrency(revenueData.breakdown.commissions)}</span>
                 </div>
-                <span className="font-semibold text-white">{formatCurrency(revenueData.breakdown.commissions)}</span>
-              </div>
-              <div className="flex items-center justify-between p-3 bg-white/5 rounded-lg">
-                <div className="flex items-center gap-3">
-                  <div className="w-2 h-2 rounded-full bg-amber-400" />
-                  <span className="text-gray-300">Pending</span>
+                <div className="flex items-center justify-between p-3 bg-slate-700/30 rounded-lg">
+                  <div className="flex items-center gap-3">
+                    <div className="w-2 h-2 rounded-full bg-amber-300" />
+                    <span className="text-slate-300">Pending</span>
+                  </div>
+                  <span className="font-semibold text-white">{formatCurrency(revenueData.breakdown.pendingCommissions)}</span>
                 </div>
-                <span className="font-semibold text-white">{formatCurrency(revenueData.breakdown.pendingCommissions)}</span>
-              </div>
-              <div className="flex items-center justify-between p-3 bg-white/5 rounded-lg">
-                <div className="flex items-center gap-3">
-                  <div className="w-2 h-2 rounded-full bg-emerald-400" />
-                  <span className="text-gray-300">Property Sales</span>
+                <div className="flex items-center justify-between p-3 bg-slate-700/30 rounded-lg">
+                  <div className="flex items-center gap-3">
+                    <div className="w-2 h-2 rounded-full bg-emerald-300" />
+                    <span className="text-slate-300">Property Sales</span>
+                  </div>
+                  <span className="font-semibold text-white">{formatCurrency(revenueData.breakdown.propertySales)}</span>
                 </div>
-                <span className="font-semibold text-white">{formatCurrency(revenueData.breakdown.propertySales)}</span>
-              </div>
-              <div className="flex items-center justify-between p-3 bg-white/5 rounded-lg">
-                <div className="flex items-center gap-3">
-                  <div className="w-2 h-2 rounded-full bg-blue-400" />
-                  <span className="text-gray-300">Affiliate</span>
+                <div className="flex items-center justify-between p-3 bg-slate-700/30 rounded-lg">
+                  <div className="flex items-center gap-3">
+                    <div className="w-2 h-2 rounded-full bg-blue-300" />
+                    <span className="text-slate-300">Affiliate</span>
+                  </div>
+                  <span className="font-semibold text-white">{formatCurrency(revenueData.breakdown.affiliateCommissions)}</span>
                 </div>
-                <span className="font-semibold text-white">{formatCurrency(revenueData.breakdown.affiliateCommissions)}</span>
               </div>
             </div>
           </div>
 
           {/* Statistics */}
-          <div className="backdrop-blur-xl bg-white/10 border border-white/20 rounded-2xl p-6 shadow-lg">
-            <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
-              <BarChart3 className="w-5 h-5 text-gold-400" />
-              Key Statistics
-            </h3>
-            <div className="space-y-4">
-              <div className="flex items-center justify-between p-3 bg-white/5 rounded-lg">
-                <span className="text-gray-300">Total Deals</span>
-                <span className="font-semibold text-white">{revenueData.stats.totalDeals}</span>
-              </div>
-              <div className="flex items-center justify-between p-3 bg-white/5 rounded-lg">
-                <span className="text-gray-300">Pending Deals</span>
-                <span className="font-semibold text-white">{revenueData.stats.pendingDeals}</span>
-              </div>
-              <div className="flex items-center justify-between p-3 bg-white/5 rounded-lg">
-                <span className="text-gray-300">Avg Deal Size</span>
-                <span className="font-semibold text-white">{formatCurrency(revenueData.stats.avgDealSize)}</span>
-              </div>
-              <div className="flex items-center justify-between p-3 bg-white/5 rounded-lg">
-                <span className="text-gray-300">Avg Commission</span>
-                <span className="font-semibold text-white">{formatCurrency(revenueData.stats.avgCommission)}</span>
-              </div>
-              <div className="flex items-center justify-between p-3 bg-white/5 rounded-lg">
-                <span className="text-gray-300">Commission Rate</span>
-                <span className="font-semibold text-white">{revenueData.commissionRate.toFixed(1)}%</span>
+          <div className="bg-gradient-to-br from-slate-800/95 via-slate-800/95 to-slate-900/95 glow-border rounded-xl overflow-hidden shadow-2xl">
+            <div className="p-6 sm:p-8">
+              <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
+                <BarChart3 className="w-5 h-5 text-amber-300" />
+                Key Statistics
+              </h3>
+              <div className="space-y-4">
+                <div className="flex items-center justify-between p-3 bg-slate-700/30 rounded-lg">
+                  <span className="text-slate-300">Total Deals</span>
+                  <span className="font-semibold text-white">{revenueData.stats.totalDeals}</span>
+                </div>
+                <div className="flex items-center justify-between p-3 bg-slate-700/30 rounded-lg">
+                  <span className="text-slate-300">Pending Deals</span>
+                  <span className="font-semibold text-white">{revenueData.stats.pendingDeals}</span>
+                </div>
+                <div className="flex items-center justify-between p-3 bg-slate-700/30 rounded-lg">
+                  <span className="text-slate-300">Avg Deal Size</span>
+                  <span className="font-semibold text-white">{formatCurrency(revenueData.stats.avgDealSize)}</span>
+                </div>
+                <div className="flex items-center justify-between p-3 bg-slate-700/30 rounded-lg">
+                  <span className="text-slate-300">Avg Commission</span>
+                  <span className="font-semibold text-white">{formatCurrency(revenueData.stats.avgCommission)}</span>
+                </div>
+                <div className="flex items-center justify-between p-3 bg-slate-700/30 rounded-lg">
+                  <span className="text-slate-300">Commission Rate</span>
+                  <span className="font-semibold text-white">{revenueData.commissionRate.toFixed(1)}%</span>
+                </div>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Recent Transactions */}
-        <div className="backdrop-blur-xl bg-white/10 border border-white/20 rounded-2xl p-6 shadow-lg">
-          <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
-            <FileText className="w-5 h-5 text-gold-400" />
-            Recent Transactions
-          </h3>
-          {revenueData.recentTransactions.length > 0 ? (
-            <div className="space-y-3">
-              {revenueData.recentTransactions.map((transaction, index) => (
-                <div
-                  key={`${transaction.id}-${index}`}
-                  className="flex items-center justify-between p-4 bg-white/5 rounded-lg hover:bg-white/10 transition-colors"
-                >
-                  <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 rounded-lg bg-gold-500/20 flex items-center justify-center">
-                      <DollarSign className="w-5 h-5 text-gold-400" />
+        {/* Recent Transactions - Design System Container */}
+        <div className="bg-gradient-to-br from-slate-800/95 via-slate-800/95 to-slate-900/95 glow-border rounded-xl overflow-hidden shadow-2xl">
+          <div className="p-6 sm:p-8">
+            <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
+              <FileText className="w-5 h-5 text-amber-300" />
+              Recent Transactions
+            </h3>
+            {revenueData.recentTransactions.length > 0 ? (
+              <div className="space-y-3">
+                {revenueData.recentTransactions.map((transaction, index) => (
+                  <div
+                    key={`${transaction.id}-${index}`}
+                    className="flex items-center justify-between p-4 bg-slate-700/30 rounded-lg hover:bg-slate-700/50 transition-colors"
+                  >
+                    <div className="flex items-center gap-4">
+                      <div className="w-10 h-10 rounded-lg bg-amber-500/20 flex items-center justify-center">
+                        <DollarSign className="w-5 h-5 text-amber-300" />
+                      </div>
+                      <div>
+                        <p className="font-medium text-white">Commission Payment</p>
+                        <p className="text-sm text-slate-400">
+                          Deal: {formatCurrency(transaction.dealValue)} • {formatDate(transaction.date)}
+                        </p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="font-medium text-white">Commission Payment</p>
-                      <p className="text-sm text-gray-400">
-                        Deal: {formatCurrency(transaction.dealValue)} • {formatDate(transaction.date)}
+                    <div className="text-right">
+                      <p className="font-bold text-white text-lg">{formatCurrency(transaction.amount)}</p>
+                      <p className={`text-xs ${
+                        transaction.status === 'completed' ? 'text-emerald-300' : 'text-amber-300'
+                      }`}>
+                        {transaction.status}
                       </p>
                     </div>
                   </div>
-                  <div className="text-right">
-                    <p className="font-bold text-white text-lg">{formatCurrency(transaction.amount)}</p>
-                    <p className={`text-xs ${
-                      transaction.status === 'completed' ? 'text-emerald-400' : 'text-amber-400'
-                    }`}>
-                      {transaction.status}
-                    </p>
-                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-16 px-6">
+                <div className="p-4 bg-slate-700/30 rounded-full w-20 h-20 mx-auto mb-6 flex items-center justify-center">
+                  <FileText className="h-10 w-10 text-slate-500" />
                 </div>
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-8 text-gray-400">
-              <p>No transactions yet</p>
-              <p className="text-sm mt-2">Revenue will appear here once deals are closed</p>
-            </div>
-          )}
+                <h4 className="text-xl font-semibold text-white mb-2">No transactions yet</h4>
+                <p className="text-slate-400">Revenue will appear here once deals are closed</p>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </BuilderPageWrapper>

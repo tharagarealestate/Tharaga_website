@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Zap, CheckCircle2, AlertCircle, X } from 'lucide-react'
 import { motion } from 'framer-motion'
+import { BuilderPageWrapper } from '../_components/BuilderPageWrapper'
 import ZohoCRMIntegration from './_components/ZohoCRMIntegration'
 
 function IntegrationsPageContent() {
@@ -235,59 +236,53 @@ function IntegrationsPageContent() {
   }
 
   return (
-    <div className="w-full">
-      {/* Header */}
-      <div className="mb-8">
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4 }}
-        >
-          <h1 className="text-3xl font-bold text-white mb-2">Integrations</h1>
-          <p className="text-slate-400">Connect your favorite tools and services</p>
-        </motion.div>
-      </div>
+    <BuilderPageWrapper 
+      title="Integrations" 
+      description="Connect your favorite tools and services"
+      noContainer
+    >
+      <div className="space-y-6">
 
-      {/* Status Message */}
-      {calendarMessage && (
-        <motion.div
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -10 }}
-          className={`mb-6 p-4 rounded-xl border backdrop-blur-md flex items-center justify-between ${
-            calendarMessage.type === 'success'
-              ? 'bg-emerald-500/20 border-emerald-400/50 text-emerald-100'
-              : 'bg-rose-500/20 border-rose-400/50 text-rose-100'
-          }`}
-        >
-          <div className="flex items-center gap-3">
-            {calendarMessage.type === 'success' ? (
-              <CheckCircle2 className="w-5 h-5 text-emerald-300" />
-            ) : (
-              <AlertCircle className="w-5 h-5 text-rose-300" />
-            )}
-            <p className="font-medium">{calendarMessage.message}</p>
-          </div>
-          <button
-            onClick={() => setCalendarMessage(null)}
-            className="text-slate-400 hover:text-white transition-colors"
-          >
-            <X className="w-5 h-5" />
-          </button>
-        </motion.div>
-      )}
-
-      {/* Integrations Grid */}
-      <div className="grid md:grid-cols-2 gap-4 mb-8">
-        {integrations.map((integration, idx) => (
+        {/* Status Message - Design System Alert */}
+        {calendarMessage && (
           <motion.div
-            key={idx}
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: idx * 0.1 }}
-            whileHover={{ scale: 1.02, y: -4 }}
-            className="relative bg-slate-800/95 glow-border rounded-lg p-6 overflow-hidden group cursor-pointer"
+            exit={{ opacity: 0, y: -10 }}
+            className={`p-4 rounded-lg border flex items-center justify-between ${
+              calendarMessage.type === 'success'
+                ? 'bg-emerald-500/20 border-emerald-400/50 text-emerald-100'
+                : 'bg-rose-500/20 border-rose-400/50 text-rose-100'
+            }`}
           >
+            <div className="flex items-center gap-3">
+              {calendarMessage.type === 'success' ? (
+                <CheckCircle2 className="w-5 h-5 text-emerald-300" />
+              ) : (
+                <AlertCircle className="w-5 h-5 text-rose-300" />
+              )}
+              <p className="font-medium">{calendarMessage.message}</p>
+            </div>
+            <button
+              onClick={() => setCalendarMessage(null)}
+              className="text-slate-400 hover:text-white transition-colors"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </motion.div>
+        )}
+
+        {/* Integrations Grid - Design System Cards */}
+        <div className="grid md:grid-cols-2 gap-4">
+          {integrations.map((integration, idx) => (
+            <motion.div
+              key={idx}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: idx * 0.1 }}
+              whileHover={{ scale: 1.02, y: -4 }}
+              className="relative bg-slate-800/95 glow-border rounded-lg border border-slate-700/50 p-6 overflow-hidden group cursor-pointer"
+            >
             {/* Hover Glow Effect */}
             <motion.div
               initial={{ opacity: 0 }}
@@ -344,13 +339,13 @@ function IntegrationsPageContent() {
                         <button
                           onClick={handleCalendarSync}
                           disabled={syncing}
-                          className="px-3 py-2 text-xs font-medium text-white hover:bg-white/10 rounded-lg transition-all disabled:opacity-50 border border-white/20"
+                          className="px-3 py-2 text-xs font-medium bg-slate-700/50 glow-border text-slate-200 hover:bg-slate-700 rounded-lg transition-all disabled:opacity-50"
                         >
                           {syncing ? 'Syncing...' : 'Sync'}
                         </button>
                         <Link
                           href={integration.href}
-                          className="px-4 py-2 text-sm font-medium rounded-lg transition-all bg-white/10 text-white hover:bg-white/20 border border-white/20"
+                          className="px-4 py-2 text-sm font-medium bg-slate-700/50 glow-border text-slate-200 hover:bg-slate-700 rounded-lg transition-all"
                         >
                           Manage
                         </Link>
@@ -359,7 +354,7 @@ function IntegrationsPageContent() {
                       <button
                         onClick={handleCalendarConnect}
                         disabled={connecting}
-                        className="px-4 py-2 text-sm font-medium rounded-lg transition-all bg-gradient-to-r from-amber-600 to-amber-500 text-white hover:shadow-lg hover:shadow-amber-500/30 hover:-translate-y-1 disabled:opacity-50"
+                        className="px-4 py-2 text-sm font-medium bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 glow-border text-slate-900 font-semibold rounded-lg transition-all duration-300 disabled:opacity-50"
                       >
                         {connecting ? 'Connecting...' : 'Connect'}
                       </button>
@@ -370,8 +365,8 @@ function IntegrationsPageContent() {
                     onClick={() => setShowZohoIntegration(!showZohoIntegration)}
                     className={`px-4 py-2 text-sm font-medium rounded-lg transition-all ${
                       integration.status === 'connected'
-                        ? 'bg-white/10 text-white hover:bg-white/20 border border-white/20'
-                        : 'bg-gradient-to-r from-amber-600 to-amber-500 text-white hover:shadow-lg hover:shadow-amber-500/30 hover:-translate-y-1'
+                        ? 'bg-slate-700/50 glow-border text-slate-200 hover:bg-slate-700'
+                        : 'bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 glow-border text-slate-900 font-semibold'
                     }`}
                   >
                     {integration.status === 'connected' ? 'Manage' : 'Connect'}
@@ -381,8 +376,8 @@ function IntegrationsPageContent() {
                     href={integration.href}
                     className={`px-4 py-2 text-sm font-medium rounded-lg transition-all ${
                       integration.status === 'connected'
-                        ? 'bg-white/10 text-white hover:bg-white/20 border border-white/20'
-                        : 'bg-gradient-to-r from-amber-600 to-amber-500 text-white hover:shadow-lg hover:shadow-amber-500/30 hover:-translate-y-1'
+                        ? 'bg-slate-700/50 glow-border text-slate-200 hover:bg-slate-700'
+                        : 'bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 glow-border text-slate-900 font-semibold'
                     }`}
                   >
                     {integration.status === 'connected' ? 'Manage' : 'Connect'}
@@ -394,57 +389,58 @@ function IntegrationsPageContent() {
         ))}
       </div>
 
-      {/* Zoho CRM Integration Component */}
-      {showZohoIntegration && (
-        <motion.div
-          initial={{ opacity: 0, height: 0 }}
-          animate={{ opacity: 1, height: 'auto' }}
-          exit={{ opacity: 0, height: 0 }}
-          className="mb-8"
-        >
-          <ZohoCRMIntegration />
-        </motion.div>
-      )}
+        {/* Zoho CRM Integration Component */}
+        {showZohoIntegration && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+          >
+            <ZohoCRMIntegration />
+          </motion.div>
+        )}
 
-      {/* API Access Section */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.6 }}
-        className="bg-slate-800/95 glow-border rounded-lg p-6"
-      >
-        <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
-          <Zap className="w-5 h-5 text-amber-300" />
-          API Access
-        </h3>
-        <p className="text-sm text-slate-400 mb-4">
-          Use our REST API to integrate Tharaga with your custom applications
-        </p>
-        <div className="flex gap-3">
-          <button className="px-6 py-2 bg-gradient-to-r from-amber-600 to-amber-500 text-white font-medium rounded-lg hover:shadow-lg hover:shadow-amber-500/30 hover:-translate-y-1 transition-all">
-            View API Docs
-          </button>
-          <button className="px-6 py-2 bg-white/10 text-white font-medium rounded-lg hover:bg-white/20 border border-white/20 transition-all">
-            Generate API Key
-          </button>
-        </div>
-      </motion.div>
-    </div>
+        {/* API Access Section - Design System Container */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.6 }}
+          className="bg-gradient-to-br from-slate-800/95 via-slate-800/95 to-slate-900/95 glow-border rounded-xl overflow-hidden shadow-2xl"
+        >
+          <div className="p-6 sm:p-8">
+            <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+              <Zap className="w-5 h-5 text-amber-300" />
+              API Access
+            </h3>
+            <p className="text-sm text-slate-400 mb-4">
+              Use our REST API to integrate Tharaga with your custom applications
+            </p>
+            <div className="flex gap-3">
+              <button className="px-6 py-2.5 bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 glow-border text-slate-900 font-semibold rounded-lg transition-all duration-300">
+                View API Docs
+              </button>
+              <button className="px-6 py-2.5 bg-slate-700/50 glow-border text-slate-200 hover:bg-slate-700 rounded-lg transition-all">
+                Generate API Key
+              </button>
+            </div>
+          </div>
+        </motion.div>
+      </div>
+    </BuilderPageWrapper>
   )
 }
 
 export default function IntegrationsPage() {
   return (
     <Suspense fallback={
-      <div className="w-full">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-white mb-2">Integrations</h1>
-          <p className="text-slate-400">Connect your favorite tools and services</p>
-        </div>
+      <BuilderPageWrapper title="Integrations" description="Connect your favorite tools and services">
         <div className="flex min-h-[300px] items-center justify-center">
-          <div className="animate-spin h-8 w-8 border-2 border-amber-300 border-t-transparent rounded-full" />
+          <div className="text-center">
+            <div className="animate-spin h-12 w-12 border-2 border-amber-300 border-t-transparent rounded-full mx-auto mb-4" />
+            <p className="text-slate-400">Loading integrations...</p>
+          </div>
         </div>
-      </div>
+      </BuilderPageWrapper>
     }>
       <IntegrationsPageContent />
     </Suspense>

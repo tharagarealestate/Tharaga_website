@@ -1,10 +1,12 @@
 "use client"
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import { motion } from 'framer-motion'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { TextArea } from '@/components/ui/TextArea'
 import { Badge } from '@/components/ui/Badge'
+import { BuilderPageWrapper } from '../_components/BuilderPageWrapper'
 
 type WebhookRow = {
   id: string
@@ -335,16 +337,16 @@ export default function BuilderCommunicationsPage() {
   }, [webhooks])
 
   return (
-    <div className={`relative min-h-screen bg-[#030712] text-white ${gradientBackground}`}>
-      <div className="relative z-10 mx-auto max-w-6xl px-6 py-10 space-y-10">
-        <header className="flex flex-col gap-4">
-          <div className="flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between">
-            <div>
-              <span className="inline-flex items-center rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs uppercase tracking-wide text-white/70">
-                Webhook Delivery Control Center
-              </span>
-              <h1 className="mt-4 text-3xl font-semibold sm:text-4xl">Real-Time Integrations Dashboard</h1>
-              <p className="mt-3 max-w-2xl text-sm text-white/70">
+    <BuilderPageWrapper 
+      title="Real-Time Integrations Dashboard" 
+      description="Manage webhooks and monitor delivery status"
+      noContainer
+    >
+      <div className="space-y-6">
+        {/* Status Badge - Design System */}
+        <div className="inline-flex items-center rounded-full border border-amber-300/20 bg-amber-500/10 px-3 py-1 text-xs uppercase tracking-wide text-amber-300">
+          Webhook Delivery Control Center
+        </div>
                 Manage webhook endpoints, monitor delivery health, and automate retries with the same clarity as our
                 pricing experience. Built for mission-critical automations.
               </p>
@@ -372,7 +374,7 @@ export default function BuilderCommunicationsPage() {
         </header>
 
         {showCreateForm && (
-          <section className="rounded-2xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-6 space-y-6 shadow-lg shadow-slate-900/20">
+          <section className="bg-gradient-to-br from-slate-800/95 via-slate-800/95 to-slate-900/95 glow-border rounded-xl overflow-hidden shadow-2xl p-6 space-y-6">
             <div>
               <h2 className="text-xl font-semibold">Webhook Registration</h2>
               <p className="text-sm text-white/70">
@@ -409,8 +411,8 @@ export default function BuilderCommunicationsPage() {
                     return (
                       <label
                         key={event.value}
-                        className={`flex cursor-pointer items-center justify-between rounded-xl border border-white/10 bg-white/[0.02] p-3 transition hover:border-white/40 ${
-                          checked ? 'bg-white/[0.06] border-white/50' : ''
+                        className={`flex cursor-pointer items-center justify-between rounded-lg border p-3 transition ${
+                          checked ? 'bg-amber-500/20 border-amber-300/50' : 'bg-slate-700/30 border-slate-600/30 hover:border-slate-500/50'
                         }`}
                       >
                         <div>
@@ -491,11 +493,11 @@ export default function BuilderCommunicationsPage() {
           </div>
         </section>
 
-        <section className="rounded-2xl border border-white/10 bg-white/[0.03] shadow-xl shadow-slate-900/30 backdrop-blur">
+        <section className="bg-gradient-to-br from-slate-800/95 via-slate-800/95 to-slate-900/95 glow-border rounded-xl overflow-hidden shadow-2xl">
           <div className="overflow-auto">
             <table className="min-w-[820px] w-full text-sm text-white/90">
               <thead>
-                <tr className="bg-white/[0.05] text-white/60 uppercase text-xs">
+                <tr className="bg-slate-700/30 text-slate-300 uppercase text-xs">
                   <th className="px-4 py-3 text-left">Webhook</th>
                   <th className="px-4 py-3 text-left">Events</th>
                   <th className="px-4 py-3 text-left">Status</th>
@@ -521,7 +523,7 @@ export default function BuilderCommunicationsPage() {
                   webhooks.map((hook) => (
                     <tr
                       key={hook.id}
-                      className={`border-t border-white/10 transition hover:bg-white/[0.04] ${
+                      className={`border-t border-slate-700/50 transition hover:bg-slate-700/30 ${
                         selectedWebhookId === hook.id ? 'bg-white/[0.05]' : ''
                       }`}
                     >

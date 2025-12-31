@@ -1,13 +1,14 @@
 "use client"
 
 import { useEffect } from 'react'
+import type { ReactNode } from 'react'
 
 /**
  * Wrapper component that ensures consistent dark background
  * across all builder dashboard sections (no white backgrounds)
  * Background is handled by layout.tsx, this just ensures no white backgrounds leak through
  */
-export function SectionWrapper({ children }: { children: React.ReactNode }) {
+export function SectionWrapper({ children }: { children: ReactNode }) {
   useEffect(() => {
     // Remove any white backgrounds from child components
     const removeWhiteBackgrounds = () => {

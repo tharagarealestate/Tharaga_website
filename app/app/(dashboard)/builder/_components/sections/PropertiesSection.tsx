@@ -106,17 +106,22 @@ export function PropertiesSection({ onNavigate }: PropertiesSectionProps) {
             <div className="text-2xl font-bold text-white">
               {displayProperties.reduce((sum, p) => sum + (p.views || 0), 0)}
             </div>
-            <div className="text-sm text-slate-400">Total Views</div>
-          </div>
-          <div className="bg-slate-800/95 rounded-lg p-4 border border-slate-700/50">
-            <div className="flex items-center justify-between mb-2">
-              <MapPin className="w-5 h-5 text-purple-400" />
+            <p className="text-sm text-slate-400">Total Views</p>
+          </motion.div>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4 }}
+            className="p-6 bg-slate-800/95 glow-border rounded-lg border border-slate-700/50"
+          >
+            <div className="flex items-center justify-between mb-4">
+              <MapPin className="h-8 w-8 text-purple-400" />
             </div>
-            <div className="text-2xl font-bold text-white">
+            <p className="text-2xl font-bold text-white mb-1">
               {displayProperties.reduce((sum, p) => sum + (p.inquiries || 0), 0)}
-            </div>
-            <div className="text-sm text-slate-400">Inquiries</div>
-          </div>
+            </p>
+            <p className="text-sm text-slate-400">Inquiries</p>
+          </motion.div>
         </div>
 
         {/* Properties Grid */}

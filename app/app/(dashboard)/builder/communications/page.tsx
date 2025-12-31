@@ -340,18 +340,15 @@ export default function BuilderCommunicationsPage() {
     <BuilderPageWrapper
       title="Real-Time Integrations Dashboard"
       description="Manage webhooks and monitor delivery status"
-      noContainer={true}
+      noContainer
     >
       <div className="space-y-6">
         {/* Status Badge - Design System */}
         <div className="inline-flex items-center rounded-full border border-amber-300/20 bg-amber-500/10 px-3 py-1 text-xs uppercase tracking-wide text-amber-300">
           Webhook Delivery Control Center
         </div>
-                Manage webhook endpoints, monitor delivery health, and automate retries with the same clarity as our
-                pricing experience. Built for mission-critical automations.
-              </p>
-            </div>
-            <div className="flex flex-wrap gap-3">
+        
+        <div className="flex flex-wrap gap-3">
               <Button variant="secondary" onClick={() => setShowCreateForm((prev) => !prev)}>
                 {showCreateForm ? 'Close Webhook Form' : 'Register New Webhook'}
               </Button>

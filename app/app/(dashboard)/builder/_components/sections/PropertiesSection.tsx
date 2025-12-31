@@ -100,12 +100,12 @@ export function PropertiesSection({ onNavigate }: PropertiesSectionProps) {
             transition={{ delay: 0.3 }}
             className="p-6 bg-slate-800/95 glow-border rounded-lg border border-slate-700/50"
           >
-            <div className="flex items-center justify-between mb-2">
-              <Eye className="w-5 h-5 text-blue-400" />
+            <div className="flex items-center justify-between mb-4">
+              <Eye className="h-8 w-8 text-blue-400" />
             </div>
-            <div className="text-2xl font-bold text-white">
+            <p className="text-2xl font-bold text-white mb-1">
               {displayProperties.reduce((sum, p) => sum + (p.views || 0), 0)}
-            </div>
+            </p>
             <p className="text-sm text-slate-400">Total Views</p>
           </motion.div>
           <motion.div

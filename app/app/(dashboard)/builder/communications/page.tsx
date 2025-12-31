@@ -340,7 +340,7 @@ export default function BuilderCommunicationsPage() {
     <BuilderPageWrapper
       title="Real-Time Integrations Dashboard"
       description="Manage webhooks and monitor delivery status"
-      noContainer
+      noContainer={true}
     >
       <div className="space-y-6">
         {/* Status Badge - Design System */}

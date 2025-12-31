@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
 import { MessageSquare, Send, MessageCircle, Phone, Plus, Trash2, Edit2, Check, X, Sparkles, BookOpen, AlertCircle } from 'lucide-react'
 import { toast } from 'sonner'
 import { 
@@ -133,85 +134,85 @@ export function ClientOutreachSection({ onNavigate }: ClientOutreachSectionProps
   }
 
   return (
-    <SectionWrapper>
-      <div className="w-full max-w-7xl mx-auto space-y-6 py-6">
-        <header className="space-y-2">
-          <h1 className="font-display text-4xl font-bold text-white sm:text-5xl flex items-center gap-3">
-            <MessageSquare className="w-10 h-10 text-gold-500" />
-            Client Outreach
-          </h1>
-          <p className="text-base text-blue-100/80 sm:text-lg max-w-2xl">
-            Send SMS and WhatsApp messages to your leads
-          </p>
-        </header>
+    <div className="space-y-6">
+      {/* Header - Design System Typography */}
+      <motion.div
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="mb-4"
+      >
+        <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2 flex items-center gap-3">
+          <MessageSquare className="w-8 h-8 text-amber-300" />
+          Client Outreach
+        </h1>
+        <p className="text-slate-300 text-base sm:text-lg max-w-2xl">
+          Send SMS and WhatsApp messages to your leads
+        </p>
+      </motion.div>
 
-        {/* Tabs */}
-        <div className="inline-flex items-center gap-2 p-1 bg-white/10 backdrop-blur-md rounded-full border border-white/20">
-          <button 
-            onClick={() => setActiveTab('send')}
-            className={`px-6 py-2 font-semibold rounded-full transition-all duration-300 ${
-              activeTab === 'send'
-                ? 'bg-gold-500 text-primary-950'
-                : 'text-white hover:bg-white/10'
-            }`}
-          >
-            <Send className="w-4 h-4 inline mr-2" />
-            Send Message
-          </button>
-          <button 
-            onClick={() => setActiveTab('library')}
-            className={`px-6 py-2 font-semibold rounded-full transition-all duration-300 ${
-              activeTab === 'library'
-                ? 'bg-gold-500 text-primary-950'
-                : 'text-white hover:bg-white/10'
-            }`}
-          >
-            <BookOpen className="w-4 h-4 inline mr-2" />
-            Template Library
-          </button>
-          <button 
-            onClick={() => setActiveTab('templates')}
-            className={`px-6 py-2 font-semibold rounded-full transition-all duration-300 ${
-              activeTab === 'templates'
-                ? 'bg-gold-500 text-primary-950'
-                : 'text-white hover:bg-white/10'
-            }`}
-          >
-            <MessageCircle className="w-4 h-4 inline mr-2" />
-            My Templates
-          </button>
+      {/* Tabs - Design System */}
+      <div className="flex gap-2 border-b border-amber-300/20 pb-2 overflow-x-auto">
+          {[
+            { id: 'send', label: 'Send Message', icon: Send },
+            { id: 'library', label: 'Template Library', icon: BookOpen },
+            { id: 'templates', label: 'My Templates', icon: MessageCircle }
+          ].map((tab) => {
+            const Icon = tab.icon
+            return (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id as 'send' | 'library' | 'templates')}
+                className={`px-6 py-3 font-medium transition-all flex items-center gap-2 whitespace-nowrap ${
+                  activeTab === tab.id
+                    ? 'text-amber-300 border-b-2 border-amber-300'
+                    : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                <Icon className="h-4 w-4" />
+                {tab.label}
+              </button>
+            )
+          })}
         </div>
 
-        {/* Send Message Tab */}
-        {activeTab === 'send' && (
-          <div className="backdrop-blur-xl bg-white/10 border border-white/20 rounded-2xl p-6 space-y-6">
+        {/* Tab Content - Design System Container */}
+        <AnimatePresence mode="wait">
+          {activeTab === 'send' && (
+            <motion.div
+              key="send"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              className="bg-gradient-to-br from-slate-800/95 via-slate-800/95 to-slate-900/95 glow-border rounded-xl overflow-hidden shadow-2xl"
+            >
+              <div className="p-6 sm:p-8 space-y-6">
             <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-white mb-2">Recipient</label>
-                <input
-                  type="text"
-                  value={sendForm.to}
-                  onChange={(e) => setSendForm({ ...sendForm, to: e.target.value })}
-                  placeholder="Phone number (e.g., +91 9876543210)"
-                  className="w-full px-4 py-2 bg-white/5 border border-white/20 rounded-lg text-white placeholder:text-gray-400 focus:outline-none focus:border-gold-500"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-white mb-2">Message</label>
-                <textarea
-                  value={sendForm.body}
-                  onChange={(e) => setSendForm({ ...sendForm, body: e.target.value })}
-                  placeholder="Type your message here..."
-                  rows={6}
-                  className="w-full px-4 py-2 bg-white/5 border border-white/20 rounded-lg text-white placeholder:text-gray-400 focus:outline-none focus:border-gold-500 resize-none"
-                />
+                <div>
+                  <label className="block text-sm font-medium text-slate-300 mb-2">Recipient</label>
+                  <input
+                    type="text"
+                    value={sendForm.to}
+                    onChange={(e) => setSendForm({ ...sendForm, to: e.target.value })}
+                    placeholder="Phone number (e.g., +91 9876543210)"
+                    className="w-full px-4 py-2.5 bg-slate-700/50 glow-border rounded-lg text-white placeholder:text-slate-400 focus:outline-none focus:glow-border transition-all"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-300 mb-2">Message</label>
+                  <textarea
+                    value={sendForm.body}
+                    onChange={(e) => setSendForm({ ...sendForm, body: e.target.value })}
+                    placeholder="Type your message here..."
+                    rows={6}
+                    className="w-full px-4 py-2.5 bg-slate-700/50 glow-border rounded-lg text-white placeholder:text-slate-400 focus:outline-none focus:glow-border transition-all resize-none"
+                  />
                 {validation && (
                   <div className="mt-2 space-y-1">
                     {validation.errors.map((error, i) => (
-                      <p key={i} className="text-sm text-red-400">{error}</p>
+                      <p key={i} className="text-sm text-rose-300">{error}</p>
                     ))}
                     {validation.warnings.map((warning, i) => (
-                      <p key={i} className="text-sm text-amber-400">{warning}</p>
+                      <p key={i} className="text-sm text-amber-300">{warning}</p>
                     ))}
                   </div>
                 )}
@@ -219,33 +220,64 @@ export function ClientOutreachSection({ onNavigate }: ClientOutreachSectionProps
               <button
                 onClick={handleSendMessage}
                 disabled={loading || !sendForm.to || !sendForm.body}
-                className="w-full px-6 py-3 bg-gradient-to-r from-gold-600 to-gold-500 text-primary-950 font-bold rounded-lg hover:shadow-lg hover:shadow-gold-500/30 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full px-6 py-3 bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 glow-border text-slate-900 font-semibold rounded-lg transition-all duration-300 shadow-lg hover:shadow-xl hover:shadow-amber-500/30 hover:-translate-y-1 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {loading ? 'Sending...' : 'Send Message'}
               </button>
-            </div>
-          </div>
-        )}
+              </div>
+            </motion.div>
+          )}
 
-        {/* Template Library Tab */}
-        {activeTab === 'library' && (
-          <div className="backdrop-blur-xl bg-white/10 border border-white/20 rounded-2xl p-6">
-            <p className="text-gray-300">Template library coming soon...</p>
-          </div>
-        )}
+          {activeTab === 'library' && (
+            <motion.div
+              key="library"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              className="bg-gradient-to-br from-slate-800/95 via-slate-800/95 to-slate-900/95 glow-border rounded-xl overflow-hidden shadow-2xl"
+            >
+              <div className="p-6 sm:p-8">
+                <div className="text-center py-16 px-6">
+                  <div className="p-4 bg-slate-700/30 rounded-full w-20 h-20 mx-auto mb-6 flex items-center justify-center">
+                    <BookOpen className="h-10 w-10 text-slate-500" />
+                  </div>
+                  <h4 className="text-xl font-semibold text-white mb-2">Template library coming soon</h4>
+                  <p className="text-slate-400">Pre-built message templates will be available here</p>
+                </div>
+              </div>
+            </motion.div>
+          )}
 
-        {/* My Templates Tab */}
-        {activeTab === 'templates' && (
-          <div className="backdrop-blur-xl bg-white/10 border border-white/20 rounded-2xl p-6">
-            {loading ? (
-              <p className="text-gray-300">Loading templates...</p>
-            ) : (
-              <p className="text-gray-300">My templates feature coming soon...</p>
-            )}
-          </div>
-        )}
-      </div>
-    </SectionWrapper>
+          {activeTab === 'templates' && (
+            <motion.div
+              key="templates"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              className="bg-gradient-to-br from-slate-800/95 via-slate-800/95 to-slate-900/95 glow-border rounded-xl overflow-hidden shadow-2xl"
+            >
+              <div className="p-6 sm:p-8">
+                {loading ? (
+                  <div className="flex items-center justify-center min-h-[400px]">
+                    <div className="text-center">
+                      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-amber-300 mx-auto mb-4"></div>
+                      <p className="text-slate-400">Loading templates...</p>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-center py-16 px-6">
+                    <div className="p-4 bg-slate-700/30 rounded-full w-20 h-20 mx-auto mb-6 flex items-center justify-center">
+                      <MessageCircle className="h-10 w-10 text-slate-500" />
+                    </div>
+                    <h4 className="text-xl font-semibold text-white mb-2">My templates feature coming soon</h4>
+                    <p className="text-slate-400">Save and manage your custom message templates</p>
+                  </div>
+                )}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+    </div>
   )
 }
 

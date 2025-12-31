@@ -140,30 +140,38 @@ export function UltraAutomationAnalyticsSection({ onNavigate }: UltraAutomationA
   const COLORS = ['#D4AF37', '#10B981', '#3B82F6', '#F97316', '#EF4444', '#8B5CF6']
 
   return (
-    <SectionWrapper>
-      <div className="w-full max-w-7xl mx-auto space-y-6 py-6">
-        {/* Header */}
-        <header className="space-y-2">
-          <h1 className="font-display text-4xl font-bold text-white sm:text-5xl">
-            Ultra Automation Analytics
-          </h1>
-          <p className="text-base text-blue-100/80 sm:text-lg max-w-2xl">
-            Comprehensive insights into automation performance, conversion metrics, and optimization opportunities.
-          </p>
-        </header>
+    <div className="space-y-6">
+      {/* Header - Design System Typography */}
+      <motion.div
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="mb-4"
+      >
+        <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">Ultra Automation Analytics</h1>
+        <p className="text-slate-300 text-base sm:text-lg max-w-2xl">
+          Comprehensive insights into automation performance, conversion metrics, and optimization opportunities.
+        </p>
+      </motion.div>
 
-        {/* Period Filter */}
-        <div className={builderGlassPanel + ' p-4'}>
+      {/* Period Filter - Design System */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="bg-gradient-to-br from-slate-800/95 via-slate-800/95 to-slate-900/95 glow-border rounded-xl overflow-hidden shadow-2xl"
+      >
+        <div className="p-6 sm:p-8">
           <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2">
+            {(['7d', '30d', '90d', 'all'] as const).map((p) => (
             {(['7d', '30d', '90d', 'all'] as const).map((p) => (
               <button
                 key={p}
                 onClick={() => setPeriod(p)}
                 className={cn(
-                  'px-4 py-2 rounded-lg border text-sm font-medium transition-all',
+                  'px-6 py-3 rounded-lg text-sm font-medium transition-all capitalize',
                   period === p
-                    ? 'bg-gold-500/20 border-gold-500/40 text-gold-400'
-                    : 'bg-white/5 border-white/10 text-gray-400 hover:border-white/20'
+                    ? 'bg-amber-500 text-white shadow-lg shadow-amber-500/30'
+                    : 'bg-slate-700/50 text-slate-300 hover:bg-slate-700'
                 )}
               >
                 {p === 'all' ? 'All Time' : p}
@@ -171,56 +179,69 @@ export function UltraAutomationAnalyticsSection({ onNavigate }: UltraAutomationA
             ))}
           </div>
         </div>
+      </motion.div>
 
-        {isLoading ? (
-          <div className="relative min-h-[400px]">
-            <GlassLoadingOverlay />
-          </div>
-        ) : isEmpty ? (
-          <div className={builderGlassPanel + ' p-6 text-center'}>
-            <Activity className="w-12 h-12 text-blue-400 mx-auto mb-3" />
-            <h3 className="text-xl font-bold text-blue-400 mb-2">No Automation Data Yet</h3>
-            <p className="text-gray-400">
-              Automation analytics will appear here once you have deals, viewings, negotiations, or contracts.
-            </p>
-          </div>
-        ) : (
-          <>
-            {/* Key Metrics */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              <MetricCard
-                icon={Target}
-                label="Overall Conversion"
-                value={`${analytics.conversionRate.toFixed(1)}%`}
-                trend={{ value: 12.5, positive: true }}
-                color="text-emerald-400"
-              />
-              <MetricCard
-                icon={Activity}
-                label="Active Deals"
-                value={analytics.activeDeals}
-                subtitle={`${analytics.closedDeals} closed`}
-                color="text-blue-400"
-              />
-              <MetricCard
-                icon={AlertTriangle}
-                label="Stalled Deals"
-                value={analytics.stalling.stalled.length}
-                subtitle={`${analytics.stalling.atRisk.length} at risk`}
-                color="text-red-400"
-                urgent
-              />
-              <MetricCard
-                icon={CheckCircle2}
-                label="Viewing Completion"
-                value={`${analytics.viewingStats.completionRate.toFixed(1)}%`}
-                subtitle={`${analytics.viewingStats.completed}/${analytics.viewingStats.total}`}
-                color="text-gold-400"
-              />
+      {/* Content - Design System Container */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="bg-gradient-to-br from-slate-800/95 via-slate-800/95 to-slate-900/95 glow-border rounded-xl overflow-hidden shadow-2xl"
+      >
+        <div className="p-6 sm:p-8">
+          {isLoading ? (
+            <div className="flex items-center justify-center min-h-[400px]">
+              <div className="text-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-amber-300 mx-auto mb-4"></div>
+                <p className="text-slate-400">Loading analytics...</p>
+              </div>
             </div>
+          ) : isEmpty ? (
+            <div className="text-center py-16 px-6">
+              <div className="p-4 bg-slate-700/30 rounded-full w-20 h-20 mx-auto mb-6 flex items-center justify-center">
+                <Activity className="h-10 w-10 text-slate-500" />
+              </div>
+              <h4 className="text-xl font-semibold text-white mb-2">No Automation Data Yet</h4>
+              <p className="text-slate-400">
+                Automation analytics will appear here once you have deals, viewings, negotiations, or contracts.
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-6">
+              {/* Key Metrics - Design System Statistics Cards */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <MetricCard
+                  icon={Target}
+                  label="Overall Conversion"
+                  value={`${analytics.conversionRate.toFixed(1)}%`}
+                  trend={{ value: 12.5, positive: true }}
+                  color="text-emerald-400"
+                />
+                <MetricCard
+                  icon={Activity}
+                  label="Active Deals"
+                  value={analytics.activeDeals}
+                  subtitle={`${analytics.closedDeals} closed`}
+                  color="text-blue-400"
+                />
+                <MetricCard
+                  icon={AlertTriangle}
+                  label="Stalled Deals"
+                  value={analytics.stalling.stalled.length}
+                  subtitle={`${analytics.stalling.atRisk.length} at risk`}
+                  color="text-red-400"
+                  urgent
+                />
+                <MetricCard
+                  icon={CheckCircle2}
+                  label="Viewing Completion"
+                  value={`${analytics.viewingStats.completionRate.toFixed(1)}%`}
+                  subtitle={`${analytics.viewingStats.completed}/${analytics.viewingStats.total}`}
+                  color="text-amber-400"
+                />
+              </div>
 
-            {/* Conversion Funnel */}
-            <div className={builderGlassPanel + ' p-6'}>
+              {/* Conversion Funnel - Design System Container */}
+              <div className="bg-slate-800/95 glow-border rounded-lg border border-slate-700/50 p-6">
               <div className="flex items-center justify-between mb-6">
                 <div>
                   <h3 className="text-xl font-bold text-white mb-1">Conversion Funnel</h3>
@@ -278,8 +299,8 @@ export function UltraAutomationAnalyticsSection({ onNavigate }: UltraAutomationA
               </div>
             </div>
 
-            {/* Stage Time Analysis */}
-            <div className={builderGlassPanel + ' p-6'}>
+              {/* Stage Time Analysis - Design System Container */}
+              <div className="bg-slate-800/95 glow-border rounded-lg border border-slate-700/50 p-6">
               <h3 className="text-xl font-bold text-white mb-6">Average Time Per Stage</h3>
               <div className="h-80">
                 <ResponsiveContainer width="100%" height="100%">
@@ -318,10 +339,10 @@ export function UltraAutomationAnalyticsSection({ onNavigate }: UltraAutomationA
               </div>
             </div>
 
-            {/* Negotiation & Contract Metrics */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Negotiation Metrics */}
-              <div className={builderGlassPanel + ' p-6'}>
+              {/* Negotiation & Contract Metrics */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Negotiation Metrics - Design System Container */}
+                <div className="bg-slate-800/95 glow-border rounded-lg border border-slate-700/50 p-6">
                 <h3 className="text-xl font-bold text-white mb-6">Negotiation Metrics</h3>
                 <div className="space-y-4">
                   <StatRow
@@ -345,8 +366,8 @@ export function UltraAutomationAnalyticsSection({ onNavigate }: UltraAutomationA
                 </div>
               </div>
 
-              {/* Contract Metrics */}
-              <div className={builderGlassPanel + ' p-6'}>
+                {/* Contract Metrics - Design System Container */}
+                <div className="bg-slate-800/95 glow-border rounded-lg border border-slate-700/50 p-6">
                 <h3 className="text-xl font-bold text-white mb-6">Contract Metrics</h3>
                 <div className="space-y-4">
                   <StatRow
@@ -372,9 +393,9 @@ export function UltraAutomationAnalyticsSection({ onNavigate }: UltraAutomationA
               </div>
             </div>
 
-            {/* Bottleneck Alerts */}
-            {analytics.funnel.bottleneckStages.length > 0 && (
-              <div className={builderGlassPanel + ' p-6 border border-orange-500/30 bg-orange-500/5'}>
+              {/* Bottleneck Alerts - Design System */}
+              {analytics.funnel.bottleneckStages.length > 0 && (
+                <div className="bg-rose-500/20 border border-rose-400/50 rounded-lg p-6">
                 <div className="flex items-center gap-3 mb-4">
                   <AlertTriangle className="w-6 h-6 text-orange-400" />
                   <h3 className="text-xl font-bold text-orange-400">
@@ -395,11 +416,12 @@ export function UltraAutomationAnalyticsSection({ onNavigate }: UltraAutomationA
                   ))}
                 </div>
               </div>
-            )}
-          </>
-        )}
-      </div>
-    </SectionWrapper>
+              )}
+            </div>
+          )}
+        </div>
+      </motion.div>
+    </div>
   )
 }
 
@@ -424,24 +446,23 @@ function MetricCard({
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className={cn(builderGlassPanel, 'p-6', urgent && 'border-orange-500/30 bg-orange-500/5')}
+      className={cn('p-6 bg-slate-800/95 glow-border rounded-lg border border-slate-700/50', urgent && 'border-rose-500/30 bg-rose-500/5')}
     >
-      <div className="flex items-start justify-between mb-4">
-        <Icon className={cn('w-6 h-6', color)} />
+      <div className="flex items-center justify-between mb-4">
+        <Icon className={cn('h-8 w-8', color)} />
         {trend && (
           <div className={cn(
             'flex items-center gap-1 text-xs font-medium',
-            trend.positive ? 'text-emerald-400' : 'text-red-400'
+            trend.positive ? 'text-emerald-300' : 'text-rose-300'
           )}>
-            {trend.positive ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
-            {Math.abs(trend.value)}%
+            {trend.positive ? <ArrowUpRight className="h-4 w-4" /> : <ArrowDownRight className="h-4 w-4" />}
           </div>
         )}
       </div>
-      <div className={cn('text-3xl font-bold mb-1', color)}>{value}</div>
-      <div className="text-sm text-gray-400">{label}</div>
+      <p className={cn('text-2xl font-bold text-white mb-1', color)}>{value}</p>
+      <p className="text-sm text-slate-400">{label}</p>
       {subtitle && (
-        <div className="text-xs text-gray-500 mt-1">{subtitle}</div>
+        <p className="text-xs text-slate-500 mt-1">{subtitle}</p>
       )}
     </motion.div>
   )
@@ -457,7 +478,7 @@ function StageCard({
   isBottleneck: boolean
 }) {
   return (
-    <div className={cn(builderGlassSubPanel, 'p-4 border', isBottleneck && 'border-orange-500/30 bg-orange-500/5')}>
+    <div className={cn('p-4 bg-slate-700/30 rounded-lg border border-slate-600/30', isBottleneck && 'border-rose-500/30 bg-rose-500/5')}>
       <div className="flex items-center justify-between mb-2">
         <h4 className="font-semibold text-white">
           {stage.stage.replace(/_/g, ' ').toUpperCase()}
@@ -494,7 +515,7 @@ function StatRow({
   urgent?: boolean
 }) {
   return (
-    <div className={cn('flex items-center justify-between p-4 rounded-lg bg-white/5', urgent && 'border border-red-500/30')}>
+    <div className={cn('flex items-center justify-between p-4 rounded-lg bg-slate-700/30', urgent && 'border border-rose-500/30')}>
       <div className="flex items-center gap-3">
         <Icon className={cn('w-5 h-5', color)} />
         <span className="text-gray-300">{label}</span>

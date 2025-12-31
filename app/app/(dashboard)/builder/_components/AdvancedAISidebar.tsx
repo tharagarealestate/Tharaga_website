@@ -29,7 +29,9 @@ import {
   BarChart3,
   Building,
   Clock,
-  CreditCard
+  CreditCard,
+  Home,
+  ArrowLeft
 } from 'lucide-react'
 
 interface SubscriptionData {
@@ -358,15 +360,77 @@ export function AdvancedAISidebar() {
         {/* Content Container */}
         <div className="relative z-10 flex flex-col h-full">
           {/* Header Section - AI Style */}
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
             className="flex-shrink-0 px-4 py-5 border-b glow-border border-b-amber-300/25"
           >
+            {/* Home Button - Elegant Design */}
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.05 }}
+              className="mb-4"
+            >
+              <Link href="/">
+                <motion.button
+                  whileHover={{ scale: 1.02, x: -2 }}
+                  whileTap={{ scale: 0.98 }}
+                  className="w-full group relative overflow-hidden rounded-xl px-4 py-3 bg-gradient-to-r from-amber-500/10 via-amber-400/5 to-transparent border border-amber-400/20 hover:border-amber-400/40 transition-all duration-300"
+                >
+                  {/* Animated background glow */}
+                  <motion.div
+                    className="absolute inset-0 bg-gradient-to-r from-amber-400/0 via-amber-400/10 to-amber-400/0"
+                    animate={{
+                      x: ['-100%', '100%'],
+                    }}
+                    transition={{
+                      duration: 3,
+                      repeat: Infinity,
+                      ease: 'linear',
+                    }}
+                  />
+
+                  <div className="relative flex items-center gap-3">
+                    {/* Icon with glow effect */}
+                    <div className="relative">
+                      <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center shadow-lg shadow-amber-500/30 group-hover:shadow-amber-500/50 transition-shadow">
+                        <ArrowLeft className="w-4 h-4 text-slate-900 group-hover:translate-x-[-2px] transition-transform" />
+                      </div>
+                      <div className="absolute inset-0 rounded-lg bg-amber-400/30 blur-md group-hover:blur-lg transition-all" />
+                    </div>
+
+                    {/* Text */}
+                    <div className="flex flex-col items-start">
+                      <span className="text-xs font-bold text-amber-300 group-hover:text-amber-200 transition-colors tracking-wide">
+                        HOME
+                      </span>
+                      <span className="text-[10px] text-slate-400 group-hover:text-slate-300 transition-colors">
+                        Back to main site
+                      </span>
+                    </div>
+
+                    {/* Chevron indicator */}
+                    <motion.div
+                      className="ml-auto"
+                      animate={{ x: [0, -4, 0] }}
+                      transition={{
+                        duration: 1.5,
+                        repeat: Infinity,
+                        ease: 'easeInOut',
+                      }}
+                    >
+                      <ArrowLeft className="w-4 h-4 text-amber-400/60" />
+                    </motion.div>
+                  </div>
+                </motion.button>
+              </Link>
+            </motion.div>
+
             {/* Brand Logo with AI Glow */}
             <div className="flex items-center gap-3 mb-4">
-              <motion.div 
+              <motion.div
                 whileHover={{ scale: 1.1, rotate: 5 }}
                 className="relative"
               >

@@ -227,14 +227,14 @@ export function AdvancedAISidebar() {
         label: 'Sales & Leads',
         items: [
           {
-            href: '/builder/leads',
+            href: createSectionUrl('leads'),
             label: 'Leads',
             icon: Users,
             badge: isLoadingCount ? null : (leadCount?.total ?? 0),
             requiresPro: false,
             submenu: [
-              { href: '/builder/leads', label: 'All Leads' },
-              { href: '/builder/leads/pipeline', label: 'Pipeline' },
+              { href: createSectionUrl('leads'), label: 'All Leads' },
+              { href: createSectionUrl('pipeline'), label: 'Pipeline' },
             ]
           },
           { href: createSectionUrl('viewings'), label: 'Viewings', icon: Calendar, requiresPro: false },

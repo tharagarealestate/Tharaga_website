@@ -1,5 +1,6 @@
 "use client"
 
+import { motion } from 'framer-motion'
 import { SectionWrapper } from './SectionWrapper'
 import { Building2, MapPin, Eye, TrendingUp, Plus } from 'lucide-react'
 import { useQuery } from '@tanstack/react-query'
@@ -41,43 +42,64 @@ export function PropertiesSection({ onNavigate }: PropertiesSectionProps) {
   return (
     <SectionWrapper>
       <div className="w-full max-w-7xl mx-auto space-y-6 py-6">
-        <header className="flex items-center justify-between">
+        <motion.header
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="flex items-center justify-between flex-wrap gap-4"
+        >
           <div className="space-y-2">
-            <h1 className="font-display text-4xl font-bold text-white sm:text-5xl">
+            <h1 className="text-2xl sm:text-3xl font-bold text-white">
               Properties
             </h1>
-            <p className="text-base text-slate-300 sm:text-lg max-w-2xl">
+            <p className="text-slate-300 text-base sm:text-lg max-w-2xl">
               Manage your property listings and track performance metrics.
             </p>
           </div>
-          <button
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
             onClick={() => window.location.href = '/builders/add-property'}
-            className="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-slate-900 font-semibold rounded-lg transition-all flex items-center gap-2"
+            className="px-6 py-3 bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 glow-border text-slate-900 font-semibold rounded-lg transition-all duration-300 shadow-lg hover:shadow-xl hover:shadow-amber-500/30 hover:-translate-y-1 flex items-center gap-2"
           >
             <Plus className="w-4 h-4" />
             Add Property
-          </button>
-        </header>
+          </motion.button>
+        </motion.header>
 
-        {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <div className="bg-slate-800/95 rounded-lg p-4 border border-slate-700/50">
-            <div className="flex items-center justify-between mb-2">
-              <Building2 className="w-5 h-5 text-amber-400" />
+        {/* Stats - Design System Statistics Cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+            className="p-6 bg-slate-800/95 glow-border rounded-lg border border-slate-700/50"
+          >
+            <div className="flex items-center justify-between mb-4">
+              <Building2 className="h-8 w-8 text-amber-300" />
             </div>
-            <div className="text-2xl font-bold text-white">{displayProperties.length}</div>
-            <div className="text-sm text-slate-400">Total Properties</div>
-          </div>
-          <div className="bg-slate-800/95 rounded-lg p-4 border border-slate-700/50">
-            <div className="flex items-center justify-between mb-2">
-              <TrendingUp className="w-5 h-5 text-emerald-400" />
+            <p className="text-2xl font-bold text-white mb-1">{displayProperties.length}</p>
+            <p className="text-sm text-slate-400">Total Properties</p>
+          </motion.div>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="p-6 bg-slate-800/95 glow-border rounded-lg border border-slate-700/50"
+          >
+            <div className="flex items-center justify-between mb-4">
+              <TrendingUp className="h-8 w-8 text-emerald-400" />
             </div>
-            <div className="text-2xl font-bold text-white">
+            <p className="text-2xl font-bold text-white mb-1">
               {displayProperties.filter(p => p.status === 'active').length}
-            </div>
-            <div className="text-sm text-slate-400">Active Listings</div>
-          </div>
-          <div className="bg-slate-800/95 rounded-lg p-4 border border-slate-700/50">
+            </p>
+            <p className="text-sm text-slate-400">Active Listings</p>
+          </motion.div>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+            className="p-6 bg-slate-800/95 glow-border rounded-lg border border-slate-700/50"
+          >
             <div className="flex items-center justify-between mb-2">
               <Eye className="w-5 h-5 text-blue-400" />
             </div>

@@ -339,11 +339,15 @@ export function UnifiedDashboard({ onNavigate }: UnifiedDashboardProps) {
 
   return (
     <div className="space-y-6">
-      {/* Header - Admin Design System */}
-      <div className="mb-4">
-        <h1 className="text-3xl font-bold text-white mb-2">Welcome back! 👋</h1>
-        <p className="text-slate-300">Here's what's happening with your properties today</p>
-      </div>
+      {/* Header - Design System Typography */}
+      <motion.div
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="mb-4"
+      >
+        <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">Welcome back! 👋</h1>
+        <p className="text-slate-300 text-base sm:text-lg">Here's what's happening with your properties today</p>
+      </motion.div>
 
       {/* Stats Grid - Admin Design System with Advanced Animations */}
       <motion.div 
@@ -371,9 +375,13 @@ export function UnifiedDashboard({ onNavigate }: UnifiedDashboardProps) {
 
       {/* Main Content - Two Column Layout */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Recent Leads Card - Admin Design System */}
-        <div className="bg-slate-800/95 glow-border rounded-lg overflow-hidden">
-          <div className="p-6 border-b glow-border border-b-amber-300/25">
+        {/* Recent Leads Card - Design System */}
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="bg-gradient-to-br from-slate-800/95 via-slate-800/95 to-slate-900/95 glow-border rounded-xl overflow-hidden shadow-2xl"
+        >
+          <div className="bg-gradient-to-r from-amber-500/20 via-amber-600/20 to-amber-500/20 border-b glow-border border-b-amber-300/25 p-6 sm:p-8">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-lg bg-slate-700/50 flex items-center justify-center">
@@ -387,41 +395,55 @@ export function UnifiedDashboard({ onNavigate }: UnifiedDashboardProps) {
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                onClick={() => onNavigate?.('leads')}
-                className="px-4 py-2 bg-amber-500 hover:bg-amber-600 glow-border text-slate-900 font-semibold rounded-lg transition-all text-sm shadow-lg shadow-amber-500/20 hover:shadow-amber-500/40"
+                onClick={() => router.push('/builder/leads')}
+                className="px-6 py-3 bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 glow-border text-slate-900 font-semibold rounded-lg transition-all duration-300 text-sm shadow-lg hover:shadow-xl hover:shadow-amber-500/30 hover:-translate-y-1"
               >
                 View All
               </motion.button>
             </div>
           </div>
 
-          <div className="p-6">
+          <div className="p-6 sm:p-8">
             {leadsLoading ? (
-              <div className="flex items-center justify-center h-64">
+              <div className="flex items-center justify-center min-h-[400px]">
                 <div className="text-center">
                   <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-amber-300 mx-auto mb-4"></div>
                   <p className="text-slate-400">Loading leads...</p>
                 </div>
               </div>
             ) : mergedLeads.length === 0 ? (
-              <div className="text-center py-12">
-                <Users className="w-12 h-12 mx-auto mb-3 text-slate-400" />
-                <p className="text-white mb-2">No leads yet</p>
-                <p className="text-sm text-slate-400">Share your property listings to start receiving inquiries</p>
+              <div className="text-center py-16 px-6">
+                <div className="p-4 bg-slate-700/30 rounded-full w-20 h-20 mx-auto mb-6 flex items-center justify-center">
+                  <Users className="h-10 w-10 text-slate-500" />
+                </div>
+                <h4 className="text-xl font-semibold text-white mb-2">No leads yet</h4>
+                <p className="text-slate-400 mb-6">Share your property listings to start receiving inquiries</p>
               </div>
             ) : (
               <div className="space-y-3">
-                {mergedLeads.slice(0, 6).map((lead: any) => (
-                  <LeadCard key={lead.id} lead={lead} onNavigate={onNavigate} />
+                {mergedLeads.slice(0, 6).map((lead: any, index: number) => (
+                  <motion.div
+                    key={lead.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.05 }}
+                  >
+                    <LeadCard lead={lead} onNavigate={onNavigate} />
+                  </motion.div>
                 ))}
               </div>
             )}
           </div>
-        </div>
+        </motion.div>
 
-        {/* Recent Properties Card - Admin Design System */}
-        <div className="bg-slate-800/95 glow-border rounded-lg overflow-hidden">
-          <div className="p-6 border-b glow-border border-b-amber-300/25">
+        {/* Recent Properties Card - Design System */}
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ delay: 0.1 }}
+          className="bg-gradient-to-br from-slate-800/95 via-slate-800/95 to-slate-900/95 glow-border rounded-xl overflow-hidden shadow-2xl"
+        >
+          <div className="bg-gradient-to-r from-amber-500/20 via-amber-600/20 to-amber-500/20 border-b glow-border border-b-amber-300/25 p-6 sm:p-8">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-lg bg-slate-700/50 flex items-center justify-center">
@@ -436,45 +458,62 @@ export function UnifiedDashboard({ onNavigate }: UnifiedDashboardProps) {
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={() => onNavigate?.('properties')}
-                className="px-4 py-2 bg-amber-500 hover:bg-amber-600 glow-border text-slate-900 font-semibold rounded-lg transition-all text-sm shadow-lg shadow-amber-500/20 hover:shadow-amber-500/40"
+                className="px-6 py-3 bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 glow-border text-slate-900 font-semibold rounded-lg transition-all duration-300 text-sm shadow-lg hover:shadow-xl hover:shadow-amber-500/30 hover:-translate-y-1"
               >
                 View All
               </motion.button>
             </div>
           </div>
 
-          <div className="p-6">
+          <div className="p-6 sm:p-8">
             {propertiesLoading ? (
-              <div className="flex items-center justify-center h-64">
+              <div className="flex items-center justify-center min-h-[400px]">
                 <div className="text-center">
                   <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-amber-300 mx-auto mb-4"></div>
                   <p className="text-slate-400">Loading properties...</p>
                 </div>
               </div>
             ) : mergedProperties.length === 0 ? (
-              <div className="text-center py-12">
-                <Building2 className="w-12 h-12 mx-auto mb-3 text-slate-400" />
-                <p className="text-white mb-2">No properties yet</p>
+              <div className="text-center py-16 px-6">
+                <div className="p-4 bg-slate-700/30 rounded-full w-20 h-20 mx-auto mb-6 flex items-center justify-center">
+                  <Building2 className="h-10 w-10 text-slate-500" />
+                </div>
+                <h4 className="text-xl font-semibold text-white mb-2">No properties yet</h4>
+                <p className="text-slate-400 mb-6">Get started by adding your first property</p>
                 <button
                   onClick={() => onNavigate?.('properties')}
-                  className="px-4 py-2 bg-amber-500 hover:bg-amber-600 glow-border text-slate-900 font-semibold rounded-lg transition-colors text-sm mt-2"
+                  className="px-6 py-3 bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 glow-border text-slate-900 font-semibold rounded-lg transition-all duration-300 shadow-lg hover:shadow-xl hover:shadow-amber-500/30 hover:-translate-y-1 inline-flex items-center gap-2"
                 >
-                  Add your first property →
+                  Add your first property
+                  <ArrowUpRight className="w-4 h-4" />
                 </button>
               </div>
             ) : (
               <div className="space-y-3">
-                {mergedProperties.slice(0, 6).map((property: any) => (
-                  <PropertyCard key={property.id} property={property} onNavigate={onNavigate} />
+                {mergedProperties.slice(0, 6).map((property: any, index: number) => (
+                  <motion.div
+                    key={property.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.05 }}
+                  >
+                    <PropertyCard property={property} onNavigate={onNavigate} />
+                  </motion.div>
                 ))}
               </div>
             )}
           </div>
-        </div>
+        </motion.div>
       </div>
 
-      {/* Quick Actions Card - Admin Design System */}
-      <div className="bg-slate-800/95 glow-border rounded-lg p-6">
+      {/* Quick Actions Card - Design System */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.2 }}
+        className="bg-gradient-to-br from-slate-800/95 via-slate-800/95 to-slate-900/95 glow-border rounded-xl overflow-hidden shadow-2xl"
+      >
+        <div className="p-6 sm:p-8">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
             <h3 className="text-lg font-bold text-white mb-1">Quick Actions</h3>
@@ -482,41 +521,41 @@ export function UnifiedDashboard({ onNavigate }: UnifiedDashboardProps) {
           </div>
           <div className="flex flex-wrap items-center gap-3">
             <button
-              onClick={() => onNavigate?.('leads')}
-              className="px-4 py-2 glow-border bg-slate-800/95 text-slate-200 hover:bg-slate-700/50 rounded-lg text-sm font-semibold transition-colors flex items-center gap-2"
+              onClick={() => router.push('/builder/leads')}
+              className="px-6 py-3 glow-border bg-slate-800/95 text-slate-200 hover:bg-slate-700/50 rounded-lg text-sm font-semibold transition-all duration-300 flex items-center gap-2 hover:-translate-y-0.5"
             >
               <Users className="w-4 h-4" />
               <span className="hidden sm:inline">Manage </span>Leads
             </button>
             <button
               onClick={() => onNavigate?.('properties')}
-              className="px-4 py-2 glow-border bg-slate-800/95 text-slate-200 hover:bg-slate-700/50 rounded-lg text-sm font-semibold transition-colors flex items-center gap-2"
+              className="px-6 py-3 glow-border bg-slate-800/95 text-slate-200 hover:bg-slate-700/50 rounded-lg text-sm font-semibold transition-all duration-300 flex items-center gap-2 hover:-translate-y-0.5"
             >
               <Building2 className="w-4 h-4" />
               Properties
             </button>
             <button
               onClick={() => router.push('/builder/analytics')}
-              className="px-4 py-2 glow-border bg-slate-800/95 text-slate-200 hover:bg-slate-700/50 rounded-lg text-sm font-semibold transition-colors flex items-center gap-2"
+              className="px-6 py-3 glow-border bg-slate-800/95 text-slate-200 hover:bg-slate-700/50 rounded-lg text-sm font-semibold transition-all duration-300 flex items-center gap-2 hover:-translate-y-0.5"
             >
               <BarChart3 className="w-4 h-4" />
               Analytics
             </button>
             <button
               onClick={() => onNavigate?.('behavior-analytics')}
-              className="px-4 py-2 glow-border bg-slate-800/95 text-slate-200 hover:bg-slate-700/50 rounded-lg text-sm font-semibold transition-colors flex items-center gap-2"
+              className="px-6 py-3 glow-border bg-slate-800/95 text-slate-200 hover:bg-slate-700/50 rounded-lg text-sm font-semibold transition-all duration-300 flex items-center gap-2 hover:-translate-y-0.5"
             >
               <Settings className="w-4 h-4" />
               Behavior Analytics
             </button>
           </div>
         </div>
-      </div>
+      </motion.div>
     </div>
   )
 }
 
-// Stat Card - Admin Design System with Advanced Hover Effects
+// Stat Card - Design System Statistics Card Pattern
 function StatCard({ 
   icon: Icon, 
   label, 
@@ -534,9 +573,11 @@ function StatCard({
 }) {
   return (
     <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
       whileHover={{ scale: 1.02, y: -4 }}
       whileTap={{ scale: 0.98 }}
-      className="relative bg-slate-800/95 glow-border rounded-lg p-4 overflow-hidden group cursor-pointer"
+      className="relative p-6 bg-slate-800/95 glow-border rounded-lg border border-slate-700/50 overflow-hidden group cursor-pointer"
     >
       {/* Hover Glow Effect */}
       <motion.div
@@ -554,7 +595,22 @@ function StatCard({
       </motion.div>
 
       <div className="relative z-10">
-        <h3 className="text-xs font-bold text-slate-400 uppercase mb-2">{label}</h3>
+        <div className="flex items-center justify-between mb-4">
+          <Icon className="h-8 w-8 text-amber-300" />
+          {trend && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className={cn(
+                "flex items-center gap-1 text-xs font-medium",
+                trend.positive ? "text-emerald-300" : "text-red-300"
+              )}
+            >
+              {trend.positive ? <ArrowUpRight className="h-4 w-4" /> : <ArrowDownRight className="h-4 w-4" />}
+            </motion.div>
+          )}
+        </div>
+        <h3 className="text-xs text-slate-400 mb-2 uppercase tracking-wide">{label}</h3>
         {loading ? (
           <div className="flex items-center justify-center h-12">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-amber-300"></div>
@@ -565,34 +621,20 @@ function StatCard({
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: 0.1 }}
-              className="flex items-baseline gap-2 mb-1"
+              className="mb-1"
             >
-              <div className="text-2xl font-bold text-white tabular-nums">{value}</div>
-              {trend && (
+              <p className="text-2xl font-bold text-white mb-1 tabular-nums">{value}</p>
+              {subtitle && (
                 <motion.div
-                  initial={{ opacity: 0, x: -10 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.2 }}
-                  className={cn(
-                    "flex items-center gap-1 text-xs font-medium",
-                    trend.positive ? "text-emerald-300" : "text-red-300"
-                  )}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.15 }}
+                  className="text-sm text-slate-400"
                 >
-                  {trend.positive ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
-                  {Math.abs(trend.value)}%
+                  {subtitle}
                 </motion.div>
               )}
             </motion.div>
-            {subtitle && (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.15 }}
-                className="text-xs text-slate-400"
-              >
-                {subtitle}
-              </motion.div>
-            )}
           </>
         )}
       </div>
@@ -600,7 +642,7 @@ function StatCard({
   )
 }
 
-// Lead Card - Admin Design System with Advanced Animations
+// Lead Card - Design System Card Pattern
 function LeadCard({ lead, onNavigate }: { lead: Lead; onNavigate?: (section: string) => void }) {
   const score = lead.score || 0
   const isHot = score >= 70
@@ -611,10 +653,13 @@ function LeadCard({ lead, onNavigate }: { lead: Lead; onNavigate?: (section: str
       whileHover={{ scale: 1.02, x: 4 }}
       whileTap={{ scale: 0.98 }}
       onClick={() => {
-        onNavigate?.('leads')
-        window.dispatchEvent(new CustomEvent('open-lead-detail', { detail: { leadId: lead.id } }))
+        router.push('/builder/leads')
+        // Optional: Open lead detail after navigation
+        setTimeout(() => {
+          window.dispatchEvent(new CustomEvent('open-lead-detail', { detail: { leadId: lead.id } }))
+        }, 100)
       }}
-      className="w-full p-4 bg-slate-700/50 hover:bg-slate-700/70 border border-slate-600/50 hover:glow-border rounded-lg transition-all text-left relative overflow-hidden group"
+      className="w-full p-4 bg-slate-700/30 hover:bg-slate-700/50 border border-slate-600/30 hover:glow-border rounded-lg transition-all duration-300 text-left relative overflow-hidden group"
     >
       {/* Hover Glow */}
       <motion.div
@@ -639,18 +684,22 @@ function LeadCard({ lead, onNavigate }: { lead: Lead; onNavigate?: (section: str
             </div>
           )}
         </div>
-        <div className={cn(
-          "px-2.5 py-1 rounded text-xs font-bold flex-shrink-0",
-          isHot ? "bg-red-500/20 text-red-300" : isWarm ? "bg-amber-500/20 text-amber-300" : "bg-blue-500/20 text-blue-300"
+        <span className={cn(
+          "px-3 py-1 rounded-full text-xs font-semibold flex-shrink-0 border",
+          isHot 
+            ? "bg-emerald-500/20 text-emerald-300 border-emerald-400/30" 
+            : isWarm 
+            ? "bg-amber-500/20 text-amber-300 border-amber-400/30" 
+            : "bg-slate-700/50 text-slate-300 border-slate-600/50"
         )}>
           {score}
-        </div>
+        </span>
       </div>
     </motion.button>
   )
 }
 
-// Property Card - Admin Design System with Advanced Animations
+// Property Card - Design System Card Pattern
 function PropertyCard({ property, onNavigate }: { property: Property; onNavigate?: (section: string) => void }) {
   return (
     <motion.button
@@ -660,7 +709,7 @@ function PropertyCard({ property, onNavigate }: { property: Property; onNavigate
         onNavigate?.('properties')
         window.dispatchEvent(new CustomEvent('open-property-detail', { detail: { propertyId: property.id } }))
       }}
-      className="w-full p-4 bg-slate-700/50 hover:bg-slate-700/70 border border-slate-600/50 hover:glow-border rounded-lg transition-all text-left relative overflow-hidden group"
+      className="w-full p-4 bg-slate-700/30 hover:bg-slate-700/50 border border-slate-600/30 hover:glow-border rounded-lg transition-all duration-300 text-left relative overflow-hidden group"
     >
       {/* Hover Glow */}
       <motion.div

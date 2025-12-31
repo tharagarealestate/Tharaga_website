@@ -1,6 +1,7 @@
 "use client"
 
 import { ReactNode } from 'react'
+import { motion } from 'framer-motion'
 
 interface BuilderPageWrapperProps {
   children: ReactNode
@@ -12,7 +13,7 @@ interface BuilderPageWrapperProps {
 
 /**
  * Consistent page wrapper for all builder dashboard pages
- * Note: Background is handled by layout.tsx, this wrapper just provides consistent content structure
+ * Uses the billing page design system for uniform styling
  * Ensures uniform design, spacing, and styling across all pages
  */
 export function BuilderPageWrapper({ 
@@ -24,25 +25,35 @@ export function BuilderPageWrapper({
 }: BuilderPageWrapperProps) {
   return (
     <div className={`relative z-10 ${className}`}>
-      {/* Page Header (optional) */}
+      {/* Page Header (optional) - Design System Typography */}
       {(title || description) && (
-        <div className="mb-6">
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-6"
+        >
           {title && (
-            <h1 className="text-3xl font-bold text-white mb-2">{title}</h1>
+            <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">{title}</h1>
           )}
           {description && (
-            <p className="text-gray-300 text-lg">{description}</p>
+            <p className="text-slate-300 text-base sm:text-lg">{description}</p>
           )}
-        </div>
+        </motion.div>
       )}
 
-      {/* Page Content */}
+      {/* Page Content - Design System Container */}
       {noContainer ? (
         children
       ) : (
-        <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-6 shadow-lg">
-          {children}
-        </div>
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-gradient-to-br from-slate-800/95 via-slate-800/95 to-slate-900/95 glow-border rounded-xl overflow-hidden shadow-2xl"
+        >
+          <div className="p-6 sm:p-8">
+            {children}
+          </div>
+        </motion.div>
       )}
     </div>
   )

@@ -550,6 +550,7 @@ export function UnifiedDashboard({ onNavigate }: UnifiedDashboardProps) {
             </button>
           </div>
         </div>
+        </div>
       </motion.div>
     </div>
   )

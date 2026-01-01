@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import { encrypt, getEncryptionKey } from '@/lib/security/encryption';
 
 const ZOHO_OAUTH_CONFIG = {
   com: 'https://accounts.zoho.com',
@@ -123,29 +122,33 @@ export async function GET(request: NextRequest) {
       throw new Error('Organization not found');
     }
     
-    // Encrypt tokens before storing
-    const encryptionKey = getEncryptionKey();
-    const encryptedAccessToken = encrypt(tokenData.access_token, encryptionKey);
-    const encryptedRefreshToken = encrypt(tokenData.refresh_token, encryptionKey);
-    
     // Calculate token expiry
     const expiresAt = new Date(Date.now() + (tokenData.expires_in * 1000));
     
-    // Store connection in database
+    // Determine API domain based on data center
+    const apiDomain = `https://www.zohoapis.${data_center}`;
+    
+    // Store connection in database using integrations table (matching ZohoClient implementation)
     const { data: connection, error: dbError } = await supabase
-      .from('zoho_crm_connections')
+      .from('integrations')
       .upsert({
         builder_id: builder_id,
-        access_token: encryptedAccessToken,
-        refresh_token: encryptedRefreshToken,
-        token_expires_at: expiresAt.toISOString(),
-        zoho_account_email: organization.email || '',
-        zoho_org_id: organization.zgid || '',
-        zoho_data_center: data_center,
-        status: 'active',
+        integration_type: 'crm',
+        provider: 'zoho',
+        config: {
+          access_token: tokenData.access_token,
+          refresh_token: tokenData.refresh_token,
+          expires_at: expiresAt.toISOString(),
+          api_domain: apiDomain,
+        },
+        crm_account_id: organization.zgid || '',
+        crm_account_name: organization.company_name || organization.email || '',
+        is_active: true,
+        is_connected: true,
+        last_sync_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       }, {
-        onConflict: 'builder_id'
+        onConflict: 'builder_id,integration_type,provider'
       })
       .select()
       .single();
@@ -154,7 +157,7 @@ export async function GET(request: NextRequest) {
       throw new Error(`Database error: ${dbError.message}`);
     }
     
-    // Initialize field mappings
+    // Initialize field mappings using crm_field_mappings table
     try {
       await initializeFieldMappings(connection.id, tokenData.access_token, data_center, supabase);
     } catch (error) {
@@ -182,47 +185,48 @@ export async function GET(request: NextRequest) {
 }
 
 async function initializeFieldMappings(
-  connectionId: string,
+  integrationId: string,
   accessToken: string,
   dataCenter: string,
   supabase: any
 ) {
   try {
-    // Create default field mappings
-    const fieldMappings = {
-      lead_fields: {
-        'name': 'Last_Name',
-        'email': 'Email',
-        'phone': 'Phone',
-        'source': 'Lead_Source',
-        'budget': 'Budget',
-        'ai_lead_score': 'Rating',
-        'status': 'Lead_Status',
-        'property_id': 'Description'
-      },
-      deal_fields: {
-        'property_id': 'Deal_Name',
-        'price': 'Amount',
-        'status': 'Stage',
-        'expected_close_date': 'Closing_Date',
-        'probability': 'Probability'
-      },
-      contact_fields: {
-        'name': 'Last_Name',
-        'email': 'Email',
-        'phone': 'Phone',
-        'whatsapp': 'Mobile'
-      }
-    };
+    // Check if field mappings already exist
+    const { data: existingMappings } = await supabase
+      .from('crm_field_mappings')
+      .select('id')
+      .eq('integration_id', integrationId)
+      .limit(1);
+    
+    if (existingMappings && existingMappings.length > 0) {
+      // Mappings already exist, skip
+      return;
+    }
+    
+    // Create default field mappings in crm_field_mappings table
+    const defaultMappings = [
+      // Lead/Contact mappings
+      { integration_id: integrationId, tharaga_field: 'name', crm_field: 'Last_Name', record_type: 'lead' },
+      { integration_id: integrationId, tharaga_field: 'email', crm_field: 'Email', record_type: 'lead' },
+      { integration_id: integrationId, tharaga_field: 'phone', crm_field: 'Phone', record_type: 'lead' },
+      { integration_id: integrationId, tharaga_field: 'source', crm_field: 'Lead_Source', record_type: 'lead' },
+      { integration_id: integrationId, tharaga_field: 'budget', crm_field: 'Budget', record_type: 'lead' },
+      { integration_id: integrationId, tharaga_field: 'ai_lead_score', crm_field: 'Rating', record_type: 'lead' },
+      { integration_id: integrationId, tharaga_field: 'status', crm_field: 'Lead_Status', record_type: 'lead' },
+      // Deal mappings
+      { integration_id: integrationId, tharaga_field: 'property_id', crm_field: 'Deal_Name', record_type: 'deal' },
+      { integration_id: integrationId, tharaga_field: 'price', crm_field: 'Amount', record_type: 'deal' },
+      { integration_id: integrationId, tharaga_field: 'status', crm_field: 'Stage', record_type: 'deal' },
+      { integration_id: integrationId, tharaga_field: 'expected_close_date', crm_field: 'Closing_Date', record_type: 'deal' },
+    ];
     
     await supabase
-      .from('zoho_crm_connections')
-      .update({ field_mappings: fieldMappings })
-      .eq('id', connectionId);
+      .from('crm_field_mappings')
+      .insert(defaultMappings);
     
   } catch (error) {
     console.error('Field mapping initialization error:', error);
-    throw error;
+    // Don't throw - this is not critical
   }
 }
 

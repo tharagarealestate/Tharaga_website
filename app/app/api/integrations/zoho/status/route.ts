@@ -32,11 +32,13 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    // Get Zoho connection
+    // Get Zoho connection from integrations table
     const { data: connection, error: connError } = await supabase
-      .from('zoho_crm_connections')
+      .from('integrations')
       .select('*')
       .eq('builder_id', builder.id)
+      .eq('integration_type', 'crm')
+      .eq('provider', 'zoho')
       .single();
 
     if (connError || !connection) {
@@ -48,18 +50,18 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    // Get sync statistics
+    // Get sync statistics from crm_sync_log table
     const { data: syncStats } = await supabase
-      .from('zoho_sync_logs')
-      .select('status, created_at')
-      .eq('connection_id', connection.id)
-      .order('created_at', { ascending: false })
+      .from('crm_sync_log')
+      .select('status, sync_completed_at')
+      .eq('integration_id', connection.id)
+      .order('sync_completed_at', { ascending: false })
       .limit(100);
 
     // Calculate health score
     const recentSyncs = syncStats?.filter(s => {
-      if (!s.created_at) return false;
-      const syncDate = new Date(s.created_at);
+      if (!s.sync_completed_at) return false;
+      const syncDate = new Date(s.sync_completed_at);
       const dayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
       return syncDate > dayAgo;
     }) || [];
@@ -73,16 +75,18 @@ export async function GET(request: NextRequest) {
     else if (successRate < 80) health = 'fair';
     else if (successRate < 95) health = 'good';
 
+    const config = connection.config as any || {};
+
     return NextResponse.json({
-      connected: connection.status === 'active',
-      active: connection.status === 'active',
+      connected: connection.is_connected && connection.is_active,
+      active: connection.is_active && connection.is_connected,
       health,
       account: {
-        id: connection.zoho_org_id || null,
-        name: connection.zoho_account_email || null,
+        id: connection.crm_account_id || null,
+        name: connection.crm_account_name || null,
       },
       sync: {
-        last_sync: connection.last_synced_at || null,
+        last_sync: connection.last_sync_at || null,
         success_rate: Math.round(successRate),
         recent_syncs: recentSyncs.length,
       },

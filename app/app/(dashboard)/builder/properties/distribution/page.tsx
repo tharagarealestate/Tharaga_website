@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Sparkles, Send, TrendingUp, Users, Mail, MessageSquare, Smartphone, BarChart3, Clock, CheckCircle, AlertCircle, Eye, MousePointerClick, Target } from 'lucide-react'
 import DistributionCard from '@/components/distribution/DistributionCard'
+import { BuilderPageWrapper } from '../../_components/BuilderPageWrapper'
+import { motion } from 'framer-motion'
 
 async function fetchDistributions(listingId: string) {
   const res = await fetch(`/api/ai/distribution?listing_id=${listingId}`)
@@ -97,26 +99,17 @@ export default function DistributionPage() {
   const distributionsList = distributionData?.distributions || []
   
   return (
-    <div className='min-h-screen bg-gradient-to-br from-primary-950 via-primary-900 to-primary-950'>
-      {/* Header */}
-      <div className='bg-white/5 backdrop-blur-xl border-b border-white/10 sticky top-[60px] z-30'>
-        <div className='max-w-7xl mx-auto px-6 py-6'>
-          <div className='flex items-center gap-3 mb-2'>
-            <Sparkles className='w-8 h-8 text-gold-500' />
-            <h1 className='text-3xl font-bold bg-gradient-to-r from-gold-400 to-emerald-400 bg-clip-text text-transparent'>
-              Smart Distribution
-            </h1>
-          </div>
-          <p className='text-gray-400'>Auto-match listings to qualified buyers in real-time</p>
-        </div>
-      </div>
-
-      <div className='max-w-7xl mx-auto px-6 py-8'>
+    <BuilderPageWrapper title="Smart Distribution" description="Auto-match listings to qualified buyers in real-time" noContainer={true}>
+      <div className='space-y-6'>
         <div className='grid lg:grid-cols-3 gap-8'>
           {/* Left Sidebar - Property Selector & Distribution Card */}
           <div className='lg:col-span-1 space-y-6'>
             {/* Property Selector */}
-            <div className='backdrop-blur-xl bg-white/10 border border-white/20 rounded-2xl p-6'>
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              className='bg-gradient-to-br from-slate-800/95 via-slate-800/95 to-slate-900/95 glow-border rounded-xl overflow-hidden shadow-2xl p-6'
+            >
               <h3 className='text-lg font-semibold text-white mb-4'>Select Property</h3>
               <div className='space-y-2 max-h-64 overflow-y-auto'>
                 {properties
@@ -136,7 +129,7 @@ export default function DistributionPage() {
                     </button>
                   ))}
               </div>
-            </div>
+            </motion.div>
             
             {/* Distribution Card */}
             {selectedProperty && (
@@ -176,13 +169,17 @@ export default function DistributionPage() {
                     icon={Target}
                     label='Conversions'
                     value={stats.conversions || 0}
-                    color='from-gold-500 to-gold-600'
+                    color='from-amber-500 to-amber-600'
                   />
                 </div>
                 
                 {/* Average Match Score */}
                 {stats.avg_match_score > 0 && (
-                  <div className='backdrop-blur-xl bg-white/10 border border-white/20 rounded-2xl p-6'>
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className='bg-gradient-to-br from-slate-800/95 via-slate-800/95 to-slate-900/95 glow-border rounded-xl overflow-hidden shadow-2xl p-6'
+                  >
                     <div className='flex items-center justify-between mb-4'>
                       <h3 className='text-lg font-semibold text-white'>Average Match Score</h3>
                       <div className='text-3xl font-bold text-gold-400'>{stats.avg_match_score.toFixed(1)}%</div>
@@ -193,12 +190,16 @@ export default function DistributionPage() {
                         style={{ width: `${stats.avg_match_score}%` }}
                       />
                     </div>
-                  </div>
+                  </motion.div>
                 )}
                 
                 {/* Channel Breakdown */}
                 {stats.channel_breakdown && Object.keys(stats.channel_breakdown).length > 0 && (
-                  <div className='backdrop-blur-xl bg-white/10 border border-white/20 rounded-2xl p-6'>
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className='bg-gradient-to-br from-slate-800/95 via-slate-800/95 to-slate-900/95 glow-border rounded-xl overflow-hidden shadow-2xl p-6'
+                  >
                     <h3 className='text-lg font-semibold text-white mb-4'>Distribution Channels</h3>
                     <div className='space-y-3'>
                       {Object.entries(stats.channel_breakdown).map(([channel, count]: [string, any]) => (
@@ -213,16 +214,24 @@ export default function DistributionPage() {
                         </div>
                       ))}
                     </div>
-                  </div>
+                  </motion.div>
                 )}
                 
                 {/* Distribution List */}
                 {isLoading ? (
-                  <div className='backdrop-blur-xl bg-white/10 border border-white/20 rounded-2xl p-6'>
-                    <div className='text-center text-gray-400'>Loading distributions...</div>
-                  </div>
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className='bg-gradient-to-br from-slate-800/95 via-slate-800/95 to-slate-900/95 glow-border rounded-xl overflow-hidden shadow-2xl p-6'
+                  >
+                    <div className='text-center text-slate-400'>Loading distributions...</div>
+                  </motion.div>
                 ) : distributionsList.length > 0 ? (
-                  <div className='backdrop-blur-xl bg-white/10 border border-white/20 rounded-2xl p-6'>
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className='bg-gradient-to-br from-slate-800/95 via-slate-800/95 to-slate-900/95 glow-border rounded-xl overflow-hidden shadow-2xl p-6'
+                  >
                     <h3 className='text-lg font-semibold text-white mb-4'>Distribution History</h3>
                     <div className='space-y-3 max-h-96 overflow-y-auto'>
                       {distributionsList.map((dist: any) => (
@@ -261,24 +270,32 @@ export default function DistributionPage() {
                         </div>
                       ))}
                     </div>
-                  </div>
+                  </motion.div>
                 ) : (
-                  <div className='backdrop-blur-xl bg-white/10 border border-white/20 rounded-2xl p-6 text-center'>
-                    <Sparkles className='w-12 h-12 text-gray-400 mx-auto mb-4' />
-                    <p className='text-gray-400'>No distributions yet. Click "Distribute Now" to get started!</p>
-                  </div>
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className='bg-gradient-to-br from-slate-800/95 via-slate-800/95 to-slate-900/95 glow-border rounded-xl overflow-hidden shadow-2xl p-6 text-center'
+                  >
+                    <Sparkles className='w-12 h-12 text-slate-400 mx-auto mb-4' />
+                    <p className='text-slate-300'>No distributions yet. Click "Distribute Now" to get started!</p>
+                  </motion.div>
                 )}
               </>
             ) : (
-              <div className='backdrop-blur-xl bg-white/10 border border-white/20 rounded-2xl p-6 text-center'>
-                <BarChart3 className='w-12 h-12 text-gray-400 mx-auto mb-4' />
-                <p className='text-gray-400'>Select a property to view distribution analytics</p>
-              </div>
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className='bg-gradient-to-br from-slate-800/95 via-slate-800/95 to-slate-900/95 glow-border rounded-xl overflow-hidden shadow-2xl p-6 text-center'
+              >
+                <BarChart3 className='w-12 h-12 text-slate-400 mx-auto mb-4' />
+                <p className='text-slate-300'>Select a property to view distribution analytics</p>
+              </motion.div>
             )}
           </div>
         </div>
       </div>
-    </div>
+    </BuilderPageWrapper>
   )
 }
 
@@ -294,17 +311,19 @@ function StatCard({
   color: string
 }) {
   return (
-    <div className='backdrop-blur-xl bg-white/10 border border-white/20 rounded-2xl p-6 relative group overflow-hidden'>
-      {/* Shimmer Effect */}
-      <div className='absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-in-out pointer-events-none' />
+    <motion.div
+      initial={{ opacity: 0, scale: 0.9 }}
+      animate={{ opacity: 1, scale: 1 }}
+      className='bg-gradient-to-br from-slate-800/95 via-slate-800/95 to-slate-900/95 glow-border rounded-xl overflow-hidden shadow-2xl p-6 relative group'
+    >
       <div className='relative'>
         <div className={`w-12 h-12 rounded-xl bg-gradient-to-r ${color} flex items-center justify-center mb-4`}>
           <Icon className='w-6 h-6 text-white' />
         </div>
         <div className='text-2xl font-bold text-white mb-1'>{value}</div>
-        <div className='text-sm text-gray-400'>{label}</div>
+        <div className='text-sm text-slate-300'>{label}</div>
       </div>
-    </div>
+    </motion.div>
   )
 }
 

@@ -5,6 +5,8 @@ import { useQuery } from '@tanstack/react-query'
 import { Eye, Users, MessageSquare, TrendingUp, TrendingDown, Building2, Download } from 'lucide-react'
 import { Select } from '@/components/ui'
 import { format } from 'date-fns'
+import { motion } from 'framer-motion'
+import { BuilderPageWrapper } from '../../_components/BuilderPageWrapper'
 import {
   ResponsiveContainer,
   LineChart,
@@ -21,14 +23,16 @@ import {
 // Simple empty state when no properties exist
 function EmptyPropertiesState() {
   return (
-    <div className="glass-card p-12 rounded-2xl text-center bg-white border border-gray-200">
-      <Building2 className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-      <h3 className="text-xl font-bold text-gray-900 mb-2">No properties yet</h3>
-      <p className="text-gray-600 mb-6">List your first property to see performance analytics</p>
-      <a href="/builders/add-property" className="inline-flex items-center gap-2 px-4 py-2 bg-gold-500 hover:bg-gold-600 text-primary-950 rounded-lg font-semibold">
-        List your first property
-      </a>
-    </div>
+    <BuilderPageWrapper title="Property Performance" description="Analyze views, engagement, and conversions">
+      <div className="bg-gradient-to-br from-slate-800/95 via-slate-800/95 to-slate-900/95 glow-border rounded-xl overflow-hidden shadow-2xl p-12 text-center">
+        <Building2 className="w-16 h-16 text-slate-400 mx-auto mb-4" />
+        <h3 className="text-xl font-bold text-white mb-2">No properties yet</h3>
+        <p className="text-slate-300 mb-6">List your first property to see performance analytics</p>
+        <a href="/builders/add-property" className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white rounded-lg font-semibold transition-all">
+          List your first property
+        </a>
+      </div>
+    </BuilderPageWrapper>
   )
 }
 
@@ -59,28 +63,32 @@ type MetricCardProps = {
 
 function MetricCard({ title, value, change, icon: Icon, color }: MetricCardProps) {
   const colors = {
-    primary: { bg: 'bg-primary-100', text: 'text-primary-600' },
-    purple: { bg: 'bg-purple-100', text: 'text-purple-600' },
-    amber: { bg: 'bg-amber-100', text: 'text-amber-600' },
-    emerald: { bg: 'bg-emerald-100', text: 'text-emerald-600' },
+    primary: { bg: 'bg-gradient-to-br from-blue-500/20 to-blue-600/20', text: 'text-blue-400', border: 'border-blue-400/30' },
+    purple: { bg: 'bg-gradient-to-br from-purple-500/20 to-purple-600/20', text: 'text-purple-400', border: 'border-purple-400/30' },
+    amber: { bg: 'bg-gradient-to-br from-amber-500/20 to-amber-600/20', text: 'text-amber-400', border: 'border-amber-400/30' },
+    emerald: { bg: 'bg-gradient-to-br from-emerald-500/20 to-emerald-600/20', text: 'text-emerald-400', border: 'border-emerald-400/30' },
   } as const
 
   return (
-    <div className="glass-card p-6 rounded-xl bg-white border border-gray-200">
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="bg-gradient-to-br from-slate-800/95 via-slate-800/95 to-slate-900/95 glow-border rounded-xl overflow-hidden shadow-2xl p-6"
+    >
       <div className="flex items-start justify-between mb-4">
-        <div className={`w-12 h-12 ${colors[color].bg} rounded-xl flex items-center justify-center`}>
+        <div className={`w-12 h-12 ${colors[color].bg} border ${colors[color].border} rounded-xl flex items-center justify-center`}>
           <Icon className={`w-6 h-6 ${colors[color].text}`} />
         </div>
         {typeof change === 'number' && !Number.isNaN(change) && (
-          <div className={`flex items-center gap-1 text-sm font-semibold ${change > 0 ? 'text-emerald-600' : 'text-red-600'}`}>
+          <div className={`flex items-center gap-1 text-sm font-semibold ${change > 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
             {change > 0 ? <TrendingUp className="w-4 h-4" /> : <TrendingDown className="w-4 h-4" />}
             {Math.abs(change)}%
           </div>
         )}
       </div>
-      <div className="text-2xl md:text-3xl font-bold text-gray-900 mb-1">{value ?? '—'}</div>
-      <div className="text-sm text-gray-600">{title}</div>
-    </div>
+      <div className="text-2xl md:text-3xl font-bold text-white mb-1">{value ?? '—'}</div>
+      <div className="text-sm text-slate-300">{title}</div>
+    </motion.div>
   )
 }
 
@@ -177,38 +185,35 @@ export default function PropertyPerformancePage() {
   if (!selectedProperty) return null
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-start justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Property Performance</h1>
-          <p className="text-gray-600 mt-1">Analyze views, engagement, and conversions</p>
-        </div>
-        <div className="flex items-center gap-3">
-          <div className="w-64">
-            <Select
-              value={selectedProperty.id}
-              onChange={(e) => {
-                const id = (e.target as HTMLSelectElement).value
-                const p = (properties || []).find((p: any) => p.id === id) || null
-                setSelectedProperty(p)
-              }}
-            >
-              {(properties || []).map((p: any) => (
-                <option key={p.id} value={p.id}>{p.title}</option>
-              ))}
-            </Select>
-          </div>
+    <BuilderPageWrapper title="Property Performance" description="Analyze views, engagement, and conversions" noContainer={true}>
+      <div className="space-y-6">
+        {/* Header Controls */}
+        <div className="flex items-start justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-64">
+              <Select
+                value={selectedProperty.id}
+                onChange={(e) => {
+                  const id = (e.target as HTMLSelectElement).value
+                  const p = (properties || []).find((p: any) => p.id === id) || null
+                  setSelectedProperty(p)
+                }}
+              >
+                {(properties || []).map((p: any) => (
+                  <option key={p.id} value={p.id}>{p.title}</option>
+                ))}
+              </Select>
+            </div>
 
-          <div className="w-40">
-            <Select value={dateRange} onChange={(e) => setDateRange((e.target as HTMLSelectElement).value as any)}>
-              <option value="7days">Last 7 Days</option>
-              <option value="30days">Last 30 Days</option>
-              <option value="90days">Last 90 Days</option>
-            </Select>
+            <div className="w-40">
+              <Select value={dateRange} onChange={(e) => setDateRange((e.target as HTMLSelectElement).value as any)}>
+                <option value="7days">Last 7 Days</option>
+                <option value="30days">Last 30 Days</option>
+                <option value="90days">Last 90 Days</option>
+              </Select>
+            </div>
           </div>
         </div>
-      </div>
 
       {/* Key Metrics */}
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-4 lg:gap-6">
@@ -221,8 +226,12 @@ export default function PropertyPerformancePage() {
       {/* Charts Grid */}
       <div className="grid lg:grid-cols-2 gap-6">
         {/* Views Over Time */}
-        <div className="glass-card p-6 rounded-2xl bg-white border border-gray-200">
-          <h3 className="text-lg font-bold text-gray-900 mb-6">Views Over Time</h3>
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-gradient-to-br from-slate-800/95 via-slate-800/95 to-slate-900/95 glow-border rounded-xl overflow-hidden shadow-2xl p-6"
+        >
+          <h3 className="text-lg font-bold text-white mb-6">Views Over Time</h3>
           <div className="h-[250px] md:h-[300px]">
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={analytics?.views_trend || []}>
@@ -234,11 +243,15 @@ export default function PropertyPerformancePage() {
             </LineChart>
           </ResponsiveContainer>
           </div>
-        </div>
+        </motion.div>
 
         {/* Inquiry Sources */}
-        <div className="glass-card p-6 rounded-2xl bg-white border border-gray-200">
-          <h3 className="text-lg font-bold text-gray-900 mb-6">Inquiry Sources</h3>
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-gradient-to-br from-slate-800/95 via-slate-800/95 to-slate-900/95 glow-border rounded-xl overflow-hidden shadow-2xl p-6"
+        >
+          <h3 className="text-lg font-bold text-white mb-6">Inquiry Sources</h3>
           <div className="h-[250px] md:h-[300px]">
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
@@ -251,18 +264,26 @@ export default function PropertyPerformancePage() {
             </PieChart>
           </ResponsiveContainer>
           </div>
-        </div>
+        </motion.div>
 
         {/* Engagement Heatmap */}
-        <div className="glass-card p-6 rounded-2xl bg-white border border-gray-200">
-          <h3 className="text-lg font-bold text-gray-900 mb-6">Engagement Heatmap</h3>
-          <div className="text-sm text-gray-600 mb-4">Peak activity times (Day × Hour)</div>
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-gradient-to-br from-slate-800/95 via-slate-800/95 to-slate-900/95 glow-border rounded-xl overflow-hidden shadow-2xl p-6"
+        >
+          <h3 className="text-lg font-bold text-white mb-6">Engagement Heatmap</h3>
+          <div className="text-sm text-slate-300 mb-4">Peak activity times (Day × Hour)</div>
           <EngagementHeatmap data={analytics?.engagement_heatmap} />
-        </div>
+        </motion.div>
 
         {/* Conversion Funnel */}
-        <div className="glass-card p-6 rounded-2xl bg-white border border-gray-200">
-          <h3 className="text-lg font-bold text-gray-900 mb-6">Conversion Funnel</h3>
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-gradient-to-br from-slate-800/95 via-slate-800/95 to-slate-900/95 glow-border rounded-xl overflow-hidden shadow-2xl p-6"
+        >
+          <h3 className="text-lg font-bold text-white mb-6">Conversion Funnel</h3>
           <div className="space-y-3">
             {(() => {
               const totalViews = Number(analytics?.total_views || 0)
@@ -280,10 +301,10 @@ export default function PropertyPerformancePage() {
               return stages.map((item, index) => (
                 <div key={item.stage}>
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm font-medium text-gray-700">{item.stage}</span>
-                    <span className="text-sm font-bold text-gray-900">{item.count} ({item.percentage}%)</span>
+                    <span className="text-sm font-medium text-slate-300">{item.stage}</span>
+                    <span className="text-sm font-bold text-white">{item.count} ({item.percentage}%)</span>
                   </div>
-                  <div className="relative h-8 bg-gray-100 rounded-lg overflow-hidden">
+                  <div className="relative h-8 bg-slate-700/50 rounded-lg overflow-hidden">
                     <div className={`${item.color} h-full flex items-center justify-end px-3 text-white text-sm font-semibold transition-all duration-500`} style={{ width: `${item.percentage}%` }}>
                       {index < 4 && (
                         <span className="text-xs">→ {Math.max(0, Math.round((1 - (item.percentage / 100)) * totalViews))} drop-off</span>
@@ -294,33 +315,37 @@ export default function PropertyPerformancePage() {
               ))
             })()}
           </div>
-        </div>
+        </motion.div>
       </div>
 
       {/* Detailed Table */}
-      <div className="glass-card p-6 rounded-2xl bg-white border border-gray-200">
-        <h3 className="text-lg font-bold text-gray-900 mb-6">Daily Breakdown</h3>
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="bg-gradient-to-br from-slate-800/95 via-slate-800/95 to-slate-900/95 glow-border rounded-xl overflow-hidden shadow-2xl p-6"
+      >
+        <h3 className="text-lg font-bold text-white mb-6">Daily Breakdown</h3>
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
-              <tr className="border-b border-gray-200">
-                <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700 cursor-pointer" onClick={() => toggleSort('date')}>Date</th>
-                <th className="text-right py-3 px-4 text-sm font-semibold text-gray-700 cursor-pointer" onClick={() => toggleSort('views')}>Views</th>
-                <th className="text-right py-3 px-4 text-sm font-semibold text-gray-700 cursor-pointer" onClick={() => toggleSort('unique_visitors')}>Unique Visitors</th>
-                <th className="text-right py-3 px-4 text-sm font-semibold text-gray-700 cursor-pointer" onClick={() => toggleSort('avg_time')}>Avg. Time</th>
-                <th className="text-right py-3 px-4 text-sm font-semibold text-gray-700 cursor-pointer" onClick={() => toggleSort('inquiries')}>Inquiries</th>
-                <th className="text-right py-3 px-4 text-sm font-semibold text-gray-700 cursor-pointer" onClick={() => toggleSort('conversion_rate')}>Conversion</th>
+              <tr className="border-b border-slate-700">
+                <th className="text-left py-3 px-4 text-sm font-semibold text-slate-300 cursor-pointer hover:text-white transition-colors" onClick={() => toggleSort('date')}>Date</th>
+                <th className="text-right py-3 px-4 text-sm font-semibold text-slate-300 cursor-pointer hover:text-white transition-colors" onClick={() => toggleSort('views')}>Views</th>
+                <th className="text-right py-3 px-4 text-sm font-semibold text-slate-300 cursor-pointer hover:text-white transition-colors" onClick={() => toggleSort('unique_visitors')}>Unique Visitors</th>
+                <th className="text-right py-3 px-4 text-sm font-semibold text-slate-300 cursor-pointer hover:text-white transition-colors" onClick={() => toggleSort('avg_time')}>Avg. Time</th>
+                <th className="text-right py-3 px-4 text-sm font-semibold text-slate-300 cursor-pointer hover:text-white transition-colors" onClick={() => toggleSort('inquiries')}>Inquiries</th>
+                <th className="text-right py-3 px-4 text-sm font-semibold text-slate-300 cursor-pointer hover:text-white transition-colors" onClick={() => toggleSort('conversion_rate')}>Conversion</th>
               </tr>
             </thead>
             <tbody>
               {(sortedDaily || []).map((day: any) => (
-                <tr key={day.date} className="border-b border-gray-100 hover:bg-gray-50">
-                  <td className="py-3 px-4 text-sm text-gray-900">{format(new Date(day.date), 'MMM dd, yyyy')}</td>
-                  <td className="py-3 px-4 text-sm text-gray-900 text-right">{day.views}</td>
-                  <td className="py-3 px-4 text-sm text-gray-900 text-right">{day.unique_visitors}</td>
-                  <td className="py-3 px-4 text-sm text-gray-900 text-right">{day.avg_time}s</td>
-                  <td className="py-3 px-4 text-sm text-gray-900 text-right">{day.inquiries}</td>
-                  <td className="py-3 px-4 text-sm font-semibold text-emerald-600 text-right">{day.conversion_rate}%</td>
+                <tr key={day.date} className="border-b border-slate-700/50 hover:bg-slate-700/30 transition-colors">
+                  <td className="py-3 px-4 text-sm text-white">{format(new Date(day.date), 'MMM dd, yyyy')}</td>
+                  <td className="py-3 px-4 text-sm text-white text-right">{day.views}</td>
+                  <td className="py-3 px-4 text-sm text-white text-right">{day.unique_visitors}</td>
+                  <td className="py-3 px-4 text-sm text-white text-right">{day.avg_time}s</td>
+                  <td className="py-3 px-4 text-sm text-white text-right">{day.inquiries}</td>
+                  <td className="py-3 px-4 text-sm font-semibold text-emerald-400 text-right">{day.conversion_rate}%</td>
                 </tr>
               ))}
             </tbody>
@@ -328,12 +353,13 @@ export default function PropertyPerformancePage() {
         </div>
 
         <div className="mt-4 flex justify-end">
-          <button onClick={exportCsv} className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors inline-flex items-center gap-2">
+          <button onClick={exportCsv} className="px-4 py-2 border border-slate-600 rounded-lg hover:bg-slate-700/50 transition-colors inline-flex items-center gap-2 text-white">
             <Download className="w-4 h-4" />
             Export CSV
           </button>
         </div>
-      </div>
+      </motion.div>
     </div>
+    </BuilderPageWrapper>
   )
 }

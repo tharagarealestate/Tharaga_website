@@ -30,6 +30,7 @@ import {
 import { toast } from "sonner";
 
 import { getSupabase } from "@/lib/supabase";
+import { BuilderPageWrapper } from "../../../_components/BuilderPageWrapper";
 
 import PipelineColumn from "./PipelineColumn";
 import PipelineCard from "./PipelineCard";
@@ -478,12 +479,14 @@ export default function LeadPipelineKanban() {
 
   if (loading) {
     return (
-      <div className="flex h-96 items-center justify-center">
-        <div className="text-center">
-          <div className="mx-auto mb-4 h-16 w-16 animate-spin rounded-full border-4 border-blue-600 border-t-transparent" />
-          <p className="text-gray-600">Loading pipeline…</p>
+      <BuilderPageWrapper title="Lead Pipeline" description="Drag & drop to move leads through your sales process">
+        <div className="flex h-96 items-center justify-center">
+          <div className="text-center">
+            <div className="mx-auto mb-4 h-16 w-16 animate-spin rounded-full border-4 border-amber-500 border-t-transparent" />
+            <p className="text-slate-300">Loading pipeline…</p>
+          </div>
         </div>
-      </div>
+      </BuilderPageWrapper>
     );
   }
 
@@ -494,29 +497,24 @@ export default function LeadPipelineKanban() {
       );
 
   return (
-    <div className="space-y-6 p-6">
-      <div className="space-y-4">
-        <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">Lead Pipeline</h1>
-            <p className="text-gray-600">
-              Drag & drop to move leads through your sales process
-            </p>
+    <BuilderPageWrapper title="Lead Pipeline" description="Drag & drop to move leads through your sales process" noContainer={true}>
+      <div className="space-y-6">
+        <div className="space-y-4">
+          <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
+            <div className="flex gap-3">
+              <button
+                onClick={fetchPipelineData}
+                className="flex items-center gap-2 rounded-lg border border-slate-600 bg-gradient-to-br from-slate-800/95 to-slate-900/95 px-4 py-2 text-white transition-colors hover:bg-slate-700/50"
+              >
+                <RefreshCw className="h-4 w-4" />
+                Refresh
+              </button>
+              <button className="flex items-center gap-2 rounded-lg border border-slate-600 bg-gradient-to-br from-slate-800/95 to-slate-900/95 px-4 py-2 text-white transition-colors hover:bg-slate-700/50">
+                <Download className="h-4 w-4" />
+                Export
+              </button>
+            </div>
           </div>
-          <div className="flex gap-3">
-            <button
-              onClick={fetchPipelineData}
-              className="flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2 transition-colors hover:bg-gray-50"
-            >
-              <RefreshCw className="h-4 w-4" />
-              Refresh
-            </button>
-            <button className="flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2 transition-colors hover:bg-gray-50">
-              <Download className="h-4 w-4" />
-              Export
-            </button>
-          </div>
-        </div>
 
         {stats ? (
           <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-6">
@@ -556,13 +554,13 @@ export default function LeadPipelineKanban() {
 
         <div className="flex flex-col gap-3 sm:flex-row">
           <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
+            <Search className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
             <input
               type="text"
               placeholder="Search leads by name or email…"
               value={searchQuery}
               onChange={(event) => setSearchQuery(event.target.value)}
-              className="w-full rounded-lg border border-gray-300 py-2 pl-10 pr-4 focus:border-transparent focus:ring-2 focus:ring-blue-500"
+              className="w-full rounded-lg border border-slate-600 bg-slate-800/50 py-2 pl-10 pr-4 text-white placeholder:text-slate-400 focus:border-amber-500/50 focus:ring-2 focus:ring-amber-500/20"
             />
           </div>
           <select
@@ -572,7 +570,7 @@ export default function LeadPipelineKanban() {
                 event.target.value ? Number(event.target.value) : null
               )
             }
-            className="rounded-lg border border-gray-300 px-4 py-2 focus:border-transparent focus:ring-2 focus:ring-blue-500"
+            className="rounded-lg border border-slate-600 bg-slate-800/50 px-4 py-2 text-white focus:border-amber-500/50 focus:ring-2 focus:ring-amber-500/20"
           >
             <option value="">All Scores</option>
             <option value="7">Score 7+ (Warm & Hot)</option>
@@ -582,8 +580,8 @@ export default function LeadPipelineKanban() {
             onClick={() => setShowClosedStages((value) => !value)}
             className={`flex items-center gap-2 rounded-lg border px-4 py-2 transition-colors ${
               showClosedStages
-                ? "border-blue-300 bg-blue-50 text-blue-700"
-                : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
+                ? "border-amber-500/50 bg-amber-500/20 text-amber-300"
+                : "border-slate-600 bg-slate-800/50 text-slate-300 hover:bg-slate-700/50"
             }`}
           >
             <Filter className="h-4 w-4" />
@@ -620,7 +618,8 @@ export default function LeadPipelineKanban() {
           ) : null}
         </DragOverlay>
       </DndContext>
-    </div>
+      </div>
+    </BuilderPageWrapper>
   );
 }
 
@@ -632,25 +631,30 @@ interface StatsCardProps {
 }
 
 function StatsCard({ label, value, icon: Icon, color }: StatsCardProps) {
-  const colorClasses: Record<StatsCardProps["color"], string> = {
-    blue: "bg-blue-50 text-blue-600",
-    emerald: "bg-emerald-50 text-emerald-600",
-    purple: "bg-purple-50 text-purple-600",
-    amber: "bg-amber-50 text-amber-600",
-    indigo: "bg-indigo-50 text-indigo-600",
-    orange: "bg-orange-50 text-orange-600",
+  const colorClasses: Record<StatsCardProps["color"], { bg: string; text: string; border: string }> = {
+    blue: { bg: "bg-gradient-to-br from-blue-500/20 to-blue-600/20", text: "text-blue-400", border: "border-blue-400/30" },
+    emerald: { bg: "bg-gradient-to-br from-emerald-500/20 to-emerald-600/20", text: "text-emerald-400", border: "border-emerald-400/30" },
+    purple: { bg: "bg-gradient-to-br from-purple-500/20 to-purple-600/20", text: "text-purple-400", border: "border-purple-400/30" },
+    amber: { bg: "bg-gradient-to-br from-amber-500/20 to-amber-600/20", text: "text-amber-400", border: "border-amber-400/30" },
+    indigo: { bg: "bg-gradient-to-br from-indigo-500/20 to-indigo-600/20", text: "text-indigo-400", border: "border-indigo-400/30" },
+    orange: { bg: "bg-gradient-to-br from-orange-500/20 to-orange-600/20", text: "text-orange-400", border: "border-orange-400/30" },
   };
 
   return (
-    <div className="glass-card rounded-xl p-4">
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="bg-gradient-to-br from-slate-800/95 via-slate-800/95 to-slate-900/95 glow-border rounded-xl overflow-hidden shadow-2xl p-4"
+    >
       <div className="mb-2 flex items-center gap-3">
-        <div className={`rounded-lg p-2 ${colorClasses[color]}`}>
-          <Icon className="h-4 w-4" />
+        <div className={`rounded-lg p-2 border ${colorClasses[color].bg} ${colorClasses[color].border}`}>
+          <Icon className={`h-4 w-4 ${colorClasses[color].text}`} />
         </div>
       </div>
-      <p className="mb-1 text-2xl font-bold text-gray-900">{value}</p>
-      <p className="text-xs text-gray-600">{label}</p>
-    </div>
+      <p className="mb-1 text-2xl font-bold text-white">{value}</p>
+      <p className="text-xs text-slate-300">{label}</p>
+    </motion.div>
   );
 }
+
 

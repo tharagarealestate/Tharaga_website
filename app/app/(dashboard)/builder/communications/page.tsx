@@ -340,7 +340,7 @@ export default function BuilderCommunicationsPage() {
     <BuilderPageWrapper
       title="Real-Time Integrations Dashboard"
       description="Manage webhooks and monitor delivery status"
-      noContainer
+      noContainer={true}
     >
       <div className="space-y-6">
         {/* Status Badge - Design System */}
@@ -349,26 +349,25 @@ export default function BuilderCommunicationsPage() {
         </div>
         
         <div className="flex flex-wrap gap-3">
-              <Button variant="secondary" onClick={() => setShowCreateForm((prev) => !prev)}>
-                {showCreateForm ? 'Close Webhook Form' : 'Register New Webhook'}
-              </Button>
-              <Button variant="primary" onClick={() => fetchWebhooks()} disabled={loading}>
-                Refresh
-              </Button>
-            </div>
+          <Button variant="secondary" onClick={() => setShowCreateForm((prev) => !prev)}>
+            {showCreateForm ? 'Close Webhook Form' : 'Register New Webhook'}
+          </Button>
+          <Button variant="primary" onClick={() => fetchWebhooks()} disabled={loading}>
+            Refresh
+          </Button>
+        </div>
+        
+        {banner && (
+          <div
+            className={`rounded-lg border px-4 py-3 text-sm shadow ${
+              banner.type === 'success'
+                ? 'border-emerald-300/40 bg-emerald-500/10 text-emerald-100'
+                : 'border-rose-400/40 bg-rose-500/10 text-rose-100'
+            }`}
+          >
+            {banner.message}
           </div>
-          {banner && (
-            <div
-              className={`rounded-lg border px-4 py-3 text-sm shadow ${
-                banner.type === 'success'
-                  ? 'border-emerald-300/40 bg-emerald-500/10 text-emerald-100'
-                  : 'border-rose-400/40 bg-rose-500/10 text-rose-100'
-              }`}
-            >
-              {banner.message}
-            </div>
-          )}
-        </header>
+        )}
 
         {showCreateForm && (
           <section className="bg-gradient-to-br from-slate-800/95 via-slate-800/95 to-slate-900/95 glow-border rounded-xl overflow-hidden shadow-2xl p-6 space-y-6">

@@ -225,11 +225,15 @@ Generate a JSON response with:
       setTimeout(async () => {
         try {
           const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://tharaga.co.in'
+          const internalApiKey = process.env.INTERNAL_API_KEY
+          if (!internalApiKey) {
+            console.error('[Marketing Automation] INTERNAL_API_KEY not configured. Webhook calls may fail.')
+          }
           await fetch(`${baseUrl}${workflow.webhook}`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
-              'Authorization': `Bearer ${process.env.INTERNAL_API_KEY || 'internal-key'}`,
+              'Authorization': `Bearer ${internalApiKey || ''}`,
             },
             body: JSON.stringify({
               property_id: propertyId,

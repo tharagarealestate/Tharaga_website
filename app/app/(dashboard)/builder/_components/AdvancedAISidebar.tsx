@@ -140,9 +140,9 @@ export function AdvancedAISidebar() {
     fetchLeadCount()
 
     const getPollInterval = () => {
-      if (document.hidden) return 30000
-      if (pathname.startsWith('/builder/leads')) return 5000
-      return 15000
+      if (document.hidden) return 60000 // Reduced when tab is hidden
+      if (pathname.startsWith('/builder/leads')) return 10000 // Reduced from 5s to 10s
+      return 30000 // Reduced from 15s to 30s
     }
 
     const startPolling = () => {
@@ -213,38 +213,32 @@ export function AdvancedAISidebar() {
     return () => window.removeEventListener('keydown', handler)
   }, [])
 
-  // Navigation groups
+  // Navigation groups - Clean, organized structure for better UX
   const navGroups = useMemo<NavGroup[]>(() => {
     const createSectionUrl = (section: string) => `/builder?section=${section}`
     
     return [
+      // Main Dashboard
       {
         items: [
-          { href: createSectionUrl('overview'), label: 'Overview', icon: LayoutDashboard, badge: null, requiresPro: false },
+          { href: createSectionUrl('overview'), label: 'Dashboard', icon: LayoutDashboard, badge: null, requiresPro: false },
         ]
       },
+      // Sales & Pipeline - Consolidated for better organization
       {
-        label: 'Sales & Leads',
+        label: 'Sales',
         items: [
           {
-            href: createSectionUrl('leads'),
+            href: '/builder/leads',
             label: 'Leads',
             icon: Users,
             badge: isLoadingCount ? null : (leadCount?.total ?? 0),
             requiresPro: false,
             submenu: [
-              { href: createSectionUrl('leads'), label: 'All Leads' },
-              { href: createSectionUrl('pipeline'), label: 'Pipeline' },
+              { href: '/builder/leads', label: 'All Leads' },
+              { href: '/builder/leads/pipeline', label: 'Pipeline' },
             ]
           },
-          { href: createSectionUrl('viewings'), label: 'Viewings', icon: Calendar, requiresPro: false },
-          { href: createSectionUrl('negotiations'), label: 'Negotiations', icon: Handshake, requiresPro: false },
-          { href: createSectionUrl('contracts'), label: 'Contracts', icon: FileText, requiresPro: false },
-        ]
-      },
-      {
-        label: 'Properties',
-        items: [
           {
             href: createSectionUrl('properties'),
             label: 'Properties',
@@ -255,32 +249,47 @@ export function AdvancedAISidebar() {
               { href: '/builder/properties/performance', label: 'Performance' },
             ]
           },
+          { href: createSectionUrl('viewings'), label: 'Viewings', icon: Calendar, requiresPro: false },
+          { href: createSectionUrl('negotiations'), label: 'Negotiations', icon: Handshake, requiresPro: false },
+          { href: createSectionUrl('contracts'), label: 'Contracts', icon: FileText, requiresPro: false },
         ]
       },
+      // Communication & Outreach
       {
         label: 'Communication',
         items: [
           {
             href: '/builder/communications',
-            label: 'Communications',
+            label: 'Messages',
             icon: MessageSquare,
             requiresPro: false,
             submenu: [
               { href: '/builder/communications', label: 'All Messages' },
-              { href: createSectionUrl('client-outreach'), label: 'Client Outreach' },
+              { href: createSectionUrl('client-outreach'), label: 'Outreach' },
+            ]
+          },
+          { href: '/builder/messaging', label: 'WhatsApp', icon: MessageSquare, requiresPro: false },
+        ]
+      },
+      // Analytics - Single item with submenu
+      {
+        label: 'Analytics',
+        items: [
+          {
+            href: '/builder/analytics',
+            label: 'Analytics',
+            icon: TrendingUp,
+            requiresPro: false,
+            submenu: [
+              { href: '/builder/analytics', label: 'Overview' },
+              { href: createSectionUrl('behavior-analytics'), label: 'Behavior' },
+              { href: createSectionUrl('deal-lifecycle'), label: 'Deal Lifecycle' },
+              { href: createSectionUrl('ultra-automation-analytics'), label: 'Automation' },
             ]
           },
         ]
       },
-      {
-        label: 'Analytics & Insights',
-        items: [
-          { href: '/builder/analytics', label: 'Analytics', icon: TrendingUp, requiresPro: false },
-          { href: createSectionUrl('behavior-analytics'), label: 'Behavior Analytics', icon: BarChart3, requiresPro: false },
-          { href: createSectionUrl('deal-lifecycle'), label: 'Deal Lifecycle', icon: Activity, requiresPro: false },
-          { href: createSectionUrl('ultra-automation-analytics'), label: 'Automation Analytics', icon: Sparkles, requiresPro: false },
-        ]
-      },
+      // Business & Finance
       {
         label: 'Business',
         items: [
@@ -297,6 +306,7 @@ export function AdvancedAISidebar() {
           },
         ]
       },
+      // Settings & Configuration
       {
         label: 'Settings',
         items: [
@@ -536,16 +546,8 @@ export function AdvancedAISidebar() {
                                 return
                               }
 
-                              // For unified dashboard sections, use window.location.href for reliable navigation
-                              if (shouldUseUnifiedDashboard(item.href)) {
-                                e.preventDefault()
-                                const unifiedUrl = getUnifiedDashboardUrl(item.href)
-                                window.location.href = unifiedUrl
-                                return
-                              }
-
-                              // For direct routes like /builder/integrations, /builder/billing
-                              // Let the Link component handle navigation normally
+                              // Use client-side navigation for all routes (smooth transitions)
+                              // Let the Link component handle navigation normally for all routes
                             }}
                             className={cn(
                               "relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-all duration-300 group",
@@ -680,14 +682,8 @@ export function AdvancedAISidebar() {
                                       <Link
                                         href={shouldUseUnifiedDashboard(sub.href) ? getUnifiedDashboardUrl(sub.href) : sub.href}
                                         onClick={(e) => {
-                                          // For unified dashboard sections, use window.location.href for reliable navigation
-                                          if (shouldUseUnifiedDashboard(sub.href)) {
-                                            e.preventDefault()
-                                            const unifiedUrl = getUnifiedDashboardUrl(sub.href)
-                                            window.location.href = unifiedUrl
-                                          }
-                                          // For direct routes like /builder/properties/performance
-                                          // Let the Link component handle navigation normally
+                                          // Use client-side navigation for all routes (smooth transitions)
+                                          // Let the Link component handle navigation normally for all routes
                                         }}
                                         className={cn(
                                           "block px-3 py-1.5 text-xs rounded-lg transition-all duration-200",

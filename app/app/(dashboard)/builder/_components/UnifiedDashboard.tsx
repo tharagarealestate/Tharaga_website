@@ -144,8 +144,8 @@ export function UnifiedDashboard({ onNavigate }: UnifiedDashboardProps) {
       }
       return fetchLeads()
     },
-    refetchInterval: isDemoMode ? false : 15000,
-    staleTime: isDemoMode ? Infinity : 0,
+    refetchInterval: isDemoMode ? false : 30000, // Reduced from 15s to 30s
+    staleTime: isDemoMode ? Infinity : 15000, // Consider data fresh for 15 seconds
     retry: isDemoMode ? 0 : 1,
     retryDelay: 1000,
     onError: (err) => {
@@ -156,7 +156,8 @@ export function UnifiedDashboard({ onNavigate }: UnifiedDashboardProps) {
   const { data: properties = [], isLoading: propertiesLoading, error: propertiesError } = useQuery({
     queryKey: ['unified-properties'],
     queryFn: fetchProperties,
-    refetchInterval: 30000,
+    refetchInterval: 60000, // Reduced from 30s to 60s
+    staleTime: 30000, // Consider data fresh for 30 seconds
     retry: 1,
     retryDelay: 1000,
     onError: (err) => {
@@ -167,7 +168,8 @@ export function UnifiedDashboard({ onNavigate }: UnifiedDashboardProps) {
   const { data: stats = { total: 0, hot: 0, warm: 0, conversionRate: 0 }, isLoading: statsLoading, error: statsError } = useQuery({
     queryKey: ['unified-stats'],
     queryFn: fetchStats,
-    refetchInterval: 5000, // Real-time updates every 5 seconds
+    refetchInterval: 30000, // Reduced from 5s to 30s for better performance
+    staleTime: 10000, // Consider data fresh for 10 seconds
     retry: 1,
     retryDelay: 1000,
     onError: (err) => {
@@ -175,11 +177,12 @@ export function UnifiedDashboard({ onNavigate }: UnifiedDashboardProps) {
     }
   })
 
-  // Fetch revenue data - real-time
+  // Fetch revenue data - optimized
   const { data: revenueData, isLoading: revenueLoading } = useQuery({
     queryKey: ['unified-revenue'],
     queryFn: fetchRevenue,
-    refetchInterval: 30000, // Update every 30 seconds
+    refetchInterval: 60000, // Reduced from 30s to 60s
+    staleTime: 30000, // Consider data fresh for 30 seconds
     retry: 1,
     retryDelay: 1000,
     onError: (err) => {

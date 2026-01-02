@@ -541,4 +541,4 @@ export const GET = secureApiRoute(
     auditAction: AuditActions.VIEW,
     auditResourceType: AuditResourceTypes.LEAD
   }
-)
+);

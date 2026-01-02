@@ -492,14 +492,8 @@ export function BuilderSidebar() {
                           return
                         }
                         
-                        // If this route should use unified dashboard, intercept and redirect
-                        if (shouldUseUnifiedDashboard(item.href)) {
-                          e.preventDefault()
-                          const unifiedUrl = getUnifiedDashboardUrl(item.href)
-                          // Use window.location for immediate navigation to ensure URL updates
-                          window.location.href = unifiedUrl
-                          return
-                        }
+                        // Use client-side navigation for all routes (smooth transitions)
+                        // Let the Link component handle navigation normally for all routes
                         
                         // For other routes, allow normal navigation
                         // Submenu toggle is handled by the chevron button
@@ -593,11 +587,8 @@ export function BuilderSidebar() {
                                 href={sub.href}
                                 onClick={(e) => {
                                   // If this submenu item should use unified dashboard, intercept
-                                  if (shouldUseUnifiedDashboard(sub.href)) {
-                                    e.preventDefault()
-                                    const unifiedUrl = getUnifiedDashboardUrl(sub.href)
-                                    window.location.href = unifiedUrl
-                                  }
+                                  // Use client-side navigation for all routes (smooth transitions)
+                                  // Let the Link component handle navigation normally for all routes
                                 }}
                                 className={cn(
                                   "block px-2 py-1 text-[11px] rounded-lg transition-colors duration-150",
@@ -800,8 +791,8 @@ export function BuilderSidebar() {
                             if (shouldUseUnifiedDashboard(item.href)) {
                               e.preventDefault()
                               const unifiedUrl = getUnifiedDashboardUrl(item.href)
-                              window.location.href = unifiedUrl
-                              return
+                              // Use client-side navigation for all routes (smooth transitions)
+                              // Let the Link component handle navigation normally for all routes
                             }
                             
                             // Otherwise, navigate and close menu
@@ -866,8 +857,8 @@ export function BuilderSidebar() {
                                       if (shouldUseUnifiedDashboard(sub.href)) {
                                         e.preventDefault()
                                         const unifiedUrl = getUnifiedDashboardUrl(sub.href)
-                                        window.location.href = unifiedUrl
-                                        return
+                                        // Use client-side navigation for all routes (smooth transitions)
+                                        // Let the Link component handle navigation normally for all routes
                                       }
                                       setMobileMenuOpen(false)
                                     }}

@@ -419,8 +419,8 @@ export function LeadsList({ onSelectLead, initialFilters, showInlineFilters = tr
     try {
       const params = new URLSearchParams();
       if (filters.category) params.append('category', filters.category);
-      if (filters.score_min > 0) params.append('score_min', filters.score_min.toString());
-      if (filters.score_max < 10) params.append('score_max', filters.score_max.toString());
+      if (typeof filters.score_min === 'number' && filters.score_min > 0) params.append('score_min', filters.score_min.toString());
+      if (typeof filters.score_max === 'number' && filters.score_max < 10) params.append('score_max', filters.score_max.toString());
 
       const response = await fetch(`/api/leads/export?format=csv&${params.toString()}`);
       if (!response.ok) {
@@ -462,14 +462,32 @@ export function LeadsList({ onSelectLead, initialFilters, showInlineFilters = tr
 
   // Show empty state if no error and no leads
   if (!loading && !error && leads.length === 0 && stats.total_leads === 0) {
+    const hasActiveFilters = activeFilterCount > 0 || (searchQuery && searchQuery.trim().length > 0);
+    
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="bg-blue-500/10 border border-blue-500/50 rounded-2xl p-8 text-center max-w-md backdrop-blur-xl">
           <Users className="w-12 h-12 text-blue-400 mx-auto mb-4" />
-          <h3 className="text-xl font-semibold text-blue-100 mb-2">No Leads Yet</h3>
-          <p className="text-blue-200/70">
-            Leads will appear here once they are generated. Start by adding properties or connecting lead sources.
+          <h3 className="text-xl font-semibold text-blue-100 mb-2">
+            {hasActiveFilters ? 'No Leads Match Your Filters' : 'No Leads Yet'}
+          </h3>
+          <p className="text-blue-200/70 mb-4">
+            {hasActiveFilters 
+              ? 'Try adjusting your filters or search query to see more results.'
+              : 'Leads will appear here once they are generated. Start by adding properties or connecting lead sources.'
+            }
           </p>
+          {hasActiveFilters && (
+            <button
+              onClick={() => {
+                clearFilters();
+                setSearchQuery('');
+              }}
+              className="px-4 py-2 bg-blue-500/20 hover:bg-blue-500/30 border border-blue-500/50 text-blue-200 rounded-lg transition-colors text-sm font-medium"
+            >
+              Clear Filters
+            </button>
+          )}
         </div>
       </div>
     );

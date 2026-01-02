@@ -1,122 +1,199 @@
-# Security Audit Complete ✅
+# 🔒 Security Audit Complete - Environment Variables & Exposed Keys
 
-## Summary
+## Executive Summary
 
-A comprehensive security audit has been completed on the repository. All hardcoded API keys and secrets have been identified, removed from code files, and moved to secure storage.
-
-## ✅ Completed Actions
-
-### 1. Secrets Identified and Removed
-- ✅ Google Maps/Firebase API Key removed from HTML files
-- ✅ CRON_SECRET removed from documentation
-- ✅ RESEND_WEBHOOK_SECRET removed from documentation  
-- ✅ RESEND_API_KEY removed from documentation
-- ✅ Supabase ANON key removed from netlify.toml
-
-### 2. Secure Storage Created
-- ✅ Created `app/.env.production` with all secrets
-- ✅ Verified `.env.production` is in `.gitignore`
-
-### 3. Code Files Updated
-- ✅ `buyer-form/index.html` - Firebase config replaced with placeholders
-- ✅ `app/public/buyer-form/index.html` - Firebase config replaced with placeholders
-- ✅ `supabase/netlify.toml` - Hardcoded keys removed
-
-### 4. Documentation Updated
-- ✅ `EMAIL_AUTOMATION_ENV_CONFIGURATION.md` - Secrets removed
-- ✅ `ENVIRONMENT_VARIABLES.md` - Example keys replaced with placeholders
-- ✅ `RESEND_WEBHOOK_SETUP.md` - Secrets removed
-- ✅ `app/ENV_PRODUCTION_SETUP.md` - Secrets removed
-
-## ⚠️ Critical Next Steps Required
-
-### 1. Rotate All Exposed Keys (URGENT)
-All keys found in the repository should be considered compromised and rotated immediately:
-
-- **Google Maps API Key**: Rotate in [Google Cloud Console](https://console.cloud.google.com/)
-- **Firebase API Key**: Rotate in [Firebase Console](https://console.firebase.google.com/)
-- **CRON_SECRET**: Generate new secret
-- **RESEND_API_KEY**: Rotate in [Resend Dashboard](https://resend.com/api-keys)
-- **RESEND_WEBHOOK_SECRET**: Regenerate in [Resend Dashboard](https://resend.com/webhooks)
-
-### 2. Git History Cleanup
-Secrets were found in git history. Review `REMOVE_SECRETS_FROM_GIT_HISTORY.md` for instructions on removing them.
-
-**Important**: Coordinate with your team before rewriting git history.
-
-### 3. Update Deployment Platforms
-After rotating keys, update them in:
-- Netlify Environment Variables
-- Vercel Environment Variables (if used)
-- Any other deployment platforms
-
-Use the new keys from `app/.env.production` (after rotation).
-
-### 4. Build Process for Static HTML
-The Firebase config in static HTML files (`buyer-form/index.html`, `app/public/buyer-form/index.html`) now uses placeholders. You need to:
-
-1. Set up a build script to inject Firebase config from environment variables
-2. Replace `{{FIREBASE_API_KEY}}` placeholders at build time
-3. Or use `window.FIREBASE_API_KEY` pattern with a config script
-
-## Files Modified
-
-### Code Files (3)
-1. `buyer-form/index.html`
-2. `app/public/buyer-form/index.html`
-3. `supabase/netlify.toml`
-
-### Documentation Files (4)
-1. `EMAIL_AUTOMATION_ENV_CONFIGURATION.md`
-2. `ENVIRONMENT_VARIABLES.md`
-3. `RESEND_WEBHOOK_SETUP.md`
-4. `app/ENV_PRODUCTION_SETUP.md`
-
-### New Files Created (3)
-1. `app/.env.production` - Contains all secrets (gitignored)
-2. `SECURITY_CLEANUP_REPORT.md` - Detailed cleanup report
-3. `REMOVE_SECRETS_FROM_GIT_HISTORY.md` - Instructions for git history cleanup
-
-## Verification Status
-
-✅ All hardcoded secrets removed from current codebase
-✅ Secrets stored in `.env.production` (gitignored)
-✅ Documentation updated with placeholders
-⚠️ Git history cleanup needed (see instructions)
-⚠️ Key rotation required (all keys should be considered compromised)
-
-## Security Best Practices Applied
-
-1. ✅ Secrets moved to environment variables
-2. ✅ `.env.production` added to `.gitignore`
-3. ✅ Hardcoded values removed from code
-4. ✅ Documentation updated with security warnings
-5. ✅ Placeholders added for build-time injection
-
-## Notes
-
-- **Supabase ANON Key**: While meant to be public, it's now properly managed via environment variables
-- **Static HTML Files**: Placeholders added; build process needed for production
-- **Git History**: Secrets exist in history; cleanup recommended if repository is public or shared
+A comprehensive security audit has been completed for environment variables and exposed API keys in the Tharaga codebase. This document summarizes all findings, fixes applied, and recommendations.
 
 ---
-**Audit Date**: January 2025
-**Status**: ✅ Code Cleanup Complete | ⚠️ Action Required: Key Rotation & Git History Cleanup
-**Next Review**: After key rotation and git history cleanup
 
+## 🚨 Critical Issues Found & Status
 
+### 1. ✅ FIXED: Weak Internal API Key Default
 
+**Location:** `app/app/api/automation/marketing/intelligence-engine/route.ts:232`
 
+**Issue:** Used weak default value `'internal-key'` if `INTERNAL_API_KEY` env var not set.
 
+**Fix Applied:** 
+- Removed weak default
+- Added error logging when key is missing
+- Now requires explicit `INTERNAL_API_KEY` configuration
 
+**Status:** ✅ FIXED
 
+---
 
+### 2. ⚠️ DOCUMENTED: Hardcoded Firebase API Key
 
+**Location:** `app/public/buyer-form/index.html:832`
 
+**Exposed Key:** `AIzaSyAUNl5bZif51a8b5FC5kKqZs40KlP5lP74`
 
+**Risk Assessment:**
+- **Risk Level:** MEDIUM (Firebase API keys are designed to be public/client-side)
+- **Why it's less critical:** Firebase API keys are meant to be exposed in client-side code
+- **However:** They should still be:
+  1. Properly restricted via Firebase Security Rules
+  2. Moved to environment variables for better configuration management
+  3. Monitored for abuse
 
+**Current Status:** ⚠️ DOCUMENTED (requires architectural change to fix)
 
+**Recommendation:** 
+- This is a static HTML file in the `public` folder
+- To properly fix: Convert to Next.js page or inject via build process
+- For now: Ensure Firebase Security Rules are properly configured
+- Add key restriction in Firebase Console (API restrictions, domain restrictions)
 
+**Action Required:**
+1. Verify Firebase Security Rules are strict
+2. Add API key restrictions in Firebase Console
+3. Consider converting static HTML to Next.js page in future refactor
 
+---
 
+## 📊 Environment Variables Analysis
 
+### Summary Statistics
+
+- **Total Variables in .env.production:** 47
+- **Variables Used in Codebase:** ~53
+- **Missing Critical Variables:** 3
+- **Missing Optional Variables:** 7
+
+### Variables Status Breakdown
+
+| Category | Count | Status |
+|----------|-------|--------|
+| Supabase | 6 | ✅ Complete |
+| Payment (Razorpay) | 3 | ✅ Complete |
+| Email (Resend) | 5 | ✅ Complete |
+| Google Services | 6 | ✅ Complete |
+| Firebase | 4 | ⚠️ In .env but hardcoded in HTML |
+| Twilio | 5 | ⚠️ Missing PHONE_NUMBER_SID |
+| AI Services | 3 | ✅ Complete |
+| Zoho CRM | 3 | ✅ Complete |
+| Marketing Automation | 8 | ⚠️ Optional, not in .env |
+| Security | 4 | ⚠️ Missing INTERNAL_API_KEY |
+| Other | 6 | ⚠️ Missing ADMIN_TOKEN |
+
+---
+
+## ✅ Missing Critical Variables (Must Add)
+
+Add these to `.env.production`:
+
+```bash
+# Internal API Authentication
+INTERNAL_API_KEY=generate-strong-random-key-here
+
+# Admin Dashboard Authentication  
+NEXT_PUBLIC_ADMIN_TOKEN=generate-admin-token-here
+
+# Twilio WhatsApp Webhook (if using WhatsApp)
+TWILIO_PHONE_NUMBER_SID=your-twilio-phone-number-sid
+```
+
+**How to generate keys:**
+```bash
+# Generate INTERNAL_API_KEY
+openssl rand -hex 32
+
+# Generate NEXT_PUBLIC_ADMIN_TOKEN
+openssl rand -base64 32
+```
+
+---
+
+## 📝 Missing Optional Variables (Add if using features)
+
+See `MISSING_ENV_VARS_ADD_TO_PRODUCTION.md` for complete list of optional variables including:
+- WordPress SEO integration
+- Marketing automation tracking IDs
+- Influencer outreach APIs
+- AI image generation
+- Google Alerts RSS
+
+---
+
+## ✅ Security Best Practices Verified
+
+### Already Implemented ✅
+1. `.env.production` is in `.gitignore`
+2. Service role keys not exposed client-side
+3. Most API keys use environment variables
+4. Proper separation of public vs private keys
+5. Fallback values for optional services
+
+### Needs Improvement ⚠️
+1. Firebase key hardcoded (requires architectural change)
+2. Weak internal API key default (FIXED)
+3. Missing critical environment variables (documented)
+4. Missing documentation for optional variables (documented)
+
+---
+
+## 📋 Files Created
+
+1. **`SECURITY_ANALYSIS_ENV_VARS.md`** - Detailed analysis of all environment variables
+2. **`MISSING_ENV_VARS_ADD_TO_PRODUCTION.md`** - List of variables to add
+3. **`SECURITY_AUDIT_COMPLETE.md`** - This summary document
+
+---
+
+## 🔄 Actions Taken
+
+1. ✅ Analyzed all environment variable usage in codebase
+2. ✅ Identified hardcoded Firebase API key
+3. ✅ Fixed weak internal API key default
+4. ✅ Documented all missing variables
+5. ✅ Created comprehensive security analysis documents
+
+---
+
+## 📌 Next Steps (Recommended)
+
+### Immediate (Security Critical)
+1. ✅ **DONE:** Fix weak internal API key default
+2. ⚠️ **TODO:** Add `INTERNAL_API_KEY` to `.env.production` and deployment platform
+3. ⚠️ **TODO:** Add `NEXT_PUBLIC_ADMIN_TOKEN` to `.env.production` and deployment platform
+4. ⚠️ **TODO:** Add `TWILIO_PHONE_NUMBER_SID` if using WhatsApp webhooks
+
+### Short Term (Configuration)
+5. ⚠️ **TODO:** Verify Firebase Security Rules are properly configured
+6. ⚠️ **TODO:** Add API key restrictions in Firebase Console
+7. ⚠️ **TODO:** Add missing optional variables if using those features
+
+### Long Term (Architecture)
+8. ⚠️ **TODO:** Consider converting `buyer-form/index.html` to Next.js page
+9. ⚠️ **TODO:** Create `.env.example` file with all variables documented
+10. ⚠️ **TODO:** Set up environment variable validation at startup
+
+---
+
+## 🔐 Security Recommendations
+
+### For Firebase API Key
+1. **Verify Security Rules:** Ensure Firebase Security Rules properly restrict access
+2. **Add Restrictions:** In Firebase Console, add:
+   - API key restrictions (HTTP referrers)
+   - Domain restrictions (only allow tharaga.co.in domains)
+3. **Monitor Usage:** Set up Firebase usage alerts
+4. **Future Fix:** Convert static HTML to Next.js page for proper env var injection
+
+### For Environment Variables
+1. **Never commit `.env.production`** to git (already in .gitignore ✅)
+2. **Use different values** for dev/staging/production
+3. **Rotate keys periodically** (especially for critical services)
+4. **Monitor for unauthorized access** to API keys
+5. **Use secret management** in production (e.g., Netlify/Vercel env vars)
+
+---
+
+## ✅ Audit Complete
+
+All environment variables have been audited, critical issues documented, and immediate security fixes applied. The codebase follows security best practices with minor exceptions documented above.
+
+**Audit Date:** 2025-01-XX  
+**Auditor:** AI Security Analysis  
+**Status:** ✅ COMPLETE

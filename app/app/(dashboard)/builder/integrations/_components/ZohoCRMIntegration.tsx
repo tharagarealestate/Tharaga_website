@@ -18,8 +18,14 @@ export default function ZohoCRMIntegration() {
   
   useEffect(() => {
     fetchConnection();
-    fetchSyncLogs();
   }, []);
+  
+  // Fetch sync logs when connection is available
+  useEffect(() => {
+    if (connection?.id && connection?.status === 'active') {
+      fetchSyncLogs();
+    }
+  }, [connection?.id, connection?.status]);
   
   const fetchConnection = async () => {
     try {
@@ -39,17 +45,32 @@ export default function ZohoCRMIntegration() {
         return;
       }
       
+      // Query integrations table (matching ZohoClient implementation)
       const { data: conn, error: connError } = await supabase
-        .from('zoho_crm_connections')
+        .from('integrations')
         .select('*')
         .eq('builder_id', builder.id)
+        .eq('integration_type', 'crm')
+        .eq('provider', 'zoho')
         .single();
       
       if (connError && connError.code !== 'PGRST116') {
         throw connError;
       }
       
-      setConnection(conn);
+      // Transform to match component expectations
+      if (conn) {
+        const config = conn.config as any || {};
+        setConnection({
+          ...conn,
+          status: conn.is_active && conn.is_connected ? 'active' : 'disconnected',
+          zoho_account_email: conn.crm_account_name || '',
+          zoho_org_id: conn.crm_account_id || '',
+          last_synced_at: conn.last_sync_at || null,
+        });
+      } else {
+        setConnection(null);
+      }
     } catch (err: any) {
       console.error('Error fetching connection:', err);
       setError(err.message);
@@ -60,16 +81,25 @@ export default function ZohoCRMIntegration() {
   
   const fetchSyncLogs = async () => {
     try {
-      if (!connection) return;
+      if (!connection?.id) return;
       
+      // Query crm_sync_log table (matching ZohoClient implementation)
       const { data: logs } = await supabase
-        .from('zoho_sync_logs')
+        .from('crm_sync_log')
         .select('*')
-        .eq('connection_id', connection.id)
-        .order('created_at', { ascending: false })
+        .eq('integration_id', connection.id)
+        .order('sync_completed_at', { ascending: false })
         .limit(50);
       
-      setSyncLogs(logs || []);
+      // Transform to match component expectations
+      const transformedLogs = (logs || []).map(log => ({
+        ...log,
+        created_at: log.sync_completed_at || log.sync_started_at,
+        operation: log.sync_type,
+        zoho_module: log.sync_direction === 'to_crm' ? 'Contacts' : 'Leads',
+      }));
+      
+      setSyncLogs(transformedLogs);
     } catch (err) {
       console.error('Error fetching sync logs:', err);
     }
@@ -103,34 +133,45 @@ export default function ZohoCRMIntegration() {
   };
   
   const handleDisconnect = async () => {
-    if (!confirm('Are you sure you want to disconnect Zoho CRM? This will stop all automatic syncing.')) {
-      return;
-    }
-    
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('Not authenticated');
-      
-      const { data: builder } = await supabase
-        .from('builders')
-        .select('id')
-        .eq('user_id', user.id)
-        .single();
-      
-      if (!builder) throw new Error('Builder not found');
-      
-      const { error: updateError } = await supabase
-        .from('zoho_crm_connections')
-        .update({ status: 'disconnected' })
-        .eq('builder_id', builder.id);
-      
-      if (updateError) throw updateError;
-      
-      setConnection({ ...connection, status: 'disconnected' });
-    } catch (err: any) {
-      setError(err.message);
-    }
-  };
+           if (!confirm('Are you sure you want to disconnect Zoho CRM? This will stop all automatic syncing.')) {
+             return;
+           }
+           
+           try {
+             const { data: { user } } = await supabase.auth.getUser();
+             if (!user) throw new Error('Not authenticated');
+             
+             const { data: builder } = await supabase
+               .from('builders')
+               .select('id')
+               .eq('user_id', user.id)
+               .single();
+             
+             if (!builder) throw new Error('Builder not found');
+             
+             // Update integrations table
+             const { error: updateError } = await supabase
+               .from('integrations')
+               .update({ 
+                 is_active: false,
+                 is_connected: false 
+               })
+               .eq('builder_id', builder.id)
+               .eq('integration_type', 'crm')
+               .eq('provider', 'zoho');
+             
+             if (updateError) throw updateError;
+             
+             setConnection({ 
+               ...connection, 
+               status: 'disconnected',
+               is_active: false,
+               is_connected: false
+             });
+           } catch (err: any) {
+             setError(err.message);
+           }
+         };
   
   const handleSync = async (syncType: string = 'incremental') => {
     try {

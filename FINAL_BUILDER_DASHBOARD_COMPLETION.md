@@ -4,8 +4,8 @@
 
 ### 1. **Environment Configuration** ✅
 - **Zoho CRM credentials added to `.env.production`:**
-  - `ZOHO_CLIENT_ID=1000.067ETSWHZFEI3BF8EKNZ6VK2GJ3S3O`
-  - `ZOHO_CLIENT_SECRET=801faf8bf5619d439bad82e5d35b5d00a10be3df68`
+  - `ZOHO_CLIENT_ID` - Configured in environment variables
+  - `ZOHO_CLIENT_SECRET` - Configured in environment variables
   - `ZOHO_REDIRECT_URI=https://tharaga.co.in/api/integrations/zoho/oauth`
   - `NEXT_PUBLIC_APP_URL=https://tharaga.co.in` (already configured)
 

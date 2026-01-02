@@ -168,27 +168,6 @@ function IntegrationsPageContent() {
       icon: '💬',
       href: '/builder/messaging',
     },
-    {
-      name: 'Zapier',
-      desc: 'Connect with 5000+ apps and automate workflows',
-      status: 'available',
-      icon: '⚡',
-      href: '#',
-    },
-    {
-      name: 'Slack',
-      desc: 'Get real-time notifications in your Slack workspace',
-      status: 'available',
-      icon: '💼',
-      href: '#',
-    },
-    {
-      name: 'Email Marketing',
-      desc: 'Integrate with Mailchimp, SendGrid, and more',
-      status: 'available',
-      icon: '📧',
-      href: '#',
-    },
   ]
 
   // Handle calendar connect
@@ -400,31 +379,6 @@ function IntegrationsPageContent() {
           </motion.div>
         )}
 
-        {/* API Access Section - Design System Container */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.6 }}
-          className="bg-gradient-to-br from-slate-800/95 via-slate-800/95 to-slate-900/95 glow-border rounded-xl overflow-hidden shadow-2xl"
-        >
-          <div className="p-6 sm:p-8">
-            <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
-              <Zap className="w-5 h-5 text-amber-300" />
-              API Access
-            </h3>
-            <p className="text-sm text-slate-400 mb-4">
-              Use our REST API to integrate Tharaga with your custom applications
-            </p>
-            <div className="flex gap-3">
-              <button className="px-6 py-2.5 bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 glow-border text-slate-900 font-semibold rounded-lg transition-all duration-300">
-                View API Docs
-              </button>
-              <button className="px-6 py-2.5 bg-slate-700/50 glow-border text-slate-200 hover:bg-slate-700 rounded-lg transition-all">
-                Generate API Key
-              </button>
-            </div>
-          </div>
-        </motion.div>
       </div>
     </BuilderPageWrapper>
   )

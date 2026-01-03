@@ -1,6 +1,6 @@
 "use client"
 
-import { usePathname, useRouter } from "next/navigation"
+import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
 
 type WorkflowKey = "attract" | "qualify" | "move" | "close" | "operate"
@@ -44,7 +44,6 @@ function getActiveWorkflow(pathname: string): WorkflowKey {
 
 export function WorkflowTabs() {
   const pathname = usePathname()
-  const router = useRouter()
   const active = getActiveWorkflow(pathname || "")
 
   return (
@@ -59,7 +58,7 @@ export function WorkflowTabs() {
             <button
               key={tab.key}
               type="button"
-              onClick={() => router.push(tab.href)}
+              onClick={() => window.location.href = tab.href}
               className={cn(
                 "relative inline-flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-4 text-xs sm:text-sm font-medium whitespace-nowrap rounded-none border-b-2 transition-colors duration-200 min-h-[44px] touch-manipulation",
                 isActive

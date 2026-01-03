@@ -1,7 +1,6 @@
 "use client"
 
 import { useMemo, useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
 import { useQuery } from '@tanstack/react-query'
 import { motion } from 'framer-motion'
 import {
@@ -84,7 +83,6 @@ interface UnifiedDashboardProps {
 }
 
 export function UnifiedDashboard({ onNavigate }: UnifiedDashboardProps) {
-  const router = useRouter()
   const { isDemoMode, builderId: demoBuilderId, userId: demoUserId } = useDemoMode()
   const [builderId, setBuilderId] = useState<string | null>(null)
   const [userId, setUserId] = useState<string | null>(null)
@@ -398,7 +396,7 @@ export function UnifiedDashboard({ onNavigate }: UnifiedDashboardProps) {
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                onClick={() => router.push('/builder/leads')}
+                onClick={() => window.location.href = '/builder/leads'}
                 className="px-6 py-3 bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 glow-border text-slate-900 font-semibold rounded-lg transition-all duration-300 text-sm shadow-lg hover:shadow-xl hover:shadow-amber-500/30 hover:-translate-y-1"
               >
                 View All
@@ -524,7 +522,7 @@ export function UnifiedDashboard({ onNavigate }: UnifiedDashboardProps) {
           </div>
           <div className="flex flex-wrap items-center gap-3">
             <button
-              onClick={() => router.push('/builder/leads')}
+              onClick={() => window.location.href = '/builder/leads'}
               className="px-6 py-3 glow-border bg-slate-800/95 text-slate-200 hover:bg-slate-700/50 rounded-lg text-sm font-semibold transition-all duration-300 flex items-center gap-2 hover:-translate-y-0.5"
             >
               <Users className="w-4 h-4" />
@@ -538,7 +536,7 @@ export function UnifiedDashboard({ onNavigate }: UnifiedDashboardProps) {
               Properties
             </button>
             <button
-              onClick={() => router.push('/builder/analytics')}
+              onClick={() => window.location.href = '/builder/analytics'}
               className="px-6 py-3 glow-border bg-slate-800/95 text-slate-200 hover:bg-slate-700/50 rounded-lg text-sm font-semibold transition-all duration-300 flex items-center gap-2 hover:-translate-y-0.5"
             >
               <BarChart3 className="w-4 h-4" />
@@ -657,7 +655,7 @@ function LeadCard({ lead, onNavigate }: { lead: Lead; onNavigate?: (section: str
       whileHover={{ scale: 1.02, x: 4 }}
       whileTap={{ scale: 0.98 }}
       onClick={() => {
-        router.push('/builder/leads')
+        window.location.href = '/builder/leads'
         // Optional: Open lead detail after navigation
         setTimeout(() => {
           window.dispatchEvent(new CustomEvent('open-lead-detail', { detail: { leadId: lead.id } }))

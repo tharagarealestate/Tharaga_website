@@ -1,7 +1,7 @@
 "use client"
 
 import Link from 'next/link'
-import { usePathname, useRouter } from 'next/navigation'
+import { usePathname } from 'next/navigation'
 import { useEffect, useMemo, useState, useRef, useCallback } from 'react'
 import { cn } from '@/lib/utils'
 import { useTrialStatus } from './TrialStatusManager'
@@ -61,7 +61,6 @@ interface NavGroup {
 
 export function BuilderSidebar() {
   const pathname = usePathname()
-  const router = useRouter()
   
   // Map routes to unified dashboard sections
   const routeToSectionMap: Record<string, string> = {
@@ -482,7 +481,7 @@ export function BuilderSidebar() {
 
                 return (
                   <div key={item.href}>
-                    <Link
+                    <a
                       href={isLocked ? '#' : item.href}
                       onClick={(e) => {
                         if (isLocked) {
@@ -492,11 +491,10 @@ export function BuilderSidebar() {
                           return
                         }
                         
-                        // Use client-side navigation for all routes (smooth transitions)
-                        // Let the Link component handle navigation normally for all routes
-                        
-                        // For other routes, allow normal navigation
-                        // Submenu toggle is handled by the chevron button
+                        // Use window.location.href for reliable navigation on initial load
+                        e.preventDefault()
+                        const targetUrl = shouldUseUnifiedDashboard(item.href) ? getUnifiedDashboardUrl(item.href) : item.href
+                        window.location.href = targetUrl
                       }}
                       className={cn(
                         "flex items-center rounded-lg px-2 py-2 text-xs transition-all duration-150 group relative",
@@ -562,7 +560,7 @@ export function BuilderSidebar() {
                           title="Upgrade to Pro to access Revenue features"
                         />
                       )}
-                    </Link>
+                    </a>
 
                     {/* Submenu - Smooth expand/collapse animation */}
                     <div 
@@ -582,13 +580,14 @@ export function BuilderSidebar() {
                                typeof window !== 'undefined' &&
                                new URLSearchParams(window.location.search).get('section') === getSectionFromHref(sub.href))
                             return (
-                              <Link
+                              <a
                                 key={sub.href}
                                 href={sub.href}
                                 onClick={(e) => {
-                                  // If this submenu item should use unified dashboard, intercept
-                                  // Use client-side navigation for all routes (smooth transitions)
-                                  // Let the Link component handle navigation normally for all routes
+                                  // Use window.location.href for reliable navigation on initial load
+                                  e.preventDefault()
+                                  const targetUrl = shouldUseUnifiedDashboard(sub.href) ? getUnifiedDashboardUrl(sub.href) : sub.href
+                                  window.location.href = targetUrl
                                 }}
                                 className={cn(
                                   "block px-2 py-1 text-[11px] rounded-lg transition-colors duration-150",
@@ -598,7 +597,7 @@ export function BuilderSidebar() {
                                 )}
                               >
                                 {sub.label}
-                              </Link>
+                              </a>
                             )
                           })}
                         </div>
@@ -773,7 +772,7 @@ export function BuilderSidebar() {
 
                     return (
                       <div key={item.href}>
-                        <Link
+                        <a
                           href={isLocked ? '#' : item.href}
                           onClick={(e) => {
                             if (isLocked) {
@@ -787,15 +786,10 @@ export function BuilderSidebar() {
                               return
                             }
                             
-                            // If this route should use unified dashboard, intercept and redirect
-                            if (shouldUseUnifiedDashboard(item.href)) {
-                              e.preventDefault()
-                              const unifiedUrl = getUnifiedDashboardUrl(item.href)
-                              // Use client-side navigation for all routes (smooth transitions)
-                              // Let the Link component handle navigation normally for all routes
-                            }
-                            
-                            // Otherwise, navigate and close menu
+                            // Use window.location.href for reliable navigation on initial load
+                            e.preventDefault()
+                            const targetUrl = shouldUseUnifiedDashboard(item.href) ? getUnifiedDashboardUrl(item.href) : item.href
+                            window.location.href = targetUrl
                             setMobileMenuOpen(false)
                           }}
                           className={cn(
@@ -830,7 +824,7 @@ export function BuilderSidebar() {
                               )}
                             </button>
                           )}
-                        </Link>
+                        </a>
                         {/* Mobile Submenu - Smooth animation */}
                         <div 
                           className={cn(
@@ -849,17 +843,14 @@ export function BuilderSidebar() {
                                    typeof window !== 'undefined' &&
                                    new URLSearchParams(window.location.search).get('section') === getSectionFromHref(sub.href))
                                 return (
-                                  <Link
+                                  <a
                                     key={sub.href}
                                     href={sub.href}
                                     onClick={(e) => {
-                                      // If this submenu item should use unified dashboard, intercept
-                                      if (shouldUseUnifiedDashboard(sub.href)) {
-                                        e.preventDefault()
-                                        const unifiedUrl = getUnifiedDashboardUrl(sub.href)
-                                        // Use client-side navigation for all routes (smooth transitions)
-                                        // Let the Link component handle navigation normally for all routes
-                                      }
+                                      // Use window.location.href for reliable navigation on initial load
+                                      e.preventDefault()
+                                      const targetUrl = shouldUseUnifiedDashboard(sub.href) ? getUnifiedDashboardUrl(sub.href) : sub.href
+                                      window.location.href = targetUrl
                                       setMobileMenuOpen(false)
                                     }}
                                     className={cn(
@@ -870,7 +861,7 @@ export function BuilderSidebar() {
                                     )}
                                   >
                                     {sub.label}
-                                  </Link>
+                                  </a>
                                 )
                               })}
                             </div>

@@ -1,7 +1,7 @@
 "use client"
 
 import Link from 'next/link'
-import { usePathname, useRouter } from 'next/navigation'
+import { usePathname } from 'next/navigation'
 import { useEffect, useMemo, useState, useRef, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { cn } from '@/lib/utils'
@@ -65,7 +65,6 @@ interface NavGroup {
 
 export function AdvancedAISidebar() {
   const pathname = usePathname()
-  const router = useRouter()
   
   // Map routes to unified dashboard sections
   // Note: /builder/leads now has its own beautiful page, properties uses section-based routing
@@ -537,7 +536,7 @@ export function AdvancedAISidebar() {
                           onHoverStart={() => setHoveredItem(item.href)}
                           onHoverEnd={() => setHoveredItem(null)}
                         >
-                          <Link
+                          <a
                             href={isLocked ? '#' : (shouldUseUnifiedDashboard(item.href) ? getUnifiedDashboardUrl(item.href) : item.href)}
                             onClick={(e) => {
                               if (isLocked) {
@@ -546,8 +545,10 @@ export function AdvancedAISidebar() {
                                 return
                               }
 
-                              // Use client-side navigation for all routes (smooth transitions)
-                              // Let the Link component handle navigation normally for all routes
+                              // Use window.location.href for reliable navigation on initial load
+                              e.preventDefault()
+                              const targetUrl = shouldUseUnifiedDashboard(item.href) ? getUnifiedDashboardUrl(item.href) : item.href
+                              window.location.href = targetUrl
                             }}
                             className={cn(
                               "relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-all duration-300 group",
@@ -652,7 +653,7 @@ export function AdvancedAISidebar() {
                                 className="ml-auto w-4 h-4 text-slate-500 shrink-0"
                               />
                             )}
-                          </Link>
+                          </a>
                         </motion.div>
 
                         {/* Submenu with Smooth Animation */}
@@ -679,11 +680,13 @@ export function AdvancedAISidebar() {
                                       animate={{ opacity: 1, x: 0 }}
                                       transition={{ delay: subIndex * 0.05 }}
                                     >
-                                      <Link
+                                      <a
                                         href={shouldUseUnifiedDashboard(sub.href) ? getUnifiedDashboardUrl(sub.href) : sub.href}
                                         onClick={(e) => {
-                                          // Use client-side navigation for all routes (smooth transitions)
-                                          // Let the Link component handle navigation normally for all routes
+                                          // Use window.location.href for reliable navigation on initial load
+                                          e.preventDefault()
+                                          const targetUrl = shouldUseUnifiedDashboard(sub.href) ? getUnifiedDashboardUrl(sub.href) : sub.href
+                                          window.location.href = targetUrl
                                         }}
                                         className={cn(
                                           "block px-3 py-1.5 text-xs rounded-lg transition-all duration-200",
@@ -693,7 +696,7 @@ export function AdvancedAISidebar() {
                                         )}
                                       >
                                         {sub.label}
-                                      </Link>
+                                      </a>
                                     </motion.div>
                                   )
                                 })}

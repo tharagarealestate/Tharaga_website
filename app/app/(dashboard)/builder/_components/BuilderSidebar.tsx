@@ -1,7 +1,7 @@
 "use client"
 
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import { useEffect, useMemo, useState, useRef, useCallback } from 'react'
 import { cn } from '@/lib/utils'
 import { useTrialStatus } from './TrialStatusManager'
@@ -61,6 +61,7 @@ interface NavGroup {
 
 export function BuilderSidebar() {
   const pathname = usePathname()
+  const router = useRouter()
   
   // Map routes to unified dashboard sections
   const routeToSectionMap: Record<string, string> = {
@@ -487,14 +488,14 @@ export function BuilderSidebar() {
                         if (isLocked) {
                           e.preventDefault()
                           // Show upgrade prompt
-                          window.location.href = '/pricing'
+                          router.push('/pricing')
                           return
                         }
                         
-                        // Use window.location.href for reliable navigation on initial load
+                        // Use Next.js router for smooth client-side navigation
                         e.preventDefault()
                         const targetUrl = shouldUseUnifiedDashboard(item.href) ? getUnifiedDashboardUrl(item.href) : item.href
-                        window.location.href = targetUrl
+                        router.push(targetUrl)
                       }}
                       className={cn(
                         "flex items-center rounded-lg px-2 py-2 text-xs transition-all duration-150 group relative",
@@ -580,14 +581,14 @@ export function BuilderSidebar() {
                                typeof window !== 'undefined' &&
                                new URLSearchParams(window.location.search).get('section') === getSectionFromHref(sub.href))
                             return (
-                              <a
+                              <Link
                                 key={sub.href}
                                 href={sub.href}
                                 onClick={(e) => {
-                                  // Use window.location.href for reliable navigation on initial load
+                                  // Use Next.js router for smooth client-side navigation
                                   e.preventDefault()
                                   const targetUrl = shouldUseUnifiedDashboard(sub.href) ? getUnifiedDashboardUrl(sub.href) : sub.href
-                                  window.location.href = targetUrl
+                                  router.push(targetUrl)
                                 }}
                                 className={cn(
                                   "block px-2 py-1 text-[11px] rounded-lg transition-colors duration-150",
@@ -597,7 +598,7 @@ export function BuilderSidebar() {
                                 )}
                               >
                                 {sub.label}
-                              </a>
+                              </Link>
                             )
                           })}
                         </div>
@@ -772,12 +773,12 @@ export function BuilderSidebar() {
 
                     return (
                       <div key={item.href}>
-                        <a
+                        <Link
                           href={isLocked ? '#' : item.href}
                           onClick={(e) => {
                             if (isLocked) {
                               e.preventDefault()
-                              window.location.href = '/pricing'
+                              router.push('/pricing')
                               return
                             }
                             // If clicking chevron button, only toggle submenu
@@ -786,10 +787,10 @@ export function BuilderSidebar() {
                               return
                             }
                             
-                            // Use window.location.href for reliable navigation on initial load
+                            // Use Next.js router for smooth client-side navigation
                             e.preventDefault()
                             const targetUrl = shouldUseUnifiedDashboard(item.href) ? getUnifiedDashboardUrl(item.href) : item.href
-                            window.location.href = targetUrl
+                            router.push(targetUrl)
                             setMobileMenuOpen(false)
                           }}
                           className={cn(
@@ -843,14 +844,14 @@ export function BuilderSidebar() {
                                    typeof window !== 'undefined' &&
                                    new URLSearchParams(window.location.search).get('section') === getSectionFromHref(sub.href))
                                 return (
-                                  <a
+                                  <Link
                                     key={sub.href}
                                     href={sub.href}
                                     onClick={(e) => {
-                                      // Use window.location.href for reliable navigation on initial load
+                                      // Use Next.js router for smooth client-side navigation
                                       e.preventDefault()
                                       const targetUrl = shouldUseUnifiedDashboard(sub.href) ? getUnifiedDashboardUrl(sub.href) : sub.href
-                                      window.location.href = targetUrl
+                                      router.push(targetUrl)
                                       setMobileMenuOpen(false)
                                     }}
                                     className={cn(

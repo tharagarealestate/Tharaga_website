@@ -329,12 +329,18 @@ export function LeadsList({ onSelectLead, initialFilters, showInlineFilters = tr
     });
   }, [filters, trackBehavior, userId, onStatsUpdate]);
 
+  // Store fetchLeads in a ref to avoid stale closures
+  const fetchLeadsRef = useRef(fetchLeads);
+  useEffect(() => {
+    fetchLeadsRef.current = fetchLeads;
+  }, [fetchLeads]);
+
   // Separate effect for filters - this prevents infinite loops
   useEffect(() => {
     if (!userId) return;
 
-    // Only fetch when filters actually change, not when fetchLeads function reference changes
-    fetchLeads();
+    // Use ref to avoid stale closure issues
+    fetchLeadsRef.current();
 
     // Cleanup on unmount
     return () => {
@@ -346,12 +352,6 @@ export function LeadsList({ onSelectLead, initialFilters, showInlineFilters = tr
       }
     };
   }, [userId, filters.page, filters.limit, filters.search, filters.category, filters.score_min, filters.score_max, filters.budget_min, filters.budget_max, filters.location, filters.property_type, filters.has_interactions, filters.no_response, filters.sort_by, filters.sort_order]);
-
-  // Store fetchLeads in a ref to avoid stale closures
-  const fetchLeadsRef = useRef(fetchLeads);
-  useEffect(() => {
-    fetchLeadsRef.current = fetchLeads;
-  }, [fetchLeads]);
 
   // Real-time subscriptions - separate from fetchLeads to prevent infinite loops
   useEffect(() => {

@@ -549,3 +549,4 @@ CREATE TABLE doc_permissions (
 
 **This system will make Tharaga's documentation the most advanced in the real estate SaaS industry, providing a competitive advantage that no competitor can easily replicate.**
 
+

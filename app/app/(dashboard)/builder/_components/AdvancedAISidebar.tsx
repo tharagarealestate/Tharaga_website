@@ -1,7 +1,7 @@
 "use client"
 
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import { useEffect, useMemo, useState, useRef, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { cn } from '@/lib/utils'
@@ -65,6 +65,7 @@ interface NavGroup {
 
 export function AdvancedAISidebar() {
   const pathname = usePathname()
+  const router = useRouter()
   
   // Map routes to unified dashboard sections
   // Note: /builder/leads now has its own beautiful page, properties uses section-based routing
@@ -536,19 +537,19 @@ export function AdvancedAISidebar() {
                           onHoverStart={() => setHoveredItem(item.href)}
                           onHoverEnd={() => setHoveredItem(null)}
                         >
-                          <a
+                          <Link
                             href={isLocked ? '#' : (shouldUseUnifiedDashboard(item.href) ? getUnifiedDashboardUrl(item.href) : item.href)}
                             onClick={(e) => {
                               if (isLocked) {
                                 e.preventDefault()
-                                window.location.href = '/pricing'
+                                router.push('/pricing')
                                 return
                               }
 
-                              // Use window.location.href for reliable navigation on initial load
+                              // Use Next.js router for smooth client-side navigation
                               e.preventDefault()
                               const targetUrl = shouldUseUnifiedDashboard(item.href) ? getUnifiedDashboardUrl(item.href) : item.href
-                              window.location.href = targetUrl
+                              router.push(targetUrl)
                             }}
                             className={cn(
                               "relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-all duration-300 group",
@@ -680,13 +681,13 @@ export function AdvancedAISidebar() {
                                       animate={{ opacity: 1, x: 0 }}
                                       transition={{ delay: subIndex * 0.05 }}
                                     >
-                                      <a
+                                      <Link
                                         href={shouldUseUnifiedDashboard(sub.href) ? getUnifiedDashboardUrl(sub.href) : sub.href}
                                         onClick={(e) => {
-                                          // Use window.location.href for reliable navigation on initial load
+                                          // Use Next.js router for smooth client-side navigation
                                           e.preventDefault()
                                           const targetUrl = shouldUseUnifiedDashboard(sub.href) ? getUnifiedDashboardUrl(sub.href) : sub.href
-                                          window.location.href = targetUrl
+                                          router.push(targetUrl)
                                         }}
                                         className={cn(
                                           "block px-3 py-1.5 text-xs rounded-lg transition-all duration-200",
@@ -696,7 +697,7 @@ export function AdvancedAISidebar() {
                                         )}
                                       >
                                         {sub.label}
-                                      </a>
+                                      </Link>
                                     </motion.div>
                                   )
                                 })}
@@ -730,7 +731,7 @@ export function AdvancedAISidebar() {
                     ? "bg-orange-500/10 border-orange-500/30 hover:border-orange-500/50"
                     : "bg-amber-500/10 border-amber-500/30 hover:border-amber-500/50"
                 )}
-                onClick={() => window.location.href = '/pricing'}
+                onClick={() => router.push('/pricing')}
               >
                 <div className="flex items-center gap-2 mb-2">
                   <Clock className={cn(

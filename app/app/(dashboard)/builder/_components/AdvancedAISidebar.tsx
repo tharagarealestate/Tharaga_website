@@ -542,16 +542,13 @@ export function AdvancedAISidebar() {
                           <Link
                             href={isLocked ? '#' : (shouldUseUnifiedDashboard(item.href) ? getUnifiedDashboardUrl(item.href) : item.href)}
                             onClick={(e) => {
+                              // Only prevent default for locked items
                               if (isLocked) {
                                 e.preventDefault()
                                 router.push('/pricing')
                                 return
                               }
-
-                              // Use Next.js router for smooth client-side navigation
-                              e.preventDefault()
-                              const targetUrl = shouldUseUnifiedDashboard(item.href) ? getUnifiedDashboardUrl(item.href) : item.href
-                              router.push(targetUrl)
+                              // Let Next.js Link handle navigation naturally for smooth client-side transitions
                             }}
                             className={cn(
                               "relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-all duration-300 group",
@@ -685,12 +682,7 @@ export function AdvancedAISidebar() {
                                     >
                                       <Link
                                         href={shouldUseUnifiedDashboard(sub.href) ? getUnifiedDashboardUrl(sub.href) : sub.href}
-                                        onClick={(e) => {
-                                          // Use Next.js router for smooth client-side navigation
-                                          e.preventDefault()
-                                          const targetUrl = shouldUseUnifiedDashboard(sub.href) ? getUnifiedDashboardUrl(sub.href) : sub.href
-                                          router.push(targetUrl)
-                                        }}
+                                        // Let Next.js Link handle navigation naturally for smooth client-side transitions
                                         className={cn(
                                           "block px-3 py-1.5 text-xs rounded-lg transition-all duration-200",
                                           isSubActive

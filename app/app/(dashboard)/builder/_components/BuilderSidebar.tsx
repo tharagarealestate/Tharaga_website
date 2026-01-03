@@ -482,20 +482,17 @@ export function BuilderSidebar() {
 
                 return (
                   <div key={item.href}>
-                    <a
-                      href={isLocked ? '#' : item.href}
+                    <Link
+                      href={isLocked ? '#' : (shouldUseUnifiedDashboard(item.href) ? getUnifiedDashboardUrl(item.href) : item.href)}
                       onClick={(e) => {
+                        // Only prevent default for locked items
                         if (isLocked) {
                           e.preventDefault()
                           // Show upgrade prompt
                           router.push('/pricing')
                           return
                         }
-                        
-                        // Use Next.js router for smooth client-side navigation
-                        e.preventDefault()
-                        const targetUrl = shouldUseUnifiedDashboard(item.href) ? getUnifiedDashboardUrl(item.href) : item.href
-                        router.push(targetUrl)
+                        // Let Next.js Link handle navigation naturally for smooth client-side transitions
                       }}
                       className={cn(
                         "flex items-center rounded-lg px-2 py-2 text-xs transition-all duration-150 group relative",
@@ -561,7 +558,7 @@ export function BuilderSidebar() {
                           title="Upgrade to Pro to access Revenue features"
                         />
                       )}
-                    </a>
+                    </Link>
 
                     {/* Submenu - Smooth expand/collapse animation */}
                     <div 
@@ -583,13 +580,8 @@ export function BuilderSidebar() {
                             return (
                               <Link
                                 key={sub.href}
-                                href={sub.href}
-                                onClick={(e) => {
-                                  // Use Next.js router for smooth client-side navigation
-                                  e.preventDefault()
-                                  const targetUrl = shouldUseUnifiedDashboard(sub.href) ? getUnifiedDashboardUrl(sub.href) : sub.href
-                                  router.push(targetUrl)
-                                }}
+                                href={shouldUseUnifiedDashboard(sub.href) ? getUnifiedDashboardUrl(sub.href) : sub.href}
+                                // Let Next.js Link handle navigation naturally for smooth client-side transitions
                                 className={cn(
                                   "block px-2 py-1 text-[11px] rounded-lg transition-colors duration-150",
                                   isSubActive
@@ -774,8 +766,9 @@ export function BuilderSidebar() {
                     return (
                       <div key={item.href}>
                         <Link
-                          href={isLocked ? '#' : item.href}
+                          href={isLocked ? '#' : (shouldUseUnifiedDashboard(item.href) ? getUnifiedDashboardUrl(item.href) : item.href)}
                           onClick={(e) => {
+                            // Only prevent default for locked items
                             if (isLocked) {
                               e.preventDefault()
                               router.push('/pricing')
@@ -786,11 +779,7 @@ export function BuilderSidebar() {
                               e.preventDefault()
                               return
                             }
-                            
-                            // Use Next.js router for smooth client-side navigation
-                            e.preventDefault()
-                            const targetUrl = shouldUseUnifiedDashboard(item.href) ? getUnifiedDashboardUrl(item.href) : item.href
-                            router.push(targetUrl)
+                            // Let Next.js Link handle navigation naturally for smooth client-side transitions
                             setMobileMenuOpen(false)
                           }}
                           className={cn(
@@ -825,7 +814,7 @@ export function BuilderSidebar() {
                               )}
                             </button>
                           )}
-                        </a>
+                        </Link>
                         {/* Mobile Submenu - Smooth animation */}
                         <div 
                           className={cn(
@@ -846,12 +835,9 @@ export function BuilderSidebar() {
                                 return (
                                   <Link
                                     key={sub.href}
-                                    href={sub.href}
-                                    onClick={(e) => {
-                                      // Use Next.js router for smooth client-side navigation
-                                      e.preventDefault()
-                                      const targetUrl = shouldUseUnifiedDashboard(sub.href) ? getUnifiedDashboardUrl(sub.href) : sub.href
-                                      router.push(targetUrl)
+                                    href={shouldUseUnifiedDashboard(sub.href) ? getUnifiedDashboardUrl(sub.href) : sub.href}
+                                    onClick={() => {
+                                      // Let Next.js Link handle navigation naturally for smooth client-side transitions
                                       setMobileMenuOpen(false)
                                     }}
                                     className={cn(
@@ -862,7 +848,7 @@ export function BuilderSidebar() {
                                     )}
                                   >
                                     {sub.label}
-                                  </a>
+                                  </Link>
                                 )
                               })}
                             </div>

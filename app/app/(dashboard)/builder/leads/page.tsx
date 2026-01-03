@@ -1,7 +1,7 @@
 'use client'
 
 import { Suspense } from 'react'
-import { LeadsList } from './_components/LeadsList'
+import { LeadsManagementDashboard } from './_components/LeadsManagementDashboard'
 import { BuilderPageWrapper } from '../_components/BuilderPageWrapper'
 import { FilterProvider } from '@/contexts/FilterContext'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
@@ -12,11 +12,11 @@ function LeadsContent() {
   return (
     <FilterProvider>
       <BuilderPageWrapper
-        title="Leads Management"
-        description="View, filter, and manage all your leads in one place"
+        title="AI-Powered Leads Management"
+        description="Intelligently manage, prioritize, and convert leads with real-time AI insights and ZOHO CRM integration"
         noContainer={true}
       >
-        <LeadsList showInlineFilters={true} />
+        <LeadsManagementDashboard />
       </BuilderPageWrapper>
     </FilterProvider>
   )
@@ -27,11 +27,11 @@ export default function LeadsPage() {
     <Suspense
       fallback={
         <BuilderPageWrapper
-          title="Leads Management"
-          description="View, filter, and manage all your leads in one place"
+          title="AI-Powered Leads Management"
+          description="Intelligently manage, prioritize, and convert leads with real-time AI insights and ZOHO CRM integration"
           noContainer={true}
         >
-          <div className="flex items-center justify-center min-h-[400px]">
+          <div className="flex items-center justify-center min-h-[600px]">
             <LoadingSpinner />
           </div>
         </BuilderPageWrapper>
@@ -41,4 +41,3 @@ export default function LeadsPage() {
     </Suspense>
   )
 }
-

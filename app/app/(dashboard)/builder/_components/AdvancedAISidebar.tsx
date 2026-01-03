@@ -331,7 +331,9 @@ export function AdvancedAISidebar() {
 
   // Filter items based on search
   const filteredGroups = useMemo(() => {
-    if (!searchQuery.trim()) return navGroups
+    if (!searchQuery.trim()) {
+      return navGroups
+    }
     
     const query = searchQuery.toLowerCase()
     return navGroups.map(group => ({
@@ -654,7 +656,7 @@ export function AdvancedAISidebar() {
                                 className="ml-auto w-4 h-4 text-slate-500 shrink-0"
                               />
                             )}
-                          </a>
+                          </Link>
                         </motion.div>
 
                         {/* Submenu with Smooth Animation */}

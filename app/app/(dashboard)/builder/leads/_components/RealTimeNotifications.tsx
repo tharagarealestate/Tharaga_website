@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   Bell,
@@ -31,8 +31,15 @@ export function RealTimeNotifications() {
   const [unreadCount, setUnreadCount] = useState(0)
   const supabase = getSupabase()
 
+  // Store notifications in ref to avoid stale closures
+  const notificationsRef = useRef<Notification[]>([])
+  useEffect(() => {
+    notificationsRef.current = notifications
+  }, [notifications])
+
   useEffect(() => {
     let isMounted = true
+    let lastNotificationTime: Record<string, number> = {}
 
     // Fetch initial notifications
     fetchNotifications()
@@ -56,24 +63,33 @@ export function RealTimeNotifications() {
             const lead = payload.new as any
             // Only notify if score actually increased significantly
             if (lead.score >= 8) {
-              // Check if we already have a recent notification for this lead
-              const recentNotification = notifications.find(
-                n => n.lead_id === lead.id && 
-                new Date(n.timestamp).getTime() > Date.now() - 60000 // Within last minute
-              )
+              const leadKey = `lead-${lead.id}`
+              const now = Date.now()
+              const lastTime = lastNotificationTime[leadKey] || 0
               
-              if (!recentNotification) {
-                addNotification({
-                  id: `notification-${Date.now()}-${lead.id}`,
-                  type: 'high_priority',
-                  title: 'High-Priority Lead Alert',
-                  message: `${lead.name || lead.email} has a score of ${lead.score.toFixed(1)}/10`,
-                  lead_id: lead.id,
-                  lead_name: lead.name || lead.email,
-                  timestamp: new Date().toISOString(),
-                  read: false,
-                  action_url: `/builder/leads/${lead.id}`,
-                })
+              // Throttle: Only notify once per minute per lead
+              if (now - lastTime > 60000) {
+                lastNotificationTime[leadKey] = now
+                
+                // Check if we already have a recent notification for this lead
+                const recentNotification = notificationsRef.current.find(
+                  n => n.lead_id === lead.id && 
+                  new Date(n.timestamp).getTime() > Date.now() - 60000 // Within last minute
+                )
+                
+                if (!recentNotification) {
+                  addNotification({
+                    id: `notification-${Date.now()}-${lead.id}`,
+                    type: 'high_priority',
+                    title: 'High-Priority Lead Alert',
+                    message: `${lead.name || lead.email} has a score of ${lead.score.toFixed(1)}/10`,
+                    lead_id: lead.id,
+                    lead_name: lead.name || lead.email,
+                    timestamp: new Date().toISOString(),
+                    read: false,
+                    action_url: `/builder/leads/${lead.id}`,
+                  })
+                }
               }
             }
           }
@@ -90,24 +106,33 @@ export function RealTimeNotifications() {
           if (!isMounted) return
           
           const interaction = payload.new as any
-          // Debounce interaction notifications
-          const recentNotification = notifications.find(
-            n => n.lead_id === interaction.lead_id && 
-            n.type === 'new_interaction' &&
-            new Date(n.timestamp).getTime() > Date.now() - 30000 // Within last 30 seconds
-          )
+          const interactionKey = `interaction-${interaction.lead_id}`
+          const now = Date.now()
+          const lastTime = lastNotificationTime[interactionKey] || 0
           
-          if (!recentNotification) {
-            addNotification({
-              id: `notification-${Date.now()}-${interaction.lead_id}`,
-              type: 'new_interaction',
-              title: 'New Interaction',
-              message: `New ${interaction.interaction_type} interaction recorded`,
-              lead_id: interaction.lead_id,
-              timestamp: new Date().toISOString(),
-              read: false,
-              action_url: interaction.lead_id ? `/builder/leads/${interaction.lead_id}` : undefined,
-            })
+          // Throttle: Only notify once per 30 seconds per lead
+          if (now - lastTime > 30000) {
+            lastNotificationTime[interactionKey] = now
+            
+            // Check for recent notification
+            const recentNotification = notificationsRef.current.find(
+              n => n.lead_id === interaction.lead_id && 
+              n.type === 'new_interaction' &&
+              new Date(n.timestamp).getTime() > Date.now() - 30000 // Within last 30 seconds
+            )
+            
+            if (!recentNotification) {
+              addNotification({
+                id: `notification-${Date.now()}-${interaction.lead_id}`,
+                type: 'new_interaction',
+                title: 'New Interaction',
+                message: `New ${interaction.interaction_type} interaction recorded`,
+                lead_id: interaction.lead_id,
+                timestamp: new Date().toISOString(),
+                read: false,
+                action_url: interaction.lead_id ? `/builder/leads/${interaction.lead_id}` : undefined,
+              })
+            }
           }
         }
       )

@@ -48,24 +48,45 @@ export function LeadsManagementDashboard() {
 
   // Fetch ZOHO CRM status
   useEffect(() => {
+    let isMounted = true
+
     async function fetchCRMStatus() {
       try {
         const response = await fetch('/api/crm/zoho/status')
-        if (response.ok) {
+        if (response.ok && isMounted) {
           const data = await response.json()
           setCrmStatus(data)
         }
       } catch (error) {
         console.error('Failed to fetch CRM status:', error)
       } finally {
-        setCrmLoading(false)
+        if (isMounted) {
+          setCrmLoading(false)
+        }
       }
     }
 
     fetchCRMStatus()
-    // Refresh every 30 seconds
-    const interval = setInterval(fetchCRMStatus, 30000)
-    return () => clearInterval(interval)
+    // Refresh every 30 seconds (increased from frequent polling)
+    const interval = setInterval(() => {
+      if (isMounted) {
+        fetchCRMStatus()
+      }
+    }, 30000)
+
+    // Listen for CRM sync completion events
+    const handleSyncComplete = () => {
+      if (isMounted) {
+        fetchCRMStatus()
+      }
+    }
+    window.addEventListener('crm-sync-complete', handleSyncComplete)
+
+    return () => {
+      isMounted = false
+      clearInterval(interval)
+      window.removeEventListener('crm-sync-complete', handleSyncComplete)
+    }
   }, [])
 
   const handleStatsUpdate = (newStats: any) => {

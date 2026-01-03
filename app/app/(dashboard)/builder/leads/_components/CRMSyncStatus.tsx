@@ -83,8 +83,18 @@ export function CRMSyncStatus({ status }: CRMSyncStatusProps) {
         body: JSON.stringify({ sync_type: 'leads' }),
       })
       if (response.ok) {
-        // Refresh status after sync
-        window.location.reload()
+        // Refresh status after sync without page reload
+        // Trigger a custom event that parent can listen to
+        window.dispatchEvent(new CustomEvent('crm-sync-complete'))
+        // Optionally refetch status
+        setTimeout(() => {
+          fetch('/api/crm/zoho/status')
+            .then(res => res.json())
+            .then(data => {
+              // Status will be updated by parent component
+            })
+            .catch(console.error)
+        }, 1000)
       }
     } catch (error) {
       console.error('Sync failed:', error)

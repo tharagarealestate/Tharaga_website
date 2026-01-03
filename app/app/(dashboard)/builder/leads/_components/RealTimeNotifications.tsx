@@ -32,10 +32,12 @@ export function RealTimeNotifications() {
   const supabase = getSupabase()
 
   useEffect(() => {
+    let isMounted = true
+
     // Fetch initial notifications
     fetchNotifications()
 
-    // Subscribe to real-time updates
+    // Subscribe to real-time updates with debouncing to prevent excessive notifications
     const channel = supabase
       .channel('lead-notifications')
       .on(
@@ -47,20 +49,32 @@ export function RealTimeNotifications() {
           filter: 'score=gte.8',
         },
         (payload) => {
+          if (!isMounted) return
+          
+          // Debounce notifications to prevent spam
           if (payload.eventType === 'UPDATE' && payload.new) {
             const lead = payload.new as any
+            // Only notify if score actually increased significantly
             if (lead.score >= 8) {
-              addNotification({
-                id: `notification-${Date.now()}`,
-                type: 'high_priority',
-                title: 'High-Priority Lead Alert',
-                message: `${lead.name || lead.email} has a score of ${lead.score.toFixed(1)}/10`,
-                lead_id: lead.id,
-                lead_name: lead.name || lead.email,
-                timestamp: new Date().toISOString(),
-                read: false,
-                action_url: `/builder/leads/${lead.id}`,
-              })
+              // Check if we already have a recent notification for this lead
+              const recentNotification = notifications.find(
+                n => n.lead_id === lead.id && 
+                new Date(n.timestamp).getTime() > Date.now() - 60000 // Within last minute
+              )
+              
+              if (!recentNotification) {
+                addNotification({
+                  id: `notification-${Date.now()}-${lead.id}`,
+                  type: 'high_priority',
+                  title: 'High-Priority Lead Alert',
+                  message: `${lead.name || lead.email} has a score of ${lead.score.toFixed(1)}/10`,
+                  lead_id: lead.id,
+                  lead_name: lead.name || lead.email,
+                  timestamp: new Date().toISOString(),
+                  read: false,
+                  action_url: `/builder/leads/${lead.id}`,
+                })
+              }
             }
           }
         }
@@ -73,25 +87,37 @@ export function RealTimeNotifications() {
           table: 'lead_interactions',
         },
         (payload) => {
+          if (!isMounted) return
+          
           const interaction = payload.new as any
-          addNotification({
-            id: `notification-${Date.now()}`,
-            type: 'new_interaction',
-            title: 'New Interaction',
-            message: `New ${interaction.interaction_type} interaction recorded`,
-            lead_id: interaction.lead_id,
-            timestamp: new Date().toISOString(),
-            read: false,
-            action_url: interaction.lead_id ? `/builder/leads/${interaction.lead_id}` : undefined,
-          })
+          // Debounce interaction notifications
+          const recentNotification = notifications.find(
+            n => n.lead_id === interaction.lead_id && 
+            n.type === 'new_interaction' &&
+            new Date(n.timestamp).getTime() > Date.now() - 30000 // Within last 30 seconds
+          )
+          
+          if (!recentNotification) {
+            addNotification({
+              id: `notification-${Date.now()}-${interaction.lead_id}`,
+              type: 'new_interaction',
+              title: 'New Interaction',
+              message: `New ${interaction.interaction_type} interaction recorded`,
+              lead_id: interaction.lead_id,
+              timestamp: new Date().toISOString(),
+              read: false,
+              action_url: interaction.lead_id ? `/builder/leads/${interaction.lead_id}` : undefined,
+            })
+          }
         }
       )
       .subscribe()
 
     return () => {
+      isMounted = false
       supabase.removeChannel(channel)
     }
-  }, [])
+  }, [supabase, addNotification])
 
   const fetchNotifications = async () => {
     try {
@@ -107,15 +133,27 @@ export function RealTimeNotifications() {
   }
 
   const addNotification = useCallback((notification: Notification) => {
-    setNotifications(prev => [notification, ...prev].slice(0, 20)) // Keep last 20
+    setNotifications(prev => {
+      // Prevent duplicate notifications
+      const exists = prev.some(n => n.id === notification.id)
+      if (exists) return prev
+      
+      return [notification, ...prev].slice(0, 20) // Keep last 20
+    })
     setUnreadCount(prev => prev + 1)
     
-    // Show browser notification if permitted
+    // Show browser notification if permitted (throttled)
     if ('Notification' in window && Notification.permission === 'granted') {
-      new Notification(notification.title, {
-        body: notification.message,
-        icon: '/favicon.ico',
-      })
+      // Throttle browser notifications to prevent spam
+      const lastNotificationTime = localStorage.getItem('lastBrowserNotification')
+      const now = Date.now()
+      if (!lastNotificationTime || now - parseInt(lastNotificationTime) > 5000) {
+        new Notification(notification.title, {
+          body: notification.message,
+          icon: '/favicon.ico',
+        })
+        localStorage.setItem('lastBrowserNotification', now.toString())
+      }
     }
   }, [])
 
@@ -234,6 +272,7 @@ export function RealTimeNotifications() {
                       onClick={() => {
                         markAsRead(notification.id)
                         if (notification.action_url) {
+                          // Use router navigation instead of window.location to prevent full reload
                           window.location.href = notification.action_url
                         }
                       }}

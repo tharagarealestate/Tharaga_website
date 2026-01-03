@@ -327,11 +327,13 @@ export function LeadsList({ onSelectLead, initialFilters, showInlineFilters = tr
         }
       }, 300); // 300ms debounce
     });
-  }, [filters, trackBehavior, userId]);
+  }, [filters, trackBehavior, userId, onStatsUpdate]);
 
+  // Separate effect for filters - this prevents infinite loops
   useEffect(() => {
     if (!userId) return;
 
+    // Only fetch when filters actually change, not when fetchLeads function reference changes
     fetchLeads();
 
     // Cleanup on unmount
@@ -343,10 +345,21 @@ export function LeadsList({ onSelectLead, initialFilters, showInlineFilters = tr
         clearTimeout(fetchTimeoutRef.current);
       }
     };
-  }, [fetchLeads, userId]);
+  }, [userId, filters.page, filters.limit, filters.search, filters.category, filters.score_min, filters.score_max, filters.budget_min, filters.budget_max, filters.location, filters.property_type, filters.has_interactions, filters.no_response, filters.sort_by, filters.sort_order]);
 
+  // Store fetchLeads in a ref to avoid stale closures
+  const fetchLeadsRef = useRef(fetchLeads);
+  useEffect(() => {
+    fetchLeadsRef.current = fetchLeads;
+  }, [fetchLeads]);
+
+  // Real-time subscriptions - separate from fetchLeads to prevent infinite loops
   useEffect(() => {
     if (!userId) return;
+
+    let updateTimeout: NodeJS.Timeout | null = null;
+    let lastUpdateTime = 0;
+    const UPDATE_THROTTLE = 2000; // Throttle updates to max once per 2 seconds
 
     const leadScoresChannel = supabase
       .channel('lead-score-updates')
@@ -354,8 +367,36 @@ export function LeadsList({ onSelectLead, initialFilters, showInlineFilters = tr
         'postgres_changes',
         { event: '*', schema: 'public', table: 'lead_scores' },
         (payload: any) => {
+          // Throttle updates to prevent excessive re-renders
+          const now = Date.now();
+          if (now - lastUpdateTime < UPDATE_THROTTLE) {
+            if (updateTimeout) clearTimeout(updateTimeout);
+            updateTimeout = setTimeout(() => {
+              lastUpdateTime = Date.now();
+              if (payload.eventType === 'INSERT') {
+                fetchLeadsRef.current();
+              } else if (payload.eventType === 'UPDATE') {
+                setLeads((previous) =>
+                  previous.map((lead) =>
+                    lead.id === payload.new?.user_id
+                      ? {
+                          ...lead,
+                          score: payload.new?.score ?? lead.score,
+                          category: payload.new?.category ?? lead.category,
+                        }
+                      : lead
+                  )
+                );
+              } else if (payload.eventType === 'DELETE') {
+                setLeads((previous) => previous.filter((lead) => lead.id !== payload.old?.user_id));
+              }
+            }, UPDATE_THROTTLE - (now - lastUpdateTime));
+            return;
+          }
+          
+          lastUpdateTime = now;
           if (payload.eventType === 'INSERT') {
-            fetchLeads();
+            fetchLeadsRef.current();
           } else if (payload.eventType === 'UPDATE') {
             setLeads((previous) =>
               previous.map((lead) =>
@@ -386,6 +427,32 @@ export function LeadsList({ onSelectLead, initialFilters, showInlineFilters = tr
           filter: `builder_id=eq.${userId}`,
         },
         (payload: any) => {
+          // Throttle interaction updates
+          const now = Date.now();
+          if (now - lastUpdateTime < UPDATE_THROTTLE) {
+            if (updateTimeout) clearTimeout(updateTimeout);
+            updateTimeout = setTimeout(() => {
+              lastUpdateTime = Date.now();
+              setLeads((previous) =>
+                previous.map((lead) =>
+                  lead.id === payload.new?.lead_id
+                    ? {
+                        ...lead,
+                        total_interactions: (lead.total_interactions ?? 0) + 1,
+                        last_interaction: {
+                          type: payload.new?.interaction_type ?? lead.last_interaction?.type ?? 'interaction',
+                          timestamp: payload.new?.timestamp ?? new Date().toISOString(),
+                          status: payload.new?.status ?? lead.last_interaction?.status ?? 'pending',
+                        },
+                      }
+                    : lead
+                )
+              );
+            }, UPDATE_THROTTLE - (now - lastUpdateTime));
+            return;
+          }
+          
+          lastUpdateTime = now;
           setLeads((previous) =>
             previous.map((lead) =>
               lead.id === payload.new?.lead_id
@@ -406,10 +473,11 @@ export function LeadsList({ onSelectLead, initialFilters, showInlineFilters = tr
       .subscribe();
 
     return () => {
+      if (updateTimeout) clearTimeout(updateTimeout);
       supabase.removeChannel(leadScoresChannel);
       supabase.removeChannel(interactionsChannel);
     };
-  }, [fetchLeads, supabase, userId]);
+  }, [supabase, userId]); // Removed fetchLeads from dependencies to prevent recreation
 
   const handleClearFilters = useCallback(() => {
     clearFilters();

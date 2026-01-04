@@ -490,17 +490,8 @@ export function AdvancedAISidebar() {
 
                   {/* Group Items */}
                   {group.items.map((item, itemIndex) => {
-                    const isRouteActive = pathname === item.href || pathname.startsWith(item.href + '/')
-                    let isSectionActive = false
-                    
-                    if (shouldUseUnifiedDashboard(item.href)) {
-                      const section = getSectionFromHref(item.href)
-                      if (section && pathname === '/builder' && typeof window !== 'undefined') {
-                        const currentSection = new URLSearchParams(window.location.search).get('section')
-                        isSectionActive = currentSection === section
-                      }
-                    }
-                    const isActive = isRouteActive || isSectionActive
+                    // Simple route matching - works with direct routes like /builder/billing
+                    const isActive = pathname === item.href || pathname.startsWith(item.href + '/')
                     const isLocked = isTrial && !!item.requiresPro
                     const hasSubmenu = item.submenu && item.submenu.length > 0
                     const isSubmenuOpen = openSubmenus.has(item.href)
@@ -643,11 +634,7 @@ export function AdvancedAISidebar() {
                             >
                               <div className="ml-4 mt-1 space-y-0.5 border-l-2 border-slate-700/50 pl-3">
                                 {item.submenu?.map((sub, subIndex) => {
-                                  const isSubActive = pathname === sub.href || 
-                                    (shouldUseUnifiedDashboard(sub.href) && 
-                                     pathname === '/builder' && 
-                                     typeof window !== 'undefined' &&
-                                     new URLSearchParams(window.location.search).get('section') === getSectionFromHref(sub.href))
+                                  const isSubActive = pathname === sub.href || pathname.startsWith(sub.href + '/')
                                   return (
                                     <motion.div
                                       key={sub.href}

@@ -543,8 +543,18 @@ export function AdvancedAISidebar() {
 
                   {/* Group Items */}
                   {group.items.map((item, itemIndex) => {
-                    // Simple route matching - works with direct routes like /builder/billing
-                    const isActive = pathname === item.href || pathname.startsWith(item.href + '/')
+                    // Active state detection - handle both direct routes and section-based routes
+                    let isActive = pathname === item.href || pathname.startsWith(item.href + '/')
+                    
+                    // Check if this is a section-based route and if it matches current section
+                    if (shouldUseQueryParams(item.href) && pathname === '/builder') {
+                      const section = sectionRoutesMap[item.href] || item.href.split('?section=')[1]?.split('&')[0]
+                      if (section && typeof window !== 'undefined') {
+                        const urlParams = new URLSearchParams(window.location.search)
+                        isActive = urlParams.get('section') === section
+                      }
+                    }
+                    
                     const isLocked = isTrial && !!item.requiresPro
                     const hasSubmenu = item.submenu && item.submenu.length > 0
                     const isSubmenuOpen = openSubmenus.has(item.href)
@@ -698,7 +708,18 @@ export function AdvancedAISidebar() {
                             >
                               <div className="ml-4 mt-1 space-y-0.5 border-l-2 border-slate-700/50 pl-3">
                                 {item.submenu?.map((sub, subIndex) => {
-                                  const isSubActive = pathname === sub.href || pathname.startsWith(sub.href + '/')
+                                  // Active state for submenu items
+                                  let isSubActive = pathname === sub.href || pathname.startsWith(sub.href + '/')
+                                  
+                                  // Check if this is a section-based route
+                                  if (shouldUseQueryParams(sub.href) && pathname === '/builder') {
+                                    const section = sectionRoutesMap[sub.href] || sub.href.split('?section=')[1]?.split('&')[0]
+                                    if (section && typeof window !== 'undefined') {
+                                      const urlParams = new URLSearchParams(window.location.search)
+                                      isSubActive = urlParams.get('section') === section
+                                    }
+                                  }
+                                  
                                   return (
                                     <motion.div
                                       key={sub.href}

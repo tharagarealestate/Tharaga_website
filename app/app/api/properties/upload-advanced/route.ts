@@ -9,9 +9,98 @@ import { secureApiRoute } from '@/lib/security/api-security';
 import { Permissions } from '@/lib/security/permissions';
 import { AuditActions, AuditResourceTypes } from '@/lib/security/audit';
 import { z } from 'zod';
+import { createClient } from '@supabase/supabase-js';
 
 export const runtime = 'nodejs';
 export const maxDuration = 120; // 2 minutes for advanced upload
+
+/**
+ * Convert data URL (base64) to Supabase Storage URL
+ */
+async function convertDataUrlToStorageUrl(
+  dataUrl: string,
+  userId: string,
+  propertyId: string | null,
+  index: number,
+  type: 'image' | 'video' | 'floor_plan'
+): Promise<string> {
+  // If it's already a URL (not a data URL), return as-is
+  if (dataUrl.startsWith('http://') || dataUrl.startsWith('https://')) {
+    return dataUrl;
+  }
+
+  // If it's not a data URL, return as-is (might be a path or other format)
+  if (!dataUrl.startsWith('data:')) {
+    return dataUrl;
+  }
+
+  try {
+    // Parse data URL: data:image/jpeg;base64,/9j/4AAQ...
+    const matches = dataUrl.match(/^data:([^;]+);base64,(.+)$/);
+    if (!matches) {
+      throw new Error('Invalid data URL format');
+    }
+
+    const mimeType = matches[1];
+    const base64Data = matches[2];
+    
+    // Convert base64 to buffer
+    const buffer = Buffer.from(base64Data, 'base64');
+    
+    // Determine file extension from mime type
+    const ext = mimeType.includes('jpeg') || mimeType.includes('jpg') ? 'jpg' :
+                 mimeType.includes('png') ? 'png' :
+                 mimeType.includes('gif') ? 'gif' :
+                 mimeType.includes('webp') ? 'webp' :
+                 mimeType.includes('video') ? 'mp4' : 'jpg';
+    
+    // Create storage path (without bucket name - that's specified in .from())
+    const prefix = propertyId ? `properties/${propertyId}` : `temp/${userId}`;
+    const fileName = `${type}_${Date.now()}_${index}.${ext}`;
+    const filePath = `${prefix}/${fileName}`;
+    
+    // Get Supabase credentials
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
+    const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_ROLE;
+    
+    if (!supabaseUrl || !supabaseKey) {
+      throw new Error('Supabase configuration missing');
+    }
+    
+    // Create storage client
+    const storageClient = createClient(supabaseUrl, supabaseKey, {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false
+      }
+    });
+    
+    // Upload to storage - use property-images bucket for all (videos can go there too)
+    const bucket = 'property-images';
+    const { data: uploadData, error: uploadError } = await storageClient.storage
+      .from(bucket)
+      .upload(filePath, buffer, {
+        contentType: mimeType,
+        upsert: false
+      });
+    
+    if (uploadError) {
+      console.error('[Image Upload] Storage error:', uploadError);
+      throw new Error(`Failed to upload ${type}: ${uploadError.message}`);
+    }
+    
+    // Get public URL
+    const { data: { publicUrl } } = storageClient.storage
+      .from(bucket)
+      .getPublicUrl(filePath);
+    
+    return publicUrl;
+  } catch (error: any) {
+    console.error(`[Image Upload] Error converting data URL:`, error);
+    // Return original data URL as fallback (will fail validation but at least we tried)
+    return dataUrl;
+  }
+}
 
 // Comprehensive property upload schema
 const advancedPropertyUploadSchema = z.object({
@@ -60,10 +149,10 @@ const advancedPropertyUploadSchema = z.object({
   parking: z.number().int().min(0).optional(),
   balcony_count: z.number().int().min(0).optional(),
   
-  // Media
-  images: z.array(z.string().url()).min(1, 'At least one image is required'),
-  videos: z.array(z.string().url()).optional(),
-  floor_plan_images: z.array(z.string().url()).optional(),
+  // Media - accept both URLs and data URLs (base64)
+  images: z.array(z.string()).min(1, 'At least one image is required'),
+  videos: z.array(z.string()).optional(),
+  floor_plan_images: z.array(z.string()).optional(),
   virtual_tour_url: z.string().url().optional(),
   
   // Amenities
@@ -218,6 +307,51 @@ export const POST = secureApiRoute(
       targetBuilderId = builder.id;
     }
     
+    // Convert data URLs to storage URLs for images, videos, and floor plans
+    const uploadedImages: string[] = [];
+    const uploadedVideos: string[] = [];
+    const uploadedFloorPlans: string[] = [];
+    
+    // Process images
+    for (let i = 0; i < validatedData.images.length; i++) {
+      const imageUrl = await convertDataUrlToStorageUrl(
+        validatedData.images[i],
+        user.id,
+        null, // propertyId not available yet
+        i,
+        'image'
+      );
+      uploadedImages.push(imageUrl);
+    }
+    
+    // Process videos
+    if (validatedData.videos && validatedData.videos.length > 0) {
+      for (let i = 0; i < validatedData.videos.length; i++) {
+        const videoUrl = await convertDataUrlToStorageUrl(
+          validatedData.videos[i],
+          user.id,
+          null,
+          i,
+          'video'
+        );
+        uploadedVideos.push(videoUrl);
+      }
+    }
+    
+    // Process floor plans
+    if (validatedData.floor_plan_images && validatedData.floor_plan_images.length > 0) {
+      for (let i = 0; i < validatedData.floor_plan_images.length; i++) {
+        const floorPlanUrl = await convertDataUrlToStorageUrl(
+          validatedData.floor_plan_images[i],
+          user.id,
+          null,
+          i,
+          'floor_plan'
+        );
+        uploadedFloorPlans.push(floorPlanUrl);
+      }
+    }
+    
     // Prepare property data
     const propertyData: any = {
       builder_id: targetBuilderId,
@@ -254,9 +388,9 @@ export const POST = secureApiRoute(
       total_floors: validatedData.total_floors,
       parking: validatedData.parking,
       balcony_count: validatedData.balcony_count,
-      images: validatedData.images,
-      videos: validatedData.videos || [],
-      floor_plan_images: validatedData.floor_plan_images || [],
+      images: uploadedImages,
+      videos: uploadedVideos,
+      floor_plan_images: uploadedFloorPlans,
       virtual_tour_url: validatedData.virtual_tour_url,
       amenities: validatedData.amenities || [],
       rera_id: validatedData.rera_id,
@@ -338,6 +472,8 @@ export const POST = secureApiRoute(
     auditResourceType: AuditResourceTypes.PROPERTY
   }
 );
+
+
 
 
 

@@ -485,14 +485,17 @@ export function BuilderSidebar() {
                     <Link
                       href={isLocked ? '#' : (shouldUseUnifiedDashboard(item.href) ? getUnifiedDashboardUrl(item.href) : item.href)}
                       onClick={(e) => {
-                        // Only prevent default for locked items
                         if (isLocked) {
                           e.preventDefault()
-                          // Show upgrade prompt
                           router.push('/pricing')
                           return
                         }
-                        // Let Next.js Link handle navigation naturally for smooth client-side transitions
+                        
+                        // Use router.push() for reliable client-side navigation (no full page reload)
+                        // This works on initial load and provides smooth transitions
+                        e.preventDefault()
+                        const targetUrl = shouldUseUnifiedDashboard(item.href) ? getUnifiedDashboardUrl(item.href) : item.href
+                        router.push(targetUrl)
                       }}
                       className={cn(
                         "flex items-center rounded-lg px-2 py-2 text-xs transition-all duration-150 group relative",
@@ -581,7 +584,12 @@ export function BuilderSidebar() {
                               <Link
                                 key={sub.href}
                                 href={shouldUseUnifiedDashboard(sub.href) ? getUnifiedDashboardUrl(sub.href) : sub.href}
-                                // Let Next.js Link handle navigation naturally for smooth client-side transitions
+                                onClick={(e) => {
+                                  // Use router.push() for reliable client-side navigation (no full page reload)
+                                  e.preventDefault()
+                                  const targetUrl = shouldUseUnifiedDashboard(sub.href) ? getUnifiedDashboardUrl(sub.href) : sub.href
+                                  router.push(targetUrl)
+                                }}
                                 className={cn(
                                   "block px-2 py-1 text-[11px] rounded-lg transition-colors duration-150",
                                   isSubActive
@@ -779,7 +787,10 @@ export function BuilderSidebar() {
                               e.preventDefault()
                               return
                             }
-                            // Let Next.js Link handle navigation naturally for smooth client-side transitions
+                            // Use router.push() for reliable client-side navigation (no full page reload)
+                            e.preventDefault()
+                            const targetUrl = shouldUseUnifiedDashboard(item.href) ? getUnifiedDashboardUrl(item.href) : item.href
+                            router.push(targetUrl)
                             setMobileMenuOpen(false)
                           }}
                           className={cn(
@@ -836,8 +847,11 @@ export function BuilderSidebar() {
                                   <Link
                                     key={sub.href}
                                     href={shouldUseUnifiedDashboard(sub.href) ? getUnifiedDashboardUrl(sub.href) : sub.href}
-                                    onClick={() => {
-                                      // Let Next.js Link handle navigation naturally for smooth client-side transitions
+                                    onClick={(e) => {
+                                      // Use router.push() for reliable client-side navigation (no full page reload)
+                                      e.preventDefault()
+                                      const targetUrl = shouldUseUnifiedDashboard(sub.href) ? getUnifiedDashboardUrl(sub.href) : sub.href
+                                      router.push(targetUrl)
                                       setMobileMenuOpen(false)
                                     }}
                                     className={cn(

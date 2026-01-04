@@ -223,10 +223,15 @@ export function LeadsList({ onSelectLead, initialFilters, showInlineFilters = tr
             throw new Error(errorData.error || errorData.message || `Failed to fetch leads (${response.status})`);
           }
 
-          const payload = await response.json();
+          let payload;
+          try {
+            payload = await response.json();
+          } catch (jsonError) {
+            throw new Error('Failed to parse API response. Please try again.');
+          }
           
           // Check for API errors
-          if (!payload.success) {
+          if (!payload || !payload.success) {
             const errorMessage = payload.message || payload.error || 'Failed to fetch leads';
             const errorType = payload.errorType || 'UNKNOWN_ERROR';
             
@@ -288,9 +293,13 @@ export function LeadsList({ onSelectLead, initialFilters, showInlineFilters = tr
           setStats(newStats);
           setTotalPages(Math.max(1, pagination.total_pages ?? 1));
 
-          // Notify parent of stats update
+          // Notify parent of stats update (wrapped in try-catch to prevent errors)
           if (onStatsUpdate) {
-            onStatsUpdate(newStats);
+            try {
+              onStatsUpdate(newStats);
+            } catch (err) {
+              console.error('[LeadsList] Error in onStatsUpdate callback:', err);
+            }
           }
 
           const activeFilters = Object.entries(filters)
@@ -302,14 +311,18 @@ export function LeadsList({ onSelectLead, initialFilters, showInlineFilters = tr
             })
             .map(([key]) => key);
 
-          await trackBehavior({
+          // Track behavior with error handling (non-blocking)
+          trackBehavior({
             behavior_type: 'search',
             metadata: {
               context: 'builder_dashboard',
               filters_applied: activeFilters,
               results_count: leadsData.length,
             },
-          }).catch(() => undefined);
+          }).catch((err) => {
+            console.warn('[LeadsList] Failed to track behavior:', err);
+            // Don't throw - behavior tracking is non-critical
+          });
         } catch (err) {
           // Don't set error if request was aborted
           if (controller.signal.aborted) {

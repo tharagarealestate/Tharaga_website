@@ -101,7 +101,7 @@ export function AdvancedAISidebar() {
   
   const trialStatus = useTrialStatus()
 
-  // Fetch lead count with real-time updates
+  // Fetch lead count with real-time updates (deferred for better initial load performance)
   useEffect(() => {
     let cancelled = false
     let retryCount = 0
@@ -133,12 +133,17 @@ export function AdvancedAISidebar() {
       }
     }
 
-    fetchLeadCount()
+    // Defer initial fetch to improve initial page load performance
+    const timeoutId = setTimeout(() => {
+      if (!cancelled) {
+        fetchLeadCount()
+      }
+    }, 500)
 
     const getPollInterval = () => {
       if (document.hidden) return 60000 // Reduced when tab is hidden
-      if (pathname.startsWith('/builder/leads')) return 10000 // Reduced from 5s to 10s
-      return 30000 // Reduced from 15s to 30s
+      if (pathname.startsWith('/builder/leads')) return 15000 // Increased for better performance
+      return 45000 // Increased for better performance
     }
 
     const startPolling = () => {
@@ -152,7 +157,12 @@ export function AdvancedAISidebar() {
       }, getPollInterval())
     }
 
-    startPolling()
+    // Start polling after initial fetch
+    const pollingTimeoutId = setTimeout(() => {
+      if (!cancelled) {
+        startPolling()
+      }
+    }, 2000)
 
     const handleRefreshEvent = () => {
       if (!cancelled) {
@@ -174,6 +184,8 @@ export function AdvancedAISidebar() {
 
     return () => {
       cancelled = true
+      clearTimeout(timeoutId)
+      clearTimeout(pollingTimeoutId)
       if (pollIntervalRef.current) {
         clearInterval(pollIntervalRef.current)
       }
@@ -515,19 +527,13 @@ export function AdvancedAISidebar() {
                           <Link
                             href={isLocked ? '#' : (shouldUseQueryParams(item.href) ? getQueryParamUrl(item.href) : item.href)}
                             onClick={(e) => {
+                              // Only handle locked items - let Next.js Link handle all navigation naturally
                               if (isLocked) {
                                 e.preventDefault()
-                                router.push('/pricing')
+                                window.location.href = '/pricing'
                                 return
                               }
-                              
-                              // Only intercept query param routes - let Link handle direct routes naturally
-                              if (shouldUseQueryParams(item.href)) {
-                                e.preventDefault()
-                                const targetUrl = getQueryParamUrl(item.href)
-                                router.push(targetUrl)
-                              }
-                              // For direct routes (billing, integrations, leads, etc.), let Next.js Link handle it
+                              // For all other navigation, let Next.js Link handle it (smooth client-side transitions)
                             }}
                             className={cn(
                               "relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-all duration-300 group",
@@ -662,13 +668,7 @@ export function AdvancedAISidebar() {
                                       <Link
                                         href={shouldUseQueryParams(sub.href) ? getQueryParamUrl(sub.href) : sub.href}
                                         onClick={(e) => {
-                                          // Only intercept query param routes - let Link handle direct routes naturally
-                                          if (shouldUseQueryParams(sub.href)) {
-                                            e.preventDefault()
-                                            const targetUrl = getQueryParamUrl(sub.href)
-                                            router.push(targetUrl)
-                                          }
-                                          // For direct routes, let Next.js Link handle it naturally
+                                          // Let Next.js Link handle all navigation naturally (smooth client-side transitions)
                                         }}
                                         className={cn(
                                           "block px-3 py-1.5 text-xs rounded-lg transition-all duration-200",

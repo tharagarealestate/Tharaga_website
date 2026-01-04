@@ -1,23 +1,23 @@
 "use client"
 
-import { useState, useEffect, useRef, Suspense } from 'react'
+import { useState, useEffect, useRef, Suspense, lazy, memo } from 'react'
 import type React from 'react'
 import { cn } from '@/lib/utils'
 
 import { motion, AnimatePresence } from 'framer-motion'
 
-// Import section components
-import { OverviewSection } from './sections/OverviewSection'
-import { LeadsSection } from './sections/LeadsSection'
-import { PipelineSection } from './sections/PipelineSection'
-import { PropertiesSection } from './sections/PropertiesSection'
-import { ClientOutreachSection } from './sections/ClientOutreachSection'
-import { BehaviorAnalyticsSection } from './sections/BehaviorAnalyticsSection'
-import { ViewingsSection } from './sections/ViewingsSection'
-import { NegotiationsSection } from './sections/NegotiationsSection'
-import { ContractsSection } from './sections/ContractsSection'
-import { DealLifecycleSection } from './sections/DealLifecycleSection'
-import { UltraAutomationAnalyticsSection } from './sections/UltraAutomationAnalyticsSection'
+// Lazy load section components for better initial performance
+const OverviewSection = lazy(() => import('./sections/OverviewSection').then(m => ({ default: m.OverviewSection })))
+const LeadsSection = lazy(() => import('./sections/LeadsSection').then(m => ({ default: m.LeadsSection })))
+const PipelineSection = lazy(() => import('./sections/PipelineSection').then(m => ({ default: m.PipelineSection })))
+const PropertiesSection = lazy(() => import('./sections/PropertiesSection').then(m => ({ default: m.PropertiesSection })))
+const ClientOutreachSection = lazy(() => import('./sections/ClientOutreachSection').then(m => ({ default: m.ClientOutreachSection })))
+const BehaviorAnalyticsSection = lazy(() => import('./sections/BehaviorAnalyticsSection').then(m => ({ default: m.BehaviorAnalyticsSection })))
+const ViewingsSection = lazy(() => import('./sections/ViewingsSection').then(m => ({ default: m.ViewingsSection })))
+const NegotiationsSection = lazy(() => import('./sections/NegotiationsSection').then(m => ({ default: m.NegotiationsSection })))
+const ContractsSection = lazy(() => import('./sections/ContractsSection').then(m => ({ default: m.ContractsSection })))
+const DealLifecycleSection = lazy(() => import('./sections/DealLifecycleSection').then(m => ({ default: m.DealLifecycleSection })))
+const UltraAutomationAnalyticsSection = lazy(() => import('./sections/UltraAutomationAnalyticsSection').then(m => ({ default: m.UltraAutomationAnalyticsSection })))
 import { SectionLoader } from './sections/SectionLoader'
 import { ErrorBoundary } from './ErrorBoundary'
 

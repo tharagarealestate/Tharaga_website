@@ -51,8 +51,8 @@ export default function BuilderDashboardClient() {
     window.addEventListener('popstate', handlePopState)
     
     // Poll for URL changes (catches all navigation including window.location.href)
-    // Reduced interval for faster response
-    const interval = setInterval(updateSectionFromUrl, 30)
+    // Increased interval for better performance (100ms is still very responsive)
+    const interval = setInterval(updateSectionFromUrl, 100)
     
     return () => {
       window.removeEventListener('popstate', handlePopState)

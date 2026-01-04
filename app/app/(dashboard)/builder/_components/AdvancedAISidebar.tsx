@@ -660,13 +660,10 @@ export function AdvancedAISidebar() {
                                       <Link
                                         href={shouldUseQueryParams(sub.href) ? getQueryParamUrl(sub.href) : sub.href}
                                         onClick={(e) => {
-                                          // Use router.push for query params to avoid page reload
-                                          if (shouldUseQueryParams(sub.href)) {
-                                            e.preventDefault()
-                                            const targetUrl = getQueryParamUrl(sub.href)
-                                            router.push(targetUrl)
-                                          }
-                                          // For direct routes, let Next.js Link handle it naturally
+                                          // Always use router.push for reliable client-side navigation
+                                          e.preventDefault()
+                                          const targetUrl = shouldUseQueryParams(sub.href) ? getQueryParamUrl(sub.href) : sub.href
+                                          router.push(targetUrl)
                                         }}
                                         className={cn(
                                           "block px-3 py-1.5 text-xs rounded-lg transition-all duration-200",

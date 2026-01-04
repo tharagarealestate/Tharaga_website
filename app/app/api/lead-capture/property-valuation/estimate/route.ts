@@ -183,3 +183,4 @@ function getComparableProperties(city: string, locality: string, propertyType: s
 
 
 
+

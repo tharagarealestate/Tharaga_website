@@ -140,3 +140,4 @@ function calculateAffordabilityScore(foir: number, downPayment: number, income: 
 
 
 
+

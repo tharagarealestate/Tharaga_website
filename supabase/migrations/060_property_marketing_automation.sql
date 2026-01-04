@@ -582,3 +582,4 @@ CREATE POLICY "Service role full access monitoring tasks" ON public.social_monit
 
 
 
+

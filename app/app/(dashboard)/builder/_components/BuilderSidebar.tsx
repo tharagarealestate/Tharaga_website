@@ -485,17 +485,12 @@ export function BuilderSidebar() {
                     <Link
                       href={isLocked ? '#' : (shouldUseUnifiedDashboard(item.href) ? getUnifiedDashboardUrl(item.href) : item.href)}
                       onClick={(e) => {
+                        // Only prevent default for locked items
                         if (isLocked) {
                           e.preventDefault()
                           router.push('/pricing')
-                          return
                         }
-                        
-                        // Use router.push() for reliable client-side navigation (no full page reload)
-                        // This works on initial load and provides smooth transitions
-                        e.preventDefault()
-                        const targetUrl = shouldUseUnifiedDashboard(item.href) ? getUnifiedDashboardUrl(item.href) : item.href
-                        router.push(targetUrl)
+                        // For normal navigation, let Next.js Link handle it naturally (client-side, no page reload)
                       }}
                       className={cn(
                         "flex items-center rounded-lg px-2 py-2 text-xs transition-all duration-150 group relative",

@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
@@ -662,7 +662,13 @@ export function AdvancedAISidebar() {
                                       <Link
                                         href={shouldUseQueryParams(sub.href) ? getQueryParamUrl(sub.href) : sub.href}
                                         onClick={(e) => {
-                                          // Only intercept query param routes - let Link handle direct routes naturally`n                                          if (shouldUseQueryParams(sub.href)) {`n                                            e.preventDefault()`n                                            const targetUrl = getQueryParamUrl(sub.href)`n                                            router.push(targetUrl)`n                                          }`n                                          // For direct routes, let Next.js Link handle it naturally
+                                          // Only intercept query param routes - let Link handle direct routes naturally
+                                          if (shouldUseQueryParams(sub.href)) {
+                                            e.preventDefault()
+                                            const targetUrl = getQueryParamUrl(sub.href)
+                                            router.push(targetUrl)
+                                          }
+                                          // For direct routes, let Next.js Link handle it naturally
                                         }}
                                         className={cn(
                                           "block px-3 py-1.5 text-xs rounded-lg transition-all duration-200",

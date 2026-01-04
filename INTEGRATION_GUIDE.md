@@ -146,3 +146,5 @@ SUPABASE_SERVICE_ROLE_KEY=...
 - **API errors**: Check environment variables and Supabase connection
 - **No recommendations**: Ensure user has viewed some features first
 
+
+

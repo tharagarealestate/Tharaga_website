@@ -263,3 +263,5 @@ COMMENT ON TABLE public.doc_search_analytics IS 'Search query analytics for docu
 COMMIT;
 
 
+
+

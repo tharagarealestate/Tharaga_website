@@ -80,3 +80,5 @@ The embedding generation process requires an active internet connection to call 
 
 In summary, you cannot run the embedding script right now because the `feature_documentation` table is empty. You need to first insert your feature documentation data into this table, ensure your environment variables (especially OPENAI_API_KEY) are properly configured, and then you can run the embedding generation script. The script itself is ready and will work automatically once these prerequisites are met.
 
+
+

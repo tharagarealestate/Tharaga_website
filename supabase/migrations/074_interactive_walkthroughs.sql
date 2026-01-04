@@ -208,3 +208,5 @@ COMMENT ON TABLE public.user_tooltip_interactions IS 'Tracks user interactions w
 COMMIT;
 
 
+
+

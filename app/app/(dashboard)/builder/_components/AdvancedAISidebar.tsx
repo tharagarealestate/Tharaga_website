@@ -67,31 +67,8 @@ export function AdvancedAISidebar() {
   const pathname = usePathname()
   const router = useRouter()
   
-  // Map routes to unified dashboard sections
-  // Note: /builder/leads now has its own beautiful page, properties uses section-based routing
-  const routeToSectionMap: Record<string, string> = {
-    '/builder': 'overview',
-    '/builder/messaging': 'client-outreach',
-    '/behavior-tracking': 'behavior-analytics',
-  }
-  
-  const getSectionFromHref = (href: string): string | null => {
-    if (href.startsWith('/builder?section=')) {
-      const match = href.match(/[?&]section=([^&]+)/)
-      return match ? match[1] : null
-    }
-    return routeToSectionMap[href] || null
-  }
-  
-  const shouldUseUnifiedDashboard = (href: string): boolean => {
-    return href.startsWith('/builder?section=') || href in routeToSectionMap
-  }
-  
-  const getUnifiedDashboardUrl = (href: string): string => {
-    if (href.startsWith('/builder?section=')) return href
-    const section = routeToSectionMap[href]
-    return section ? `/builder?section=${section}` : href
-  }
+  // All routes now use direct paths like /builder/billing and /builder/integrations
+  // This ensures smooth client-side navigation without page reloads
 
   const [leadCount, setLeadCount] = useState<LeadCountData | null>(null)
   const [isLoadingCount, setIsLoadingCount] = useState(true)
@@ -214,14 +191,13 @@ export function AdvancedAISidebar() {
   }, [])
 
   // Navigation groups - Clean, organized structure for better UX
+  // All routes use direct paths (like /builder/billing) for smooth client-side navigation
   const navGroups = useMemo<NavGroup[]>(() => {
-    const createSectionUrl = (section: string) => `/builder?section=${section}`
-    
     return [
       // Main Dashboard
       {
         items: [
-          { href: createSectionUrl('overview'), label: 'Dashboard', icon: LayoutDashboard, badge: null, requiresPro: false },
+          { href: '/builder', label: 'Dashboard', icon: LayoutDashboard, badge: null, requiresPro: false },
         ]
       },
       // Sales & Pipeline - Consolidated for better organization
@@ -240,18 +216,18 @@ export function AdvancedAISidebar() {
             ]
           },
           {
-            href: createSectionUrl('properties'),
+            href: '/builder/properties',
             label: 'Properties',
             icon: Building2,
             requiresPro: false,
             submenu: [
-              { href: createSectionUrl('properties'), label: 'Manage' },
+              { href: '/builder/properties', label: 'Manage' },
               { href: '/builder/properties/performance', label: 'Performance' },
             ]
           },
-          { href: createSectionUrl('viewings'), label: 'Viewings', icon: Calendar, requiresPro: false },
-          { href: createSectionUrl('negotiations'), label: 'Negotiations', icon: Handshake, requiresPro: false },
-          { href: createSectionUrl('contracts'), label: 'Contracts', icon: FileText, requiresPro: false },
+          { href: '/builder/viewings', label: 'Viewings', icon: Calendar, requiresPro: false },
+          { href: '/builder/negotiations', label: 'Negotiations', icon: Handshake, requiresPro: false },
+          { href: '/builder/contracts', label: 'Contracts', icon: FileText, requiresPro: false },
         ]
       },
       // Communication & Outreach
@@ -265,7 +241,7 @@ export function AdvancedAISidebar() {
             requiresPro: false,
             submenu: [
               { href: '/builder/communications', label: 'All Messages' },
-              { href: createSectionUrl('client-outreach'), label: 'Outreach' },
+              { href: '/builder/messaging', label: 'Outreach' },
             ]
           },
           { href: '/builder/messaging', label: 'WhatsApp', icon: MessageSquare, requiresPro: false },
@@ -282,9 +258,9 @@ export function AdvancedAISidebar() {
             requiresPro: false,
             submenu: [
               { href: '/builder/analytics', label: 'Overview' },
-              { href: createSectionUrl('behavior-analytics'), label: 'Behavior' },
-              { href: createSectionUrl('deal-lifecycle'), label: 'Deal Lifecycle' },
-              { href: createSectionUrl('ultra-automation-analytics'), label: 'Automation' },
+              { href: '/builder/analytics/behavior', label: 'Behavior' },
+              { href: '/builder/analytics/deal-lifecycle', label: 'Deal Lifecycle' },
+              { href: '/builder/analytics/automation', label: 'Automation' },
             ]
           },
         ]
@@ -540,7 +516,7 @@ export function AdvancedAISidebar() {
                           onHoverEnd={() => setHoveredItem(null)}
                         >
                           <Link
-                            href={isLocked ? '#' : (shouldUseUnifiedDashboard(item.href) ? getUnifiedDashboardUrl(item.href) : item.href)}
+                            href={isLocked ? '#' : item.href}
                             onClick={(e) => {
                               // Only prevent default for locked items
                               if (isLocked) {
@@ -680,7 +656,7 @@ export function AdvancedAISidebar() {
                                       transition={{ delay: subIndex * 0.05 }}
                                     >
                                       <Link
-                                        href={shouldUseUnifiedDashboard(sub.href) ? getUnifiedDashboardUrl(sub.href) : sub.href}
+                                        href={sub.href}
                                         // Let Next.js Link handle navigation naturally (client-side, no page reload)
                                         className={cn(
                                           "block px-3 py-1.5 text-xs rounded-lg transition-all duration-200",

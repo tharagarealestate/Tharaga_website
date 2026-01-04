@@ -62,30 +62,76 @@ export async function POST(request: NextRequest) {
       if (existingLead) {
         leadId = existingLead.id;
         // Update lead with new information
+        // Build update object with all possible fields
+        const updateData: any = {
+          name: step_2_data.name || existingLead.name,
+          phone_number: step_3_data?.phone || step_3_data?.phone_number || existingLead.phone_number || existingLead.phone,
+          budget: step_3_data?.exact_budget ? parseFloat(step_3_data.exact_budget.replace(/[^\d.]/g, '')) : step_3_data?.budget || existingLead.budget,
+          source: source || existingLead.source,
+          lead_score: current_step >= 3 ? 65 : 40,
+          status: current_step >= 3 ? 'qualified' : 'new',
+        };
+
+        // Add TN-specific fields if present
+        if (step_1_data?.city || step_3_data?.preferred_city) {
+          updateData.preferred_city = step_3_data?.preferred_city || step_1_data?.city;
+        }
+        if (step_1_data?.family_type || step_3_data?.family_type) {
+          updateData.family_type = step_3_data?.family_type || step_1_data?.family_type;
+        }
+        if (step_3_data?.buyer_type_primary) {
+          updateData.buyer_type_primary = step_3_data.buyer_type_primary;
+        }
+        if (step_3_data?.buyer_type_confidence) {
+          updateData.buyer_type_confidence = step_3_data.buyer_type_confidence;
+        }
+        if (step_3_data?.purchase_timeline || step_3_data?.timeline) {
+          updateData.purchase_timeline = step_3_data?.purchase_timeline || step_3_data?.timeline;
+        }
+        if (step_3_data?.cultural_preferences) {
+          updateData.cultural_preferences = step_3_data.cultural_preferences;
+        }
+
         await supabase
           .from('leads')
-          .update({
-            name: step_2_data.name || existingLead.name,
-            phone_number: step_3_data?.phone || existingLead.phone,
-            budget: step_3_data?.exact_budget ? parseFloat(step_3_data.exact_budget.replace(/[^\d.]/g, '')) : existingLead.budget,
-            source: source || existingLead.source,
-            score: current_step >= 3 ? 65 : 40,
-            status: current_step >= 3 ? 'qualified' : 'new',
-          })
+          .update(updateData)
           .eq('id', leadId);
       } else {
+        // Build insert object with all possible fields
+        const insertData: any = {
+          email: step_2_data.email,
+          name: step_2_data.name || '',
+          phone_number: step_3_data?.phone || step_3_data?.phone_number || null,
+          budget: step_3_data?.exact_budget ? parseFloat(step_3_data.exact_budget.replace(/[^\d.]/g, '')) : step_3_data?.budget || null,
+          source: source || form_type,
+          lead_score: current_step >= 3 ? 65 : 40,
+          status: current_step >= 3 ? 'qualified' : 'new',
+        };
+
+        // Add TN-specific fields if present
+        if (step_1_data?.city || step_3_data?.preferred_city) {
+          insertData.preferred_city = step_3_data?.preferred_city || step_1_data?.city;
+        }
+        if (step_1_data?.family_type || step_3_data?.family_type) {
+          insertData.family_type = step_3_data?.family_type || step_1_data?.family_type;
+        }
+        if (step_3_data?.buyer_type_primary) {
+          insertData.buyer_type_primary = step_3_data.buyer_type_primary;
+        }
+        if (step_3_data?.buyer_type_confidence) {
+          insertData.buyer_type_confidence = step_3_data.buyer_type_confidence;
+        }
+        if (step_3_data?.purchase_timeline || step_3_data?.timeline) {
+          insertData.purchase_timeline = step_3_data?.purchase_timeline || step_3_data?.timeline;
+        }
+        if (step_3_data?.cultural_preferences) {
+          insertData.cultural_preferences = step_3_data.cultural_preferences;
+        }
+
         // Create new lead
         const { data: newLead, error: leadError } = await supabase
           .from('leads')
-          .insert({
-            email: step_2_data.email,
-            name: step_2_data.name || '',
-            phone_number: step_3_data?.phone || null,
-            budget: step_3_data?.exact_budget ? parseFloat(step_3_data.exact_budget.replace(/[^\d.]/g, '')) : null,
-            source: source || form_type,
-            score: current_step >= 3 ? 65 : 40,
-            status: current_step >= 3 ? 'qualified' : 'new',
-          })
+          .insert(insertData)
           .select()
           .single();
 
@@ -106,6 +152,9 @@ export async function POST(request: NextRequest) {
     const completed = current_step === 4 && step_4_data && Object.keys(step_4_data).length > 0;
     const time_to_complete_seconds = body.time_to_complete_seconds || null;
 
+    // Extract calculation_results if provided (for calculator forms)
+    const calculation_results = body.calculation_results || null;
+
     let submissionData: any = {
       form_type,
       form_variant: form_variant || null,
@@ -113,6 +162,7 @@ export async function POST(request: NextRequest) {
       step_2_data: step_2_data || {},
       step_3_data: step_3_data || {},
       step_4_data: step_4_data || {},
+      calculation_results: calculation_results || null,
       current_step,
       completed,
       completion_rate: Math.round(completion_rate * 100) / 100,

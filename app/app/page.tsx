@@ -14,7 +14,8 @@ import {
   ArrowRight,
   Users,
   Award,
-  MapPin
+  MapPin,
+  DollarSign
 } from 'lucide-react'
 
 export default function HomePage() {
@@ -188,11 +189,101 @@ export default function HomePage() {
               </div>
             </motion.div>
 
+            {/* Smart Calculators Section */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.4 }}
+              className="bg-gradient-to-br from-slate-800/95 via-slate-800/95 to-slate-900/95 glow-border rounded-xl p-6 sm:p-8 shadow-2xl"
+            >
+              <div className="text-center mb-8">
+                <h2 className="text-2xl sm:text-3xl font-bold text-white mb-3">
+                  Smart Calculators & Tools
+                </h2>
+                <p className="text-lg text-slate-300">
+                  Make informed decisions with our AI-powered calculators
+                </p>
+              </div>
+
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                {[
+                  {
+                    icon: TrendingUp,
+                    title: 'ROI Calculator',
+                    description: 'Calculate rental yield, appreciation, and total returns',
+                    href: '/tools/roi',
+                    gradient: 'from-amber-500/20 to-amber-600/20'
+                  },
+                  {
+                    icon: DollarSign,
+                    title: 'EMI Calculator',
+                    description: 'Calculate home loan EMI, interest, and amortization',
+                    href: '/tools/emi',
+                    gradient: 'from-emerald-500/20 to-emerald-600/20'
+                  },
+                  {
+                    icon: Building2,
+                    title: 'Budget Planner',
+                    description: 'Plan your budget and find affordable properties',
+                    href: '/tools/budget-planner',
+                    gradient: 'from-blue-500/20 to-blue-600/20'
+                  },
+                  {
+                    icon: Shield,
+                    title: 'Loan Eligibility',
+                    description: 'Check your home loan eligibility with TN banks',
+                    href: '/tools/loan-eligibility',
+                    gradient: 'from-purple-500/20 to-purple-600/20'
+                  },
+                  {
+                    icon: MapPin,
+                    title: 'Neighborhood Finder',
+                    description: 'Find the perfect neighborhood for your needs',
+                    href: '/tools/neighborhood-finder',
+                    gradient: 'from-rose-500/20 to-rose-600/20'
+                  },
+                  {
+                    icon: Award,
+                    title: 'Property Valuation',
+                    description: 'Get accurate property valuation with RERA data',
+                    href: '/tools/property-valuation',
+                    gradient: 'from-cyan-500/20 to-cyan-600/20'
+                  }
+                ].map((tool, index) => (
+                  <motion.div
+                    key={index}
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.5 + index * 0.05 }}
+                  >
+                    <Link
+                      href={tool.href}
+                      className="block p-6 bg-slate-800/50 rounded-lg border border-slate-700/30 hover:border-amber-300/30 transition-all duration-300 hover:-translate-y-1 group"
+                    >
+                      <div className={`p-3 bg-gradient-to-r ${tool.gradient} rounded-lg w-fit mb-4`}>
+                        <tool.icon className="h-6 w-6 text-white" />
+                      </div>
+                      <h3 className="text-lg font-bold text-white mb-2 group-hover:text-amber-300 transition-colors">
+                        {tool.title}
+                      </h3>
+                      <p className="text-sm text-slate-400 mb-4">
+                        {tool.description}
+                      </p>
+                      <div className="flex items-center text-amber-300 text-sm font-medium">
+                        Calculate Now
+                        <ArrowRight className="h-4 w-4 ml-2 group-hover:translate-x-1 transition-transform" />
+                      </div>
+                    </Link>
+                  </motion.div>
+                ))}
+              </div>
+            </motion.div>
+
             {/* Call to Action Section */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.5 }}
+              transition={{ delay: 0.6 }}
               className="bg-gradient-to-r from-amber-500/20 via-amber-600/20 to-amber-500/20 glow-border rounded-xl p-8 sm:p-12 text-center shadow-2xl"
             >
               <motion.div

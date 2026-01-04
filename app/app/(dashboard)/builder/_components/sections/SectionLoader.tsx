@@ -25,7 +25,7 @@ export function SectionLoader({ section, message }: SectionLoaderProps) {
     <div className="flex items-center justify-center min-h-[60vh] w-full">
       <div className="flex flex-col items-center gap-4">
         <LoadingSpinner size="lg" variant="gold" />
-        <p className="text-gray-400 text-sm font-medium">{displayMessage}</p>
+        <p className="text-slate-400 text-sm font-medium">{displayMessage}</p>
       </div>
     </div>
   )

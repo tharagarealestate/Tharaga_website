@@ -397,7 +397,7 @@ export function AdvancedPropertyUploadForm({
   }
 
   return (
-    <div className="w-full">
+    <div className="w-full space-y-6">
       {/* Progress Bar - Billing Design System */}
       <div className="mb-8">
         <div className="flex justify-between mb-2">
@@ -489,15 +489,15 @@ export function AdvancedPropertyUploadForm({
                       onChange={(e) =>
                         setFormData((prev) => ({ ...prev, project: e.target.value }))
                       }
-                      className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-4 py-2.5 bg-slate-700/50 border border-slate-600/50 rounded-lg text-white placeholder-slate-400 focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500/50 transition-all"
                       placeholder="e.g., Green Valley Residency"
                     />
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium mb-2">
-                        Property Type <span className="text-red-500">*</span>
+                      <label className="block text-sm font-medium mb-2 text-slate-300">
+                        Property Type <span className="text-red-400">*</span>
                       </label>
                       <select
                         value={formData.property_type}
@@ -518,7 +518,7 @@ export function AdvancedPropertyUploadForm({
 
                     {formData.property_type === 'Apartment' && (
                       <div>
-                        <label className="block text-sm font-medium mb-2">BHK Type</label>
+                        <label className="block text-sm font-medium mb-2 text-slate-300">BHK Type</label>
                         <select
                           value={formData.bhk_type || ''}
                           onChange={(e) =>
@@ -549,13 +549,13 @@ export function AdvancedPropertyUploadForm({
           {currentStep === 2 && (
             <div className="space-y-6">
               <div>
-                <h2 className="text-2xl font-bold mb-4 flex items-center gap-2">
-                  <Building2 className="w-6 h-6" />
+                <h2 className="text-2xl sm:text-3xl font-bold mb-6 flex items-center gap-2 text-white">
+                  <Building2 className="w-6 h-6 text-amber-300" />
                   Property Details
                 </h2>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium mb-2">Bedrooms</label>
+                    <label className="block text-sm font-medium mb-2 text-slate-300">Bedrooms</label>
                     <input
                       type="number"
                       min="0"
@@ -567,12 +567,12 @@ export function AdvancedPropertyUploadForm({
                           bedrooms: e.target.value ? parseInt(e.target.value) : undefined,
                         }))
                       }
-                      className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-4 py-2.5 bg-slate-700/50 border border-slate-600/50 rounded-lg text-white placeholder-slate-400 focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500/50 transition-all"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium mb-2">Bathrooms</label>
+                    <label className="block text-sm font-medium mb-2 text-slate-300">Bathrooms</label>
                     <input
                       type="number"
                       min="0"
@@ -584,12 +584,12 @@ export function AdvancedPropertyUploadForm({
                           bathrooms: e.target.value ? parseInt(e.target.value) : undefined,
                         }))
                       }
-                      className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-4 py-2.5 bg-slate-700/50 border border-slate-600/50 rounded-lg text-white placeholder-slate-400 focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500/50 transition-all"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium mb-2">Carpet Area (sqft)</label>
+                    <label className="block text-sm font-medium mb-2 text-slate-300">Carpet Area (sqft)</label>
                     <input
                       type="number"
                       min="0"
@@ -600,12 +600,12 @@ export function AdvancedPropertyUploadForm({
                           carpet_area: e.target.value ? parseFloat(e.target.value) : undefined,
                         }))
                       }
-                      className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-4 py-2.5 bg-slate-700/50 border border-slate-600/50 rounded-lg text-white placeholder-slate-400 focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500/50 transition-all"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium mb-2">Built-up Area (sqft)</label>
+                    <label className="block text-sm font-medium mb-2 text-slate-300">Built-up Area (sqft)</label>
                     <input
                       type="number"
                       min="0"
@@ -616,12 +616,12 @@ export function AdvancedPropertyUploadForm({
                           builtup_area: e.target.value ? parseFloat(e.target.value) : undefined,
                         }))
                       }
-                      className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-4 py-2.5 bg-slate-700/50 border border-slate-600/50 rounded-lg text-white placeholder-slate-400 focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500/50 transition-all"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium mb-2">Super Built-up Area (sqft)</label>
+                    <label className="block text-sm font-medium mb-2 text-slate-300">Super Built-up Area (sqft)</label>
                     <input
                       type="number"
                       min="0"
@@ -632,12 +632,12 @@ export function AdvancedPropertyUploadForm({
                           super_buildup_area: e.target.value ? parseFloat(e.target.value) : undefined,
                         }))
                       }
-                      className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-4 py-2.5 bg-slate-700/50 border border-slate-600/50 rounded-lg text-white placeholder-slate-400 focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500/50 transition-all"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium mb-2">Plot Area (sqft)</label>
+                    <label className="block text-sm font-medium mb-2 text-slate-300">Plot Area (sqft)</label>
                     <input
                       type="number"
                       min="0"
@@ -648,12 +648,12 @@ export function AdvancedPropertyUploadForm({
                           plot_area: e.target.value ? parseFloat(e.target.value) : undefined,
                         }))
                       }
-                      className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-4 py-2.5 bg-slate-700/50 border border-slate-600/50 rounded-lg text-white placeholder-slate-400 focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500/50 transition-all"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium mb-2">Floor Number</label>
+                    <label className="block text-sm font-medium mb-2 text-slate-300">Floor Number</label>
                     <input
                       type="number"
                       min="0"
@@ -664,12 +664,12 @@ export function AdvancedPropertyUploadForm({
                           floor: e.target.value ? parseInt(e.target.value) : undefined,
                         }))
                       }
-                      className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-4 py-2.5 bg-slate-700/50 border border-slate-600/50 rounded-lg text-white placeholder-slate-400 focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500/50 transition-all"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium mb-2">Total Floors</label>
+                    <label className="block text-sm font-medium mb-2 text-slate-300">Total Floors</label>
                     <input
                       type="number"
                       min="0"
@@ -680,18 +680,18 @@ export function AdvancedPropertyUploadForm({
                           total_floors: e.target.value ? parseInt(e.target.value) : undefined,
                         }))
                       }
-                      className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-4 py-2.5 bg-slate-700/50 border border-slate-600/50 rounded-lg text-white placeholder-slate-400 focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500/50 transition-all"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium mb-2">Facing</label>
+                    <label className="block text-sm font-medium mb-2 text-slate-300">Facing</label>
                     <select
                       value={formData.facing || ''}
                       onChange={(e) =>
                         setFormData((prev) => ({ ...prev, facing: e.target.value }))
                       }
-                      className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-4 py-2.5 bg-slate-700/50 border border-slate-600/50 rounded-lg text-white placeholder-slate-400 focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500/50 transition-all"
                     >
                       <option value="">Select Facing</option>
                       <option value="North">North</option>
@@ -706,7 +706,7 @@ export function AdvancedPropertyUploadForm({
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium mb-2">Parking Slots</label>
+                    <label className="block text-sm font-medium mb-2 text-slate-300">Parking Slots</label>
                     <input
                       type="number"
                       min="0"
@@ -717,12 +717,12 @@ export function AdvancedPropertyUploadForm({
                           parking: e.target.value ? parseInt(e.target.value) : undefined,
                         }))
                       }
-                      className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-4 py-2.5 bg-slate-700/50 border border-slate-600/50 rounded-lg text-white placeholder-slate-400 focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500/50 transition-all"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium mb-2">Furnishing Status</label>
+                    <label className="block text-sm font-medium mb-2 text-slate-300">Furnishing Status</label>
                     <select
                       value={formData.furnishing_status || ''}
                       onChange={(e) =>
@@ -731,7 +731,7 @@ export function AdvancedPropertyUploadForm({
                           furnishing_status: e.target.value as any,
                         }))
                       }
-                      className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-4 py-2.5 bg-slate-700/50 border border-slate-600/50 rounded-lg text-white placeholder-slate-400 focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500/50 transition-all"
                     >
                       <option value="">Select Status</option>
                       <option value="unfurnished">Unfurnished</option>
@@ -748,14 +748,14 @@ export function AdvancedPropertyUploadForm({
           {currentStep === 3 && (
             <div className="space-y-6">
               <div>
-                <h2 className="text-2xl font-bold mb-4 flex items-center gap-2">
-                  <MapPin className="w-6 h-6" />
+                <h2 className="text-2xl sm:text-3xl font-bold mb-6 flex items-center gap-2 text-white">
+                  <MapPin className="w-6 h-6 text-amber-300" />
                   Location
                 </h2>
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium mb-2">
-                      City <span className="text-red-500">*</span>
+                    <label className="block text-sm font-medium mb-2 text-slate-300">
+                      City <span className="text-red-400">*</span>
                     </label>
                     <input
                       type="text"
@@ -763,56 +763,56 @@ export function AdvancedPropertyUploadForm({
                       onChange={(e) =>
                         setFormData((prev) => ({ ...prev, city: e.target.value }))
                       }
-                      className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-4 py-2.5 bg-slate-700/50 border border-slate-600/50 rounded-lg text-white placeholder-slate-400 focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500/50 transition-all"
                       placeholder="e.g., Bangalore"
                     />
                     {errors.city && (
-                      <p className="text-red-500 text-sm mt-1">{errors.city}</p>
+                      <p className="text-red-400 text-sm mt-1">{errors.city}</p>
                     )}
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium mb-2">Locality</label>
+                    <label className="block text-sm font-medium mb-2 text-slate-300">Locality</label>
                     <input
                       type="text"
                       value={formData.locality}
                       onChange={(e) =>
                         setFormData((prev) => ({ ...prev, locality: e.target.value }))
                       }
-                      className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-4 py-2.5 bg-slate-700/50 border border-slate-600/50 rounded-lg text-white placeholder-slate-400 focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500/50 transition-all"
                       placeholder="e.g., Whitefield"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium mb-2">State</label>
+                    <label className="block text-sm font-medium mb-2 text-slate-300">State</label>
                     <input
                       type="text"
                       value={formData.state}
                       onChange={(e) =>
                         setFormData((prev) => ({ ...prev, state: e.target.value }))
                       }
-                      className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-4 py-2.5 bg-slate-700/50 border border-slate-600/50 rounded-lg text-white placeholder-slate-400 focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500/50 transition-all"
                       placeholder="e.g., Karnataka"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium mb-2">Address</label>
+                    <label className="block text-sm font-medium mb-2 text-slate-300">Address</label>
                     <textarea
                       value={formData.address}
                       onChange={(e) =>
                         setFormData((prev) => ({ ...prev, address: e.target.value }))
                       }
                       rows={3}
-                      className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-4 py-2.5 bg-slate-700/50 border border-slate-600/50 rounded-lg text-white placeholder-slate-400 focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500/50 transition-all"
                       placeholder="Full address..."
                     />
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium mb-2">Pincode</label>
+                      <label className="block text-sm font-medium mb-2 text-slate-300">Pincode</label>
                       <input
                         type="text"
                         value={formData.pincode}
@@ -833,14 +833,14 @@ export function AdvancedPropertyUploadForm({
           {currentStep === 4 && (
             <div className="space-y-6">
               <div>
-                <h2 className="text-2xl font-bold mb-4 flex items-center gap-2">
-                  <DollarSign className="w-6 h-6" />
+                <h2 className="text-2xl sm:text-3xl font-bold mb-6 flex items-center gap-2 text-white">
+                  <DollarSign className="w-6 h-6 text-amber-300" />
                   Pricing
                 </h2>
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium mb-2">
-                      Price (INR) <span className="text-red-500">*</span>
+                    <label className="block text-sm font-medium mb-2 text-slate-300">
+                      Price (INR) <span className="text-red-400">*</span>
                     </label>
                     <input
                       type="number"
@@ -853,16 +853,16 @@ export function AdvancedPropertyUploadForm({
                           price_inr: e.target.value ? parseFloat(e.target.value) : 0,
                         }))
                       }
-                      className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-4 py-2.5 bg-slate-700/50 border border-slate-600/50 rounded-lg text-white placeholder-slate-400 focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500/50 transition-all"
                       placeholder="5000000"
                     />
                     {errors.price_inr && (
-                      <p className="text-red-500 text-sm mt-1">{errors.price_inr}</p>
+                      <p className="text-red-400 text-sm mt-1">{errors.price_inr}</p>
                     )}
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium mb-2">Price per sqft</label>
+                    <label className="block text-sm font-medium mb-2 text-slate-300">Price per sqft</label>
                     <input
                       type="number"
                       min="0"
@@ -874,7 +874,7 @@ export function AdvancedPropertyUploadForm({
                           price_per_sqft: e.target.value ? parseFloat(e.target.value) : undefined,
                         }))
                       }
-                      className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-4 py-2.5 bg-slate-700/50 border border-slate-600/50 rounded-lg text-white placeholder-slate-400 focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500/50 transition-all"
                       placeholder="Auto-calculated if area provided"
                     />
                   </div>
@@ -887,9 +887,9 @@ export function AdvancedPropertyUploadForm({
                       onChange={(e) =>
                         setFormData((prev) => ({ ...prev, negotiable: e.target.checked }))
                       }
-                      className="w-4 h-4"
+                      className="w-4 h-4 accent-amber-500"
                     />
-                    <label htmlFor="negotiable" className="text-sm font-medium">
+                    <label htmlFor="negotiable" className="text-sm font-medium text-slate-300">
                       Price is negotiable
                     </label>
                   </div>
@@ -902,17 +902,17 @@ export function AdvancedPropertyUploadForm({
           {currentStep === 5 && (
             <div className="space-y-6">
               <div>
-                <h2 className="text-2xl font-bold mb-4 flex items-center gap-2">
-                  <ImageIcon className="w-6 h-6" />
+                <h2 className="text-2xl sm:text-3xl font-bold mb-6 flex items-center gap-2 text-white">
+                  <ImageIcon className="w-6 h-6 text-amber-300" />
                   Media
                 </h2>
                 <div className="space-y-6">
                   {/* Images */}
                   <div>
-                    <label className="block text-sm font-medium mb-2">
-                      Property Images <span className="text-red-500">*</span>
+                    <label className="block text-sm font-medium mb-2 text-slate-300">
+                      Property Images <span className="text-red-400">*</span>
                     </label>
-                    <label className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center cursor-pointer hover:border-blue-500 transition block">
+                    <label className="border-2 border-dashed border-slate-600/50 rounded-lg p-6 text-center cursor-pointer hover:border-amber-500/50 hover:bg-slate-700/30 transition-all block glow-border">
                       <input
                         type="file"
                         accept="image/jpeg,image/jpg,image/png,image/webp"
@@ -920,29 +920,29 @@ export function AdvancedPropertyUploadForm({
                         onChange={handleImageChange}
                         className="hidden"
                       />
-                      <ImageIcon className="w-12 h-12 mx-auto mb-2 text-gray-400" />
-                      <p className="text-sm text-gray-600">
+                      <ImageIcon className="w-12 h-12 mx-auto mb-2 text-amber-300" />
+                      <p className="text-sm text-slate-300">
                         Click to select images
                       </p>
-                      <p className="text-xs text-gray-500 mt-1">
+                      <p className="text-xs text-slate-400 mt-1">
                         JPEG, PNG, WebP (max 10MB each)
                       </p>
                     </label>
                     {errors.images && (
-                      <p className="text-red-500 text-sm mt-1">{errors.images}</p>
+                      <p className="text-red-400 text-sm mt-1">{errors.images}</p>
                     )}
                     {formData.images.length > 0 && (
                       <div className="grid grid-cols-4 gap-4 mt-4">
                         {formData.images.map((img, index) => (
-                          <div key={index} className="relative">
+                          <div key={index} className="relative group">
                             <img
                               src={img}
                               alt={`Property ${index + 1}`}
-                              className="w-full h-32 object-cover rounded-lg"
+                              className="w-full h-32 object-cover rounded-lg border border-slate-600/50 glow-border"
                             />
                             <button
                               onClick={() => removeImage(index)}
-                              className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1"
+                              className="absolute top-2 right-2 bg-rose-500 hover:bg-rose-600 text-white rounded-full p-1.5 shadow-lg transition-all"
                             >
                               <X className="w-4 h-4" />
                             </button>
@@ -954,8 +954,8 @@ export function AdvancedPropertyUploadForm({
 
                   {/* Videos */}
                   <div>
-                    <label className="block text-sm font-medium mb-2">Property Videos</label>
-                    <label className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center cursor-pointer hover:border-blue-500 transition block">
+                    <label className="block text-sm font-medium mb-2 text-slate-300">Property Videos</label>
+                    <label className="border-2 border-dashed border-slate-600/50 rounded-lg p-6 text-center cursor-pointer hover:border-amber-500/50 hover:bg-slate-700/30 transition-all block glow-border">
                       <input
                         type="file"
                         accept="video/mp4,video/mov,video/webm"
@@ -963,26 +963,26 @@ export function AdvancedPropertyUploadForm({
                         onChange={handleVideoChange}
                         className="hidden"
                       />
-                      <Video className="w-12 h-12 mx-auto mb-2 text-gray-400" />
-                      <p className="text-sm text-gray-600">
+                      <Video className="w-12 h-12 mx-auto mb-2 text-amber-300" />
+                      <p className="text-sm text-slate-300">
                         Click to select videos
                       </p>
-                      <p className="text-xs text-gray-500 mt-1">
+                      <p className="text-xs text-slate-400 mt-1">
                         MP4, MOV, WebM (max 50MB each)
                       </p>
                     </label>
                     {formData.videos.length > 0 && (
                       <div className="grid grid-cols-4 gap-4 mt-4">
                         {formData.videos.map((video, index) => (
-                          <div key={index} className="relative">
+                          <div key={index} className="relative group">
                             <video
                               src={video}
-                              className="w-full h-32 object-cover rounded-lg"
+                              className="w-full h-32 object-cover rounded-lg border border-slate-600/50 glow-border"
                               controls
                             />
                             <button
                               onClick={() => removeVideo(index)}
-                              className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1"
+                              className="absolute top-2 right-2 bg-rose-500 hover:bg-rose-600 text-white rounded-full p-1.5 shadow-lg transition-all"
                             >
                               <X className="w-4 h-4" />
                             </button>
@@ -994,8 +994,8 @@ export function AdvancedPropertyUploadForm({
 
                   {/* Floor Plans */}
                   <div>
-                    <label className="block text-sm font-medium mb-2">Floor Plans</label>
-                    <label className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center cursor-pointer hover:border-blue-500 transition block">
+                    <label className="block text-sm font-medium mb-2 text-slate-300">Floor Plans</label>
+                    <label className="border-2 border-dashed border-slate-600/50 rounded-lg p-6 text-center cursor-pointer hover:border-amber-500/50 hover:bg-slate-700/30 transition-all block glow-border">
                       <input
                         type="file"
                         accept="image/jpeg,image/jpg,image/png,application/pdf"
@@ -1003,26 +1003,26 @@ export function AdvancedPropertyUploadForm({
                         onChange={handleFloorPlanChange}
                         className="hidden"
                       />
-                      <FileText className="w-12 h-12 mx-auto mb-2 text-gray-400" />
-                      <p className="text-sm text-gray-600">
+                      <FileText className="w-12 h-12 mx-auto mb-2 text-amber-300" />
+                      <p className="text-sm text-slate-300">
                         Click to select floor plans
                       </p>
-                      <p className="text-xs text-gray-500 mt-1">
+                      <p className="text-xs text-slate-400 mt-1">
                         JPEG, PNG, PDF (max 10MB each)
                       </p>
                     </label>
                     {formData.floor_plan_images.length > 0 && (
                       <div className="grid grid-cols-4 gap-4 mt-4">
                         {formData.floor_plan_images.map((plan, index) => (
-                          <div key={index} className="relative">
+                          <div key={index} className="relative group">
                             <img
                               src={plan}
                               alt={`Floor Plan ${index + 1}`}
-                              className="w-full h-32 object-cover rounded-lg"
+                              className="w-full h-32 object-cover rounded-lg border border-slate-600/50 glow-border"
                             />
                             <button
                               onClick={() => removeFloorPlan(index)}
-                              className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1"
+                              className="absolute top-2 right-2 bg-rose-500 hover:bg-rose-600 text-white rounded-full p-1.5 shadow-lg transition-all"
                             >
                               <X className="w-4 h-4" />
                             </button>
@@ -1034,14 +1034,14 @@ export function AdvancedPropertyUploadForm({
 
                   {/* Virtual Tour */}
                   <div>
-                    <label className="block text-sm font-medium mb-2">Virtual Tour URL</label>
+                    <label className="block text-sm font-medium mb-2 text-slate-300">Virtual Tour URL</label>
                     <input
                       type="url"
                       value={formData.virtual_tour_url}
                       onChange={(e) =>
                         setFormData((prev) => ({ ...prev, virtual_tour_url: e.target.value }))
                       }
-                      className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-4 py-2.5 bg-slate-700/50 border border-slate-600/50 rounded-lg text-white placeholder-slate-400 focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500/50 transition-all"
                       placeholder="https://..."
                     />
                   </div>
@@ -1054,7 +1054,7 @@ export function AdvancedPropertyUploadForm({
           {currentStep === 6 && (
             <div className="space-y-6">
               <div>
-                <h2 className="text-2xl font-bold mb-4">Amenities & Features</h2>
+                <h2 className="text-2xl sm:text-3xl font-bold mb-6 text-white">Amenities & Features</h2>
                 <div className="grid grid-cols-3 gap-3">
                   {commonAmenities.map((amenity) => (
                     <label key={amenity} className="flex items-center gap-2 cursor-pointer">
@@ -1074,9 +1074,9 @@ export function AdvancedPropertyUploadForm({
                             }));
                           }
                         }}
-                        className="w-4 h-4"
+                        className="w-4 h-4 accent-amber-500"
                       />
-                      <span className="text-sm">{amenity}</span>
+                      <span className="text-sm text-slate-300">{amenity}</span>
                     </label>
                   ))}
                 </div>
@@ -1088,20 +1088,20 @@ export function AdvancedPropertyUploadForm({
           {currentStep === 7 && (
             <div className="space-y-6">
               <div>
-                <h2 className="text-2xl font-bold mb-4 flex items-center gap-2">
-                  <FileText className="w-6 h-6" />
+                <h2 className="text-2xl sm:text-3xl font-bold mb-6 flex items-center gap-2 text-white">
+                  <FileText className="w-6 h-6 text-amber-300" />
                   Documents & Certificates
                 </h2>
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium mb-2">RERA ID</label>
+                    <label className="block text-sm font-medium mb-2 text-slate-300">RERA ID</label>
                     <input
                       type="text"
                       value={formData.rera_id}
                       onChange={(e) =>
                         setFormData((prev) => ({ ...prev, rera_id: e.target.value }))
                       }
-                      className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-4 py-2.5 bg-slate-700/50 border border-slate-600/50 rounded-lg text-white placeholder-slate-400 focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500/50 transition-all"
                       placeholder="e.g., PRM/KA/RERA/1251/308/PR/171021/004234"
                     />
                   </div>
@@ -1114,15 +1114,15 @@ export function AdvancedPropertyUploadForm({
                       onChange={(e) =>
                         setFormData((prev) => ({ ...prev, rera_verified: e.target.checked }))
                       }
-                      className="w-4 h-4"
-                    />
-                    <label htmlFor="rera_verified" className="text-sm font-medium">
+                        className="w-4 h-4 accent-amber-500"
+                      />
+                      <label htmlFor="rera_verified" className="text-sm font-medium text-slate-300">
                       RERA Verified
                     </label>
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium mb-2">RERA Certificate URL</label>
+                    <label className="block text-sm font-medium mb-2 text-slate-300">RERA Certificate URL</label>
                     <input
                       type="url"
                       value={formData.rera_certificate_url}
@@ -1132,46 +1132,46 @@ export function AdvancedPropertyUploadForm({
                           rera_certificate_url: e.target.value,
                         }))
                       }
-                      className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-4 py-2.5 bg-slate-700/50 border border-slate-600/50 rounded-lg text-white placeholder-slate-400 focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500/50 transition-all"
                       placeholder="https://..."
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium mb-2">Occupancy Certificate</label>
+                    <label className="block text-sm font-medium mb-2 text-slate-300">Occupancy Certificate</label>
                     <input
                       type="text"
                       value={formData.oc_certificate}
                       onChange={(e) =>
                         setFormData((prev) => ({ ...prev, oc_certificate: e.target.value }))
                       }
-                      className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-4 py-2.5 bg-slate-700/50 border border-slate-600/50 rounded-lg text-white placeholder-slate-400 focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500/50 transition-all"
                       placeholder="OC Number"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium mb-2">Completion Certificate</label>
+                    <label className="block text-sm font-medium mb-2 text-slate-300">Completion Certificate</label>
                     <input
                       type="text"
                       value={formData.cc_certificate}
                       onChange={(e) =>
                         setFormData((prev) => ({ ...prev, cc_certificate: e.target.value }))
                       }
-                      className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-4 py-2.5 bg-slate-700/50 border border-slate-600/50 rounded-lg text-white placeholder-slate-400 focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500/50 transition-all"
                       placeholder="CC Number"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium mb-2">Approved Plan URL</label>
+                    <label className="block text-sm font-medium mb-2 text-slate-300">Approved Plan URL</label>
                     <input
                       type="url"
                       value={formData.approved_plan_url}
                       onChange={(e) =>
                         setFormData((prev) => ({ ...prev, approved_plan_url: e.target.value }))
                       }
-                      className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-4 py-2.5 bg-slate-700/50 border border-slate-600/50 rounded-lg text-white placeholder-slate-400 focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500/50 transition-all"
                       placeholder="https://..."
                     />
                   </div>
@@ -1184,10 +1184,10 @@ export function AdvancedPropertyUploadForm({
           {currentStep === 8 && (
             <div className="space-y-6">
               <div>
-                <h2 className="text-2xl font-bold mb-4">Additional Information</h2>
+                <h2 className="text-2xl sm:text-3xl font-bold mb-6 text-white">Additional Information</h2>
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium mb-2">Construction Year</label>
+                    <label className="block text-sm font-medium mb-2 text-slate-300">Construction Year</label>
                     <input
                       type="number"
                       min="1900"
@@ -1204,12 +1204,12 @@ export function AdvancedPropertyUploadForm({
                           },
                         }))
                       }
-                      className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-4 py-2.5 bg-slate-700/50 border border-slate-600/50 rounded-lg text-white placeholder-slate-400 focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500/50 transition-all"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium mb-2">Possession Date</label>
+                    <label className="block text-sm font-medium mb-2 text-slate-300">Possession Date</label>
                     <input
                       type="date"
                       value={formData.property_metadata?.possession_date || ''}
@@ -1222,7 +1222,7 @@ export function AdvancedPropertyUploadForm({
                           },
                         }))
                       }
-                      className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-4 py-2.5 bg-slate-700/50 border border-slate-600/50 rounded-lg text-white placeholder-slate-400 focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500/50 transition-all"
                     />
                   </div>
 
@@ -1240,9 +1240,9 @@ export function AdvancedPropertyUploadForm({
                           },
                         }))
                       }
-                      className="w-4 h-4"
+                      className="w-4 h-4 accent-amber-500"
                     />
-                    <label htmlFor="vastu_compliant" className="text-sm font-medium">
+                    <label htmlFor="vastu_compliant" className="text-sm font-medium text-slate-300">
                       Vastu Compliant
                     </label>
                   </div>

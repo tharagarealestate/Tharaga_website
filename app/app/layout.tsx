@@ -629,12 +629,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 
   const state = { user: null, loading: true, nextUrl: null, supabaseReady: false, sub: null };
 
-  function setButtonLoading(ui, isLoading){ const spinner = ui.btn.querySelector('.thg-spinner'); const label = ui.btn.querySelector('.thg-label'); if (isLoading){ ui.btn.classList.remove('is-auth'); if (label) label.textContent = 'Loading…'; if (spinner) spinner.style.display = 'inline-block'; ui.btn.setAttribute('aria-expanded','false'); } else { if (spinner) spinner.style.display = 'none'; } }
+  function setButtonLoading(ui, isLoading){ const spinner = ui.btn.querySelector('.thg-spinner'); const label = ui.btn.querySelector('.thg-label'); if (isLoading){ ui.btn.classList.remove('is-auth'); /* Removed text change - only show spinner */ if (spinner) spinner.style.display = 'inline-block'; ui.btn.setAttribute('aria-expanded','false'); } else { if (spinner) spinner.style.display = 'none'; } }
 
   function render(ui){
     const label = ui.btn.querySelector('.thg-label');
     const avatar = ui.btn.querySelector('.thg-initial');
-    if (state.loading){ setButtonLoading(ui, true); return; }
+    // Only show loading if actively loading AND supabase is ready (prevents unnecessary loading state)
+    if (state.loading && state.supabaseReady){ setButtonLoading(ui, true); return; }
     setButtonLoading(ui, false);
     if (state.user && state.user.email){
       const name = getDisplayName(state.user);

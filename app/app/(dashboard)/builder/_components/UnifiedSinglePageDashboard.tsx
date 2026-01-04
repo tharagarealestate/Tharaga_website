@@ -26,7 +26,7 @@ interface UnifiedSinglePageDashboardProps {
   onSectionChange: (section: string) => void
 }
 
-export function UnifiedSinglePageDashboard({ activeSection, onSectionChange }: UnifiedSinglePageDashboardProps) {
+function UnifiedSinglePageDashboardComponent({ activeSection, onSectionChange }: UnifiedSinglePageDashboardProps) {
   // Use ref to store the latest onSectionChange to avoid dependency issues
   const onSectionChangeRef = useRef(onSectionChange)
   onSectionChangeRef.current = onSectionChange
@@ -47,9 +47,13 @@ export function UnifiedSinglePageDashboard({ activeSection, onSectionChange }: U
     }
   }, [activeSection]) // Only depend on activeSection, not onSectionChange
 
-  // Scroll to top when section changes
+  // Scroll to top when section changes (defer to avoid blocking render)
   useEffect(() => {
-    window.scrollTo({ top: 0, behavior: 'smooth' })
+    if (typeof window !== 'undefined') {
+      requestAnimationFrame(() => {
+        window.scrollTo({ top: 0, behavior: 'smooth' })
+      })
+    }
   }, [activeSection])
 
   // Sync with URL parameter on mount only - parent handles URL sync
@@ -135,4 +139,7 @@ export function UnifiedSinglePageDashboard({ activeSection, onSectionChange }: U
     </div>
   )
 }
+
+// Memoize component to prevent unnecessary re-renders
+export const UnifiedSinglePageDashboard = memo(UnifiedSinglePageDashboardComponent)
 

@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from 'react'
+import Breadcrumb from '@/components/Breadcrumb'
 
 export default function EnvironmentIntelPage(){
   const [coords, setCoords] = React.useState<{lat:number;lng:number}|null>(null)
@@ -23,7 +24,22 @@ export default function EnvironmentIntelPage(){
   }
 
   return (
-    <main className="mx-auto max-w-3xl px-6 py-8">
+    <div className="min-h-screen bg-gradient-to-br from-primary-950 via-primary-900 to-primary-800 relative overflow-hidden">
+      {/* Animated Background Elements - EXACT from pricing page */}
+      <div className="absolute inset-0 opacity-30">
+        <div className="absolute top-20 left-10 w-96 h-96 bg-gold-500 rounded-full blur-3xl animate-pulse-slow" />
+        <div
+          className="absolute bottom-20 right-10 w-[600px] h-[600px] bg-emerald-500 rounded-full blur-3xl animate-pulse-slow"
+          style={{ animationDelay: '1s' }}
+        />
+      </div>
+
+      <div className="relative z-10">
+        <main className="mx-auto max-w-3xl px-6 py-8">
+      <Breadcrumb items={[
+        { label: 'Home', href: '/' },
+        { label: 'Environment Intelligence' }
+      ]} />
       <h1 className="text-2xl font-bold text-plum mb-4">Environment intelligence</h1>
       <div className="rounded-xl border border-plum/10 bg-brandWhite p-4 space-y-4">
         <div className="flex gap-2">
@@ -39,7 +55,9 @@ export default function EnvironmentIntelPage(){
         )}
         {msg && <div className="text-sm text-plum/80">{msg}</div>}
       </div>
-    </main>
+        </main>
+      </div>
+    </div>
   )
 }
 

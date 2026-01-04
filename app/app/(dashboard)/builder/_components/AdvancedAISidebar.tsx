@@ -67,8 +67,27 @@ export function AdvancedAISidebar() {
   const pathname = usePathname()
   const router = useRouter()
   
-  // All routes now use direct paths like /builder/billing and /builder/integrations
-  // This ensures smooth client-side navigation without page reloads
+  // Routes that exist as separate pages use direct paths (billing, integrations, leads, etc.)
+  // Routes that don't exist use query parameters with router.push for smooth navigation
+  const routeToSectionMap: Record<string, string> = {
+    '/builder': 'overview',
+  }
+  
+  const shouldUseQueryParams = (href: string): boolean => {
+    return href.startsWith('/builder?section=') || href === '/builder' || 
+           ['/builder/viewings', '/builder/negotiations', '/builder/contracts', 
+            '/builder/properties'].includes(href)
+  }
+  
+  const getQueryParamUrl = (href: string): string => {
+    if (href.startsWith('/builder?section=')) return href
+    if (href === '/builder') return '/builder?section=overview'
+    if (href === '/builder/viewings') return '/builder?section=viewings'
+    if (href === '/builder/negotiations') return '/builder?section=negotiations'
+    if (href === '/builder/contracts') return '/builder?section=contracts'
+    if (href === '/builder/properties') return '/builder?section=properties'
+    return href
+  }
 
   const [leadCount, setLeadCount] = useState<LeadCountData | null>(null)
   const [isLoadingCount, setIsLoadingCount] = useState(true)
@@ -191,7 +210,7 @@ export function AdvancedAISidebar() {
   }, [])
 
   // Navigation groups - Clean, organized structure for better UX
-  // All routes use direct paths (like /builder/billing) for smooth client-side navigation
+  // Routes that exist use direct paths, others use query params
   const navGroups = useMemo<NavGroup[]>(() => {
     return [
       // Main Dashboard
@@ -494,14 +513,21 @@ export function AdvancedAISidebar() {
                           onHoverEnd={() => setHoveredItem(null)}
                         >
                           <Link
-                            href={isLocked ? '#' : item.href}
+                            href={isLocked ? '#' : (shouldUseQueryParams(item.href) ? getQueryParamUrl(item.href) : item.href)}
                             onClick={(e) => {
-                              // Only prevent default for locked items
                               if (isLocked) {
                                 e.preventDefault()
                                 router.push('/pricing')
+                                return
                               }
-                              // For normal navigation, let Next.js Link handle it naturally (client-side, no page reload)
+                              
+                              // Use router.push for query params to avoid page reload
+                              if (shouldUseQueryParams(item.href)) {
+                                e.preventDefault()
+                                const targetUrl = getQueryParamUrl(item.href)
+                                router.push(targetUrl)
+                              }
+                              // For direct routes, let Next.js Link handle it naturally
                             }}
                             className={cn(
                               "relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-all duration-300 group",
@@ -634,8 +660,16 @@ export function AdvancedAISidebar() {
                                       transition={{ delay: subIndex * 0.05 }}
                                     >
                                       <Link
-                                        href={sub.href}
-                                        // Let Next.js Link handle navigation naturally (client-side, no page reload)
+                                        href={shouldUseQueryParams(sub.href) ? getQueryParamUrl(sub.href) : sub.href}
+                                        onClick={(e) => {
+                                          // Use router.push for query params to avoid page reload
+                                          if (shouldUseQueryParams(sub.href)) {
+                                            e.preventDefault()
+                                            const targetUrl = getQueryParamUrl(sub.href)
+                                            router.push(targetUrl)
+                                          }
+                                          // For direct routes, let Next.js Link handle it naturally
+                                        }}
                                         className={cn(
                                           "block px-3 py-1.5 text-xs rounded-lg transition-all duration-200",
                                           isSubActive

@@ -579,12 +579,7 @@ export function BuilderSidebar() {
                               <Link
                                 key={sub.href}
                                 href={shouldUseUnifiedDashboard(sub.href) ? getUnifiedDashboardUrl(sub.href) : sub.href}
-                                onClick={(e) => {
-                                  // Use router.push() for reliable client-side navigation (no full page reload)
-                                  e.preventDefault()
-                                  const targetUrl = shouldUseUnifiedDashboard(sub.href) ? getUnifiedDashboardUrl(sub.href) : sub.href
-                                  router.push(targetUrl)
-                                }}
+                                // Let Next.js Link handle navigation naturally (client-side, no page reload)
                                 className={cn(
                                   "block px-2 py-1 text-[11px] rounded-lg transition-colors duration-150",
                                   isSubActive
@@ -782,10 +777,7 @@ export function BuilderSidebar() {
                               e.preventDefault()
                               return
                             }
-                            // Use router.push() for reliable client-side navigation (no full page reload)
-                            e.preventDefault()
-                            const targetUrl = shouldUseUnifiedDashboard(item.href) ? getUnifiedDashboardUrl(item.href) : item.href
-                            router.push(targetUrl)
+                            // For normal navigation, let Next.js Link handle it naturally (client-side, no page reload)
                             setMobileMenuOpen(false)
                           }}
                           className={cn(
@@ -842,11 +834,8 @@ export function BuilderSidebar() {
                                   <Link
                                     key={sub.href}
                                     href={shouldUseUnifiedDashboard(sub.href) ? getUnifiedDashboardUrl(sub.href) : sub.href}
-                                    onClick={(e) => {
-                                      // Use router.push() for reliable client-side navigation (no full page reload)
-                                      e.preventDefault()
-                                      const targetUrl = shouldUseUnifiedDashboard(sub.href) ? getUnifiedDashboardUrl(sub.href) : sub.href
-                                      router.push(targetUrl)
+                                    onClick={() => {
+                                      // Let Next.js Link handle navigation naturally (client-side, no page reload)
                                       setMobileMenuOpen(false)
                                     }}
                                     className={cn(

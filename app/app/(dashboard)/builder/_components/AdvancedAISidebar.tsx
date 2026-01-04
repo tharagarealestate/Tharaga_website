@@ -681,12 +681,7 @@ export function AdvancedAISidebar() {
                                     >
                                       <Link
                                         href={shouldUseUnifiedDashboard(sub.href) ? getUnifiedDashboardUrl(sub.href) : sub.href}
-                                        onClick={(e) => {
-                                          // Use router.push() for reliable client-side navigation (no full page reload)
-                                          e.preventDefault()
-                                          const targetUrl = shouldUseUnifiedDashboard(sub.href) ? getUnifiedDashboardUrl(sub.href) : sub.href
-                                          router.push(targetUrl)
-                                        }}
+                                        // Let Next.js Link handle navigation naturally (client-side, no page reload)
                                         className={cn(
                                           "block px-3 py-1.5 text-xs rounded-lg transition-all duration-200",
                                           isSubActive

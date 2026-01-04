@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useCallback } from 'react'
 import { motion } from 'framer-motion'
 import { 
   Sparkles, 
@@ -89,7 +89,8 @@ export function LeadsManagementDashboard() {
     }
   }, [])
 
-  const handleStatsUpdate = (newStats: any) => {
+  // Wrap in useCallback to ensure stable reference (prevents LeadsList re-renders)
+  const handleStatsUpdate = useCallback((newStats: any) => {
     setStats({
       total_leads: newStats.total_leads || 0,
       hot_leads: newStats.hot_leads || 0,
@@ -99,7 +100,7 @@ export function LeadsManagementDashboard() {
       conversion_rate: 0, // Calculate from analytics
       ai_recommendations: 0, // Calculate from insights
     })
-  }
+  }, [])
 
   return (
     <div className="space-y-6">

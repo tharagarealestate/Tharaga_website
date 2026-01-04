@@ -367,50 +367,54 @@ export function LeadsList({ onSelectLead, initialFilters, showInlineFilters = tr
         'postgres_changes',
         { event: '*', schema: 'public', table: 'lead_scores' },
         (payload: any) => {
-          // Throttle updates to prevent excessive re-renders
-          const now = Date.now();
-          if (now - lastUpdateTime < UPDATE_THROTTLE) {
-            if (updateTimeout) clearTimeout(updateTimeout);
-            updateTimeout = setTimeout(() => {
-              lastUpdateTime = Date.now();
-              if (payload.eventType === 'INSERT') {
-                fetchLeadsRef.current();
-              } else if (payload.eventType === 'UPDATE') {
-                setLeads((previous) =>
-                  previous.map((lead) =>
-                    lead.id === payload.new?.user_id
-                      ? {
-                          ...lead,
-                          score: payload.new?.score ?? lead.score,
-                          category: payload.new?.category ?? lead.category,
-                        }
-                      : lead
-                  )
-                );
-              } else if (payload.eventType === 'DELETE') {
-                setLeads((previous) => previous.filter((lead) => lead.id !== payload.old?.user_id));
-              }
-            }, UPDATE_THROTTLE - (now - lastUpdateTime));
-            return;
-          }
-          
-          lastUpdateTime = now;
-          if (payload.eventType === 'INSERT') {
-            fetchLeadsRef.current();
-          } else if (payload.eventType === 'UPDATE') {
-            setLeads((previous) =>
-              previous.map((lead) =>
-                lead.id === payload.new?.user_id
-                  ? {
-                      ...lead,
-                      score: payload.new?.score ?? lead.score,
-                      category: payload.new?.category ?? lead.category,
-                    }
-                  : lead
-              )
-            );
-          } else if (payload.eventType === 'DELETE') {
-            setLeads((previous) => previous.filter((lead) => lead.id !== payload.old?.user_id));
+          try {
+            // Throttle updates to prevent excessive re-renders
+            const now = Date.now();
+            if (now - lastUpdateTime < UPDATE_THROTTLE) {
+              if (updateTimeout) clearTimeout(updateTimeout);
+              updateTimeout = setTimeout(() => {
+                lastUpdateTime = Date.now();
+                if (payload?.eventType === 'INSERT') {
+                  fetchLeadsRef.current();
+                } else if (payload?.eventType === 'UPDATE' && payload?.new?.user_id) {
+                  setLeads((previous) =>
+                    previous.map((lead) =>
+                      lead.id === payload.new.user_id
+                        ? {
+                            ...lead,
+                            score: payload.new?.score ?? lead.score,
+                            category: payload.new?.category ?? lead.category,
+                          }
+                        : lead
+                    )
+                  );
+                } else if (payload?.eventType === 'DELETE' && payload?.old?.user_id) {
+                  setLeads((previous) => previous.filter((lead) => lead.id !== payload.old.user_id));
+                }
+              }, UPDATE_THROTTLE - (now - lastUpdateTime));
+              return;
+            }
+            
+            lastUpdateTime = now;
+            if (payload?.eventType === 'INSERT') {
+              fetchLeadsRef.current();
+            } else if (payload?.eventType === 'UPDATE' && payload?.new?.user_id) {
+              setLeads((previous) =>
+                previous.map((lead) =>
+                  lead.id === payload.new.user_id
+                    ? {
+                        ...lead,
+                        score: payload.new?.score ?? lead.score,
+                        category: payload.new?.category ?? lead.category,
+                      }
+                    : lead
+                )
+              );
+            } else if (payload?.eventType === 'DELETE' && payload?.old?.user_id) {
+              setLeads((previous) => previous.filter((lead) => lead.id !== payload.old.user_id));
+            }
+          } catch (err) {
+            console.error('[LeadsList] Error in lead_scores subscription callback:', err);
           }
         }
       )
@@ -427,47 +431,53 @@ export function LeadsList({ onSelectLead, initialFilters, showInlineFilters = tr
           filter: `builder_id=eq.${userId}`,
         },
         (payload: any) => {
-          // Throttle interaction updates
-          const now = Date.now();
-          if (now - lastUpdateTime < UPDATE_THROTTLE) {
-            if (updateTimeout) clearTimeout(updateTimeout);
-            updateTimeout = setTimeout(() => {
-              lastUpdateTime = Date.now();
-              setLeads((previous) =>
-                previous.map((lead) =>
-                  lead.id === payload.new?.lead_id
-                    ? {
-                        ...lead,
-                        total_interactions: (lead.total_interactions ?? 0) + 1,
-                        last_interaction: {
-                          type: payload.new?.interaction_type ?? lead.last_interaction?.type ?? 'interaction',
-                          timestamp: payload.new?.timestamp ?? new Date().toISOString(),
-                          status: payload.new?.status ?? lead.last_interaction?.status ?? 'pending',
-                        },
-                      }
-                    : lead
-                )
-              );
-            }, UPDATE_THROTTLE - (now - lastUpdateTime));
-            return;
+          try {
+            // Throttle interaction updates
+            const now = Date.now();
+            if (!payload?.new?.lead_id) return; // Validate payload
+            
+            if (now - lastUpdateTime < UPDATE_THROTTLE) {
+              if (updateTimeout) clearTimeout(updateTimeout);
+              updateTimeout = setTimeout(() => {
+                lastUpdateTime = Date.now();
+                setLeads((previous) =>
+                  previous.map((lead) =>
+                    lead.id === payload.new.lead_id
+                      ? {
+                          ...lead,
+                          total_interactions: (lead.total_interactions ?? 0) + 1,
+                          last_interaction: {
+                            type: payload.new?.interaction_type ?? lead.last_interaction?.type ?? 'interaction',
+                            timestamp: payload.new?.timestamp ?? new Date().toISOString(),
+                            status: payload.new?.status ?? lead.last_interaction?.status ?? 'pending',
+                          },
+                        }
+                      : lead
+                  )
+                );
+              }, UPDATE_THROTTLE - (now - lastUpdateTime));
+              return;
+            }
+            
+            lastUpdateTime = now;
+            setLeads((previous) =>
+              previous.map((lead) =>
+                lead.id === payload.new.lead_id
+                  ? {
+                      ...lead,
+                      total_interactions: (lead.total_interactions ?? 0) + 1,
+                      last_interaction: {
+                        type: payload.new?.interaction_type ?? lead.last_interaction?.type ?? 'interaction',
+                        timestamp: payload.new?.timestamp ?? new Date().toISOString(),
+                        status: payload.new?.status ?? lead.last_interaction?.status ?? 'pending',
+                      },
+                    }
+                  : lead
+              )
+            );
+          } catch (err) {
+            console.error('[LeadsList] Error in lead_interactions subscription callback:', err);
           }
-          
-          lastUpdateTime = now;
-          setLeads((previous) =>
-            previous.map((lead) =>
-              lead.id === payload.new?.lead_id
-                ? {
-                    ...lead,
-                    total_interactions: (lead.total_interactions ?? 0) + 1,
-                    last_interaction: {
-                      type: payload.new?.interaction_type ?? lead.last_interaction?.type ?? 'interaction',
-                      timestamp: payload.new?.timestamp ?? new Date().toISOString(),
-                      status: payload.new?.status ?? lead.last_interaction?.status ?? 'pending',
-                    },
-                  }
-                : lead
-            )
-          );
         }
       )
       .subscribe();

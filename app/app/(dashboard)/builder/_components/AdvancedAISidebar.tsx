@@ -521,13 +521,11 @@ export function AdvancedAISidebar() {
                                 return
                               }
                               
-                              // Use router.push for query params to avoid page reload
-                              if (shouldUseQueryParams(item.href)) {
-                                e.preventDefault()
-                                const targetUrl = getQueryParamUrl(item.href)
-                                router.push(targetUrl)
-                              }
-                              // For direct routes, let Next.js Link handle it naturally
+                              // Always use router.push for reliable client-side navigation
+                              // This works for both query params and direct routes
+                              e.preventDefault()
+                              const targetUrl = shouldUseQueryParams(item.href) ? getQueryParamUrl(item.href) : item.href
+                              router.push(targetUrl)
                             }}
                             className={cn(
                               "relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-all duration-300 group",

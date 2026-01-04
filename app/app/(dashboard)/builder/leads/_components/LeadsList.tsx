@@ -571,7 +571,7 @@ export function LeadsList({ onSelectLead, initialFilters, showInlineFilters = tr
           <button
             onClick={() => {
               setError(null);
-              fetchLeads();
+              fetchLeadsRef.current();
             }}
             className="px-6 py-2 bg-amber-500 hover:bg-amber-600 glow-border text-slate-900 font-semibold rounded-lg transition-colors"
           >

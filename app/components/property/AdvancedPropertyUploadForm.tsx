@@ -340,22 +340,30 @@ export function AdvancedPropertyUploadForm({
 
   if (success) {
     return (
-      <div className="max-w-2xl mx-auto p-6 bg-white rounded-lg shadow-lg">
-        <motion.div
-          initial={{ scale: 0 }}
-          animate={{ scale: 1 }}
-          className="text-center"
-        >
-          <CheckCircle2 className="w-16 h-16 text-green-500 mx-auto mb-4" />
-          <h2 className="text-2xl font-bold mb-2">Property Uploaded Successfully!</h2>
-          <p className="text-gray-600 mb-4">
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        className="max-w-2xl mx-auto p-8 bg-slate-800/95 glow-border rounded-xl shadow-2xl border border-slate-700/50"
+      >
+        <div className="text-center">
+          <motion.div
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ delay: 0.2, type: 'spring' }}
+          >
+            <CheckCircle2 className="w-16 h-16 text-emerald-400 mx-auto mb-4" />
+          </motion.div>
+          <h2 className="text-2xl sm:text-3xl font-bold mb-2 text-white">Property Uploaded Successfully!</h2>
+          <p className="text-slate-300 mb-4">
             Your property has been uploaded and is pending verification.
           </p>
           {propertyId && (
-            <p className="text-sm text-gray-500 mb-6">Property ID: {propertyId}</p>
+            <p className="text-sm text-slate-400 mb-6">Property ID: {propertyId}</p>
           )}
-          <div className="flex gap-4 justify-center">
-            <button
+          <div className="flex gap-4 justify-center flex-wrap">
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
               onClick={() => {
                 setSuccess(false);
                 setCurrentStep(1);
@@ -368,39 +376,41 @@ export function AdvancedPropertyUploadForm({
                   floor_plan_images: [],
                 });
               }}
-              className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+              className="px-8 py-3 bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 text-slate-900 font-semibold rounded-lg transition-all duration-300 shadow-lg hover:shadow-xl hover:shadow-amber-500/30 hover:-translate-y-1 glow-border"
             >
               Upload Another Property
-            </button>
+            </motion.button>
             {onCancel && (
-              <button
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
                 onClick={onCancel}
-                className="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300"
+                className="px-8 py-3 bg-slate-700/50 text-slate-300 rounded-lg hover:bg-slate-700 hover:text-white transition-all border border-slate-600/50"
               >
                 Close
-              </button>
+              </motion.button>
             )}
           </div>
-        </motion.div>
-      </div>
+        </div>
+      </motion.div>
     );
   }
 
   return (
-    <div className="max-w-4xl mx-auto p-6 bg-white rounded-lg shadow-lg">
-      {/* Progress Bar */}
+    <div className="w-full">
+      {/* Progress Bar - Billing Design System */}
       <div className="mb-8">
         <div className="flex justify-between mb-2">
-          <span className="text-sm font-medium text-gray-700">
+          <span className="text-sm font-medium text-slate-300">
             Step {currentStep} of {TOTAL_STEPS}
           </span>
-          <span className="text-sm text-gray-500">
+          <span className="text-sm text-slate-400">
             {Math.round((currentStep / TOTAL_STEPS) * 100)}% Complete
           </span>
         </div>
-        <div className="w-full bg-gray-200 rounded-full h-2">
+        <div className="w-full bg-slate-700/50 rounded-full h-2 glow-border">
           <motion.div
-            className="bg-blue-600 h-2 rounded-full"
+            className="bg-gradient-to-r from-amber-600 to-amber-500 h-2 rounded-full"
             initial={{ width: 0 }}
             animate={{ width: `${(currentStep / TOTAL_STEPS) * 100}%` }}
             transition={{ duration: 0.3 }}
@@ -408,13 +418,15 @@ export function AdvancedPropertyUploadForm({
         </div>
       </div>
 
-      {/* Step Indicators */}
-      <div className="flex justify-between mb-8">
+      {/* Step Indicators - Billing Design System */}
+      <div className="flex justify-between mb-8 gap-2">
         {[1, 2, 3, 4, 5, 6, 7, 8].map((step) => (
           <div
             key={step}
-            className={`flex-1 mx-1 h-2 rounded ${
-              step <= currentStep ? 'bg-blue-600' : 'bg-gray-200'
+            className={`flex-1 h-2 rounded-lg transition-all duration-300 ${
+              step <= currentStep 
+                ? 'bg-gradient-to-r from-amber-600 to-amber-500 shadow-lg shadow-amber-500/30' 
+                : 'bg-slate-700/50'
             }`}
           />
         ))}
@@ -433,14 +445,14 @@ export function AdvancedPropertyUploadForm({
           {currentStep === 1 && (
             <div className="space-y-6">
               <div>
-                <h2 className="text-2xl font-bold mb-4 flex items-center gap-2">
-                  <Home className="w-6 h-6" />
+                <h2 className="text-2xl sm:text-3xl font-bold mb-6 flex items-center gap-2 text-white">
+                  <Home className="w-6 h-6 text-amber-300" />
                   Basic Information
                 </h2>
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium mb-2">
-                      Property Title <span className="text-red-500">*</span>
+                    <label className="block text-sm font-medium mb-2 text-slate-300">
+                      Property Title <span className="text-red-400">*</span>
                     </label>
                     <input
                       type="text"
@@ -448,29 +460,29 @@ export function AdvancedPropertyUploadForm({
                       onChange={(e) =>
                         setFormData((prev) => ({ ...prev, title: e.target.value }))
                       }
-                      className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-4 py-2.5 bg-slate-700/50 border border-slate-600/50 rounded-lg text-white placeholder-slate-400 focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500/50 transition-all"
                       placeholder="e.g., Luxury 3BHK Apartment in Prime Location"
                     />
                     {errors.title && (
-                      <p className="text-red-500 text-sm mt-1">{errors.title}</p>
+                      <p className="text-red-400 text-sm mt-1">{errors.title}</p>
                     )}
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium mb-2">Description</label>
+                    <label className="block text-sm font-medium mb-2 text-slate-300">Description</label>
                     <textarea
                       value={formData.description}
                       onChange={(e) =>
                         setFormData((prev) => ({ ...prev, description: e.target.value }))
                       }
                       rows={4}
-                      className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-4 py-2.5 bg-slate-700/50 border border-slate-600/50 rounded-lg text-white placeholder-slate-400 focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500/50 transition-all resize-none"
                       placeholder="Describe your property..."
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium mb-2">Project Name</label>
+                    <label className="block text-sm font-medium mb-2 text-slate-300">Project Name</label>
                     <input
                       type="text"
                       value={formData.project}
@@ -495,7 +507,7 @@ export function AdvancedPropertyUploadForm({
                             property_type: e.target.value as any,
                           }))
                         }
-                        className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                        className="w-full px-4 py-2.5 bg-slate-700/50 border border-slate-600/50 rounded-lg text-white focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500/50 transition-all"
                       >
                         <option value="Apartment">Apartment</option>
                         <option value="Villa">Villa</option>
@@ -515,7 +527,7 @@ export function AdvancedPropertyUploadForm({
                               bhk_type: e.target.value as any,
                             }))
                           }
-                          className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                          className="w-full px-4 py-2.5 bg-slate-700/50 border border-slate-600/50 rounded-lg text-white focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500/50 transition-all"
                         >
                           <option value="">Select BHK</option>
                           <option value="1RK">1RK</option>
@@ -807,7 +819,7 @@ export function AdvancedPropertyUploadForm({
                         onChange={(e) =>
                           setFormData((prev) => ({ ...prev, pincode: e.target.value }))
                         }
-                        className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                        className="w-full px-4 py-2.5 bg-slate-700/50 border border-slate-600/50 rounded-lg text-white focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500/50 transition-all"
                         placeholder="560001"
                       />
                     </div>
@@ -1241,20 +1253,24 @@ export function AdvancedPropertyUploadForm({
         </motion.div>
       </AnimatePresence>
 
-      {/* Error Message */}
+      {/* Error Message - Billing Design System */}
       {errors.submit && (
-        <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg flex items-center gap-2">
-          <AlertCircle className="w-5 h-5 text-red-500" />
-          <p className="text-red-700">{errors.submit}</p>
-        </div>
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mt-4 p-4 bg-rose-500/20 border border-rose-400/50 rounded-lg flex items-center gap-2 text-rose-100"
+        >
+          <AlertCircle className="w-5 h-5 flex-shrink-0" />
+          <p>{errors.submit}</p>
+        </motion.div>
       )}
 
-      {/* Navigation Buttons */}
-      <div className="flex justify-between mt-8">
+      {/* Navigation Buttons - Billing Design System */}
+      <div className="flex justify-between mt-8 pt-6 border-t border-slate-700/50">
         <button
           onClick={currentStep === 1 ? onCancel : handlePrevious}
           disabled={loading}
-          className="px-6 py-2 border rounded-lg hover:bg-gray-50 disabled:opacity-50 flex items-center gap-2"
+          className="px-6 py-3 bg-slate-700/50 text-slate-300 rounded-lg hover:bg-slate-700 hover:text-white disabled:opacity-50 flex items-center gap-2 transition-all duration-300 border border-slate-600/50"
         >
           <ArrowLeft className="w-4 h-4" />
           {currentStep === 1 ? 'Cancel' : 'Previous'}
@@ -1265,7 +1281,7 @@ export function AdvancedPropertyUploadForm({
             <button
               onClick={handleNext}
               disabled={loading}
-              className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 flex items-center gap-2"
+              className="px-8 py-3 bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 text-slate-900 font-semibold rounded-lg disabled:opacity-50 flex items-center gap-2 transition-all duration-300 shadow-lg hover:shadow-xl hover:shadow-amber-500/30 hover:-translate-y-1 glow-border"
             >
               Next
               <ArrowRight className="w-4 h-4" />
@@ -1274,7 +1290,7 @@ export function AdvancedPropertyUploadForm({
             <button
               onClick={handleSubmit}
               disabled={loading}
-              className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 flex items-center gap-2"
+              className="px-8 py-3 bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 text-slate-900 font-semibold rounded-lg disabled:opacity-50 flex items-center gap-2 transition-all duration-300 shadow-lg hover:shadow-xl hover:shadow-amber-500/30 hover:-translate-y-1 glow-border"
             >
               {loading ? (
                 <>

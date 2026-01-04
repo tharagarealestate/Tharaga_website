@@ -359,13 +359,13 @@ export function AdvancedAISidebar() {
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.05 }}
-              className="mb-4"
+              className="mb-3"
             >
               <Link href="/">
                 <motion.button
                   whileHover={{ scale: 1.02, x: -2 }}
                   whileTap={{ scale: 0.98 }}
-                  className="w-full group relative overflow-hidden rounded-xl px-4 py-3 bg-gradient-to-r from-amber-500/10 via-amber-400/5 to-transparent border border-amber-400/20 hover:border-amber-400/40 transition-all duration-300"
+                  className="w-full group relative overflow-hidden rounded-lg px-3 py-2.5 bg-gradient-to-r from-amber-500/10 via-amber-400/5 to-transparent border border-amber-400/20 hover:border-amber-400/40 transition-all duration-300"
                 >
                   {/* Animated background glow */}
                   <motion.div
@@ -380,16 +380,16 @@ export function AdvancedAISidebar() {
                     }}
                   />
 
-                  <div className="relative flex items-center gap-3">
-                    {/* Icon with glow effect */}
+                  <div className="relative flex items-center gap-2.5">
+                    {/* Icon with glow effect - Reduced size */}
                     <div className="relative">
-                      <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center shadow-lg shadow-amber-500/30 group-hover:shadow-amber-500/50 transition-shadow">
-                        <ArrowLeft className="w-4 h-4 text-slate-900 group-hover:translate-x-[-2px] transition-transform" />
+                      <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center shadow-lg shadow-amber-500/30 group-hover:shadow-amber-500/50 transition-shadow">
+                        <ArrowLeft className="w-3.5 h-3.5 text-slate-900 group-hover:translate-x-[-2px] transition-transform" />
                       </div>
                       <div className="absolute inset-0 rounded-lg bg-amber-400/30 blur-md group-hover:blur-lg transition-all" />
                     </div>
 
-                    {/* Text */}
+                    {/* Text - Compact */}
                     <div className="flex flex-col items-start">
                       <span className="text-xs font-bold text-amber-300 group-hover:text-amber-200 transition-colors tracking-wide">
                         HOME
@@ -398,19 +398,6 @@ export function AdvancedAISidebar() {
                         Back to main site
                       </span>
                     </div>
-
-                    {/* Chevron indicator */}
-                    <motion.div
-                      className="ml-auto"
-                      animate={{ x: [0, -4, 0] }}
-                      transition={{
-                        duration: 1.5,
-                        repeat: Infinity,
-                        ease: 'easeInOut',
-                      }}
-                    >
-                      <ArrowLeft className="w-4 h-4 text-amber-400/60" />
-                    </motion.div>
                   </div>
                 </motion.button>
               </Link>
@@ -622,14 +609,18 @@ export function AdvancedAISidebar() {
                           </Link>
                         </motion.div>
 
-                        {/* Submenu with Smooth Animation */}
+                        {/* Submenu with Smooth Animation - Enhanced */}
                         <AnimatePresence>
                           {hasSubmenu && isSubmenuOpen && (
                             <motion.div
-                              initial={{ height: 0, opacity: 0 }}
-                              animate={{ height: 'auto', opacity: 1 }}
-                              exit={{ height: 0, opacity: 0 }}
-                              transition={{ duration: 0.3, ease: 'easeInOut' }}
+                              initial={{ height: 0, opacity: 0, y: -10 }}
+                              animate={{ height: 'auto', opacity: 1, y: 0 }}
+                              exit={{ height: 0, opacity: 0, y: -10 }}
+                              transition={{ 
+                                duration: 0.25, 
+                                ease: [0.16, 1, 0.3, 1],
+                                opacity: { duration: 0.2 }
+                              }}
                               className="overflow-hidden"
                             >
                               <div className="ml-4 mt-1 space-y-0.5 border-l-2 border-slate-700/50 pl-3">

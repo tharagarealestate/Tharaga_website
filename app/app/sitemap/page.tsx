@@ -48,6 +48,11 @@ export default function SitemapPage() {
         { href: '/tools/voice-tamil', label: 'Voice Search (Tamil)' },
         { href: '/tools/verification', label: 'Property Verification' },
         { href: '/tools/roi', label: 'ROI Calculator' },
+        { href: '/tools/emi', label: 'EMI Calculator' },
+        { href: '/tools/budget-planner', label: 'Budget Planner' },
+        { href: '/tools/loan-eligibility', label: 'Loan Eligibility Calculator' },
+        { href: '/tools/neighborhood-finder', label: 'Neighborhood Finder' },
+        { href: '/tools/property-valuation', label: 'Property Valuation' },
         { href: '/tools/currency-risk', label: 'Currency Risk Analysis' },
         { href: '/tools/cost-calculator', label: 'Cost Calculator' }
       ]

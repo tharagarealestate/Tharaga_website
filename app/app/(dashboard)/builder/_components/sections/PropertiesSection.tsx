@@ -132,22 +132,33 @@ export function PropertiesSection({ onNavigate }: PropertiesSectionProps) {
           </h2>
 
           {isLoading && !isDemoMode ? (
-            <div className="text-center py-12">
+            <div className="text-center py-16">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-amber-300 mx-auto mb-4"></div>
               <p className="text-slate-400">Loading properties...</p>
             </div>
           ) : displayProperties.length === 0 ? (
-            <div className="text-center py-12">
-              <Building2 className="w-12 h-12 mx-auto mb-3 text-slate-400" />
-              <p className="text-white mb-2">No properties yet</p>
-              <p className="text-sm text-slate-400 mb-4">Add your first property to start receiving inquiries</p>
-              <button
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="text-center py-16 px-6"
+            >
+              <div className="p-4 bg-slate-700/30 rounded-full w-20 h-20 mx-auto mb-6 flex items-center justify-center">
+                <Building2 className="h-10 w-10 text-amber-300" />
+              </div>
+              <h4 className="text-xl font-semibold text-white mb-2">Upload your property</h4>
+              <p className="text-slate-400 mb-6 max-w-md mx-auto">
+                Get started by adding your first property listing. Once uploaded, it will appear here and start generating leads.
+              </p>
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
                 onClick={() => window.location.href = '/builders/add-property'}
-                className="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-slate-900 font-semibold rounded-lg transition-all"
+                className="px-8 py-3 bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 text-slate-900 font-semibold rounded-lg transition-all duration-300 shadow-lg hover:shadow-xl hover:shadow-amber-500/30 hover:-translate-y-1 glow-border inline-flex items-center gap-2"
               >
-                Add Property
-              </button>
-            </div>
+                <Plus className="w-4 h-4" />
+                Add Your First Property
+              </motion.button>
+            </motion.div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {displayProperties.map((property) => (

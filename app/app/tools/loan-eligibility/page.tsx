@@ -2,9 +2,9 @@
 
 import React from 'react'
 import Breadcrumb from '@/components/Breadcrumb'
-import { ROICalculator } from '@/components/lead-capture/ROICalculator'
+import { LoanEligibilityCalculator } from '@/components/lead-capture/LoanEligibilityCalculator'
 
-export default function RoiPage(){
+export default function LoanEligibilityPage(){
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary-950 via-primary-900 to-primary-800 relative overflow-hidden">
       {/* Animated Background Elements */}
@@ -21,13 +21,14 @@ export default function RoiPage(){
           <Breadcrumb items={[
             { label: 'Home', href: '/' },
             { label: 'Tools', href: '/sitemap' },
-            { label: 'ROI Calculator' }
+            { label: 'Loan Eligibility Calculator' }
           ]} />
           <div className="mt-6">
-            <ROICalculator />
+            <LoanEligibilityCalculator />
           </div>
         </main>
       </div>
     </div>
   )
 }
+

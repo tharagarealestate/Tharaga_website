@@ -1,6 +1,7 @@
 "use client"
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import { motion, AnimatePresence } from 'framer-motion'
 import { AdvancedPropertyUploadForm } from '@/components/property/AdvancedPropertyUploadForm'
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 
@@ -57,19 +58,33 @@ export default function AddPropertyPage() {
   }
 
   return (
-    <main className="mx-auto max-w-4xl px-6 py-8">
-      <h1 className="text-2xl font-bold text-fg mb-2">List your property</h1>
-      <p className="text-fgMuted mb-2">
-        Simple onboarding for builders. Logged in users can save drafts and submit for verification.
-      </p>
-      <div className="mb-6 text-sm text-fgMuted">
-        Your plan: <b className="text-fg">{tier}</b>. Active project limit: {Number.isFinite(limit) ? limit : 'Unlimited'} • <a className="underline" href="/pricing/">See pricing</a>
-      </div>
+    <main className="min-h-screen bg-gradient-to-br from-slate-800/95 via-slate-800/95 to-slate-900/95">
+      <div className="mx-auto max-w-5xl px-6 py-8 sm:px-8 sm:py-12">
+        {/* Header Section with Billing Design System */}
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4 }}
+          className="mb-8"
+        >
+          <h1 className="text-3xl sm:text-4xl font-bold text-white mb-4">
+            List your property
+          </h1>
+        </motion.div>
 
-      <AdvancedPropertyUploadForm
-        onSuccess={handleSuccess}
-        onCancel={handleCancel}
-      />
+        {/* Form Container with Billing Design System */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, delay: 0.1 }}
+          className="bg-slate-800/95 glow-border rounded-xl shadow-2xl border border-slate-700/50 p-6 sm:p-8"
+        >
+          <AdvancedPropertyUploadForm
+            onSuccess={handleSuccess}
+            onCancel={handleCancel}
+          />
+        </motion.div>
+      </div>
     </main>
   )
 }

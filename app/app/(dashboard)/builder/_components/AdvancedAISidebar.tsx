@@ -73,20 +73,55 @@ export function AdvancedAISidebar() {
     '/builder': 'overview',
   }
   
+  // Routes that exist as actual Next.js pages (use direct Link navigation)
+  const existingPageRoutes = [
+    '/builder/leads',
+    '/builder/leads/pipeline',
+    '/builder/properties/performance',
+    '/builder/billing',
+    '/builder/integrations',
+    '/builder/analytics',
+    '/builder/communications',
+    '/builder/messaging',
+    '/builder/settings',
+  ]
+  
+  // Routes that should use unified dashboard sections (use event-based navigation)
+  const sectionRoutesMap: Record<string, string> = {
+    '/builder': 'overview',
+    '/builder/viewings': 'viewings',
+    '/builder/negotiations': 'negotiations',
+    '/builder/contracts': 'contracts',
+    '/builder/properties': 'properties', // Properties section in unified dashboard
+  }
+  
   const shouldUseQueryParams = (href: string): boolean => {
-    return href.startsWith('/builder?section=') || href === '/builder' || 
-           ['/builder/viewings', '/builder/negotiations', '/builder/contracts', 
-            '/builder/properties'].includes(href)
+    // Use query params for routes that don't exist as pages
+    return href in sectionRoutesMap || href.startsWith('/builder?section=')
   }
   
   const getQueryParamUrl = (href: string): string => {
     if (href.startsWith('/builder?section=')) return href
-    if (href === '/builder') return '/builder?section=overview'
-    if (href === '/builder/viewings') return '/builder?section=viewings'
-    if (href === '/builder/negotiations') return '/builder?section=negotiations'
-    if (href === '/builder/contracts') return '/builder?section=contracts'
-    if (href === '/builder/properties') return '/builder?section=properties'
-    return href
+    const section = sectionRoutesMap[href]
+    return section ? `/builder?section=${section}` : href
+  }
+  
+  // Handle navigation for section-based routes (like BuilderTopNav does)
+  const handleSectionNavigation = (href: string) => {
+    if (!shouldUseQueryParams(href)) return // Let Link handle it
+    
+    const section = sectionRoutesMap[href] || href.split('?section=')[1]?.split('&')[0]
+    if (!section) return
+    
+    // Use the same approach as BuilderTopNav - update URL and dispatch event
+    if (typeof window !== 'undefined') {
+      const url = new URL(window.location.href)
+      url.pathname = '/builder'
+      url.searchParams.set('section', section)
+      window.history.pushState({}, '', url.toString())
+      // Dispatch custom event for section change (BuilderTopNav pattern)
+      window.dispatchEvent(new CustomEvent('dashboard-section-change', { detail: { section } }))
+    }
   }
 
   const [leadCount, setLeadCount] = useState<LeadCountData | null>(null)
@@ -533,7 +568,13 @@ export function AdvancedAISidebar() {
                                 window.location.href = '/pricing'
                                 return
                               }
-                              // For all other navigation, let Next.js Link handle it (smooth client-side transitions)
+                              
+                              // For section-based routes (unified dashboard), use event-based navigation (like BuilderTopNav)
+                              if (shouldUseQueryParams(item.href)) {
+                                e.preventDefault()
+                                handleSectionNavigation(item.href)
+                              }
+                              // For direct page routes (leads, billing, integrations), let Next.js Link handle it
                             }}
                             className={cn(
                               "relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-all duration-300 group",
@@ -668,7 +709,12 @@ export function AdvancedAISidebar() {
                                       <Link
                                         href={shouldUseQueryParams(sub.href) ? getQueryParamUrl(sub.href) : sub.href}
                                         onClick={(e) => {
-                                          // Let Next.js Link handle all navigation naturally (smooth client-side transitions)
+                                          // For section-based routes (unified dashboard), use event-based navigation
+                                          if (shouldUseQueryParams(sub.href)) {
+                                            e.preventDefault()
+                                            handleSectionNavigation(sub.href)
+                                          }
+                                          // For direct page routes, let Next.js Link handle it
                                         }}
                                         className={cn(
                                           "block px-3 py-1.5 text-xs rounded-lg transition-all duration-200",

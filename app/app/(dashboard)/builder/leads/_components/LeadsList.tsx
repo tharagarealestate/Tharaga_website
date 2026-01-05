@@ -343,7 +343,8 @@ export function LeadsList({ onSelectLead, initialFilters, showInlineFilters = tr
   }, [filters, trackBehavior, userId, onStatsUpdate]);
 
   // Store fetchLeads in a ref to avoid stale closures
-  const fetchLeadsRef = useRef(fetchLeads);
+  // Initialize as null to prevent "Cannot access before initialization" error
+  const fetchLeadsRef = useRef<(() => Promise<void>) | null>(null);
   useEffect(() => {
     fetchLeadsRef.current = fetchLeads;
   }, [fetchLeads]);

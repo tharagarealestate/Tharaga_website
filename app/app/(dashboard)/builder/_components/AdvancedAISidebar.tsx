@@ -585,6 +585,101 @@ export function AdvancedAISidebar() {
                                   : "text-slate-300 hover:text-white"
                               )}
                             >
+                              {/* Active Indicator Glow */}
+                              {isActive && (
+                                <motion.div
+                                  layoutId="activeIndicator"
+                                  className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-gradient-to-b from-amber-400 to-amber-600 rounded-r-full shadow-[0_0_10px_rgba(251,191,36,0.5)]"
+                                  transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+                                />
+                              )}
+
+                              {/* Hover Glow Effect */}
+                              {isHovered && !isActive && (
+                                <motion.div
+                                  initial={{ opacity: 0 }}
+                                  animate={{ opacity: 1 }}
+                                  exit={{ opacity: 0 }}
+                                  className="absolute inset-0 rounded-xl bg-amber-500/5 blur-sm"
+                                />
+                              )}
+
+                              {/* Icon with Animation */}
+                              <motion.div
+                                whileHover={{ scale: 1.1, rotate: 5 }}
+                                whileTap={{ scale: 0.95 }}
+                                className={cn(
+                                  "relative flex items-center justify-center shrink-0 w-8 h-8 rounded-lg transition-all duration-300",
+                                  isActive 
+                                    ? "bg-amber-500/20 text-amber-300 shadow-lg shadow-amber-500/20" 
+                                    : "bg-slate-800/50 text-slate-400 group-hover:bg-slate-700/50 group-hover:text-amber-300"
+                                )}
+                              >
+                                <item.icon className="w-4 h-4 relative z-10" />
+                                {isActive && (
+                                  <motion.div
+                                    initial={{ scale: 0 }}
+                                    animate={{ scale: 1 }}
+                                    className="absolute inset-0 rounded-lg bg-amber-400/20 blur-md"
+                                  />
+                                )}
+                              </motion.div>
+                              
+                              {/* Label */}
+                              <span className="font-medium truncate flex-1 min-w-0 text-sm">
+                                {item.label}
+                              </span>
+                              
+                              {/* Badge */}
+                              {item.badge !== null && item.badge !== undefined && (
+                                <motion.span
+                                  initial={{ scale: 0 }}
+                                  animate={{ scale: 1 }}
+                                  className={cn(
+                                    "ml-auto px-2 py-0.5 text-white text-[10px] font-bold rounded-full",
+                                    "bg-gradient-to-r from-emerald-500 to-emerald-600",
+                                    "shadow-lg shadow-emerald-500/30",
+                                    isLoadingCount && "opacity-50"
+                                  )}
+                                >
+                                  {isLoadingCount ? (
+                                    <span className="inline-block w-4 h-2.5 bg-white/30 rounded animate-pulse" />
+                                  ) : (
+                                    typeof item.badge === 'number' ? (item.badge > 99 ? '99+' : item.badge) : item.badge
+                                  )}
+                                </motion.span>
+                              )}
+
+                              {/* Submenu Toggle */}
+                              {hasSubmenu && (
+                                <motion.button
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.preventDefault()
+                                    e.stopPropagation()
+                                    toggleSubmenu(item.href)
+                                  }}
+                                  whileHover={{ scale: 1.1 }}
+                                  whileTap={{ scale: 0.9 }}
+                                  className="ml-auto p-1 hover:bg-slate-700/50 rounded transition-colors shrink-0"
+                                  aria-label={isSubmenuOpen ? "Collapse submenu" : "Expand submenu"}
+                                  aria-expanded={isSubmenuOpen}
+                                >
+                                  <motion.div
+                                    animate={{ rotate: isSubmenuOpen ? 90 : 0 }}
+                                    transition={{ duration: 0.2 }}
+                                  >
+                                    <ChevronRight className="w-4 h-4 text-slate-400" />
+                                  </motion.div>
+                                </motion.button>
+                              )}
+
+                              {isLocked && (
+                                <Lock 
+                                  className="ml-auto w-4 h-4 text-slate-500 shrink-0"
+                                />
+                              )}
+                            </button>
                           ) : (
                             <Link
                               href={isLocked ? '#' : item.href}
@@ -606,104 +701,100 @@ export function AdvancedAISidebar() {
                                 isLocked && "opacity-50 cursor-not-allowed"
                               )}
                             >
-                          )}
-                            {/* Active Indicator Glow */}
-                            {isActive && (
-                              <motion.div
-                                layoutId="activeIndicator"
-                                className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-gradient-to-b from-amber-400 to-amber-600 rounded-r-full shadow-[0_0_10px_rgba(251,191,36,0.5)]"
-                                transition={{ type: 'spring', stiffness: 500, damping: 30 }}
-                              />
-                            )}
-
-                            {/* Hover Glow Effect */}
-                            {isHovered && !isActive && (
-                              <motion.div
-                                initial={{ opacity: 0 }}
-                                animate={{ opacity: 1 }}
-                                exit={{ opacity: 0 }}
-                                className="absolute inset-0 rounded-xl bg-amber-500/5 blur-sm"
-                              />
-                            )}
-
-                            {/* Icon with Animation */}
-                            <motion.div
-                              whileHover={{ scale: 1.1, rotate: 5 }}
-                              whileTap={{ scale: 0.95 }}
-                              className={cn(
-                                "relative flex items-center justify-center shrink-0 w-8 h-8 rounded-lg transition-all duration-300",
-                                isActive 
-                                  ? "bg-amber-500/20 text-amber-300 shadow-lg shadow-amber-500/20" 
-                                  : "bg-slate-800/50 text-slate-400 group-hover:bg-slate-700/50 group-hover:text-amber-300"
-                              )}
-                            >
-                              <item.icon className="w-4 h-4 relative z-10" />
+                              {/* Active Indicator Glow */}
                               {isActive && (
                                 <motion.div
-                                  initial={{ scale: 0 }}
-                                  animate={{ scale: 1 }}
-                                  className="absolute inset-0 rounded-lg bg-amber-400/20 blur-md"
+                                  layoutId="activeIndicator"
+                                  className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-gradient-to-b from-amber-400 to-amber-600 rounded-r-full shadow-[0_0_10px_rgba(251,191,36,0.5)]"
+                                  transition={{ type: 'spring', stiffness: 500, damping: 30 }}
                                 />
                               )}
-                            </motion.div>
-                            
-                            {/* Label */}
-                            <span className="font-medium truncate flex-1 min-w-0 text-sm">
-                              {item.label}
-                            </span>
-                            
-                            {/* Badge */}
-                            {item.badge !== null && item.badge !== undefined && (
-                              <motion.span
-                                initial={{ scale: 0 }}
-                                animate={{ scale: 1 }}
-                                className={cn(
-                                  "ml-auto px-2 py-0.5 text-white text-[10px] font-bold rounded-full",
-                                  "bg-gradient-to-r from-emerald-500 to-emerald-600",
-                                  "shadow-lg shadow-emerald-500/30",
-                                  isLoadingCount && "opacity-50"
-                                )}
-                              >
-                                {isLoadingCount ? (
-                                  <span className="inline-block w-4 h-2.5 bg-white/30 rounded animate-pulse" />
-                                ) : (
-                                  typeof item.badge === 'number' ? (item.badge > 99 ? '99+' : item.badge) : item.badge
-                                )}
-                              </motion.span>
-                            )}
 
-                            {/* Submenu Toggle */}
-                            {hasSubmenu && (
-                              <motion.button
-                                type="button"
-                                onClick={(e) => {
-                                  e.preventDefault()
-                                  e.stopPropagation()
-                                  toggleSubmenu(item.href)
-                                }}
-                                whileHover={{ scale: 1.1 }}
-                                whileTap={{ scale: 0.9 }}
-                                className="ml-auto p-1 hover:bg-slate-700/50 rounded transition-colors shrink-0"
-                                aria-label={isSubmenuOpen ? "Collapse submenu" : "Expand submenu"}
-                                aria-expanded={isSubmenuOpen}
-                              >
+                              {/* Hover Glow Effect */}
+                              {isHovered && !isActive && (
                                 <motion.div
-                                  animate={{ rotate: isSubmenuOpen ? 90 : 0 }}
-                                  transition={{ duration: 0.2 }}
-                                >
-                                  <ChevronRight className="w-4 h-4 text-slate-400" />
-                                </motion.div>
-                              </motion.button>
-                            )}
+                                  initial={{ opacity: 0 }}
+                                  animate={{ opacity: 1 }}
+                                  exit={{ opacity: 0 }}
+                                  className="absolute inset-0 rounded-xl bg-amber-500/5 blur-sm"
+                                />
+                              )}
 
-                            {isLocked && (
-                              <Lock 
-                                className="ml-auto w-4 h-4 text-slate-500 shrink-0"
-                              />
-                            )}
-                          {shouldUseQueryParams(item.href) && !isLocked ? (
-                            </button>
-                          ) : (
+                              {/* Icon with Animation */}
+                              <motion.div
+                                whileHover={{ scale: 1.1, rotate: 5 }}
+                                whileTap={{ scale: 0.95 }}
+                                className={cn(
+                                  "relative flex items-center justify-center shrink-0 w-8 h-8 rounded-lg transition-all duration-300",
+                                  isActive 
+                                    ? "bg-amber-500/20 text-amber-300 shadow-lg shadow-amber-500/20" 
+                                    : "bg-slate-800/50 text-slate-400 group-hover:bg-slate-700/50 group-hover:text-amber-300"
+                                )}
+                              >
+                                <item.icon className="w-4 h-4 relative z-10" />
+                                {isActive && (
+                                  <motion.div
+                                    initial={{ scale: 0 }}
+                                    animate={{ scale: 1 }}
+                                    className="absolute inset-0 rounded-lg bg-amber-400/20 blur-md"
+                                  />
+                                )}
+                              </motion.div>
+                              
+                              {/* Label */}
+                              <span className="font-medium truncate flex-1 min-w-0 text-sm">
+                                {item.label}
+                              </span>
+                              
+                              {/* Badge */}
+                              {item.badge !== null && item.badge !== undefined && (
+                                <motion.span
+                                  initial={{ scale: 0 }}
+                                  animate={{ scale: 1 }}
+                                  className={cn(
+                                    "ml-auto px-2 py-0.5 text-white text-[10px] font-bold rounded-full",
+                                    "bg-gradient-to-r from-emerald-500 to-emerald-600",
+                                    "shadow-lg shadow-emerald-500/30",
+                                    isLoadingCount && "opacity-50"
+                                  )}
+                                >
+                                  {isLoadingCount ? (
+                                    <span className="inline-block w-4 h-2.5 bg-white/30 rounded animate-pulse" />
+                                  ) : (
+                                    typeof item.badge === 'number' ? (item.badge > 99 ? '99+' : item.badge) : item.badge
+                                  )}
+                                </motion.span>
+                              )}
+
+                              {/* Submenu Toggle */}
+                              {hasSubmenu && (
+                                <motion.button
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.preventDefault()
+                                    e.stopPropagation()
+                                    toggleSubmenu(item.href)
+                                  }}
+                                  whileHover={{ scale: 1.1 }}
+                                  whileTap={{ scale: 0.9 }}
+                                  className="ml-auto p-1 hover:bg-slate-700/50 rounded transition-colors shrink-0"
+                                  aria-label={isSubmenuOpen ? "Collapse submenu" : "Expand submenu"}
+                                  aria-expanded={isSubmenuOpen}
+                                >
+                                  <motion.div
+                                    animate={{ rotate: isSubmenuOpen ? 90 : 0 }}
+                                    transition={{ duration: 0.2 }}
+                                  >
+                                    <ChevronRight className="w-4 h-4 text-slate-400" />
+                                  </motion.div>
+                                </motion.button>
+                              )}
+
+                              {isLocked && (
+                                <Lock 
+                                  className="ml-auto w-4 h-4 text-slate-500 shrink-0"
+                                />
+                              )}
                             </Link>
                           )}
                         </motion.div>

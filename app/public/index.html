@@ -797,10 +797,6 @@
         visibility: hidden !important;
       }
 
-      header.nav #site-header-auth-container {
-        display: none !important;
-        visibility: hidden !important;
-      }
 
       /* Hide desktop auth wrap if it exists */
       header.nav .thg-auth-wrap {
@@ -1820,67 +1816,73 @@
       } catch(_) {}
     })();
   </script>
-  <!-- Show header Login/Signup button ONLY on homepage -->
+  <!-- Show header Login/Signup button ONLY on homepage, REMOVE on non-homepages -->
   <script>
     (function() {
       function isHomepage() {
         const pathname = window.location.pathname;
-        return pathname === '/' || pathname === '' || pathname === '/index.html' || 
-               document.querySelector('.hero-premium') !== null ||
-               document.body.classList.contains('homepage-header');
+        // Check pathname first (most reliable)
+        if (pathname === '/' || pathname === '' || pathname === '/index.html') {
+          return true;
+        }
+        // Check for homepage-specific elements
+        if (document.querySelector('.hero-premium') || document.body.classList.contains('homepage-header')) {
+          return true;
+        }
+        return false;
       }
       
-      function hideLoginButton() {
+      function manageLoginButton() {
         const isHome = isHomepage();
+        
+        // Set global flag
         window.AUTH_HIDE_HEADER = !isHome;
         
-        // Force hide/show auth button elements
-        const authWrap = document.querySelector('.thg-auth-wrap');
+        // Get elements
         const authContainer = document.getElementById('site-header-auth-container');
-        const authBtn = document.querySelector('.thg-auth-btn');
+        const authWrap = document.querySelector('.thg-auth-wrap');
         
         if (!isHome) {
-          // Hide on non-homepage
-          if (authWrap) {
-            authWrap.style.setProperty('display', 'none', 'important');
-            authWrap.style.setProperty('visibility', 'hidden', 'important');
-            authWrap.style.setProperty('opacity', '0', 'important');
+          // NON-HOMEPAGE: REMOVE elements completely (not just hide)
+          if (authContainer && authContainer.parentNode) {
+            authContainer.parentNode.removeChild(authContainer);
           }
-          if (authContainer) {
-            authContainer.style.setProperty('display', 'none', 'important');
-            authContainer.style.setProperty('visibility', 'hidden', 'important');
-            authContainer.style.setProperty('opacity', '0', 'important');
-          }
-          if (authBtn) {
-            authBtn.style.setProperty('display', 'none', 'important');
-            authBtn.style.setProperty('visibility', 'hidden', 'important');
-            authBtn.style.setProperty('opacity', '0', 'important');
+          if (authWrap && authWrap.parentNode && !authContainer) {
+            authWrap.parentNode.removeChild(authWrap);
           }
         } else {
-          // Show on homepage (only if not globally hidden)
-          if (authWrap && window.AUTH_HIDE_HEADER !== true && window.AUTH_NO_HEADER !== true) {
-            authWrap.style.removeProperty('display');
-            authWrap.style.removeProperty('visibility');
-            authWrap.style.removeProperty('opacity');
-          }
-          if (authContainer && window.AUTH_HIDE_HEADER !== true && window.AUTH_NO_HEADER !== true) {
-            authContainer.style.removeProperty('display');
-            authContainer.style.removeProperty('visibility');
-            authContainer.style.removeProperty('opacity');
-          }
-          if (authBtn && window.AUTH_HIDE_HEADER !== true && window.AUTH_NO_HEADER !== true) {
-            authBtn.style.removeProperty('display');
-            authBtn.style.removeProperty('visibility');
-            authBtn.style.removeProperty('opacity');
-          }
+          // HOMEPAGE: Ensure elements exist and are visible
+          // The auth system will create them if they don't exist
+          // We just need to make sure AUTH_HIDE_HEADER is false
+          window.AUTH_HIDE_HEADER = false;
         }
       }
       
-      // Run immediately
-      hideLoginButton();
+      // Run after DOM is ready
+      function init() {
+        manageLoginButton();
+        
+        // Monitor for element creation (auth system creates them asynchronously)
+        const observer = new MutationObserver(function() {
+          manageLoginButton();
+        });
+        
+        // Observe header for auth container creation
+        const header = document.querySelector('header.nav') || document.body;
+        if (header) {
+          observer.observe(header, { childList: true, subtree: true });
+        }
+        
+        // Also check periodically (in case observer misses it)
+        setInterval(manageLoginButton, 500);
+      }
       
-      // Re-check continuously
-      setInterval(hideLoginButton, 200);
+      // Run on DOM ready
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+      } else {
+        init();
+      }
       
       // Re-check on route changes
       let lastPath = window.location.pathname;
@@ -1888,21 +1890,21 @@
         const currentPath = window.location.pathname;
         if (currentPath !== lastPath) {
           lastPath = currentPath;
-          hideLoginButton();
+          manageLoginButton();
         }
-      }, 100);
+      }, 200);
       
       // Listen for navigation events
-      window.addEventListener('popstate', hideLoginButton);
+      window.addEventListener('popstate', manageLoginButton);
       const originalPushState = history.pushState;
       const originalReplaceState = history.replaceState;
       history.pushState = function(...args) {
         originalPushState.apply(history, args);
-        setTimeout(hideLoginButton, 0);
+        setTimeout(manageLoginButton, 100);
       };
       history.replaceState = function(...args) {
         originalReplaceState.apply(history, args);
-        setTimeout(hideLoginButton, 0);
+        setTimeout(manageLoginButton, 100);
       };
     })();
   </script>

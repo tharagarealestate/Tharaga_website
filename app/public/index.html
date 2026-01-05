@@ -1616,7 +1616,7 @@
       color:#ffffff;
       cursor:pointer;
       transition:all 0.2s cubic-bezier(0.4,0,0.2,1);
-      z-index:10;
+      z-index:100000;
     }
     .features-modal-close:hover{
       background:rgba(255,255,255,0.2);
@@ -1756,15 +1756,15 @@
     }
     @media (max-width:767px){
       .features-modal-container{padding:1.25rem;max-width:95vw;max-height:90vh;overflow-y:auto}
-      .features-modal-close{top:1rem;right:1rem;width:32px;height:32px}
+      .features-modal-close{top:1rem;right:1rem;width:32px;height:32px;z-index:100000}
       .features-modal-close svg{width:18px;height:18px}
       .features-modal-title{font-size:1.375rem;margin-bottom:0.375rem}
       .features-modal-subtitle{font-size:0.8125rem}
-      .features-modal-grid{gap:0.625rem;overflow:visible}
-      .features-modal-card{padding:1rem;min-height:140px;max-height:150px}
-      .features-modal-icon{width:42px;height:42px;margin-bottom:0.625rem}
-      .features-modal-icon svg{width:22px;height:22px}
-      .features-modal-card h3{font-size:1rem;margin-bottom:0.375rem;line-height:1.2}
+      .features-modal-grid{grid-template-columns:repeat(2,1fr);grid-template-rows:repeat(3,1fr);gap:0.625rem;overflow:visible}
+      .features-modal-card{padding:0.875rem;min-height:140px;max-height:150px}
+      .features-modal-icon{width:40px;height:40px;margin-bottom:0.625rem}
+      .features-modal-icon svg{width:20px;height:20px}
+      .features-modal-card h3{font-size:0.9375rem;margin-bottom:0.375rem;line-height:1.2}
       .features-modal-card p{font-size:0.75rem;margin-bottom:0.625rem;line-height:1.3}
       .features-modal-cta{font-size:0.75rem;gap:0.25rem}
       .features-modal-header{margin-bottom:1rem}
@@ -1820,8 +1820,92 @@
       } catch(_) {}
     })();
   </script>
-  <!-- Show header Login/Signup button -->
-  <script>window.AUTH_HIDE_HEADER = false;</script>
+  <!-- Show header Login/Signup button ONLY on homepage -->
+  <script>
+    (function() {
+      function isHomepage() {
+        const pathname = window.location.pathname;
+        return pathname === '/' || pathname === '' || pathname === '/index.html' || 
+               document.querySelector('.hero-premium') !== null ||
+               document.body.classList.contains('homepage-header');
+      }
+      
+      function hideLoginButton() {
+        const isHome = isHomepage();
+        window.AUTH_HIDE_HEADER = !isHome;
+        
+        // Force hide/show auth button elements
+        const authWrap = document.querySelector('.thg-auth-wrap');
+        const authContainer = document.getElementById('site-header-auth-container');
+        const authBtn = document.querySelector('.thg-auth-btn');
+        
+        if (!isHome) {
+          // Hide on non-homepage
+          if (authWrap) {
+            authWrap.style.setProperty('display', 'none', 'important');
+            authWrap.style.setProperty('visibility', 'hidden', 'important');
+            authWrap.style.setProperty('opacity', '0', 'important');
+          }
+          if (authContainer) {
+            authContainer.style.setProperty('display', 'none', 'important');
+            authContainer.style.setProperty('visibility', 'hidden', 'important');
+            authContainer.style.setProperty('opacity', '0', 'important');
+          }
+          if (authBtn) {
+            authBtn.style.setProperty('display', 'none', 'important');
+            authBtn.style.setProperty('visibility', 'hidden', 'important');
+            authBtn.style.setProperty('opacity', '0', 'important');
+          }
+        } else {
+          // Show on homepage (only if not globally hidden)
+          if (authWrap && window.AUTH_HIDE_HEADER !== true && window.AUTH_NO_HEADER !== true) {
+            authWrap.style.removeProperty('display');
+            authWrap.style.removeProperty('visibility');
+            authWrap.style.removeProperty('opacity');
+          }
+          if (authContainer && window.AUTH_HIDE_HEADER !== true && window.AUTH_NO_HEADER !== true) {
+            authContainer.style.removeProperty('display');
+            authContainer.style.removeProperty('visibility');
+            authContainer.style.removeProperty('opacity');
+          }
+          if (authBtn && window.AUTH_HIDE_HEADER !== true && window.AUTH_NO_HEADER !== true) {
+            authBtn.style.removeProperty('display');
+            authBtn.style.removeProperty('visibility');
+            authBtn.style.removeProperty('opacity');
+          }
+        }
+      }
+      
+      // Run immediately
+      hideLoginButton();
+      
+      // Re-check continuously
+      setInterval(hideLoginButton, 200);
+      
+      // Re-check on route changes
+      let lastPath = window.location.pathname;
+      setInterval(function() {
+        const currentPath = window.location.pathname;
+        if (currentPath !== lastPath) {
+          lastPath = currentPath;
+          hideLoginButton();
+        }
+      }, 100);
+      
+      // Listen for navigation events
+      window.addEventListener('popstate', hideLoginButton);
+      const originalPushState = history.pushState;
+      const originalReplaceState = history.replaceState;
+      history.pushState = function(...args) {
+        originalPushState.apply(history, args);
+        setTimeout(hideLoginButton, 0);
+      };
+      history.replaceState = function(...args) {
+        originalReplaceState.apply(history, args);
+        setTimeout(hideLoginButton, 0);
+      };
+    })();
+  </script>
 
   <!-- 1) Configure globals BEFORE loading scripts -->
   <script>
@@ -1942,7 +2026,7 @@
     function injectStyles(){
       if (document.getElementById('thg-auth-styles')) return;
       const css = `
-.thg-auth-wrap{ position:absolute; top:14px; right:16px; display:flex; align-items:center; z-index:${Z_BASE}; }
+.thg-auth-wrap{ position:absolute; top:14px; right:16px; display:flex; align-items:center; z-index:9998; }
 @media (min-width:1024px){ .thg-auth-wrap{ top:16px; right:24px; } }
 .thg-auth-wrap.is-fixed{ position:fixed; top:14px; right:16px; }
 

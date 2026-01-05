@@ -75,8 +75,7 @@ export function AdvancedAISidebar() {
   
   // Routes that exist as actual Next.js pages (use direct Link navigation)
   const existingPageRoutes = [
-    '/builder/leads',
-    '/builder/leads/pipeline',
+    '/builder/leads/pipeline', // Keep pipeline as standalone page
     '/builder/properties/performance',
     '/builder/billing',
     '/builder/integrations',
@@ -89,6 +88,7 @@ export function AdvancedAISidebar() {
   // Routes that should use unified dashboard sections (use event-based navigation)
   const sectionRoutesMap: Record<string, string> = {
     '/builder': 'overview',
+    '/builder/leads': 'leads', // Use unified dashboard LeadsSection (the top-tier recent implementation)
     '/builder/viewings': 'viewings',
     '/builder/negotiations': 'negotiations',
     '/builder/contracts': 'contracts',

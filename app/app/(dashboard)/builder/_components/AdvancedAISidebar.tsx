@@ -569,32 +569,44 @@ export function AdvancedAISidebar() {
                           onHoverStart={() => setHoveredItem(item.href)}
                           onHoverEnd={() => setHoveredItem(null)}
                         >
-                          <Link
-                            href={isLocked ? '#' : (shouldUseQueryParams(item.href) ? getQueryParamUrl(item.href) : item.href)}
-                            onClick={(e) => {
-                              // Only handle locked items - let Next.js Link handle all navigation naturally
-                              if (isLocked) {
-                                e.preventDefault()
-                                window.location.href = '/pricing'
-                                return
-                              }
-                              
-                              // For section-based routes (unified dashboard), use event-based navigation (like BuilderTopNav)
-                              if (shouldUseQueryParams(item.href)) {
-                                e.preventDefault()
+                          {/* Use button for section-based routes to avoid Link navigation conflicts */}
+                          {shouldUseQueryParams(item.href) && !isLocked ? (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                // For section-based routes, use event-based navigation (no Link conflicts)
                                 handleSectionNavigation(item.href)
-                              }
-                              // For direct page routes (leads, billing, integrations), let Next.js Link handle it
-                            }}
-                            className={cn(
-                              "relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-all duration-300 group",
-                              "hover:bg-slate-800/60",
-                              isActive
-                                ? "bg-gradient-to-r from-amber-500/20 to-amber-400/10 text-white shadow-lg shadow-amber-500/20"
-                                : "text-slate-300 hover:text-white",
-                              isLocked && "opacity-50 cursor-not-allowed"
-                            )}
-                          >
+                              }}
+                              className={cn(
+                                "relative w-full flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-all duration-300 group text-left",
+                                "hover:bg-slate-800/60",
+                                isActive
+                                  ? "bg-gradient-to-r from-amber-500/20 to-amber-400/10 text-white shadow-lg shadow-amber-500/20"
+                                  : "text-slate-300 hover:text-white"
+                              )}
+                            >
+                          ) : (
+                            <Link
+                              href={isLocked ? '#' : item.href}
+                              onClick={(e) => {
+                                // Only handle locked items - let Next.js Link handle all navigation naturally
+                                if (isLocked) {
+                                  e.preventDefault()
+                                  window.location.href = '/pricing'
+                                  return
+                                }
+                                // For direct page routes (billing, integrations), let Next.js Link handle it
+                              }}
+                              className={cn(
+                                "relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-all duration-300 group",
+                                "hover:bg-slate-800/60",
+                                isActive
+                                  ? "bg-gradient-to-r from-amber-500/20 to-amber-400/10 text-white shadow-lg shadow-amber-500/20"
+                                  : "text-slate-300 hover:text-white",
+                                isLocked && "opacity-50 cursor-not-allowed"
+                              )}
+                            >
+                          )}
                             {/* Active Indicator Glow */}
                             {isActive && (
                               <motion.div
@@ -689,7 +701,11 @@ export function AdvancedAISidebar() {
                                 className="ml-auto w-4 h-4 text-slate-500 shrink-0"
                               />
                             )}
-                          </Link>
+                          {shouldUseQueryParams(item.href) && !isLocked ? (
+                            </button>
+                          ) : (
+                            </Link>
+                          )}
                         </motion.div>
 
                         {/* Submenu with Smooth Animation - Enhanced */}
@@ -727,25 +743,36 @@ export function AdvancedAISidebar() {
                                       animate={{ opacity: 1, x: 0 }}
                                       transition={{ delay: subIndex * 0.05 }}
                                     >
-                                      <Link
-                                        href={shouldUseQueryParams(sub.href) ? getQueryParamUrl(sub.href) : sub.href}
-                                        onClick={(e) => {
-                                          // For section-based routes (unified dashboard), use event-based navigation
-                                          if (shouldUseQueryParams(sub.href)) {
-                                            e.preventDefault()
+                                      {/* Use button for section-based submenu routes to avoid Link navigation conflicts */}
+                                      {shouldUseQueryParams(sub.href) ? (
+                                        <button
+                                          type="button"
+                                          onClick={() => {
+                                            // For section-based routes, use event-based navigation (no Link conflicts)
                                             handleSectionNavigation(sub.href)
-                                          }
-                                          // For direct page routes, let Next.js Link handle it
-                                        }}
-                                        className={cn(
-                                          "block px-3 py-1.5 text-xs rounded-lg transition-all duration-200",
-                                          isSubActive
-                                            ? "text-amber-300 font-semibold bg-amber-500/10 border-l-2 border-amber-400"
-                                            : "text-slate-400 hover:text-white hover:bg-slate-800/50"
-                                        )}
-                                      >
-                                        {sub.label}
-                                      </Link>
+                                          }}
+                                          className={cn(
+                                            "block w-full text-left px-3 py-1.5 text-xs rounded-lg transition-all duration-200",
+                                            isSubActive
+                                              ? "text-amber-300 font-semibold bg-amber-500/10 border-l-2 border-amber-400"
+                                              : "text-slate-400 hover:text-white hover:bg-slate-800/50"
+                                          )}
+                                        >
+                                          {sub.label}
+                                        </button>
+                                      ) : (
+                                        <Link
+                                          href={sub.href}
+                                          className={cn(
+                                            "block px-3 py-1.5 text-xs rounded-lg transition-all duration-200",
+                                            isSubActive
+                                              ? "text-amber-300 font-semibold bg-amber-500/10 border-l-2 border-amber-400"
+                                              : "text-slate-400 hover:text-white hover:bg-slate-800/50"
+                                          )}
+                                        >
+                                          {sub.label}
+                                        </Link>
+                                      )}
                                     </motion.div>
                                   )
                                 })}

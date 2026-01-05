@@ -351,7 +351,7 @@ export function LeadsList({ onSelectLead, initialFilters, showInlineFilters = tr
 
   // Separate effect for filters - this prevents infinite loops
   useEffect(() => {
-    if (!userId) return;
+    if (!userId || !fetchLeadsRef.current) return;
 
     // Use ref to avoid stale closure issues
     fetchLeadsRef.current();
@@ -388,7 +388,7 @@ export function LeadsList({ onSelectLead, initialFilters, showInlineFilters = tr
               if (updateTimeout) clearTimeout(updateTimeout);
               updateTimeout = setTimeout(() => {
                 lastUpdateTime = Date.now();
-                if (payload?.eventType === 'INSERT') {
+                if (payload?.eventType === 'INSERT' && fetchLeadsRef.current) {
                   fetchLeadsRef.current();
                 } else if (payload?.eventType === 'UPDATE' && payload?.new?.user_id) {
                   setLeads((previous) =>
@@ -410,7 +410,7 @@ export function LeadsList({ onSelectLead, initialFilters, showInlineFilters = tr
             }
             
             lastUpdateTime = now;
-            if (payload?.eventType === 'INSERT') {
+            if (payload?.eventType === 'INSERT' && fetchLeadsRef.current) {
               fetchLeadsRef.current();
             } else if (payload?.eventType === 'UPDATE' && payload?.new?.user_id) {
               setLeads((previous) =>
@@ -595,7 +595,9 @@ export function LeadsList({ onSelectLead, initialFilters, showInlineFilters = tr
           <button
             onClick={() => {
               setError(null);
-              fetchLeadsRef.current();
+              if (fetchLeadsRef.current) {
+                fetchLeadsRef.current();
+              }
             }}
             className="px-6 py-2 bg-amber-500 hover:bg-amber-600 glow-border text-slate-900 font-semibold rounded-lg transition-colors"
           >

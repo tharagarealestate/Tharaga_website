@@ -1,7 +1,8 @@
 "use client"
 
 import { motion } from 'framer-motion'
-import { SectionWrapper } from './SectionWrapper'
+import { SectionWrapper } from '@/components/ui/SectionWrapper'
+import { GlassCard } from '@/components/ui/glass-card'
 import { Building2, MapPin, Eye, TrendingUp, Plus } from 'lucide-react'
 import { useQuery } from '@tanstack/react-query'
 import { useDemoMode } from '../DemoDataProvider'
@@ -122,7 +123,7 @@ export function PropertiesSection({ onNavigate }: PropertiesSectionProps) {
               {displayProperties.reduce((sum, p) => sum + (p.inquiries || 0), 0)}
             </p>
             <p className="text-sm text-slate-400">Inquiries</p>
-          </motion.div>
+          </GlassCard>
         </div>
 
         {/* Properties Grid */}

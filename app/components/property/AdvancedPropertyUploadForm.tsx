@@ -19,6 +19,8 @@ import {
   AlertCircle,
   CheckCircle2,
 } from 'lucide-react';
+import { ProgressBar } from '@/components/ui/progress-bar';
+import { useToast } from '@/components/ui/toast';
 // Using native file inputs instead of react-dropzone
 
 interface PropertyUploadFormData {
@@ -109,6 +111,7 @@ export function AdvancedPropertyUploadForm({
   onSuccess,
   onCancel,
 }: AdvancedPropertyUploadFormProps) {
+  const { showToast } = useToast();
   const [currentStep, setCurrentStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState<Record<string, number>>({});
@@ -299,12 +302,27 @@ export function AdvancedPropertyUploadForm({
       setPropertyId(data.propertyId);
       setSuccess(true);
       
+      // Show success toast
+      showToast({
+        type: 'success',
+        title: 'Property Uploaded Successfully!',
+        message: 'Your property is pending verification.',
+      });
+      
       if (onSuccess) {
         onSuccess(data.propertyId);
       }
     } catch (error: any) {
       console.error('Upload error:', error);
-      setErrors({ submit: error.message || 'Failed to upload property. Please try again.' });
+      const errorMessage = error.message || 'Failed to upload property. Please try again.';
+      setErrors({ submit: errorMessage });
+      
+      // Show error toast
+      showToast({
+        type: 'error',
+        title: 'Upload Failed',
+        message: errorMessage,
+      });
     } finally {
       setLoading(false);
     }
@@ -396,41 +414,25 @@ export function AdvancedPropertyUploadForm({
     );
   }
 
+  const formSteps = [
+    { id: 'basic', label: 'Basic Info' },
+    { id: 'details', label: 'Details' },
+    { id: 'location', label: 'Location' },
+    { id: 'pricing', label: 'Pricing' },
+    { id: 'images', label: 'Images' },
+    { id: 'amenities', label: 'Amenities' },
+    { id: 'documents', label: 'Documents' },
+    { id: 'review', label: 'Review' },
+  ];
+
   return (
     <div className="w-full space-y-6">
-      {/* Progress Bar - Billing Design System */}
-      <div className="mb-8">
-        <div className="flex justify-between mb-2">
-          <span className="text-sm font-medium text-slate-300">
-            Step {currentStep} of {TOTAL_STEPS}
-          </span>
-          <span className="text-sm text-slate-400">
-            {Math.round((currentStep / TOTAL_STEPS) * 100)}% Complete
-          </span>
-        </div>
-        <div className="w-full bg-slate-700/50 rounded-full h-2 glow-border">
-          <motion.div
-            className="bg-gradient-to-r from-amber-600 to-amber-500 h-2 rounded-full"
-            initial={{ width: 0 }}
-            animate={{ width: `${(currentStep / TOTAL_STEPS) * 100}%` }}
-            transition={{ duration: 0.3 }}
-          />
-        </div>
-      </div>
-
-      {/* Step Indicators - Billing Design System */}
-      <div className="flex justify-between mb-8 gap-2">
-        {[1, 2, 3, 4, 5, 6, 7, 8].map((step) => (
-          <div
-            key={step}
-            className={`flex-1 h-2 rounded-lg transition-all duration-300 ${
-              step <= currentStep 
-                ? 'bg-gradient-to-r from-amber-600 to-amber-500 shadow-lg shadow-amber-500/30' 
-                : 'bg-slate-700/50'
-            }`}
-          />
-        ))}
-      </div>
+      {/* Enhanced Progress Bar */}
+      <ProgressBar 
+        steps={formSteps}
+        currentStep={currentStep - 1}
+        className="mb-8"
+      />
 
       {/* Form Steps */}
       <AnimatePresence mode="wait">

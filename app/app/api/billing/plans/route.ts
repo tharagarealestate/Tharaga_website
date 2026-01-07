@@ -1,71 +1,5 @@
 import { NextResponse } from 'next/server';
-
-// Match the pricing page structure: Single "Tharaga Pro" plan
-const THARAGA_PRO_PLAN = {
-  id: 'tharaga_pro',
-  name: 'Tharaga Pro',
-  description: 'The only plan you\'ll ever need',
-  pricing: {
-    monthly: { 
-      amount: 499900, // ₹4,999 in paise
-      display: '₹4,999',
-      perMonth: '₹4,999/month'
-    },
-    yearly: { 
-      amount: 4999200, // ₹4,166/month × 12 = ₹49,992 in paise
-      display: '₹4,166',
-      perMonth: '₹4,166/month',
-      savings: '17%',
-      totalYearly: '₹49,992/year'
-    }
-  },
-  features: {
-    properties_limit: -1, // unlimited
-    leads_limit: -1, // unlimited
-    email_quota: -1, // unlimited
-    storage_gb: -1, // unlimited
-    team_members_limit: -1, // unlimited
-    analytics: 'advanced',
-    crm_integration: true,
-    whatsapp_integration: true,
-    custom_branding: true,
-    priority_support: true,
-    api_access: true,
-    dedicated_account_manager: true,
-    white_label: true,
-    custom_integrations: true
-  },
-  features_list: [
-    'Unlimited property listings',
-    'Unlimited AI-scored leads',
-    'Unlimited team members',
-    'Full CRM & pipeline management',
-    'Email + WhatsApp automation',
-    'SMS notifications',
-    'Tamil + English voice search',
-    'Advanced analytics dashboard',
-    'RERA verification automation',
-    'Bank loan integration',
-    'Virtual property tours',
-    '4-property comparison tool',
-    'Priority support (2-hour response)',
-    'WhatsApp support channel',
-    'Phone support (callback)',
-    'Dedicated account manager',
-    'API access + webhooks',
-    'White-label branding',
-    'Custom domain',
-    'Multi-location management',
-    'Bulk property import/export',
-    'Featured listings (unlimited)',
-    'Custom integrations',
-    '99.9% uptime SLA',
-    'Free onboarding & training',
-    'Free migration assistance',
-    'Monthly business reviews',
-    'Early access to new features'
-  ]
-};
+import { THARAGA_PRO_PLAN } from '@/lib/pricing-config';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -73,7 +7,42 @@ export const dynamic = 'force-dynamic';
 export async function GET() {
   return NextResponse.json({
     success: true,
-    plan: THARAGA_PRO_PLAN
+    plan: {
+      id: THARAGA_PRO_PLAN.id,
+      name: THARAGA_PRO_PLAN.name,
+      description: THARAGA_PRO_PLAN.description,
+      pricing: {
+        monthly: {
+          amount: THARAGA_PRO_PLAN.pricing.monthly.amount,
+          display: THARAGA_PRO_PLAN.pricing.monthly.display,
+          perMonth: THARAGA_PRO_PLAN.pricing.monthly.perMonth,
+        },
+        yearly: {
+          amount: THARAGA_PRO_PLAN.pricing.yearly.amount,
+          display: THARAGA_PRO_PLAN.pricing.yearly.display,
+          perMonth: THARAGA_PRO_PLAN.pricing.yearly.perMonth,
+          savings: THARAGA_PRO_PLAN.pricing.yearly.savings,
+          totalYearly: THARAGA_PRO_PLAN.pricing.yearly.totalYearly,
+        },
+      },
+      features: {
+        properties_limit: THARAGA_PRO_PLAN.features.properties.limit,
+        leads_limit: THARAGA_PRO_PLAN.features.leads.limit,
+        email_quota: -1, // unlimited
+        storage_gb: THARAGA_PRO_PLAN.features.storage.limit,
+        team_members_limit: THARAGA_PRO_PLAN.features.teamMembers.limit,
+        analytics: THARAGA_PRO_PLAN.features.analytics.level,
+        crm_integration: THARAGA_PRO_PLAN.features.crm.enabled,
+        whatsapp_integration: THARAGA_PRO_PLAN.features.whatsappAutomation.enabled,
+        custom_branding: THARAGA_PRO_PLAN.features.whiteLabel.enabled,
+        priority_support: THARAGA_PRO_PLAN.features.prioritySupport.enabled,
+        api_access: THARAGA_PRO_PLAN.features.apiAccess.enabled,
+        dedicated_account_manager: THARAGA_PRO_PLAN.features.dedicatedManager.enabled,
+        white_label: THARAGA_PRO_PLAN.features.whiteLabel.enabled,
+        custom_integrations: THARAGA_PRO_PLAN.features.customIntegrations.enabled,
+      },
+      features_list: THARAGA_PRO_PLAN.featuresList,
+    },
   });
 }
 

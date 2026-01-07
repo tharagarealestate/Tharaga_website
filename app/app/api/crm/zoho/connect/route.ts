@@ -3,7 +3,7 @@
 // Redirects user to Zoho consent screen
 // =============================================
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { requireBuilder, createErrorResponse } from '@/lib/auth/api-auth-helper';
 import { zohoClient } from '@/lib/integrations/crm/zohoClient';
 
 export const runtime = 'nodejs';
@@ -11,15 +11,24 @@ export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
   try {
-    const supabase = await createClient();
+    // Enhanced authentication with better error handling
+    const { user, builder, supabase, error: authError } = await requireBuilder(request);
+    
+    if (authError) {
+      const statusCode = authError.type === 'NOT_BUILDER' ? 403 : 
+                        authError.type === 'CONFIG_ERROR' ? 500 : 401;
+      return createErrorResponse(authError as any, statusCode);
+    }
 
-    // Get current user (builder)
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-
-    if (authError || !user) {
+    if (!builder || !supabase) {
       return NextResponse.json(
-        { error: 'Unauthorized. Please log in.' },
-        { status: 401 }
+        { 
+          success: false,
+          error: 'Builder profile not found',
+          errorType: 'NOT_FOUND',
+          message: 'Please complete your builder profile setup to connect Zoho CRM.',
+        },
+        { status: 404 }
       );
     }
 
@@ -27,7 +36,7 @@ export async function GET(request: NextRequest) {
     const { data: existingConnection } = await supabase
       .from('integrations')
       .select('id, is_active, is_connected')
-      .eq('builder_id', user.id)
+      .eq('builder_id', builder.id)
       .eq('integration_type', 'crm')
       .eq('provider', 'zoho')
       .single();
@@ -41,7 +50,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Generate OAuth URL with builder_id in state
-    const authUrl = zohoClient.getAuthUrl(user.id);
+    const authUrl = zohoClient.getAuthUrl(user!.id);
 
     return NextResponse.json({ 
       success: true,

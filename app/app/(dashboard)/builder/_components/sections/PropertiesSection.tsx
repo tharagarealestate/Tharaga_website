@@ -4,7 +4,7 @@ import { motion } from 'framer-motion'
 import { SectionWrapper } from './SectionWrapper'
 import { Building2, MapPin, Eye, TrendingUp, Plus } from 'lucide-react'
 import { useQuery } from '@tanstack/react-query'
-import { useDemoMode, DEMO_DATA } from '../DemoDataProvider'
+import { useDemoMode } from '../DemoDataProvider'
 
 interface PropertiesSectionProps {
   onNavigate?: (section: string) => void
@@ -29,15 +29,20 @@ async function fetchProperties() {
 }
 
 export function PropertiesSection({ onNavigate }: PropertiesSectionProps) {
-  const { isDemoMode } = useDemoMode()
+  const { isAuthenticated } = useDemoMode()
 
-  const { data: properties = [], isLoading } = useQuery({
+  // Always fetch real data for authenticated users
+  // Only skip API call for unauthenticated public previews
+  const { data: properties = [], isLoading, error } = useQuery({
     queryKey: ['builder-properties'],
     queryFn: fetchProperties,
-    enabled: !isDemoMode,
+    enabled: isAuthenticated, // Only fetch if authenticated
+    retry: 2,
+    staleTime: 30000, // Cache for 30 seconds
   })
 
-  const displayProperties = isDemoMode ? DEMO_DATA.properties : properties
+  // Remove demo data - show loading or empty state instead
+  const displayProperties = properties
 
   return (
     <SectionWrapper>
@@ -68,23 +73,21 @@ export function PropertiesSection({ onNavigate }: PropertiesSectionProps) {
 
         {/* Stats - Design System Statistics Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-            className="p-6 bg-slate-800/95 glow-border rounded-lg border border-slate-700/50"
+          <GlassCard
+            variant="dark"
+            glow
+            hover
           >
             <div className="flex items-center justify-between mb-4">
               <Building2 className="h-8 w-8 text-amber-300" />
             </div>
             <p className="text-2xl font-bold text-white mb-1">{displayProperties.length}</p>
             <p className="text-sm text-slate-400">Total Properties</p>
-          </motion.div>
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-            className="p-6 bg-slate-800/95 glow-border rounded-lg border border-slate-700/50"
+          </GlassCard>
+          <GlassCard
+            variant="dark"
+            glow
+            hover
           >
             <div className="flex items-center justify-between mb-4">
               <TrendingUp className="h-8 w-8 text-emerald-400" />
@@ -93,12 +96,11 @@ export function PropertiesSection({ onNavigate }: PropertiesSectionProps) {
               {displayProperties.filter(p => p.status === 'active').length}
             </p>
             <p className="text-sm text-slate-400">Active Listings</p>
-          </motion.div>
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-            className="p-6 bg-slate-800/95 glow-border rounded-lg border border-slate-700/50"
+          </GlassCard>
+          <GlassCard
+            variant="dark"
+            glow
+            hover
           >
             <div className="flex items-center justify-between mb-4">
               <Eye className="h-8 w-8 text-blue-400" />
@@ -107,12 +109,11 @@ export function PropertiesSection({ onNavigate }: PropertiesSectionProps) {
               {displayProperties.reduce((sum, p) => sum + (p.views || 0), 0)}
             </p>
             <p className="text-sm text-slate-400">Total Views</p>
-          </motion.div>
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4 }}
-            className="p-6 bg-slate-800/95 glow-border rounded-lg border border-slate-700/50"
+          </GlassCard>
+          <GlassCard
+            variant="dark"
+            glow
+            hover
           >
             <div className="flex items-center justify-between mb-4">
               <MapPin className="h-8 w-8 text-purple-400" />
@@ -131,10 +132,15 @@ export function PropertiesSection({ onNavigate }: PropertiesSectionProps) {
             Your Properties
           </h2>
 
-          {isLoading && !isDemoMode ? (
+          {isLoading ? (
             <div className="text-center py-16">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-amber-300 mx-auto mb-4"></div>
               <p className="text-slate-400">Loading properties...</p>
+            </div>
+          ) : error ? (
+            <div className="text-center py-16">
+              <p className="text-red-400 mb-2">Failed to load properties</p>
+              <p className="text-slate-400 text-sm">Please try refreshing the page</p>
             </div>
           ) : displayProperties.length === 0 ? (
             <motion.div

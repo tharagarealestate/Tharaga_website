@@ -449,6 +449,24 @@ export const POST = secureApiRoute(
         // Non-critical
       });
     
+    // Trigger AI automation marketing (fire and forget)
+    try {
+      const marketingUrl = new URL('/api/automation/marketing/auto-trigger', request.url)
+      fetch(marketingUrl.toString(), {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          property_id: property.id,
+        }),
+      }).catch(err => {
+        console.error('[Property Upload] Marketing automation trigger failed (non-critical):', err)
+      })
+    } catch (triggerError) {
+      console.error('[Property Upload] Error triggering marketing automation (non-critical):', triggerError)
+    }
+    
     return NextResponse.json({
       success: true,
       message: isAdmin 

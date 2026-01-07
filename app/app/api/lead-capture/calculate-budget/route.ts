@@ -32,7 +32,8 @@ export async function POST(request: NextRequest) {
       existing_loans_emi = 0,
       savings_available,
       city = 'Chennai',
-    }: BudgetInput = body;
+      use_advanced_ai = false,
+    }: BudgetInput & { use_advanced_ai?: boolean } = body;
 
     if (!primary_income_monthly || !monthly_expenses || !savings_available) {
       return NextResponse.json(
@@ -86,6 +87,37 @@ export async function POST(request: NextRequest) {
     const isHealthyFOIR = foirPercentage <= 40;
     const hasGoodDownPayment = downPaymentPercentage >= 20;
 
+    // If advanced AI is requested, use advanced service
+    if (use_advanced_ai) {
+      try {
+        const advancedUrl = new URL('/api/tools/advanced-budget', request.url);
+        const advancedResponse = await fetch(advancedUrl.toString(), {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            primary_income_monthly,
+            secondary_income_monthly,
+            monthly_expenses,
+            existing_loans_emi,
+            savings_available,
+            city,
+            family_type,
+          }),
+        });
+        
+        if (advancedResponse.ok) {
+          const advancedData = await advancedResponse.json();
+          return NextResponse.json({
+            success: true,
+            results: advancedData.results,
+            ai_enhanced: true,
+          });
+        }
+      } catch (aiError) {
+        console.error('Advanced AI failed, using base calculations:', aiError);
+      }
+    }
+
     return NextResponse.json({
       success: true,
       results: {
@@ -137,6 +169,15 @@ function calculateAffordabilityScore(foir: number, downPayment: number, income: 
 
   return Math.min(Math.max(score, 0), 100);
 }
+
+
+
+
+
+
+
+
+
 
 
 

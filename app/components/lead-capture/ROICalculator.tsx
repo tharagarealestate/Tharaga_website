@@ -89,7 +89,7 @@ export function ROICalculator() {
     setLoading(true);
 
     try {
-      // Calculate initial ROI
+      // Calculate initial ROI with Advanced AI
       const calcResponse = await fetch('/api/lead-capture/calculate-roi', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -98,6 +98,10 @@ export function ROICalculator() {
           down_payment_percentage: step1Data.down_payment_percentage,
           expected_rental_income: step1Data.expected_rental_income,
           calculate_years: [5, 10, 15],
+          use_advanced_ai: true, // Enable advanced AI
+          city: 'Chennai', // Can be made dynamic
+          locality: 'OMR', // Can be made dynamic
+          property_type: 'apartment', // Can be made dynamic
         }),
       });
 

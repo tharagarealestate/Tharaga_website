@@ -25,6 +25,12 @@ import { useRouter } from 'next/navigation';
 
 import { getSupabase } from '@/lib/supabase';
 import type { RecommendationItem } from '@/types/recommendations';
+import { PageWrapper } from '@/components/ui/PageWrapper';
+import { PageHeader } from '@/components/ui/PageHeader';
+import { SectionWrapper } from '@/components/ui/SectionWrapper';
+import { GlassCard } from '@/components/ui/glass-card';
+import { StatsCard } from '@/components/ui/StatsCard';
+import { DESIGN_TOKENS } from '@/lib/design-system';
 
 const RecommendationsCarousel = dynamic(
   () => import('@/features/recommendations/RecommendationsCarousel').then((m) => m.RecommendationsCarousel),
@@ -243,30 +249,20 @@ function BuyerDashboardContent() {
 
   // Render immediately - NO blocking loading state (matches admin dashboard pattern)
   return (
-    <div className="relative min-h-screen overflow-hidden bg-gradient-to-br from-primary-950 via-primary-900 to-primary-800 text-white">
-      {/* Animated Background Elements - EXACT from pricing page */}
-      <div className="absolute inset-0 opacity-30">
-        <div className="absolute top-20 left-10 w-96 h-96 bg-gold-500 rounded-full blur-3xl animate-pulse-slow" />
-        <div
-          className="absolute bottom-20 right-10 w-[600px] h-[600px] bg-emerald-500 rounded-full blur-3xl animate-pulse-slow"
-          style={{ animationDelay: '1s' }}
-        />
-      </div>
-
-      <main className="relative z-10 mx-auto flex min-h-screen w-full max-w-7xl flex-col gap-12 px-5 pb-16 pt-12 sm:px-8 lg:px-12">
+    <PageWrapper>
+      <main className="flex min-h-screen w-full mx-auto flex-col gap-12 px-6 pb-16 pt-12 sm:px-8 lg:px-12 xl:px-16 overflow-x-hidden">
+        {/* Container with proper constraints and overflow handling */}
+        <div className="w-full max-w-[1920px] mx-auto">
         <HeroSection greeting={greeting} name={userName} savedCount={savedCount} />
 
-        <motion.section
-          initial={{ opacity: 0, y: 24 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.1 }}
-          className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4"
-        >
-          <StatTile icon={<TrendingUp className="h-5 w-5" />} label="Live Listings" value="12k+" accent="from-emerald-400 via-emerald-500 to-teal-400" />
-          <StatTile icon={<Shield className="h-5 w-5" />} label="Zero Brokerage" value="100%" accent="from-yellow-400 via-amber-500 to-orange-500" />
-          <StatTile icon={<Award className="h-5 w-5" />} label="Avg. Satisfaction" value="4.9★" accent="from-blue-400 via-indigo-500 to-purple-500" />
-          <StatTile icon={<Zap className="h-5 w-5" />} label="AI Match Score" value="92%" accent="from-fuchsia-400 via-pink-500 to-rose-500" />
-        </motion.section>
+        <SectionWrapper noPadding>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4 w-full desktop-grid-item">
+            <StatsCard icon={TrendingUp} label="Live Listings" value="12k+" delay={0.1} />
+            <StatsCard icon={Shield} label="Zero Brokerage" value="100%" delay={0.15} />
+            <StatsCard icon={Award} label="Avg. Satisfaction" value="4.9★" delay={0.2} />
+            <StatsCard icon={Zap} label="AI Match Score" value="92%" delay={0.25} />
+          </div>
+        </SectionWrapper>
 
         <QuickActions savedCount={savedCount} />
 
@@ -277,8 +273,9 @@ function BuyerDashboardContent() {
         <UpcomingVisitsSection />
 
         <TrustIndicatorsSection />
+        </div>
       </main>
-    </div>
+    </PageWrapper>
   );
 }
 
@@ -292,8 +289,9 @@ function HeroSection({ greeting, name, savedCount }: { greeting: string; name: s
       initial={{ opacity: 0, y: 24 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6 }}
-      className="relative overflow-hidden rounded-[32px] border border-white/10 bg-white/8 px-6 py-10 shadow-[0_35px_120px_rgba(15,23,42,0.40)] backdrop-blur-2xl sm:px-10 sm:py-12 lg:flex lg:items-center lg:justify-between"
+      className="relative overflow-hidden"
     >
+      <GlassCard variant="dark" glow border className="px-6 py-10 sm:px-10 sm:py-12 lg:flex lg:items-center lg:justify-between">
       <GlowOrbs />
 
       <div className="relative z-10 flex flex-col gap-6 text-white">
@@ -405,10 +403,10 @@ function QuickActions({ savedCount }: { savedCount: number }) {
   ];
 
   return (
-    <section className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+    <section className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4 w-full desktop-grid-item">
       {cards.map((card) => (
-        <Link key={card.label} href={card.href} className="group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-300">
-          <div className="relative flex h-full min-h-[240px] flex-col justify-between overflow-hidden rounded-3xl border-2 border-amber-300 bg-slate-800/95 p-6 transition-transform duration-200 hover:-translate-y-1">
+        <Link key={card.label} href={card.href} className="group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-300 desktop-grid-item">
+          <div className="relative flex h-full min-h-[240px] flex-col justify-between overflow-hidden rounded-3xl border-2 border-amber-300 bg-slate-800/95 p-6 transition-transform duration-200 hover:-translate-y-1 desktop-card min-w-0">
             <div className="relative z-10 flex items-center justify-between">
               <div className="rounded-2xl bg-slate-700/50 p-3">
                 {card.icon}
@@ -438,12 +436,14 @@ function QuickActions({ savedCount }: { savedCount: number }) {
 
 function RecommendationsSection({ recs, error, userId }: { recs: RecommendationItem[]; error: string | null; userId?: string }) {
   return (
-    <motion.section
-      initial={{ opacity: 0, y: 24 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.6, delay: 0.15 }}
-      className="space-y-6 rounded-[28px] border-2 border-amber-300 bg-slate-900/95 p-6 sm:p-8"
-    >
+    <SectionWrapper noPadding>
+      <GlassCard variant="dark" glow border className="p-6 sm:p-8 space-y-6">
+        <motion.div
+          initial={{ opacity: 0, y: 24 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.15 }}
+          className="space-y-6"
+        >
       <SectionHeader
         title="Perfect matches for you"
         subtitle={`AI-powered recommendations based on your preferences${userId ? ' and search history' : ''}. Each property shows a personalized match score.`}
@@ -463,10 +463,12 @@ function RecommendationsSection({ recs, error, userId }: { recs: RecommendationI
           </div>
         </div>
       )}
-      <Suspense fallback={<div className="rounded-2xl border-2 border-amber-300 bg-slate-800/95 p-8 text-center text-white">Loading recommendations…</div>}>
+      <Suspense fallback={<GlassCard variant="dark" glow border className="p-8 text-center"><div className={DESIGN_TOKENS.colors.text.primary}>Loading recommendations…</div></GlassCard>}>
         <RecommendationsCarousel items={recs} isLoading={!recs.length && !error} error={error} />
       </Suspense>
-    </motion.section>
+        </motion.div>
+      </GlassCard>
+    </SectionWrapper>
   );
 }
 
@@ -476,12 +478,14 @@ function RecommendationsSection({ recs, error, userId }: { recs: RecommendationI
 
 function SavedPropertiesSection({ saved, userId }: { saved: SavedItem[]; userId?: string }) {
   return (
-    <motion.section
-      initial={{ opacity: 0, y: 24 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.6, delay: 0.2 }}
-      className="space-y-6 rounded-[28px] border-2 border-amber-300 bg-slate-900/95 p-6 sm:p-8"
-    >
+    <SectionWrapper noPadding>
+      <GlassCard variant="dark" glow border className="p-6 sm:p-8 space-y-6">
+        <motion.div
+          initial={{ opacity: 0, y: 24 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.2 }}
+          className="space-y-6"
+        >
       <SectionHeader
         title="Your curated shortlist"
         subtitle="Easily compare features, track price changes, and take the next step. Click any property to see detailed market analysis."
@@ -493,23 +497,23 @@ function SavedPropertiesSection({ saved, userId }: { saved: SavedItem[]; userId?
       />
 
       {saved.length === 0 ? (
-        <div className="flex flex-col items-center gap-3 rounded-2xl border border-white/10 bg-white/4 p-10 text-white/80">
-          <Bookmark className="h-12 w-12 text-white/40" />
-          <p className="text-lg font-medium text-white">Save properties to build your personal watchlist</p>
-          <p className="text-sm text-white/60">Tap the heart icon on any property to bookmark it for later.</p>
+        <GlassCard variant="dark" glow border className="flex flex-col items-center gap-3 p-10">
+          <Bookmark className={`h-12 w-12 ${DESIGN_TOKENS.colors.text.muted}`} />
+          <p className={`text-lg font-medium ${DESIGN_TOKENS.colors.text.primary}`}>Save properties to build your personal watchlist</p>
+          <p className={`text-sm ${DESIGN_TOKENS.colors.text.muted}`}>Tap the heart icon on any property to bookmark it for later.</p>
           <PrimaryActionButton href="/property-listing" icon={<Search className="h-4 w-4" />}>
             Discover properties
           </PrimaryActionButton>
-        </div>
+        </GlassCard>
       ) : (
-        <div className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-4">
+        <div className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-4 w-full desktop-grid-item desktop-overflow-prevention">
           {saved.slice(0, 4).map((item, index) => (
             <motion.div
               key={item.property_id}
               initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.4, delay: index * 0.05 }}
-              className="group relative overflow-hidden rounded-2xl border border-white/10 bg-white/[0.08] shadow-[0_15px_45px_rgba(8,15,40,0.35)] backdrop-blur-xl transition-transform duration-200 hover:-translate-y-1"
+              className={`group relative overflow-hidden rounded-2xl border ${DESIGN_TOKENS.colors.border.default} ${DESIGN_TOKENS.colors.background.card} ${DESIGN_TOKENS.effects.transition} hover:-translate-y-1 desktop-card min-w-0 max-w-full`}
             >
               <Link href={`/properties/${item.property_id}`} className="flex h-full flex-col">
                 <div className="relative h-48 w-full overflow-hidden">
@@ -543,7 +547,9 @@ function SavedPropertiesSection({ saved, userId }: { saved: SavedItem[]; userId?
           ))}
         </div>
       )}
-    </motion.section>
+        </motion.div>
+      </GlassCard>
+    </SectionWrapper>
   );
 }
 
@@ -553,7 +559,8 @@ function SavedPropertiesSection({ saved, userId }: { saved: SavedItem[]; userId?
 
 function UpcomingVisitsSection() {
   return (
-    <section className="space-y-4 rounded-[28px] border-2 border-amber-300 bg-slate-900/95 p-6 text-white sm:p-8">
+    <SectionWrapper noPadding>
+      <GlassCard variant="dark" glow border className="p-6 sm:p-8 space-y-4">
       <SectionHeader
         title="Upcoming site visits"
         subtitle="Stay organised and never miss a walkthrough."
@@ -600,17 +607,18 @@ function TrustIndicatorsSection() {
     <section className="rounded-[32px] border-2 border-amber-300 bg-slate-900/95 px-6 py-10 text-white sm:px-10">
       <div className="mx-auto grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
         {items.map((item) => (
-          <div key={item.title} className="flex flex-col gap-4 rounded-3xl border-2 border-amber-300 bg-slate-800/95 p-6">
-            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-700/50">{item.icon}</div>
+          <GlassCard key={item.title} variant="dark" glow border className="p-6">
+            <div className={`flex h-14 w-14 items-center justify-center rounded-2xl ${DESIGN_TOKENS.colors.background.card}`}>{item.icon}</div>
             <div>
-              <h3 className="font-display text-xl text-white">{item.title}</h3>
-              <p className="mt-2 text-sm text-slate-200">{item.description}</p>
+              <h3 className={`font-display text-xl ${DESIGN_TOKENS.colors.text.primary}`}>{item.title}</h3>
+              <p className={`mt-2 text-sm ${DESIGN_TOKENS.colors.text.secondary}`}>{item.description}</p>
             </div>
-            <ArrowRight className="mt-2 h-4 w-4 text-slate-400" />
-          </div>
+            <ArrowRight className={`mt-2 h-4 w-4 ${DESIGN_TOKENS.colors.text.muted}`} />
+          </GlassCard>
         ))}
       </div>
-    </section>
+      </GlassCard>
+    </SectionWrapper>
   );
 }
 
@@ -648,14 +656,16 @@ function StatTile({
   label: string;
   accent: string;
 }) {
+  // This component is now replaced by StatsCard in the main render
+  // Keeping for backward compatibility if used elsewhere
   return (
-    <div className="relative overflow-hidden rounded-3xl border-2 border-amber-300 bg-slate-800/95 p-6">
-      <div className="relative z-10 flex flex-col gap-3 text-white">
-        <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-slate-700/50">{icon}</div>
-        <div className="text-4xl font-bold text-white">{value}</div>
-        <div className="text-sm uppercase tracking-[0.3em] text-slate-300">{label}</div>
+    <GlassCard variant="dark" glow border className="p-6">
+      <div className="flex flex-col gap-3">
+        <div className={`flex h-11 w-11 items-center justify-center rounded-2xl ${DESIGN_TOKENS.colors.background.card}`}>{icon}</div>
+        <div className={`text-4xl font-bold ${DESIGN_TOKENS.colors.text.primary}`}>{value}</div>
+        <div className={`text-sm uppercase tracking-[0.3em] ${DESIGN_TOKENS.colors.text.muted}`}>{label}</div>
       </div>
-    </div>
+    </GlassCard>
   );
 }
 
@@ -671,14 +681,14 @@ function HeroMiniCard({
   icon: React.ReactNode;
 }) {
   return (
-    <div className="flex flex-col gap-3 rounded-2xl border-2 border-amber-300 bg-slate-800/95 p-4 text-white">
-      <div className="flex items-center justify-between text-xs uppercase tracking-[0.28em] text-slate-400">
+    <GlassCard variant="dark" glow border className="p-4">
+      <div className={`flex items-center justify-between text-xs uppercase tracking-[0.28em] ${DESIGN_TOKENS.colors.text.muted}`}>
         {title}
         {icon}
       </div>
-      <div className="text-2xl font-semibold text-white">{value}</div>
-      <p className="text-sm text-slate-200">{caption}</p>
-    </div>
+      <div className={`text-2xl font-semibold ${DESIGN_TOKENS.colors.text.primary}`}>{value}</div>
+      <p className={`text-sm ${DESIGN_TOKENS.colors.text.secondary}`}>{caption}</p>
+    </GlassCard>
   );
 }
 
@@ -696,16 +706,16 @@ function SectionHeader({
   return (
     <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
       <div className="flex items-start gap-4">
-        {icon && <div className="rounded-2xl bg-slate-700/50 p-3">{icon}</div>}
+        {icon && <div className={`rounded-2xl ${DESIGN_TOKENS.colors.background.card} p-3`}>{icon}</div>}
         <div>
-          <h2 className="font-display text-2xl text-white">{title}</h2>
-          <p className="mt-1 text-sm text-slate-200">{subtitle}</p>
+          <h2 className={`font-display text-2xl ${DESIGN_TOKENS.colors.text.primary}`}>{title}</h2>
+          <p className={`mt-1 text-sm ${DESIGN_TOKENS.colors.text.secondary}`}>{subtitle}</p>
         </div>
       </div>
       {action && (
         <Link
           href={action.href}
-          className="group inline-flex items-center gap-2 rounded-full border-2 border-amber-300 bg-slate-800/80 px-4 py-2 text-sm font-medium text-white transition hover:border-amber-400 hover:bg-slate-700/80"
+          className={`group inline-flex items-center gap-2 rounded-full border-2 ${DESIGN_TOKENS.effects.border.amberClass} ${DESIGN_TOKENS.colors.background.card} px-4 py-2 text-sm font-medium ${DESIGN_TOKENS.colors.text.primary} ${DESIGN_TOKENS.effects.transition} hover:border-amber-400 hover:bg-slate-700/80`}
         >
           {action.label}
           <ArrowRight className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-1" />
@@ -747,7 +757,7 @@ function SecondaryActionButton({
   return (
     <Link
       href={href}
-      className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-6 py-3 text-sm font-semibold text-white shadow-[0_10px_35px_rgba(8,15,40,0.3)] transition hover:border-white/40 hover:bg-white/15"
+      className={`inline-flex items-center gap-2 rounded-full border ${DESIGN_TOKENS.colors.border.default} ${DESIGN_TOKENS.colors.background.card} px-6 py-3 text-sm font-semibold ${DESIGN_TOKENS.colors.text.primary} ${DESIGN_TOKENS.effects.transition} hover:border-amber-300/50 hover:bg-slate-700/50`}
     >
       {icon}
       {children}

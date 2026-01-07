@@ -90,7 +90,10 @@ export function PropertyValuation() {
       const calcResponse = await fetch('/api/lead-capture/property-valuation/estimate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(step1Data),
+        body: JSON.stringify({
+          ...step1Data,
+          use_advanced_ai: true, // Enable advanced AI
+        }),
       });
 
       const calcData = await calcResponse.json();
@@ -909,6 +912,15 @@ export function PropertyValuation() {
     </div>
   );
 }
+
+
+
+
+
+
+
+
+
 
 
 

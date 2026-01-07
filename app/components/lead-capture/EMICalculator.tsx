@@ -98,10 +98,18 @@ export function EMICalculator() {
     setLoading(true);
 
     try {
+      // Enhanced: Add income and credit data for advanced AI (if available)
       const calcResponse = await fetch('/api/lead-capture/calculate-emi', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(step1Data),
+        body: JSON.stringify({
+          ...step1Data,
+          use_advanced_ai: true, // Enable advanced AI
+          monthly_income: 100000, // Can be made dynamic from user input
+          existing_loans_emi: 0, // Can be made dynamic
+          cibil_score: 750, // Can be made dynamic
+          employment_type: 'salaried', // Can be made dynamic
+        }),
       });
 
       const calcData = await calcResponse.json();
@@ -856,6 +864,15 @@ export function EMICalculator() {
     </div>
   );
 }
+
+
+
+
+
+
+
+
+
 
 
 

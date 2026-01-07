@@ -195,20 +195,24 @@ export const POST = secureApiRoute(
       let automationWorkflows: string[] = [];
       if (validatedData.trigger_marketing_automation) {
         try {
-          // Trigger marketing automation workflow
-          const automationResponse = await fetch(
-            `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/automation/property-created`,
-            {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ property_id: property.id }),
+          // Trigger AI automation marketing (fire and forget)
+          const marketingUrl = new URL('/api/automation/marketing/auto-trigger', request.url)
+          fetch(marketingUrl.toString(), {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              property_id: property.id,
+            }),
+          }).then(async (response) => {
+            if (response.ok) {
+              const data = await response.json()
+              automationWorkflows = data.campaign_id ? ['ai_marketing_campaign'] : []
             }
-          );
-
-          if (automationResponse.ok) {
-            const automationData = await automationResponse.json();
-            automationWorkflows = automationData.workflows_triggered || [];
-          }
+          }).catch(err => {
+            console.error('[Publish Draft] Marketing automation trigger failed (non-critical):', err)
+          })
         } catch (error) {
           console.error('[Publish Draft] Marketing automation error:', error);
           // Don't fail the publish if automation fails
@@ -236,6 +240,11 @@ export const POST = secureApiRoute(
     requirePermission: Permissions.PROPERTY_CREATE,
   }
 );
+
+
+
+
+
 
 
 

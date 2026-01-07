@@ -1,9 +1,20 @@
 "use client"
 import { Check, Sparkles, Zap, Star } from 'lucide-react';
 import Link from 'next/link';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
+import { PageWrapper } from '@/components/ui/PageWrapper';
+import { PageHeader } from '@/components/ui/PageHeader';
+import { PremiumButton } from '@/components/ui/premium-button';
+import { GlassCard } from '@/components/ui/glass-card';
+import { CountdownTimer } from '@/components/ui/countdown-timer';
+import { TrustBadge } from '@/components/ui/trust-badge';
+import { motion } from 'framer-motion';
 
 export default function PricingPage() {
+  const [buttonLoading, setButtonLoading] = useState(false);
+  // Set countdown to 48 hours from now
+  const countdownTarget = new Date(Date.now() + 48 * 60 * 60 * 1000);
+
   // Hide login/signup button on pricing page
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -33,28 +44,33 @@ export default function PricingPage() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-slate-950 text-white overflow-x-hidden">
-      <main className="mx-auto max-w-7xl px-4 sm:px-6 py-6 sm:py-8" style={{ paddingLeft: 'max(16px, env(safe-area-inset-left))', paddingRight: 'max(16px, env(safe-area-inset-right))' }}>
-        {/* Header - Builder Dashboard Style */}
-        <div className="mb-6">
-          <div className="inline-flex items-center gap-2 px-4 py-2 bg-amber-500/20 glow-border rounded-full mb-6">
-            <Star className="w-4 h-4 text-amber-300" />
-            <span className="text-sm font-semibold text-amber-300">
-              14-Day Free Trial · No Credit Card Required
-            </span>
-          </div>
+    <PageWrapper>
+      <main className="py-6 sm:py-8">
+        {/* Header */}
+        <PageHeader
+          title="Everything Unlimited. One Simple Price."
+          description="Stop paying 1-2% commission (₹1-3L per property). Get unlimited properties, AI-powered leads, and full automation for just ₹4,999/month."
+          emoji="💰"
+          actions={
+            <div className="flex flex-col sm:flex-row items-center gap-3">
+              <div className="inline-flex items-center gap-2 px-4 py-2 bg-amber-500/20 glow-border rounded-full">
+                <Star className="w-4 h-4 text-amber-300" />
+                <span className="text-sm font-semibold text-amber-300">
+                  14-Day Free Trial · No Credit Card Required
+                </span>
+              </div>
+              <CountdownTimer
+                targetDate={countdownTarget}
+                variant="urgent"
+                className="text-xs"
+              />
+            </div>
+          }
+        />
 
-          <h1 className="text-3xl font-bold text-white mb-2">
-            Everything Unlimited. One Simple Price.
-          </h1>
-          <p className="text-slate-300">
-            Stop paying 1-2% commission (₹1-3L per property). Get unlimited properties, AI-powered leads, and full automation for just ₹4,999/month.
-          </p>
-        </div>
-
-        {/* Pricing Card - Builder Dashboard Style */}
+        {/* Pricing Card */}
         <div className="space-y-6">
-          <div className="bg-slate-800/95 glow-border rounded-lg overflow-hidden">
+          <GlassCard variant="dark" glow border className="overflow-hidden">
             {/* Header */}
             <div className="bg-gradient-to-r from-amber-500/20 to-amber-600/20 border-b glow-border border-b-amber-300/25 p-8 text-center">
               <div className="flex items-center justify-center gap-2 mb-4">
@@ -85,17 +101,41 @@ export default function PricingPage() {
                 </div>
               </div>
 
-              <Link
-                href="/signup"
-                className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-amber-500 hover:bg-amber-600 glow-border text-slate-900 font-semibold rounded-lg transition-all duration-300"
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3 }}
               >
-                Start 14-Day Free Trial
-                <Zap className="w-5 h-5" />
-              </Link>
+                <PremiumButton
+                  variant="gold"
+                  size="lg"
+                  shimmer
+                  loading={buttonLoading}
+                  onClick={() => setButtonLoading(true)}
+                  asChild
+                  className="w-full sm:w-auto"
+                >
+                  <Link 
+                    href="/signup" 
+                    className="inline-flex items-center gap-2"
+                    onClick={() => setButtonLoading(true)}
+                  >
+                    Start 14-Day Free Trial
+                    <Zap className="w-5 h-5" />
+                  </Link>
+                </PremiumButton>
+              </motion.div>
 
-              <p className="text-sm text-slate-400 mt-4">
-                No credit card required · Cancel anytime
-              </p>
+              <div className="mt-4 space-y-2">
+                <p className="text-sm text-slate-400">
+                  No credit card required · Cancel anytime
+                </p>
+                <div className="flex flex-wrap items-center justify-center gap-2">
+                  <TrustBadge type="verified" label="100% Secure" size="sm" />
+                  <TrustBadge type="certified" label="RERA Certified" size="sm" />
+                  <TrustBadge type="award" label="Trusted by 500+ Builders" size="sm" />
+                </div>
+              </div>
             </div>
 
             {/* Features */}
@@ -131,17 +171,29 @@ export default function PricingPage() {
                   'Monthly business reviews',
                   'Early access to new features'
                 ].map((feature, index) => (
-                  <div key={index} className="flex items-start gap-3">
-                    <Check className="w-5 h-5 text-green-300 flex-shrink-0 mt-0.5" />
-                    <span className="text-sm text-slate-300">{feature}</span>
-                  </div>
+                  <motion.div
+                    key={index}
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: index * 0.02 }}
+                    className="flex items-start gap-3 group"
+                  >
+                    <motion.div
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      transition={{ delay: index * 0.02 + 0.1, type: 'spring' }}
+                    >
+                      <Check className="w-5 h-5 text-green-300 flex-shrink-0 mt-0.5 group-hover:scale-110 transition-transform" />
+                    </motion.div>
+                    <span className="text-sm text-slate-300 group-hover:text-white transition-colors">{feature}</span>
+                  </motion.div>
                 ))}
               </div>
             </div>
-          </div>
+          </GlassCard>
 
-          {/* ROI Calculator - Builder Dashboard Style */}
-          <div className="bg-slate-800/95 glow-border rounded-lg p-8">
+          {/* ROI Calculator */}
+          <GlassCard variant="dark" glow border className="p-8">
             <h3 className="text-2xl font-bold text-white mb-6 text-center">
               💰 Your Savings with Tharaga
             </h3>
@@ -172,10 +224,10 @@ export default function PricingPage() {
                 ROI paid back with just ONE property sale
               </p>
             </div>
-          </div>
+          </GlassCard>
         </div>
       </main>
-    </div>
+    </PageWrapper>
   );
 }
 

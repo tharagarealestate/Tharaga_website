@@ -2,6 +2,12 @@
 
 import * as React from 'react'
 import Breadcrumb from '@/components/Breadcrumb'
+import { PageWrapper } from '@/components/ui/PageWrapper'
+import { PageHeader } from '@/components/ui/PageHeader'
+import { SectionWrapper } from '@/components/ui/SectionWrapper'
+import { GlassCard } from '@/components/ui/glass-card'
+import { PremiumButton } from '@/components/ui/premium-button'
+import { DESIGN_TOKENS } from '@/lib/design-system'
 
 export default function EnvironmentIntelPage(){
   const [coords, setCoords] = React.useState<{lat:number;lng:number}|null>(null)
@@ -24,27 +30,26 @@ export default function EnvironmentIntelPage(){
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-950 via-primary-900 to-primary-800 relative overflow-hidden">
-      {/* Animated Background Elements - EXACT from pricing page */}
-      <div className="absolute inset-0 opacity-30">
-        <div className="absolute top-20 left-10 w-96 h-96 bg-gold-500 rounded-full blur-3xl animate-pulse-slow" />
-        <div
-          className="absolute bottom-20 right-10 w-[600px] h-[600px] bg-emerald-500 rounded-full blur-3xl animate-pulse-slow"
-          style={{ animationDelay: '1s' }}
-        />
-      </div>
-
-      <div className="relative z-10">
-        <main className="mx-auto max-w-3xl px-6 py-8">
+    <PageWrapper>
       <Breadcrumb items={[
         { label: 'Home', href: '/' },
+        { label: 'Tools', href: '/sitemap' },
         { label: 'Environment Intelligence' }
       ]} />
-      <h1 className="text-2xl font-bold text-plum mb-4">Environment intelligence</h1>
-      <div className="rounded-xl border border-plum/10 bg-brandWhite p-4 space-y-4">
-        <div className="flex gap-2">
-          <button className="rounded-lg border px-3 py-2" onClick={get}>Use my location</button>
-          {coords && <div className="text-sm text-plum/70">lat {coords.lat.toFixed(4)}, lng {coords.lng.toFixed(4)}</div>}
+      
+      <PageHeader
+        title="Environment Intelligence"
+        description="Get air quality, flood risk, and climate data for your property location"
+        className="text-center mb-8"
+      />
+
+      <SectionWrapper noPadding>
+        <GlassCard variant="dark" glow border className="p-6 sm:p-8 space-y-4">
+        <div className="flex flex-col sm:flex-row gap-2 items-start sm:items-center">
+          <PremiumButton variant="secondary" size="sm" onClick={get}>
+            Use my location
+          </PremiumButton>
+          {coords && <div className={`text-sm ${DESIGN_TOKENS.colors.text.secondary}`}>lat {coords.lat.toFixed(4)}, lng {coords.lng.toFixed(4)}</div>}
         </div>
         {data && (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
@@ -53,19 +58,18 @@ export default function EnvironmentIntelPage(){
             <Card label="Climate score" value={String(Math.round(data.climateScore))+'/100'} />
           </div>
         )}
-        {msg && <div className="text-sm text-plum/80">{msg}</div>}
-      </div>
-        </main>
-      </div>
-    </div>
+        {msg && <div className={`text-sm ${DESIGN_TOKENS.colors.text.secondary}`}>{msg}</div>}
+        </GlassCard>
+      </SectionWrapper>
+    </PageWrapper>
   )
 }
 
 function Card({ label, value }: { label: string; value: string }){
   return (
-    <div className="rounded-lg border border-plum/10 p-3">
-      <div className="text-xs text-plum/60">{label}</div>
-      <div className="font-semibold">{value}</div>
+    <div className={`rounded-lg border ${DESIGN_TOKENS.colors.border.default} p-3`}>
+      <div className={`text-xs ${DESIGN_TOKENS.colors.text.muted}`}>{label}</div>
+      <div className={`font-semibold ${DESIGN_TOKENS.colors.text.primary}`}>{value}</div>
     </div>
   )
 }

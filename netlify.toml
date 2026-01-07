@@ -13,6 +13,15 @@
   # RERA_MONITOR_API_KEY=your-key-here
   # SUPABASE_SERVICE_ROLE_KEY=your-key-here
 
+# NOTE: AWS Lambda has a 4KB limit on environment variables per function.
+# Netlify passes ALL site environment variables to ALL functions by default.
+# If you exceed this limit, you'll see: "Your environment variables exceed the 4KB limit"
+# 
+# SOLUTION: Remove duplicate environment variables in Netlify Dashboard:
+# 1. Remove SUPABASE_SERVICE_ROLE (keep only SUPABASE_SERVICE_ROLE_KEY)
+# 2. Review and remove any other unused/duplicate variables
+# 3. See NETLIFY_ENV_VAR_4KB_FIX.md for detailed instructions
+
 [[plugins]]
   package = "@netlify/plugin-nextjs"
 

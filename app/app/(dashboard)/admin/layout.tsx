@@ -1,8 +1,7 @@
 import type { ReactNode } from 'react'
 import { ReactQueryProvider } from '@/components/providers/ReactQueryProvider'
 import AdminNav from '@/components/admin/AdminNav'
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
-import { cookies } from 'next/headers'
+import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 
 export const runtime = 'nodejs'
@@ -13,7 +12,7 @@ export const runtime = 'nodejs'
  */
 async function verifyAdminAccess() {
   try {
-    const supabase = createRouteHandlerClient({ cookies })
+    const supabase = await createClient()
     const { data: { user }, error: userError } = await supabase.auth.getUser()
     
     if (userError || !user) {

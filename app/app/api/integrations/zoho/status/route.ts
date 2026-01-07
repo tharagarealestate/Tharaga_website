@@ -1,34 +1,26 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { requireBuilder, createErrorResponse } from '@/lib/auth/api-auth-helper';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
   try {
-    const supabase = await createClient();
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-
-    if (authError || !user) {
-      return NextResponse.json(
-        { error: 'Unauthorized. Please log in.', success: false },
-        { status: 401 }
-      );
+    // Enhanced authentication with better error handling
+    const { user, builder, supabase, error: authError } = await requireBuilder(request);
+    
+    if (authError) {
+      const statusCode = authError.type === 'NOT_BUILDER' ? 403 : 
+                        authError.type === 'CONFIG_ERROR' ? 500 : 401;
+      return createErrorResponse(authError as any, statusCode);
     }
 
-    // Get builder profile
-    const { data: builder, error: builderError } = await supabase
-      .from('builders')
-      .select('id')
-      .eq('user_id', user.id)
-      .single();
-
-    if (builderError || !builder) {
+    if (!builder || !supabase) {
       return NextResponse.json({
         connected: false,
         active: false,
         success: true,
-        message: 'Builder profile not found',
+        message: 'Builder profile not found. Please complete your builder profile setup.',
       });
     }
 

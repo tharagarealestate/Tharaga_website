@@ -3,55 +3,33 @@
 import React from 'react'
 import Breadcrumb from '@/components/Breadcrumb'
 import { NeighborhoodFinder } from '@/components/lead-capture/NeighborhoodFinder'
-import { motion } from 'framer-motion'
+import { PageWrapper } from '@/components/ui/PageWrapper'
+import { PageHeader } from '@/components/ui/PageHeader'
+import { SectionWrapper } from '@/components/ui/SectionWrapper'
+import { GlassCard } from '@/components/ui/glass-card'
+import { DESIGN_TOKENS } from '@/lib/design-system'
 
 export default function NeighborhoodFinderPage(){
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-800/95 via-slate-800/95 to-slate-900/95 relative overflow-hidden">
-      {/* Animated Background Elements - Billing Design System Pattern */}
-      <div className="absolute inset-0 opacity-30">
-        <div className="absolute top-20 left-10 w-96 h-96 bg-amber-500 rounded-full blur-3xl animate-pulse-slow" />
-        <div
-          className="absolute bottom-20 right-10 w-[600px] h-[600px] bg-emerald-500 rounded-full blur-3xl animate-pulse-slow"
-          style={{ animationDelay: '1s' }}
-        />
-      </div>
+    <PageWrapper>
+      <Breadcrumb items={[
+        { label: 'Home', href: '/' },
+        { label: 'Tools', href: '/sitemap' },
+        { label: 'Neighborhood Finder' }
+      ]} />
+      
+      <PageHeader
+        title="Neighborhood Finder"
+        description="Find the perfect neighborhood with Tamil Nadu-specific amenities and insights"
+        className="text-center mb-8"
+      />
 
-      <div className="relative z-10">
-        <main className="mx-auto max-w-4xl px-6 sm:px-8 py-8 sm:py-12">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3 }}
-            className="space-y-6"
-          >
-            <Breadcrumb items={[
-              { label: 'Home', href: '/' },
-              { label: 'Tools', href: '/sitemap' },
-              { label: 'Neighborhood Finder' }
-            ]} />
-            
-            {/* Header Section - Billing Design System Pattern */}
-            <div className="bg-gradient-to-r from-rose-500/20 via-rose-600/20 to-rose-500/20 glow-border rounded-xl p-6 sm:p-8 text-center">
-              <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">
-                Neighborhood Finder
-              </h1>
-              <p className="text-lg sm:text-xl text-slate-300">
-                Find the perfect neighborhood with Tamil Nadu-specific amenities and insights
-              </p>
-            </div>
-
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1 }}
-            >
-              <NeighborhoodFinder />
-            </motion.div>
-          </motion.div>
-        </main>
-      </div>
-    </div>
+      <SectionWrapper noPadding>
+        <GlassCard variant="dark" glow border className="p-6 sm:p-8">
+          <NeighborhoodFinder />
+        </GlassCard>
+      </SectionWrapper>
+    </PageWrapper>
   )
 }
 

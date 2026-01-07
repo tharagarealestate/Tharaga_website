@@ -30,7 +30,8 @@ export async function POST(request: NextRequest) {
       city = 'Chennai',
       property_age_years = 0,
       furnishing = 'unfurnished',
-    }: ValuationInput = body;
+      use_advanced_ai = false,
+    }: ValuationInput & { use_advanced_ai?: boolean } = body;
 
     if (!property_type || !bhk_config || !total_area_sqft || !locality) {
       return NextResponse.json(
@@ -88,6 +89,37 @@ export async function POST(request: NextRequest) {
 
     // Market trend (based on city)
     const marketTrend = getMarketTrend(city);
+
+    // If advanced AI is requested, use advanced service
+    if (use_advanced_ai) {
+      try {
+        const advancedUrl = new URL('/api/tools/advanced-property-valuation', request.url);
+        const advancedResponse = await fetch(advancedUrl.toString(), {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            property_type,
+            bhk_config,
+            total_area_sqft,
+            locality,
+            city,
+            property_age_years,
+            furnishing,
+          }),
+        });
+        
+        if (advancedResponse.ok) {
+          const advancedData = await advancedResponse.json();
+          return NextResponse.json({
+            success: true,
+            results: advancedData.results,
+            ai_enhanced: true,
+          });
+        }
+      } catch (aiError) {
+        console.error('Advanced AI failed, using base calculations:', aiError);
+      }
+    }
 
     return NextResponse.json({
       success: true,
@@ -180,6 +212,15 @@ function getComparableProperties(city: string, locality: string, propertyType: s
     },
   ];
 }
+
+
+
+
+
+
+
+
+
 
 
 

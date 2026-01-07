@@ -1,5 +1,7 @@
 import './globals.css'
+import './mobile-premium-design-system.css'
 import './mobile-responsive.css'
+import './desktop-ux-fixes.css'
 import type { Metadata } from 'next'
 import Script from 'next/script'
 import { Playfair_Display, Plus_Jakarta_Sans, Manrope } from 'next/font/google'
@@ -49,6 +51,7 @@ import { PrefetchRoutes } from '@/components/providers/PrefetchRoutes'
 import { HeaderLinkInterceptor } from '@/components/HeaderLinkInterceptor'
 import { NotificationProvider } from '@/contexts/NotificationContext'
 import { CookieConsent } from '@/components/CookieConsent'
+import { ToastProvider } from '@/components/ui/toast'
 
 const playfair = Playfair_Display({
   subsets: ['latin'],
@@ -1843,7 +1846,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             }
             
             body:has(.hero-premium) header.nav .mobile-menu-panel a,
-            .homepage-header header.nav .mobile-menu-panel a {
+            .homepage-header header.nav .mobile-menu-panel a,
+            body:has(.hero-premium) header.nav .mobile-menu-panel button.mobile-menu-link,
+            .homepage-header header.nav .mobile-menu-panel button.mobile-menu-link {
               display: block;
               padding: 16px;
               color: #ffffff !important;
@@ -1854,10 +1859,19 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               display: flex;
               align-items: center;
               text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+              background: transparent;
+              border: none;
+              width: 100%;
+              text-align: left;
+              cursor: pointer;
+              font-size: inherit;
+              font-family: inherit;
             }
             
             body:has(.hero-premium) header.nav .mobile-menu-panel a:hover,
-            .homepage-header header.nav .mobile-menu-panel a:hover {
+            .homepage-header header.nav .mobile-menu-panel a:hover,
+            body:has(.hero-premium) header.nav .mobile-menu-panel button.mobile-menu-link:hover,
+            .homepage-header header.nav .mobile-menu-panel button.mobile-menu-link:hover {
               background: rgba(255, 255, 255, 0.15) !important;
               color: #ffffff !important;
             }
@@ -1939,6 +1953,19 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             body:not(:has(.hero-premium)):not(.homepage-header) header.nav .thg-auth-wrap,
             body:not(:has(.hero-premium)):not(.homepage-header) header.nav #site-header-auth-container,
             body:not(:has(.hero-premium)):not(.homepage-header) header.nav #site-header-auth-container.thg-auth-wrap,
+            body:not(:has(.hero-premium)):not(.homepage-header) #site-header-auth-container.thg-auth-wrap,
+            header.nav .thg-auth-wrap,
+            header.nav #site-header-auth-container,
+            header.nav #site-header-auth-container.thg-auth-wrap,
+            #site-header-auth-container.thg-auth-wrap,
+            /* CRITICAL FIX: Hide mobile user icon button on all pages except homepage */
+            body:not(:has(.hero-premium)):not(.homepage-header) header.nav .mobile-user-icon {
+            body:not(:has(.hero-premium)):not(.homepage-header) header.nav .mobile-user-icon {
+              display: none !important;
+              visibility: hidden !important;
+              opacity: 0 !important;
+              pointer-events: none !important;
+            }
             body:not(:has(.hero-premium)):not(.homepage-header) #site-header-auth-container.thg-auth-wrap,
             header.nav .thg-auth-wrap,
             header.nav #site-header-auth-container,
@@ -2955,10 +2982,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                ` }} />
         <AppI18nProvider>
           <NotificationProvider>
-            <EntitlementsProvider>
-              <PrefetchRoutes />
-              {children}
-            </EntitlementsProvider>
+            <ToastProvider>
+              <EntitlementsProvider>
+                <PrefetchRoutes />
+                {children}
+              </EntitlementsProvider>
+            </ToastProvider>
           </NotificationProvider>
         </AppI18nProvider>
         {/* Web Vitals reporting */}

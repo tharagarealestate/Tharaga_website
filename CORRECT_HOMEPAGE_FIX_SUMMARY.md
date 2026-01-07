@@ -35,3 +35,12 @@ These routes are correctly implemented and will work. Only the homepage section 
 1. ✅ `app/public/index.html` - Add Smart Calculators section
 2. ❌ `app/app/page.tsx` - Can be reverted or kept (not used for homepage)
 
+
+
+
+
+
+
+
+
+

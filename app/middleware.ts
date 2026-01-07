@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 import createMiddleware from 'next-intl/middleware'
 import { defaultLocale, locales } from './i18n/config'
-import { createMiddlewareClient } from '@supabase/auth-helpers-nextjs'
+import { createServerClient, type CookieOptions } from '@supabase/ssr'
 
 // Normalize legacy routes and protect /admin with role-based access
 // IMPORTANT: Do NOT localize the root "/". We serve a static homepage at
@@ -116,12 +116,36 @@ export async function middleware(req: NextRequest) {
   // 4) Role-based route protection (only for protected routes)
   if (!isPublicRoute) {
     try {
-      const supabase = createMiddlewareClient({ req, res: response })
-      const { data: { session } } = await supabase.auth.getSession()
+      // Create Supabase client with proper cookie handling for middleware
+      const supabase = createServerClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+        {
+          cookies: {
+            getAll() {
+              return req.cookies.getAll()
+            },
+            setAll(cookiesToSet) {
+              cookiesToSet.forEach(({ name, value, options }) => {
+                req.cookies.set(name, value)
+                response.cookies.set({
+                  name,
+                  value,
+                  ...options,
+                })
+              })
+            },
+          },
+        }
+      )
+
+      // IMPORTANT: Call getUser() to refresh tokens if needed
+      // This ensures tokens are refreshed before they expire
+      const { data: { user }, error: authError } = await supabase.auth.getUser()
 
       // If not authenticated, allow through - client-side will handle opening auth modal
       // Don't redirect to /login - let the dashboard pages open the modal popup
-      if (!session) {
+      if (authError || !user) {
         // Add header to indicate auth is required - client can use this to open modal
         response.headers.set('X-Auth-Required', 'true')
         response.headers.set('X-Auth-Redirect', pathname)
@@ -136,31 +160,31 @@ export async function middleware(req: NextRequest) {
         )
 
         if (isRoleRoute) {
-          // Fetch user roles from user_roles table (primary source of truth)
-          // Add timeout and error handling to prevent blocking
-          try {
-            const { data: userRoles, error: rolesError } = await supabase
-              .from('user_roles')
-              .select('role, is_primary')
-              .eq('user_id', session.user.id)
+            // Fetch user roles from user_roles table (primary source of truth)
+            // Add timeout and error handling to prevent blocking
+            try {
+              const { data: userRoles, error: rolesError } = await supabase
+                .from('user_roles')
+                .select('role, is_primary')
+                .eq('user_id', user.id)
 
-            // If role check fails, allow through (let client-side handle it)
-            // This prevents blocking users due to DB issues or RLS policies
-            if (rolesError) {
-              console.warn('Middleware: Error fetching roles, allowing through:', rolesError)
-              // Allow through - client-side will handle role check
-              response.headers.set('X-User-Id', session.user.id)
-              response.headers.set('X-User-Role', '')
-              response.headers.set('X-User-Roles', '')
-              break
-            }
+              // If role check fails, allow through (let client-side handle it)
+              // This prevents blocking users due to DB issues or RLS policies
+              if (rolesError) {
+                console.warn('Middleware: Error fetching roles, allowing through:', rolesError)
+                // Allow through - client-side will handle role check
+                response.headers.set('X-User-Id', user.id)
+                response.headers.set('X-User-Role', '')
+                response.headers.set('X-User-Roles', '')
+                break
+              }
 
             const roles = userRoles?.map(r => r.role) || []
             const primaryRoleData = userRoles?.find(r => r.is_primary)
             const primaryRole = primaryRoleData?.role || roles[0] || null
 
             // ADVANCED SECURITY: Admin access is restricted to tharagarealestate@gmail.com ONLY
-            const userEmail = session.user.email || ''
+            const userEmail = user.email || ''
             const isAdminOwner = userEmail === 'tharagarealestate@gmail.com'
             
             // For admin routes, verify admin email access
@@ -186,7 +210,7 @@ export async function middleware(req: NextRequest) {
           } catch (roleCheckError) {
             console.warn('Middleware: Role check exception, allowing through:', roleCheckError)
             // On exception, allow through - client-side will handle
-            response.headers.set('X-User-Id', session.user.id)
+            response.headers.set('X-User-Id', user.id)
             response.headers.set('X-User-Role', '')
             response.headers.set('X-User-Roles', '')
             break
@@ -197,7 +221,7 @@ export async function middleware(req: NextRequest) {
             const { data: builderProfile } = await supabase
               .from('builder_profiles')
               .select('verification_status')
-              .eq('user_id', session.user.id)
+              .eq('user_id', user.id)
               .single()
 
             // Allow access even if pending verification (for onboarding)
@@ -208,7 +232,7 @@ export async function middleware(req: NextRequest) {
           }
 
           // Add user context to headers
-          response.headers.set('X-User-Id', session.user.id)
+          response.headers.set('X-User-Id', user.id)
           response.headers.set('X-User-Role', primaryRole || '')
           response.headers.set('X-User-Roles', roles.join(','))
 

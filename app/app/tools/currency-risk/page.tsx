@@ -3,6 +3,11 @@
 import * as React from 'react'
 import Breadcrumb from '@/components/Breadcrumb'
 import { useTranslations } from 'next-intl'
+import { PageWrapper } from '@/components/ui/PageWrapper'
+import { PageHeader } from '@/components/ui/PageHeader'
+import { SectionWrapper } from '@/components/ui/SectionWrapper'
+import { GlassCard } from '@/components/ui/glass-card'
+import { DESIGN_TOKENS } from '@/lib/design-system'
 
 const FX: Record<string, number> = { USD: 0.012, AED: 0.044, GBP: 0.0095, EUR: 0.011 }
 
@@ -52,25 +57,21 @@ export default function CurrencyRiskPage() {
   const sim = simulateVaR()
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-950 via-primary-900 to-primary-800 relative overflow-hidden">
-      {/* Animated Background Elements - EXACT from pricing page */}
-      <div className="absolute inset-0 opacity-30">
-        <div className="absolute top-20 left-10 w-96 h-96 bg-gold-500 rounded-full blur-3xl animate-pulse-slow" />
-        <div
-          className="absolute bottom-20 right-10 w-[600px] h-[600px] bg-emerald-500 rounded-full blur-3xl animate-pulse-slow"
-          style={{ animationDelay: '1s' }}
-        />
-      </div>
-
-      <div className="relative z-10">
-        <main className="mx-auto max-w-3xl px-6 py-8">
+    <PageWrapper>
       <Breadcrumb items={[
         { label: 'Home', href: '/' },
-        { label: 'Tools', href: '/tools' },
+        { label: 'Tools', href: '/sitemap' },
         { label: 'Currency Risk' }
       ]} />
-      <h1 className="text-2xl font-bold text-plum mb-4">{t('title')}</h1>
-      <div className="rounded-xl border border-plum/10 bg-brandWhite p-4 space-y-4">
+      
+      <PageHeader
+        title={t('title')}
+        description="Analyze currency risk for international property investments"
+        className="text-center mb-8"
+      />
+
+      <SectionWrapper noPadding>
+        <GlassCard variant="dark" glow border className="p-6 sm:p-8 space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
             <label className="block text-sm mb-1">{t('fields.investment')}</label>
@@ -107,19 +108,18 @@ export default function CurrencyRiskPage() {
           <Card label={t('cards.median')} value={fmt(sim.p50, fx)} />
           <Card label={t('cards.p95')} value={fmt(sim.p95, fx)} />
         </div>
-        <p className="text-xs text-plum/60">{t('disclaimer')}</p>
-      </div>
-        </main>
-      </div>
-    </div>
+        <p className={`text-xs ${DESIGN_TOKENS.colors.text.muted}`}>{t('disclaimer')}</p>
+        </GlassCard>
+      </SectionWrapper>
+    </PageWrapper>
   )
 }
 
 function Card({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-lg border border-plum/10 p-3">
-      <div className="text-xs text-plum/60">{label}</div>
-      <div className="font-semibold">{value}</div>
+    <div className={`rounded-lg border ${DESIGN_TOKENS.colors.border.default} p-3`}>
+      <div className={`text-xs ${DESIGN_TOKENS.colors.text.muted}`}>{label}</div>
+      <div className={`font-semibold ${DESIGN_TOKENS.colors.text.primary}`}>{value}</div>
     </div>
   )
 }

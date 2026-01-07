@@ -1,6 +1,8 @@
 "use client"
 
 import { ReactNode } from 'react'
+import { PageHeader } from '@/components/ui/PageHeader'
+import { GlassCard } from '@/components/ui/glass-card'
 import { motion } from 'framer-motion'
 
 interface BuilderPageWrapperProps {
@@ -13,7 +15,7 @@ interface BuilderPageWrapperProps {
 
 /**
  * Consistent page wrapper for all builder dashboard pages
- * Uses the billing page design system for uniform styling
+ * Uses the design system for uniform styling
  * Ensures uniform design, spacing, and styling across all pages
  */
 export function BuilderPageWrapper({ 
@@ -25,20 +27,12 @@ export function BuilderPageWrapper({
 }: BuilderPageWrapperProps) {
   return (
     <div className={`relative z-10 ${className}`}>
-      {/* Page Header (optional) - Design System Typography */}
+      {/* Page Header - Design System */}
       {(title || description) && (
-        <motion.div
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mb-6"
-        >
-          {title && (
-            <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">{title}</h1>
-          )}
-          {description && (
-            <p className="text-slate-300 text-base sm:text-lg">{description}</p>
-          )}
-        </motion.div>
+        <PageHeader
+          title={title || ''}
+          description={description}
+        />
       )}
 
       {/* Page Content - Design System Container */}
@@ -48,11 +42,10 @@ export function BuilderPageWrapper({
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-gradient-to-br from-slate-800/95 via-slate-800/95 to-slate-900/95 glow-border rounded-xl overflow-hidden shadow-2xl"
         >
-          <div className="p-6 sm:p-8">
+          <GlassCard variant="dark" glow border className="p-6 sm:p-8">
             {children}
-          </div>
+          </GlassCard>
         </motion.div>
       )}
     </div>

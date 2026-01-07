@@ -110,7 +110,11 @@ export function NeighborhoodFinder() {
       const calcResponse = await fetch('/api/lead-capture/neighborhood-analysis', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(step1Data),
+        body: JSON.stringify({
+          ...step1Data,
+          use_advanced_ai: true, // Enable advanced AI
+          work_location: step3Data.work_location, // Optional
+        }),
       });
 
       const calcData = await calcResponse.json();

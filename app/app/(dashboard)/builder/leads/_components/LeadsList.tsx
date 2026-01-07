@@ -9,6 +9,9 @@ import { getSupabase } from '@/lib/supabase';
 import { useBehaviorTracking } from '@/hooks/useBehaviorTracking';
 import { useFilters, type FilterConfig } from '@/contexts/FilterContext';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
+import { EmptyState } from '@/components/ui/empty-state';
+import { SkeletonListItem } from '@/components/ui/skeleton-loader';
+import { useToast } from '@/components/ui/toast';
 
 export interface Lead {
   id: string;
@@ -64,6 +67,7 @@ interface StatsSummary {
 }
 
 export function LeadsList({ onSelectLead, initialFilters, showInlineFilters = true, onStatsUpdate }: LeadsListProps) {
+  const { showToast } = useToast();
   const supabase = useMemo(() => getSupabase(), []);
   const { trackBehavior } = useBehaviorTracking();
   const {
@@ -557,54 +561,61 @@ export function LeadsList({ onSelectLead, initialFilters, showInlineFilters = tr
     const hasActiveFilters = activeFilterCount > 0 || (searchQuery && searchQuery.trim().length > 0);
     
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="bg-blue-500/10 border border-blue-500/50 rounded-2xl p-8 text-center max-w-md backdrop-blur-xl">
-          <Users className="w-12 h-12 text-blue-400 mx-auto mb-4" />
-          <h3 className="text-xl font-semibold text-blue-100 mb-2">
-            {hasActiveFilters ? 'No Leads Match Your Filters' : 'No Leads Yet'}
-          </h3>
-          <p className="text-blue-200/70 mb-4">
-            {hasActiveFilters 
-              ? 'Try adjusting your filters or search query to see more results.'
-              : 'Leads will appear here once they are generated. Start by adding properties or connecting lead sources.'
-            }
-          </p>
-          {hasActiveFilters && (
-            <button
-              onClick={() => {
-                clearFilters();
-                setSearchQuery('');
-              }}
-              className="px-4 py-2 bg-blue-500/20 hover:bg-blue-500/30 border border-blue-500/50 text-blue-200 rounded-lg transition-colors text-sm font-medium"
-            >
-              Clear Filters
-            </button>
-          )}
-        </div>
-      </div>
+      <EmptyState
+        icon={Users}
+        iconColor="text-blue-400"
+        title={hasActiveFilters ? 'No Leads Match Your Filters' : 'No Leads Yet'}
+        description={
+          hasActiveFilters
+            ? 'Try adjusting your filters or search query to see more results.'
+            : 'Leads will appear here once they are generated. Start by adding properties or connecting lead sources.'
+        }
+        action={
+          hasActiveFilters
+            ? {
+                label: 'Clear Filters',
+                onClick: () => {
+                  clearFilters();
+                  setSearchQuery('');
+                },
+                variant: 'gold',
+              }
+            : {
+                label: 'Add Properties',
+                href: '/builder/properties',
+                variant: 'gold',
+              }
+        }
+        secondaryAction={
+          !hasActiveFilters
+            ? {
+                label: 'View Documentation',
+                href: '/help',
+              }
+            : undefined
+        }
+      />
     );
   }
 
   if (error) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="bg-slate-800/95 border-2 border-red-500/50 rounded-lg p-8 text-center max-w-md">
-          <AlertCircle className="w-12 h-12 text-red-300 mx-auto mb-4" />
-          <h3 className="text-xl font-bold text-white mb-2">Error Loading Leads</h3>
-          <p className="text-sm text-slate-300 mb-4">{error}</p>
-          <button
-            onClick={() => {
-              setError(null);
-              if (fetchLeadsRef.current) {
-                fetchLeadsRef.current();
-              }
-            }}
-            className="px-6 py-2 bg-amber-500 hover:bg-amber-600 glow-border text-slate-900 font-semibold rounded-lg transition-colors"
-          >
-            Try Again
-          </button>
-        </div>
-      </div>
+      <EmptyState
+        icon={AlertCircle}
+        iconColor="text-red-400"
+        title="Error Loading Leads"
+        description={error || 'We encountered an issue while loading leads. Please try again.'}
+        action={{
+          label: 'Retry',
+          onClick: () => {
+            setError(null);
+            if (fetchLeadsRef.current) {
+              fetchLeadsRef.current();
+            }
+          },
+          variant: 'gold',
+        }}
+      />
     );
   }
 

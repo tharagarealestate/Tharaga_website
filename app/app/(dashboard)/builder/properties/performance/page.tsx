@@ -7,6 +7,9 @@ import { Select } from '@/components/ui'
 import { format } from 'date-fns'
 import { motion } from 'framer-motion'
 import { BuilderPageWrapper } from '../../_components/BuilderPageWrapper'
+import { StatsCard } from '@/components/ui/StatsCard'
+import { GlassCard } from '@/components/ui/glass-card'
+import { DESIGN_TOKENS } from '@/lib/design-system'
 import {
   ResponsiveContainer,
   LineChart,
@@ -24,14 +27,14 @@ import {
 function EmptyPropertiesState() {
   return (
     <BuilderPageWrapper title="Property Performance" description="Analyze views, engagement, and conversions">
-      <div className="bg-gradient-to-br from-slate-800/95 via-slate-800/95 to-slate-900/95 glow-border rounded-xl overflow-hidden shadow-2xl p-12 text-center">
-        <Building2 className="w-16 h-16 text-slate-400 mx-auto mb-4" />
-        <h3 className="text-xl font-bold text-white mb-2">No properties yet</h3>
-        <p className="text-slate-300 mb-6">List your first property to see performance analytics</p>
-        <a href="/builders/add-property" className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white rounded-lg font-semibold transition-all">
+      <GlassCard variant="dark" glow border className="p-12 text-center">
+        <Building2 className={`w-16 h-16 ${DESIGN_TOKENS.colors.text.muted} mx-auto mb-4`} />
+        <h3 className={`${DESIGN_TOKENS.typography.h3} mb-2`}>No properties yet</h3>
+        <p className={`${DESIGN_TOKENS.colors.text.secondary} mb-6`}>List your first property to see performance analytics</p>
+        <a href="/builders/add-property" className={`inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 ${DESIGN_TOKENS.colors.text.primary} rounded-lg font-semibold transition-all`}>
           List your first property
         </a>
-      </div>
+      </GlassCard>
     </BuilderPageWrapper>
   )
 }
@@ -62,33 +65,23 @@ type MetricCardProps = {
 }
 
 function MetricCard({ title, value, change, icon: Icon, color }: MetricCardProps) {
-  const colors = {
-    primary: { bg: 'bg-gradient-to-br from-blue-500/20 to-blue-600/20', text: 'text-blue-400', border: 'border-blue-400/30' },
-    purple: { bg: 'bg-gradient-to-br from-purple-500/20 to-purple-600/20', text: 'text-purple-400', border: 'border-purple-400/30' },
-    amber: { bg: 'bg-gradient-to-br from-amber-500/20 to-amber-600/20', text: 'text-amber-400', border: 'border-amber-400/30' },
-    emerald: { bg: 'bg-gradient-to-br from-emerald-500/20 to-emerald-600/20', text: 'text-emerald-400', border: 'border-emerald-400/30' },
+  // Map color to StatsCard compatible props
+  const colorMap = {
+    primary: 'blue',
+    purple: 'purple',
+    amber: 'amber',
+    emerald: 'emerald',
   } as const
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="bg-gradient-to-br from-slate-800/95 via-slate-800/95 to-slate-900/95 glow-border rounded-xl overflow-hidden shadow-2xl p-6"
-    >
-      <div className="flex items-start justify-between mb-4">
-        <div className={`w-12 h-12 ${colors[color].bg} border ${colors[color].border} rounded-xl flex items-center justify-center`}>
-          <Icon className={`w-6 h-6 ${colors[color].text}`} />
-        </div>
-        {typeof change === 'number' && !Number.isNaN(change) && (
-          <div className={`flex items-center gap-1 text-sm font-semibold ${change > 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
-            {change > 0 ? <TrendingUp className="w-4 h-4" /> : <TrendingDown className="w-4 h-4" />}
-            {Math.abs(change)}%
-          </div>
-        )}
-      </div>
-      <div className="text-2xl md:text-3xl font-bold text-white mb-1">{value ?? '—'}</div>
-      <div className="text-sm text-slate-300">{title}</div>
-    </motion.div>
+    <StatsCard
+      icon={Icon}
+      label={title}
+      value={value ?? '—'}
+      trend={typeof change === 'number' && !Number.isNaN(change) ? { value: change, positive: change > 0 } : undefined}
+      loading={false}
+      className={`bg-gradient-to-br from-slate-800/95 via-slate-800/95 to-slate-900/95`}
+    />
   )
 }
 

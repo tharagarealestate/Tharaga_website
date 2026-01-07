@@ -23,7 +23,18 @@ export async function POST(request: NextRequest) {
       down_payment_percentage,
       loan_tenure_years,
       interest_rate,
-    }: EMIInput = body;
+      use_advanced_ai = false,
+      monthly_income,
+      existing_loans_emi,
+      cibil_score,
+      employment_type,
+    }: EMIInput & { 
+      use_advanced_ai?: boolean;
+      monthly_income?: number;
+      existing_loans_emi?: number;
+      cibil_score?: number;
+      employment_type?: string;
+    } = body;
 
     if (!property_price || !down_payment_percentage || !loan_tenure_years || !interest_rate) {
       return NextResponse.json(
@@ -65,6 +76,38 @@ export async function POST(request: NextRequest) {
       });
     }
 
+    // If advanced AI is requested, use advanced service
+    if (use_advanced_ai && monthly_income) {
+      try {
+        const advancedUrl = new URL('/api/tools/advanced-emi', request.url);
+        const advancedResponse = await fetch(advancedUrl.toString(), {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            property_price,
+            down_payment_percentage,
+            loan_tenure_years,
+            interest_rate,
+            monthly_income,
+            existing_loans_emi: existing_loans_emi || 0,
+            cibil_score: cibil_score || 750,
+            employment_type: employment_type || 'salaried',
+          }),
+        });
+        
+        if (advancedResponse.ok) {
+          const advancedData = await advancedResponse.json();
+          return NextResponse.json({
+            success: true,
+            results: advancedData.results,
+            ai_enhanced: true,
+          });
+        }
+      } catch (aiError) {
+        console.error('Advanced AI failed, using base calculations:', aiError);
+      }
+    }
+
     return NextResponse.json({
       success: true,
       results: {
@@ -85,6 +128,15 @@ export async function POST(request: NextRequest) {
     );
   }
 }
+
+
+
+
+
+
+
+
+
 
 
 

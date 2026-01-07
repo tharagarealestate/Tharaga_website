@@ -3,30 +3,36 @@
 // Check connection health and statistics
 // =============================================
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { requireBuilder, createErrorResponse } from '@/lib/auth/api-auth-helper';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
   try {
-    const supabase = await createClient();
+    // Enhanced authentication with better error handling
+    const { user, builder, supabase, error: authError } = await requireBuilder(request);
+    
+    if (authError) {
+      const statusCode = authError.type === 'NOT_BUILDER' ? 403 : 
+                        authError.type === 'CONFIG_ERROR' ? 500 : 401;
+      return createErrorResponse(authError as any, statusCode);
+    }
 
-    // Get current user
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-
-    if (authError || !user) {
-      return NextResponse.json(
-        { error: 'Unauthorized', success: false },
-        { status: 401 }
-      );
+    if (!builder || !supabase) {
+      return NextResponse.json({
+        connected: false,
+        active: false,
+        success: true,
+        message: 'Builder profile not found. Please complete your builder profile setup.',
+      });
     }
 
     // Get integration
     const { data: integration, error } = await supabase
       .from('integrations')
       .select('*')
-      .eq('builder_id', user.id)
+      .eq('builder_id', builder.id)
       .eq('integration_type', 'crm')
       .eq('provider', 'zoho')
       .single();

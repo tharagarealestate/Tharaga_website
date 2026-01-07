@@ -2447,12 +2447,31 @@
         // Initialize role manager for existing logged-in users
         if (state.user && window.thgRoleManager) {
           console.log('[thg-auth] Initializing role manager on page load');
+          // CRITICAL FIX: Remove loading flag immediately when user is detected
+          const portalMenu = document.getElementById('portal-menu');
+          if (portalMenu && state.user) {
+            portalMenu.removeAttribute('data-loading');
+            // Update menu immediately with basic options, will be enhanced when roles load
+            if (window.__updatePortalMenu) {
+              window.__updatePortalMenu();
+            }
+          }
           window.thgRoleManager.init(state.user, ui).then(() => {
             // CRITICAL: Update Portal menu immediately after role manager initializes
             if (window.__updatePortalMenu) {
               window.__updatePortalMenu();
             }
           }).catch(err => console.error('[thg-auth] Role manager init error:', err));
+        } else if (state.user) {
+          // User is logged in but role manager not ready yet - remove loading flag immediately
+          const portalMenu = document.getElementById('portal-menu');
+          if (portalMenu) {
+            portalMenu.removeAttribute('data-loading');
+            // Update menu with basic options
+            if (window.__updatePortalMenu) {
+              window.__updatePortalMenu();
+            }
+          }
         }
       }
 
@@ -2469,14 +2488,14 @@
           if ((event === 'SIGNED_IN' || event === 'INITIAL_SESSION') && state.user && window.thgRoleManager) {
             console.log('[thg-auth] User signed in, syncing Portal menu');
             
-            // CRITICAL: Immediately close Portal dropdown and set loading state
+            // CRITICAL FIX: Remove loading flag immediately on sign-in to allow instant dropdown opening
             const portalMenu = document.getElementById('portal-menu');
             if (portalMenu) {
               portalMenu.removeAttribute('open'); // Force close
-              portalMenu.setAttribute('data-loading', 'true'); // Prevent opening
-              const portalMenuItems = document.getElementById('portal-menu-items');
-              if (portalMenuItems) {
-                portalMenuItems.innerHTML = '<div style="padding:12px;color:rgba(255,255,255,0.6);text-align:center;font-size:13px;">Loading...</div>';
+              portalMenu.removeAttribute('data-loading'); // CRITICAL: Remove loading flag immediately
+              // Update menu immediately with basic options, will be enhanced when roles load
+              if (window.__updatePortalMenu) {
+                window.__updatePortalMenu();
               }
             }
             
@@ -3630,17 +3649,28 @@
           }
         }
 
-        // If role manager not ready yet, show loading state and prevent opening
-        if (!window.thgRoleManager) {
+        // CRITICAL FIX: Remove loading flag IMMEDIATELY when user is logged in
+        // This allows dropdown to open instantly after login, even if role manager isn't ready yet
+        if (isLoggedIn) {
+          portalMenu.removeAttribute('data-loading');
+        } else if (!window.thgRoleManager) {
+          // Only set loading for logged-out users if role manager not ready
           portalMenuItems.innerHTML = '<div style="padding:12px;color:rgba(255,255,255,0.6);text-align:center;font-size:13px;">Loading...</div>';
           portalMenu.setAttribute('data-loading', 'true');
           return;
         }
 
-        // CRITICAL: Remove loading flag IMMEDIATELY at START when user is logged in and roles are ready
-        // This ensures Portal dropdown can open instantly after login - no delay waiting for menu HTML to be set
-        if (isLoggedIn) {
+        // If role manager not ready but user is logged in, show basic menu with loading indicator
+        if (!window.thgRoleManager && isLoggedIn) {
+          // User is logged in but role manager not ready - show basic menu immediately
+          // This allows dropdown to open instantly, roles will be updated when ready
+          menuHTML = '<div style="padding:12px;color:rgba(255,255,255,0.6);text-align:center;font-size:13px;">Loading roles...</div>';
+          menuHTML += '<a href="/my-dashboard" class="portal-link" data-portal-type="buyer">🏠 Buyer Dashboard</a>';
+          menuHTML += '<a href="/builder" class="portal-link" data-portal-type="builder">🏗️ Builder Dashboard</a>';
+          portalMenuItems.innerHTML = menuHTML;
+          // Remove loading flag to allow dropdown to open
           portalMenu.removeAttribute('data-loading');
+          return; // Exit early, will be updated when role manager is ready
         }
 
         // Show portal menu
@@ -3673,7 +3703,7 @@
           // CRITICAL: Admin access is restricted to tharagarealestate@gmail.com only
           if (isAdminOwner) {
             const active = primaryRole === 'admin' ? ' <span style="color:#10b981">✓</span>' : '';
-            menuHTML += `<a href="/admin" class="portal-link" data-portal-type="admin" style="border-top:1px solid rgba(255,255,255,0.1);margin-top:8px;padding-top:8px;">⚙️ Admin Panel${active}</a>`;
+            menuHTML += `<a href="/admin" class="portal-link" data-portal-type="admin" data-next-link style="border-top:1px solid rgba(255,255,255,0.1);margin-top:8px;padding-top:8px;">⚙️ Admin Panel${active}</a>`;
           }
         }
 
@@ -4317,7 +4347,13 @@
             for (let i = 0; i < items.length; i++) {
               const item = items[i];
               
-              // Handle dropdowns (details elements)
+              // CRITICAL FIX: Handle Features button
+              if (item.tagName === 'BUTTON' && item.classList.contains('features-button')) {
+                const buttonText = item.textContent.trim();
+                menuHTML += '<button class="mobile-menu-link mobile-features-button" type="button" id="mobile-features-button">' + buttonText + '</button>';
+              }
+              
+              // Handle dropdowns (details elements) - Portal dropdown
               if (item.tagName === 'DETAILS' && item.classList.contains('dropdown')) {
                 const summary = item.querySelector('summary');
                 const menu = item.querySelector('.menu');
@@ -4368,6 +4404,30 @@
             newCloseBtn.addEventListener('click', closeMenu);
           }
 
+          // CRITICAL FIX: Add Features button click handler to open popup
+          const mobileFeaturesButton = panel.querySelector('.mobile-features-button');
+          if (mobileFeaturesButton) {
+            mobileFeaturesButton.addEventListener('click', function(e) {
+              e.preventDefault();
+              e.stopPropagation();
+              
+              // Close mobile menu first
+              closeMenu();
+              
+              // Open features modal (same as desktop)
+              const featuresModal = document.getElementById('features-modal-overlay');
+              const featuresButton = document.getElementById('features-button');
+              
+              if (featuresModal) {
+                featuresModal.setAttribute('aria-hidden', 'false');
+                if (featuresButton) {
+                  featuresButton.setAttribute('aria-expanded', 'true');
+                }
+                document.body.style.overflow = 'hidden'; // Prevent background scroll
+              }
+            });
+          }
+
           // Add dropdown toggle functionality
           const dropdowns = panel.querySelectorAll('.mobile-menu-dropdown');
           dropdowns.forEach(function(dropdown) {
@@ -4375,13 +4435,17 @@
             if (header) {
               header.addEventListener('click', function(e) {
                 e.preventDefault();
+                e.stopPropagation();
                 const isOpen = dropdown.classList.contains('is-open');
                 
                 // Close all other dropdowns
                 dropdowns.forEach(function(otherDropdown) {
                   if (otherDropdown !== dropdown) {
                     otherDropdown.classList.remove('is-open');
-                    otherDropdown.querySelector('.mobile-menu-dropdown-header').setAttribute('aria-expanded', 'false');
+                    const otherHeader = otherDropdown.querySelector('.mobile-menu-dropdown-header');
+                    if (otherHeader) {
+                      otherHeader.setAttribute('aria-expanded', 'false');
+                    }
                   }
                 });
                 
@@ -4398,8 +4462,8 @@
           });
 
 
-          // Add click listeners to menu items to close menu (but not dropdown headers)
-          const menuLinks = panel.querySelectorAll('.mobile-menu-link, .mobile-menu-dropdown-item');
+          // Add click listeners to menu items to close menu (but not dropdown headers or features button)
+          const menuLinks = panel.querySelectorAll('.mobile-menu-link:not(.mobile-features-button), .mobile-menu-dropdown-item');
           menuLinks.forEach(function(link) {
             link.addEventListener('click', function() {
               closeMenu();

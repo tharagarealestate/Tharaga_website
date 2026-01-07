@@ -99,9 +99,9 @@ export function MobilePropertyCard({ property, onFavoriteToggle }: MobilePropert
 
   return (
     <Link href={`/property/${property.slug || property.id}`} className="block">
-      <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden active:scale-[0.98] transition-transform touch-manipulation">
+      <div className="mobile-card mobile-property-card">
         {/* Image */}
-        <div className="relative aspect-[16/10]">
+        <div className="mobile-card-image">
           <Image
             src={property.thumbnail_url || property.images[0] || '/placeholder-property.jpg'}
             alt={property.title}
@@ -112,14 +112,14 @@ export function MobilePropertyCard({ property, onFavoriteToggle }: MobilePropert
           />
           
           {/* Badges - Top Left */}
-          <div className="absolute top-3 left-3 flex flex-col gap-2 z-10">
+          <div className="badge-top">
             {daysSinceListing <= 7 && (
-              <span className="px-3 py-1 bg-[#D4AF37] text-white text-xs font-bold rounded-full shadow-md">
+              <span className="badge bg-[#D4AF37] text-white">
                 NEW
               </span>
             )}
             {property.rera_verified && (
-              <span className="px-3 py-1 bg-emerald-500 text-white text-xs font-bold rounded-full flex items-center gap-1 shadow-md">
+              <span className="badge bg-emerald-500 text-white flex items-center gap-1">
                 <Shield className="w-3 h-3" />
                 RERA
               </span>
@@ -127,32 +127,30 @@ export function MobilePropertyCard({ property, onFavoriteToggle }: MobilePropert
           </div>
 
           {/* Actions - Top Right */}
-          <div className="absolute top-3 right-3 flex gap-2 z-10">
+          <div className="actions-top-right">
             <button
               onClick={handleFavoriteClick}
               disabled={isLoading}
-              className="p-2.5 bg-white/90 backdrop-blur-sm rounded-full active:scale-95 transition-all shadow-md touch-manipulation"
+              className="action-button"
               aria-label="Add to favorites"
             >
               <Heart 
-                className={`w-5 h-5 ${isFavorited ? 'fill-red-500 text-red-500' : 'text-slate-700'}`} 
+                className={isFavorited ? 'fill-red-500 text-red-500' : 'text-slate-700'} 
               />
             </button>
             <button
               onClick={handleShareClick}
               disabled={isSharing}
-              className="p-2.5 bg-white/90 backdrop-blur-sm rounded-full active:scale-95 transition-all shadow-md touch-manipulation"
+              className="action-button"
               aria-label="Share property"
             >
-              <Share2 className="w-5 h-5 text-slate-700" />
+              <Share2 className="text-slate-700" />
             </button>
           </div>
 
           {/* Price Badge - Bottom Left */}
-          <div className="absolute bottom-3 left-3 z-10">
-            <div className="px-4 py-2 bg-black/70 backdrop-blur-sm text-white rounded-full font-bold text-lg shadow-lg">
-              {formatPrice(property.base_price)}
-            </div>
+          <div className="price-badge">
+            {formatPrice(property.base_price)}
           </div>
 
           {/* View Count - Bottom Right */}
@@ -165,29 +163,31 @@ export function MobilePropertyCard({ property, onFavoriteToggle }: MobilePropert
         </div>
 
         {/* Content */}
-        <div className="p-4">
-          <h3 className="font-bold text-slate-900 text-lg mb-2 line-clamp-2 leading-tight">
+        <div className="mobile-card-content">
+          <h3 className="mobile-card-title">
             {property.title}
           </h3>
 
           {/* Location */}
-          <div className="flex items-center gap-1.5 text-slate-600 mb-3">
+          <div className="flex items-center gap-1.5 text-slate-600">
             <MapPin className="w-4 h-4 flex-shrink-0 text-slate-400" />
-            <span className="text-sm line-clamp-1">{property.address}, {property.city}</span>
+            <span className="mobile-text-sm line-clamp-1">{property.address}, {property.city}</span>
           </div>
 
           {/* Specs */}
-          <div className="flex items-center gap-4 text-sm text-slate-700 mb-3 pb-3 border-b border-slate-200">
-            <div className="flex items-center gap-1.5">
-              <Bed className="w-4 h-4 text-slate-400" />
-              <span className="font-semibold">{property.bhk_type || 'N/A'}</span>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <Maximize className="w-4 h-4 text-slate-400" />
-              <span className="font-semibold">{property.carpet_area} sqft</span>
+          <div className="mobile-card-footer">
+            <div className="flex items-center gap-4 mobile-text-sm text-slate-700">
+              <div className="flex items-center gap-1.5">
+                <Bed className="w-4 h-4 text-slate-400" />
+                <span className="font-semibold">{property.bhk_type || 'N/A'}</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <Maximize className="w-4 h-4 text-slate-400" />
+                <span className="font-semibold">{property.carpet_area} sqft</span>
+              </div>
             </div>
             {property.price_per_sqft && (
-              <div className="text-xs text-slate-500 ml-auto">
+              <div className="mobile-text-xs text-slate-500">
                 ₹{property.price_per_sqft.toLocaleString('en-IN')}/sqft
               </div>
             )}

@@ -27,7 +27,9 @@ export async function POST(request: NextRequest) {
       property_price,
       preferred_tenure_years,
       cibil_score_range,
-    }: LoanEligibilityInput = body;
+      use_advanced_ai = false,
+      city,
+    }: LoanEligibilityInput & { use_advanced_ai?: boolean; city?: string } = body;
 
     if (!monthly_income || !property_price || !cibil_score_range) {
       return NextResponse.json(
@@ -88,6 +90,41 @@ export async function POST(request: NextRequest) {
 
     probability = Math.min(Math.max(probability, 0), 95);
 
+    // If advanced AI is requested, use advanced service
+    if (use_advanced_ai && city) {
+      try {
+        const cibilScore = cibil_score_range === '750+' ? 775 :
+                          cibil_score_range === '650-749' ? 700 :
+                          cibil_score_range === '550-649' ? 600 : 500;
+        
+        const advancedUrl = new URL('/api/tools/advanced-loan-eligibility', request.url);
+        const advancedResponse = await fetch(advancedUrl.toString(), {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            monthly_income,
+            existing_loans_emi,
+            property_price,
+            preferred_tenure_years,
+            cibil_score: cibilScore,
+            employment_type,
+            city,
+          }),
+        });
+        
+        if (advancedResponse.ok) {
+          const advancedData = await advancedResponse.json();
+          return NextResponse.json({
+            success: true,
+            results: advancedData.results,
+            ai_enhanced: true,
+          });
+        }
+      } catch (aiError) {
+        console.error('Advanced AI failed, using base calculations:', aiError);
+      }
+    }
+
     return NextResponse.json({
       success: true,
       results: {
@@ -110,6 +147,15 @@ export async function POST(request: NextRequest) {
     );
   }
 }
+
+
+
+
+
+
+
+
+
 
 
 

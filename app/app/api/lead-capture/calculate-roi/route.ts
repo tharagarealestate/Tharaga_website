@@ -32,7 +32,11 @@ export async function POST(request: NextRequest) {
       expected_rental_income,
       property_appreciation_rate = 8, // Default 8% for Tamil Nadu
       calculate_years = [5, 10, 15],
-    }: ROIInput = body;
+      use_advanced_ai = false, // New flag for advanced AI
+      city,
+      locality,
+      property_type,
+    }: ROIInput & { use_advanced_ai?: boolean; city?: string; locality?: string; property_type?: string } = body;
 
     if (!property_price || !down_payment_percentage || !expected_rental_income) {
       return NextResponse.json(
@@ -106,6 +110,37 @@ export async function POST(request: NextRequest) {
       };
     }
 
+    // If advanced AI is requested and city/locality provided, use advanced service
+    if (use_advanced_ai && city && locality) {
+      try {
+        const advancedUrl = new URL('/api/tools/advanced-roi', request.url);
+        const advancedResponse = await fetch(advancedUrl.toString(), {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            property_price,
+            down_payment_percentage,
+            expected_rental_income,
+            city,
+            locality,
+            property_type: property_type || 'apartment',
+          }),
+        });
+        
+        if (advancedResponse.ok) {
+          const advancedData = await advancedResponse.json();
+          return NextResponse.json({
+            success: true,
+            results: advancedData.results,
+            ai_enhanced: true,
+          });
+        }
+      } catch (aiError) {
+        console.error('Advanced AI failed, using base calculations:', aiError);
+        // Fall through to base calculations
+      }
+    }
+
     return NextResponse.json({
       success: true,
       results,
@@ -118,6 +153,15 @@ export async function POST(request: NextRequest) {
     );
   }
 }
+
+
+
+
+
+
+
+
+
 
 
 

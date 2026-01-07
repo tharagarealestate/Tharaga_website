@@ -73,13 +73,8 @@ export default function HelpCenterPage() {
   })).filter(cat => cat.questions.length > 0 || !searchQuery)
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-950 via-primary-900 to-primary-800 relative overflow-hidden">
-      <div className="absolute inset-0 opacity-30">
-        <div className="absolute top-20 left-10 w-96 h-96 bg-gold-500 rounded-full blur-3xl animate-pulse-slow" />
-        <div className="absolute bottom-20 right-10 w-[600px] h-[600px] bg-emerald-500 rounded-full blur-3xl animate-pulse-slow" style={{ animationDelay: '1s' }} />
-      </div>
-
-      <div className="relative z-10 container mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    <PageWrapper>
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <Breadcrumb items={[
           { label: 'Home', href: '/' },
           { label: 'Help Center' }
@@ -87,16 +82,16 @@ export default function HelpCenterPage() {
 
         <div className="max-w-5xl mx-auto mt-8">
           <div className="text-center mb-12">
-            <div className="inline-flex items-center gap-2 px-4 py-2 bg-gold-500/20 backdrop-blur-sm border border-gold-500/30 rounded-full mb-6">
-              <HelpCircle className="w-4 h-4 text-gold-300" />
-              <span className="text-gold-300 text-sm font-medium">AI-Powered Support</span>
-            </div>
-            <h1 className="font-display text-4xl sm:text-5xl lg:text-6xl font-bold text-white mb-4">
-              Help Center
-            </h1>
-            <p className="text-xl text-gray-300 mb-8">
-              Find answers to common questions or contact our support team
-            </p>
+            <PageHeader
+              title="Help Center"
+              description="Find answers to common questions or contact our support team"
+              className="text-center mb-8"
+            >
+              <div className={`inline-flex items-center gap-2 px-4 py-2 ${DESIGN_TOKENS.colors.background.card} backdrop-blur-sm border ${DESIGN_TOKENS.effects.border.amberClass} rounded-full mb-6`}>
+                <HelpCircle className={`w-4 h-4 ${DESIGN_TOKENS.colors.text.accent}`} />
+                <span className={`${DESIGN_TOKENS.colors.text.accent} text-sm font-medium`}>AI-Powered Support</span>
+              </div>
+            </PageHeader>
 
             {/* Search Bar */}
             <div className="max-w-2xl mx-auto">
@@ -107,30 +102,31 @@ export default function HelpCenterPage() {
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Search for help..."
-                  className="w-full pl-12 pr-4 py-4 rounded-xl bg-white/10 border border-white/20 backdrop-blur-sm text-white placeholder:text-white/50 focus:outline-none focus:ring-2 focus:ring-gold-500/50"
+                  className={`w-full pl-12 pr-4 py-4 rounded-xl ${DESIGN_TOKENS.colors.background.card} border ${DESIGN_TOKENS.colors.border.default} backdrop-blur-sm ${DESIGN_TOKENS.colors.text.primary} placeholder:${DESIGN_TOKENS.colors.text.muted} focus:outline-none focus:ring-2 focus:ring-amber-500/50`}
                 />
               </div>
             </div>
           </div>
 
           {/* FAQ Categories */}
-          <div className="space-y-6">
+          <SectionWrapper noPadding>
+            <div className="space-y-6">
             {filteredCategories.map((category) => (
-              <div key={category.id} className="backdrop-blur-xl bg-white/10 border border-white/20 rounded-3xl p-6">
+              <GlassCard key={category.id} variant="dark" glow border className="p-6">
                 <button
                   onClick={() => setOpenCategory(openCategory === category.id ? null : category.id)}
                   className="w-full flex items-center justify-between text-left mb-4"
                 >
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-lg bg-gold-500/20 flex items-center justify-center text-gold-300">
+                    <div className={`w-10 h-10 rounded-lg ${DESIGN_TOKENS.colors.background.card} flex items-center justify-center ${DESIGN_TOKENS.colors.text.accent}`}>
                       {category.icon}
                     </div>
-                    <h2 className="text-2xl font-bold text-white">{category.title}</h2>
+                    <h2 className={`text-2xl font-bold ${DESIGN_TOKENS.colors.text.primary}`}>{category.title}</h2>
                   </div>
                   {openCategory === category.id ? (
-                    <ChevronUp className="w-6 h-6 text-white/70" />
+                    <ChevronUp className={`w-6 h-6 ${DESIGN_TOKENS.colors.text.secondary}`} />
                   ) : (
-                    <ChevronDown className="w-6 h-6 text-white/70" />
+                    <ChevronDown className={`w-6 h-6 ${DESIGN_TOKENS.colors.text.secondary}`} />
                   )}
                 </button>
 
@@ -142,18 +138,18 @@ export default function HelpCenterPage() {
                           onClick={() => setOpenQuestion(openQuestion === item.id ? null : item.id)}
                           className="w-full flex items-center justify-between text-left mb-2"
                         >
-                          <h3 className="text-lg font-semibold text-white">{item.question}</h3>
+                          <h3 className={`text-lg font-semibold ${DESIGN_TOKENS.colors.text.primary}`}>{item.question}</h3>
                           {openQuestion === item.id ? (
-                            <ChevronUp className="w-5 h-5 text-white/50 flex-shrink-0 ml-4" />
+                            <ChevronUp className={`w-5 h-5 ${DESIGN_TOKENS.colors.text.muted} flex-shrink-0 ml-4`} />
                           ) : (
-                            <ChevronDown className="w-5 h-5 text-white/50 flex-shrink-0 ml-4" />
+                            <ChevronDown className={`w-5 h-5 ${DESIGN_TOKENS.colors.text.muted} flex-shrink-0 ml-4`} />
                           )}
                         </button>
                         {openQuestion === item.id && (
-                          <div className="text-white/80 leading-relaxed mt-3">
+                          <div className={`${DESIGN_TOKENS.colors.text.secondary} leading-relaxed mt-3`}>
                             <p>{item.answer}</p>
                             {(item as any).link && (
-                              <Link href={(item as any).link} className="text-gold-400 hover:text-gold-300 underline mt-2 inline-block">
+                              <Link href={(item as any).link} className={`${DESIGN_TOKENS.colors.text.accent} hover:text-amber-200 underline mt-2 inline-block`}>
                                 Learn more →
                               </Link>
                             )}
@@ -163,37 +159,38 @@ export default function HelpCenterPage() {
                     ))}
                   </div>
                 )}
-              </div>
+              </GlassCard>
             ))}
           </div>
+          </SectionWrapper>
 
           {/* Contact Support */}
-          <div className="mt-12 backdrop-blur-xl bg-gold-500/10 border border-gold-500/30 rounded-3xl p-8 text-center">
-            <MessageCircle className="w-12 h-12 text-gold-400 mx-auto mb-4" />
-            <h2 className="text-2xl font-bold text-white mb-4">Still Need Help?</h2>
-            <p className="text-white/80 mb-6">
-              Our support team is available to assist you 24/7
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <a
-                href="mailto:tharagarealestate@gmail.com"
-                className="flex items-center justify-center gap-2 px-6 py-3 bg-gold-500 hover:bg-gold-600 rounded-xl font-semibold transition-colors"
-              >
-                <Mail className="w-5 h-5" />
-                Email Support
-              </a>
-              <a
-                href="tel:+918870980839"
-                className="flex items-center justify-center gap-2 px-6 py-3 bg-white/10 hover:bg-white/20 border border-white/20 rounded-xl font-semibold transition-colors"
-              >
-                <Phone className="w-5 h-5" />
-                Call Us
-              </a>
-            </div>
-          </div>
+          <SectionWrapper noPadding className="mt-12">
+            <GlassCard variant="gold" glow border className="p-8 text-center">
+              <MessageCircle className={`w-12 h-12 ${DESIGN_TOKENS.colors.text.accent} mx-auto mb-4`} />
+              <h2 className={`${DESIGN_TOKENS.typography.h2} mb-4`}>Still Need Help?</h2>
+              <p className={`${DESIGN_TOKENS.colors.text.secondary} mb-6`}>
+                Our support team is available to assist you 24/7
+              </p>
+              <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                <PremiumButton variant="gold" size="md" asChild>
+                  <a href="mailto:tharagarealestate@gmail.com">
+                    <Mail className="w-5 h-5 mr-2" />
+                    Email Support
+                  </a>
+                </PremiumButton>
+                <PremiumButton variant="secondary" size="md" asChild>
+                  <a href="tel:+918870980839">
+                    <Phone className="w-5 h-5 mr-2" />
+                    Call Us
+                  </a>
+                </PremiumButton>
+              </div>
+            </GlassCard>
+          </SectionWrapper>
         </div>
       </div>
-    </div>
+    </PageWrapper>
   )
 }
 

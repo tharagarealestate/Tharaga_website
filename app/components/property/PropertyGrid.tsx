@@ -28,9 +28,11 @@ export function PropertyGrid({ properties, layout = 'grid', useMobileCard }: Pro
   // Use mobile-optimized cards on mobile
   if (shouldUseMobile) {
     return (
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3 md:gap-6">
-        {properties.map((property) => (
-          <MobilePropertyCard key={property.id} property={property} />
+      <div className="mobile-grid stagger-item">
+        {properties.map((property, index) => (
+          <div key={property.id} className="stagger-item" style={{ animationDelay: `${index * 50}ms` }}>
+            <MobilePropertyCard property={property} />
+          </div>
         ))}
       </div>
     );

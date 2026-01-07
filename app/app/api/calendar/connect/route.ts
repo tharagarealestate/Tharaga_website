@@ -3,7 +3,7 @@
 // Redirects user to Google consent screen
 // =============================================
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { requireBuilder, createErrorResponse } from '@/lib/auth/api-auth-helper';
 import { googleCalendarClient } from '@/lib/integrations/calendar/googleCalendar';
 
 export const runtime = 'nodejs';
@@ -11,32 +11,26 @@ export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
   try {
-    const supabase = await createClient();
-
     // =============================================
-    // AUTHENTICATION
+    // ENHANCED AUTHENTICATION
     // =============================================
-    // Get current user (builder)
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-
-    if (authError || !user) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
+    const { user, builder, error: authError } = await requireBuilder(request);
+    
+    if (authError) {
+      const statusCode = authError.type === 'NOT_BUILDER' ? 403 : 
+                        authError.type === 'CONFIG_ERROR' ? 500 : 401;
+      return createErrorResponse(authError as any, statusCode);
     }
-
-    // Verify user is a builder
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', user.id)
-      .single();
-
-    if (profile?.role !== 'builder') {
+    
+    if (!builder) {
       return NextResponse.json(
-        { error: 'Forbidden - Builders only' },
-        { status: 403 }
+        { 
+          success: false,
+          error: 'Builder profile not found',
+          errorType: 'NOT_FOUND',
+          message: 'Please complete your builder profile setup to connect Google Calendar.',
+        },
+        { status: 404 }
       );
     }
 
@@ -44,7 +38,7 @@ export async function GET(request: NextRequest) {
     // GENERATE OAUTH URL
     // =============================================
     // Generate OAuth URL with builder_id in state
-    const authUrl = googleCalendarClient.getAuthUrl(user.id);
+    const authUrl = googleCalendarClient.getAuthUrl(user!.id);
 
     // =============================================
     // RETURN RESPONSE

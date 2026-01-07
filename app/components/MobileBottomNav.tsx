@@ -14,8 +14,8 @@ const tabs = [
 export default function MobileBottomNav() {
   const pathname = usePathname()
   return (
-    <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-gray-200 shadow-lg safe-area-bottom">
-      <ul className="grid grid-cols-5">
+    <nav className="mobile-bottom-nav md:hidden">
+      <ul>
         {tabs.map(({ href, icon: Icon, label }) => {
           // Check exact match first, then check if pathname starts with href
           // But prioritize more specific routes (e.g., /builder/leads/pipeline over /builder/leads)
@@ -29,14 +29,13 @@ export default function MobileBottomNav() {
           )
           const active = exactMatch || (startsWithMatch && !moreSpecificMatch)
           return (
-            <li key={href} className="text-center">
+            <li key={href}>
               <Link 
                 href={href} 
-                className="flex flex-col items-center justify-center py-2 min-h-[60px] touch-manipulation active:bg-gray-100 transition-colors"
-                style={{ WebkitTapHighlightColor: 'transparent' }}
+                className={active ? 'active' : ''}
               >
-                <Icon className={"h-6 w-6 mb-1 " + (active ? 'text-[rgb(var(--gold-500))]' : 'text-gray-500')} />
-                <span className={"text-[10px] font-medium " + (active ? 'text-[rgb(var(--gold-500))] font-bold' : 'text-gray-500')}>{label}</span>
+                <Icon />
+                <span>{label}</span>
               </Link>
             </li>
           )

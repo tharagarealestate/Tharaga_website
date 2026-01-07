@@ -4,6 +4,11 @@ import React from 'react'
 import Link from 'next/link'
 import { Map, Home, Building2, Users, DollarSign, FileText, HelpCircle, Settings } from 'lucide-react'
 import Breadcrumb from '@/components/Breadcrumb'
+import { PageWrapper } from '@/components/ui/PageWrapper'
+import { PageHeader } from '@/components/ui/PageHeader'
+import { SectionWrapper } from '@/components/ui/SectionWrapper'
+import { GlassCard } from '@/components/ui/glass-card'
+import { DESIGN_TOKENS } from '@/lib/design-system'
 
 export default function SitemapPage() {
   const sections = [
@@ -80,89 +85,88 @@ export default function SitemapPage() {
   ]
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-950 via-primary-900 to-primary-800 relative overflow-hidden">
-      <div className="absolute inset-0 opacity-30">
-        <div className="absolute top-20 left-10 w-96 h-96 bg-gold-500 rounded-full blur-3xl animate-pulse-slow" />
-        <div className="absolute bottom-20 right-10 w-[600px] h-[600px] bg-emerald-500 rounded-full blur-3xl animate-pulse-slow" style={{ animationDelay: '1s' }} />
-      </div>
+    <PageWrapper>
+      <Breadcrumb items={[
+        { label: 'Home', href: '/' },
+        { label: 'Sitemap' }
+      ]} />
 
-      <div className="relative z-10 container mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <Breadcrumb items={[
-          { label: 'Home', href: '/' },
-          { label: 'Sitemap' }
-        ]} />
+      <PageHeader
+        title="Sitemap"
+        description="Find all pages and sections of Tharaga platform"
+        className="text-center mb-8"
+      >
+        <div className={`inline-flex items-center gap-2 px-4 py-2 ${DESIGN_TOKENS.colors.background.card} backdrop-blur-sm border ${DESIGN_TOKENS.effects.border.amberClass} rounded-full mb-6`}>
+          <Map className={`w-4 h-4 ${DESIGN_TOKENS.colors.text.accent}`} />
+          <span className={`${DESIGN_TOKENS.colors.text.accent} text-sm font-medium`}>Site Navigation</span>
+        </div>
+      </PageHeader>
 
-        <div className="max-w-6xl mx-auto mt-8">
-          <div className="text-center mb-12">
-            <div className="inline-flex items-center gap-2 px-4 py-2 bg-gold-500/20 backdrop-blur-sm border border-gold-500/30 rounded-full mb-6">
-              <Map className="w-4 h-4 text-gold-300" />
-              <span className="text-gold-300 text-sm font-medium">Site Navigation</span>
-            </div>
-            <h1 className="font-display text-4xl sm:text-5xl lg:text-6xl font-bold text-white mb-4">
-              Sitemap
-            </h1>
-            <p className="text-xl text-gray-300">
-              Find all pages and sections of Tharaga platform
-            </p>
-          </div>
+      <div className="max-w-6xl mx-auto">
 
-          {/* Sitemap Grid */}
+        {/* Sitemap Grid */}
+        <SectionWrapper noPadding>
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {sections.map((section) => (
-              <div
+              <GlassCard
                 key={section.title}
-                className="backdrop-blur-xl bg-white/10 border border-white/20 rounded-3xl p-6"
+                variant="dark"
+                glow
+                border
+                className="p-6"
               >
                 <div className="flex items-center gap-3 mb-6">
-                  <div className="w-10 h-10 rounded-lg bg-gold-500/20 flex items-center justify-center text-gold-300">
+                  <div className={`w-10 h-10 rounded-lg ${DESIGN_TOKENS.colors.background.card} flex items-center justify-center ${DESIGN_TOKENS.colors.text.accent}`}>
                     {section.icon}
                   </div>
-                  <h2 className="text-xl font-bold text-white">{section.title}</h2>
+                  <h2 className={`text-xl font-bold ${DESIGN_TOKENS.colors.text.primary}`}>{section.title}</h2>
                 </div>
                 <ul className="space-y-3">
                   {section.links.map((link) => (
                     <li key={link.href}>
                       <Link
                         href={link.href}
-                        className="text-white/70 hover:text-gold-400 transition-colors flex items-center gap-2 group"
+                        className={`${DESIGN_TOKENS.colors.text.secondary} hover:${DESIGN_TOKENS.colors.text.accent} transition-colors flex items-center gap-2 group`}
                       >
-                        <span className="w-1.5 h-1.5 rounded-full bg-white/30 group-hover:bg-gold-400 transition-colors" />
+                        <span className={`w-1.5 h-1.5 rounded-full ${DESIGN_TOKENS.colors.text.muted} group-hover:${DESIGN_TOKENS.colors.text.accent} transition-colors`} />
                         {link.label}
                       </Link>
                     </li>
                   ))}
                 </ul>
-              </div>
+              </GlassCard>
             ))}
           </div>
+        </SectionWrapper>
 
-          {/* Additional Information */}
-          <div className="mt-12 backdrop-blur-xl bg-white/10 border border-white/20 rounded-3xl p-8">
-            <h2 className="text-2xl font-bold text-white mb-4">About This Sitemap</h2>
-            <p className="text-white/80 leading-relaxed mb-4">
+        {/* Additional Information */}
+        <SectionWrapper noPadding className="mt-12">
+          <GlassCard variant="dark" glow border className="p-8">
+            <h2 className={`${DESIGN_TOKENS.typography.h2} mb-4`}>About This Sitemap</h2>
+            <p className={`${DESIGN_TOKENS.colors.text.secondary} leading-relaxed mb-4`}>
               This sitemap provides an overview of all major pages and sections available on Tharaga. 
               Use it to navigate through our platform and discover features for builders, buyers, and tools.
             </p>
-            <p className="text-white/80 leading-relaxed">
-              If you can't find what you're looking for, visit our <Link href="/help" className="text-gold-400 hover:text-gold-300 underline">Help Center</Link> or 
-              {' '}<Link href="/contact" className="text-gold-400 hover:text-gold-300 underline">contact our support team</Link>.
+            <p className={`${DESIGN_TOKENS.colors.text.secondary} leading-relaxed`}>
+              If you can't find what you're looking for, visit our <Link href="/help" className={`${DESIGN_TOKENS.colors.text.accent} hover:text-amber-200 underline`}>Help Center</Link> or 
+              {' '}<Link href="/contact" className={`${DESIGN_TOKENS.colors.text.accent} hover:text-amber-200 underline`}>contact our support team</Link>.
             </p>
-          </div>
+          </GlassCard>
+        </SectionWrapper>
 
-          {/* XML Sitemap Link */}
-          <div className="mt-8 text-center">
-            <p className="text-white/70 mb-4">For search engines:</p>
-            <Link
-              href="/sitemap.xml"
-              className="inline-flex items-center gap-2 px-6 py-3 bg-white/10 hover:bg-white/20 border border-white/20 rounded-xl font-semibold transition-colors"
-            >
-              <FileText className="w-5 h-5" />
-              View XML Sitemap
-            </Link>
-          </div>
-        </div>
+        {/* XML Sitemap Link */}
+        <SectionWrapper noPadding className="mt-8 text-center">
+          <p className={`${DESIGN_TOKENS.colors.text.secondary} mb-4`}>For search engines:</p>
+          <Link
+            href="/sitemap.xml"
+            className={`inline-flex items-center gap-2 px-6 py-3 ${DESIGN_TOKENS.colors.background.card} hover:bg-slate-700/50 border ${DESIGN_TOKENS.colors.border.default} rounded-xl font-semibold transition-colors`}
+          >
+            <FileText className="w-5 h-5" />
+            View XML Sitemap
+          </Link>
+        </SectionWrapper>
       </div>
-    </div>
+    </PageWrapper>
   )
 }
 

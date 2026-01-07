@@ -24,7 +24,9 @@ export async function POST(request: NextRequest) {
       family_type,
       preferred_localities = [],
       city = 'Chennai',
-    }: NeighborhoodInput = body;
+      use_advanced_ai = false,
+      work_location,
+    }: NeighborhoodInput & { use_advanced_ai?: boolean; work_location?: string } = body;
 
     if (!primary_priorities.length || !family_type) {
       return NextResponse.json(
@@ -68,6 +70,35 @@ export async function POST(request: NextRequest) {
     const topNeighborhoods = preferred_localities.length > 0
       ? scoredNeighborhoods.filter(n => preferred_localities.includes(n.name))
       : scoredNeighborhoods.slice(0, 5);
+
+    // If advanced AI is requested, use advanced service
+    if (use_advanced_ai) {
+      try {
+        const advancedUrl = new URL('/api/tools/advanced-neighborhood', request.url);
+        const advancedResponse = await fetch(advancedUrl.toString(), {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            primary_priorities,
+            family_type,
+            city,
+            preferred_localities,
+            work_location,
+          }),
+        });
+        
+        if (advancedResponse.ok) {
+          const advancedData = await advancedResponse.json();
+          return NextResponse.json({
+            success: true,
+            results: advancedData.results,
+            ai_enhanced: true,
+          });
+        }
+      } catch (aiError) {
+        console.error('Advanced AI failed, using base calculations:', aiError);
+      }
+    }
 
     return NextResponse.json({
       success: true,
@@ -223,6 +254,15 @@ function generateRecommendations(neighborhoods: any[], familyType: string): stri
 
   return recommendations;
 }
+
+
+
+
+
+
+
+
+
 
 
 

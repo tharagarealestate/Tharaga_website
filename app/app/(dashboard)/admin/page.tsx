@@ -2,11 +2,13 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { Card } from '@/components/ui/Card'
-import { Button } from '@/components/ui/Button'
-import { Select } from '@/components/ui/Select'
+import { GlassCard } from '@/components/ui/glass-card'
+import { PremiumButton } from '@/components/ui/premium-button'
+import { PageHeader } from '@/components/ui/PageHeader'
+import { StatsCard } from '@/components/ui/StatsCard'
 import { getSupabase } from '@/lib/supabase'
 import { format } from 'date-fns'
+import { Users, TrendingUp, DollarSign, Activity } from 'lucide-react'
 
 // ---------- Types ----------
 
@@ -213,23 +215,28 @@ export default function AdminDashboardPage() {
   return (
     <div className="space-y-8">
       {/* Header */}
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold text-white mb-2">Admin Dashboard</h1>
-        <p className="text-slate-300">Comprehensive platform metrics and insights</p>
-      </div>
-
-      {/* Controls */}
-      <div className="flex items-center gap-3">
-        <Select value={range} onChange={(e) => setRange(e.target.value as DateRange)} className="w-[160px] bg-slate-800/95 text-white glow-border">
-          <option value="7d">Last 7 days</option>
-          <option value="30d">Last 30 days</option>
-          <option value="90d">Last 90 days</option>
-        </Select>
-        <Button onClick={exportCSV} className="bg-amber-500 hover:bg-amber-600 glow-border text-slate-900">Export CSV</Button>
-        <Button
-          variant="secondary"
-          className="glow-border bg-slate-800/95 text-slate-200 hover:bg-slate-700/50"
-          onClick={async () => {
+      <PageHeader
+        title="Admin Dashboard"
+        description="Comprehensive platform metrics and insights"
+        emoji="📊"
+        actions={
+          <div className="flex items-center gap-3">
+            <select
+              value={range}
+              onChange={(e) => setRange(e.target.value as DateRange)}
+              className="px-4 py-2 bg-slate-800/95 text-white glow-border rounded-lg border border-slate-700/50 focus:outline-none focus:ring-2 focus:ring-amber-500/50"
+            >
+              <option value="7d">Last 7 days</option>
+              <option value="30d">Last 30 days</option>
+              <option value="90d">Last 90 days</option>
+            </select>
+            <PremiumButton variant="gold" size="md" onClick={exportCSV}>
+              Export CSV
+            </PremiumButton>
+            <PremiumButton
+              variant="outline"
+              size="md"
+              onClick={async () => {
             const emails = window.prompt('Enter recipient emails (comma separated)') || ''
             if (!emails.trim()) return
             const freq = window.prompt('Frequency: daily, weekly, or monthly', 'daily') || 'daily'
@@ -247,49 +254,46 @@ export default function AdminDashboardPage() {
           }}
         >
           Email Report
-        </Button>
-      </div>
+        </PremiumButton>
+          </div>
+        }
+      />
 
       {/* Top Row */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <MetricCard
-          title="Active Users Now"
-          value={topQuery.data?.activeUsersNow.value}
-          loading={topQuery.isLoading}
-          accent="emerald"
-        >
-          <Sparkline data={topQuery.data?.activeUsersNow.series || []} color="var(--emerald-500)" />
-        </MetricCard>
-
-        <MetricCard
-          title="Leads Today"
-          value={topQuery.data?.leadsToday.value}
-          sub={`${fmtPct(topQuery.data?.leadsToday.pctVsYesterday)} vs yesterday`}
-          loading={topQuery.isLoading}
-          accent="gold"
+        <StatsCard
+          icon={Users}
+          value={topQuery.data?.activeUsersNow.value || 0}
+          label="Active Users Now"
+          delay={0.1}
         />
-
-        <MetricCard
-          title="Trial Conversions (This Week)"
-          value={topQuery.data?.trialConversionsWeek.value}
-          sub={`Rate ${fmtPct(topQuery.data?.trialConversionsWeek.conversionRate)}`}
-          loading={topQuery.isLoading}
-          accent="primary"
+        <StatsCard
+          icon={Activity}
+          value={topQuery.data?.leadsToday.value || 0}
+          label="Leads Today"
+          subtitle={`${fmtPct(topQuery.data?.leadsToday.pctVsYesterday)} vs yesterday`}
+          delay={0.15}
         />
-
-        <MetricCard
-          title="Revenue (MTD)"
+        <StatsCard
+          icon={TrendingUp}
+          value={topQuery.data?.trialConversionsWeek.value || 0}
+          label="Trial Conversions (This Week)"
+          subtitle={`Rate ${fmtPct(topQuery.data?.trialConversionsWeek.conversionRate)}`}
+          delay={0.2}
+        />
+        <StatsCard
+          icon={DollarSign}
           value={fmtINR(topQuery.data?.revenueMtd.value)}
-          sub={`${fmtPct(topQuery.data?.revenueMtd.growthVsLastMonth)} vs last month`}
-          loading={topQuery.isLoading}
-          accent="emerald"
+          label="Revenue (MTD)"
+          subtitle={`${fmtPct(topQuery.data?.revenueMtd.growthVsLastMonth)} vs last month`}
+          delay={0.25}
         />
       </div>
 
       {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card className="bg-gray-900 border-gray-800">
-          <div className="mb-2 text-gray-200 font-semibold">User Growth (Last {range.toUpperCase()})</div>
+        <GlassCard variant="dark" glow border className="p-6">
+          <div className="mb-2 text-white font-semibold">User Growth (Last {range.toUpperCase()})</div>
           {growthQuery.isLoading || !R ? (
             <div className="h-64 rounded-md bg-gray-800/60 animate-pulse" />
           ) : (
@@ -307,10 +311,10 @@ export default function AdminDashboardPage() {
               </R.ResponsiveContainer>
             </div>
           )}
-        </Card>
+        </GlassCard>
 
-        <Card className="bg-gray-900 border-gray-800">
-          <div className="mb-2 text-gray-200 font-semibold">Lead Quality Distribution</div>
+        <GlassCard variant="dark" glow border className="p-6">
+          <div className="mb-2 text-white font-semibold">Lead Quality Distribution</div>
           {leadQualityQuery.isLoading || !R ? (
             <div className="h-64 rounded-md bg-gray-800/60 animate-pulse" />
           ) : (
@@ -327,10 +331,10 @@ export default function AdminDashboardPage() {
               </R.ResponsiveContainer>
             </div>
           )}
-        </Card>
+        </GlassCard>
 
-        <Card className="bg-gray-900 border-gray-800 lg:col-span-2">
-          <div className="mb-2 text-gray-200 font-semibold">Revenue Forecast (Next 3 Months)</div>
+        <GlassCard variant="dark" glow border className="p-6 lg:col-span-2">
+          <div className="mb-2 text-white font-semibold">Revenue Forecast (Next 3 Months)</div>
           {forecastQuery.isLoading || !R ? (
             <div className="h-64 rounded-md bg-gray-800/60 animate-pulse" />
           ) : (
@@ -348,10 +352,10 @@ export default function AdminDashboardPage() {
               </R.ResponsiveContainer>
             </div>
           )}
-        </Card>
+        </GlassCard>
 
-        <Card className="bg-gray-900 border-gray-800 lg:col-span-2">
-          <div className="mb-2 text-gray-200 font-semibold">Acquisition Funnel (Last 30 Days)</div>
+        <GlassCard variant="dark" glow border className="p-6 lg:col-span-2">
+          <div className="mb-2 text-white font-semibold">Acquisition Funnel (Last 30 Days)</div>
           {funnelQuery.isLoading ? (
             <div className="h-64 rounded-md bg-gray-800/60 animate-pulse" />
           ) : (
@@ -371,9 +375,9 @@ export default function AdminDashboardPage() {
 
       {/* Tables */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card className="bg-gray-900 border-gray-800">
+        <GlassCard variant="dark" glow border className="p-6">
           <div className="mb-3 flex items-center justify-between">
-            <div className="text-gray-200 font-semibold">Top Performing Properties</div>
+            <div className="text-white font-semibold">Top Performing Properties</div>
           </div>
           <div className="overflow-auto rounded-md border border-gray-800">
             {topPropsQuery.isLoading ? (
@@ -408,11 +412,11 @@ export default function AdminDashboardPage() {
             </table>
             )}
           </div>
-        </Card>
+        </GlassCard>
 
-        <Card className="bg-gray-900 border-gray-800">
+        <GlassCard variant="dark" glow border className="p-6">
           <div className="mb-3 flex items-center justify-between">
-            <div className="text-gray-200 font-semibold">Builder Leaderboard</div>
+            <div className="text-white font-semibold">Builder Leaderboard</div>
           </div>
           <div className="overflow-auto rounded-md border border-gray-800">
             {buildersQuery.isLoading ? (
@@ -447,16 +451,16 @@ export default function AdminDashboardPage() {
             </table>
             )}
           </div>
-        </Card>
+        </GlassCard>
       </div>
 
       {/* Live Activity */}
-      <Card className="bg-gray-900 border-gray-800">
+      <GlassCard variant="dark" glow border className="p-6">
         <div className="mb-3 flex items-center justify-between">
-          <div className="text-gray-200 font-semibold">Recent Activity</div>
-          <Button variant="secondary" className="border-gray-800 bg-gray-900 text-gray-200 hover:bg-gray-800" onClick={() => activityQuery.refetch()}>
+          <div className="text-white font-semibold">Recent Activity</div>
+          <PremiumButton variant="outline" size="md" onClick={() => activityQuery.refetch()}>
             Refresh
-          </Button>
+          </PremiumButton>
         </div>
         <div className="overflow-auto rounded-md border border-gray-800">
           {activityQuery.isLoading ? (
@@ -487,46 +491,14 @@ export default function AdminDashboardPage() {
             </table>
           )}
         </div>
-      </Card>
+      </GlassCard>
     </div>
   )
 }
 
 // ---------- UI Bits ----------
 
-function MetricCard({
-  title,
-  value,
-  sub,
-  loading,
-  accent = 'primary',
-  children,
-}: {
-  title: string
-  value: number | string | undefined
-  sub?: string
-  loading?: boolean
-  accent?: 'primary' | 'emerald' | 'gold'
-  children?: React.ReactNode
-}) {
-  const isNumber = typeof value === 'number'
-  const animated = useCountUp(isNumber ? (value as number) : null)
-  const displayValue = loading
-    ? '—'
-    : isNumber
-    ? animated
-    : value ?? '—'
-  return (
-    <Card className="bg-gray-900 border-gray-800">
-      <div className="text-sm text-gray-400">{title}</div>
-      <div className="mt-1 flex items-baseline gap-2">
-        <div className="text-3xl font-semibold text-gray-100 tabular-nums">{displayValue}</div>
-        {sub && <div className="text-xs text-gray-400">{sub}</div>}
-      </div>
-      {children && <div className="mt-2">{children}</div>}
-    </Card>
-  )
-}
+// MetricCard removed - using StatsCard component instead
 
 function Sparkline({ data, color }: { data: Array<{ t: string; v: number }>; color: string }) {
   const formatted = useMemo(() => (data || []).map((d) => ({ t: d.t, v: d.v })), [data])

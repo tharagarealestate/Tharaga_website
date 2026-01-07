@@ -12,6 +12,8 @@ import {
 import { cn } from '@/lib/utils'
 import { getSupabase } from '@/lib/supabase'
 import { useDemoMode, DEMO_DATA } from './DemoDataProvider'
+import { GlassCard } from '@/components/ui/glass-card'
+import { PremiumButton } from '@/components/ui/premium-button'
 
 interface Lead {
   id: string
@@ -339,12 +341,12 @@ export function UnifiedDashboard({ onNavigate }: UnifiedDashboardProps) {
   }, [mergedLeads, mergedProperties, stats, previousStats])
 
   return (
-    <div className="space-y-6">
-      {/* Header - Design System Typography */}
+    <div className="w-full space-y-8">
+      {/* Header - Design System Typography with proper spacing */}
       <motion.div
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
-        className="mb-4"
+        className="mb-6"
       >
         <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">Welcome back! 👋</h1>
         <p className="text-slate-300 text-base sm:text-lg">Here's what's happening with your properties today</p>
@@ -355,7 +357,7 @@ export function UnifiedDashboard({ onNavigate }: UnifiedDashboardProps) {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4 }}
-        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4"
+        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 w-full desktop-grid-item"
       >
         {[
           { icon: Users, label: "Total Leads", value: metrics.totalLeads, subtitle: `${metrics.hotLeads} hot • ${metrics.warmLeads} warm`, trend: { value: parseFloat(metrics.leadTrend), positive: parseFloat(metrics.leadTrend) >= 0 }, loading: statsLoading },
@@ -374,13 +376,13 @@ export function UnifiedDashboard({ onNavigate }: UnifiedDashboardProps) {
         ))}
       </motion.div>
 
-      {/* Main Content - Two Column Layout */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      {/* Main Content - Two Column Layout with optimized spacing */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 xl:gap-8 w-full">
         {/* Recent Leads Card - Design System */}
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="bg-gradient-to-br from-slate-800/95 via-slate-800/95 to-slate-900/95 glow-border rounded-xl overflow-hidden shadow-2xl"
+        <GlassCard
+          variant="dark"
+          glow
+          className="overflow-hidden desktop-card min-w-0 max-w-full h-full flex flex-col"
         >
           <div className="bg-gradient-to-r from-amber-500/20 via-amber-600/20 to-amber-500/20 border-b glow-border border-b-amber-300/25 p-6 sm:p-8">
             <div className="flex items-center justify-between">
@@ -393,14 +395,13 @@ export function UnifiedDashboard({ onNavigate }: UnifiedDashboardProps) {
                   <p className="text-sm text-slate-300">{metrics.hotLeads} hot • {metrics.warmLeads} warm</p>
                 </div>
               </div>
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
+              <PremiumButton
+                variant="gold"
+                size="sm"
                 onClick={() => window.location.href = '/builder/leads'}
-                className="px-6 py-3 bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 glow-border text-slate-900 font-semibold rounded-lg transition-all duration-300 text-sm shadow-lg hover:shadow-xl hover:shadow-amber-500/30 hover:-translate-y-1"
               >
                 View All
-              </motion.button>
+              </PremiumButton>
             </div>
           </div>
 
@@ -435,14 +436,13 @@ export function UnifiedDashboard({ onNavigate }: UnifiedDashboardProps) {
               </div>
             )}
           </div>
-        </motion.div>
+        </GlassCard>
 
         {/* Recent Properties Card - Design System */}
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: 0.1 }}
-          className="bg-gradient-to-br from-slate-800/95 via-slate-800/95 to-slate-900/95 glow-border rounded-xl overflow-hidden shadow-2xl"
+        <GlassCard
+          variant="dark"
+          glow
+          className="overflow-hidden desktop-card min-w-0 max-w-full h-full flex flex-col"
         >
           <div className="bg-gradient-to-r from-amber-500/20 via-amber-600/20 to-amber-500/20 border-b glow-border border-b-amber-300/25 p-6 sm:p-8">
             <div className="flex items-center justify-between">
@@ -455,14 +455,13 @@ export function UnifiedDashboard({ onNavigate }: UnifiedDashboardProps) {
                   <p className="text-sm text-slate-300">{metrics.activeProperties} active listings</p>
                 </div>
               </div>
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
+              <PremiumButton
+                variant="gold"
+                size="sm"
                 onClick={() => onNavigate?.('properties')}
-                className="px-6 py-3 bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 glow-border text-slate-900 font-semibold rounded-lg transition-all duration-300 text-sm shadow-lg hover:shadow-xl hover:shadow-amber-500/30 hover:-translate-y-1"
               >
                 View All
-              </motion.button>
+              </PremiumButton>
             </div>
           </div>
 
@@ -481,13 +480,15 @@ export function UnifiedDashboard({ onNavigate }: UnifiedDashboardProps) {
                 </div>
                 <h4 className="text-xl font-semibold text-white mb-2">No properties yet</h4>
                 <p className="text-slate-400 mb-6">Get started by adding your first property</p>
-                <button
+                <PremiumButton
+                  variant="gold"
+                  size="md"
                   onClick={() => onNavigate?.('properties')}
-                  className="px-6 py-3 bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 glow-border text-slate-900 font-semibold rounded-lg transition-all duration-300 shadow-lg hover:shadow-xl hover:shadow-amber-500/30 hover:-translate-y-1 inline-flex items-center gap-2"
+                  icon={<ArrowUpRight className="w-4 h-4" />}
+                  iconPosition="right"
                 >
                   Add your first property
-                  <ArrowUpRight className="w-4 h-4" />
-                </button>
+                </PremiumButton>
               </div>
             ) : (
               <div className="space-y-3">
@@ -504,15 +505,14 @@ export function UnifiedDashboard({ onNavigate }: UnifiedDashboardProps) {
               </div>
             )}
           </div>
-        </motion.div>
+        </GlassCard>
       </div>
 
       {/* Quick Actions Card - Design System */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.2 }}
-        className="bg-gradient-to-br from-slate-800/95 via-slate-800/95 to-slate-900/95 glow-border rounded-xl overflow-hidden shadow-2xl"
+      <GlassCard
+        variant="dark"
+        glow
+        className="overflow-hidden"
       >
         <div className="p-6 sm:p-8">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -521,43 +521,47 @@ export function UnifiedDashboard({ onNavigate }: UnifiedDashboardProps) {
             <p className="text-sm text-slate-300">Access your most used features</p>
           </div>
           <div className="flex flex-wrap items-center gap-3">
-            <button
+            <PremiumButton
+              variant="secondary"
+              size="sm"
               onClick={() => window.location.href = '/builder/leads'}
-              className="px-6 py-3 glow-border bg-slate-800/95 text-slate-200 hover:bg-slate-700/50 rounded-lg text-sm font-semibold transition-all duration-300 flex items-center gap-2 hover:-translate-y-0.5"
+              icon={<Users className="w-4 h-4" />}
             >
-              <Users className="w-4 h-4" />
               <span className="hidden sm:inline">Manage </span>Leads
-            </button>
-            <button
+            </PremiumButton>
+            <PremiumButton
+              variant="secondary"
+              size="sm"
               onClick={() => onNavigate?.('properties')}
-              className="px-6 py-3 glow-border bg-slate-800/95 text-slate-200 hover:bg-slate-700/50 rounded-lg text-sm font-semibold transition-all duration-300 flex items-center gap-2 hover:-translate-y-0.5"
+              icon={<Building2 className="w-4 h-4" />}
             >
-              <Building2 className="w-4 h-4" />
               Properties
-            </button>
-            <button
+            </PremiumButton>
+            <PremiumButton
+              variant="secondary"
+              size="sm"
               onClick={() => window.location.href = '/builder/analytics'}
-              className="px-6 py-3 glow-border bg-slate-800/95 text-slate-200 hover:bg-slate-700/50 rounded-lg text-sm font-semibold transition-all duration-300 flex items-center gap-2 hover:-translate-y-0.5"
+              icon={<BarChart3 className="w-4 h-4" />}
             >
-              <BarChart3 className="w-4 h-4" />
               Analytics
-            </button>
-            <button
+            </PremiumButton>
+            <PremiumButton
+              variant="secondary"
+              size="sm"
               onClick={() => onNavigate?.('behavior-analytics')}
-              className="px-6 py-3 glow-border bg-slate-800/95 text-slate-200 hover:bg-slate-700/50 rounded-lg text-sm font-semibold transition-all duration-300 flex items-center gap-2 hover:-translate-y-0.5"
+              icon={<Settings className="w-4 h-4" />}
             >
-              <Settings className="w-4 h-4" />
               Behavior Analytics
-            </button>
+            </PremiumButton>
           </div>
         </div>
         </div>
-      </motion.div>
+      </GlassCard>
     </div>
   )
 }
 
-// Stat Card - Design System Statistics Card Pattern
+// Stat Card - Design System Statistics Card Pattern (Using GlassCard)
 function StatCard({ 
   icon: Icon, 
   label, 
@@ -574,12 +578,11 @@ function StatCard({
   loading: boolean
 }) {
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      whileHover={{ scale: 1.02, y: -4 }}
-      whileTap={{ scale: 0.98 }}
-      className="relative p-6 bg-slate-800/95 glow-border rounded-lg border border-slate-700/50 overflow-hidden group cursor-pointer"
+    <GlassCard
+      variant="dark"
+      glow
+      hover
+      className="relative overflow-hidden group cursor-pointer"
     >
       {/* Hover Glow Effect */}
       <motion.div

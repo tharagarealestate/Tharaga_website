@@ -3,7 +3,7 @@ import type { ReactNode } from 'react'
 import { motion } from 'framer-motion'
 import { ReactQueryProvider } from '@/components/providers/ReactQueryProvider'
 import { DemoDataProvider } from './_components/DemoDataProvider'
-import { AdvancedAISidebar } from './_components/AdvancedAISidebar'
+import { RestructuredSidebar } from './_components/RestructuredSidebar'
 import { TrialUpgradeBanner } from './_components/TrialUpgradeBanner'
 import { AIAssistant } from './_components/AIAssistant'
 
@@ -17,23 +17,27 @@ export default function BuilderDashboardLayout({ children }: { children: ReactNo
         {/* Trial upgrade banner */}
         <TrialUpgradeBanner />
 
-        {/* Advanced AI Sidebar - Fixed positioning with smooth transitions */}
-        <AdvancedAISidebar />
+        {/* Restructured Sidebar - Optimal UX flow based on research */}
+        <RestructuredSidebar />
 
-        {/* Main Content Area - Positioned next to sidebar with smooth transitions */}
+        {/* Main Content Area - Optimized space utilization for desktop */}
         <motion.main 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4, ease: 'easeOut' }}
-          className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 pt-0 pb-6 sm:pb-8" 
+          className="relative z-10 overflow-x-hidden" 
           style={{ 
-            marginLeft: '260px',
-            width: 'calc(100% - 260px)',
-            paddingLeft: 'max(16px, env(safe-area-inset-left))', 
-            paddingRight: 'max(16px, env(safe-area-inset-right))' 
+            marginLeft: '280px',
+            width: 'calc(100% - 280px)',
+            minHeight: 'calc(100vh - 60px)',
           }}
         >
-          {children}
+          {/* Inner container with proper spacing and constraints */}
+          <div className="w-full h-full px-6 lg:px-8 xl:px-12 pt-8 pb-8 sm:pb-12">
+            <div className="max-w-none w-full mx-auto">
+              {children}
+            </div>
+          </div>
         </motion.main>
         
         {/* AI Assistant */}

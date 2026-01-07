@@ -79,3 +79,6 @@ backend/.env
 __pycache__/
 *.py[cod]
 *.class
+
+# MCP Servers (local development tools)
+mcp-reasoning/

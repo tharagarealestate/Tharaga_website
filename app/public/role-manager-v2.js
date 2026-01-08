@@ -67,34 +67,8 @@
     }
   }
 
-  // Fetch user roles (with cache and localStorage for instant display)
+  // Fetch user roles (with cache)
   async function fetchUserRoles(force = false) {
-    // CRITICAL FIX: Try to load cached roles from localStorage for instant display
-    if (!force && !roleState.initialized) {
-      try {
-        const cached = localStorage.getItem('tharaga_roles_cache');
-        if (cached) {
-          const parsed = JSON.parse(cached);
-          // Only use cache if it's recent (less than 5 minutes old)
-          if (parsed.timestamp && Date.now() - parsed.timestamp < 5 * 60 * 1000) {
-            roleState.roles = parsed.roles || [];
-            roleState.primaryRole = parsed.primaryRole || null;
-            roleState.builderVerified = parsed.builderVerified || false;
-            roleState.hasBuilderProfile = parsed.hasBuilderProfile || false;
-            roleState.hasBuyerProfile = parsed.hasBuyerProfile || false;
-            // Don't set initialized=true yet, still fetch fresh data
-            console.log('[role-v2] Loaded cached roles for instant display:', roleState.roles);
-            // Update portal menu immediately with cached roles
-            if (window.__updatePortalMenu) {
-              window.__updatePortalMenu();
-            }
-          }
-        }
-      } catch (e) {
-        console.debug('[role-v2] Could not load cached roles:', e);
-      }
-    }
-
     if (roleState.initialized && !force) {
       return roleState; // Return cached state
     }
@@ -129,20 +103,6 @@
       roleState.initialized = true;
       roleState.loading = false;
 
-      // CRITICAL FIX: Cache roles in localStorage for instant display on next page load
-      try {
-        localStorage.setItem('tharaga_roles_cache', JSON.stringify({
-          roles: roleState.roles,
-          primaryRole: roleState.primaryRole,
-          builderVerified: roleState.builderVerified,
-          hasBuilderProfile: roleState.hasBuilderProfile,
-          hasBuyerProfile: roleState.hasBuyerProfile,
-          timestamp: Date.now(),
-        }));
-      } catch (e) {
-        console.debug('[role-v2] Could not cache roles:', e);
-      }
-
       console.log('[role-v2] Roles fetched:', {
         roles: roleState.roles,
         primary: roleState.primaryRole,
@@ -151,11 +111,6 @@
 
       // Dispatch event to notify portal menu and other listeners
       emitRoleChangeEvent();
-      
-      // CRITICAL FIX: Update portal menu immediately with fresh roles
-      if (window.__updatePortalMenu) {
-        window.__updatePortalMenu();
-      }
 
       return roleState;
     } catch (error) {

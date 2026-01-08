@@ -74,6 +74,86 @@ export interface AdvancedROIAnalysis {
   }>;
 }
 
+// ============================================
+// HELPER FUNCTIONS FOR BASE CALCULATIONS
+// ============================================
+
+// Helper function to calculate base ROI (extracted from API route logic)
+function calculateBaseROI(
+  propertyPrice: number,
+  downPaymentPercentage: number,
+  expectedRentalIncome: number,
+  interestRate: number = 8.5,
+  loanTenureYears: number = 20,
+  propertyAppreciationRate: number = 8,
+  calculateYears: number[] = [5, 10, 15]
+) {
+  const calculatedLoanAmount = propertyPrice * (1 - downPaymentPercentage / 100);
+  const downPaymentAmount = propertyPrice * (downPaymentPercentage / 100);
+  const monthlyRate = interestRate / 12 / 100;
+  const tenureMonths = loanTenureYears * 12;
+
+  // Calculate EMI
+  const monthlyEMI = (calculatedLoanAmount * monthlyRate * Math.pow(1 + monthlyRate, tenureMonths)) /
+    (Math.pow(1 + monthlyRate, tenureMonths) - 1);
+
+  // Calculate rental yield
+  const annualRentalIncome = expectedRentalIncome * 12;
+  const rentalYield = (annualRentalIncome / propertyPrice) * 100;
+
+  // Calculate ROI for different time periods
+  const results: Record<string, any> = {
+    property_price: propertyPrice,
+    down_payment_amount: downPaymentAmount,
+    down_payment_percentage: downPaymentPercentage,
+    loan_amount: calculatedLoanAmount,
+    interest_rate: interestRate,
+    loan_tenure_years: loanTenureYears,
+    monthly_emi: Math.round(monthlyEMI),
+    expected_rental_income: expectedRentalIncome,
+    annual_rental_income: annualRentalIncome,
+    rental_yield_percentage: parseFloat(rentalYield.toFixed(2)),
+    property_appreciation_rate: propertyAppreciationRate,
+  };
+
+  // Calculate for each year period
+  for (const years of calculateYears) {
+    const propertyValueAfterYears = propertyPrice * Math.pow(1 + propertyAppreciationRate / 100, years);
+    const capitalGain = propertyValueAfterYears - propertyPrice;
+    const totalRentalIncome = annualRentalIncome * years;
+
+    // Calculate total interest paid
+    const totalEMIPaid = monthlyEMI * (years * 12);
+    const principalPaid = calculatedLoanAmount * (years / loanTenureYears);
+    const interestPaid = totalEMIPaid - principalPaid;
+
+    // Tax benefits (Section 80C + 24B)
+    const annualPrincipalRepayment = calculatedLoanAmount / loanTenureYears;
+    const annualInterest = calculatedLoanAmount * (interestRate / 100);
+    
+    const taxBenefit80C = Math.min(annualPrincipalRepayment, 150000) * years;
+    const taxBenefit24B = Math.min(annualInterest, 200000) * years;
+    const totalTaxBenefits = taxBenefit80C + taxBenefit24B;
+
+    // Net profit calculation
+    const netProfit = capitalGain + totalRentalIncome + totalTaxBenefits - interestPaid - downPaymentAmount;
+    const totalROIPercentage = (netProfit / downPaymentAmount) * 100;
+
+    results[`years_${years}`] = {
+      property_value: Math.round(propertyValueAfterYears),
+      capital_gain: Math.round(capitalGain),
+      total_rental_income: Math.round(totalRentalIncome),
+      interest_paid: Math.round(interestPaid),
+      tax_benefits: Math.round(totalTaxBenefits),
+      net_profit: Math.round(netProfit),
+      total_roi_percentage: parseFloat(totalROIPercentage.toFixed(2)),
+      annualized_roi: parseFloat((totalROIPercentage / years).toFixed(2)),
+    };
+  }
+
+  return results;
+}
+
 export async function analyzeAdvancedROI(
   propertyPrice: number,
   downPaymentPercentage: number,
@@ -83,17 +163,16 @@ export async function analyzeAdvancedROI(
   propertyType: string
 ): Promise<AdvancedROIAnalysis> {
   
-  // Get base ROI calculations (from existing API)
-  const baseROI = await fetch('/api/lead-capture/calculate-roi', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      property_price: propertyPrice,
-      down_payment_percentage: downPaymentPercentage,
-      expected_rental_income: expectedRentalIncome,
-      calculate_years: [5, 10, 15],
-    }),
-  }).then(r => r.json());
+  // Calculate base ROI directly (no fetch call needed)
+  const baseROI = calculateBaseROI(
+    propertyPrice,
+    downPaymentPercentage,
+    expectedRentalIncome,
+    8.5, // interestRate
+    20,  // loanTenureYears
+    8,   // propertyAppreciationRate
+    [5, 10, 15] // calculateYears
+  );
 
   // AI-Powered Market Forecasting
   const marketForecast = await getMarketForecast(city, locality, propertyType);
@@ -119,11 +198,11 @@ export async function analyzeAdvancedROI(
   
   // Tax Optimization Strategy
   const taxStrategy = calculateOptimalTaxStrategy(
-    baseROI.results.loan_amount,
-    baseROI.results.interest_rate,
-    baseROI.results.loan_tenure_years
+    baseROI.loan_amount,
+    baseROI.interest_rate,
+    baseROI.loan_tenure_years
   );
-  
+
   // Comparable Investment Analysis
   const comparables = await findComparableInvestments(
     propertyPrice,
@@ -133,7 +212,7 @@ export async function analyzeAdvancedROI(
   );
 
   return {
-    ...baseROI.results,
+    ...baseROI,
     market_forecast: marketForecast,
     rental_income_forecast: rentalForecast,
     investment_score: investmentAnalysis.score,
@@ -499,6 +578,242 @@ export interface AdvancedEMIAnalysis {
   }>;
 }
 
+// Helper function to calculate base Property Valuation
+function calculateBasePropertyValuation(
+  propertyType: string,
+  bhkConfig: string,
+  totalAreaSqft: number,
+  locality: string,
+  city: string,
+  propertyAgeYears: number,
+  furnishing: string
+) {
+  // Get base price per sqft for locality (simplified - in production, use database)
+  const getBasePricePerSqft = (cityName: string, localityName: string, propType: string) => {
+    const cityPrices: Record<string, number> = {
+      'Chennai': 7500,
+      'Coimbatore': 5000,
+      'Madurai': 3800,
+      'Trichy': 3500,
+      'Salem': 3200,
+      'Tirunelveli': 3000,
+    };
+    return cityPrices[cityName] || 5000;
+  };
+
+  const basePricePerSqft = getBasePricePerSqft(city, locality, propertyType);
+
+  // Calculate base value
+  let estimatedValue = basePricePerSqft * totalAreaSqft;
+
+  // Adjust for property age (depreciation)
+  if (propertyAgeYears > 0) {
+    const depreciationRate = Math.min(propertyAgeYears * 0.015, 0.3); // Max 30% depreciation
+    estimatedValue *= (1 - depreciationRate);
+  }
+
+  // Adjust for furnishing
+  const furnishingMultipliers: Record<string, number> = {
+    'unfurnished': 1.0,
+    'semi_furnished': 1.08,
+    'fully_furnished': 1.15,
+  };
+  estimatedValue *= furnishingMultipliers[furnishing] || 1.0;
+
+  // Adjust for BHK configuration
+  const bhkMultipliers: Record<string, number> = {
+    'Studio': 0.85,
+    '1BHK': 1.0,
+    '2BHK': 1.05,
+    '3BHK': 1.12,
+    '4BHK+': 1.20,
+  };
+  estimatedValue *= bhkMultipliers[bhkConfig] || 1.0;
+
+  // Confidence level
+  const confidenceLevel = propertyAgeYears === 0 ? 92 : 
+                         propertyAgeYears < 5 ? 88 : 85;
+
+  // Price range (±8%)
+  const priceRange = {
+    low: Math.round(estimatedValue * 0.92),
+    high: Math.round(estimatedValue * 1.08),
+  };
+
+  return {
+    estimated_value: Math.round(estimatedValue),
+    confidence_level: confidenceLevel,
+    price_range: priceRange,
+  };
+}
+
+// Helper function to calculate base Loan Eligibility
+function calculateBaseLoanEligibility(
+  monthlyIncome: number,
+  existingLoansEMI: number,
+  propertyPrice: number,
+  preferredTenure: number,
+  cibilScore: number,
+  employmentType: string
+) {
+  // Determine CIBIL score range
+  const cibilScoreRange = cibilScore >= 750 ? '750+' :
+                          cibilScore >= 650 ? '650-749' :
+                          cibilScore >= 550 ? '550-649' : 'below_550';
+
+  // Tamil Nadu bank-specific FOIR limits based on CIBIL score
+  const foirLimit = cibilScoreRange === '750+' ? 0.60 :
+                    cibilScoreRange === '650-749' ? 0.50 :
+                    cibilScoreRange === '550-649' ? 0.40 : 0.30;
+
+  // Calculate eligible EMI
+  const eligibleEMI = (monthlyIncome * foirLimit) - (existingLoansEMI || 0);
+
+  // Interest rates based on CIBIL score in Tamil Nadu
+  const interestRate = cibilScoreRange === '750+' ? 8.4 :
+                       cibilScoreRange === '650-749' ? 8.8 :
+                       cibilScoreRange === '550-649' ? 9.5 : 10.5;
+
+  // Calculate max loan amount based on EMI
+  const monthlyRate = interestRate / 12 / 100;
+  const tenureMonths = preferredTenure * 12;
+  const maxLoanAmountByEMI = eligibleEMI > 0 ? 
+    (eligibleEMI * ((Math.pow(1 + monthlyRate, tenureMonths) - 1) / 
+    (monthlyRate * Math.pow(1 + monthlyRate, tenureMonths)))) : 0;
+
+  // LTV (Loan to Value) limits - TN banks typically allow 80-90%
+  const ltvLimit = propertyPrice <= 3000000 ? 0.90 : 
+                   propertyPrice <= 7500000 ? 0.80 : 0.75;
+
+  const maxLoanByLTV = propertyPrice * ltvLimit;
+
+  // Final eligible loan is minimum of both calculations
+  const finalEligibleLoan = Math.min(maxLoanAmountByEMI, maxLoanByLTV);
+  const requiredDownPayment = propertyPrice - finalEligibleLoan;
+
+  // Calculate approval probability
+  let probability = 50;
+  if (cibilScoreRange === '750+') probability += 30;
+  else if (cibilScoreRange === '650-749') probability += 15;
+  else if (cibilScoreRange === '550-649') probability -= 10;
+  else probability -= 30;
+
+  if (existingLoansEMI === 0) probability += 10;
+  else if (existingLoansEMI < monthlyIncome * 0.2) probability += 5;
+
+  if (monthlyIncome >= 100000) probability += 10;
+  else if (monthlyIncome >= 50000) probability += 5;
+
+  probability = Math.min(Math.max(probability, 0), 95);
+
+  return {
+    eligible_loan_amount: Math.round(finalEligibleLoan),
+    eligible_emi: Math.round(eligibleEMI),
+    required_down_payment: Math.round(requiredDownPayment),
+    approval_probability: probability,
+    interest_rate: interestRate,
+    preferred_tenure: preferredTenure,
+  };
+}
+
+// Helper function to calculate base Budget
+function calculateBaseBudget(
+  primaryIncomeMonthly: number,
+  secondaryIncomeMonthly: number,
+  monthlyExpenses: number,
+  existingLoansEMI: number,
+  savingsAvailable: number,
+  city: string
+) {
+  const totalIncome = primaryIncomeMonthly + secondaryIncomeMonthly;
+  const disposableIncome = totalIncome - monthlyExpenses - existingLoansEMI;
+
+  // FOIR (Fixed Obligation to Income Ratio) - Tamil Nadu banks typically use 50%
+  const foirLimit = 0.50;
+  const maxEMI = Math.min(disposableIncome * foirLimit, totalIncome * foirLimit);
+
+  // Calculate max loan amount (20 years @ 8.5% interest)
+  const interestRate = 8.5;
+  const tenureYears = 20;
+  const monthlyRate = interestRate / 12 / 100;
+  const tenureMonths = tenureYears * 12;
+  const maxLoanAmount = maxEMI > 0 ?
+    (maxEMI * ((Math.pow(1 + monthlyRate, tenureMonths) - 1) /
+      (monthlyRate * Math.pow(1 + monthlyRate, tenureMonths)))) : 0;
+
+  // Add savings for down payment
+  const totalBudget = maxLoanAmount + savingsAvailable;
+
+  // City-specific price ranges (per sq.ft)
+  const cityPricePerSqft: Record<string, number> = {
+    'Chennai': 7500,
+    'Coimbatore': 5000,
+    'Madurai': 3800,
+    'Trichy': 3500,
+    'Salem': 3200,
+    'Tirunelveli': 3000,
+  };
+
+  const avgPrice = cityPricePerSqft[city] || 5000;
+  const affordableAreaSqft = Math.floor(totalBudget / avgPrice);
+
+  // Recommend BHK type based on area
+  let recommendedBHK = '1BHK';
+  if (affordableAreaSqft >= 1800) recommendedBHK = '3BHK';
+  else if (affordableAreaSqft >= 1200) recommendedBHK = '2BHK';
+  else if (affordableAreaSqft >= 900) recommendedBHK = '1.5BHK';
+
+  // Calculate affordability health metrics
+  const foirPercentage = (maxEMI / totalIncome) * 100;
+  const downPaymentPercentage = (savingsAvailable / totalBudget) * 100;
+  const isHealthyFOIR = foirPercentage <= 40;
+  const hasGoodDownPayment = downPaymentPercentage >= 20;
+
+  return {
+    total_income: totalIncome,
+    disposable_income: disposableIncome,
+    max_emi: Math.round(maxEMI),
+    max_loan_amount: Math.round(maxLoanAmount),
+    total_budget: Math.round(totalBudget),
+    affordable_area_sqft: affordableAreaSqft,
+    recommended_bhk: recommendedBHK,
+    foir_percentage: parseFloat(foirPercentage.toFixed(2)),
+    down_payment_percentage: parseFloat(downPaymentPercentage.toFixed(2)),
+    is_healthy_foir: isHealthyFOIR,
+    has_good_down_payment: hasGoodDownPayment,
+  };
+}
+
+// Helper function to calculate base EMI
+function calculateBaseEMI(
+  propertyPrice: number,
+  downPaymentPercentage: number,
+  loanTenureYears: number,
+  interestRate: number
+) {
+  const loanAmount = propertyPrice * (1 - downPaymentPercentage / 100);
+  const monthlyRate = interestRate / 12 / 100;
+  const numPayments = loanTenureYears * 12;
+
+  // Calculate EMI using standard formula
+  const emi = (loanAmount * monthlyRate * Math.pow(1 + monthlyRate, numPayments)) /
+    (Math.pow(1 + monthlyRate, numPayments) - 1);
+
+  const totalPayment = emi * numPayments;
+  const totalInterest = totalPayment - loanAmount;
+
+  return {
+    loan_amount: Math.round(loanAmount),
+    down_payment_amount: Math.round(propertyPrice * (downPaymentPercentage / 100)),
+    monthly_emi: Math.round(emi),
+    total_interest: Math.round(totalInterest),
+    total_payment: Math.round(totalPayment),
+    interest_to_principal_ratio: parseFloat((totalInterest / loanAmount).toFixed(2)),
+    interest_rate: interestRate,
+    loan_tenure_years: loanTenureYears,
+  };
+}
+
 export async function analyzeAdvancedEMI(
   propertyPrice: number,
   downPaymentPercentage: number,
@@ -510,21 +825,17 @@ export async function analyzeAdvancedEMI(
   employmentType: string
 ): Promise<AdvancedEMIAnalysis> {
   
-  // Get base EMI calculations
-  const baseEMI = await fetch('/api/lead-capture/calculate-emi', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      property_price: propertyPrice,
-      down_payment_percentage: downPaymentPercentage,
-      loan_tenure_years: loanTenureYears,
-      interest_rate: interestRate,
-    }),
-  }).then(r => r.json());
+  // Calculate base EMI directly (no fetch call needed)
+  const baseEMI = calculateBaseEMI(
+    propertyPrice,
+    downPaymentPercentage,
+    loanTenureYears,
+    interestRate
+  );
 
   // ML-Based Risk Assessment
   const riskAssessment = await assessLoanRisk(
-    baseEMI.results.monthly_emi,
+    baseEMI.monthly_emi,
     monthlyIncome,
     existingLoansEMI,
     cibilScore,
@@ -542,7 +853,7 @@ export async function analyzeAdvancedEMI(
   
   // Prepayment Analysis
   const prepaymentAnalysis = analyzePrepayment(
-    baseEMI.results.loan_amount,
+    baseEMI.loan_amount,
     interestRate,
     loanTenureYears,
     monthlyIncome
@@ -556,11 +867,11 @@ export async function analyzeAdvancedEMI(
     monthlyIncome,
     cibilScore,
     employmentType,
-    baseEMI.results.loan_amount
+    baseEMI.loan_amount
   );
 
   return {
-    ...baseEMI.results,
+    ...baseEMI,
     loan_risk_score: riskAssessment.riskScore,
     default_probability: riskAssessment.defaultProbability,
     repayment_capacity_score: riskAssessment.repaymentCapacity,
@@ -917,20 +1228,15 @@ export async function analyzeAdvancedBudget(
   familyType: string
 ): Promise<AdvancedBudgetAnalysis> {
   
-  // Get base budget calculations
-  const baseBudget = await fetch('/api/lead-capture/calculate-budget', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      primary_income_monthly: primaryIncome,
-      secondary_income_monthly: secondaryIncome,
-      monthly_expenses: monthlyExpenses,
-      existing_loans_emi: existingLoansEMI,
-      savings_available: savingsAvailable,
-      city: city,
-      family_type: familyType,
-    }),
-  }).then(r => r.json());
+  // Calculate base budget directly (no fetch call needed)
+  const baseBudget = calculateBaseBudget(
+    primaryIncome,
+    secondaryIncome,
+    monthlyExpenses,
+    existingLoansEMI,
+    savingsAvailable,
+    city
+  );
 
   // AI Financial Health Assessment
   const financialHealth = await assessFinancialHealth(
@@ -938,7 +1244,7 @@ export async function analyzeAdvancedBudget(
     monthlyExpenses,
     existingLoansEMI,
     savingsAvailable,
-    baseBudget.results.total_budget,
+    baseBudget.total_budget,
     familyType
   );
   
@@ -947,16 +1253,16 @@ export async function analyzeAdvancedBudget(
     primaryIncome + secondaryIncome,
     monthlyExpenses,
     savingsAvailable,
-    baseBudget.results.total_budget,
+    baseBudget.total_budget,
     city,
     familyType
   );
   
   // Property Matching
   const matchingProperties = await findMatchingProperties(
-    baseBudget.results.total_budget,
+    baseBudget.total_budget,
     city,
-    baseBudget.results.recommended_bhk
+    baseBudget.recommended_bhk
   );
   
   // Savings Optimization
@@ -964,18 +1270,22 @@ export async function analyzeAdvancedBudget(
     primaryIncome + secondaryIncome,
     monthlyExpenses,
     savingsAvailable,
-    baseBudget.results.total_budget
+    baseBudget.total_budget
   );
   
   // Optimal Loan Strategy
   const loanStrategy = calculateOptimalLoanStrategy(
-    baseBudget.results.total_budget,
+    baseBudget.total_budget,
     savingsAvailable,
     primaryIncome + secondaryIncome
   );
 
   return {
-    ...baseBudget.results,
+    total_monthly_income: baseBudget.total_income,
+    max_emi: baseBudget.max_emi,
+    total_budget: baseBudget.total_budget,
+    affordable_area_sqft: baseBudget.affordable_area_sqft,
+    recommended_bhk: baseBudget.recommended_bhk,
     financial_health_score: financialHealth.score,
     affordability_assessment: financialHealth.assessment,
     recommendations: recommendations,
@@ -1275,20 +1585,15 @@ export async function analyzeAdvancedLoanEligibility(
   city: string
 ): Promise<AdvancedLoanEligibility> {
   
-  // Get base eligibility calculations
-  const baseEligibility = await fetch('/api/lead-capture/loan-eligibility', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      employment_type: employmentType,
-      monthly_income: monthlyIncome,
-      existing_loans_emi: existingLoansEMI,
-      property_price: propertyPrice,
-      preferred_tenure_years: preferredTenure,
-      cibil_score_range: getCIBILRange(cibilScore),
-      city: city,
-    }),
-  }).then(r => r.json());
+  // Calculate base eligibility directly (no fetch call needed)
+  const baseEligibility = calculateBaseLoanEligibility(
+    monthlyIncome,
+    existingLoansEMI,
+    propertyPrice,
+    preferredTenure,
+    cibilScore,
+    employmentType
+  );
 
   // Credit Risk Modeling
   const creditRisk = await modelCreditRisk(
@@ -1296,7 +1601,7 @@ export async function analyzeAdvancedLoanEligibility(
     existingLoansEMI,
     cibilScore,
     employmentType,
-    baseEligibility.results.eligible_loan_amount
+    baseEligibility.eligible_loan_amount
   );
   
   // Approval Prediction
@@ -1304,7 +1609,7 @@ export async function analyzeAdvancedLoanEligibility(
     monthlyIncome,
     cibilScore,
     employmentType,
-    baseEligibility.results.eligible_loan_amount,
+    baseEligibility.eligible_loan_amount,
     city
   );
   
@@ -1321,12 +1626,14 @@ export async function analyzeAdvancedLoanEligibility(
     monthlyIncome,
     cibilScore,
     employmentType,
-    baseEligibility.results.eligible_loan_amount,
+    baseEligibility.eligible_loan_amount,
     city
   );
 
   return {
-    ...baseEligibility.results,
+    eligible_loan_amount: baseEligibility.eligible_loan_amount,
+    eligible_emi: baseEligibility.eligible_emi,
+    approval_probability: baseEligibility.approval_probability,
     credit_risk_score: creditRisk.riskScore,
     risk_factors: creditRisk.riskFactors,
     risk_mitigation_strategies: creditRisk.mitigationStrategies,
@@ -1644,21 +1951,39 @@ export async function analyzeAdvancedNeighborhood(
   workLocation?: string
 ): Promise<AdvancedNeighborhoodAnalysis> {
   
-  // Get base neighborhood analysis
-  const baseAnalysis = await fetch('/api/lead-capture/neighborhood-analysis', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      primary_priorities: primaryPriorities,
-      family_type: familyType,
-      preferred_localities: preferredLocalities,
+  // Get base neighborhood analysis (simplified - in production, fetch from database)
+  // For now, use a basic list of neighborhoods for the city
+  const getCityNeighborhoods = (cityName: string) => {
+    const neighborhoods: Record<string, any[]> = {
+      'Chennai': [
+        { name: 'Adyar', score: 85 },
+        { name: 'Anna Nagar', score: 90 },
+        { name: 'T. Nagar', score: 88 },
+        { name: 'Velachery', score: 82 },
+        { name: 'OMR', score: 80 },
+      ],
+      'Coimbatore': [
+        { name: 'RS Puram', score: 88 },
+        { name: 'Saibaba Colony', score: 85 },
+        { name: 'Peelamedu', score: 82 },
+      ],
+    };
+    return neighborhoods[cityName] || [{ name: 'City Center', score: 75 }];
+  };
+
+  const baseNeighborhoods = getCityNeighborhoods(city);
+  const baseAnalysis = {
+    top_neighborhoods: baseNeighborhoods.slice(0, 5).map(n => ({
+      name: n.name,
+      score: n.score,
       city: city,
-    }),
-  }).then(r => r.json());
+    })),
+    total_analyzed: baseNeighborhoods.length,
+  };
 
   // AI Livability Scoring
   const livabilityScores = await calculateLivabilityScores(
-    baseAnalysis.results.top_neighborhoods,
+    baseAnalysis.top_neighborhoods,
     primaryPriorities,
     familyType,
     city
@@ -1666,26 +1991,26 @@ export async function analyzeAdvancedNeighborhood(
   
   // Geospatial Analysis
   const geospatialAnalysis = await analyzeGeospatial(
-    baseAnalysis.results.top_neighborhoods,
+    baseAnalysis.top_neighborhoods,
     workLocation,
     city
   );
   
   // Future Growth Prediction
   const growthPredictions = await predictNeighborhoodGrowth(
-    baseAnalysis.results.top_neighborhoods,
+    baseAnalysis.top_neighborhoods,
     city
   );
   
   // Family-Specific Recommendations
   const familyRecommendations = await generateFamilyRecommendations(
-    baseAnalysis.results.top_neighborhoods,
+    baseAnalysis.top_neighborhoods,
     familyType,
     primaryPriorities
   );
 
   return {
-    top_neighborhoods: baseAnalysis.results.top_neighborhoods,
+    top_neighborhoods: baseAnalysis.top_neighborhoods,
     livability_scores: livabilityScores,
     geospatial_analysis: geospatialAnalysis,
     growth_predictions: growthPredictions,
@@ -1920,20 +2245,16 @@ export async function analyzeAdvancedPropertyValuation(
   furnishing: string
 ): Promise<AdvancedPropertyValuation> {
   
-  // Get base valuation
-  const baseValuation = await fetch('/api/lead-capture/property-valuation/estimate', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      property_type: propertyType,
-      bhk_config: bhkConfig,
-      total_area_sqft: totalAreaSqft,
-      locality: locality,
-      city: city,
-      property_age_years: propertyAgeYears,
-      furnishing: furnishing,
-    }),
-  }).then(r => r.json());
+  // Calculate base valuation directly (no fetch call needed)
+  const baseValuation = calculateBasePropertyValuation(
+    propertyType,
+    bhkConfig,
+    totalAreaSqft,
+    locality,
+    city,
+    propertyAgeYears,
+    furnishing
+  );
 
   // Ensemble AVM
   const ensembleValuation = await calculateEnsembleAVM(
@@ -1948,7 +2269,7 @@ export async function analyzeAdvancedPropertyValuation(
   
   // Market Analysis
   const marketAnalysis = await analyzeMarket(
-    baseValuation.results.estimated_value,
+    baseValuation.estimated_value,
     city,
     locality,
     propertyType
@@ -1965,7 +2286,7 @@ export async function analyzeAdvancedPropertyValuation(
   
   // Risk Assessment
   const valuationRisks = await assessValuationRisks(
-    baseValuation.results.estimated_value,
+    baseValuation.estimated_value,
     city,
     locality,
     propertyType
@@ -1973,16 +2294,16 @@ export async function analyzeAdvancedPropertyValuation(
   
   // Future Value Projection
   const futureValue = await projectFutureValue(
-    baseValuation.results.estimated_value,
+    baseValuation.estimated_value,
     city,
     locality,
     propertyType
   );
 
   return {
-    estimated_value: baseValuation.results.estimated_value,
-    confidence_level: baseValuation.results.confidence_level,
-    price_range: baseValuation.results.price_range,
+    estimated_value: baseValuation.estimated_value,
+    confidence_level: baseValuation.confidence_level,
+    price_range: baseValuation.price_range,
     ensemble_valuation: ensembleValuation,
     market_analysis: marketAnalysis,
     comparable_sales: comparableSales,

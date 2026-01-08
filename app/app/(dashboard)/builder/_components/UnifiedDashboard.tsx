@@ -555,7 +555,6 @@ export function UnifiedDashboard({ onNavigate }: UnifiedDashboardProps) {
             </PremiumButton>
           </div>
         </div>
-        </div>
       </GlassCard>
     </div>
   )

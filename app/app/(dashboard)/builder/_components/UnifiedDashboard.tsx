@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo, useEffect, useState } from 'react'
+import React, { useMemo, useEffect, useState, useRef } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { motion } from 'framer-motion'
 import {
@@ -89,6 +89,7 @@ export function UnifiedDashboard({ onNavigate }: UnifiedDashboardProps) {
   const [builderId, setBuilderId] = useState<string | null>(null)
   const [userId, setUserId] = useState<string | null>(null)
   const [previousStats, setPreviousStats] = useState({ total: 0, hot: 0, warm: 0, conversionRate: 0 })
+  const prevStatsRef = useRef({ total: 0, conversionRate: 0 })
 
   // Get user and builder ID - non-blocking (skip if demo mode)
   useEffect(() => {
@@ -198,11 +199,14 @@ export function UnifiedDashboard({ onNavigate }: UnifiedDashboardProps) {
     if (!builderId) return
 
     let mounted = true
+    let leadsChannel: any = null
+    let propertiesChannel: any = null
+    
     try {
       const supabase = getSupabase()
       
       // Subscribe to leads changes - non-blocking
-      const leadsChannel = supabase
+      leadsChannel = supabase
         .channel(`builder-leads-${builderId}`)
         .on(
           'postgres_changes',
@@ -228,7 +232,7 @@ export function UnifiedDashboard({ onNavigate }: UnifiedDashboardProps) {
         .subscribe()
 
       // Subscribe to properties changes - non-blocking
-      const propertiesChannel = supabase
+      propertiesChannel = supabase
         .channel(`builder-properties-${builderId}`)
         .on(
           'postgres_changes',
@@ -252,19 +256,19 @@ export function UnifiedDashboard({ onNavigate }: UnifiedDashboardProps) {
           }
         )
         .subscribe()
-
-      return () => {
-        mounted = false
-        try {
-          supabase.removeChannel(leadsChannel)
-          supabase.removeChannel(propertiesChannel)
-        } catch (err) {
-          console.warn('[UnifiedDashboard] Error cleaning up channels:', err)
-        }
-      }
     } catch (err) {
       console.error('[UnifiedDashboard] Realtime subscription error (non-blocking):', err)
-      return () => { mounted = false }
+    }
+
+    return () => {
+      mounted = false
+      try {
+        const supabase = getSupabase()
+        if (leadsChannel) supabase.removeChannel(leadsChannel)
+        if (propertiesChannel) supabase.removeChannel(propertiesChannel)
+      } catch (err) {
+        console.warn('[UnifiedDashboard] Error cleaning up channels:', err)
+      }
     }
   }, [builderId])
 
@@ -300,31 +304,38 @@ export function UnifiedDashboard({ onNavigate }: UnifiedDashboardProps) {
     const totalInquiries = stats.totalInquiries ?? mergedProperties.reduce((sum: number, p: any) => sum + (p.inquiries || p.inquiry_count || 0), 0)
     const conversionRate = stats.conversionRate ?? (totalViews > 0 ? parseFloat(((totalInquiries / totalViews) * 100).toFixed(1)) : 0)
     
+    prevStatsRef.current = {
+      total: stats.total,
+      conversionRate
+    }
+    
     setPreviousStats({
       total: stats.total,
       hot: stats.hot,
       warm: stats.warm,
       conversionRate
     })
-  }, [stats.total, stats.hot, stats.warm, stats.conversionRate, stats.totalProperties, stats.totalViews, stats.totalInquiries, mergedProperties])
+  }, [mergedProperties, stats.total, stats.hot, stats.warm, stats.conversionRate, stats.totalProperties, stats.totalViews, stats.totalInquiries])
 
   // Calculate metrics with real-time updates and trend calculation
   const metrics = useMemo(() => {
-    // Use stats from API if available, otherwise calculate from merged data
-    const totalProperties = stats.totalProperties ?? mergedProperties.length
-    const activeProperties = stats.activeProperties ?? mergedProperties.filter((p: any) => p.status === 'active' || p.listing_status === 'active').length
-    const totalViews = stats.totalViews ?? mergedProperties.reduce((sum: number, p: any) => sum + (p.views || p.view_count || 0), 0)
-    const totalInquiries = stats.totalInquiries ?? mergedProperties.reduce((sum: number, p: any) => sum + (p.inquiries || p.inquiry_count || 0), 0)
-    const conversionRate = stats.conversionRate ?? (totalViews > 0 ? parseFloat(((totalInquiries / totalViews) * 100).toFixed(1)) : 0)
+    const totalProps = mergedProperties.length
+    const activeProps = mergedProperties.filter((p: any) => p.status === 'active' || p.listing_status === 'active').length
+    const totalViews = mergedProperties.reduce((sum: number, p: any) => sum + (p.views || p.view_count || 0), 0)
+    const totalInquiries = mergedProperties.reduce((sum: number, p: any) => sum + (p.inquiries || p.inquiry_count || 0), 0)
+    const convRate = totalViews > 0 ? parseFloat(((totalInquiries / totalViews) * 100).toFixed(1)) : 0
     
-    // Calculate trends (compare with previous stats)
-    const leadTrend = previousStats.total > 0 
-      ? ((stats.total - previousStats.total) / previousStats.total) * 100 
-      : 0
+    const totalProperties = stats.totalProperties ?? totalProps
+    const activeProperties = stats.activeProperties ?? activeProps
+    const views = stats.totalViews ?? totalViews
+    const inquiries = stats.totalInquiries ?? totalInquiries
+    const conversionRate = stats.conversionRate ?? convRate
     
-    const conversionTrend = previousStats.conversionRate > 0
-      ? conversionRate - previousStats.conversionRate
-      : 0
+    const prevTotal = prevStatsRef.current.total
+    const prevConversionRate = prevStatsRef.current.conversionRate
+    
+    const leadTrend = prevTotal > 0 ? ((stats.total - prevTotal) / prevTotal) * 100 : 0
+    const conversionTrend = prevConversionRate > 0 ? conversionRate - prevConversionRate : 0
     
     return {
       totalLeads: stats.total,
@@ -332,13 +343,13 @@ export function UnifiedDashboard({ onNavigate }: UnifiedDashboardProps) {
       warmLeads: stats.warm,
       totalProperties,
       activeProperties,
-      totalViews,
-      totalInquiries,
+      totalViews: views,
+      totalInquiries: inquiries,
       conversionRate: conversionRate.toFixed(1),
       leadTrend: Math.abs(leadTrend).toFixed(1),
       conversionTrend: Math.abs(conversionTrend).toFixed(1),
     }
-  }, [mergedLeads, mergedProperties, stats, previousStats])
+  }, [mergedProperties, stats.total, stats.hot, stats.warm, stats.conversionRate, stats.totalProperties, stats.totalViews, stats.totalInquiries, stats.activeProperties])
 
   return (
     <div className="w-full space-y-8">

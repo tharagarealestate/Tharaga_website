@@ -16,6 +16,9 @@ import AppreciationPrediction from '@/components/property/AppreciationPrediction
 import ClientMarketAnalysis from '@/components/property/ClientMarketAnalysis'
 import PropertyDocuments from '@/components/property/PropertyDocuments'
 import LocationInsights from '@/components/property/LocationInsights'
+import KeyHighlights from '@/components/property/KeyHighlights'
+import PriceComparison from '@/components/property/PriceComparison'
+import ShareProperty from '@/components/property/ShareProperty'
 import { getSupabase } from '@/lib/supabase'
 
 export const revalidate = 300 // ISR: 5 minutes
@@ -345,6 +348,13 @@ export default async function PropertyPage({ params }: { params: { id: string } 
       <div className="mx-auto max-w-7xl px-3 sm:px-4 py-4 sm:py-6 grid grid-cols-1 lg:grid-cols-10 gap-4 sm:gap-6" style={{ paddingLeft: 'max(12px, env(safe-area-inset-left))', paddingRight: 'max(12px, env(safe-area-inset-right))' }}>
         <div className="lg:col-span-7 space-y-6">
           <Overview p={p} />
+          <KeyHighlights property={p} />
+          <PriceComparison 
+            propertyId={p.id} 
+            pricePerSqft={p.pricePerSqftINR} 
+            locality={p.locality}
+            city={p.city}
+          />
           <div className="bg-slate-800/95 glow-border rounded-lg p-6">
             <RERAVerification propertyId={p.id} reraId={p.reraId} />
           </div>
@@ -376,6 +386,7 @@ export default async function PropertyPage({ params }: { params: { id: string } 
         </div>
         <div className="lg:col-span-3 space-y-4">
           <StickySidebar p={p} />
+          <ShareProperty propertyId={p.id} title={p.title} />
           <div className="bg-slate-800/95 glow-border rounded-lg p-6">
             <ClientMatchScore propertyId={p.id} />
           </div>

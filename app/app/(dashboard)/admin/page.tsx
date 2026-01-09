@@ -59,6 +59,7 @@ function useRealtime<T = any>(table: string, onChange: () => void) {
     return () => {
       supabase.removeChannel(channel)
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [table, onChange])
 }
 
@@ -370,7 +371,7 @@ export default function AdminDashboardPage() {
               ))}
             </div>
           )}
-        </Card>
+        </GlassCard>
       </div>
 
       {/* Tables */}

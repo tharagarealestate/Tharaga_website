@@ -13,3 +13,4 @@ export { ProgressiveDisclosure } from './progressive-disclosure';
 export { PageWrapper } from './PageWrapper';
 export { PageHeader } from './PageHeader';
 export { SectionWrapper } from './SectionWrapper';
+export { Select } from './Select';

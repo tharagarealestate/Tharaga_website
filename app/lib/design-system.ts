@@ -307,6 +307,46 @@ export function cn(...classes: (string | undefined | null | false)[]): string {
 }
 
 // ============================================
+// DESIGN_TOKENS - Tailwind Class Name Interface
+// ============================================
+export const DESIGN_TOKENS = {
+  colors: {
+    text: {
+      primary: 'text-white',
+      secondary: 'text-slate-200',
+      tertiary: 'text-slate-300',
+      muted: 'text-slate-400',
+      accent: 'text-amber-400',
+    },
+    border: {
+      default: 'border border-slate-700/50',
+      amber: 'border-2 border-amber-500/30',
+      glow: 'border border-amber-300/25',
+    },
+    background: {
+      card: 'bg-slate-800/95',
+      page: 'bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900',
+    },
+  },
+  typography: {
+    h1: 'text-3xl sm:text-4xl font-bold text-white',
+    h2: 'text-2xl sm:text-3xl font-semibold text-white',
+    h3: 'text-xl sm:text-2xl font-semibold text-white',
+    body: 'text-base text-slate-200',
+    bodyLarge: 'text-lg text-slate-200',
+    small: 'text-sm text-slate-400',
+  },
+  effects: {
+    transition: 'transition-all duration-300',
+    hover: 'hover:bg-slate-700/50',
+    border: {
+      amberClass: 'border-2 border-amber-500/30',
+      glowClass: 'border border-amber-300/25 glow-border',
+    },
+  },
+} as const
+
+// ============================================
 // EXPORT ALL
 // ============================================
 export default {
@@ -321,7 +361,16 @@ export default {
   getSemanticBg,
   getSpacing,
   cn,
+  DESIGN_TOKENS,
 }
+
+
+
+
+
+
+
+
 
 
 

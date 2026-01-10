@@ -1,78 +1,87 @@
-# Property Listing Route Fix - Summary
+# Property Listing Fix Summary
 
-## 🐛 Issue Identified
+## Issue Identified
+The `netlify/functions/properties-list.js` endpoint was filtering properties by `is_verified = true`, which excluded all 17 properties that were imported via the API automation script from MagicBricks, 99acres, and NoBroker.
 
-The live site was showing the old static HTML page instead of the new Next.js dark theme implementation because:
+## Root Cause
+```javascript
+// OLD CODE (Line 19)
+.eq('is_verified', true)
+```
+This filter prevented API-imported properties from appearing on the property listing page, even though they had:
+- `status = 'active'`
+- `listing_status = 'active'`
+- `upload_source = 'api_import'`
 
-1. **Static files in `/public` directory** override Next.js App Router routes
-2. **Build script was copying** `property-listing` directory from root to `app/public/property-listing/`
-3. This caused Next.js to serve the static `index.html` instead of the React component at `app/app/property-listing/page.tsx`
+## Solution Implemented
+Updated the query to:
+1. Filter by `status = 'active'` instead of `is_verified = true`
+2. Keep the `listing_status = 'active'` OR `listing_status IS NULL` filter
+3. Sort results in JavaScript to prioritize verified properties first, then by `listed_at` (newest first)
 
-## ✅ Fix Applied
+### Code Changes
+**File:** `netlify/functions/properties-list.js`
 
-### 1. Updated Build Script (`scripts/copy-static.cjs`)
-- **Removed** `'property-listing'` from the `allowedDirs` set
-- Added comment explaining it now uses Next.js App Router route
-- This prevents the static files from being copied during build
+**Changes:**
+- Removed `.eq('is_verified', true)` filter
+- Added `.eq('status', 'active')` filter
+- Added JavaScript sorting to prioritize verified properties while including all active listings
 
-### 2. Deleted Static Files (`app/public/property-listing/`)
-- Removed all static HTML/JS/CSS files from `app/public/property-listing/`
-- Files deleted:
-  - `index.html` (static HTML page)
-  - `details.html`
-  - `app.js`, `listings.js`, `details.js`, `getMatches.js`
-  - `config.js`
-  - `styles.css`
-  - `properties.json`, `noimg.svg`
-  - Netlify functions directory
-  - README.md
+```javascript
+// NEW CODE
+.eq('status', 'active')
+.or('listing_status.eq.active,listing_status.is.null')
+.order('listed_at', { ascending: false })
+.limit(200)
 
-### 3. Git Commits
+// Then sort in JavaScript
+const sortedData = (data || []).sort((a, b) => {
+  // First sort by verified status (verified first)
+  if (a.is_verified !== b.is_verified) {
+    return b.is_verified ? 1 : -1
+  }
+  // Then sort by listed_at (newest first)
+  const dateA = a.listed_at ? new Date(a.listed_at).getTime() : 0
+  const dateB = b.listed_at ? new Date(b.listed_at).getTime() : 0
+  return dateB - dateA
+})
+```
 
-**Commit 1**: `b7b203e` - fix(property-listing): remove static HTML override to enable Next.js route
-- Removed static files
-- Updated build script
+## Database Status
+- **Total Active Properties:** 32
+- **Verified Properties:** 7 (`is_verified=true`)
+- **API Imported Properties:** 17 (`upload_source='api_import'`, `is_verified=false`)
+- **Other Unverified Properties:** 8
 
-**Previous Commit**: `8088ddd` - style(property-listing): transform UI theme from light to dark
-- All UI theme changes
+## Properties Now Available
+All 17 API-imported properties from Chennai are now included in the property listing results:
+- Locations: Perungudi, Madipakkam, OMR, Ottiambakkam, Tambaram West, Oragadam, Madhavaram
+- Types: 1BHK, 2BHK, 3BHK Apartments
+- Price Range: ₹5.8L - ₹9.88Cr
 
-## 📋 Verification Checklist
+## Deployment Note
+⚠️ **IMPORTANT:** The changes to `netlify/functions/properties-list.js` need to be deployed to Netlify for the fix to take effect on the live website (`https://dulcet-caramel-1f7489.netlify.app/`).
 
-- [x] Build script updated to exclude property-listing
-- [x] Static files removed from app/public/property-listing/
-- [x] Next.js route exists at app/app/property-listing/page.tsx
-- [x] All UI components updated with dark theme
-- [x] Changes committed
-- [x] Changes pushed to main
+To deploy:
+1. Commit the changes to git
+2. Push to the main branch (or configured Netlify branch)
+3. Netlify will automatically deploy the updated function
+4. Alternatively, manually trigger a deploy from the Netlify dashboard
 
-## 🔍 How Next.js Route Priority Works
+## Verification Steps
+1. ✅ Updated the `properties-list.js` function
+2. ✅ Verified query logic in Supabase (32 active properties match criteria)
+3. ✅ Browser snapshot shows property listing page is rendering results
+4. ⏳ **PENDING:** Deploy to Netlify and verify API-imported properties appear on live site
+5. ⏳ **PENDING:** Test property filters and search functionality
 
-1. **Static files in `/public`** are served first (if they exist)
-2. **App Router routes** (`app/app/*/page.tsx`) are served if no static file matches
-3. By removing static files, the Next.js route now takes precedence
+## Next Steps
+1. Deploy the updated function to Netlify
+2. Verify properties are showing on the live website
+3. Test property detail pages for API-imported properties
+4. Verify all property features (RERA, market intelligence, etc.) work with imported properties
 
-## 🚀 Expected Result
-
-After the next Netlify deployment:
-- `/property-listing` will serve the Next.js React component
-- Dark theme UI will be displayed
-- All the updated components (PropertyCard, SearchFilters, etc.) will work
-- No conflicts with static HTML files
-
-## 📝 Next Steps
-
-1. **Wait for Netlify rebuild** - The changes need to be deployed
-2. **Clear browser cache** - Users may need to hard refresh (Ctrl+F5)
-3. **Verify on live site** - Check that dark theme is now showing
-4. **Monitor for issues** - Ensure no 404 errors or broken routes
-
-## ⚠️ Important Notes
-
-- The root `property-listing/` directory still exists but is no longer copied to public
-- If needed in future, the static files can be restored from git history
-- The Next.js route implementation is the primary version going forward
-
----
-
-**Status**: ✅ Fixed and ready for deployment
-
+## Related Files
+- `netlify/functions/properties-list.js` - Main fix
+- `app/app/property-listing/page.tsx` - Property listing page (uses `/api/properties-list`)
+- `app/scripts/fetch-properties-zenrows.mjs` - Property fetching script

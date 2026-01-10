@@ -570,10 +570,15 @@ export function AdvancedAISidebar() {
                           onHoverEnd={() => setHoveredItem(null)}
                         >
                           {/* Use button for section-based routes to avoid Link navigation conflicts */}
-                          {shouldUseQueryParams(item.href) && !isLocked ? (
+                          {shouldUseQueryParams(item.href) ? (
                             <button
                               type="button"
                               onClick={() => {
+                                // Handle locked items - redirect to pricing
+                                if (isLocked) {
+                                  window.location.href = '/pricing'
+                                  return
+                                }
                                 // For section-based routes, use event-based navigation (no Link conflicts)
                                 handleSectionNavigation(item.href)
                               }}

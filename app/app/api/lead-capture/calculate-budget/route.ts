@@ -90,29 +90,24 @@ export async function POST(request: NextRequest) {
     // If advanced AI is requested, use advanced service
     if (use_advanced_ai) {
       try {
-        const advancedUrl = new URL('/api/tools/advanced-budget', request.url);
-        const advancedResponse = await fetch(advancedUrl.toString(), {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            primary_income_monthly,
-            secondary_income_monthly,
-            monthly_expenses,
-            existing_loans_emi,
-            savings_available,
-            city,
-            family_type,
-          }),
-        });
+        // Import and call advanced AI service directly (no internal fetch needed)
+        const { analyzeAdvancedBudget } = await import('@/lib/services/advanced-ai-tools-service');
+        const advancedAnalysis = await analyzeAdvancedBudget(
+          primary_income_monthly,
+          secondary_income_monthly || 0,
+          monthly_expenses,
+          existing_loans_emi || 0,
+          savings_available,
+          city,
+          family_type || 'nuclear'
+        );
         
-        if (advancedResponse.ok) {
-          const advancedData = await advancedResponse.json();
-          return NextResponse.json({
-            success: true,
-            results: advancedData.results,
-            ai_enhanced: true,
-          });
-        }
+        return NextResponse.json({
+          success: true,
+          results: advancedAnalysis,
+          ai_enhanced: true,
+          models_used: ['GPT-4o', 'Claude Sonnet 4', 'AI Financial Advisor'],
+        });
       } catch (aiError) {
         console.error('Advanced AI failed, using base calculations:', aiError);
       }

@@ -97,29 +97,24 @@ export async function POST(request: NextRequest) {
                           cibil_score_range === '650-749' ? 700 :
                           cibil_score_range === '550-649' ? 600 : 500;
         
-        const advancedUrl = new URL('/api/tools/advanced-loan-eligibility', request.url);
-        const advancedResponse = await fetch(advancedUrl.toString(), {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            monthly_income,
-            existing_loans_emi,
-            property_price,
-            preferred_tenure_years,
-            cibil_score: cibilScore,
-            employment_type,
-            city,
-          }),
-        });
+        // Import and call advanced AI service directly (no internal fetch needed)
+        const { analyzeAdvancedLoanEligibility } = await import('@/lib/services/advanced-ai-tools-service');
+        const advancedAnalysis = await analyzeAdvancedLoanEligibility(
+          monthly_income,
+          existing_loans_emi || 0,
+          property_price,
+          preferred_tenure_years,
+          cibilScore,
+          employment_type || 'salaried',
+          city
+        );
         
-        if (advancedResponse.ok) {
-          const advancedData = await advancedResponse.json();
-          return NextResponse.json({
-            success: true,
-            results: advancedData.results,
-            ai_enhanced: true,
-          });
-        }
+        return NextResponse.json({
+          success: true,
+          results: advancedAnalysis,
+          ai_enhanced: true,
+          models_used: ['GPT-4o', 'Claude Sonnet 4', 'Credit Risk Modeling'],
+        });
       } catch (aiError) {
         console.error('Advanced AI failed, using base calculations:', aiError);
       }

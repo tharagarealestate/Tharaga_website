@@ -106,3 +106,11 @@ export default function KeyHighlights({ property }: KeyHighlightsProps) {
 
 
 
+
+
+
+
+
+
+
+

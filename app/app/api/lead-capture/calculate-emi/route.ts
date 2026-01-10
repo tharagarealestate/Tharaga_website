@@ -79,30 +79,25 @@ export async function POST(request: NextRequest) {
     // If advanced AI is requested, use advanced service
     if (use_advanced_ai && monthly_income) {
       try {
-        const advancedUrl = new URL('/api/tools/advanced-emi', request.url);
-        const advancedResponse = await fetch(advancedUrl.toString(), {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            property_price,
-            down_payment_percentage,
-            loan_tenure_years,
-            interest_rate,
-            monthly_income,
-            existing_loans_emi: existing_loans_emi || 0,
-            cibil_score: cibil_score || 750,
-            employment_type: employment_type || 'salaried',
-          }),
-        });
+        // Import and call advanced AI service directly (no internal fetch needed)
+        const { analyzeAdvancedEMI } = await import('@/lib/services/advanced-ai-tools-service');
+        const advancedAnalysis = await analyzeAdvancedEMI(
+          property_price,
+          down_payment_percentage,
+          loan_tenure_years,
+          interest_rate,
+          monthly_income,
+          existing_loans_emi || 0,
+          cibil_score || 750,
+          employment_type || 'salaried'
+        );
         
-        if (advancedResponse.ok) {
-          const advancedData = await advancedResponse.json();
-          return NextResponse.json({
-            success: true,
-            results: advancedData.results,
-            ai_enhanced: true,
-          });
-        }
+        return NextResponse.json({
+          success: true,
+          results: advancedAnalysis,
+          ai_enhanced: true,
+          models_used: ['GPT-4o-mini', 'Claude Sonnet 4', 'ML Risk Assessment'],
+        });
       } catch (aiError) {
         console.error('Advanced AI failed, using base calculations:', aiError);
       }

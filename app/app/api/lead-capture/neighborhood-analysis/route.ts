@@ -74,27 +74,22 @@ export async function POST(request: NextRequest) {
     // If advanced AI is requested, use advanced service
     if (use_advanced_ai) {
       try {
-        const advancedUrl = new URL('/api/tools/advanced-neighborhood', request.url);
-        const advancedResponse = await fetch(advancedUrl.toString(), {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            primary_priorities,
-            family_type,
-            city,
-            preferred_localities,
-            work_location,
-          }),
-        });
+        // Import and call advanced AI service directly (no internal fetch needed)
+        const { analyzeAdvancedNeighborhood } = await import('@/lib/services/advanced-ai-tools-service');
+        const advancedAnalysis = await analyzeAdvancedNeighborhood(
+          primary_priorities,
+          family_type || 'nuclear',
+          city,
+          preferred_localities || [],
+          work_location
+        );
         
-        if (advancedResponse.ok) {
-          const advancedData = await advancedResponse.json();
-          return NextResponse.json({
-            success: true,
-            results: advancedData.results,
-            ai_enhanced: true,
-          });
-        }
+        return NextResponse.json({
+          success: true,
+          results: advancedAnalysis,
+          ai_enhanced: true,
+          models_used: ['GPT-4o', 'Claude Sonnet 4', 'Geospatial Analysis'],
+        });
       } catch (aiError) {
         console.error('Advanced AI failed, using base calculations:', aiError);
       }

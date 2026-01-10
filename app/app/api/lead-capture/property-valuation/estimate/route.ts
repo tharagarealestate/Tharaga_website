@@ -93,29 +93,24 @@ export async function POST(request: NextRequest) {
     // If advanced AI is requested, use advanced service
     if (use_advanced_ai) {
       try {
-        const advancedUrl = new URL('/api/tools/advanced-property-valuation', request.url);
-        const advancedResponse = await fetch(advancedUrl.toString(), {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            property_type,
-            bhk_config,
-            total_area_sqft,
-            locality,
-            city,
-            property_age_years,
-            furnishing,
-          }),
-        });
+        // Import and call advanced AI service directly (no internal fetch needed)
+        const { analyzeAdvancedPropertyValuation } = await import('@/lib/services/advanced-ai-tools-service');
+        const advancedAnalysis = await analyzeAdvancedPropertyValuation(
+          property_type || 'apartment',
+          bhk_config,
+          total_area_sqft,
+          locality,
+          city,
+          property_age_years || 0,
+          furnishing || 'unfurnished'
+        );
         
-        if (advancedResponse.ok) {
-          const advancedData = await advancedResponse.json();
-          return NextResponse.json({
-            success: true,
-            results: advancedData.results,
-            ai_enhanced: true,
-          });
-        }
+        return NextResponse.json({
+          success: true,
+          results: advancedAnalysis,
+          ai_enhanced: true,
+          models_used: ['GPT-4o', 'Claude Sonnet 4', 'Ensemble AVM'],
+        });
       } catch (aiError) {
         console.error('Advanced AI failed, using base calculations:', aiError);
       }

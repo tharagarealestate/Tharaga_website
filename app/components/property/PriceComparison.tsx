@@ -127,3 +127,11 @@ export default function PriceComparison({ propertyId, pricePerSqft, locality, ci
 
 
 
+
+
+
+
+
+
+
+

@@ -54,7 +54,18 @@ async function fetchProperties() {
 
 async function fetchStats() {
   const res = await fetch('/api/builder/stats/realtime', { cache: 'no-store' })
-  if (!res.ok) return { total: 0, hot: 0, warm: 0, conversionRate: 0 }
+  if (!res.ok) {
+    return {
+      total: 0,
+      hot: 0,
+      warm: 0,
+      conversionRate: 0,
+      totalProperties: 0,
+      totalViews: 0,
+      totalInquiries: 0,
+      activeProperties: 0,
+    }
+  }
   const data = await res.json()
   return {
     total: data.totalLeads || 0,
@@ -137,7 +148,7 @@ export function UnifiedDashboard({ onNavigate }: UnifiedDashboardProps) {
   }, [isDemoMode, demoBuilderId, demoUserId])
 
   // Fetch data with real-time updates - non-blocking with error handling
-  const { data: leads = [], isLoading: leadsLoading, error: leadsError } = useQuery({
+  const { data: leads = [], isLoading: leadsLoading, error: leadsError } = useQuery<Lead[]>({
     queryKey: ['unified-leads', isDemoMode],
     queryFn: async () => {
       if (isDemoMode) {
@@ -145,50 +156,49 @@ export function UnifiedDashboard({ onNavigate }: UnifiedDashboardProps) {
       }
       return fetchLeads()
     },
-    refetchInterval: isDemoMode ? false : 30000, // Reduced from 15s to 30s
-    staleTime: isDemoMode ? Infinity : 15000, // Consider data fresh for 15 seconds
+    refetchInterval: isDemoMode ? false : 30000,
+    staleTime: isDemoMode ? Infinity : 15000,
     retry: isDemoMode ? 0 : 1,
     retryDelay: 1000,
-    onError: (err) => {
-      console.warn('[UnifiedDashboard] Leads fetch error (non-blocking):', err)
-    }
   })
 
-  const { data: properties = [], isLoading: propertiesLoading, error: propertiesError } = useQuery({
+  const { data: properties = [], isLoading: propertiesLoading, error: propertiesError } = useQuery<Property[]>({
     queryKey: ['unified-properties'],
     queryFn: fetchProperties,
-    refetchInterval: 60000, // Reduced from 30s to 60s
-    staleTime: 30000, // Consider data fresh for 30 seconds
+    refetchInterval: 60000,
+    staleTime: 30000,
     retry: 1,
     retryDelay: 1000,
-    onError: (err) => {
-      console.warn('[UnifiedDashboard] Properties fetch error (non-blocking):', err)
-    }
   })
 
-  const { data: stats = { total: 0, hot: 0, warm: 0, conversionRate: 0 }, isLoading: statsLoading, error: statsError } = useQuery({
+  interface StatsData {
+    total: number
+    hot: number
+    warm: number
+    conversionRate: number
+    totalProperties: number
+    totalViews: number
+    totalInquiries: number
+    activeProperties: number
+  }
+
+  const { data: stats = { total: 0, hot: 0, warm: 0, conversionRate: 0, totalProperties: 0, totalViews: 0, totalInquiries: 0, activeProperties: 0 }, isLoading: statsLoading, error: statsError } = useQuery<StatsData>({
     queryKey: ['unified-stats'],
     queryFn: fetchStats,
-    refetchInterval: 30000, // Reduced from 5s to 30s for better performance
-    staleTime: 10000, // Consider data fresh for 10 seconds
+    refetchInterval: 30000,
+    staleTime: 10000,
     retry: 1,
     retryDelay: 1000,
-    onError: (err) => {
-      console.warn('[UnifiedDashboard] Stats fetch error (non-blocking):', err)
-    }
   })
 
   // Fetch revenue data - optimized
-  const { data: revenueData, isLoading: revenueLoading } = useQuery({
+  const { data: revenueData, isLoading: revenueLoading } = useQuery<any>({
     queryKey: ['unified-revenue'],
     queryFn: fetchRevenue,
-    refetchInterval: 60000, // Reduced from 30s to 60s
-    staleTime: 30000, // Consider data fresh for 30 seconds
+    refetchInterval: 60000,
+    staleTime: 30000,
     retry: 1,
     retryDelay: 1000,
-    onError: (err) => {
-      console.warn('[UnifiedDashboard] Revenue fetch error (non-blocking):', err)
-    }
   })
 
   // Real-time leads subscription - using Supabase realtime directly for better performance
@@ -273,49 +283,59 @@ export function UnifiedDashboard({ onNavigate }: UnifiedDashboardProps) {
   }, [builderId])
 
   // Merge real-time data with fetched data
-  const mergedLeads = useMemo(() => {
+  const mergedLeads = useMemo<Lead[]>(() => {
     // Real-time updates are handled by state, so we merge with initial fetch
     if (realtimeLeads.length > 0) {
-      const leadMap = new Map(leads.map((l: any) => [l.id, l]))
+      const leadMap = new Map(leads.map((l: Lead) => [l.id, l]))
       realtimeLeads.forEach((lead: any) => {
         leadMap.set(lead.id, lead)
       })
-      return Array.from(leadMap.values())
+      return Array.from(leadMap.values()) as Lead[]
     }
     return leads
   }, [leads, realtimeLeads])
 
-  const mergedProperties = useMemo(() => {
+  const mergedProperties = useMemo<Property[]>(() => {
     // Real-time updates are handled by state, so we merge with initial fetch
     if (realtimeProperties.length > 0) {
-      const propertyMap = new Map(properties.map((p: any) => [p.id, p]))
+      const propertyMap = new Map(properties.map((p: Property) => [p.id, p]))
       realtimeProperties.forEach((property: any) => {
         propertyMap.set(property.id, property)
       })
-      return Array.from(propertyMap.values())
+      return Array.from(propertyMap.values()) as Property[]
     }
     return properties
   }, [properties, realtimeProperties])
 
+  // Extract stats values to avoid nested property access in dependency arrays
+  const statsTotal = stats.total
+  const statsHot = stats.hot
+  const statsWarm = stats.warm
+  const statsConversionRate = stats.conversionRate
+  const statsTotalProperties = stats.totalProperties
+  const statsTotalViews = stats.totalViews
+  const statsTotalInquiries = stats.totalInquiries
+  const statsActiveProperties = stats.activeProperties
+
   // Update previous stats when stats change (separate from metrics calculation to prevent infinite loop)
   useEffect(() => {
-    const totalProperties = stats.totalProperties ?? mergedProperties.length
-    const totalViews = stats.totalViews ?? mergedProperties.reduce((sum: number, p: any) => sum + (p.views || p.view_count || 0), 0)
-    const totalInquiries = stats.totalInquiries ?? mergedProperties.reduce((sum: number, p: any) => sum + (p.inquiries || p.inquiry_count || 0), 0)
-    const conversionRate = stats.conversionRate ?? (totalViews > 0 ? parseFloat(((totalInquiries / totalViews) * 100).toFixed(1)) : 0)
+    const totalProperties = statsTotalProperties ?? mergedProperties.length
+    const totalViews = statsTotalViews ?? mergedProperties.reduce((sum: number, p: any) => sum + (p.views || p.view_count || 0), 0)
+    const totalInquiries = statsTotalInquiries ?? mergedProperties.reduce((sum: number, p: any) => sum + (p.inquiries || p.inquiry_count || 0), 0)
+    const conversionRate = statsConversionRate ?? (totalViews > 0 ? parseFloat(((totalInquiries / totalViews) * 100).toFixed(1)) : 0)
     
     prevStatsRef.current = {
-      total: stats.total,
+      total: statsTotal,
       conversionRate
     }
     
     setPreviousStats({
-      total: stats.total,
-      hot: stats.hot,
-      warm: stats.warm,
+      total: statsTotal,
+      hot: statsHot,
+      warm: statsWarm,
       conversionRate
     })
-  }, [mergedProperties, stats.total, stats.hot, stats.warm, stats.conversionRate, stats.totalProperties, stats.totalViews, stats.totalInquiries])
+  }, [mergedProperties, statsTotal, statsHot, statsWarm, statsConversionRate, statsTotalProperties, statsTotalViews, statsTotalInquiries])
 
   // Calculate metrics with real-time updates and trend calculation
   const metrics = useMemo(() => {
@@ -325,22 +345,22 @@ export function UnifiedDashboard({ onNavigate }: UnifiedDashboardProps) {
     const totalInquiries = mergedProperties.reduce((sum: number, p: any) => sum + (p.inquiries || p.inquiry_count || 0), 0)
     const convRate = totalViews > 0 ? parseFloat(((totalInquiries / totalViews) * 100).toFixed(1)) : 0
     
-    const totalProperties = stats.totalProperties ?? totalProps
-    const activeProperties = stats.activeProperties ?? activeProps
-    const views = stats.totalViews ?? totalViews
-    const inquiries = stats.totalInquiries ?? totalInquiries
-    const conversionRate = stats.conversionRate ?? convRate
+    const totalProperties = statsTotalProperties ?? totalProps
+    const activeProperties = statsActiveProperties ?? activeProps
+    const views = statsTotalViews ?? totalViews
+    const inquiries = statsTotalInquiries ?? totalInquiries
+    const conversionRate = statsConversionRate ?? convRate
     
     const prevTotal = prevStatsRef.current.total
     const prevConversionRate = prevStatsRef.current.conversionRate
     
-    const leadTrend = prevTotal > 0 ? ((stats.total - prevTotal) / prevTotal) * 100 : 0
+    const leadTrend = prevTotal > 0 ? ((statsTotal - prevTotal) / prevTotal) * 100 : 0
     const conversionTrend = prevConversionRate > 0 ? conversionRate - prevConversionRate : 0
     
     return {
-      totalLeads: stats.total,
-      hotLeads: stats.hot,
-      warmLeads: stats.warm,
+      totalLeads: statsTotal,
+      hotLeads: statsHot,
+      warmLeads: statsWarm,
       totalProperties,
       activeProperties,
       totalViews: views,
@@ -349,7 +369,17 @@ export function UnifiedDashboard({ onNavigate }: UnifiedDashboardProps) {
       leadTrend: Math.abs(leadTrend).toFixed(1),
       conversionTrend: Math.abs(conversionTrend).toFixed(1),
     }
-  }, [mergedProperties, stats.total, stats.hot, stats.warm, stats.conversionRate, stats.totalProperties, stats.totalViews, stats.totalInquiries, stats.activeProperties])
+  }, [
+    mergedProperties,
+    statsTotal,
+    statsHot,
+    statsWarm,
+    statsConversionRate,
+    statsTotalProperties,
+    statsTotalViews,
+    statsTotalInquiries,
+    statsActiveProperties
+  ]);
 
   return (
     <div className="w-full space-y-8">
@@ -374,7 +404,7 @@ export function UnifiedDashboard({ onNavigate }: UnifiedDashboardProps) {
           { icon: Users, label: "Total Leads", value: metrics.totalLeads, subtitle: `${metrics.hotLeads} hot • ${metrics.warmLeads} warm`, trend: { value: parseFloat(metrics.leadTrend), positive: parseFloat(metrics.leadTrend) >= 0 }, loading: statsLoading },
           { icon: Building2, label: "Properties", value: metrics.totalProperties, subtitle: `${metrics.activeProperties} active`, loading: propertiesLoading },
           { icon: TrendingUp, label: "Conversion Rate", value: `${metrics.conversionRate}%`, trend: { value: parseFloat(metrics.conversionTrend), positive: parseFloat(metrics.conversionTrend) >= 0 }, loading: statsLoading },
-          { icon: DollarSign, label: "This Month", value: revenueData?.monthlyRevenue ? revenueData.monthlyRevenue >= 10000000 ? `₹${(revenueData.monthlyRevenue / 10000000).toFixed(2)} Cr` : revenueData.monthlyRevenue >= 100000 ? `₹${(revenueData.monthlyRevenue / 100000).toFixed(2)} L` : `₹${(revenueData.monthlyRevenue / 1000).toFixed(1)}K` : '₹0', subtitle: "Revenue", loading: revenueLoading },
+          { icon: DollarSign, label: "This Month", value: revenueData && (revenueData as any).monthlyRevenue ? (revenueData as any).monthlyRevenue >= 10000000 ? `₹${((revenueData as any).monthlyRevenue / 10000000).toFixed(2)} Cr` : (revenueData as any).monthlyRevenue >= 100000 ? `₹${((revenueData as any).monthlyRevenue / 100000).toFixed(2)} L` : `₹${((revenueData as any).monthlyRevenue / 1000).toFixed(1)}K` : '₹0', subtitle: "Revenue", loading: revenueLoading },
         ].map((stat, index) => (
           <motion.div
             key={stat.label}
@@ -566,6 +596,7 @@ export function UnifiedDashboard({ onNavigate }: UnifiedDashboardProps) {
             </PremiumButton>
           </div>
         </div>
+        </div>
       </GlassCard>
     </div>
   )
@@ -653,7 +684,7 @@ function StatCard({
           </>
         )}
       </div>
-    </motion.div>
+    </GlassCard>
   )
 }
 

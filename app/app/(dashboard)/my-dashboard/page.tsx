@@ -350,6 +350,7 @@ function HeroSection({ greeting, name, savedCount }: { greeting: string; name: s
           icon={<MapPin className="h-4 w-4 text-emerald-300" />}
         />
       </div>
+      </GlassCard>
     </motion.section>
   );
 }
@@ -576,7 +577,8 @@ function UpcomingVisitsSection() {
           </PrimaryActionButton>
         </div>
       </div>
-    </section>
+      </GlassCard>
+    </SectionWrapper>
   );
 }
 
@@ -617,8 +619,7 @@ function TrustIndicatorsSection() {
           </GlassCard>
         ))}
       </div>
-      </GlassCard>
-    </SectionWrapper>
+    </section>
   );
 }
 

@@ -6,11 +6,12 @@ import { typography } from '@/lib/design-system'
 import { cn } from '@/lib/design-system'
 
 interface PageHeaderProps {
-  title: string
-  description?: string
+  title: string | ReactNode
+  description?: string | ReactNode
   emoji?: string
   actions?: ReactNode
   className?: string
+  children?: ReactNode
 }
 
 /**
@@ -23,6 +24,7 @@ export function PageHeader({
   emoji,
   actions,
   className = '',
+  children,
 }: PageHeaderProps) {
   return (
     <motion.div
@@ -49,9 +51,18 @@ export function PageHeader({
           </div>
         )}
       </div>
+      {children && <div className="mt-6">{children}</div>}
     </motion.div>
   )
 }
+
+
+
+
+
+
+
+
 
 
 

@@ -327,6 +327,12 @@ export const DESIGN_TOKENS = {
       card: 'bg-slate-800/95',
       page: 'bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900',
     },
+    semantic: {
+      success: 'text-emerald-400',
+      error: 'text-red-400',
+      warning: 'text-amber-400',
+      info: 'text-blue-400',
+    },
   },
   typography: {
     h1: 'text-3xl sm:text-4xl font-bold text-white',

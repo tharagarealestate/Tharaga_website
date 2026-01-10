@@ -4,7 +4,8 @@ import React, { useState } from 'react'
 import Link from 'next/link'
 import { Search, MessageCircle, Book, Video, HelpCircle, ChevronDown, ChevronUp, Mail, Phone, FileText } from 'lucide-react'
 import Breadcrumb from '@/components/Breadcrumb'
-import { PageWrapper } from '@/components/ui'
+import { PageWrapper, PageHeader, SectionWrapper, GlassCard, PremiumButton } from '@/components/ui'
+import { DESIGN_TOKENS } from '@/lib/design-system'
 
 export default function HelpCenterPage() {
   const [searchQuery, setSearchQuery] = useState('')

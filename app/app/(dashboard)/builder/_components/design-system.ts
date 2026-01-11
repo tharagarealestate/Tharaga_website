@@ -198,16 +198,14 @@ export const builderDesignSystem = {
   },
 }
 
-// Legacy helper functions - Use StandardCard, StandardPageWrapper, EmptyState, LoadingState instead
-// These are kept for backward compatibility but new code should use the standard components
+// Helper functions - For backward compatibility
+// NEW CODE: Use StandardCard, StandardPageWrapper, EmptyState, LoadingState instead
 export const getSectionClassName = () => 'bg-slate-900/95 glow-border rounded-xl border border-amber-300/25 p-6 sm:p-8'
 export const getCardClassName = () => 'bg-slate-800/95 glow-border rounded-lg border border-amber-300/25 p-4 md:p-6'
 export const getSubCardClassName = () => 'bg-slate-700/30 rounded-lg border border-amber-300/20 p-4'
 
-// Note: For buttons, use PremiumButton component instead
 export const getPrimaryButtonClassName = () => 'px-6 py-3 bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 glow-border text-white font-semibold rounded-lg transition-all duration-300 shadow-lg hover:shadow-xl hover:shadow-amber-500/30 hover:-translate-y-0.5'
 
-// Note: For badges, use the badge utility classes
 export const getBadgeClassName = (type: 'hot' | 'warm' | 'developing' | 'cold' | 'accent' = 'accent') => {
   const badgeClasses = {
     hot: 'bg-red-500/20 text-red-300 border border-red-500/30',

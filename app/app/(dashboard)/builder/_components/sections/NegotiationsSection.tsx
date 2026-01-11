@@ -1,10 +1,12 @@
 "use client"
 
-import { motion } from 'framer-motion'
 import { SectionWrapper } from './SectionWrapper'
 import { NegotiationsDashboard } from '../ultra-automation/components/NegotiationsDashboard'
 import { useDemoMode } from '../DemoDataProvider'
-import { getSectionClassName } from '../design-system'
+import { StandardPageWrapper } from '../StandardPageWrapper'
+import { GlassCard } from '@/components/ui/glass-card'
+import { builderDesignSystem } from '../design-system'
+import { Handshake } from 'lucide-react'
 
 interface NegotiationsSectionProps {
   onNavigate?: (section: string) => void
@@ -14,30 +16,22 @@ export function NegotiationsSection({ onNavigate }: NegotiationsSectionProps) {
   const { builderId } = useDemoMode()
   
   return (
-    <div className="space-y-6">
-      {/* Header - Design System Typography */}
-      <motion.div
-        initial={{ opacity: 0, y: -10 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="mb-4"
+    <SectionWrapper>
+      <StandardPageWrapper
+        title="Negotiations"
+        subtitle="Track price negotiations, analyze strategies, and get AI-powered recommendations for successful deals."
+        icon={<Handshake className={builderDesignSystem.cards.icon} />}
       >
-        <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">Negotiations</h1>
-        <p className="text-slate-300 text-base sm:text-lg max-w-2xl">
-          Track price negotiations, analyze strategies, and get AI-powered recommendations for successful deals.
-        </p>
-      </motion.div>
-
-      {/* Content - Design System Container */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className={getSectionClassName()}
-      >
-        <div className="p-6 sm:p-8">
-          <NegotiationsDashboard builderId={builderId || undefined} />
-        </div>
-      </motion.div>
-    </div>
+        <GlassCard
+          {...builderDesignSystem.cards.sectionCard.props}
+          className={builderDesignSystem.cards.sectionCard.props.className}
+        >
+          <div className="p-6 sm:p-8">
+            <NegotiationsDashboard builderId={builderId || undefined} />
+          </div>
+        </GlassCard>
+      </StandardPageWrapper>
+    </SectionWrapper>
   )
 }
 

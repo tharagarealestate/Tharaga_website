@@ -1,9 +1,12 @@
 "use client"
 
-import { motion } from 'framer-motion'
 import dynamic from 'next/dynamic'
+import { SectionWrapper } from './SectionWrapper'
 import { SectionLoader } from './SectionLoader'
-import { getSectionClassName } from '../design-system'
+import { StandardPageWrapper } from '../StandardPageWrapper'
+import { GlassCard } from '@/components/ui/glass-card'
+import { builderDesignSystem } from '../design-system'
+import { TrendingUp } from 'lucide-react'
 
 interface PipelineSectionProps {
   onNavigate?: (section: string) => void
@@ -17,30 +20,24 @@ const LeadPipelineKanban = dynamic(() => import('../../leads/pipeline/_component
 
 export function PipelineSection({ onNavigate }: PipelineSectionProps) {
   return (
-    <div className="space-y-6">
-      {/* Header - Design System Typography */}
-      <motion.div
-        initial={{ opacity: 0, y: -10 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="mb-4"
+    <SectionWrapper>
+      <StandardPageWrapper
+        title="Lead Pipeline"
+        subtitle="Visualize and manage your leads through the sales pipeline"
+        icon={<TrendingUp className={builderDesignSystem.cards.icon} />}
       >
-        <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">Lead Pipeline</h1>
-        <p className="text-slate-300 text-base sm:text-lg">Visualize and manage your leads through the sales pipeline</p>
-      </motion.div>
-
-      {/* Pipeline Content - Design System Container */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className={getSectionClassName()}
-      >
-        <div className="p-6 sm:p-8">
-          <div className="w-full max-w-[1920px] mx-auto">
-            <LeadPipelineKanban />
+        <GlassCard
+          {...builderDesignSystem.cards.sectionCard.props}
+          className={builderDesignSystem.cards.sectionCard.props.className}
+        >
+          <div className="p-6 sm:p-8">
+            <div className="w-full max-w-[1920px] mx-auto">
+              <LeadPipelineKanban />
+            </div>
           </div>
-        </div>
-      </motion.div>
-    </div>
+        </GlassCard>
+      </StandardPageWrapper>
+    </SectionWrapper>
   )
 }
 

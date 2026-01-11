@@ -565,15 +565,27 @@ export function RestructuredSidebar() {
                             >
                               <div className="ml-8 mt-1 space-y-1">
                                 {item.submenu?.map((subItem) => {
-                                  const isSubActive = pathname === subItem.href || pathname.startsWith(subItem.href + '/')
-                                  const subItemUsesQueryParams = subItem.href.startsWith('/builder?section=')
+                                  // Check if submenu item uses section-based routing
+                                  const subItemUsesQueryParams = subItem.href.startsWith('/builder?section=') || routeToSectionMap[subItem.href]
+                                  let isSubActive = false
+                                  
+                                  if (subItemUsesQueryParams) {
+                                    const section = routeToSectionMap[subItem.href] || subItem.href.split('?section=')[1]?.split('&')[0]
+                                    if (section && typeof window !== 'undefined') {
+                                      const urlParams = new URLSearchParams(window.location.search)
+                                      isSubActive = urlParams.get('section') === section
+                                    }
+                                  } else {
+                                    isSubActive = pathname === subItem.href || pathname.startsWith(subItem.href + '/')
+                                  }
                                   
                                   if (subItemUsesQueryParams) {
                                     return (
                                       <button
                                         key={subItem.href}
                                         type="button"
-                                        onClick={() => {
+                                        onClick={(e) => {
+                                          e.preventDefault()
                                           handleSectionNavigation(subItem.href)
                                           toggleSubmenu(item.href)
                                         }}
@@ -593,6 +605,7 @@ export function RestructuredSidebar() {
                                     <Link
                                       key={subItem.href}
                                       href={subItem.href}
+                                      onClick={() => toggleSubmenu(item.href)}
                                       className={cn(
                                         "block px-3 py-2 rounded-lg text-sm transition-all duration-200",
                                         isSubActive

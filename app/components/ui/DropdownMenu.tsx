@@ -99,7 +99,7 @@ export function DropdownMenuContent({
     <div
       role="menu"
       className={cn(
-        'absolute z-50 mt-2 min-w-[12rem] rounded-md border border-slate-600/50 bg-slate-800/95 backdrop-blur-sm p-1 shadow-lg focus:outline-none glow-border',
+        'absolute z-50 mt-2 min-w-[12rem] rounded-md border border-amber-300/25 bg-slate-900/98 backdrop-blur-md p-1 shadow-xl shadow-black/50 focus:outline-none',
         alignmentClass,
         className
       )}
@@ -129,7 +129,7 @@ export function DropdownMenuItem({
   }
 
   const baseClasses = cn(
-    'flex cursor-pointer select-none items-center rounded-sm px-2 py-2 text-sm text-slate-200 hover:bg-slate-700/50 focus:bg-slate-700/50 focus:outline-none transition-colors',
+    'flex cursor-pointer select-none items-center rounded-sm px-2 py-2 text-sm text-white hover:bg-amber-500/20 hover:text-amber-300 focus:bg-amber-500/20 focus:text-amber-300 focus:outline-none transition-all duration-200',
     className
   )
 
@@ -153,5 +153,5 @@ export function DropdownMenuItem({
 }
 
 export function DropdownMenuSeparator() {
-  return <div className="my-1 h-px bg-slate-600/50" role="separator" />
+  return <div className="my-1 h-px bg-amber-300/20" role="separator" />
 }

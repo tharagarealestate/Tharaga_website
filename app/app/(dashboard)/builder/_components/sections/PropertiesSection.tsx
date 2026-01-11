@@ -138,12 +138,7 @@ export function PropertiesSection({ onNavigate }: PropertiesSectionProps) {
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-amber-300 mx-auto mb-4"></div>
               <p className="text-slate-400">Loading properties...</p>
             </div>
-          ) : error ? (
-            <div className="text-center py-16">
-              <p className="text-red-400 mb-2">Failed to load properties</p>
-              <p className="text-slate-400 text-sm">Please try refreshing the page</p>
-            </div>
-          ) : displayProperties.length === 0 ? (
+          ) : error || displayProperties.length === 0 ? (
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}

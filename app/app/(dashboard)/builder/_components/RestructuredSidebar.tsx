@@ -103,7 +103,7 @@ export function RestructuredSidebar() {
   // Route to section mapping for unified dashboard
   const routeToSectionMap: Record<string, string> = {
     '/builder': 'overview',
-    '/builder/leads': 'leads',
+    '/builder?section=leads': 'leads',
     '/builder/properties': 'properties',
   }
 
@@ -182,16 +182,6 @@ export function RestructuredSidebar() {
               { href: createSectionUrl('pipeline'), label: 'Pipeline View' },
             ]
           },
-          { 
-            href: '/builder/integrations', 
-            label: 'CRM Integration', 
-            icon: Link2, 
-            requiresPro: false,
-            submenu: [
-              { href: '/builder/integrations', label: 'Zoho CRM' },
-              { href: '/builder/settings/zoho', label: 'Zoho Settings' },
-            ]
-          },
         ]
       },
       // 4. Communications
@@ -199,12 +189,11 @@ export function RestructuredSidebar() {
         label: 'Communication',
         items: [
           { 
-            href: '/builder/communications', 
+            href: '/builder/messaging', 
             label: 'Messages', 
             icon: MessageSquare, 
             requiresPro: false,
             submenu: [
-              { href: '/builder/communications', label: 'All Messages' },
               { href: '/builder/messaging', label: 'WhatsApp' },
             ]
           },
@@ -214,16 +203,6 @@ export function RestructuredSidebar() {
       {
         label: 'Calendar & Viewings',
         items: [
-          { 
-            href: createSectionUrl('viewings'), 
-            label: 'Site Visits', 
-            icon: Calendar, 
-            requiresPro: false,
-            submenu: [
-              { href: createSectionUrl('viewings'), label: 'Calendar View' },
-              { href: '/builder/settings/calendar', label: 'Calendar Settings' },
-            ]
-          },
           { 
             href: createSectionUrl('negotiations'), 
             label: 'Negotiations', 
@@ -246,63 +225,13 @@ export function RestructuredSidebar() {
             href: '/builder/analytics', 
             label: 'Analytics Dashboard', 
             icon: BarChart3, 
-            requiresPro: false,
-            submenu: [
-              { href: '/builder/analytics', label: 'Overview' },
-              { href: createSectionUrl('behavior-analytics'), label: 'Behavior Analytics' },
-              { href: createSectionUrl('deal-lifecycle'), label: 'Deal Lifecycle' },
-            ]
+            requiresPro: false
           },
           { 
             href: '/builder/revenue', 
             label: 'Revenue Analytics', 
             icon: TrendingUp, 
-            requiresPro: true,
-            submenu: [
-              { href: '/builder/revenue', label: 'Overview' },
-              { href: '/builder/revenue/payments', label: 'Payments' },
-              { href: '/builder/revenue/forecasting', label: 'Forecasting' },
-            ]
-          },
-        ]
-      },
-      // 7. Automation
-      {
-        label: 'Automation',
-        items: [
-          { 
-            href: createSectionUrl('ultra-automation'), 
-            label: 'Workflow Automation', 
-            icon: Zap, 
-            requiresPro: false,
-            submenu: [
-              { href: '/builder/workflows/builder', label: 'Workflow Builder' },
-              { href: '/builder/workflows/monitoring', label: 'Monitoring' },
-            ]
-          },
-        ]
-      },
-      // 8. Settings
-      {
-        label: 'Settings',
-        items: [
-          { 
-            href: '/builder/settings', 
-            label: 'Settings', 
-            icon: Settings, 
-            requiresPro: false,
-            submenu: [
-              { href: '/builder/settings', label: 'Profile & Company' },
-              { href: '/builder/integrations', label: 'Integrations' },
-              { href: '/builder/settings/calendar', label: 'Calendar' },
-              { href: '/builder/settings/zoho', label: 'Zoho CRM' },
-            ]
-          },
-          { 
-            href: '/builder/subscription', 
-            label: 'Billing & Subscription', 
-            icon: CreditCard, 
-            requiresPro: false 
+            requiresPro: true
           },
         ]
       },
@@ -375,23 +304,18 @@ export function RestructuredSidebar() {
           animate={{ opacity: 1, y: 0 }}
           className="flex-shrink-0 px-4 py-5 border-b glow-border border-b-amber-300/25"
         >
-          {/* Home Button */}
+          {/* Home Button - Compact */}
           <div className="mb-3">
             <Link href="/">
               <motion.button
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
-                className="w-full group relative overflow-hidden rounded-lg px-3 py-2.5 bg-gradient-to-r from-amber-500/10 via-amber-400/5 to-transparent border border-amber-400/20 hover:border-amber-400/40 transition-all duration-300"
+                className="inline-flex items-center justify-center group relative overflow-hidden rounded-lg px-3 py-2 border border-amber-300/25 hover:border-amber-300/40 transition-all duration-300 bg-slate-800/50 hover:bg-slate-800/70"
               >
-                <div className="relative flex items-center gap-2.5">
-                  <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center shadow-lg shadow-amber-500/30">
-                    <ArrowLeft className="w-3.5 h-3.5 text-slate-900" />
-                  </div>
-                  <div className="flex flex-col items-start">
-                    <span className="text-xs font-bold text-amber-300">HOME</span>
-                    <span className="text-[10px] text-slate-400">Back to main site</span>
-                  </div>
+                <div className="w-5 h-5 rounded-md bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center shadow-lg shadow-amber-500/30">
+                  <ArrowLeft className="w-3 h-3 text-slate-900" />
                 </div>
+                <span className="ml-2 text-xs font-semibold text-amber-300">HOME</span>
               </motion.button>
             </Link>
           </div>

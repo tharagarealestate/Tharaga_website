@@ -425,7 +425,7 @@ export function UnifiedDashboard({ onNavigate }: UnifiedDashboardProps) {
           glow
           className="overflow-hidden desktop-card min-w-0 max-w-full h-full flex flex-col"
         >
-          <div className="bg-gradient-to-r from-amber-500/20 via-amber-600/20 to-amber-500/20 border-b glow-border border-b-amber-300/25 p-6 sm:p-8">
+          <div className="border-b border-amber-300/25 p-6 sm:p-8">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-lg bg-slate-700/50 flex items-center justify-center">
@@ -437,9 +437,9 @@ export function UnifiedDashboard({ onNavigate }: UnifiedDashboardProps) {
                 </div>
               </div>
               <PremiumButton
-                variant="gold"
+                variant="primary"
                 size="sm"
-                onClick={() => window.location.href = '/builder/leads'}
+                onClick={() => onNavigate?.('leads')}
               >
                 View All
               </PremiumButton>
@@ -485,7 +485,7 @@ export function UnifiedDashboard({ onNavigate }: UnifiedDashboardProps) {
           glow
           className="overflow-hidden desktop-card min-w-0 max-w-full h-full flex flex-col"
         >
-          <div className="bg-gradient-to-r from-amber-500/20 via-amber-600/20 to-amber-500/20 border-b glow-border border-b-amber-300/25 p-6 sm:p-8">
+          <div className="border-b border-amber-300/25 p-6 sm:p-8">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-lg bg-slate-700/50 flex items-center justify-center">
@@ -497,7 +497,7 @@ export function UnifiedDashboard({ onNavigate }: UnifiedDashboardProps) {
                 </div>
               </div>
               <PremiumButton
-                variant="gold"
+                variant="primary"
                 size="sm"
                 onClick={() => onNavigate?.('properties')}
               >
@@ -522,7 +522,7 @@ export function UnifiedDashboard({ onNavigate }: UnifiedDashboardProps) {
                 <h4 className="text-xl font-semibold text-white mb-2">No properties yet</h4>
                 <p className="text-slate-400 mb-6">Get started by adding your first property</p>
                 <PremiumButton
-                  variant="gold"
+                  variant="primary"
                   size="md"
                   onClick={() => onNavigate?.('properties')}
                   icon={<ArrowUpRight className="w-4 h-4" />}

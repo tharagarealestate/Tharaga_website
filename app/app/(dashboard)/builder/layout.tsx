@@ -12,7 +12,7 @@ export default function BuilderDashboardLayout({ children }: { children: ReactNo
   return (
     <ReactQueryProvider>
       <DemoDataProvider>
-        <div className="min-h-screen bg-slate-950 text-white overflow-x-hidden">
+        <div className="min-h-screen bg-gradient-to-br from-slate-800/95 via-slate-800/95 to-slate-900/95 text-white overflow-x-hidden">
 
         {/* Trial upgrade banner */}
         <TrialUpgradeBanner />

@@ -103,22 +103,43 @@ export function RestructuredSidebar() {
   // Route to section mapping for unified dashboard
   const routeToSectionMap: Record<string, string> = {
     '/builder': 'overview',
-    '/builder?section=leads': 'leads',
+    '/builder/leads': 'leads',
     '/builder/properties': 'properties',
+    '/builder/pipeline': 'pipeline',
+    '/builder/viewings': 'viewings',
+    '/builder/negotiations': 'negotiations',
+    '/builder/contracts': 'contracts',
+    '/builder/contacts': 'contacts',
   }
 
-  // Handle section-based navigation
+  // Handle section-based navigation (NO PAGE RELOAD)
   const handleSectionNavigation = useCallback((href: string) => {
+    if (typeof window === 'undefined') return
+    
+    // Extract section from href
+    let section: string | null = null
     if (href.startsWith('/builder?section=')) {
-      router.push(href)
+      section = href.split('?section=')[1]?.split('&')[0] || null
     } else {
-      const section = routeToSectionMap[href]
-      if (section) {
-        router.push(`/builder?section=${section}`)
-      } else {
-        router.push(href)
-      }
+      section = routeToSectionMap[href] || null
     }
+    
+    if (!section) {
+      // Not a section route, use regular navigation
+      router.push(href)
+      return
+    }
+    
+    // Update URL without page reload
+    const url = new URL(window.location.href)
+    url.pathname = '/builder'
+    url.searchParams.set('section', section)
+    window.history.pushState({}, '', url.toString())
+    
+    // Dispatch custom event for section change (BuilderDashboardClient listens to this)
+    window.dispatchEvent(new CustomEvent('dashboard-section-change', { 
+      detail: { section } 
+    }))
   }, [router])
 
   // Toggle submenu
@@ -265,20 +286,44 @@ export function RestructuredSidebar() {
     return href.startsWith('/builder?section=') || href in routeToSectionMap
   }
 
-  // Determine active state
+  // Determine active state (works on initial load)
   const isItemActive = (item: NavItem): boolean => {
+    if (typeof window === 'undefined') return false
+    
+    // For section-based routes, check URL params
+    if (shouldUseQueryParams(item.href)) {
+      const section = routeToSectionMap[item.href] || item.href.split('?section=')[1]?.split('&')[0]
+      if (section) {
+        const urlParams = new URLSearchParams(window.location.search)
+        const currentSection = urlParams.get('section') || 'overview'
+        return currentSection === section
+      }
+    }
+    
+    // For regular routes, check pathname
     if (pathname === item.href || pathname.startsWith(item.href + '/')) {
       return true
     }
-    if (shouldUseQueryParams(item.href) && pathname === '/builder') {
-      const section = routeToSectionMap[item.href] || item.href.split('?section=')[1]?.split('&')[0]
-      if (section && typeof window !== 'undefined') {
-        const urlParams = new URLSearchParams(window.location.search)
-        return urlParams.get('section') === section
-      }
-    }
+    
     return false
   }
+  
+  // Sync active section on mount
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    
+    // Read initial section from URL on mount
+    const urlParams = new URLSearchParams(window.location.search)
+    const initialSection = urlParams.get('section') || 'overview'
+    
+    // Trigger section change event to sync dashboard
+    // Use setTimeout to ensure BuilderDashboardClient is ready
+    setTimeout(() => {
+      window.dispatchEvent(new CustomEvent('dashboard-section-change', { 
+        detail: { section: initialSection } 
+      }))
+    }, 0)
+  }, [])
 
   const sidebarWidth = 280 // Optimal width per research (240-300px range)
 
@@ -575,6 +620,7 @@ export function RestructuredSidebar() {
     </motion.aside>
   )
 }
+
 
 
 

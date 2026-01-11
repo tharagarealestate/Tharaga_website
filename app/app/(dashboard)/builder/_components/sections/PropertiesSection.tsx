@@ -4,9 +4,10 @@ import { motion } from 'framer-motion'
 import { SectionWrapper } from './SectionWrapper'
 import { GlassCard } from '@/components/ui/glass-card'
 import { Building2, MapPin, Eye, TrendingUp, Plus } from 'lucide-react'
-import { builderDesignSystem, getCardClassName, getPrimaryButtonClassName } from '../design-system'
+import { builderDesignSystem } from '../design-system'
 import { useQuery } from '@tanstack/react-query'
 import { useDemoMode } from '../DemoDataProvider'
+import { StandardPageWrapper, StandardCard, EmptyState, LoadingState } from '../StandardPageWrapper'
 
 interface PropertiesSectionProps {
   onNavigate?: (section: string) => void
@@ -118,41 +119,25 @@ export function PropertiesSection({ onNavigate }: PropertiesSectionProps) {
           </GlassCard>
         </div>
 
-        {/* Properties Grid */}
-        <div className={getCardClassName()}>
-          <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
-            <Building2 className="w-5 h-5 text-amber-400" />
-            Your Properties
-          </h2>
-
+        {/* Properties Grid - EXACT card style from main dashboard */}
+        <StandardCard
+          title="Your Properties"
+          subtitle={`${displayProperties.filter(p => p.status === 'active').length} active listings`}
+          icon={<Building2 className={builderDesignSystem.cards.icon} />}
+        >
           {isLoading ? (
-            <div className="text-center py-16">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-amber-300 mx-auto mb-4"></div>
-              <p className="text-slate-400">Loading properties...</p>
-            </div>
+            <LoadingState message="Loading properties..." />
           ) : error || displayProperties.length === 0 ? (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="text-center py-16 px-6"
-            >
-              <div className="p-4 bg-slate-700/30 rounded-full w-20 h-20 mx-auto mb-6 flex items-center justify-center">
-                <Building2 className="h-10 w-10 text-amber-300" />
-              </div>
-              <h4 className="text-xl font-semibold text-white mb-2">Upload your property</h4>
-              <p className="text-slate-400 mb-6 max-w-md mx-auto">
-                Get started by adding your first property listing. Once uploaded, it will appear here and start generating leads.
-              </p>
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={() => window.location.href = '/builders/add-property'}
-                className="px-8 py-3 bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 text-slate-900 font-semibold rounded-lg transition-all duration-300 shadow-lg hover:shadow-xl hover:shadow-amber-500/30 hover:-translate-y-1 glow-border inline-flex items-center gap-2"
-              >
-                <Plus className="w-4 h-4" />
-                Add Your First Property
-              </motion.button>
-            </motion.div>
+            <EmptyState
+              icon={<Building2 />}
+              title="No properties yet"
+              description="Get started by adding your first property listing. Once uploaded, it will appear here and start generating leads."
+              actionButton={{
+                label: 'Add your first property',
+                onClick: () => window.location.href = '/builders/add-property',
+                icon: <Plus className="w-4 h-4" />,
+              }}
+            />
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {displayProperties.map((property) => (

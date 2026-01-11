@@ -23,7 +23,10 @@ import {
 } from 'lucide-react'
 import { getSupabase } from '@/lib/supabase'
 import { SectionWrapper } from './SectionWrapper'
-import { builderDesignSystem, getCardClassName, getBadgeClassName } from '../design-system'
+import { builderDesignSystem, getBadgeClassName } from '../design-system'
+import { StandardPageWrapper, EmptyState, LoadingState } from '../StandardPageWrapper'
+import { GlassCard } from '@/components/ui/glass-card'
+import { motion } from 'framer-motion'
 
 interface Contact {
   id: string
@@ -149,141 +152,101 @@ export function ContactsSection({ onNavigate }: ContactsSectionProps) {
 
   return (
     <SectionWrapper>
-      <div className="space-y-6">
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-          <div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">Contacts</h1>
-            <p className="text-slate-300 text-base sm:text-lg max-w-2xl">
-              Manage your contact database, track interactions, and build relationships.
-            </p>
-          </div>
-          <div className="flex items-center gap-2">
-            <button className="px-4 py-2 bg-slate-700/50 border border-slate-600/50 rounded-lg text-white hover:bg-slate-700 transition-all flex items-center gap-2">
-              <Upload className="h-4 w-4" />
-              Import
-            </button>
-            <button className="px-4 py-2 bg-slate-700/50 border border-slate-600/50 rounded-lg text-white hover:bg-slate-700 transition-all flex items-center gap-2">
-              <Download className="h-4 w-4" />
-              Export
-            </button>
-            <button className="px-4 py-2 bg-gradient-to-r from-amber-600 to-amber-500 text-white rounded-lg hover:shadow-lg hover:shadow-amber-500/30 transition-all flex items-center gap-2">
-              <Plus className="h-4 w-4" />
-              Add Contact
-            </button>
-          </div>
-        </div>
+      <StandardPageWrapper
+        title="Contacts"
+        subtitle="Manage your contact database, track interactions, and build relationships."
+        icon={<Users className={builderDesignSystem.cards.icon} />}
+        actionButton={{
+          label: 'Add Contact',
+          onClick: () => {/* TODO: Add contact modal */},
+          icon: <Plus className="w-4 h-4" />,
+        }}
+      >
+        {/* Stats Cards - Custom 5-column grid */}
+        <motion.div
+          initial={builderDesignSystem.animations.content.initial}
+          animate={builderDesignSystem.animations.content.animate}
+          transition={builderDesignSystem.animations.content.transition}
+          className="grid grid-cols-2 sm:grid-cols-5 gap-4 w-full"
+        >
+          {[
+            { label: 'Total', value: stats.total, color: 'text-white' },
+            { label: 'Hot', value: stats.hot, color: 'text-red-300' },
+            { label: 'Warm', value: stats.warm, color: 'text-orange-300' },
+            { label: 'Developing', value: stats.developing, color: 'text-blue-300' },
+            { label: 'Cold', value: stats.cold, color: 'text-gray-300' },
+          ].map((stat, index) => (
+            <motion.div
+              key={stat.label}
+              {...builderDesignSystem.animations.statCard(index)}
+            >
+              <GlassCard {...builderDesignSystem.cards.statCard.props}>
+                <div className="text-sm text-slate-400 mb-1">{stat.label}</div>
+                <div className={`text-2xl font-bold ${stat.color}`}>{stat.value}</div>
+              </GlassCard>
+            </motion.div>
+          ))}
+        </motion.div>
 
-        {/* Stats Cards */}
-        <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className={getCardClassName()}
-          >
-            <div className="text-sm text-slate-400 mb-1">Total</div>
-            <div className="text-2xl font-bold text-white">{stats.total}</div>
-          </motion.div>
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-            className={getCardClassName()}
-          >
-            <div className="text-sm text-slate-400 mb-1">Hot</div>
-            <div className="text-2xl font-bold text-red-300">{stats.hot}</div>
-          </motion.div>
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-            className={getCardClassName()}
-          >
-            <div className="text-sm text-slate-400 mb-1">Warm</div>
-            <div className="text-2xl font-bold text-orange-300">{stats.warm}</div>
-          </motion.div>
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-            className={getCardClassName()}
-          >
-            <div className="text-sm text-slate-400 mb-1">Developing</div>
-            <div className="text-2xl font-bold text-blue-300">{stats.developing}</div>
-          </motion.div>
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4 }}
-            className={getCardClassName()}
-          >
-            <div className="text-sm text-slate-400 mb-1">Cold</div>
-            <div className="text-2xl font-bold text-gray-300">{stats.cold}</div>
-          </motion.div>
-        </div>
-
-        {/* Filters */}
-        <div className={getCardClassName()}>
-          <div className="flex flex-col sm:flex-row gap-4">
-            <div className="flex-1 relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
-              <input
-                type="text"
-                placeholder="Search contacts..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className={builderDesignSystem.inputs.default + ' pl-10'}
-              />
-            </div>
-            <div className="flex gap-2">
-              {['all', 'hot', 'warm', 'developing', 'cold'].map((cat) => (
-                <button
-                  key={cat}
-                  onClick={() => setCategoryFilter(cat)}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                    categoryFilter === cat
-                      ? 'bg-amber-500 text-white'
-                      : builderDesignSystem.buttons.ghost
-                  }`}
-                >
-                  {cat.charAt(0).toUpperCase() + cat.slice(1)}
-                </button>
-              ))}
+        {/* Filters - EXACT card style */}
+        <GlassCard {...builderDesignSystem.cards.sectionCard.props}>
+          <div className="p-4 md:p-6">
+            <div className="flex flex-col sm:flex-row gap-4">
+              <div className="flex-1 relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
+                <input
+                  type="text"
+                  placeholder="Search contacts..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full pl-10 pr-4 py-2.5 bg-slate-700/50 border border-amber-300/25 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-400/50 transition-all"
+                />
+              </div>
+              <div className="flex gap-2">
+                {['all', 'hot', 'warm', 'developing', 'cold'].map((cat) => (
+                  <button
+                    key={cat}
+                    onClick={() => setCategoryFilter(cat)}
+                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                      categoryFilter === cat
+                        ? 'bg-amber-500 text-white'
+                        : 'px-4 py-2 text-slate-300 rounded-lg hover:bg-slate-800/60 hover:text-white transition-all'
+                    }`}
+                  >
+                    {cat.charAt(0).toUpperCase() + cat.slice(1)}
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
-        </div>
+        </GlassCard>
 
         {/* Contacts List */}
         {loading ? (
-          <div className={`${getCardClassName()} p-12 text-center`}>
-            <RefreshCw className="h-8 w-8 animate-spin text-amber-300 mx-auto mb-4" />
-            <p className="text-slate-400">Loading contacts...</p>
-          </div>
+          <LoadingState message="Loading contacts..." />
         ) : filteredContacts.length === 0 ? (
-          <div className={`${getCardClassName()} p-12 text-center`}>
-            <Users className="h-12 w-12 text-slate-500 mx-auto mb-4" />
-            <h3 className="text-xl font-semibold text-white mb-2">No contacts found</h3>
-            <p className="text-slate-400 mb-6">
-              {searchQuery || categoryFilter !== 'all' 
-                ? 'Try adjusting your filters' 
-                : 'Start by adding your first contact'}
-            </p>
-            {!searchQuery && categoryFilter === 'all' && (
-              <button className="px-6 py-3 bg-gradient-to-r from-amber-600 to-amber-500 text-white rounded-lg hover:shadow-lg hover:shadow-amber-500/30 transition-all">
-                Add Your First Contact
-              </button>
-            )}
-          </div>
+          <EmptyState
+            icon={<Users />}
+            title="No contacts found"
+            description={searchQuery || categoryFilter !== 'all' 
+              ? 'Try adjusting your filters' 
+              : 'Start by adding your first contact'}
+            actionButton={!searchQuery && categoryFilter === 'all' ? {
+              label: 'Add Your First Contact',
+              onClick: () => {/* TODO: Add contact modal */},
+            } : undefined}
+          />
         ) : (
-          <div className="grid gap-4">
+          <div className={builderDesignSystem.spacing.card}>
             {filteredContacts.map((contact, index) => (
               <motion.div
                 key={contact.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.05 }}
-                className={`${getCardClassName()} p-6 hover:border-amber-300/40 transition-all`}
+                {...builderDesignSystem.animations.item(index)}
               >
+                <GlassCard
+                  {...builderDesignSystem.cards.sectionCard.props}
+                  className="p-6 hover:border-amber-300/40 transition-all"
+                >
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
                     <div className="flex items-center gap-3 mb-3">
@@ -338,12 +301,17 @@ export function ContactsSection({ onNavigate }: ContactsSectionProps) {
                     </button>
                   </div>
                 </div>
+                </GlassCard>
               </motion.div>
             ))}
           </div>
         )}
-      </div>
+      </StandardPageWrapper>
     </SectionWrapper>
   )
+}
+
+function getCategoryColor(category: string) {
+  return getBadgeClassName(category as 'hot' | 'warm' | 'developing' | 'cold')
 }
 

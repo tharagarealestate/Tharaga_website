@@ -515,6 +515,29 @@ export function RestructuredSidebar() {
                               <div className="ml-8 mt-1 space-y-1">
                                 {item.submenu?.map((subItem) => {
                                   const isSubActive = pathname === subItem.href || pathname.startsWith(subItem.href + '/')
+                                  const subItemUsesQueryParams = subItem.href.startsWith('/builder?section=')
+                                  
+                                  if (subItemUsesQueryParams) {
+                                    return (
+                                      <button
+                                        key={subItem.href}
+                                        type="button"
+                                        onClick={() => {
+                                          handleSectionNavigation(subItem.href)
+                                          toggleSubmenu(item.href)
+                                        }}
+                                        className={cn(
+                                          "w-full text-left block px-3 py-2 rounded-lg text-sm transition-all duration-200",
+                                          isSubActive
+                                            ? "bg-amber-500/10 text-amber-300 font-medium"
+                                            : "text-slate-400 hover:text-white hover:bg-slate-800/40"
+                                        )}
+                                      >
+                                        {subItem.label}
+                                      </button>
+                                    )
+                                  }
+                                  
                                   return (
                                     <Link
                                       key={subItem.href}

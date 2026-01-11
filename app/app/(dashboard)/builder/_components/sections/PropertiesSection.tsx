@@ -48,33 +48,24 @@ export function PropertiesSection({ onNavigate }: PropertiesSectionProps) {
 
   return (
     <SectionWrapper>
-      <div className="w-full max-w-7xl mx-auto space-y-6 py-6">
-        <motion.header
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="flex items-center justify-between flex-wrap gap-4"
-        >
-          <div className="space-y-2">
-            <h1 className="text-2xl sm:text-3xl font-bold text-white">
-              Properties
-            </h1>
-            <p className="text-slate-300 text-base sm:text-lg max-w-2xl">
-              Manage your property listings and track performance metrics.
-            </p>
-          </div>
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={() => window.location.href = '/builders/add-property'}
-            className={`${getPrimaryButtonClassName()} flex items-center gap-2`}
-          >
-            <Plus className="w-4 h-4" />
-            Add Property
-          </motion.button>
-        </motion.header>
+      <StandardPageWrapper
+        title="Properties"
+        subtitle="Manage your property listings and track performance metrics."
+        icon={<Building2 className={builderDesignSystem.cards.icon} />}
+        actionButton={{
+          label: 'Add Property',
+          onClick: () => window.location.href = '/builders/add-property',
+          icon: <Plus className="w-4 h-4" />,
+        }}
+      >
 
-        {/* Stats - Design System Statistics Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {/* Stats - EXACT from main dashboard */}
+        <motion.div
+          initial={builderDesignSystem.animations.content.initial}
+          animate={builderDesignSystem.animations.content.animate}
+          transition={builderDesignSystem.animations.content.transition}
+          className={builderDesignSystem.grids.statsGrid}
+        >
           <GlassCard
             variant="dark"
             glow
@@ -167,7 +158,7 @@ export function PropertiesSection({ onNavigate }: PropertiesSectionProps) {
               {displayProperties.map((property) => (
                 <div
                   key={property.id}
-                  className={`${builderDesignSystem.containers.subCard} hover:border-amber-300/40 transition-all cursor-pointer`}
+                  className="w-full p-4 bg-slate-700/30 hover:bg-slate-700/50 border border-slate-600/30 hover:glow-border rounded-lg transition-all duration-300 text-left relative overflow-hidden group cursor-pointer"
                   onClick={() => {
                     window.dispatchEvent(new CustomEvent('open-property-detail', { detail: { propertyId: property.id } }))
                   }}
@@ -195,8 +186,8 @@ export function PropertiesSection({ onNavigate }: PropertiesSectionProps) {
               ))}
             </div>
           )}
-        </div>
-      </div>
+        </StandardCard>
+      </StandardPageWrapper>
     </SectionWrapper>
   )
 }

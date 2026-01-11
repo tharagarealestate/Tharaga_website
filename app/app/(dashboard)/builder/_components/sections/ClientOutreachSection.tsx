@@ -17,6 +17,7 @@ import {
   type MessageTemplate as PreBuiltTemplate
 } from '@/lib/integrations/messaging/templates'
 import { SectionWrapper } from './SectionWrapper'
+import { getSectionClassName } from '../design-system'
 
 interface MessageTemplate {
   id: string
@@ -183,7 +184,7 @@ export function ClientOutreachSection({ onNavigate }: ClientOutreachSectionProps
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
-              className="bg-gradient-to-br from-slate-800/95 via-slate-800/95 to-slate-900/95 glow-border rounded-xl overflow-hidden shadow-2xl"
+              className={getSectionClassName()}
             >
               <div className="p-6 sm:p-8 space-y-6">
                 <div className="space-y-4">
@@ -235,7 +236,7 @@ export function ClientOutreachSection({ onNavigate }: ClientOutreachSectionProps
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
-              className="bg-gradient-to-br from-slate-800/95 via-slate-800/95 to-slate-900/95 glow-border rounded-xl overflow-hidden shadow-2xl"
+              className={getSectionClassName()}
             >
               <div className="p-6 sm:p-8">
                 <div className="text-center py-16 px-6">
@@ -255,7 +256,7 @@ export function ClientOutreachSection({ onNavigate }: ClientOutreachSectionProps
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
-              className="bg-gradient-to-br from-slate-800/95 via-slate-800/95 to-slate-900/95 glow-border rounded-xl overflow-hidden shadow-2xl"
+              className={getSectionClassName()}
             >
               <div className="p-6 sm:p-8">
                 {loading ? (

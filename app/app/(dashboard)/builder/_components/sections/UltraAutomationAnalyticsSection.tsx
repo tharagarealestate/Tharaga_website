@@ -444,7 +444,7 @@ function MetricCard({
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className={cn('p-6 bg-slate-800/95 glow-border rounded-lg border border-slate-700/50', urgent && 'border-rose-500/30 bg-rose-500/5')}
+      className={cn('p-6 bg-slate-800/95 glow-border rounded-lg border border-amber-300/25', urgent && 'border-rose-500/30 bg-rose-500/5')}
     >
       <div className="flex items-center justify-between mb-4">
         <Icon className={cn('h-8 w-8', color)} />

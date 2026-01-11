@@ -157,7 +157,7 @@ export function UltraAutomationAnalyticsSection({ onNavigate }: UltraAutomationA
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="bg-gradient-to-br from-slate-800/95 via-slate-800/95 to-slate-900/95 glow-border rounded-xl overflow-hidden shadow-2xl"
+        className="bg-slate-900/95 glow-border rounded-xl border border-amber-300/25 overflow-hidden shadow-2xl"
       >
         <div className="p-6 sm:p-8">
           <div className="flex items-center gap-2">
@@ -183,7 +183,7 @@ export function UltraAutomationAnalyticsSection({ onNavigate }: UltraAutomationA
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="bg-gradient-to-br from-slate-800/95 via-slate-800/95 to-slate-900/95 glow-border rounded-xl overflow-hidden shadow-2xl"
+        className="bg-slate-900/95 glow-border rounded-xl border border-amber-300/25 overflow-hidden shadow-2xl"
       >
         <div className="p-6 sm:p-8">
           {isLoading ? (
@@ -239,7 +239,7 @@ export function UltraAutomationAnalyticsSection({ onNavigate }: UltraAutomationA
               </div>
 
               {/* Conversion Funnel - Design System Container */}
-              <div className="bg-slate-800/95 glow-border rounded-lg border border-slate-700/50 p-6">
+              <div className="bg-slate-800/95 glow-border rounded-lg border border-amber-300/25 p-6">
               <div className="flex items-center justify-between mb-6">
                 <div>
                   <h3 className="text-xl font-bold text-white mb-1">Conversion Funnel</h3>
@@ -298,7 +298,7 @@ export function UltraAutomationAnalyticsSection({ onNavigate }: UltraAutomationA
             </div>
 
               {/* Stage Time Analysis - Design System Container */}
-              <div className="bg-slate-800/95 glow-border rounded-lg border border-slate-700/50 p-6">
+              <div className="bg-slate-800/95 glow-border rounded-lg border border-amber-300/25 p-6">
               <h3 className="text-xl font-bold text-white mb-6">Average Time Per Stage</h3>
               <div className="h-80">
                 <ResponsiveContainer width="100%" height="100%">
@@ -340,7 +340,7 @@ export function UltraAutomationAnalyticsSection({ onNavigate }: UltraAutomationA
               {/* Negotiation & Contract Metrics */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* Negotiation Metrics - Design System Container */}
-                <div className="bg-slate-800/95 glow-border rounded-lg border border-slate-700/50 p-6">
+                <div className="bg-slate-800/95 glow-border rounded-lg border border-amber-300/25 p-6">
                 <h3 className="text-xl font-bold text-white mb-6">Negotiation Metrics</h3>
                 <div className="space-y-4">
                   <StatRow
@@ -365,7 +365,7 @@ export function UltraAutomationAnalyticsSection({ onNavigate }: UltraAutomationA
               </div>
 
                 {/* Contract Metrics - Design System Container */}
-                <div className="bg-slate-800/95 glow-border rounded-lg border border-slate-700/50 p-6">
+                <div className="bg-slate-800/95 glow-border rounded-lg border border-amber-300/25 p-6">
                 <h3 className="text-xl font-bold text-white mb-6">Contract Metrics</h3>
                 <div className="space-y-4">
                   <StatRow

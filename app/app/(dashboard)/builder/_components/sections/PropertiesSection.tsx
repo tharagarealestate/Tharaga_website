@@ -1,9 +1,10 @@
 "use client"
 
 import { motion } from 'framer-motion'
-import { SectionWrapper } from '@/components/ui/SectionWrapper'
+import { SectionWrapper } from './SectionWrapper'
 import { GlassCard } from '@/components/ui/glass-card'
 import { Building2, MapPin, Eye, TrendingUp, Plus } from 'lucide-react'
+import { builderDesignSystem, getCardClassName, getPrimaryButtonClassName } from '../design-system'
 import { useQuery } from '@tanstack/react-query'
 import { useDemoMode } from '../DemoDataProvider'
 
@@ -65,7 +66,7 @@ export function PropertiesSection({ onNavigate }: PropertiesSectionProps) {
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             onClick={() => window.location.href = '/builders/add-property'}
-            className="px-6 py-3 bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 glow-border text-slate-900 font-semibold rounded-lg transition-all duration-300 shadow-lg hover:shadow-xl hover:shadow-amber-500/30 hover:-translate-y-1 flex items-center gap-2"
+            className={`${getPrimaryButtonClassName()} flex items-center gap-2`}
           >
             <Plus className="w-4 h-4" />
             Add Property
@@ -127,7 +128,7 @@ export function PropertiesSection({ onNavigate }: PropertiesSectionProps) {
         </div>
 
         {/* Properties Grid */}
-        <div className="bg-slate-800/95 rounded-lg border border-slate-700/50 p-6">
+        <div className={getCardClassName()}>
           <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
             <Building2 className="w-5 h-5 text-amber-400" />
             Your Properties
@@ -166,7 +167,7 @@ export function PropertiesSection({ onNavigate }: PropertiesSectionProps) {
               {displayProperties.map((property) => (
                 <div
                   key={property.id}
-                  className="bg-slate-700/50 hover:bg-slate-700/70 border border-slate-600/50 rounded-lg p-4 transition-all cursor-pointer"
+                  className={`${builderDesignSystem.containers.subCard} hover:border-amber-300/40 transition-all cursor-pointer`}
                   onClick={() => {
                     window.dispatchEvent(new CustomEvent('open-property-detail', { detail: { propertyId: property.id } }))
                   }}

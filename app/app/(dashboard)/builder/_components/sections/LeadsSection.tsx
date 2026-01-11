@@ -48,16 +48,8 @@ export function LeadsSection({ onNavigate }: LeadsSectionProps) {
 
   return (
     <FilterProvider>
-      <div className="relative min-h-screen bg-gradient-to-br from-primary-950 via-primary-900 to-primary-800 overflow-hidden">
-        {/* Animated Background Elements */}
-        <div className="absolute inset-0 opacity-30">
-          <div className="absolute top-20 left-10 w-96 h-96 bg-gold-500 rounded-full blur-3xl animate-pulse-slow" />
-          <div
-            className="absolute bottom-20 right-10 w-[600px] h-[600px] bg-emerald-500 rounded-full blur-3xl animate-pulse-slow"
-            style={{ animationDelay: '1s' }}
-          />
-        </div>
-
+      {/* Background handled by layout.tsx - no custom background needed */}
+      <div className="relative min-h-screen overflow-hidden">
         <div className="relative z-10 px-4 py-8 sm:px-6 lg:px-12">
           <div className="mx-auto max-w-7xl space-y-6">
 
@@ -70,7 +62,7 @@ export function LeadsSection({ onNavigate }: LeadsSectionProps) {
             />
 
             {/* Main Content - Leads First! */}
-            <section className="rounded-[28px] border border-white/10 bg-white/5 p-6 shadow-xl shadow-blue-900/20 backdrop-blur-2xl sm:p-8">
+            <section className="bg-slate-900/95 glow-border rounded-xl border border-amber-300/25 p-6 sm:p-8">
               <div className="space-y-6">
                 {/* Inline Quick Filters */}
                 <AdvancedFilters />
@@ -102,9 +94,9 @@ export function LeadsSection({ onNavigate }: LeadsSectionProps) {
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.95, y: 20 }}
                 transition={{ type: 'spring', damping: 25 }}
-                className="fixed inset-4 sm:inset-10 md:inset-20 z-50 overflow-y-auto rounded-3xl border border-white/10 bg-gradient-to-br from-primary-950/98 via-primary-900/98 to-primary-800/98 backdrop-blur-xl shadow-2xl"
+                className="fixed inset-4 sm:inset-10 md:inset-20 z-50 overflow-y-auto rounded-3xl border border-amber-300/25 bg-slate-900/98 backdrop-blur-xl shadow-2xl"
               >
-                <div className="sticky top-0 z-10 border-b border-white/10 bg-primary-950/95 backdrop-blur p-6">
+                <div className="sticky top-0 z-10 border-b border-amber-300/25 bg-slate-900/95 backdrop-blur p-6">
                   <div className="flex items-center justify-between">
                     <div>
                       <h2 className="text-2xl font-bold text-white flex items-center gap-2">
@@ -117,7 +109,7 @@ export function LeadsSection({ onNavigate }: LeadsSectionProps) {
                     </div>
                     <button
                       onClick={() => setShowPresets(false)}
-                      className="rounded-xl border border-white/20 bg-white/10 px-4 py-2 text-white hover:bg-white/20 transition-colors"
+                      className="rounded-xl border border-amber-300/25 bg-slate-700/50 px-4 py-2 text-white hover:bg-slate-700 transition-colors"
                     >
                       Close
                     </button>
@@ -147,9 +139,9 @@ export function LeadsSection({ onNavigate }: LeadsSectionProps) {
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.95, y: 20 }}
                 transition={{ type: 'spring', damping: 25 }}
-                className="fixed inset-4 sm:inset-10 md:left-auto md:right-10 md:top-10 md:bottom-10 md:w-full md:max-w-2xl z-50 overflow-y-auto rounded-3xl border border-white/10 bg-gradient-to-br from-slate-900/98 via-slate-800/98 to-slate-900/98 backdrop-blur-xl shadow-2xl"
+                className="fixed inset-4 sm:inset-10 md:left-auto md:right-10 md:top-10 md:bottom-10 md:w-full md:max-w-2xl z-50 overflow-y-auto rounded-3xl border border-amber-300/25 bg-slate-900/98 backdrop-blur-xl shadow-2xl"
               >
-                <div className="sticky top-0 z-10 border-b border-white/10 bg-slate-900/95 backdrop-blur p-6">
+                <div className="sticky top-0 z-10 border-b border-amber-300/25 bg-slate-900/95 backdrop-blur p-6">
                   <div className="flex items-center justify-between">
                     <div>
                       <h2 className="text-2xl font-bold text-white flex items-center gap-2">
@@ -162,7 +154,7 @@ export function LeadsSection({ onNavigate }: LeadsSectionProps) {
                     </div>
                     <button
                       onClick={() => setShowCRM(false)}
-                      className="rounded-xl border border-white/20 bg-white/10 px-4 py-2 text-white hover:bg-white/20 transition-colors"
+                      className="rounded-xl border border-amber-300/25 bg-slate-700/50 px-4 py-2 text-white hover:bg-slate-700 transition-colors"
                     >
                       Close
                     </button>
@@ -207,7 +199,7 @@ function LeadsCommandCenter({ onShowPresets, onShowCRM, onNavigate, stats }: {
   }
 }) {
   return (
-    <header className="rounded-[28px] border border-white/10 bg-gradient-to-br from-white/15 via-white/5 to-white/10 p-6 shadow-xl shadow-blue-900/20 backdrop-blur-2xl">
+    <header className="bg-slate-900/95 glow-border rounded-xl border border-amber-300/25 p-6 backdrop-blur-2xl">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
 
         {/* Left: Title & Badge */}
@@ -232,7 +224,7 @@ function LeadsCommandCenter({ onShowPresets, onShowCRM, onNavigate, stats }: {
           {/* Filter Presets Button */}
           <button
             onClick={onShowPresets}
-            className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-2 rounded-xl border border-amber-400/30 bg-gradient-to-r from-amber-500/20 to-orange-500/20 px-4 py-2.5 text-sm font-semibold text-amber-100 backdrop-blur transition-all hover:border-amber-400/50 hover:from-amber-500/30 hover:to-orange-500/30"
+            className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-2 rounded-xl border border-amber-300/25 bg-amber-500/20 px-4 py-2.5 text-sm font-semibold text-amber-300 backdrop-blur transition-all hover:border-amber-300/40 hover:bg-amber-500/30"
           >
             <LayoutGrid className="h-4 w-4" />
             <span>Filter Presets</span>
@@ -241,7 +233,7 @@ function LeadsCommandCenter({ onShowPresets, onShowCRM, onNavigate, stats }: {
           {/* CRM Integration Button */}
           <button
             onClick={onShowCRM}
-            className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-2 rounded-xl border border-blue-400/30 bg-gradient-to-r from-blue-500/20 to-purple-500/20 px-4 py-2.5 text-sm font-semibold text-blue-100 backdrop-blur transition-all hover:border-blue-400/50 hover:from-blue-500/30 hover:to-purple-500/30"
+            className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-2 rounded-xl border border-amber-300/25 bg-amber-500/20 px-4 py-2.5 text-sm font-semibold text-amber-300 backdrop-blur transition-all hover:border-amber-300/40 hover:bg-amber-500/30"
           >
             <ExternalLink className="h-4 w-4" />
             <span className="hidden sm:inline">Zoho CRM</span>
@@ -251,7 +243,7 @@ function LeadsCommandCenter({ onShowPresets, onShowCRM, onNavigate, stats }: {
           {/* Pipeline View */}
           <button
             onClick={() => onNavigate?.('pipeline')}
-            className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-2 rounded-xl border border-white/20 bg-white/10 px-4 py-2.5 text-sm font-semibold text-white backdrop-blur transition-all hover:border-white/40 hover:bg-white/20"
+            className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-2 rounded-xl border border-amber-300/25 bg-slate-700/50 px-4 py-2.5 text-sm font-semibold text-white backdrop-blur transition-all hover:border-amber-300/40 hover:bg-slate-700"
           >
             <TrendingUp className="h-4 w-4" />
             <span className="hidden sm:inline">Pipeline</span>
@@ -380,7 +372,7 @@ function ZohoCRMQuickAccess() {
         </div>
       </div>
 
-      <div className="rounded-2xl border border-white/10 bg-white/5 p-6 space-y-4">
+      <div className="bg-slate-900/95 glow-border rounded-xl border border-amber-300/25 p-6 space-y-4">
         {status?.connected ? (
           <>
             <div className="flex items-center gap-2 text-emerald-400">
@@ -392,7 +384,7 @@ function ZohoCRMQuickAccess() {
             </p>
             <button
               onClick={() => handleOpenZoho()}
-              className="block w-full rounded-xl bg-gradient-to-r from-blue-600 to-purple-600 px-6 py-3 text-center text-sm font-semibold text-white shadow-lg shadow-blue-500/30 hover:shadow-blue-500/50 transition-all"
+              className="block w-full rounded-xl bg-gradient-to-r from-amber-600 to-amber-500 px-6 py-3 text-center text-sm font-semibold text-white shadow-lg shadow-amber-500/30 hover:shadow-amber-500/50 transition-all"
             >
               Open Zoho CRM
             </button>
@@ -404,7 +396,7 @@ function ZohoCRMQuickAccess() {
             </p>
             <button
               onClick={() => window.location.href = '/builder/integrations?provider=zoho'}
-              className="block w-full rounded-xl bg-gradient-to-r from-blue-600 to-purple-600 px-6 py-3 text-center text-sm font-semibold text-white shadow-lg shadow-blue-500/30 hover:shadow-blue-500/50 transition-all"
+              className="block w-full rounded-xl bg-gradient-to-r from-amber-600 to-amber-500 px-6 py-3 text-center text-sm font-semibold text-white shadow-lg shadow-amber-500/30 hover:shadow-amber-500/50 transition-all"
             >
               Connect Zoho CRM
             </button>
@@ -412,7 +404,7 @@ function ZohoCRMQuickAccess() {
         )}
         <button
           onClick={() => window.dispatchEvent(new CustomEvent('navigate-to-integrations'))}
-          className="block w-full rounded-xl border border-white/20 bg-white/5 px-6 py-3 text-center text-sm font-semibold text-white hover:bg-white/10 transition-all"
+          className="block w-full rounded-xl border border-amber-300/25 bg-slate-700/50 px-6 py-3 text-center text-sm font-semibold text-white hover:bg-slate-700 transition-all"
         >
           Manage Integration Settings
         </button>

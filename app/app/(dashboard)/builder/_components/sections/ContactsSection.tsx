@@ -23,6 +23,7 @@ import {
 } from 'lucide-react'
 import { getSupabase } from '@/lib/supabase'
 import { SectionWrapper } from './SectionWrapper'
+import { builderDesignSystem, getCardClassName, getBadgeClassName } from '../design-system'
 
 interface Contact {
   id: string
@@ -136,15 +137,7 @@ export function ContactsSection({ onNavigate }: ContactsSectionProps) {
     return matchesSearch && matchesCategory
   })
 
-  const getCategoryColor = (category: string) => {
-    switch (category) {
-      case 'hot': return 'bg-red-500/20 text-red-300 border-red-500/30'
-      case 'warm': return 'bg-orange-500/20 text-orange-300 border-orange-500/30'
-      case 'developing': return 'bg-blue-500/20 text-blue-300 border-blue-500/30'
-      case 'cold': return 'bg-gray-500/20 text-gray-300 border-gray-500/30'
-      default: return 'bg-slate-500/20 text-slate-300 border-slate-500/30'
-    }
-  }
+  // Use design system badge colors
 
   const stats = {
     total: contacts.length,
@@ -186,7 +179,7 @@ export function ContactsSection({ onNavigate }: ContactsSectionProps) {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-slate-800/95 glow-border rounded-lg p-4 border border-slate-700/50"
+            className={getCardClassName()}
           >
             <div className="text-sm text-slate-400 mb-1">Total</div>
             <div className="text-2xl font-bold text-white">{stats.total}</div>
@@ -195,7 +188,7 @@ export function ContactsSection({ onNavigate }: ContactsSectionProps) {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className="bg-slate-800/95 glow-border rounded-lg p-4 border border-slate-700/50"
+            className={getCardClassName()}
           >
             <div className="text-sm text-slate-400 mb-1">Hot</div>
             <div className="text-2xl font-bold text-red-300">{stats.hot}</div>
@@ -204,7 +197,7 @@ export function ContactsSection({ onNavigate }: ContactsSectionProps) {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
-            className="bg-slate-800/95 glow-border rounded-lg p-4 border border-slate-700/50"
+            className={getCardClassName()}
           >
             <div className="text-sm text-slate-400 mb-1">Warm</div>
             <div className="text-2xl font-bold text-orange-300">{stats.warm}</div>
@@ -213,7 +206,7 @@ export function ContactsSection({ onNavigate }: ContactsSectionProps) {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
-            className="bg-slate-800/95 glow-border rounded-lg p-4 border border-slate-700/50"
+            className={getCardClassName()}
           >
             <div className="text-sm text-slate-400 mb-1">Developing</div>
             <div className="text-2xl font-bold text-blue-300">{stats.developing}</div>
@@ -222,7 +215,7 @@ export function ContactsSection({ onNavigate }: ContactsSectionProps) {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.4 }}
-            className="bg-slate-800/95 glow-border rounded-lg p-4 border border-slate-700/50"
+            className={getCardClassName()}
           >
             <div className="text-sm text-slate-400 mb-1">Cold</div>
             <div className="text-2xl font-bold text-gray-300">{stats.cold}</div>
@@ -230,7 +223,7 @@ export function ContactsSection({ onNavigate }: ContactsSectionProps) {
         </div>
 
         {/* Filters */}
-        <div className="bg-slate-800/95 glow-border rounded-lg p-4 border border-slate-700/50">
+        <div className={getCardClassName()}>
           <div className="flex flex-col sm:flex-row gap-4">
             <div className="flex-1 relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
@@ -239,7 +232,7 @@ export function ContactsSection({ onNavigate }: ContactsSectionProps) {
                 placeholder="Search contacts..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 bg-slate-700/50 border border-slate-600/50 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-500"
+                className={builderDesignSystem.inputs.default + ' pl-10'}
               />
             </div>
             <div className="flex gap-2">
@@ -250,7 +243,7 @@ export function ContactsSection({ onNavigate }: ContactsSectionProps) {
                   className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
                     categoryFilter === cat
                       ? 'bg-amber-500 text-white'
-                      : 'bg-slate-700/50 text-slate-300 hover:bg-slate-700'
+                      : builderDesignSystem.buttons.ghost
                   }`}
                 >
                   {cat.charAt(0).toUpperCase() + cat.slice(1)}
@@ -262,12 +255,12 @@ export function ContactsSection({ onNavigate }: ContactsSectionProps) {
 
         {/* Contacts List */}
         {loading ? (
-          <div className="bg-slate-800/95 glow-border rounded-lg p-12 text-center border border-slate-700/50">
+          <div className={`${getCardClassName()} p-12 text-center`}>
             <RefreshCw className="h-8 w-8 animate-spin text-amber-300 mx-auto mb-4" />
             <p className="text-slate-400">Loading contacts...</p>
           </div>
         ) : filteredContacts.length === 0 ? (
-          <div className="bg-slate-800/95 glow-border rounded-lg p-12 text-center border border-slate-700/50">
+          <div className={`${getCardClassName()} p-12 text-center`}>
             <Users className="h-12 w-12 text-slate-500 mx-auto mb-4" />
             <h3 className="text-xl font-semibold text-white mb-2">No contacts found</h3>
             <p className="text-slate-400 mb-6">
@@ -289,7 +282,7 @@ export function ContactsSection({ onNavigate }: ContactsSectionProps) {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.05 }}
-                className="bg-slate-800/95 glow-border rounded-lg p-6 border border-slate-700/50 hover:border-amber-300/25 transition-all"
+                className={`${getCardClassName()} p-6 hover:border-amber-300/40 transition-all`}
               >
                 <div className="flex items-start justify-between">
                   <div className="flex-1">

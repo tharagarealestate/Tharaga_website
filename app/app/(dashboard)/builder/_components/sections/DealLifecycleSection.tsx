@@ -4,6 +4,7 @@ import { motion } from 'framer-motion'
 import { SectionWrapper } from './SectionWrapper'
 import { DealLifecycleTracker } from '../ultra-automation/components/DealLifecycleTracker'
 import { useDemoMode } from '../DemoDataProvider'
+import { getSectionClassName } from '../design-system'
 
 interface DealLifecycleSectionProps {
   onNavigate?: (section: string) => void
@@ -30,7 +31,7 @@ export function DealLifecycleSection({ onNavigate }: DealLifecycleSectionProps) 
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="bg-gradient-to-br from-slate-800/95 via-slate-800/95 to-slate-900/95 glow-border rounded-xl overflow-hidden shadow-2xl"
+        className={getSectionClassName()}
       >
         <div className="p-6 sm:p-8">
           <DealLifecycleTracker builderId={builderId || undefined} />

@@ -41,6 +41,13 @@ export default function BuilderDashboardClient() {
       }
     }
     
+    // Listen for custom section change events from sidebar
+    const handleCustomSectionChange = (event: CustomEvent<{ section: string }>) => {
+      if (event.detail?.section) {
+        setActiveSection(event.detail.section)
+      }
+    }
+    
     // Initial read (in case URL changed before component mounted)
     updateSectionFromUrl()
     
@@ -49,6 +56,7 @@ export default function BuilderDashboardClient() {
       updateSectionFromUrl()
     }
     window.addEventListener('popstate', handlePopState)
+    window.addEventListener('dashboard-section-change', handleCustomSectionChange as EventListener)
     
     // Poll for URL changes (catches all navigation including window.location.href)
     // Increased interval for better performance (100ms is still very responsive)
@@ -56,6 +64,7 @@ export default function BuilderDashboardClient() {
     
     return () => {
       window.removeEventListener('popstate', handlePopState)
+      window.removeEventListener('dashboard-section-change', handleCustomSectionChange as EventListener)
       clearInterval(interval)
     }
   }, [pathname]) // Only depend on pathname, not activeSection to avoid loops

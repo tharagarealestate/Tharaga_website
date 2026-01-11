@@ -182,6 +182,12 @@ export function RestructuredSidebar() {
               { href: createSectionUrl('pipeline'), label: 'Pipeline View' },
             ]
           },
+          { 
+            href: createSectionUrl('contacts'), 
+            label: 'Contacts', 
+            icon: Users, 
+            requiresPro: false,
+          },
         ]
       },
       // 4. Communications

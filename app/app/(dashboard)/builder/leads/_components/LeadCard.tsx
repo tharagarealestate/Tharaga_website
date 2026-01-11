@@ -1,9 +1,10 @@
 "use client"
 
 import Link from 'next/link'
-import { ArrowRight, Calendar, DollarSign, Globe, Mail, Phone, Users } from 'lucide-react'
+import { ArrowRight, Calendar, DollarSign, Globe, Mail, Phone, Users, ExternalLink } from 'lucide-react'
 import { formatDistanceToNow } from 'date-fns'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
+import { useState } from 'react'
 
 export type Lead = {
   id: string
@@ -67,7 +68,36 @@ export function LeadCard({
   isSelected?: boolean
   onSelect?: (selected: boolean) => void
 }) {
+  const [openingCRM, setOpeningCRM] = useState(false)
   const scoreColor = getScoreColor(lead.score)
+
+  const handleOpenCRM = async () => {
+    setOpeningCRM(true)
+    try {
+      const response = await fetch('/api/integrations/zoho/open-with-lead', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ lead_id: lead.id }),
+      })
+
+      const data = await response.json()
+
+      if (data.success && data.zohoUrl) {
+        window.open(data.zohoUrl, '_blank')
+      } else if (data.errorType === 'NOT_CONNECTED' && data.connectUrl) {
+        if (confirm('Zoho CRM is not connected. Would you like to connect now?')) {
+          window.location.href = data.connectUrl
+        }
+      } else {
+        alert(data.message || 'Failed to open Zoho CRM')
+      }
+    } catch (error) {
+      console.error('Error opening Zoho:', error)
+      alert('Failed to open Zoho CRM. Please try again.')
+    } finally {
+      setOpeningCRM(false)
+    }
+  }
   return (
     <div className="glass-card p-4 md:p-6 rounded-xl hover:shadow-xl transition-all duration-300 border-l-4 bg-white border-gray-200 relative" style={{ borderLeftColor: scoreColor }}>
       {onSelect && (
@@ -160,6 +190,15 @@ export function LeadCard({
           <Mail className="w-4 h-4" />
           Email
         </a>
+        <button
+          onClick={handleOpenCRM}
+          disabled={openingCRM}
+          className="py-2 px-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
+          title="Open in Zoho CRM"
+        >
+          <ExternalLink className="w-4 h-4" />
+          {openingCRM ? 'Opening...' : 'CRM'}
+        </button>
         <Link href={`/builder/leads/${lead.id}`} className="py-2 px-4 border border-gray-300 hover:bg-gray-50 rounded-lg transition-colors flex items-center justify-center w-full md:w-auto" title="View Details">
           <ArrowRight className="w-4 h-4 text-gray-600" />
         </Link>

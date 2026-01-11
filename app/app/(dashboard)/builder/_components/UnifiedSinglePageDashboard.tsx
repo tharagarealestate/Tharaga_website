@@ -59,6 +59,8 @@ function UnifiedSinglePageDashboardComponent({ activeSection, onSectionChange }:
   // Sync with URL parameter on mount only - parent handles URL sync
   // Removed to prevent conflicts with parent component's URL handling
 
+  const ContactsSection = lazy(() => import('./sections/ContactsSection').then(m => ({ default: m.ContactsSection })))
+
   const sectionComponents: Record<string, React.ComponentType<{ onNavigate?: (section: string) => void }>> = {
     overview: OverviewSection,
     leads: LeadsSection,
@@ -71,6 +73,7 @@ function UnifiedSinglePageDashboardComponent({ activeSection, onSectionChange }:
     contracts: ContractsSection,
     'deal-lifecycle': DealLifecycleSection,
     'ultra-automation-analytics': UltraAutomationAnalyticsSection,
+    contacts: ContactsSection,
   }
 
   const ActiveComponent = sectionComponents[activeSection] || OverviewSection

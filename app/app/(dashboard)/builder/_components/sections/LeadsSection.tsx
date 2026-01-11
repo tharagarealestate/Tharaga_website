@@ -1,6 +1,6 @@
 "use client"
 
-import { useCallback, useState } from 'react'
+import { useCallback, useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   TrendingUp,
@@ -11,7 +11,8 @@ import {
   ExternalLink,
   Filter,
   LayoutGrid,
-  Zap
+  Zap,
+  CheckCircle2
 } from 'lucide-react'
 
 import { LeadsList, type Lead } from '../../leads/_components/LeadsList'
@@ -319,6 +320,47 @@ function StatBadge({ icon: Icon, label, value, color }: StatBadgeProps) {
 
 // Zoho CRM Quick Access Component
 function ZohoCRMQuickAccess() {
+  const [status, setStatus] = useState<{ connected?: boolean; account?: { name?: string } } | null>(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    fetch('/api/integrations/zoho/status')
+      .then(res => res.json())
+      .then(data => {
+        setStatus(data)
+        setLoading(false)
+      })
+      .catch(() => setLoading(false))
+  }, [])
+
+  const handleOpenZoho = async (leadId?: string) => {
+    if (!leadId) {
+      window.open('https://crm.zoho.in', '_blank')
+      return
+    }
+
+    try {
+      const response = await fetch('/api/integrations/zoho/open-with-lead', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ lead_id: leadId }),
+      })
+
+      const data = await response.json()
+
+      if (data.success && data.zohoUrl) {
+        window.open(data.zohoUrl, '_blank')
+      } else if (data.errorType === 'NOT_CONNECTED' && data.connectUrl) {
+        window.location.href = data.connectUrl
+      } else {
+        alert(data.message || 'Failed to open Zoho CRM')
+      }
+    } catch (error) {
+      console.error('Error opening Zoho:', error)
+      alert('Failed to open Zoho CRM. Please try again.')
+    }
+  }
+
   return (
     <div className="space-y-6">
       <div className="rounded-2xl border border-blue-400/30 bg-blue-400/10 p-6">
@@ -327,26 +369,53 @@ function ZohoCRMQuickAccess() {
             <Zap className="h-6 w-6 text-blue-300" />
           </div>
           <div className="flex-1">
-            <h3 className="text-lg font-bold text-white">Quick Access</h3>
+            <h3 className="text-lg font-bold text-white">Zoho CRM Integration</h3>
             <p className="text-sm text-slate-300 mt-1">
-              Manage your Zoho CRM integration, sync leads bidirectionally, and view sync logs.
+              {loading ? 'Checking connection...' : 
+               status?.connected 
+                 ? `Connected to ${status.account?.name || 'Zoho CRM'}` 
+                 : 'Connect your Zoho CRM to sync leads and deals automatically'}
             </p>
           </div>
         </div>
       </div>
 
-      <div className="rounded-2xl border border-white/10 bg-white/5 p-6">
-        <p className="text-center text-slate-400">
-          Full CRM integration UI will be loaded here...
-        </p>
-        <div className="mt-4">
-          <button
-            onClick={() => window.dispatchEvent(new CustomEvent('navigate-to-integrations'))}
-            className="block w-full rounded-xl bg-gradient-to-r from-blue-600 to-purple-600 px-6 py-3 text-center text-sm font-semibold text-white shadow-lg shadow-blue-500/30 hover:shadow-blue-500/50 transition-all"
-          >
-            Go to Full Integration Settings
-          </button>
-        </div>
+      <div className="rounded-2xl border border-white/10 bg-white/5 p-6 space-y-4">
+        {status?.connected ? (
+          <>
+            <div className="flex items-center gap-2 text-emerald-400">
+              <CheckCircle2 className="h-5 w-5" />
+              <span className="text-sm font-medium">CRM Connected</span>
+            </div>
+            <p className="text-sm text-slate-300">
+              Click on any lead card to open it in Zoho CRM with details pre-filled.
+            </p>
+            <button
+              onClick={() => handleOpenZoho()}
+              className="block w-full rounded-xl bg-gradient-to-r from-blue-600 to-purple-600 px-6 py-3 text-center text-sm font-semibold text-white shadow-lg shadow-blue-500/30 hover:shadow-blue-500/50 transition-all"
+            >
+              Open Zoho CRM
+            </button>
+          </>
+        ) : (
+          <>
+            <p className="text-center text-slate-400 text-sm">
+              Connect your Zoho CRM account to start syncing leads automatically.
+            </p>
+            <button
+              onClick={() => window.location.href = '/builder/integrations?provider=zoho'}
+              className="block w-full rounded-xl bg-gradient-to-r from-blue-600 to-purple-600 px-6 py-3 text-center text-sm font-semibold text-white shadow-lg shadow-blue-500/30 hover:shadow-blue-500/50 transition-all"
+            >
+              Connect Zoho CRM
+            </button>
+          </>
+        )}
+        <button
+          onClick={() => window.dispatchEvent(new CustomEvent('navigate-to-integrations'))}
+          className="block w-full rounded-xl border border-white/20 bg-white/5 px-6 py-3 text-center text-sm font-semibold text-white hover:bg-white/10 transition-all"
+        >
+          Manage Integration Settings
+        </button>
       </div>
     </div>
   )

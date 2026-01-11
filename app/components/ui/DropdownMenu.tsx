@@ -60,14 +60,14 @@ export function DropdownMenuTrigger({
   }
 
   if (asChild && React.isValidElement(children)) {
+    const childProps = (children as React.ReactElement).props as any
     return React.cloneElement(children as React.ReactElement, {
       onClick: (e: React.MouseEvent) => {
         // Preserve child onClick
-        // @ts-expect-error - allow existing handlers
-        children.props?.onClick?.(e)
+        childProps?.onClick?.(e)
         handleClick(e)
       },
-      className: cn(children.props?.className, className),
+      className: cn(childProps?.className, className),
       'aria-haspopup': 'menu',
       'aria-expanded': ctx.open,
     })
@@ -99,7 +99,7 @@ export function DropdownMenuContent({
     <div
       role="menu"
       className={cn(
-        'absolute z-50 mt-2 min-w-[12rem] rounded-md border border-gray-200 bg-white p-1 shadow-lg focus:outline-none',
+        'absolute z-50 mt-2 min-w-[12rem] rounded-md border border-slate-600/50 bg-slate-800/95 backdrop-blur-sm p-1 shadow-lg focus:outline-none glow-border',
         alignmentClass,
         className
       )}
@@ -129,16 +129,16 @@ export function DropdownMenuItem({
   }
 
   const baseClasses = cn(
-    'flex cursor-pointer select-none items-center rounded-sm px-2 py-2 text-sm text-gray-700 hover:bg-gray-100 focus:bg-gray-100 focus:outline-none',
+    'flex cursor-pointer select-none items-center rounded-sm px-2 py-2 text-sm text-slate-200 hover:bg-slate-700/50 focus:bg-slate-700/50 focus:outline-none transition-colors',
     className
   )
 
   if (asChild && React.isValidElement(children)) {
+    const childProps = (children as React.ReactElement).props as any
     return React.cloneElement(children as React.ReactElement, {
-      className: cn((children as any).props?.className, baseClasses),
+      className: cn(childProps?.className, baseClasses),
       onClick: (e: React.MouseEvent) => {
-        // @ts-expect-error - preserve child handler
-        children.props?.onClick?.(e)
+        childProps?.onClick?.(e)
         handleClick()
       },
       role: 'menuitem',
@@ -153,5 +153,5 @@ export function DropdownMenuItem({
 }
 
 export function DropdownMenuSeparator() {
-  return <div className="my-1 h-px bg-gray-200" role="separator" />
+  return <div className="my-1 h-px bg-slate-600/50" role="separator" />
 }

@@ -43,6 +43,8 @@ import { useDealLifecycles, useViewings, useNegotiations, useContracts } from '.
 import { detectStallingDeals, calculateConversionFunnel, analyzeNegotiations, analyzeContracts } from '../ultra-automation/utils/dataProcessing'
 import { LoadingSpinner, GlassLoadingOverlay } from '@/components/ui/loading-spinner'
 import { builderGlassPanel, builderGlassSubPanel } from '../builderGlassStyles'
+import { StandardPageWrapper } from '../StandardPageWrapper'
+import { builderDesignSystem } from '../design-system'
 
 interface UltraAutomationAnalyticsSectionProps {
   onNavigate?: (section: string) => void
@@ -140,18 +142,12 @@ export function UltraAutomationAnalyticsSection({ onNavigate }: UltraAutomationA
   const COLORS = ['#D4AF37', '#10B981', '#3B82F6', '#F97316', '#EF4444', '#8B5CF6']
 
   return (
-    <div className="space-y-6">
-      {/* Header - Design System Typography */}
-      <motion.div
-        initial={{ opacity: 0, y: -10 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="mb-4"
+    <SectionWrapper>
+      <StandardPageWrapper
+        title="Ultra Automation Analytics"
+        subtitle="Comprehensive insights into automation performance, conversion metrics, and optimization opportunities."
+        icon={<BarChart3 className={builderDesignSystem.cards.icon} />}
       >
-        <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">Ultra Automation Analytics</h1>
-        <p className="text-slate-300 text-base sm:text-lg max-w-2xl">
-          Comprehensive insights into automation performance, conversion metrics, and optimization opportunities.
-        </p>
-      </motion.div>
 
       {/* Period Filter - Design System */}
       <motion.div
@@ -419,7 +415,8 @@ export function UltraAutomationAnalyticsSection({ onNavigate }: UltraAutomationA
           )}
         </div>
       </motion.div>
-    </div>
+      </StandardPageWrapper>
+    </SectionWrapper>
   )
 }
 

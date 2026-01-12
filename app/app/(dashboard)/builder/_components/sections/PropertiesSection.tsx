@@ -1,7 +1,6 @@
 "use client"
 
 import { motion } from 'framer-motion'
-import { SectionWrapper } from './SectionWrapper'
 import { GlassCard } from '@/components/ui/glass-card'
 import { Building2, MapPin, Eye, TrendingUp, Plus } from 'lucide-react'
 import { builderDesignSystem } from '../design-system'
@@ -49,10 +48,9 @@ export function PropertiesSection({ onNavigate }: PropertiesSectionProps) {
   // Remove demo data - show loading or empty state instead
   const displayProperties = properties
 
-  if (!isAuthenticated) {
-    return (
-      <div className="w-full">
-        <StandardPageWrapper
+  return (
+    <div className="w-full">
+      <StandardPageWrapper
         title="Properties"
         subtitle="Manage your property listings and track performance metrics."
         icon={<Building2 className={builderDesignSystem.cards.icon} />}
@@ -62,7 +60,6 @@ export function PropertiesSection({ onNavigate }: PropertiesSectionProps) {
           icon: <Plus className="w-4 h-4" />,
         }}
       >
-
         {/* Stats - EXACT from main dashboard */}
         <motion.div
           initial={builderDesignSystem.animations.content.initial}
@@ -120,7 +117,7 @@ export function PropertiesSection({ onNavigate }: PropertiesSectionProps) {
             </p>
             <p className="text-sm text-slate-400">Inquiries</p>
           </GlassCard>
-        </div>
+        </motion.div>
 
         {/* Properties Grid - EXACT card style from main dashboard */}
         <StandardCard
@@ -176,7 +173,7 @@ export function PropertiesSection({ onNavigate }: PropertiesSectionProps) {
           )}
         </StandardCard>
       </StandardPageWrapper>
-    </SectionWrapper>
+    </div>
   )
 }
 

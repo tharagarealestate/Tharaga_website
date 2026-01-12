@@ -120,11 +120,16 @@ export function PropertiesSection({ onNavigate }: PropertiesSectionProps) {
         </div>
 
         {/* Properties Grid - EXACT card style from main dashboard */}
-        <StandardCard
-          title="Your Properties"
-          subtitle={`${displayProperties.filter(p => p.status === 'active').length} active listings`}
-          icon={<Building2 className={builderDesignSystem.cards.icon} />}
-        >
+        <StandardCard>
+          <div className="mb-4">
+            <div className="flex items-center gap-2 mb-1">
+              <Building2 className={builderDesignSystem.cards.icon} />
+              <h3 className={builderDesignSystem.typography.cardTitle}>Your Properties</h3>
+            </div>
+            <p className={builderDesignSystem.typography.cardDescription}>
+              {displayProperties.filter(p => p.status === 'active').length} active listings
+            </p>
+          </div>
           {isLoading ? (
             <LoadingState message="Loading properties..." />
           ) : error || displayProperties.length === 0 ? (

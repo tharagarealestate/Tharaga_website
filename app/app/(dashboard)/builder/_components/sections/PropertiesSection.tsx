@@ -24,19 +24,21 @@ interface Property {
   inquiries?: number
 }
 
+async function fetchProperties(): Promise<Property[]> {
+  const res = await fetch('/api/builder/properties', { cache: 'no-store' })
+  if (!res.ok) throw new Error('Failed to fetch properties')
+  const data = await res.json()
+  return (data?.items || []) as Property[]
+}
+
 export function PropertiesSection({ onNavigate }: PropertiesSectionProps) {
   const { isAuthenticated } = useDemoMode()
 
   // Always fetch real data for authenticated users
   // Only skip API call for unauthenticated public previews
-  const { data: properties = [], isLoading, error } = useQuery({
+  const { data: properties = [], isLoading, error } = useQuery<Property[]>({
     queryKey: ['builder-properties'],
-    queryFn: async () => {
-      const res = await fetch('/api/builder/properties', { cache: 'no-store' })
-      if (!res.ok) throw new Error('Failed to fetch properties')
-      const data = await res.json()
-      return (data?.items || []) as Property[]
-    },
+    queryFn: fetchProperties,
     enabled: isAuthenticated, // Only fetch if authenticated
     retry: 2,
     staleTime: 30000, // Cache for 30 seconds

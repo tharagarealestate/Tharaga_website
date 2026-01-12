@@ -24,11 +24,13 @@ interface Property {
   inquiries?: number
 }
 
-async function fetchProperties(): Promise<Property[]> {
-  const res = await fetch('/api/builder/properties', { cache: 'no-store' })
-  if (!res.ok) throw new Error('Failed to fetch properties')
-  const data = await res.json()
-  return (data?.items || []) as Property[]
+function fetchProperties(): Promise<Property[]> {
+  return fetch('/api/builder/properties', { cache: 'no-store' })
+    .then((res) => {
+      if (!res.ok) throw new Error('Failed to fetch properties')
+      return res.json()
+    })
+    .then((data) => (data?.items || []) as Property[])
 }
 
 export function PropertiesSection({ onNavigate }: PropertiesSectionProps) {
@@ -120,16 +122,11 @@ export function PropertiesSection({ onNavigate }: PropertiesSectionProps) {
         </div>
 
         {/* Properties Grid - EXACT card style from main dashboard */}
-        <StandardCard>
-          <div className="mb-4">
-            <div className="flex items-center gap-2 mb-1">
-              <Building2 className={builderDesignSystem.cards.icon} />
-              <h3 className={builderDesignSystem.typography.cardTitle}>Your Properties</h3>
-            </div>
-            <p className={builderDesignSystem.typography.cardDescription}>
-              {displayProperties.filter(p => p.status === 'active').length} active listings
-            </p>
-          </div>
+        <StandardCard
+          title="Your Properties"
+          subtitle={`${displayProperties.filter(p => p.status === 'active').length} active listings`}
+          icon={<Building2 className={builderDesignSystem.cards.icon} />}
+        >
           {isLoading ? (
             <LoadingState message="Loading properties..." />
           ) : error || displayProperties.length === 0 ? (

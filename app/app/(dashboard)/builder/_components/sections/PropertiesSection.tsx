@@ -49,9 +49,10 @@ export function PropertiesSection({ onNavigate }: PropertiesSectionProps) {
   // Remove demo data - show loading or empty state instead
   const displayProperties = properties
 
-  return (
-    <SectionWrapper>
-      <StandardPageWrapper
+  if (!isAuthenticated) {
+    return (
+      <div className="w-full">
+        <StandardPageWrapper
         title="Properties"
         subtitle="Manage your property listings and track performance metrics."
         icon={<Building2 className={builderDesignSystem.cards.icon} />}

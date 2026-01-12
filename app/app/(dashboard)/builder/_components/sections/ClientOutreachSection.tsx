@@ -20,7 +20,6 @@ import { SectionWrapper } from './SectionWrapper'
 import { getSectionClassName } from '../design-system'
 import { StandardPageWrapper } from '../StandardPageWrapper'
 import { builderDesignSystem } from '../design-system'
-import { MessageSquare } from 'lucide-react'
 
 interface MessageTemplate {
   id: string

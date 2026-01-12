@@ -26,7 +26,6 @@ import { SectionWrapper } from './SectionWrapper'
 import { builderDesignSystem, getBadgeClassName } from '../design-system'
 import { StandardPageWrapper, EmptyState, LoadingState } from '../StandardPageWrapper'
 import { GlassCard } from '@/components/ui/glass-card'
-import { motion } from 'framer-motion'
 
 interface Contact {
   id: string

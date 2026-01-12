@@ -235,4 +235,3 @@ export function sanitizeHTML(html: string): string {
     .replace(/javascript:/gi, '')
     .replace(/data:text\/html/gi, '')
 }
-

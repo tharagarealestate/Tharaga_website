@@ -82,3 +82,7 @@ __pycache__/
 
 # MCP Servers (local development tools)
 mcp-reasoning/
+
+# Environment file backups
+.env.production.backup
+.env.production.cleaned

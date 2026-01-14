@@ -13,7 +13,7 @@ export function getSupabase(): SupabaseClient {
   // Prefer anon/public keys. On server, gracefully fall back to service role if anon is missing.
   let key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY
   if (!key && typeof window === 'undefined') {
-    key = process.env.SUPABASE_SERVICE_ROLE || ''
+    key = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_ROLE || ''
   }
   if (!url || !key) {
     // Log the error for debugging but provide more context

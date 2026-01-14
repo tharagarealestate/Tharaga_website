@@ -7,9 +7,9 @@ function json(body, code = 200) {
 exports.handler = async () => {
   try {
     const url = process.env.SUPABASE_URL
-    const key = process.env.SUPABASE_SERVICE_ROLE
+    const key = process.env.SUPABASE_SERVICE_ROLE_KEY
     if (!url || !key) {
-      console.warn('[properties-list] Missing env SUPABASE_URL or SUPABASE_SERVICE_ROLE')
+      console.warn('[properties-list] Missing env SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY')
       return json({ error: 'Supabase env missing', items: [] }, 200)
     }
     const supabase = createClient(url, key)

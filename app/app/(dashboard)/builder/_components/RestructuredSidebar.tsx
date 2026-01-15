@@ -353,23 +353,19 @@ export function RestructuredSidebar() {
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="flex-shrink-0 px-4 py-5 border-b glow-border border-b-amber-300/25"
+          className="flex-shrink-0 px-4 py-4 border-b glow-border border-b-amber-300/25"
         >
-          {/* Home Button - Compact */}
-          <div className="mb-3">
-            <Link href="/">
-              <motion.button
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                className="inline-flex items-center justify-center group relative overflow-hidden rounded-lg px-3 py-2 border border-amber-300/25 hover:border-amber-300/40 transition-all duration-300 bg-slate-800/50 hover:bg-slate-800/70"
-              >
-                <div className="w-5 h-5 rounded-md bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center shadow-lg shadow-amber-500/30">
-                  <ArrowLeft className="w-3 h-3 text-slate-900" />
-                </div>
-                <span className="ml-2 text-xs font-semibold text-amber-300">HOME</span>
-              </motion.button>
-            </Link>
-          </div>
+          {/* Home Button - Compact, Top Left Aligned */}
+          <Link href="/" className="inline-block mb-3">
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-gradient-to-br from-amber-400/20 to-amber-600/20 border border-amber-300/30 hover:border-amber-300/50 hover:bg-amber-400/30 transition-all duration-200 shadow-sm hover:shadow-md"
+              aria-label="Go to homepage"
+            >
+              <ArrowLeft className="w-4 h-4 text-amber-300" />
+            </motion.button>
+          </Link>
 
           {/* Brand */}
           <div className="flex items-center gap-3 mb-4">
@@ -437,7 +433,8 @@ export function RestructuredSidebar() {
                       {shouldUseQueryParams(item.href) && !isLocked ? (
                         <button
                           type="button"
-                          onClick={() => {
+                          onClick={(e) => {
+                            e.preventDefault()
                             handleSectionNavigation(item.href)
                             if (hasSubmenu) toggleSubmenu(item.href)
                           }}
@@ -496,10 +493,17 @@ export function RestructuredSidebar() {
                             if (isLocked) {
                               e.preventDefault()
                               // Show upgrade modal
+                              return
                             }
                             if (hasSubmenu) {
                               e.preventDefault()
                               toggleSubmenu(item.href)
+                              return
+                            }
+                            // For builder routes, use Next.js router for smooth transition
+                            if (item.href.startsWith('/builder/') && !item.href.includes('?')) {
+                              e.preventDefault()
+                              router.push(item.href)
                             }
                           }}
                           onMouseEnter={() => setHoveredItem(item.href)}
@@ -605,12 +609,20 @@ export function RestructuredSidebar() {
                                     <Link
                                       key={subItem.href}
                                       href={subItem.href}
-                                      onClick={() => toggleSubmenu(item.href)}
+                                      onClick={(e) => {
+                                        // For regular links, use Next.js navigation but prevent default if it's a builder route
+                                        if (subItem.href.startsWith('/builder/')) {
+                                          e.preventDefault()
+                                          router.push(subItem.href)
+                                        }
+                                        // Auto-close submenu after navigation
+                                        setTimeout(() => toggleSubmenu(item.href), 150)
+                                      }}
                                       className={cn(
-                                        "block px-3 py-2 rounded-lg text-sm transition-all duration-200",
+                                        "block px-3 py-2 rounded-lg text-sm transition-all duration-200 ml-2",
                                         isSubActive
-                                          ? "bg-amber-500/10 text-amber-300 font-medium"
-                                          : "text-slate-400 hover:text-white hover:bg-slate-800/40"
+                                          ? "bg-amber-500/15 text-amber-300 font-medium border-l-2 border-l-amber-400"
+                                          : "text-slate-400 hover:text-white hover:bg-slate-800/50 hover:border-l-2 hover:border-l-amber-400/30 border-l-2 border-l-transparent"
                                       )}
                                     >
                                       {subItem.label}

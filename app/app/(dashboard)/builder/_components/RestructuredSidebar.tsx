@@ -112,8 +112,8 @@ export function RestructuredSidebar() {
     '/builder/contacts': 'contacts',
   }
 
-  // Handle section-based navigation (NO PAGE RELOAD) - Enhanced
-  const handleSectionNavigation = useCallback((href: string, preventDefault?: boolean) => {
+  // Handle section-based navigation (NO PAGE RELOAD)
+  const handleSectionNavigation = useCallback((href: string) => {
     if (typeof window === 'undefined') return
     
     // Extract section from href
@@ -125,19 +125,16 @@ export function RestructuredSidebar() {
     }
     
     if (!section) {
-      // Not a section route, use regular navigation (but still try to avoid reload)
-      if (href.startsWith('/builder/')) {
-        // For builder routes, use Next.js router for smooth transition
-        router.push(href)
-      } else {
-        // External routes
-        window.location.href = href
-      }
+      // Not a section route, use regular navigation
+      router.push(href)
       return
     }
     
-    // Update URL without page reload using Next.js router
-    router.push(`/builder?section=${section}`, { scroll: false })
+    // Update URL without page reload
+    const url = new URL(window.location.href)
+    url.pathname = '/builder'
+    url.searchParams.set('section', section)
+    window.history.pushState({}, '', url.toString())
     
     // Dispatch custom event for section change (BuilderDashboardClient listens to this)
     window.dispatchEvent(new CustomEvent('dashboard-section-change', { 
@@ -341,8 +338,7 @@ export function RestructuredSidebar() {
         "bg-slate-900/95 backdrop-blur-2xl",
         "border-r glow-border border-r-amber-300/25",
         "shadow-[0_0_60px_rgba(251,191,36,0.1)]",
-        "hidden lg:flex",
-        "relative" // For absolute positioning of home button
+        "hidden lg:flex"
       )}
       style={{ width: `${sidebarWidth}px` }}
       aria-label="Main navigation sidebar"
@@ -357,22 +353,26 @@ export function RestructuredSidebar() {
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="flex-shrink-0 px-4 py-4 border-b glow-border border-b-amber-300/25"
+          className="flex-shrink-0 px-4 py-5 border-b glow-border border-b-amber-300/25"
         >
-          {/* Home Button - Top Left, Perfect Alignment */}
-          <Link href="/" className="absolute top-3 left-3 z-20">
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-gradient-to-br from-amber-400/20 to-amber-600/20 border border-amber-300/30 hover:border-amber-300/50 hover:bg-amber-400/30 transition-all duration-200 shadow-sm hover:shadow-md"
-              aria-label="Go to homepage"
-            >
-              <ArrowLeft className="w-4 h-4 text-amber-300" />
-            </motion.button>
-          </Link>
+          {/* Home Button - Compact */}
+          <div className="mb-3">
+            <Link href="/">
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                className="inline-flex items-center justify-center group relative overflow-hidden rounded-lg px-3 py-2 border border-amber-300/25 hover:border-amber-300/40 transition-all duration-300 bg-slate-800/50 hover:bg-slate-800/70"
+              >
+                <div className="w-5 h-5 rounded-md bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center shadow-lg shadow-amber-500/30">
+                  <ArrowLeft className="w-3 h-3 text-slate-900" />
+                </div>
+                <span className="ml-2 text-xs font-semibold text-amber-300">HOME</span>
+              </motion.button>
+            </Link>
+          </div>
 
-          {/* Brand - Adjusted for home button */}
-          <div className="flex items-center gap-3 mb-4 mt-1">
+          {/* Brand */}
+          <div className="flex items-center gap-3 mb-4">
             <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-400 via-amber-500 to-amber-600 flex items-center justify-center shadow-lg shadow-amber-500/50">
               <Sparkles className="w-5 h-5 text-slate-900" />
             </div>
@@ -437,8 +437,7 @@ export function RestructuredSidebar() {
                       {shouldUseQueryParams(item.href) && !isLocked ? (
                         <button
                           type="button"
-                          onClick={(e) => {
-                            e.preventDefault()
+                          onClick={() => {
                             handleSectionNavigation(item.href)
                             if (hasSubmenu) toggleSubmenu(item.href)
                           }}
@@ -446,12 +445,21 @@ export function RestructuredSidebar() {
                           onMouseLeave={() => setHoveredItem(null)}
                           className={cn(
                             "relative w-full flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-all duration-300 group text-left",
-                            "hover:bg-slate-800/70 hover:border-l-2 hover:border-l-amber-400/30",
+                            "hover:bg-slate-800/60",
                             isActive
-                              ? "bg-gradient-to-r from-amber-500/25 via-amber-500/15 to-transparent text-white shadow-[inset_0_0_20px_rgba(251,191,36,0.1)] border-l-2 border-l-amber-400"
-                              : "text-slate-300 hover:text-white border-l-2 border-l-transparent"
+                              ? "bg-gradient-to-r from-amber-500/20 to-amber-400/10 text-white shadow-lg shadow-amber-500/20"
+                              : "text-slate-300 hover:text-white"
                           )}
                         >
+                          {/* Active Indicator */}
+                          {isActive && (
+                            <motion.div
+                              layoutId="activeIndicator"
+                              className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-gradient-to-b from-amber-400 to-amber-600 rounded-r-full shadow-[0_0_10px_rgba(251,191,36,0.5)]"
+                              transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+                            />
+                          )}
+
                           <Icon className={cn(
                             "w-5 h-5 flex-shrink-0 transition-colors",
                             isActive ? "text-amber-400" : "text-slate-400 group-hover:text-amber-300"
@@ -488,29 +496,31 @@ export function RestructuredSidebar() {
                             if (isLocked) {
                               e.preventDefault()
                               // Show upgrade modal
-                              return
                             }
                             if (hasSubmenu) {
                               e.preventDefault()
                               toggleSubmenu(item.href)
-                              return
-                            }
-                            // For regular links to builder routes, use Next.js router for smooth transition
-                            if (item.href.startsWith('/builder/') && !item.href.includes('?')) {
-                              e.preventDefault()
-                              router.push(item.href)
                             }
                           }}
                           onMouseEnter={() => setHoveredItem(item.href)}
                           onMouseLeave={() => setHoveredItem(null)}
                           className={cn(
                             "relative w-full flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-all duration-300 group",
-                            "hover:bg-slate-800/70 hover:border-l-2 hover:border-l-amber-400/30",
+                            "hover:bg-slate-800/60",
                             isActive
-                              ? "bg-gradient-to-r from-amber-500/25 via-amber-500/15 to-transparent text-white shadow-[inset_0_0_20px_rgba(251,191,36,0.1)] border-l-2 border-l-amber-400"
-                              : "text-slate-300 hover:text-white border-l-2 border-l-transparent"
+                              ? "bg-gradient-to-r from-amber-500/20 to-amber-400/10 text-white shadow-lg shadow-amber-500/20"
+                              : "text-slate-300 hover:text-white"
                           )}
                         >
+                          {/* Active Indicator */}
+                          {isActive && (
+                            <motion.div
+                              layoutId="activeIndicator"
+                              className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-gradient-to-b from-amber-400 to-amber-600 rounded-r-full shadow-[0_0_10px_rgba(251,191,36,0.5)]"
+                              transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+                            />
+                          )}
+
                           <Icon className={cn(
                             "w-5 h-5 flex-shrink-0 transition-colors",
                             isActive ? "text-amber-400" : "text-slate-400 group-hover:text-amber-300"
@@ -576,9 +586,8 @@ export function RestructuredSidebar() {
                                         type="button"
                                         onClick={(e) => {
                                           e.preventDefault()
-                                          handleSectionNavigation(subItem.href, true)
-                                          // Auto-close submenu after navigation
-                                          setTimeout(() => toggleSubmenu(item.href), 150)
+                                          handleSectionNavigation(subItem.href)
+                                          toggleSubmenu(item.href)
                                         }}
                                         className={cn(
                                           "w-full text-left block px-3 py-2 rounded-lg text-sm transition-all duration-200",
@@ -596,20 +605,12 @@ export function RestructuredSidebar() {
                                     <Link
                                       key={subItem.href}
                                       href={subItem.href}
-                                      onClick={(e) => {
-                                        // For regular links, use Next.js navigation but prevent default if it's a builder route
-                                        if (subItem.href.startsWith('/builder/')) {
-                                          e.preventDefault()
-                                          router.push(subItem.href)
-                                        }
-                                        // Auto-close submenu after navigation
-                                        setTimeout(() => toggleSubmenu(item.href), 150)
-                                      }}
+                                      onClick={() => toggleSubmenu(item.href)}
                                       className={cn(
-                                        "block px-3 py-2 rounded-lg text-sm transition-all duration-200 ml-2",
+                                        "block px-3 py-2 rounded-lg text-sm transition-all duration-200",
                                         isSubActive
-                                          ? "bg-amber-500/15 text-amber-300 font-medium border-l-2 border-l-amber-400"
-                                          : "text-slate-400 hover:text-white hover:bg-slate-800/50 hover:border-l-2 hover:border-l-amber-400/30 border-l-2 border-l-transparent"
+                                          ? "bg-amber-500/10 text-amber-300 font-medium"
+                                          : "text-slate-400 hover:text-white hover:bg-slate-800/40"
                                       )}
                                     >
                                       {subItem.label}

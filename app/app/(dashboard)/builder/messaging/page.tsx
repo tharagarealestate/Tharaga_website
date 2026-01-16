@@ -483,7 +483,7 @@ export default function MessagingPage() {
                   {getPreBuiltTemplates().map((template) => (
                     <div
                       key={`${template.type}-${template.name}`}
-                      className="bg-slate-800/95 glow-border rounded-lg border border-slate-700/50 p-6 hover:border-amber-300/50 transition-all relative group"
+                      className="bg-slate-800/95 glow-border rounded-lg p-6 transition-all relative group"
                     >
                       <div className="flex items-start justify-between mb-4">
                         <div className="flex-1">

@@ -274,7 +274,7 @@ export default function RevenuePage() {
         {/* Main Revenue Cards - Design System Statistics Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {/* Total Revenue */}
-          <div className="p-6 bg-slate-800/95 glow-border rounded-lg border border-slate-700/50 relative overflow-hidden group">
+          <div className="p-6 bg-slate-800/95 glow-border rounded-lg relative overflow-hidden group">
             <div className="absolute top-6 right-6 opacity-10 group-hover:opacity-20 transition-opacity">
               <DollarSign className="w-16 h-16 text-amber-300" />
             </div>
@@ -292,7 +292,7 @@ export default function RevenuePage() {
           </div>
 
           {/* Monthly Revenue */}
-          <div className="p-6 bg-slate-800/95 glow-border rounded-lg border border-slate-700/50 relative overflow-hidden group">
+          <div className="p-6 bg-slate-800/95 glow-border rounded-lg relative overflow-hidden group">
             <div className="absolute top-6 right-6 opacity-10 group-hover:opacity-20 transition-opacity">
               <Calendar className="w-16 h-16 text-emerald-300" />
             </div>
@@ -315,7 +315,7 @@ export default function RevenuePage() {
           </div>
 
           {/* Pending Revenue */}
-          <div className="p-6 bg-slate-800/95 glow-border rounded-lg border border-slate-700/50 relative overflow-hidden group">
+          <div className="p-6 bg-slate-800/95 glow-border rounded-lg relative overflow-hidden group">
             <div className="absolute top-6 right-6 opacity-10 group-hover:opacity-20 transition-opacity">
               <Clock className="w-16 h-16 text-amber-300" />
             </div>
@@ -333,7 +333,7 @@ export default function RevenuePage() {
           </div>
 
           {/* Pipeline Value */}
-          <div className="p-6 bg-slate-800/95 glow-border rounded-lg border border-slate-700/50 relative overflow-hidden group">
+          <div className="p-6 bg-slate-800/95 glow-border rounded-lg relative overflow-hidden group">
             <div className="absolute top-6 right-6 opacity-10 group-hover:opacity-20 transition-opacity">
               <BarChart3 className="w-16 h-16 text-blue-300" />
             </div>

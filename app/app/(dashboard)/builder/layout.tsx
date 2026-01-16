@@ -3,7 +3,7 @@ import type { ReactNode } from 'react'
 import { motion } from 'framer-motion'
 import { ReactQueryProvider } from '@/components/providers/ReactQueryProvider'
 import { DemoDataProvider } from './_components/DemoDataProvider'
-import { RestructuredSidebar } from './_components/RestructuredSidebar'
+import { ModernSidebar } from './_components/ModernSidebar'
 import { TrialUpgradeBanner } from './_components/TrialUpgradeBanner'
 import { AIAssistant } from './_components/AIAssistant'
 
@@ -17,8 +17,8 @@ export default function BuilderDashboardLayout({ children }: { children: ReactNo
         {/* Trial upgrade banner */}
         <TrialUpgradeBanner />
 
-        {/* Restructured Sidebar - Optimal UX flow based on research */}
-        <RestructuredSidebar />
+        {/* Modern Sidebar - Top-notch design inspired by GitHub, Linear, Vercel */}
+        <ModernSidebar />
 
         {/* Main Content Area - Optimized space utilization for desktop */}
         <motion.main 

@@ -32,12 +32,13 @@ export function StandardPageWrapper({
   className = '',
 }: StandardPageWrapperProps) {
   return (
-    <div className={`${builderDesignSystem.layout.container} ${className}`}>
-      {/* Header - EXACT from UnifiedDashboard */}
+    <div className={`w-full ${className}`}>
+      {/* Header - Modern Design */}
       <motion.div
-        initial={builderDesignSystem.animations.pageHeader.initial}
-        animate={builderDesignSystem.animations.pageHeader.animate}
-        className={builderDesignSystem.spacing.header}
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.2 }}
+        className="mb-6"
       >
         <div className="flex items-center justify-between flex-wrap gap-4">
           <div className="flex items-center gap-3">
@@ -70,11 +71,11 @@ export function StandardPageWrapper({
         </div>
       </motion.div>
 
-      {/* Content - EXACT animation from UnifiedDashboard */}
+      {/* Content - Fast Transition */}
       <motion.div
-        initial={builderDesignSystem.animations.content.initial}
-        animate={builderDesignSystem.animations.content.animate}
-        transition={builderDesignSystem.animations.content.transition}
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.2, ease: 'easeOut' }}
       >
         {children}
       </motion.div>

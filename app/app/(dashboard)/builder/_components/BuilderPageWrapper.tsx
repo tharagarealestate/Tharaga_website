@@ -1,8 +1,6 @@
 "use client"
 
 import { ReactNode } from 'react'
-import { PageHeader } from '@/components/ui/PageHeader'
-import { GlassCard } from '@/components/ui/glass-card'
 import { motion } from 'framer-motion'
 
 interface BuilderPageWrapperProps {
@@ -14,9 +12,10 @@ interface BuilderPageWrapperProps {
 }
 
 /**
- * Consistent page wrapper for all builder dashboard pages
- * Uses the design system for uniform styling
- * Ensures uniform design, spacing, and styling across all pages
+ * Modern page wrapper for all builder dashboard pages
+ * Matches sidebar background: bg-gradient-to-br from-slate-800/95 via-slate-800/95 to-slate-900/95
+ * Fast transitions with zero lag
+ * Consistent styling across all pages
  */
 export function BuilderPageWrapper({ 
   children, 
@@ -26,26 +25,39 @@ export function BuilderPageWrapper({
   noContainer = false 
 }: BuilderPageWrapperProps) {
   return (
-    <div className={`relative z-10 ${className}`}>
-      {/* Page Header - Design System */}
+    <div className={`relative z-10 w-full ${className}`}>
+      {/* Page Header - Modern Design */}
       {(title || description) && (
-        <PageHeader
-          title={title || ''}
-          description={description}
-        />
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.2 }}
+          className="mb-6"
+        >
+          <h1 className="text-2xl font-bold text-white mb-1">{title}</h1>
+          {description && (
+            <p className="text-sm text-slate-400">{description}</p>
+          )}
+        </motion.div>
       )}
 
-      {/* Page Content - Design System Container */}
+      {/* Page Content - Fast Transition */}
       {noContainer ? (
-        children
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.2, ease: 'easeOut' }}
+        >
+          {children}
+        </motion.div>
       ) : (
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.2, ease: 'easeOut' }}
+          className="bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 rounded-xl p-6 sm:p-8"
         >
-          <GlassCard variant="dark" glow border className="p-6 sm:p-8">
-            {children}
-          </GlassCard>
+          {children}
         </motion.div>
       )}
     </div>

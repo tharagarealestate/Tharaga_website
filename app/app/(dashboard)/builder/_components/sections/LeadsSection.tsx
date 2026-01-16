@@ -48,9 +48,9 @@ export function LeadsSection({ onNavigate }: LeadsSectionProps) {
 
   return (
     <FilterProvider>
-      {/* Background handled by layout.tsx - no custom background needed */}
-      <div className="relative min-h-screen overflow-hidden">
-        <div className="relative z-10 px-4 py-8 sm:px-6 lg:px-12">
+      {/* Background matches sidebar - no custom background needed */}
+      <div className="relative w-full">
+        <div className="relative z-10 w-full">
           <div className="mx-auto max-w-7xl space-y-6">
 
             {/* Hero Command Center - Compact & Action-Oriented */}
@@ -62,7 +62,7 @@ export function LeadsSection({ onNavigate }: LeadsSectionProps) {
             />
 
             {/* Main Content - Leads First! */}
-            <section className="bg-slate-900/95 glow-border rounded-xl border border-amber-300/25 p-6 sm:p-8">
+            <section className="bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 rounded-xl p-6 sm:p-8">
               <div className="space-y-6">
                 {/* Inline Quick Filters */}
                 <AdvancedFilters />

@@ -87,15 +87,13 @@ function UnifiedSinglePageDashboardComponent({ activeSection, onSectionChange }:
         <AnimatePresence mode="wait">
           <motion.div
             key={activeSection}
-            initial={{ opacity: 0, y: 30, scale: 0.96, filter: 'blur(4px)' }}
+            initial={{ opacity: 0, y: 10 }}
             animate={{ 
               opacity: 1, 
-              y: 0, 
-              scale: 1, 
-              filter: 'blur(0px)',
+              y: 0,
               transition: {
-                duration: 0.5,
-                ease: [0.16, 1, 0.3, 1], // Custom easing for smooth AI feel
+                duration: 0.2,
+                ease: 'easeOut', // Fast, smooth transition
               }
             }}
             exit={{ 

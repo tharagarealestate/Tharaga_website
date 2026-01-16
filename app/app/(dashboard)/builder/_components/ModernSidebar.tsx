@@ -288,7 +288,7 @@ export function ModernSidebar() {
     return false
   }
 
-  const sidebarWidth = 280
+  const sidebarWidth = 300 // Increased to prevent text truncation
 
   return (
     <motion.aside

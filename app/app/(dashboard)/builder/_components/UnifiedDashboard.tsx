@@ -425,7 +425,7 @@ export function UnifiedDashboard({ onNavigate }: UnifiedDashboardProps) {
           glow
           className="overflow-hidden desktop-card min-w-0 max-w-full h-full flex flex-col"
         >
-          <div className="border-b border-amber-300/25 p-6 sm:p-8">
+          <div className="border-b glow-border p-6 sm:p-8">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-lg bg-slate-700/50 flex items-center justify-center">
@@ -485,7 +485,7 @@ export function UnifiedDashboard({ onNavigate }: UnifiedDashboardProps) {
           glow
           className="overflow-hidden desktop-card min-w-0 max-w-full h-full flex flex-col"
         >
-          <div className="border-b border-amber-300/25 p-6 sm:p-8">
+          <div className="border-b glow-border p-6 sm:p-8">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-lg bg-slate-700/50 flex items-center justify-center">

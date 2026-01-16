@@ -336,7 +336,7 @@ export function RestructuredSidebar() {
         "fixed left-0 top-0 bottom-0 z-[1000]",
         "flex flex-col",
         "bg-slate-900/95 backdrop-blur-2xl",
-        "border-r glow-border border-r-amber-300/25",
+        "border-r glow-border",
         "shadow-[0_0_60px_rgba(251,191,36,0.1)]",
         "hidden lg:flex"
       )}
@@ -353,7 +353,7 @@ export function RestructuredSidebar() {
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="flex-shrink-0 px-3 py-3 border-b glow-border border-b-amber-300/25"
+          className="flex-shrink-0 px-3 py-3 border-b glow-border"
         >
           {/* Home Button - No Container, Top Left, Small Size */}
           <Link href="/" className="inline-flex items-center gap-1.5 text-xs font-semibold text-amber-300 hover:text-amber-200 transition-colors mb-3">
@@ -387,7 +387,7 @@ export function RestructuredSidebar() {
                 "border-2 rounded-lg text-white placeholder:text-slate-400 text-xs",
                 "focus:outline-none transition-all duration-300",
                 isSearchFocused 
-                  ? "glow-border shadow-[0_0_20px_rgba(251,191,36,0.2)] bg-slate-800/70 border-amber-400/50" 
+                  ? "glow-border shadow-[0_0_20px_rgba(212,175,55,0.2)] bg-slate-800/70" 
                   : "border-slate-700/50 hover:border-slate-600/50"
               )}
             />

@@ -400,7 +400,7 @@ export function AdvancedAISidebar() {
           "fixed left-0 top-0 bottom-0 z-[1000]",
           "flex flex-col",
           "bg-slate-900/95 backdrop-blur-2xl",
-          "border-r glow-border border-r-amber-300/25",
+          "border-r glow-border",
           "shadow-[0_0_60px_rgba(251,191,36,0.1)]",
           "hidden lg:flex"
         )}
@@ -418,7 +418,7 @@ export function AdvancedAISidebar() {
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className="flex-shrink-0 px-4 py-5 border-b glow-border border-b-amber-300/25"
+            className="flex-shrink-0 px-4 py-5 border-b glow-border"
           >
             {/* Home Button - Elegant Design */}
             <motion.div

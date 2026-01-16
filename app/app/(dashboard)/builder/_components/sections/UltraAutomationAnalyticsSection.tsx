@@ -153,7 +153,7 @@ export function UltraAutomationAnalyticsSection({ onNavigate }: UltraAutomationA
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="bg-slate-900/95 glow-border rounded-xl border border-amber-300/25 overflow-hidden shadow-2xl"
+        className="bg-slate-900/95 glow-border rounded-xl overflow-hidden shadow-2xl"
       >
         <div className="p-6 sm:p-8">
           <div className="flex items-center gap-2">
@@ -179,7 +179,7 @@ export function UltraAutomationAnalyticsSection({ onNavigate }: UltraAutomationA
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="bg-slate-900/95 glow-border rounded-xl border border-amber-300/25 overflow-hidden shadow-2xl"
+        className="bg-slate-900/95 glow-border rounded-xl overflow-hidden shadow-2xl"
       >
         <div className="p-6 sm:p-8">
           {isLoading ? (

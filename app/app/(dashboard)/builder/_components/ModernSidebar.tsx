@@ -345,7 +345,7 @@ export function ModernSidebar() {
                 "border rounded-lg text-white placeholder:text-slate-400 text-xs",
                 "focus:outline-none transition-all duration-200",
                 isSearchFocused 
-                  ? "border-amber-400/50 bg-slate-800/70 shadow-sm" 
+                  ? "glow-border bg-slate-800/70 shadow-sm" 
                   : "border-slate-700/50 hover:border-slate-600/50"
               )}
             />
@@ -465,7 +465,8 @@ export function ModernSidebar() {
                                       onClick={(e) => {
                                         e.preventDefault()
                                         handleNavigation(subItem.href, e)
-                                        setTimeout(() => toggleSubmenu(item.href), 150)
+                                        // DO NOT close dropdown - let user manually close by clicking parent again
+                                        // This allows users to navigate between submenu items without dropdown closing
                                       }}
                                       className={cn(
                                         "w-full text-left block px-2.5 py-1.5 rounded-md text-xs transition-all duration-150",

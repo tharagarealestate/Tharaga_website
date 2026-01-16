@@ -353,34 +353,28 @@ export function RestructuredSidebar() {
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="flex-shrink-0 px-4 py-4 border-b glow-border border-b-amber-300/25"
+          className="flex-shrink-0 px-3 py-3 border-b glow-border border-b-amber-300/25"
         >
-          {/* Home Button - Compact, Top Left Aligned */}
-          <Link href="/" className="inline-block mb-3">
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-gradient-to-br from-amber-400/20 to-amber-600/20 border border-amber-300/30 hover:border-amber-300/50 hover:bg-amber-400/30 transition-all duration-200 shadow-sm hover:shadow-md"
-              aria-label="Go to homepage"
-            >
-              <ArrowLeft className="w-4 h-4 text-amber-300" />
-            </motion.button>
+          {/* Home Button - No Container, Top Left, Small Size */}
+          <Link href="/" className="inline-flex items-center gap-1.5 text-xs font-semibold text-amber-300 hover:text-amber-200 transition-colors mb-3">
+            <ArrowLeft className="w-3.5 h-3.5" />
+            <span>HOME</span>
           </Link>
 
           {/* Brand */}
-          <div className="flex items-center gap-3 mb-4">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-400 via-amber-500 to-amber-600 flex items-center justify-center shadow-lg shadow-amber-500/50">
-              <Sparkles className="w-5 h-5 text-slate-900" />
+          <div className="flex items-center gap-2.5 mb-3">
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-amber-400 via-amber-500 to-amber-600 flex items-center justify-center shadow-lg shadow-amber-500/50">
+              <Sparkles className="w-4.5 h-4.5 text-slate-900" />
             </div>
             <div className="flex flex-col">
-              <span className="font-bold text-white text-sm">THARAGA</span>
-              <span className="text-amber-300 text-[10px] font-medium">Builder Portal</span>
+              <span className="font-bold text-white text-sm leading-tight">THARAGA</span>
+              <span className="text-amber-300 text-[10px] font-medium leading-tight">Builder Portal</span>
             </div>
           </div>
 
           {/* Search */}
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
             <input
               type="text"
               value={searchQuery}
@@ -389,8 +383,8 @@ export function RestructuredSidebar() {
               onBlur={() => setIsSearchFocused(false)}
               placeholder="Search commands..."
               className={cn(
-                "w-full pl-10 pr-3 py-2.5 bg-slate-800/50 backdrop-blur-sm",
-                "border-2 rounded-xl text-white placeholder:text-slate-400 text-sm",
+                "w-full pl-9 pr-2.5 py-2 bg-slate-800/50 backdrop-blur-sm",
+                "border-2 rounded-lg text-white placeholder:text-slate-400 text-xs",
                 "focus:outline-none transition-all duration-300",
                 isSearchFocused 
                   ? "glow-border shadow-[0_0_20px_rgba(251,191,36,0.2)] bg-slate-800/70 border-amber-400/50" 
@@ -401,7 +395,7 @@ export function RestructuredSidebar() {
         </motion.div>
 
         {/* Navigation */}
-        <nav className="flex-1 overflow-y-auto overflow-x-hidden px-2 py-4 space-y-1">
+        <nav className="flex-1 overflow-y-auto overflow-x-hidden px-2 py-3 space-y-0.5">
           <AnimatePresence mode="wait">
             {filteredGroups.map((group, groupIndex) => (
               <motion.div

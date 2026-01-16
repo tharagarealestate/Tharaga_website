@@ -407,7 +407,7 @@ export function ModernSidebar() {
                           isActive ? "text-amber-400" : "text-slate-400 group-hover:text-amber-300"
                         )} />
 
-                        <span className="flex-1 font-medium text-sm">{item.label}</span>
+                        <span className="flex-1 font-medium text-sm truncate min-w-0">{item.label}</span>
 
                         {/* Badge */}
                         {item.badge !== null && item.badge !== undefined && (

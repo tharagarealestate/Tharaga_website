@@ -34,9 +34,9 @@ export function BuilderPageWrapper({
           transition={{ duration: 0.2 }}
           className="mb-6"
         >
-          <h1 className="text-2xl font-bold text-white mb-1">{title}</h1>
+          <h1 className="text-3xl sm:text-4xl font-bold text-white mb-2">{title}</h1>
           {description && (
-            <p className="text-sm text-slate-400">{description}</p>
+            <p className="text-base sm:text-lg text-slate-300">{description}</p>
           )}
         </motion.div>
       )}

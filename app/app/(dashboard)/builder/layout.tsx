@@ -26,11 +26,11 @@ export default function BuilderDashboardLayout({ children }: { children: ReactNo
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4, ease: 'easeOut' }}
           className="relative z-10 overflow-x-hidden" 
-          style={{ 
-            marginLeft: '280px',
-            width: 'calc(100% - 280px)',
-            minHeight: 'calc(100vh - 60px)',
-          }}
+                   style={{
+                     marginLeft: '300px',
+                     width: 'calc(100% - 300px)',
+                     minHeight: 'calc(100vh - 60px)',
+                   }}
         >
           {/* Inner container with proper spacing and constraints */}
           <div className="w-full h-full px-6 lg:px-8 xl:px-12 pt-8 pb-8 sm:pb-12">

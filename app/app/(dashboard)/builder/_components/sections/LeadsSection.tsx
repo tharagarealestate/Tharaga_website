@@ -96,7 +96,7 @@ export function LeadsSection({ onNavigate }: LeadsSectionProps) {
                 transition={{ type: 'spring', damping: 25 }}
                 className="fixed inset-4 sm:inset-10 md:inset-20 z-50 overflow-y-auto rounded-3xl glow-border bg-slate-900/98 backdrop-blur-xl shadow-2xl"
               >
-                <div className="sticky top-0 z-10 border-b border-amber-300/25 bg-slate-900/95 backdrop-blur p-6">
+                <div className="sticky top-0 z-10 border-b glow-border bg-slate-900/95 backdrop-blur p-6">
                   <div className="flex items-center justify-between">
                     <div>
                       <h2 className="text-2xl font-bold text-white flex items-center gap-2">
@@ -141,7 +141,7 @@ export function LeadsSection({ onNavigate }: LeadsSectionProps) {
                 transition={{ type: 'spring', damping: 25 }}
                 className="fixed inset-4 sm:inset-10 md:left-auto md:right-10 md:top-10 md:bottom-10 md:w-full md:max-w-2xl z-50 overflow-y-auto rounded-3xl glow-border bg-slate-900/98 backdrop-blur-xl shadow-2xl"
               >
-                <div className="sticky top-0 z-10 border-b border-amber-300/25 bg-slate-900/95 backdrop-blur p-6">
+                <div className="sticky top-0 z-10 border-b glow-border bg-slate-900/95 backdrop-blur p-6">
                   <div className="flex items-center justify-between">
                     <div>
                       <h2 className="text-2xl font-bold text-white flex items-center gap-2">

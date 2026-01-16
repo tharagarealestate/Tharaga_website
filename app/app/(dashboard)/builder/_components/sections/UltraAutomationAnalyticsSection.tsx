@@ -235,7 +235,7 @@ export function UltraAutomationAnalyticsSection({ onNavigate }: UltraAutomationA
               </div>
 
               {/* Conversion Funnel - Design System Container */}
-              <div className="bg-slate-800/95 glow-border rounded-lg border border-amber-300/25 p-6">
+              <div className="bg-slate-800/95 glow-border rounded-lg p-6">
               <div className="flex items-center justify-between mb-6">
                 <div>
                   <h3 className="text-xl font-bold text-white mb-1">Conversion Funnel</h3>
@@ -294,7 +294,7 @@ export function UltraAutomationAnalyticsSection({ onNavigate }: UltraAutomationA
             </div>
 
               {/* Stage Time Analysis - Design System Container */}
-              <div className="bg-slate-800/95 glow-border rounded-lg border border-amber-300/25 p-6">
+              <div className="bg-slate-800/95 glow-border rounded-lg p-6">
               <h3 className="text-xl font-bold text-white mb-6">Average Time Per Stage</h3>
               <div className="h-80">
                 <ResponsiveContainer width="100%" height="100%">
@@ -336,7 +336,7 @@ export function UltraAutomationAnalyticsSection({ onNavigate }: UltraAutomationA
               {/* Negotiation & Contract Metrics */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* Negotiation Metrics - Design System Container */}
-                <div className="bg-slate-800/95 glow-border rounded-lg border border-amber-300/25 p-6">
+                <div className="bg-slate-800/95 glow-border rounded-lg p-6">
                 <h3 className="text-xl font-bold text-white mb-6">Negotiation Metrics</h3>
                 <div className="space-y-4">
                   <StatRow
@@ -361,7 +361,7 @@ export function UltraAutomationAnalyticsSection({ onNavigate }: UltraAutomationA
               </div>
 
                 {/* Contract Metrics - Design System Container */}
-                <div className="bg-slate-800/95 glow-border rounded-lg border border-amber-300/25 p-6">
+                <div className="bg-slate-800/95 glow-border rounded-lg p-6">
                 <h3 className="text-xl font-bold text-white mb-6">Contract Metrics</h3>
                 <div className="space-y-4">
                   <StatRow
@@ -441,7 +441,7 @@ function MetricCard({
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className={cn('p-6 bg-slate-800/95 glow-border rounded-lg border border-amber-300/25', urgent && 'border-rose-500/30 bg-rose-500/5')}
+      className={cn('p-6 bg-slate-800/95 glow-border rounded-lg', urgent && 'border-rose-500/30 bg-rose-500/5')}
     >
       <div className="flex items-center justify-between mb-4">
         <Icon className={cn('h-8 w-8', color)} />

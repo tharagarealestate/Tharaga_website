@@ -84,7 +84,7 @@ export const builderDesignSystem = {
     },
     
     // Card header styling - EXACT from UnifiedDashboard
-    cardHeader: 'border-b border-amber-300/25 p-6 sm:p-8',
+    cardHeader: 'border-b glow-border p-6 sm:p-8',
     
     // Card body styling
     cardBody: 'p-6 sm:p-8',
@@ -200,9 +200,9 @@ export const builderDesignSystem = {
 
 // Helper functions - For backward compatibility
 // NEW CODE: Use StandardCard, StandardPageWrapper, EmptyState, LoadingState instead
-export const getSectionClassName = () => 'bg-slate-900/95 glow-border rounded-xl border border-amber-300/25 p-6 sm:p-8'
-export const getCardClassName = () => 'bg-slate-800/95 glow-border rounded-lg border border-amber-300/25 p-4 md:p-6'
-export const getSubCardClassName = () => 'bg-slate-700/30 rounded-lg border border-amber-300/20 p-4'
+export const getSectionClassName = () => 'bg-slate-900/95 glow-border rounded-xl p-6 sm:p-8'
+export const getCardClassName = () => 'bg-slate-800/95 glow-border rounded-lg p-4 md:p-6'
+export const getSubCardClassName = () => 'bg-slate-700/30 rounded-lg glow-border p-4'
 
 export const getPrimaryButtonClassName = () => 'px-6 py-3 bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 glow-border text-white font-semibold rounded-lg transition-all duration-300 shadow-lg hover:shadow-xl hover:shadow-amber-500/30 hover:-translate-y-0.5'
 
@@ -212,7 +212,7 @@ export const getBadgeClassName = (type: 'hot' | 'warm' | 'developing' | 'cold' |
     warm: 'bg-orange-500/20 text-orange-300 border border-orange-500/30',
     developing: 'bg-blue-500/20 text-blue-300 border border-blue-500/30',
     cold: 'bg-gray-500/20 text-gray-300 border border-gray-500/30',
-    accent: 'bg-amber-500/20 text-amber-300 border border-amber-500/30',
+    accent: 'bg-amber-500/20 text-amber-300 glow-border',
   }
   return `px-3 py-1 rounded-full text-xs font-semibold ${badgeClasses[type]}`
 }

@@ -91,6 +91,18 @@ export function BuilderAuthProvider({ children }: BuilderAuthProviderProps) {
           return
         }
 
+        // Check if user is admin first (admins bypass builder profile requirement)
+        // Check both user_roles table and profiles table for admin role
+        const [userRolesResult, profileResult] = await Promise.all([
+          supabase.from('user_roles').select('role').eq('user_id', user.id),
+          supabase.from('profiles').select('role').eq('id', user.id).maybeSingle()
+        ])
+
+        const isAdmin = 
+          userRolesResult.data?.some((r: any) => r.role === 'admin') || 
+          profileResult.data?.role === 'admin' || 
+          false
+
         // User is authenticated - check for builder profile
         const { data: builderProfile, error: profileError } = await supabase
           .from('builder_profiles')
@@ -100,7 +112,28 @@ export function BuilderAuthProvider({ children }: BuilderAuthProviderProps) {
 
         if (!mounted) return
 
-        // No builder profile = not authorized
+        // Admin users bypass builder profile requirement
+        if (isAdmin) {
+          const userEmail = user.email || null
+          setAuthState({
+            isAuthenticated: true,
+            isLoading: false,
+            builderId: builderProfile?.id || null, // Use profile ID if exists, otherwise null
+            userId: user.id,
+            builderProfile: builderProfile ? {
+              id: builderProfile.id,
+              company_name: builderProfile.company_name || 'Admin',
+              email: userEmail,
+            } : {
+              id: user.id, // Use user ID as fallback for admin without profile
+              company_name: 'Admin',
+              email: userEmail,
+            },
+          })
+          return
+        }
+
+        // Non-admin users: No builder profile = not authorized
         if (profileError || !builderProfile) {
           setAuthState({
             isAuthenticated: false,
@@ -114,7 +147,7 @@ export function BuilderAuthProvider({ children }: BuilderAuthProviderProps) {
           return
         }
 
-        // Check if company_name is filled (required field)
+        // Check if company_name is filled (required field for non-admin builders)
         if (!builderProfile.company_name || builderProfile.company_name.trim() === '') {
           setAuthState({
             isAuthenticated: false,

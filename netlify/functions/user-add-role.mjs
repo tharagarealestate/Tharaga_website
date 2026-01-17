@@ -71,11 +71,101 @@ export async function handler(event, context) {
       .select('role')
       .eq('user_id', user.id);
 
-    if (existingRoles?.some(r => r.role === role)) {
+    const hasRole = existingRoles?.some(r => r.role === role) || false;
+    
+    // If user already has the role, allow profile creation/update only
+    if (hasRole && role === 'builder') {
+      // Check if builder profile exists
+      const { data: existingProfile } = await supabase
+        .from('builder_profiles')
+        .select('*')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      if (!builder_data || !builder_data.company_name) {
+        return {
+          statusCode: 400,
+          headers,
+          body: JSON.stringify({ error: 'Builder company_name is required' }),
+        };
+      }
+
+      if (existingProfile) {
+        // Update existing profile
+        const { error: updateError } = await supabase
+          .from('builder_profiles')
+          .update({
+            company_name: builder_data.company_name,
+            gstin: builder_data.gstin || null,
+            rera_number: builder_data.rera_number || null,
+            updated_at: new Date().toISOString(),
+          })
+          .eq('user_id', user.id);
+
+        if (updateError) {
+          console.error('Error updating builder profile:', updateError);
+          return {
+            statusCode: 500,
+            headers,
+            body: JSON.stringify({ error: 'Failed to update builder profile' }),
+          };
+        }
+
+        return {
+          statusCode: 200,
+          headers,
+          body: JSON.stringify({
+            success: true,
+            role_added: role,
+            profile_updated: true,
+            message: 'Builder profile updated successfully',
+          }),
+        };
+      } else {
+        // Create profile for existing role
+        const { error: builderError } = await supabase
+          .from('builder_profiles')
+          .insert({
+            user_id: user.id,
+            company_name: builder_data.company_name,
+            gstin: builder_data.gstin || null,
+            rera_number: builder_data.rera_number || null,
+            verification_status: 'pending',
+          });
+
+        if (builderError) {
+          console.error('Error creating builder profile:', builderError);
+          return {
+            statusCode: 500,
+            headers,
+            body: JSON.stringify({ error: 'Failed to create builder profile' }),
+          };
+        }
+
+        return {
+          statusCode: 200,
+          headers,
+          body: JSON.stringify({
+            success: true,
+            role_added: role,
+            profile_created: true,
+            message: 'Builder profile created successfully',
+          }),
+        };
+      }
+    }
+
+    // If user already has the role for non-builder roles, return success
+    if (hasRole) {
       return {
-        statusCode: 400,
+        statusCode: 200,
         headers,
-        body: JSON.stringify({ error: `User already has ${role} role` }),
+        body: JSON.stringify({
+          success: true,
+          role_added: role,
+          already_had_role: true,
+          message: `User already has ${role} role`,
+        }),
       };
     }
 

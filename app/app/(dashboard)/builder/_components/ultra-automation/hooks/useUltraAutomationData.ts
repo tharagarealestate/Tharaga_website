@@ -60,7 +60,7 @@ export function useBuyerJourney({ journeyId, leadId, enabled = true }: UseBuyerJ
  */
 export function useViewings(filters?: { status?: string; builder_id?: string }) {
   // Safe access to demo mode - hook always returns safe defaults
-  const { isDemoMode } = useDemoMode();
+  const { isDemoMode, isLoading: authLoading } = useDemoMode();
   const queryKey = ['ultra-automation', 'viewings', filters, isDemoMode];
   
   return useQuery({
@@ -110,6 +110,7 @@ export function useViewings(filters?: { status?: string; builder_id?: string }) 
       
       return data.data || { viewings: [], reminders: [] };
     },
+    enabled: !authLoading, // Wait for auth state to be determined
     refetchInterval: isDemoMode ? false : 60000,
     staleTime: isDemoMode ? Infinity : 30000,
     retry: (failureCount, error: any) => {
@@ -126,7 +127,7 @@ export function useViewings(filters?: { status?: string; builder_id?: string }) 
  */
 export function useNegotiations(filters?: { status?: string; builder_id?: string }) {
   // Safe access to demo mode - hook always returns safe defaults
-  const { isDemoMode } = useDemoMode();
+  const { isDemoMode, isLoading: authLoading } = useDemoMode();
   const queryKey = ['ultra-automation', 'negotiations', filters, isDemoMode];
   
   return useQuery({
@@ -176,6 +177,7 @@ export function useNegotiations(filters?: { status?: string; builder_id?: string
       
       return data.data || { negotiations: [], insights: [] };
     },
+    enabled: !authLoading, // Wait for auth state to be determined
     refetchInterval: isDemoMode ? false : 60000,
     staleTime: isDemoMode ? Infinity : 30000,
     retry: (failureCount, error: any) => {
@@ -192,7 +194,7 @@ export function useNegotiations(filters?: { status?: string; builder_id?: string
  */
 export function useContracts(filters?: { status?: string; builder_id?: string }) {
   // Safe access to demo mode - hook always returns safe defaults
-  const { isDemoMode } = useDemoMode();
+  const { isDemoMode, isLoading: authLoading } = useDemoMode();
   const queryKey = ['ultra-automation', 'contracts', filters, isDemoMode];
   
   return useQuery({
@@ -241,6 +243,7 @@ export function useContracts(filters?: { status?: string; builder_id?: string })
       
       return data.data || [];
     },
+    enabled: !authLoading, // Wait for auth state to be determined
     refetchInterval: isDemoMode ? false : 60000,
     staleTime: isDemoMode ? Infinity : 30000,
     retry: (failureCount, error: any) => {
@@ -257,7 +260,7 @@ export function useContracts(filters?: { status?: string; builder_id?: string })
  */
 export function useDealLifecycles(filters?: { stage?: string; builder_id?: string }) {
   // Safe access to demo mode - hook always returns safe defaults
-  const { isDemoMode } = useDemoMode();
+  const { isDemoMode, isLoading: authLoading } = useDemoMode();
   const queryKey = ['ultra-automation', 'deal-lifecycle', filters, isDemoMode];
   
   return useQuery({
@@ -309,6 +312,7 @@ export function useDealLifecycles(filters?: { stage?: string; builder_id?: strin
       
       return data.data || { lifecycles: [], milestones: [] };
     },
+    enabled: !authLoading, // Wait for auth state to be determined
     refetchInterval: isDemoMode ? false : 60000,
     staleTime: isDemoMode ? Infinity : 30000,
     retry: (failureCount, error: any) => {

@@ -102,10 +102,19 @@ export function ModernSidebar() {
     '/builder/contacts': 'contacts',
   }
 
-  // Enhanced client-side navigation - NO PAGE RELOADS
+  // Enhanced client-side navigation - FAST SMOOTH TRANSITIONS, NO PAGE RELOADS
   const handleNavigation = useCallback((href: string, e?: React.MouseEvent) => {
-    if (e) e.preventDefault()
+    if (e) {
+      e.preventDefault()
+      e.stopPropagation()
+    }
     if (typeof window === 'undefined') return
+    
+    // Prevent double navigation
+    const currentHref = window.location.pathname + window.location.search
+    if (currentHref === href || currentHref === href + '/') {
+      return // Already on this page
+    }
     
     // Check if it's a section-based route
     let section: string | null = null
@@ -118,9 +127,12 @@ export function ModernSidebar() {
     if (section) {
       // Section-based navigation - update URL without reload
       router.push(`/builder?section=${section}`, { scroll: false })
-      window.dispatchEvent(new CustomEvent('dashboard-section-change', { 
-        detail: { section } 
-      }))
+      // Dispatch event after router update
+      requestAnimationFrame(() => {
+        window.dispatchEvent(new CustomEvent('dashboard-section-change', { 
+          detail: { section } 
+        }))
+      })
     } else if (href.startsWith('/builder/')) {
       // Builder routes - use Next.js router for smooth transition
       router.push(href, { scroll: false })

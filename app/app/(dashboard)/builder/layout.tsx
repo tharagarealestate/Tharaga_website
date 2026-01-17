@@ -32,11 +32,9 @@ export default function BuilderDashboardLayout({ children }: { children: ReactNo
             minHeight: 'calc(100vh - 60px)',
           }}
         >
-          {/* Inner container with proper spacing and constraints */}
+          {/* Full width container - NO max-width restrictions */}
           <div className="w-full h-full px-6 lg:px-8 xl:px-12 pt-8 pb-8 sm:pb-12">
-            <div className="max-w-none w-full mx-auto">
-              {children}
-            </div>
+            {children}
           </div>
         </motion.main>
         

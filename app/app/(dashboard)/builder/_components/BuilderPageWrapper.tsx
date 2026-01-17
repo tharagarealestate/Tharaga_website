@@ -17,6 +17,11 @@ interface BuilderPageWrapperProps {
  * Fast transitions with zero lag
  * Consistent styling across all pages
  */
+/**
+ * Modern page wrapper - FULL WIDTH, NO CONTAINER RESTRICTIONS
+ * All pages use entire width after sidebar (260px)
+ * Matches messaging page pattern exactly
+ */
 export function BuilderPageWrapper({ 
   children, 
   title, 
@@ -41,25 +46,15 @@ export function BuilderPageWrapper({
         </motion.div>
       )}
 
-      {/* Page Content - Fast Transition */}
-      {noContainer ? (
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.2, ease: 'easeOut' }}
-        >
-          {children}
-        </motion.div>
-      ) : (
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.2, ease: 'easeOut' }}
-          className="bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 rounded-xl p-6 sm:p-8"
-        >
-          {children}
-        </motion.div>
-      )}
+      {/* Page Content - FULL WIDTH, Fast Transition */}
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.2, ease: 'easeOut' }}
+        className="w-full"
+      >
+        {children}
+      </motion.div>
     </div>
   )
 }

@@ -28,6 +28,7 @@ import {
   XCircle,
 } from 'lucide-react';
 import { GlassLoadingOverlay } from '@/components/ui/loading-spinner';
+import { StandardStatsCard } from '../_components/design-system/StandardStatsCard';
 import {
   ResponsiveContainer,
   PieChart,
@@ -352,131 +353,28 @@ export default function AnalyticsDashboard({
           </div>
         </div>
       
-        {/* Stats Grid - Design System Statistics Cards */}
+        {/* Stats Grid - Using StandardStatsCard for consistency */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-            className="p-6 bg-slate-800/95 glow-border rounded-lg border border-slate-700/50 relative overflow-hidden group"
-          >
-            <div className="absolute top-6 right-6 opacity-10 group-hover:opacity-20 transition-opacity">
-              <Users className="w-16 h-16 text-amber-300" />
-            </div>
-            <div className="relative z-10">
-              <div className="flex items-center justify-between mb-4">
-                <Users className="h-8 w-8 text-amber-300" />
-                {showChangeIndicators && getTrendIcon(data.overview.new_leads_change)}
-              </div>
-              <h3 className="text-xs font-bold text-slate-400 uppercase mb-2 tracking-wide">Total Leads</h3>
-              <p className="text-3xl font-bold text-white mb-1 tabular-nums">
-                {formatNumber(data.overview.total_leads)}
-              </p>
-              <div className="flex items-center gap-2 text-sm mt-2">
-                {showChangeIndicators && (
-                  <span className={getTrendColor(data.overview.new_leads_change).replace('text-gray-600', 'text-slate-400').replace('text-emerald-600', 'text-emerald-300').replace('text-red-600', 'text-rose-300')}>
-                    {data.overview.new_leads_change > 0 ? '+' : ''}
-                    {data.overview.new_leads_change.toFixed(1)}%
-                  </span>
-                )}
-                <span className="text-slate-400">
-                  +{formatNumber(data.overview.new_leads_this_period)} this period
-                </span>
-              </div>
-            </div>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.1 }}
-            className="p-6 bg-slate-800/95 glow-border rounded-lg border border-slate-700/50 relative overflow-hidden group"
-          >
-            <div className="absolute top-6 right-6 opacity-10 group-hover:opacity-20 transition-opacity">
-              <Zap className="w-16 h-16 text-rose-300" />
-            </div>
-            <div className="relative z-10">
-              <div className="flex items-center justify-between mb-4">
-                <Zap className="h-8 w-8 text-rose-300" />
-                {showChangeIndicators && getTrendIcon(data.overview.hot_leads_change)}
-              </div>
-              <h3 className="text-xs font-bold text-slate-400 uppercase mb-2 tracking-wide">Hot Leads</h3>
-              <p className="text-3xl font-bold text-white mb-1 tabular-nums">
-                {formatNumber(data.overview.hot_leads)}
-              </p>
-              {showChangeIndicators && (
-                <div className="flex items-center gap-2 text-sm mt-2">
-                  <span className={getTrendColor(data.overview.hot_leads_change).replace('text-gray-600', 'text-slate-400').replace('text-emerald-600', 'text-emerald-300').replace('text-red-600', 'text-rose-300')}>
-                    {data.overview.hot_leads_change > 0 ? '+' : ''}
-                    {data.overview.hot_leads_change.toFixed(1)}%
-                  </span>
-                  <span className="text-slate-400">vs previous period</span>
-                </div>
-              )}
-            </div>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.2 }}
-            className="p-6 bg-slate-800/95 glow-border rounded-lg border border-slate-700/50 relative overflow-hidden group"
-          >
-            <div className="absolute top-6 right-6 opacity-10 group-hover:opacity-20 transition-opacity">
-              <Target className="w-16 h-16 text-emerald-300" />
-            </div>
-            <div className="relative z-10">
-              <div className="flex items-center justify-between mb-4">
-                <Target className="h-8 w-8 text-emerald-300" />
-                {showChangeIndicators && getTrendIcon(data.overview.conversion_rate_change)}
-              </div>
-              <h3 className="text-xs font-bold text-slate-400 uppercase mb-2 tracking-wide">Conversion Rate</h3>
-              <p className="text-3xl font-bold text-white mb-1 tabular-nums">
-                {data.overview.conversion_rate.toFixed(1)}%
-              </p>
-              {showChangeIndicators && (
-                <div className="flex items-center gap-2 text-sm mt-2">
-                  <span className={getTrendColor(data.overview.conversion_rate_change).replace('text-gray-600', 'text-slate-400').replace('text-emerald-600', 'text-emerald-300').replace('text-red-600', 'text-rose-300')}>
-                    {data.overview.conversion_rate_change > 0 ? '+' : ''}
-                    {data.overview.conversion_rate_change.toFixed(1)}%
-                  </span>
-                  <span className="text-slate-400">change</span>
-                </div>
-              )}
-            </div>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.3 }}
-            className="p-6 bg-slate-800/95 glow-border rounded-lg border border-slate-700/50 relative overflow-hidden group"
-          >
-            <div className="absolute top-6 right-6 opacity-10 group-hover:opacity-20 transition-opacity">
-              <Clock className="w-16 h-16 text-amber-300" />
-            </div>
-            <div className="relative z-10">
-              <div className="flex items-center justify-between mb-4">
-                <Clock className="h-8 w-8 text-amber-300" />
-                {showChangeIndicators && getTrendIcon(data.overview.response_time_change)}
-              </div>
-              <h3 className="text-xs font-bold text-slate-400 uppercase mb-2 tracking-wide">Avg Response Time</h3>
-              <p className="text-3xl font-bold text-white mb-1 tabular-nums">
-                {formatDuration(data.overview.avg_response_time)}
-              </p>
-              {showChangeIndicators && (
-                <div className="flex items-center gap-2 text-sm mt-2">
-                  <span className={getTrendColor(data.overview.response_time_change, true).replace('text-gray-600', 'text-slate-400').replace('text-emerald-600', 'text-emerald-300').replace('text-red-600', 'text-rose-300')}>
-                    {data.overview.response_time_change > 0 ? '+' : ''}
-                    {data.overview.response_time_change.toFixed(1)}%
-                  </span>
-                  <span className="text-slate-400">
-                    {data.overview.response_time_change < 0 ? 'faster' : 'slower'}
-                  </span>
-                </div>
-              )}
-            </div>
-          </motion.div>
+          <StandardStatsCard
+            title="Total Leads"
+            value={formatNumber(data.overview.total_leads)}
+            icon={<Users className="w-5 h-5" />}
+          />
+          <StandardStatsCard
+            title="Hot Leads"
+            value={formatNumber(data.overview.hot_leads)}
+            icon={<Zap className="w-5 h-5" />}
+          />
+          <StandardStatsCard
+            title="Conversion Rate"
+            value={`${data.overview.conversion_rate.toFixed(1)}%`}
+            icon={<Target className="w-5 h-5" />}
+          />
+          <StandardStatsCard
+            title="Avg Response Time"
+            value={formatDuration(data.overview.avg_response_time)}
+            icon={<Clock className="w-5 h-5" />}
+          />
         </div>
 
         {/* Charts Grid - Design System Containers */}

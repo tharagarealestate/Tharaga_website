@@ -37,14 +37,12 @@ import {
   AreaChart,
 } from 'recharts'
 import { cn } from '@/lib/utils'
-import { SectionWrapper } from './SectionWrapper'
 import { useQuery } from '@tanstack/react-query'
 import { useDealLifecycles, useViewings, useNegotiations, useContracts } from '../ultra-automation/hooks/useUltraAutomationData'
 import { detectStallingDeals, calculateConversionFunnel, analyzeNegotiations, analyzeContracts } from '../ultra-automation/utils/dataProcessing'
 import { LoadingSpinner, GlassLoadingOverlay } from '@/components/ui/loading-spinner'
-import { builderGlassPanel, builderGlassSubPanel } from '../builderGlassStyles'
-import { StandardPageWrapper } from '../StandardPageWrapper'
-import { builderDesignSystem } from '../design-system'
+import { BuilderPageWrapper } from '../BuilderPageWrapper'
+import { StandardStatsCard } from '../design-system/StandardStatsCard'
 
 interface UltraAutomationAnalyticsSectionProps {
   onNavigate?: (section: string) => void
@@ -142,45 +140,44 @@ export function UltraAutomationAnalyticsSection({ onNavigate }: UltraAutomationA
   const COLORS = ['#D4AF37', '#10B981', '#3B82F6', '#F97316', '#EF4444', '#8B5CF6']
 
   return (
-    <SectionWrapper>
-      <StandardPageWrapper
-        title="Ultra Automation Analytics"
-        subtitle="Comprehensive insights into automation performance, conversion metrics, and optimization opportunities."
-        icon={<BarChart3 className={builderDesignSystem.cards.icon} />}
-      >
-
-      {/* Period Filter - Design System */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="bg-slate-900/95 glow-border rounded-xl overflow-hidden shadow-2xl"
-      >
-        <div className="p-6 sm:p-8">
-          <div className="flex items-center gap-2">
-            {(['7d', '30d', '90d', 'all'] as const).map((p) => (
-              <button
-                key={p}
-                onClick={() => setPeriod(p)}
-                className={cn(
-                  'px-6 py-3 rounded-lg text-sm font-medium transition-all capitalize',
-                  period === p
-                    ? 'bg-amber-500 text-white shadow-lg shadow-amber-500/30'
-                    : 'bg-slate-700/50 text-slate-300 hover:bg-slate-700'
-                )}
-              >
-                {p === 'all' ? 'All Time' : p}
-              </button>
-            ))}
+    <BuilderPageWrapper 
+      title="Automation Analytics" 
+      description="Comprehensive insights into automation performance, conversion metrics, and optimization opportunities"
+      noContainer
+    >
+      <div className="space-y-6">
+        {/* Period Filter - Design System */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-gradient-to-br from-slate-800/95 via-slate-800/95 to-slate-900/95 glow-border rounded-xl overflow-hidden shadow-2xl"
+        >
+          <div className="p-6 sm:p-8">
+            <div className="flex items-center gap-2">
+              {(['7d', '30d', '90d', 'all'] as const).map((p) => (
+                <button
+                  key={p}
+                  onClick={() => setPeriod(p)}
+                  className={cn(
+                    'px-6 py-3 rounded-lg text-sm font-medium transition-all capitalize glow-border',
+                    period === p
+                      ? 'bg-amber-500 text-white shadow-lg shadow-amber-500/30'
+                      : 'bg-slate-700/50 text-slate-300 hover:bg-slate-700'
+                  )}
+                >
+                  {p === 'all' ? 'All Time' : p}
+                </button>
+              ))}
+            </div>
           </div>
-        </div>
-      </motion.div>
+        </motion.div>
 
-      {/* Content - Design System Container */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="bg-slate-900/95 glow-border rounded-xl overflow-hidden shadow-2xl"
-      >
+        {/* Content - Design System Container */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-gradient-to-br from-slate-800/95 via-slate-800/95 to-slate-900/95 glow-border rounded-xl overflow-hidden shadow-2xl"
+        >
         <div className="p-6 sm:p-8">
           {isLoading ? (
             <div className="flex items-center justify-center min-h-[400px]">
@@ -201,41 +198,32 @@ export function UltraAutomationAnalyticsSection({ onNavigate }: UltraAutomationA
             </div>
           ) : (
             <div className="space-y-6">
-              {/* Key Metrics - Design System Statistics Cards */}
+              {/* Key Metrics - Using StandardStatsCard for consistency */}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                <MetricCard
-                  icon={Target}
-                  label="Overall Conversion"
+                <StandardStatsCard
+                  title="Overall Conversion"
                   value={`${analytics.conversionRate.toFixed(1)}%`}
-                  trend={{ value: 12.5, positive: true }}
-                  color="text-emerald-400"
+                  icon={<Target className="w-5 h-5" />}
                 />
-                <MetricCard
-                  icon={Activity}
-                  label="Active Deals"
+                <StandardStatsCard
+                  title="Active Deals"
                   value={analytics.activeDeals}
-                  subtitle={`${analytics.closedDeals} closed`}
-                  color="text-blue-400"
+                  icon={<Activity className="w-5 h-5" />}
                 />
-                <MetricCard
-                  icon={AlertTriangle}
-                  label="Stalled Deals"
+                <StandardStatsCard
+                  title="Stalled Deals"
                   value={analytics.stalling.stalled.length}
-                  subtitle={`${analytics.stalling.atRisk.length} at risk`}
-                  color="text-red-400"
-                  urgent
+                  icon={<AlertTriangle className="w-5 h-5" />}
                 />
-                <MetricCard
-                  icon={CheckCircle2}
-                  label="Viewing Completion"
+                <StandardStatsCard
+                  title="Viewing Completion"
                   value={`${analytics.viewingStats.completionRate.toFixed(1)}%`}
-                  subtitle={`${analytics.viewingStats.completed}/${analytics.viewingStats.total}`}
-                  color="text-amber-400"
+                  icon={<CheckCircle2 className="w-5 h-5" />}
                 />
               </div>
 
               {/* Conversion Funnel - Design System Container */}
-              <div className="bg-slate-800/95 glow-border rounded-lg p-6">
+              <div className="bg-slate-800/95 glow-border rounded-lg p-6 overflow-hidden">
               <div className="flex items-center justify-between mb-6">
                 <div>
                   <h3 className="text-xl font-bold text-white mb-1">Conversion Funnel</h3>
@@ -415,8 +403,8 @@ export function UltraAutomationAnalyticsSection({ onNavigate }: UltraAutomationA
           )}
         </div>
       </motion.div>
-      </StandardPageWrapper>
-    </SectionWrapper>
+      </div>
+    </BuilderPageWrapper>
   )
 }
 

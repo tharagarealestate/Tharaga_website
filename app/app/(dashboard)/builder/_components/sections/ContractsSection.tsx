@@ -1,11 +1,8 @@
 "use client"
 
-import { SectionWrapper } from './SectionWrapper'
 import { ContractsManager } from '../ultra-automation/components/ContractsManager'
 import { useDemoMode } from '../DemoDataProvider'
-import { StandardPageWrapper } from '../StandardPageWrapper'
-import { GlassCard } from '@/components/ui/glass-card'
-import { builderDesignSystem } from '../design-system'
+import { BuilderPageWrapper } from '../BuilderPageWrapper'
 import { FileText } from 'lucide-react'
 
 interface ContractsSectionProps {
@@ -16,22 +13,19 @@ export function ContractsSection({ onNavigate }: ContractsSectionProps) {
   const { builderId } = useDemoMode()
   
   return (
-    <SectionWrapper>
-      <StandardPageWrapper
-        title="Contracts"
-        subtitle="Manage contracts, track signatures, and monitor contract status with automatic alerts."
-        icon={<FileText className={builderDesignSystem.cards.icon} />}
-      >
-        <GlassCard
-          {...builderDesignSystem.cards.sectionCard.props}
-          className={builderDesignSystem.cards.sectionCard.props.className}
-        >
+    <BuilderPageWrapper 
+      title="Contracts" 
+      description="Manage contracts, track signatures, and monitor contract status with automatic alerts"
+      noContainer
+    >
+      <div className="space-y-6">
+        <div className="bg-gradient-to-br from-slate-800/95 via-slate-800/95 to-slate-900/95 glow-border rounded-xl overflow-hidden shadow-2xl">
           <div className="p-6 sm:p-8">
             <ContractsManager builderId={builderId || undefined} />
           </div>
-        </GlassCard>
-      </StandardPageWrapper>
-    </SectionWrapper>
+        </div>
+      </div>
+    </BuilderPageWrapper>
   )
 }
 

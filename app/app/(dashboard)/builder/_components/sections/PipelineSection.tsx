@@ -1,11 +1,8 @@
 "use client"
 
 import dynamic from 'next/dynamic'
-import { SectionWrapper } from './SectionWrapper'
 import { SectionLoader } from './SectionLoader'
-import { StandardPageWrapper } from '../StandardPageWrapper'
-import { GlassCard } from '@/components/ui/glass-card'
-import { builderDesignSystem } from '../design-system'
+import { BuilderPageWrapper } from '../BuilderPageWrapper'
 import { TrendingUp } from 'lucide-react'
 
 interface PipelineSectionProps {
@@ -20,24 +17,21 @@ const LeadPipelineKanban = dynamic(() => import('../../leads/pipeline/_component
 
 export function PipelineSection({ onNavigate }: PipelineSectionProps) {
   return (
-    <SectionWrapper>
-      <StandardPageWrapper
-        title="Lead Pipeline"
-        subtitle="Visualize and manage your leads through the sales pipeline"
-        icon={<TrendingUp className={builderDesignSystem.cards.icon} />}
-      >
-        <GlassCard
-          {...builderDesignSystem.cards.sectionCard.props}
-          className={builderDesignSystem.cards.sectionCard.props.className}
-        >
+    <BuilderPageWrapper 
+      title="Lead Pipeline" 
+      description="Visualize and manage your leads through the sales pipeline"
+      noContainer
+    >
+      <div className="space-y-6">
+        <div className="bg-gradient-to-br from-slate-800/95 via-slate-800/95 to-slate-900/95 glow-border rounded-xl overflow-hidden shadow-2xl">
           <div className="p-6 sm:p-8">
             <div className="w-full max-w-[1920px] mx-auto">
               <LeadPipelineKanban />
             </div>
           </div>
-        </GlassCard>
-      </StandardPageWrapper>
-    </SectionWrapper>
+        </div>
+      </div>
+    </BuilderPageWrapper>
   )
 }
 

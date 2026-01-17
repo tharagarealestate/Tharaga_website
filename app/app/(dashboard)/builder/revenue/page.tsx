@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { DollarSign, TrendingUp, TrendingDown, Clock, ArrowUpRight, ArrowDownRight, RefreshCw, Calendar, FileText, PieChart, BarChart3, Lock, Sparkles } from 'lucide-react'
 import { BuilderPageWrapper } from '../_components/BuilderPageWrapper'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
+import { StandardStatsCard } from '../_components/design-system/StandardStatsCard'
 import Link from 'next/link'
 
 interface RevenueData {
@@ -271,84 +272,28 @@ export default function RevenuePage() {
           </button>
         </div>
 
-        {/* Main Revenue Cards - Design System Statistics Cards */}
+        {/* Main Revenue Cards - Using StandardStatsCard for consistency */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {/* Total Revenue */}
-          <div className="p-6 bg-slate-800/95 glow-border rounded-lg relative overflow-hidden group">
-            <div className="absolute top-6 right-6 opacity-10 group-hover:opacity-20 transition-opacity">
-              <DollarSign className="w-16 h-16 text-amber-300" />
-            </div>
-            <div className="relative z-10">
-              <div className="flex items-center justify-between mb-4">
-                <DollarSign className="h-8 w-8 text-amber-300" />
-                <span className="text-xs text-slate-400">Total</span>
-              </div>
-              <h3 className="text-xs font-bold text-slate-400 uppercase mb-2 tracking-wide">Total Revenue</h3>
-              <p className="text-3xl font-bold text-white mb-1 tabular-nums">
-                {formatCurrency(revenueData.totalRevenue)}
-              </p>
-              <p className="text-sm text-slate-400">All-time revenue</p>
-            </div>
-          </div>
-
-          {/* Monthly Revenue */}
-          <div className="p-6 bg-slate-800/95 glow-border rounded-lg relative overflow-hidden group">
-            <div className="absolute top-6 right-6 opacity-10 group-hover:opacity-20 transition-opacity">
-              <Calendar className="w-16 h-16 text-emerald-300" />
-            </div>
-            <div className="relative z-10">
-              <div className="flex items-center justify-between mb-4">
-                <Calendar className="h-8 w-8 text-emerald-300" />
-                <div className={`flex items-center gap-1 ${growthColor.replace('text-emerald-400', 'text-emerald-300').replace('text-red-400', 'text-rose-300')}`}>
-                  {growthIcon}
-                  <span className="text-xs font-medium">
-                    {revenueData.monthlyGrowth >= 0 ? '+' : ''}{revenueData.monthlyGrowth.toFixed(1)}%
-                  </span>
-                </div>
-              </div>
-              <h3 className="text-xs font-bold text-slate-400 uppercase mb-2 tracking-wide">Monthly Revenue</h3>
-              <p className="text-3xl font-bold text-white mb-1 tabular-nums">
-                {formatCurrency(revenueData.monthlyRevenue)}
-              </p>
-              <p className="text-sm text-slate-400">This month</p>
-            </div>
-          </div>
-
-          {/* Pending Revenue */}
-          <div className="p-6 bg-slate-800/95 glow-border rounded-lg relative overflow-hidden group">
-            <div className="absolute top-6 right-6 opacity-10 group-hover:opacity-20 transition-opacity">
-              <Clock className="w-16 h-16 text-amber-300" />
-            </div>
-            <div className="relative z-10">
-              <div className="flex items-center justify-between mb-4">
-                <Clock className="h-8 w-8 text-amber-300" />
-                <span className="text-xs text-slate-400">Pending</span>
-              </div>
-              <h3 className="text-xs font-bold text-slate-400 uppercase mb-2 tracking-wide">Pending Revenue</h3>
-              <p className="text-3xl font-bold text-white mb-1 tabular-nums">
-                {formatCurrency(revenueData.pendingRevenue)}
-              </p>
-              <p className="text-sm text-slate-400">Awaiting payment</p>
-            </div>
-          </div>
-
-          {/* Pipeline Value */}
-          <div className="p-6 bg-slate-800/95 glow-border rounded-lg relative overflow-hidden group">
-            <div className="absolute top-6 right-6 opacity-10 group-hover:opacity-20 transition-opacity">
-              <BarChart3 className="w-16 h-16 text-blue-300" />
-            </div>
-            <div className="relative z-10">
-              <div className="flex items-center justify-between mb-4">
-                <BarChart3 className="h-8 w-8 text-blue-300" />
-                <span className="text-xs text-slate-400">Potential</span>
-              </div>
-              <h3 className="text-xs font-bold text-slate-400 uppercase mb-2 tracking-wide">Pipeline Value</h3>
-              <p className="text-3xl font-bold text-white mb-1 tabular-nums">
-                {formatCurrency(revenueData.pipelineValue)}
-              </p>
-              <p className="text-sm text-slate-400">{revenueData.pipelineLeads} hot/warm leads</p>
-            </div>
-          </div>
+          <StandardStatsCard
+            title="Total Revenue"
+            value={formatCurrency(revenueData.totalRevenue)}
+            icon={<DollarSign className="w-5 h-5" />}
+          />
+          <StandardStatsCard
+            title="Monthly Revenue"
+            value={formatCurrency(revenueData.monthlyRevenue)}
+            icon={<Calendar className="w-5 h-5" />}
+          />
+          <StandardStatsCard
+            title="Pending Revenue"
+            value={formatCurrency(revenueData.pendingRevenue)}
+            icon={<Clock className="w-5 h-5" />}
+          />
+          <StandardStatsCard
+            title="Pipeline Value"
+            value={formatCurrency(revenueData.pipelineValue)}
+            icon={<BarChart3 className="w-5 h-5" />}
+          />
         </div>
 
         {/* Breakdown Section - Design System Containers */}

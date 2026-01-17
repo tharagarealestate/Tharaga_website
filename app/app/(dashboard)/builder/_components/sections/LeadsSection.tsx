@@ -7,6 +7,7 @@ import { BuilderPageWrapper } from '../BuilderPageWrapper'
 import { LeadsList, type Lead } from '../../leads/_components/LeadsList'
 import { FilterProvider } from '@/contexts/FilterContext'
 import AdvancedFilters from '../../leads/_components/AdvancedFilters'
+import { StandardStatsCard } from '../design-system/StandardStatsCard'
 
 interface LeadsSectionProps {
   onNavigate?: (section: string) => void
@@ -80,20 +81,23 @@ export function LeadsSection({ onNavigate }: LeadsSectionProps) {
                 className="bg-gradient-to-br from-slate-800/95 via-slate-800/95 to-slate-900/95 glow-border rounded-xl overflow-hidden shadow-2xl"
               >
                 <div className="p-6 sm:p-8 space-y-6">
-                  {/* Quick Stats */}
+                  {/* Quick Stats - Using StandardStatsCard for consistency */}
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                    <div className="p-4 bg-slate-700/50 rounded-lg">
-                      <div className="text-sm text-slate-400 mb-1">Total Leads</div>
-                      <div className="text-2xl font-bold text-white">{stats.total_leads}</div>
-                    </div>
-                    <div className="p-4 bg-slate-700/50 rounded-lg">
-                      <div className="text-sm text-slate-400 mb-1">Hot Leads</div>
-                      <div className="text-2xl font-bold text-emerald-400">{stats.hot_leads}</div>
-                    </div>
-                    <div className="p-4 bg-slate-700/50 rounded-lg">
-                      <div className="text-sm text-slate-400 mb-1">Warm Leads</div>
-                      <div className="text-2xl font-bold text-amber-400">{stats.warm_leads}</div>
-                    </div>
+                    <StandardStatsCard
+                      title="Total Leads"
+                      value={stats.total_leads}
+                      icon={<Users className="w-5 h-5" />}
+                    />
+                    <StandardStatsCard
+                      title="Hot Leads"
+                      value={stats.hot_leads}
+                      icon={<Users className="w-5 h-5" />}
+                    />
+                    <StandardStatsCard
+                      title="Warm Leads"
+                      value={stats.warm_leads}
+                      icon={<Users className="w-5 h-5" />}
+                    />
                   </div>
 
                   {/* Leads List */}

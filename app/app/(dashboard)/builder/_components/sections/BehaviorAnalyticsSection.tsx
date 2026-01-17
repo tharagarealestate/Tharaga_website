@@ -1,11 +1,8 @@
 "use client"
 
-import { SectionWrapper } from './SectionWrapper'
 import dynamic from 'next/dynamic'
 import { SectionLoader } from './SectionLoader'
-import { StandardPageWrapper } from '../StandardPageWrapper'
-import { GlassCard } from '@/components/ui/glass-card'
-import { builderDesignSystem } from '../design-system'
+import { BuilderPageWrapper } from '../BuilderPageWrapper'
 import { Activity } from 'lucide-react'
 
 interface BehaviorAnalyticsSectionProps {
@@ -19,22 +16,19 @@ const BehaviorTrackingPage = dynamic(() => import('../../../behavior-tracking/pa
 
 export function BehaviorAnalyticsSection({ onNavigate }: BehaviorAnalyticsSectionProps) {
   return (
-    <SectionWrapper>
-      <StandardPageWrapper
-        title="Behavior Analytics"
-        subtitle="Track and analyze user behavior patterns"
-        icon={<Activity className={builderDesignSystem.cards.icon} />}
-      >
-        <GlassCard
-          {...builderDesignSystem.cards.sectionCard.props}
-          className={builderDesignSystem.cards.sectionCard.props.className}
-        >
+    <BuilderPageWrapper 
+      title="Behavior Analytics" 
+      description="Track and analyze user behavior patterns"
+      noContainer
+    >
+      <div className="space-y-6">
+        <div className="bg-gradient-to-br from-slate-800/95 via-slate-800/95 to-slate-900/95 glow-border rounded-xl overflow-hidden shadow-2xl">
           <div className="p-6 sm:p-8">
             <BehaviorTrackingPage />
           </div>
-        </GlassCard>
-      </StandardPageWrapper>
-    </SectionWrapper>
+        </div>
+      </div>
+    </BuilderPageWrapper>
   )
 }
 

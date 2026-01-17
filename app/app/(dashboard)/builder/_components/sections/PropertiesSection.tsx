@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Building2, MapPin, Eye, TrendingUp, Plus, List, Filter } from 'lucide-react'
 import { useQuery } from '@tanstack/react-query'
-import { useDemoMode } from '../DemoDataProvider'
+import { useBuilderAuth } from '../BuilderAuthProvider'
 import { BuilderPageWrapper } from '../BuilderPageWrapper'
 import { StandardStatsCard } from '../design-system/StandardStatsCard'
 
@@ -33,7 +33,7 @@ function fetchProperties(): Promise<Property[]> {
 }
 
 export function PropertiesSection({ onNavigate }: PropertiesSectionProps) {
-  const { isAuthenticated } = useDemoMode()
+  const { isAuthenticated } = useBuilderAuth()
 
   // Always fetch real data for authenticated users
   // Only skip API call for unauthenticated public previews

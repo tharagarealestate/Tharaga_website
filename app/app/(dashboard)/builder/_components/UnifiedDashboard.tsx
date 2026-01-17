@@ -11,7 +11,7 @@ import {
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { getSupabase } from '@/lib/supabase'
-import { useDemoMode, DEMO_DATA } from './DemoDataProvider'
+import { useBuilderAuth } from './BuilderAuthProvider'
 import { GlassCard } from '@/components/ui/glass-card'
 import { PremiumButton } from '@/components/ui/premium-button'
 
@@ -96,69 +96,23 @@ interface UnifiedDashboardProps {
 }
 
 export function UnifiedDashboard({ onNavigate }: UnifiedDashboardProps) {
-  const { isDemoMode, builderId: demoBuilderId, userId: demoUserId } = useDemoMode()
-  const [builderId, setBuilderId] = useState<string | null>(null)
-  const [userId, setUserId] = useState<string | null>(null)
+  const { isAuthenticated, builderId, userId, isLoading: authLoading } = useBuilderAuth()
   const [previousStats, setPreviousStats] = useState({ total: 0, hot: 0, warm: 0, conversionRate: 0 })
   const prevStatsRef = useRef({ total: 0, conversionRate: 0 })
 
-  // Get user and builder ID - non-blocking (skip if demo mode)
-  useEffect(() => {
-    if (isDemoMode) {
-      setBuilderId(demoBuilderId)
-      setUserId(demoUserId)
-      return
-    }
-    
-    let mounted = true
-    async function initAuth() {
-      try {
-        const supabase = getSupabase()
-        const { data: { user }, error: userError } = await supabase.auth.getUser()
-        if (!mounted) return
-        
-        if (userError || !user) {
-          console.log('[UnifiedDashboard] User not authenticated (non-blocking)')
-          return
-        }
-        
-        setUserId(user.id)
-        // Get builder profile - non-blocking
-        const { data, error: profileError } = await supabase
-          .from('builder_profiles')
-          .select('id')
-          .eq('user_id', user.id)
-          .single()
-        
-        if (!mounted) return
-        
-        if (profileError) {
-          console.warn('[UnifiedDashboard] Builder profile not found (non-blocking):', profileError)
-          return
-        }
-        
-        if (data) setBuilderId(data.id)
-      } catch (err) {
-        console.error('[UnifiedDashboard] Auth init error (non-blocking):', err)
-      }
-    }
-    
-    initAuth()
-    return () => { mounted = false }
-  }, [isDemoMode, demoBuilderId, demoUserId])
-
-  // Fetch data with real-time updates - non-blocking with error handling
+  // Fetch data with real-time updates - only for authenticated builders
   const { data: leads = [], isLoading: leadsLoading, error: leadsError } = useQuery<Lead[]>({
-    queryKey: ['unified-leads', isDemoMode],
+    queryKey: ['unified-leads', builderId],
     queryFn: async () => {
-      if (isDemoMode) {
-        return DEMO_DATA.leads.leads
+      if (!isAuthenticated || !builderId) {
+        throw new Error('Authentication required')
       }
       return fetchLeads()
     },
-    refetchInterval: isDemoMode ? false : 30000,
-    staleTime: isDemoMode ? Infinity : 15000,
-    retry: isDemoMode ? 0 : 1,
+    enabled: !authLoading && isAuthenticated && !!builderId,
+    refetchInterval: 30000,
+    staleTime: 15000,
+    retry: 1,
     retryDelay: 1000,
   })
 

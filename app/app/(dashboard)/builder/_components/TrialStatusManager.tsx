@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState, useMemo } from 'react'
-import { useDemoMode } from './DemoDataProvider'
+import { useBuilderAuth } from './BuilderAuthProvider'
 
 interface SubscriptionData {
   tier: 'trial' | 'pro' | 'enterprise' | 'trial_expired' | string
@@ -29,7 +29,7 @@ interface TrialStatusResult {
  * Advanced Trial Status Manager
  * 
  * Smart algorithm that:
- * 1. Detects if user is logged in (via DemoDataProvider)
+ * 1. Detects if user is logged in (via BuilderAuthProvider)
  * 2. Fetches real subscription data from API
  * 3. Calculates accurate days remaining with timezone handling
  * 4. Provides formatted display strings
@@ -37,15 +37,15 @@ interface TrialStatusResult {
  * 6. Updates in real-time
  */
 export function useTrialStatus(): TrialStatusResult {
-  const { isDemoMode, isAuthenticated, isLoading: authLoading } = useDemoMode()
+  const { isAuthenticated, isLoading: authLoading } = useBuilderAuth()
   const [subscription, setSubscription] = useState<SubscriptionData | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [lastFetchTime, setLastFetchTime] = useState(0)
 
   // Fetch subscription data
   useEffect(() => {
-    // Don't fetch if in demo mode or auth is still loading
-    if (isDemoMode || authLoading) {
+    // Don't fetch if auth is still loading or not authenticated
+    if (authLoading || !isAuthenticated) {
       setIsLoading(false)
       setSubscription(null)
       return
@@ -99,7 +99,7 @@ export function useTrialStatus(): TrialStatusResult {
 
     // Refresh every 60 seconds to keep days_remaining accurate
     const interval = setInterval(() => {
-      if (!cancelled && !isDemoMode && !authLoading) {
+      if (!cancelled && isAuthenticated && !authLoading) {
         fetchSubscription()
       }
     }, 60000)
@@ -108,7 +108,7 @@ export function useTrialStatus(): TrialStatusResult {
       cancelled = true
       clearInterval(interval)
     }
-  }, [isDemoMode, authLoading])
+  }, [isAuthenticated, authLoading])
 
   // Calculate computed values
   const computed = useMemo(() => {

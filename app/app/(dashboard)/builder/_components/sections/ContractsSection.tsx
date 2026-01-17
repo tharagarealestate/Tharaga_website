@@ -1,7 +1,7 @@
 "use client"
 
 import { ContractsManager } from '../ultra-automation/components/ContractsManager'
-import { useDemoMode } from '../DemoDataProvider'
+import { useBuilderAuth } from '../BuilderAuthProvider'
 import { BuilderPageWrapper } from '../BuilderPageWrapper'
 import { FileText } from 'lucide-react'
 
@@ -10,7 +10,7 @@ interface ContractsSectionProps {
 }
 
 export function ContractsSection({ onNavigate }: ContractsSectionProps) {
-  const { builderId } = useDemoMode()
+  const { builderId } = useBuilderAuth()
   
   return (
     <BuilderPageWrapper 

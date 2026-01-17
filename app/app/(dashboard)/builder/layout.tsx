@@ -2,7 +2,7 @@
 import type { ReactNode } from 'react'
 import { motion } from 'framer-motion'
 import { ReactQueryProvider } from '@/components/providers/ReactQueryProvider'
-import { DemoDataProvider } from './_components/DemoDataProvider'
+import { BuilderAuthProvider } from './_components/BuilderAuthProvider'
 import { ModernSidebar } from './_components/ModernSidebar'
 import { TrialUpgradeBanner } from './_components/TrialUpgradeBanner'
 import { AIAssistant } from './_components/AIAssistant'
@@ -11,7 +11,7 @@ export default function BuilderDashboardLayout({ children }: { children: ReactNo
 
   return (
     <ReactQueryProvider>
-      <DemoDataProvider>
+      <BuilderAuthProvider>
         <div className="min-h-screen bg-gradient-to-br from-slate-800/95 via-slate-800/95 to-slate-900/95 text-white overflow-x-hidden">
 
         {/* Trial upgrade banner */}
@@ -41,7 +41,7 @@ export default function BuilderDashboardLayout({ children }: { children: ReactNo
         {/* AI Assistant */}
         <AIAssistant />
         </div>
-      </DemoDataProvider>
+      </BuilderAuthProvider>
     </ReactQueryProvider>
   )
 }

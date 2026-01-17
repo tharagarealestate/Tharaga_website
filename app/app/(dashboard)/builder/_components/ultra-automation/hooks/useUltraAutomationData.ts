@@ -6,7 +6,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useCallback } from 'react';
 import { classifyHttpError, type ErrorType } from '@/lib/error-handler';
-import { useDemoMode, DEMO_DATA } from '../../DemoDataProvider';
+import { useBuilderAuth } from '../../BuilderAuthProvider';
 
 const API_BASE = '/api/ultra-automation';
 
@@ -59,30 +59,21 @@ export function useBuyerJourney({ journeyId, leadId, enabled = true }: UseBuyerJ
  * Fetch property viewings
  */
 export function useViewings(filters?: { status?: string; builder_id?: string }) {
-  // Safe access to demo mode - hook always returns safe defaults
-  const { isDemoMode, isLoading: authLoading } = useDemoMode();
-  const queryKey = ['ultra-automation', 'viewings', filters, isDemoMode];
+  const { isAuthenticated, isLoading: authLoading, builderId } = useBuilderAuth();
+  const queryKey = ['ultra-automation', 'viewings', filters, builderId];
   
   return useQuery({
     queryKey,
     queryFn: async () => {
-      // Return demo data if in demo mode
-      if (isDemoMode) {
-        let viewings = DEMO_DATA.viewings.viewings;
-        const reminders = DEMO_DATA.viewings.reminders;
-        
-        // Apply status filter if provided
-        if (filters?.status && filters.status !== 'all') {
-          viewings = viewings.filter((v: any) => v.status === filters.status);
-        }
-        
-        return { viewings, reminders, isEmpty: false };
+      // Only make API call if authenticated
+      if (!isAuthenticated || !builderId) {
+        throw new Error('Authentication required');
       }
       
       // Real API call
       const params = new URLSearchParams();
       if (filters?.status) params.set('status', filters.status);
-      if (filters?.builder_id) params.set('builder_id', filters.builder_id);
+      params.set('builder_id', builderId);
       
       const url = `${API_BASE}/viewings${params.toString() ? `?${params.toString()}` : ''}`;
       const res = await fetch(url);
@@ -110,11 +101,10 @@ export function useViewings(filters?: { status?: string; builder_id?: string }) 
       
       return data.data || { viewings: [], reminders: [] };
     },
-    enabled: !authLoading, // Wait for auth state to be determined
-    refetchInterval: isDemoMode ? false : 60000,
-    staleTime: isDemoMode ? Infinity : 30000,
+    enabled: !authLoading && isAuthenticated && !!builderId,
+    refetchInterval: 60000,
+    staleTime: 30000,
     retry: (failureCount, error: any) => {
-      if (isDemoMode) return false;
       if (error?.retryable === false) return false;
       return failureCount < 2;
     },
@@ -126,30 +116,21 @@ export function useViewings(filters?: { status?: string; builder_id?: string }) 
  * Fetch negotiations
  */
 export function useNegotiations(filters?: { status?: string; builder_id?: string }) {
-  // Safe access to demo mode - hook always returns safe defaults
-  const { isDemoMode, isLoading: authLoading } = useDemoMode();
-  const queryKey = ['ultra-automation', 'negotiations', filters, isDemoMode];
+  const { isAuthenticated, isLoading: authLoading, builderId } = useBuilderAuth();
+  const queryKey = ['ultra-automation', 'negotiations', filters, builderId];
   
   return useQuery({
     queryKey,
     queryFn: async () => {
-      // Return demo data if in demo mode
-      if (isDemoMode) {
-        let negotiations = DEMO_DATA.negotiations.negotiations;
-        const insights = DEMO_DATA.negotiations.insights;
-        
-        // Apply status filter if provided
-        if (filters?.status && filters.status !== 'all') {
-          negotiations = negotiations.filter((n: any) => n.status === filters.status);
-        }
-        
-        return { negotiations, insights, isEmpty: false };
+      // Only make API call if authenticated
+      if (!isAuthenticated || !builderId) {
+        throw new Error('Authentication required');
       }
       
       // Real API call
       const params = new URLSearchParams();
       if (filters?.status) params.set('status', filters.status);
-      if (filters?.builder_id) params.set('builder_id', filters.builder_id);
+      params.set('builder_id', builderId);
       
       const url = `${API_BASE}/negotiations${params.toString() ? `?${params.toString()}` : ''}`;
       const res = await fetch(url);
@@ -177,11 +158,10 @@ export function useNegotiations(filters?: { status?: string; builder_id?: string
       
       return data.data || { negotiations: [], insights: [] };
     },
-    enabled: !authLoading, // Wait for auth state to be determined
-    refetchInterval: isDemoMode ? false : 60000,
-    staleTime: isDemoMode ? Infinity : 30000,
+    enabled: !authLoading && isAuthenticated && !!builderId,
+    refetchInterval: 60000,
+    staleTime: 30000,
     retry: (failureCount, error: any) => {
-      if (isDemoMode) return false;
       if (error?.retryable === false) return false;
       return failureCount < 2;
     },
@@ -193,29 +173,21 @@ export function useNegotiations(filters?: { status?: string; builder_id?: string
  * Fetch contracts
  */
 export function useContracts(filters?: { status?: string; builder_id?: string }) {
-  // Safe access to demo mode - hook always returns safe defaults
-  const { isDemoMode, isLoading: authLoading } = useDemoMode();
-  const queryKey = ['ultra-automation', 'contracts', filters, isDemoMode];
+  const { isAuthenticated, isLoading: authLoading, builderId } = useBuilderAuth();
+  const queryKey = ['ultra-automation', 'contracts', filters, builderId];
   
   return useQuery({
     queryKey,
     queryFn: async () => {
-      // Return demo data if in demo mode
-      if (isDemoMode) {
-        let contracts = DEMO_DATA.contracts;
-        
-        // Apply status filter if provided
-        if (filters?.status && filters.status !== 'all') {
-          contracts = contracts.filter((c: any) => c.status === filters.status);
-        }
-        
-        return contracts;
+      // Only make API call if authenticated
+      if (!isAuthenticated || !builderId) {
+        throw new Error('Authentication required');
       }
       
       // Real API call
       const params = new URLSearchParams();
       if (filters?.status) params.set('status', filters.status);
-      if (filters?.builder_id) params.set('builder_id', filters.builder_id);
+      params.set('builder_id', builderId);
       
       const url = `${API_BASE}/contracts${params.toString() ? `?${params.toString()}` : ''}`;
       const res = await fetch(url);
@@ -243,11 +215,10 @@ export function useContracts(filters?: { status?: string; builder_id?: string })
       
       return data.data || [];
     },
-    enabled: !authLoading, // Wait for auth state to be determined
-    refetchInterval: isDemoMode ? false : 60000,
-    staleTime: isDemoMode ? Infinity : 30000,
+    enabled: !authLoading && isAuthenticated && !!builderId,
+    refetchInterval: 60000,
+    staleTime: 30000,
     retry: (failureCount, error: any) => {
-      if (isDemoMode) return false;
       if (error?.retryable === false) return false;
       return failureCount < 2;
     },
@@ -259,30 +230,21 @@ export function useContracts(filters?: { status?: string; builder_id?: string })
  * Fetch deal lifecycles
  */
 export function useDealLifecycles(filters?: { stage?: string; builder_id?: string }) {
-  // Safe access to demo mode - hook always returns safe defaults
-  const { isDemoMode, isLoading: authLoading } = useDemoMode();
-  const queryKey = ['ultra-automation', 'deal-lifecycle', filters, isDemoMode];
+  const { isAuthenticated, isLoading: authLoading, builderId } = useBuilderAuth();
+  const queryKey = ['ultra-automation', 'deal-lifecycle', filters, builderId];
   
   return useQuery({
     queryKey,
     queryFn: async () => {
-      // Return demo data if in demo mode
-      if (isDemoMode) {
-        let lifecycles = DEMO_DATA.dealLifecycles.lifecycles;
-        let milestones = DEMO_DATA.dealLifecycles.milestones;
-        
-        // Apply stage filter if provided
-        if (filters?.stage && filters.stage !== 'all') {
-          lifecycles = lifecycles.filter((l: any) => l.current_stage === filters.stage);
-        }
-        
-        return { lifecycles, milestones, isEmpty: false };
+      // Only make API call if authenticated
+      if (!isAuthenticated || !builderId) {
+        throw new Error('Authentication required');
       }
       
       // Real API call
       const params = new URLSearchParams();
       if (filters?.stage) params.set('stage', filters.stage);
-      if (filters?.builder_id) params.set('builder_id', filters.builder_id);
+      params.set('builder_id', builderId);
       
       const url = `${API_BASE}/deal-lifecycle${params.toString() ? `?${params.toString()}` : ''}`;
       const res = await fetch(url);
@@ -312,11 +274,10 @@ export function useDealLifecycles(filters?: { stage?: string; builder_id?: strin
       
       return data.data || { lifecycles: [], milestones: [] };
     },
-    enabled: !authLoading, // Wait for auth state to be determined
-    refetchInterval: isDemoMode ? false : 60000,
-    staleTime: isDemoMode ? Infinity : 30000,
+    enabled: !authLoading && isAuthenticated && !!builderId,
+    refetchInterval: 60000,
+    staleTime: 30000,
     retry: (failureCount, error: any) => {
-      if (isDemoMode) return false;
       // Only retry if error is retryable
       if (error?.retryable === false) return false;
       return failureCount < 2;

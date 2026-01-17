@@ -1,7 +1,7 @@
 "use client"
 
 import { NegotiationsDashboard } from '../ultra-automation/components/NegotiationsDashboard'
-import { useDemoMode } from '../DemoDataProvider'
+import { useBuilderAuth } from '../BuilderAuthProvider'
 import { BuilderPageWrapper } from '../BuilderPageWrapper'
 import { Handshake } from 'lucide-react'
 
@@ -10,7 +10,7 @@ interface NegotiationsSectionProps {
 }
 
 export function NegotiationsSection({ onNavigate }: NegotiationsSectionProps) {
-  const { builderId } = useDemoMode()
+  const { builderId } = useBuilderAuth()
   
   return (
     <BuilderPageWrapper 

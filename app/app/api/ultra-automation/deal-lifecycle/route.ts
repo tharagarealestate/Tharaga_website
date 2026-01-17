@@ -23,8 +23,34 @@ export async function GET(request: NextRequest) {
       }, { status: 401 });
     }
 
+    // Verify user has builder profile
+    const { data: builderProfile, error: profileError } = await supabase
+      .from('builder_profiles')
+      .select('id, company_name')
+      .eq('user_id', user.id)
+      .maybeSingle();
+
+    if (profileError || !builderProfile) {
+      return NextResponse.json({ 
+        success: false,
+        error: 'Forbidden',
+        errorType: 'AUTH_ERROR',
+        message: 'Builder profile required. Please complete your builder profile to access this feature.'
+      }, { status: 403 });
+    }
+
+    // Check if company_name is filled (required)
+    if (!builderProfile.company_name || builderProfile.company_name.trim() === '') {
+      return NextResponse.json({ 
+        success: false,
+        error: 'Forbidden',
+        errorType: 'AUTH_ERROR',
+        message: 'Please complete your builder profile (company name required).'
+      }, { status: 403 });
+    }
+
     const searchParams = request.nextUrl.searchParams;
-    const builderId = searchParams.get('builder_id') || user.id;
+    const builderId = searchParams.get('builder_id') || builderProfile.id;
     const stage = searchParams.get('stage'); // Specific lifecycle stage
 
     let query = supabase

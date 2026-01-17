@@ -1,7 +1,7 @@
 "use client"
 
 import { DealLifecycleTracker } from '../ultra-automation/components/DealLifecycleTracker'
-import { useDemoMode } from '../DemoDataProvider'
+import { useBuilderAuth } from '../BuilderAuthProvider'
 import { BuilderPageWrapper } from '../BuilderPageWrapper'
 import { TrendingUp } from 'lucide-react'
 
@@ -10,7 +10,7 @@ interface DealLifecycleSectionProps {
 }
 
 export function DealLifecycleSection({ onNavigate }: DealLifecycleSectionProps) {
-  const { builderId } = useDemoMode()
+  const { builderId } = useBuilderAuth()
   
   return (
     <BuilderPageWrapper 

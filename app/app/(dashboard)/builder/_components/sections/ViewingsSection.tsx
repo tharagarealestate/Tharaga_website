@@ -1,7 +1,7 @@
 "use client"
 
 import { ViewingsCalendar } from '../ultra-automation/components/ViewingsCalendar'
-import { useDemoMode } from '../DemoDataProvider'
+import { useBuilderAuth } from '../BuilderAuthProvider'
 import { BuilderPageWrapper } from '../BuilderPageWrapper'
 import { Calendar } from 'lucide-react'
 
@@ -10,7 +10,7 @@ interface ViewingsSectionProps {
 }
 
 export function ViewingsSection({ onNavigate }: ViewingsSectionProps) {
-  const { builderId } = useDemoMode()
+  const { builderId } = useBuilderAuth()
   
   return (
     <BuilderPageWrapper 

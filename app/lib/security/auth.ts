@@ -13,6 +13,7 @@ export interface AuthUser {
 
 /**
  * Verify JWT token from Authorization header
+ * Checks both user_roles and profiles tables for admin role
  */
 export async function verifyAuthToken(token: string): Promise<AuthUser | null> {
   try {
@@ -23,18 +24,45 @@ export async function verifyAuthToken(token: string): Promise<AuthUser | null> {
       return null
     }
     
-    // Get user role from profiles
+    // Get user role from both user_roles and profiles tables
     let role: string | undefined
+    
+    // Check user_roles table first (primary source)
     try {
-      const { data: profile } = await supabase
-        .from('profiles')
+      const { data: userRoles } = await supabase
+        .from('user_roles')
         .select('role')
-        .eq('id', user.id)
-        .single()
+        .eq('user_id', user.id)
       
-      role = profile?.role
+      if (userRoles && userRoles.length > 0) {
+        // Prioritize admin role, then builder, then buyer
+        if (userRoles.some((r: any) => r.role === 'admin')) {
+          role = 'admin'
+        } else if (userRoles.some((r: any) => r.role === 'builder')) {
+          role = 'builder'
+        } else if (userRoles.some((r: any) => r.role === 'buyer')) {
+          role = 'buyer'
+        } else {
+          role = userRoles[0]?.role
+        }
+      }
     } catch {
-      // User might not have a profile yet
+      // user_roles table might not exist or have data
+    }
+    
+    // Fallback to profiles table if no role found
+    if (!role) {
+      try {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', user.id)
+          .maybeSingle()
+        
+        role = profile?.role
+      } catch {
+        // User might not have a profile yet
+      }
     }
     
     return {
@@ -50,6 +78,7 @@ export async function verifyAuthToken(token: string): Promise<AuthUser | null> {
 /**
  * Get authenticated user from request (uses cookies in Next.js)
  * Returns null if not authenticated (doesn't throw)
+ * Checks both user_roles and profiles tables for admin role
  */
 export async function withAuth(req: NextRequest): Promise<AuthUser | null> {
   try {
@@ -60,18 +89,45 @@ export async function withAuth(req: NextRequest): Promise<AuthUser | null> {
       return null
     }
     
-    // Get user role
+    // Get user role from both user_roles and profiles tables
     let role: string | undefined
+    
+    // Check user_roles table first (primary source)
     try {
-      const { data: profile } = await supabase
-        .from('profiles')
+      const { data: userRoles } = await supabase
+        .from('user_roles')
         .select('role')
-        .eq('id', user.id)
-        .single()
+        .eq('user_id', user.id)
       
-      role = profile?.role
+      if (userRoles && userRoles.length > 0) {
+        // Prioritize admin role, then builder, then buyer
+        if (userRoles.some((r: any) => r.role === 'admin')) {
+          role = 'admin'
+        } else if (userRoles.some((r: any) => r.role === 'builder')) {
+          role = 'builder'
+        } else if (userRoles.some((r: any) => r.role === 'buyer')) {
+          role = 'buyer'
+        } else {
+          role = userRoles[0]?.role
+        }
+      }
     } catch {
-      // User might not have a profile yet
+      // user_roles table might not exist or have data
+    }
+    
+    // Fallback to profiles table if no role found
+    if (!role) {
+      try {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', user.id)
+          .maybeSingle()
+        
+        role = profile?.role
+      } catch {
+        // User might not have a profile yet
+      }
     }
     
     return {

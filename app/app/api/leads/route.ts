@@ -106,7 +106,8 @@ export const GET = secureApiRoute(
     const supabase = createRouteHandlerClient({ cookies });
     
     // User is already authenticated and has required role/permission via secureApiRoute
-    // Additional builder check if needed
+    // Admin users should have access, but for non-admin users, require builder role
+    // Note: secureApiRoute already checks roles, but we do an additional check here for clarity
     if (user.role !== 'builder' && user.role !== 'admin') {
       return NextResponse.json({
         success: false,

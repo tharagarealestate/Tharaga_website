@@ -268,10 +268,15 @@ export function ModernSidebar() {
     return href.startsWith('/builder?section=') || href in routeToSectionMap
   }
 
-  // Determine active state
+  // Determine active state - Fixed highlighting logic
   const isItemActive = (item: NavItem): boolean => {
     if (typeof window === 'undefined') return false
     
+    // Normalize paths - remove trailing slashes for comparison
+    const normalizedPathname = pathname.replace(/\/$/, '') || '/builder'
+    const normalizedItemHref = item.href.replace(/\/$/, '')
+    
+    // Check section-based routes first
     if (shouldUseQueryParams(item.href)) {
       const section = routeToSectionMap[item.href] || item.href.split('?section=')[1]?.split('&')[0]
       if (section) {
@@ -281,14 +286,20 @@ export function ModernSidebar() {
       }
     }
     
-    if (pathname === item.href || pathname.startsWith(item.href + '/')) {
+    // Exact match
+    if (normalizedPathname === normalizedItemHref) {
+      return true
+    }
+    
+    // Child route match (but not the other way around)
+    if (normalizedPathname.startsWith(normalizedItemHref + '/')) {
       return true
     }
     
     return false
   }
 
-  const sidebarWidth = 300 // Increased to prevent text truncation
+  const sidebarWidth = 260 // Optimized width
 
   return (
     <motion.aside

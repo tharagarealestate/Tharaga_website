@@ -115,17 +115,20 @@ export function BuilderAuthProvider({ children }: BuilderAuthProviderProps) {
         // Admin users bypass builder profile requirement
         if (isAdmin) {
           const userEmail = user.email || null
+          // For admin users, use builderProfile.id if exists, otherwise use user.id as builderId
+          // This ensures admin users can access all builder features even without a builder profile
+          const adminBuilderId = builderProfile?.id || user.id
           setAuthState({
             isAuthenticated: true,
             isLoading: false,
-            builderId: builderProfile?.id || null, // Use profile ID if exists, otherwise null
+            builderId: adminBuilderId, // Use profile ID if exists, otherwise use user.id for admin
             userId: user.id,
             builderProfile: builderProfile ? {
               id: builderProfile.id,
               company_name: builderProfile.company_name || 'Admin',
               email: userEmail,
             } : {
-              id: user.id, // Use user ID as fallback for admin without profile
+              id: adminBuilderId, // Use user ID as builderId for admin without profile
               company_name: 'Admin',
               email: userEmail,
             },

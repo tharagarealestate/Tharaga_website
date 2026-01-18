@@ -11,7 +11,7 @@ function isAuthorized(event){
 exports.handler = async (event) => {
   if (!isAuthorized(event)) return json({ error: 'Unauthorized' }, 401)
   try{
-    const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE)
+    const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY)
     const since7 = new Date(Date.now() - 7*24*60*60*1000).toISOString()
     const [{ count: newProps }, { count: verified }, { count: leads }] = await Promise.all([
       supabase.from('properties').select('id', { count: 'exact', head: true }).gte('listed_at', since7),

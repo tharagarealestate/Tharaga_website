@@ -1,3 +1,6 @@
+"use client"
+
+import Breadcrumb from '@/components/Breadcrumb'
 import dynamic from 'next/dynamic'
 
 // Client animated section; disable SSR since it uses browser-only APIs/animations
@@ -9,6 +12,10 @@ const HowItWorksAnimatedSection = dynamic(
 export default function SaaSHome(){
   return (
     <main className="mx-auto max-w-5xl px-6 py-8">
+      <Breadcrumb items={[
+        { label: 'Home', href: '/' },
+        { label: 'Builder SaaS' }
+      ]} />
       <h1 className="text-2xl font-bold mb-2">Builder SaaS</h1>
       <p className="text-fgMuted">Start your 14‑day Growth trial. Add a project, capture leads, and publish a microsite.</p>
       <div className="mt-4 flex gap-3">

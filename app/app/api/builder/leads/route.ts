@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-export const runtime = 'edge'
-import { getSupabase } from '@/lib/supabase'
+import { createClient } from '@/lib/supabase/server'
 
 export async function GET(req: NextRequest) {
   const url = new URL(req.url)
@@ -11,14 +10,15 @@ export async function GET(req: NextRequest) {
   const dateRange = url.searchParams.get('dateRange') || '30days'
   const limit = Number(url.searchParams.get('limit') || '0') // 0 = no limit, supports pagination
 
-  const supabase = getSupabase()
+  // Use server-side Supabase client that properly handles cookies
+  const supabase = await createClient()
 
-  // Get authenticated user - NO DEMO FALLBACK
+  // Get authenticated user from session
   const { data: { user }, error: authError } = await supabase.auth.getUser()
   if (authError || !user) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
-  
+
   // Use real authenticated user ID as builder_id
   const builderId = user.id
 

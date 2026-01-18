@@ -145,104 +145,85 @@ export function ModernSidebar() {
 
   // Removed toggleSubmenu - no dropdowns anymore
 
-  // Navigation structure - NO DROPDOWNS, submenu items are separate menu items
+  // Optimized Navigation structure - Simplified from 12 items to 8 items
+  // Pipeline View integrated into Leads page as tab
+  // Performance Analytics integrated into Properties page as tab
   const navGroups = useMemo<NavGroup[]>(() => {
     const createSectionUrl = (section: string) => `/builder?section=${section}`
 
     return [
       {
+        label: 'Dashboard',
         items: [
-          { 
-            href: '/builder', 
-            label: 'Dashboard', 
-            icon: LayoutDashboard, 
-            badge: null, 
-            requiresPro: false 
+          {
+            href: '/builder',
+            label: 'Overview',
+            icon: LayoutDashboard,
+            badge: null,
+            requiresPro: false
           },
         ]
       },
       {
         label: 'Properties',
         items: [
-          { 
-            href: createSectionUrl('properties'), 
-            label: 'All Properties', 
-            icon: Building2, 
+          {
+            href: createSectionUrl('properties'),
+            label: 'Properties',
+            icon: Building2,
             requiresPro: false,
           },
-          { 
-            href: createSectionUrl('properties'), // Use section-based routing - Performance is same section
-            label: 'Performance Analytics', 
-            icon: Building2, 
-            requiresPro: false,
+          {
+            href: createSectionUrl('analytics'),
+            label: 'Analytics',
+            icon: BarChart3,
+            requiresPro: false
           },
         ]
       },
       {
         label: 'Leads & CRM',
         items: [
-          { 
-            href: createSectionUrl('leads'), 
-            label: 'Lead Management', 
-            icon: Users, 
+          {
+            href: createSectionUrl('leads'),
+            label: 'Leads',
+            icon: Users,
             badge: isLoadingCount ? null : (leadCount?.total ?? 0),
             requiresPro: false,
           },
-          { 
-            href: createSectionUrl('pipeline'), 
-            label: 'Pipeline View', 
-            icon: Users, 
-            requiresPro: false,
-          },
-          { 
-            href: createSectionUrl('contacts'), 
-            label: 'Contacts', 
-            icon: Users, 
+          {
+            href: createSectionUrl('contacts'),
+            label: 'Contacts',
+            icon: Users,
             requiresPro: false,
           },
         ]
       },
       {
-        label: 'Communication',
+        label: 'Deals & Revenue',
         items: [
-          { 
-            href: createSectionUrl('client-outreach'), // Convert to section-based routing
-            label: 'Messages', 
-            icon: MessageSquare, 
-            requiresPro: false,
-          },
-        ]
-      },
-      {
-        label: 'Calendar & Viewings',
-        items: [
-          { 
-            href: createSectionUrl('negotiations'), 
-            label: 'Negotiations', 
-            icon: Handshake, 
-            requiresPro: false 
-          },
-          { 
-            href: createSectionUrl('contracts'), 
-            label: 'Contracts', 
-            icon: FileText, 
-            requiresPro: false 
-          },
-        ]
-      },
-      {
-        label: 'Analytics',
-        items: [
-          { 
-            href: createSectionUrl('analytics'), // Use section-based routing
-            label: 'Analytics Dashboard', 
-            icon: BarChart3, 
+          {
+            href: createSectionUrl('negotiations'),
+            label: 'Negotiations',
+            icon: Handshake,
             requiresPro: false
           },
-          { 
-            href: createSectionUrl('revenue'), // Use section-based routing
-            label: 'Revenue Analytics', 
-            icon: TrendingUp, 
+          {
+            href: createSectionUrl('contracts'),
+            label: 'Contracts',
+            icon: FileText,
+            requiresPro: false
+          },
+          {
+            href: createSectionUrl('client-outreach'),
+            label: 'Messages',
+            icon: MessageSquare,
+            requiresPro: false,
+          },
+          {
+            href: createSectionUrl('revenue'),
+            label: 'Revenue',
+            icon: TrendingUp,
             requiresPro: true
           },
         ]
@@ -397,7 +378,8 @@ export function ModernSidebar() {
                       type="button"
                       onClick={(e) => {
                         if (isLocked) {
-                          e.preventDefault()
+                          // Still navigate to show the upgrade/lock screen
+                          handleNavigation(item.href, e)
                           return
                         }
                         handleNavigation(item.href, e)

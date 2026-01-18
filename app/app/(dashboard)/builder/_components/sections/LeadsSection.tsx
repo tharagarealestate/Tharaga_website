@@ -2,13 +2,21 @@
 
 import { useState, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Users, List, LayoutGrid, Filter, Link2 } from 'lucide-react'
+import { Users, List, LayoutGrid, Filter, Link2, TrendingUp } from 'lucide-react'
 import { BuilderPageWrapper } from '../BuilderPageWrapper'
 import { LeadsList, type Lead } from '../../leads/_components/LeadsList'
 import { FilterProvider } from '@/contexts/FilterContext'
 import AdvancedFilters from '../../leads/_components/AdvancedFilters'
 import { StandardStatsCard } from '../design-system/StandardStatsCard'
 import { CRMContent } from './CRMContent'
+import dynamic from 'next/dynamic'
+import { SectionLoader } from './SectionLoader'
+
+// Dynamically import the pipeline component
+const LeadPipelineKanban = dynamic(() => import('../../leads/pipeline/_components/LeadPipelineKanban').then(mod => ({ default: mod.default })), {
+  ssr: false,
+  loading: () => <SectionLoader section="pipeline" />
+})
 
 interface LeadsSectionProps {
   onNavigate?: (section: string) => void
@@ -18,9 +26,10 @@ interface LeadsSectionProps {
  * LeadsSection - Simplified to match messaging page pattern
  * Removed all popup modals (Filter Presets, CRM)
  * Clean tab-based interface matching messaging page
+ * Includes Pipeline View as a tab (replaces separate sidebar menu)
  */
 export function LeadsSection({ onNavigate }: LeadsSectionProps) {
-  const [activeTab, setActiveTab] = useState<'list' | 'filters' | 'crm'>('list')
+  const [activeTab, setActiveTab] = useState<'list' | 'pipeline' | 'filters' | 'crm'>('list')
   const [stats, setStats] = useState({
     total_leads: 0,
     hot_leads: 0,
@@ -51,6 +60,7 @@ export function LeadsSection({ onNavigate }: LeadsSectionProps) {
           <div className="flex gap-2 border-b glow-border pb-2 overflow-x-auto">
             {[
               { id: 'list', label: 'All Leads', icon: List },
+              { id: 'pipeline', label: 'Pipeline View', icon: TrendingUp },
               { id: 'filters', label: 'Filters', icon: Filter },
               { id: 'crm', label: 'CRM', icon: Link2 },
             ].map((tab) => {
@@ -58,7 +68,7 @@ export function LeadsSection({ onNavigate }: LeadsSectionProps) {
               return (
                 <button
                   key={tab.id}
-                  onClick={() => setActiveTab(tab.id as 'list' | 'filters' | 'crm')}
+                  onClick={() => setActiveTab(tab.id as 'list' | 'pipeline' | 'filters' | 'crm')}
                   className={`px-6 py-3 font-medium transition-all flex items-center gap-2 whitespace-nowrap ${
                     activeTab === tab.id
                       ? 'text-amber-300 border-b-2 border-amber-300'
@@ -112,6 +122,22 @@ export function LeadsSection({ onNavigate }: LeadsSectionProps) {
               </motion.div>
             )}
 
+            {activeTab === 'pipeline' && (
+              <motion.div
+                key="pipeline"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                className="bg-gradient-to-br from-slate-800/95 via-slate-800/95 to-slate-900/95 glow-border rounded-xl overflow-hidden shadow-2xl"
+              >
+                <div className="p-6 sm:p-8">
+                  <div className="w-full max-w-[1920px] mx-auto">
+                    <LeadPipelineKanban />
+                  </div>
+                </div>
+              </motion.div>
+            )}
+
             {activeTab === 'filters' && (
               <motion.div
                 key="filters"
@@ -121,6 +147,14 @@ export function LeadsSection({ onNavigate }: LeadsSectionProps) {
                 className="bg-gradient-to-br from-slate-800/95 via-slate-800/95 to-slate-900/95 glow-border rounded-xl overflow-hidden shadow-2xl"
               >
                 <div className="p-6 sm:p-8">
+                  {/* Filter Help Section */}
+                  <div className="mb-6 p-4 bg-amber-500/10 border border-amber-400/30 rounded-lg">
+                    <h4 className="text-sm font-semibold text-amber-300 mb-2">About Filters</h4>
+                    <p className="text-xs text-slate-300">
+                      Use filters to narrow down your leads based on specific criteria like score range, budget, location, and activity.
+                      Filtered results will automatically apply to the "All Leads" tab. You can save commonly used filter combinations for quick access.
+                    </p>
+                  </div>
                   <AdvancedFilters />
                 </div>
               </motion.div>

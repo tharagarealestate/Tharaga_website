@@ -8,7 +8,7 @@ import { LeadsList, type Lead } from '../../leads/_components/LeadsList'
 import { FilterProvider } from '@/contexts/FilterContext'
 import AdvancedFilters from '../../leads/_components/AdvancedFilters'
 import { StandardStatsCard } from '../design-system/StandardStatsCard'
-import { CRMInterface } from './CRMInterface'
+import { CRMContent } from './CRMContent'
 
 interface LeadsSectionProps {
   onNavigate?: (section: string) => void
@@ -20,8 +20,7 @@ interface LeadsSectionProps {
  * Clean tab-based interface matching messaging page
  */
 export function LeadsSection({ onNavigate }: LeadsSectionProps) {
-  const [activeTab, setActiveTab] = useState<'list' | 'filters'>('list')
-  const [showCRM, setShowCRM] = useState(false)
+  const [activeTab, setActiveTab] = useState<'list' | 'filters' | 'crm'>('list')
   const [stats, setStats] = useState({
     total_leads: 0,
     hot_leads: 0,
@@ -49,17 +48,17 @@ export function LeadsSection({ onNavigate }: LeadsSectionProps) {
       >
         <div className="space-y-6">
           {/* Tabs - Design System (matching messaging page) */}
-          <div className="flex gap-2 border-b glow-border pb-2 overflow-x-auto items-center">
-            <div className="flex gap-2 flex-1">
-              {[
-                { id: 'list', label: 'All Leads', icon: List },
-                { id: 'filters', label: 'Filters', icon: Filter },
-              ].map((tab) => {
+          <div className="flex gap-2 border-b glow-border pb-2 overflow-x-auto">
+            {[
+              { id: 'list', label: 'All Leads', icon: List },
+              { id: 'filters', label: 'Filters', icon: Filter },
+              { id: 'crm', label: 'CRM', icon: Link2 },
+            ].map((tab) => {
               const Icon = tab.icon
               return (
                 <button
                   key={tab.id}
-                  onClick={() => setActiveTab(tab.id as 'list' | 'filters')}
+                  onClick={() => setActiveTab(tab.id as 'list' | 'filters' | 'crm')}
                   className={`px-6 py-3 font-medium transition-all flex items-center gap-2 whitespace-nowrap ${
                     activeTab === tab.id
                       ? 'text-amber-300 border-b-2 border-amber-300'
@@ -71,16 +70,6 @@ export function LeadsSection({ onNavigate }: LeadsSectionProps) {
                 </button>
               )
             })}
-            </div>
-            
-            {/* CRM Button - Next to Filters */}
-            <button
-              onClick={() => setShowCRM(true)}
-              className="px-4 py-2 bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/50 text-amber-300 rounded-lg text-sm font-semibold transition-all flex items-center gap-2 whitespace-nowrap"
-            >
-              <Link2 className="w-4 h-4" />
-              CRM
-            </button>
           </div>
 
           {/* Tab Content - Design System Container (matching messaging page) */}
@@ -136,10 +125,21 @@ export function LeadsSection({ onNavigate }: LeadsSectionProps) {
                 </div>
               </motion.div>
             )}
-          </AnimatePresence>
 
-          {/* CRM Interface Panel */}
-          <CRMInterface isOpen={showCRM} onClose={() => setShowCRM(false)} />
+            {activeTab === 'crm' && (
+              <motion.div
+                key="crm"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                className="bg-gradient-to-br from-slate-800/95 via-slate-800/95 to-slate-900/95 glow-border rounded-xl overflow-hidden shadow-2xl"
+              >
+                <div className="p-6 sm:p-8">
+                  <CRMContent />
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       </BuilderPageWrapper>
     </FilterProvider>

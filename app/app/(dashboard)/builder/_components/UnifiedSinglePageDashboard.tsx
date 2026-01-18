@@ -18,6 +18,8 @@ const NegotiationsSection = lazy(() => import('./sections/NegotiationsSection').
 const ContractsSection = lazy(() => import('./sections/ContractsSection').then(m => ({ default: m.ContractsSection })))
 const DealLifecycleSection = lazy(() => import('./sections/DealLifecycleSection').then(m => ({ default: m.DealLifecycleSection })))
 const UltraAutomationAnalyticsSection = lazy(() => import('./sections/UltraAutomationAnalyticsSection').then(m => ({ default: m.UltraAutomationAnalyticsSection })))
+const AnalyticsSection = lazy(() => import('./sections/AnalyticsSection').then(m => ({ default: m.AnalyticsSection })))
+const RevenueSection = lazy(() => import('./sections/RevenueSection').then(m => ({ default: m.RevenueSection })))
 import { SectionLoader } from './sections/SectionLoader'
 import { ErrorBoundary } from './ErrorBoundary'
 
@@ -74,6 +76,8 @@ function UnifiedSinglePageDashboardComponent({ activeSection, onSectionChange }:
     'deal-lifecycle': DealLifecycleSection,
     'ultra-automation-analytics': UltraAutomationAnalyticsSection,
     contacts: ContactsSection,
+    analytics: AnalyticsSection,
+    revenue: RevenueSection,
   }
 
   const ActiveComponent = sectionComponents[activeSection] || OverviewSection

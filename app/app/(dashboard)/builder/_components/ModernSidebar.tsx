@@ -89,15 +89,20 @@ export function ModernSidebar() {
   }, [])
 
   // Route to section mapping for unified dashboard
+  // ALL routes now use section-based navigation for no page reload
   const routeToSectionMap: Record<string, string> = {
     '/builder': 'overview',
     '/builder/leads': 'leads',
     '/builder/properties': 'properties',
+    '/builder/properties/performance': 'properties', // Performance analytics is a subsection
     '/builder/pipeline': 'pipeline',
     '/builder/viewings': 'viewings',
     '/builder/negotiations': 'negotiations',
     '/builder/contracts': 'contracts',
     '/builder/contacts': 'contacts',
+    '/builder/messaging': 'client-outreach', // Messages uses client-outreach section
+    '/builder/analytics': 'analytics', // Need to add analytics section
+    '/builder/revenue': 'revenue', // Need to add revenue section
   }
 
   // Enhanced client-side navigation - INSTANT HIGHLIGHTING, NO LAG
@@ -166,7 +171,7 @@ export function ModernSidebar() {
             requiresPro: false,
           },
           { 
-            href: '/builder/properties/performance', 
+            href: createSectionUrl('properties'), // Use section-based routing - Performance is same section
             label: 'Performance Analytics', 
             icon: Building2, 
             requiresPro: false,
@@ -201,7 +206,7 @@ export function ModernSidebar() {
         label: 'Communication',
         items: [
           { 
-            href: '/builder/messaging', 
+            href: createSectionUrl('client-outreach'), // Convert to section-based routing
             label: 'Messages', 
             icon: MessageSquare, 
             requiresPro: false,
@@ -229,13 +234,13 @@ export function ModernSidebar() {
         label: 'Analytics',
         items: [
           { 
-            href: '/builder/analytics', 
+            href: createSectionUrl('analytics'), // Use section-based routing
             label: 'Analytics Dashboard', 
             icon: BarChart3, 
             requiresPro: false
           },
           { 
-            href: '/builder/revenue', 
+            href: createSectionUrl('revenue'), // Use section-based routing
             label: 'Revenue Analytics', 
             icon: TrendingUp, 
             requiresPro: true
@@ -266,31 +271,32 @@ export function ModernSidebar() {
   }
 
   // Determine active state - INSTANT, ACCURATE highlighting with no lag
+  // Use URL search params and pathname for instant, accurate highlighting
   const isItemActive = useCallback((item: NavItem): boolean => {
     if (typeof window === 'undefined') return false
-    
-    // Normalize paths - remove trailing slashes for comparison
-    const normalizedPathname = pathname.replace(/\/$/, '') || '/builder'
-    const normalizedItemHref = item.href.replace(/\/$/, '')
     
     // Check section-based routes first (most common case)
     if (shouldUseQueryParams(item.href)) {
       const section = routeToSectionMap[item.href] || item.href.split('?section=')[1]?.split('&')[0]
       if (section) {
-        // Use current URL directly for instant check
+        // Use current URL directly for instant check - most reliable method
         const urlParams = new URLSearchParams(window.location.search)
-        const currentSection = urlParams.get('section') || 'overview'
+        const currentSection = urlParams.get('section') || (pathname === '/builder' ? 'overview' : null)
         return currentSection === section
       }
     }
     
-    // Exact match
+    // For direct routes (non-section-based), use pathname matching
+    const normalizedPathname = pathname.replace(/\/$/, '') || '/builder'
+    const normalizedItemHref = item.href.replace(/\/$/, '')
+    
+    // Exact match for direct routes
     if (normalizedPathname === normalizedItemHref) {
       return true
     }
     
     // Child route match (but not the other way around)
-    if (normalizedPathname.startsWith(normalizedItemHref + '/')) {
+    if (normalizedItemHref !== '/builder' && normalizedPathname.startsWith(normalizedItemHref + '/')) {
       return true
     }
     

@@ -100,6 +100,19 @@ interface LeadWithDetails {
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
+// Handle OPTIONS for CORS preflight
+export async function OPTIONS(request: NextRequest) {
+  return new NextResponse(null, {
+    status: 204,
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'GET, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+      'Access-Control-Max-Age': '86400',
+    },
+  });
+}
+
 // Secure GET handler with authentication, rate limiting, and permissions
 export const GET = secureApiRoute(
   async (request: NextRequest, user) => {

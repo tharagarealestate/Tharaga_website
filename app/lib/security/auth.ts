@@ -84,11 +84,20 @@ export async function withAuth(req: NextRequest): Promise<AuthUser | null> {
   try {
     const supabase = createRouteHandlerClient({ cookies })
     const { data: { user }, error } = await supabase.auth.getUser()
-    
+
     if (error || !user) {
       return null
     }
-    
+
+    // CRITICAL FIX: Admin owner email gets full access immediately (bypasses all database checks)
+    if (user.email === 'tharagarealestate@gmail.com') {
+      return {
+        id: user.id,
+        email: user.email,
+        role: 'admin'
+      }
+    }
+
     // Get user role from both user_roles and profiles tables
     let role: string | undefined
     

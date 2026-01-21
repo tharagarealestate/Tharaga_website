@@ -3,6 +3,7 @@
 import { motion } from 'framer-motion'
 import { CheckCircle2, AlertCircle, RefreshCw, Link2, XCircle } from 'lucide-react'
 import { useState } from 'react'
+import { InlineCRMPanel } from './InlineCRMPanel'
 
 interface CRMSyncStatusProps {
   status: {
@@ -28,32 +29,37 @@ interface CRMSyncStatusProps {
 
 export function CRMSyncStatus({ status }: CRMSyncStatusProps) {
   const [syncing, setSyncing] = useState(false)
+  const [showCRMPanel, setShowCRMPanel] = useState(false)
 
   if (!status || !status.connected) {
     return (
-      <motion.div
-        initial={{ opacity: 0, y: -10 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="bg-gradient-to-r from-amber-500/10 to-orange-500/10 border border-amber-500/30 rounded-xl p-4"
-      >
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-amber-500/20 flex items-center justify-center">
-              <Link2 className="w-5 h-5 text-amber-400" />
+      <>
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-gradient-to-r from-amber-500/10 to-orange-500/10 border border-amber-500/30 rounded-xl p-4"
+        >
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-lg bg-amber-500/20 flex items-center justify-center">
+                <Link2 className="w-5 h-5 text-amber-400" />
+              </div>
+              <div>
+                <h3 className="text-sm font-semibold text-white">ZOHO CRM Not Connected</h3>
+                <p className="text-xs text-slate-400">Connect ZOHO CRM to automatically sync leads and deals</p>
+              </div>
             </div>
-            <div>
-              <h3 className="text-sm font-semibold text-white">ZOHO CRM Not Connected</h3>
-              <p className="text-xs text-slate-400">Connect ZOHO CRM to automatically sync leads and deals</p>
-            </div>
+            <button
+              onClick={() => setShowCRMPanel(true)}
+              className="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-lg text-sm font-semibold transition-colors"
+            >
+              Connect Now
+            </button>
           </div>
-          <a
-            href="/builder/settings/zoho"
-            className="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-lg text-sm font-semibold transition-colors"
-          >
-            Connect Now
-          </a>
-        </div>
-      </motion.div>
+        </motion.div>
+
+        {showCRMPanel && <InlineCRMPanel onClose={() => setShowCRMPanel(false)} />}
+      </>
     )
   }
 
@@ -159,15 +165,18 @@ export function CRMSyncStatus({ status }: CRMSyncStatusProps) {
             <RefreshCw className={`w-4 h-4 ${syncing ? 'animate-spin' : ''}`} />
             {syncing ? 'Syncing...' : 'Sync Now'}
           </button>
-          <a
-            href="/builder/settings/zoho"
+          <button
+            onClick={() => setShowCRMPanel(true)}
             className="px-4 py-2 bg-white/10 hover:bg-white/20 border border-white/20 rounded-lg text-white text-sm font-semibold transition-all"
           >
-            Manage
-          </a>
+            View Details
+          </button>
         </div>
       </div>
     </motion.div>
+
+    {showCRMPanel && <InlineCRMPanel onClose={() => setShowCRMPanel(false)} />}
+    </>
   )
 }
 

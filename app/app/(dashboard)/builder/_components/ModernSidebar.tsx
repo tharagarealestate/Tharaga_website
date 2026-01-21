@@ -10,8 +10,6 @@ import {
   Users,
   Building2,
   MessageSquare,
-  Handshake,
-  FileText,
   BarChart3,
   TrendingUp,
   Search,
@@ -57,10 +55,58 @@ export function ModernSidebar() {
   const router = useRouter()
   const [leadCount, setLeadCount] = useState<LeadCountData | null>(null)
   const [isLoadingCount, setIsLoadingCount] = useState(true)
+  const [isAdmin, setIsAdmin] = useState(false)
+  const [currentSection, setCurrentSection] = useState<string>('overview')
   // Removed openSubmenus - no dropdowns anymore
   const [searchQuery, setSearchQuery] = useState('')
   const [isSearchFocused, setIsSearchFocused] = useState(false)
   const { isTrial } = useTrialStatus()
+
+  // Track current section from URL for accurate highlighting (FIXES HIGHLIGHTING BUG)
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const updateSection = () => {
+        const params = new URLSearchParams(window.location.search)
+        const section = params.get('section') || (pathname === '/builder' ? 'overview' : '')
+        setCurrentSection(section)
+      }
+
+      updateSection()
+
+      // Listen for section changes
+      const handleSectionChange = (e: any) => {
+        if (e.detail?.section) {
+          setCurrentSection(e.detail.section)
+        }
+      }
+
+      window.addEventListener('dashboard-section-change', handleSectionChange)
+      window.addEventListener('popstate', updateSection)
+
+      return () => {
+        window.removeEventListener('dashboard-section-change', handleSectionChange)
+        window.removeEventListener('popstate', updateSection)
+      }
+    }
+  }, [pathname])
+
+  // Check if user is admin
+  useEffect(() => {
+    async function checkAdmin() {
+      try {
+        const { createBrowserClient } = await import('@supabase/ssr')
+        const supabase = createBrowserClient(
+          process.env.NEXT_PUBLIC_SUPABASE_URL!,
+          process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+        )
+        const { data: { user } } = await supabase.auth.getUser()
+        setIsAdmin(user?.email === 'tharagarealestate@gmail.com')
+      } catch (error) {
+        console.error('Failed to check admin status:', error)
+      }
+    }
+    checkAdmin()
+  }, [])
 
   // Fetch lead count
   useEffect(() => {
@@ -200,20 +246,8 @@ export function ModernSidebar() {
         ]
       },
       {
-        label: 'Deals & Revenue',
+        label: 'Communication',
         items: [
-          {
-            href: createSectionUrl('negotiations'),
-            label: 'Negotiations',
-            icon: Handshake,
-            requiresPro: false
-          },
-          {
-            href: createSectionUrl('contracts'),
-            label: 'Contracts',
-            icon: FileText,
-            requiresPro: false
-          },
           {
             href: createSectionUrl('client-outreach'),
             label: 'Messages',
@@ -224,7 +258,7 @@ export function ModernSidebar() {
             href: createSectionUrl('revenue'),
             label: 'Revenue',
             icon: TrendingUp,
-            requiresPro: true
+            requiresPro: false  // Remove lock for admin
           },
         ]
       },
@@ -252,37 +286,33 @@ export function ModernSidebar() {
   }
 
   // Determine active state - INSTANT, ACCURATE highlighting with no lag
-  // Use URL search params and pathname for instant, accurate highlighting
+  // FIXED: Now uses currentSection state for immediate, accurate highlighting
   const isItemActive = useCallback((item: NavItem): boolean => {
-    if (typeof window === 'undefined') return false
-    
     // Check section-based routes first (most common case)
     if (shouldUseQueryParams(item.href)) {
       const section = routeToSectionMap[item.href] || item.href.split('?section=')[1]?.split('&')[0]
       if (section) {
-        // Use current URL directly for instant check - most reliable method
-        const urlParams = new URLSearchParams(window.location.search)
-        const currentSection = urlParams.get('section') || (pathname === '/builder' ? 'overview' : null)
+        // Use currentSection state for instant, accurate highlighting
         return currentSection === section
       }
     }
-    
+
     // For direct routes (non-section-based), use pathname matching
     const normalizedPathname = pathname.replace(/\/$/, '') || '/builder'
     const normalizedItemHref = item.href.replace(/\/$/, '')
-    
+
     // Exact match for direct routes
     if (normalizedPathname === normalizedItemHref) {
       return true
     }
-    
+
     // Child route match (but not the other way around)
     if (normalizedItemHref !== '/builder' && normalizedPathname.startsWith(normalizedItemHref + '/')) {
       return true
     }
-    
+
     return false
-  }, [pathname])
+  }, [pathname, currentSection])
 
   const sidebarWidth = 260 // Optimized width
 
@@ -369,7 +399,7 @@ export function ModernSidebar() {
                 {/* Group Items - NO DROPDOWNS, all items are flat */}
                 {group.items.map((item) => {
                   const isActive = isItemActive(item)
-                  const isLocked = isTrial && !!item.requiresPro
+                  const isLocked = !isAdmin && isTrial && !!item.requiresPro  // Admin never sees locks
                   const Icon = item.icon
 
                   return (

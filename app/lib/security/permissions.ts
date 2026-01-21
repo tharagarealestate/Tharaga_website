@@ -58,7 +58,13 @@ export async function hasPermission(
 ): Promise<boolean> {
   try {
     const supabase = getSupabase()
-    
+
+    // CRITICAL FIX: Admin owner email gets full permissions immediately (bypasses database checks)
+    const { data: { user } } = await supabase.auth.getUser()
+    if (user?.email === 'tharagarealestate@gmail.com') {
+      return true
+    }
+
     // Get user role and permissions
     const { data: profile, error } = await supabase
       .from('profiles')

@@ -94,11 +94,12 @@
   status = 200
   force = true
 
-[[redirects]]
-  from = "/api/leads"
-  to = "/.netlify/functions/lead-create"
-  status = 200
-  force = true
+# DISABLED: Use Next.js API route instead of Netlify function
+# [[redirects]]
+#   from = "/api/leads"
+#   to = "/.netlify/functions/lead-create"
+#   status = 200
+#   force = true
 
 [[redirects]]
   from = "/api/digest-send"

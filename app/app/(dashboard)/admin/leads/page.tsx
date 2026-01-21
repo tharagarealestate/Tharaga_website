@@ -56,12 +56,32 @@ export default function AdminLeadsPage() {
   async function load() {
     setBusy(true);
     try {
-      const res = await fetch('/api/admin/leads', {
-        headers: { 'x-admin-token': process.env.NEXT_PUBLIC_ADMIN_TOKEN || '' }
-      });
-      const j = await res.json();
-      setRows(j.items || []);
+      // Use /api/leads endpoint which handles both builder and admin roles
+      const res = await fetch('/api/leads?limit=100');
+
+      if (!res.ok) {
+        throw new Error(`API error: ${res.status} ${res.statusText}`);
+      }
+
+      const json = await res.json();
+
+      if (json.success && json.data?.leads) {
+        // Map the new response format to the expected format
+        const leads = json.data.leads.map((lead: any) => ({
+          id: lead.id,
+          created_at: lead.created_at,
+          property_id: lead.property_id || '-',
+          name: lead.full_name || 'Unknown',
+          email: lead.email || '',
+          phone: lead.phone || '',
+          message: '-',
+        }));
+        setRows(leads);
+      } else {
+        setRows([]);
+      }
     } catch (e: any) {
+      console.error('Failed to load leads:', e);
       setMsg(e?.message || 'Load failed');
     } finally {
       setBusy(false);

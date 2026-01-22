@@ -375,67 +375,32 @@
     roleState.initializingModal = false;
   }
 
-  // Builder verification form - Enhanced with intelligent state detection
-  async function showBuilderVerificationForm() {
+  // Builder verification form
+  function showBuilderVerificationForm() {
     const modal = document.getElementById('thg-role-onboarding');
     if (!modal) return;
-
-    // Ensure role state is initialized
-    if (!roleState.initialized) {
-      await fetchUserRoles();
-    }
-
-    // Check user's current state
-    const hasBuilderRole = roleState.roles.includes('builder');
-    const hasProfile = roleState.hasBuilderProfile;
-    
-    // Determine form state and messaging
-    let formTitle = '🏗️ Builder Registration';
-    let submitButtonText = 'Submit';
-    let formNote = 'ℹ️ Verified builders get priority visibility';
-    let existingProfile = null;
-
-    if (hasBuilderRole && hasProfile) {
-      // User has both role and profile - allow updates
-      formTitle = '🏗️ Update Builder Profile';
-      submitButtonText = 'Update Profile';
-      formNote = 'ℹ️ Update your builder profile information';
-      
-      // Fetch existing profile data to pre-fill form
-      try {
-        const profileData = await apiCall('/api/user/roles');
-        existingProfile = profileData.builder_profile || null;
-      } catch (error) {
-        console.warn('[role-v2] Could not fetch profile:', error);
-      }
-    } else if (hasBuilderRole && !hasProfile) {
-      // User has role but no profile - create profile
-      formTitle = '🏗️ Complete Builder Profile';
-      submitButtonText = 'Create Profile';
-      formNote = 'ℹ️ Complete your builder profile to access the dashboard';
-    }
 
     const body = modal.querySelector('.thg-role-body');
     body.innerHTML = `
       <div class="thg-builder-form">
-        <h3>${formTitle}</h3>
+        <h3>🏗️ Builder Registration</h3>
         <div class="thg-form-field">
           <label for="builder-company">Company Name *</label>
-          <input type="text" id="builder-company" placeholder="ABC Constructions Pvt Ltd" value="${existingProfile?.company_name || ''}" required autofocus />
+          <input type="text" id="builder-company" placeholder="ABC Constructions Pvt Ltd" required autofocus />
         </div>
         <div class="thg-form-field">
           <label for="builder-gstin">GSTIN (optional)</label>
-          <input type="text" id="builder-gstin" placeholder="29AABCU9603R1ZM" value="${existingProfile?.gstin || ''}" />
+          <input type="text" id="builder-gstin" placeholder="29AABCU9603R1ZM" />
         </div>
         <div class="thg-form-field">
           <label for="builder-rera">RERA Number (optional)</label>
-          <input type="text" id="builder-rera" placeholder="PRM/KA/RERA/1251/309/PR/171130" value="${existingProfile?.rera_number || ''}" />
+          <input type="text" id="builder-rera" placeholder="PRM/KA/RERA/1251/309/PR/171130" />
         </div>
         <div class="thg-form-actions">
           <button type="button" class="thg-btn-secondary" id="builder-back">Back</button>
-          <button type="button" class="thg-btn-gold" id="builder-submit">${submitButtonText}</button>
+          <button type="button" class="thg-btn-gold" id="builder-submit">Submit</button>
         </div>
-        <p class="thg-form-note">${formNote}</p>
+        <p class="thg-form-note">ℹ️ Verified builders get priority visibility</p>
       </div>
     `;
 
@@ -447,30 +412,20 @@
       setTimeout(showRoleSelectionModal, 100);
     });
 
-    const submitButton = body.querySelector('#builder-submit');
-    submitButton.addEventListener('click', async function() {
+    body.querySelector('#builder-submit').addEventListener('click', async function() {
       const companyName = document.getElementById('builder-company').value.trim();
       const gstin = document.getElementById('builder-gstin').value.trim();
       const reraNumber = document.getElementById('builder-rera').value.trim();
 
-      // Validate required fields
       if (!companyName) {
         showNotification('Please enter your company name', 'error');
         document.getElementById('builder-company').focus();
         return;
       }
 
-      // Validate GSTIN format if provided (15 alphanumeric characters)
-      if (gstin && !/^[0-9A-Z]{15}$/.test(gstin)) {
-        showNotification('Please enter a valid GSTIN (15 alphanumeric characters)', 'error');
-        document.getElementById('builder-gstin').focus();
-        return;
-      }
-
-      // Instant UI feedback with state-aware loading text
-      const originalText = this.textContent;
+      // Instant UI feedback
       this.disabled = true;
-      this.textContent = hasBuilderRole && hasProfile ? 'Updating...' : 'Creating...';
+      this.textContent = 'Adding...';
       this.style.opacity = '0.7';
 
       try {
@@ -481,42 +436,27 @@
             rera_number: reraNumber || null,
           },
         });
-        
-        // Update role state after successful submission
-        await fetchUserRoles(true);
       } catch (error) {
         this.disabled = false;
-        this.textContent = originalText;
+        this.textContent = 'Submit';
         this.style.opacity = '1';
-        // Error notification is shown in handleRoleSelection
       }
     });
 
     // Focus first input
     setTimeout(() => {
       const input = document.getElementById('builder-company');
-      if (input) {
-        // Select all text if it's an update
-        if (hasBuilderRole && hasProfile && input.value) {
-          input.select();
-        } else {
-          input.focus();
-        }
-      }
+      if (input) input.focus();
     }, 100);
   }
 
-  // Handle role selection (NO auto-redirect, just add role or update profile)
+  // Handle role selection (NO auto-redirect, just add role)
   async function handleRoleSelection(role, data = {}) {
     try {
       console.log('[role-v2] Handling role selection:', role);
 
-      // Check if user already has this role
-      const hasRole = roleState.roles.includes(role);
-      const isBuilderWithProfile = role === 'builder' && roleState.hasBuilderProfile;
-
-      // Add role with instant feedback (or update profile if role exists)
-      const result = await addRole(role, data);
+      // Add role with instant feedback
+      await addRole(role, data);
 
       // Close modal with animation
       const modal = document.getElementById('thg-role-onboarding');
@@ -525,33 +465,14 @@
         setTimeout(() => modal.remove(), 300);
       }
 
-      // Show success notification with appropriate message
+      // Show success notification
       const roleLabel = role === 'buyer' ? 'Buyer' : 'Builder';
-      if (hasRole && isBuilderWithProfile) {
-        showNotification(`✅ Builder profile updated successfully! Check Portal menu for dashboard access.`);
-      } else if (hasRole && !isBuilderWithProfile && role === 'builder') {
-        showNotification(`✅ Builder profile created successfully! Check Portal menu for dashboard access.`);
-      } else {
-        showNotification(`✅ ${roleLabel} role added! Check Portal menu for dashboard access.`);
-      }
+      showNotification(`✅ ${roleLabel} role added! Check Portal menu for dashboard access.`);
 
       // NO REDIRECT - just stay on current page
 
     } catch (error) {
-      // Handle specific error messages
-      let errorMessage = error.message || 'An error occurred';
-      
-      // Provide user-friendly error messages
-      if (errorMessage.includes('already has')) {
-        // This shouldn't happen now, but handle gracefully
-        errorMessage = 'Profile updated successfully';
-      } else if (errorMessage.includes('company_name')) {
-        errorMessage = 'Please enter your company name';
-      } else if (errorMessage.includes('Failed to')) {
-        errorMessage = 'Unable to save profile. Please try again.';
-      }
-
-      showNotification(`Error: ${errorMessage}`, 'error');
+      showNotification(`Error: ${error.message}`, 'error');
       console.error('[role-v2] Role selection error:', error);
       throw error;
     }

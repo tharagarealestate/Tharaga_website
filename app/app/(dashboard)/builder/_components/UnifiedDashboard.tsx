@@ -14,6 +14,8 @@ import { getSupabase } from '@/lib/supabase'
 import { useBuilderAuth } from './BuilderAuthProvider'
 import { GlassCard } from '@/components/ui/glass-card'
 import { PremiumButton } from '@/components/ui/premium-button'
+import { BuilderJourneyFlowchart } from './BuilderJourneyFlowchart'
+import { BuilderJourneyHorizontal } from './BuilderJourneyHorizontal'
 
 interface Lead {
   id: string
@@ -99,6 +101,7 @@ export function UnifiedDashboard({ onNavigate }: UnifiedDashboardProps) {
   const { isAuthenticated, builderId, userId, isLoading: authLoading } = useBuilderAuth()
   const [previousStats, setPreviousStats] = useState({ total: 0, hot: 0, warm: 0, conversionRate: 0 })
   const prevStatsRef = useRef({ total: 0, conversionRate: 0 })
+  const [viewMode, setViewMode] = useState<'vertical' | 'horizontal'>('vertical')
 
   // Fetch data with real-time updates - only for authenticated builders
   const { data: leads = [], isLoading: leadsLoading, error: leadsError } = useQuery<Lead[]>({
@@ -335,40 +338,98 @@ export function UnifiedDashboard({ onNavigate }: UnifiedDashboardProps) {
     statsActiveProperties
   ]);
 
+  // Calculate monthly revenue for flowchart
+  const monthlyRevenue = useMemo(() => {
+    if (!revenueData || !(revenueData as any).monthlyRevenue) return '₹0'
+    const revenue = (revenueData as any).monthlyRevenue
+    if (revenue >= 10000000) return `₹${(revenue / 10000000).toFixed(2)} Cr`
+    if (revenue >= 100000) return `₹${(revenue / 100000).toFixed(2)} L`
+    return `₹${(revenue / 1000).toFixed(1)}K`
+  }, [revenueData])
+
   return (
     <div className="w-full space-y-8">
+      {/* View Toggle */}
+      <motion.div
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="flex justify-end"
+      >
+        <GlassCard variant="dark" className="inline-flex p-1">
+          <button
+            onClick={() => setViewMode('vertical')}
+            className={cn(
+              'px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200',
+              viewMode === 'vertical'
+                ? 'bg-amber-500/20 text-amber-300 border border-amber-400/30'
+                : 'text-slate-400 hover:text-white'
+            )}
+          >
+            Detailed View
+          </button>
+          <button
+            onClick={() => setViewMode('horizontal')}
+            className={cn(
+              'px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200',
+              viewMode === 'horizontal'
+                ? 'bg-amber-500/20 text-amber-300 border border-amber-400/30'
+                : 'text-slate-400 hover:text-white'
+            )}
+          >
+            Compact View
+          </button>
+        </GlassCard>
+      </motion.div>
+
+      {/* Builder Journey Flowchart - Hero Section */}
+      {viewMode === 'vertical' ? (
+        <BuilderJourneyFlowchart
+          metrics={{
+            totalProperties: metrics.totalProperties,
+            totalLeads: metrics.totalLeads,
+            hotLeads: metrics.hotLeads,
+            conversionRate: metrics.conversionRate,
+            totalViews: metrics.totalViews,
+            totalInquiries: metrics.totalInquiries,
+            monthlyRevenue,
+          }}
+          loading={statsLoading || propertiesLoading || revenueLoading}
+          onNavigate={onNavigate}
+        />
+      ) : (
+        <BuilderJourneyHorizontal
+          metrics={{
+            totalProperties: metrics.totalProperties,
+            totalLeads: metrics.totalLeads,
+            hotLeads: metrics.hotLeads,
+            conversionRate: metrics.conversionRate,
+            totalViews: metrics.totalViews,
+            totalInquiries: metrics.totalInquiries,
+            monthlyRevenue,
+          }}
+          loading={statsLoading || propertiesLoading || revenueLoading}
+          onNavigate={onNavigate}
+        />
+      )}
+
+      {/* Divider */}
+      <div className="relative">
+        <div className="absolute inset-0 flex items-center">
+          <div className="w-full border-t border-slate-700/50"></div>
+        </div>
+        <div className="relative flex justify-center">
+          <span className="bg-slate-900 px-4 text-sm text-slate-400">Recent Activity</span>
+        </div>
+      </div>
+
       {/* Header - Design System Typography with proper spacing */}
       <motion.div
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
         className="mb-6"
       >
-        <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">Welcome back! 👋</h1>
-        <p className="text-slate-300 text-base sm:text-lg">Here's what's happening with your properties today</p>
-      </motion.div>
-
-      {/* Stats Grid - Admin Design System with Advanced Animations */}
-      <motion.div 
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4 }}
-        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 w-full desktop-grid-item"
-      >
-        {[
-          { icon: Users, label: "Total Leads", value: metrics.totalLeads, subtitle: `${metrics.hotLeads} hot • ${metrics.warmLeads} warm`, trend: { value: parseFloat(metrics.leadTrend), positive: parseFloat(metrics.leadTrend) >= 0 }, loading: statsLoading },
-          { icon: Building2, label: "Properties", value: metrics.totalProperties, subtitle: `${metrics.activeProperties} active`, loading: propertiesLoading },
-          { icon: TrendingUp, label: "Conversion Rate", value: `${metrics.conversionRate}%`, trend: { value: parseFloat(metrics.conversionTrend), positive: parseFloat(metrics.conversionTrend) >= 0 }, loading: statsLoading },
-          { icon: DollarSign, label: "This Month", value: revenueData && (revenueData as any).monthlyRevenue ? (revenueData as any).monthlyRevenue >= 10000000 ? `₹${((revenueData as any).monthlyRevenue / 10000000).toFixed(2)} Cr` : (revenueData as any).monthlyRevenue >= 100000 ? `₹${((revenueData as any).monthlyRevenue / 100000).toFixed(2)} L` : `₹${((revenueData as any).monthlyRevenue / 1000).toFixed(1)}K` : '₹0', subtitle: "Revenue", loading: revenueLoading },
-        ].map((stat, index) => (
-          <motion.div
-            key={stat.label}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: index * 0.1, duration: 0.4 }}
-          >
-            <StatCard {...stat} />
-          </motion.div>
-        ))}
+        <h2 className="text-2xl sm:text-3xl font-bold text-white mb-2">Your Dashboard</h2>
+        <p className="text-slate-300 text-base sm:text-lg">Quick access to your leads and properties</p>
       </motion.div>
 
       {/* Main Content - Two Column Layout with optimized spacing */}

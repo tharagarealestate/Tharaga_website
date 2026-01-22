@@ -2,7 +2,8 @@
 
 import { motion } from 'framer-motion'
 import { CheckCircle2, AlertCircle, RefreshCw, Link2, XCircle } from 'lucide-react'
-import { useState } from 'react'
+import { useState, Fragment } from 'react'
+import { InlineCRMPanel } from './InlineCRMPanel'
 
 interface CRMSyncStatusProps {
   status: {
@@ -28,6 +29,7 @@ interface CRMSyncStatusProps {
 
 export function CRMSyncStatus({ status }: CRMSyncStatusProps) {
   const [syncing, setSyncing] = useState(false)
+  const [showCRMPanel, setShowCRMPanel] = useState(false)
 
   if (!status || !status.connected) {
     return (
@@ -119,55 +121,65 @@ export function CRMSyncStatus({ status }: CRMSyncStatusProps) {
   }
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: -10 }}
-      animate={{ opacity: 1, y: 0 }}
-      className={`bg-gradient-to-r ${healthColor} border rounded-xl p-4 shadow-lg`}
-    >
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <div className={`w-12 h-12 rounded-lg bg-gradient-to-br ${healthColor} flex items-center justify-center`}>
-            <HealthIcon className="w-6 h-6 text-white" />
+    <Fragment>
+      <motion.div
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        className={`bg-gradient-to-r ${healthColor} border rounded-xl p-4 shadow-lg`}
+      >
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <div className={`w-12 h-12 rounded-lg bg-gradient-to-br ${healthColor} flex items-center justify-center`}>
+              <HealthIcon className="w-6 h-6 text-white" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2 mb-1">
+                <h3 className="text-sm font-bold text-white">ZOHO CRM Connected</h3>
+                <span className={`px-2 py-0.5 rounded text-xs font-semibold ${
+                  status.health === 'excellent' ? 'bg-green-500/30 text-green-200' :
+                  status.health === 'good' ? 'bg-blue-500/30 text-blue-200' :
+                  status.health === 'fair' ? 'bg-yellow-500/30 text-yellow-200' :
+                  'bg-red-500/30 text-red-200'
+                }`}>
+                  {status.health?.toUpperCase() || 'UNKNOWN'}
+                </span>
+              </div>
+              <div className="flex items-center gap-4 text-xs text-slate-300">
+                <span>{status.account?.name || 'ZOHO Account'}</span>
+                <span>•</span>
+                <span>Last sync: {formatLastSync(status.sync?.last_sync)}</span>
+                <span>•</span>
+                <span>Success rate: {status.sync?.success_rate || 0}%</span>
+              </div>
+            </div>
           </div>
-          <div>
-            <div className="flex items-center gap-2 mb-1">
-              <h3 className="text-sm font-bold text-white">ZOHO CRM Connected</h3>
-              <span className={`px-2 py-0.5 rounded text-xs font-semibold ${
-                status.health === 'excellent' ? 'bg-green-500/30 text-green-200' :
-                status.health === 'good' ? 'bg-blue-500/30 text-blue-200' :
-                status.health === 'fair' ? 'bg-yellow-500/30 text-yellow-200' :
-                'bg-red-500/30 text-red-200'
-              }`}>
-                {status.health?.toUpperCase() || 'UNKNOWN'}
-              </span>
-            </div>
-            <div className="flex items-center gap-4 text-xs text-slate-300">
-              <span>{status.account?.name || 'ZOHO Account'}</span>
-              <span>•</span>
-              <span>Last sync: {formatLastSync(status.sync?.last_sync)}</span>
-              <span>•</span>
-              <span>Success rate: {status.sync?.success_rate || 0}%</span>
-            </div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={handleSync}
+              disabled={syncing}
+              className="px-4 py-2 bg-white/10 hover:bg-white/20 border border-white/20 rounded-lg text-white text-sm font-semibold transition-all flex items-center gap-2 disabled:opacity-50"
+            >
+              <RefreshCw className={`w-4 h-4 ${syncing ? 'animate-spin' : ''}`} />
+              {syncing ? 'Syncing...' : 'Sync Now'}
+            </button>
+            <button
+              onClick={() => setShowCRMPanel(true)}
+              className="px-4 py-2 bg-white/10 hover:bg-white/20 border border-white/20 rounded-lg text-white text-sm font-semibold transition-all"
+            >
+              Open CRM
+            </button>
+            <a
+              href="/builder/settings/zoho"
+              className="px-4 py-2 bg-white/10 hover:bg-white/20 border border-white/20 rounded-lg text-white text-sm font-semibold transition-all"
+            >
+              Manage
+            </a>
           </div>
         </div>
-        <div className="flex items-center gap-2">
-          <button
-            onClick={handleSync}
-            disabled={syncing}
-            className="px-4 py-2 bg-white/10 hover:bg-white/20 border border-white/20 rounded-lg text-white text-sm font-semibold transition-all flex items-center gap-2 disabled:opacity-50"
-          >
-            <RefreshCw className={`w-4 h-4 ${syncing ? 'animate-spin' : ''}`} />
-            {syncing ? 'Syncing...' : 'Sync Now'}
-          </button>
-          <a
-            href="/builder/settings/zoho"
-            className="px-4 py-2 bg-white/10 hover:bg-white/20 border border-white/20 rounded-lg text-white text-sm font-semibold transition-all"
-          >
-            Manage
-          </a>
-        </div>
-      </div>
-    </motion.div>
+      </motion.div>
+
+      {showCRMPanel && <InlineCRMPanel onClose={() => setShowCRMPanel(false)} />}
+    </Fragment>
   )
 }
 

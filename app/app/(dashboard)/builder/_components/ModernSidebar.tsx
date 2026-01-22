@@ -10,8 +10,6 @@ import {
   Users,
   Building2,
   MessageSquare,
-  Handshake,
-  FileText,
   BarChart3,
   TrendingUp,
   Search,
@@ -57,10 +55,58 @@ export function ModernSidebar() {
   const router = useRouter()
   const [leadCount, setLeadCount] = useState<LeadCountData | null>(null)
   const [isLoadingCount, setIsLoadingCount] = useState(true)
+  const [isAdmin, setIsAdmin] = useState(false)
+  const [currentSection, setCurrentSection] = useState<string>('overview')
   // Removed openSubmenus - no dropdowns anymore
   const [searchQuery, setSearchQuery] = useState('')
   const [isSearchFocused, setIsSearchFocused] = useState(false)
   const { isTrial } = useTrialStatus()
+
+  // Track current section from URL for accurate highlighting (FIXES HIGHLIGHTING BUG)
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const updateSection = () => {
+        const params = new URLSearchParams(window.location.search)
+        const section = params.get('section') || (pathname === '/builder' ? 'overview' : '')
+        setCurrentSection(section)
+      }
+
+      updateSection()
+
+      // Listen for section changes
+      const handleSectionChange = (e: any) => {
+        if (e.detail?.section) {
+          setCurrentSection(e.detail.section)
+        }
+      }
+
+      window.addEventListener('dashboard-section-change', handleSectionChange)
+      window.addEventListener('popstate', updateSection)
+
+      return () => {
+        window.removeEventListener('dashboard-section-change', handleSectionChange)
+        window.removeEventListener('popstate', updateSection)
+      }
+    }
+  }, [pathname])
+
+  // Check if user is admin
+  useEffect(() => {
+    async function checkAdmin() {
+      try {
+        const { createBrowserClient } = await import('@supabase/ssr')
+        const supabase = createBrowserClient(
+          process.env.NEXT_PUBLIC_SUPABASE_URL!,
+          process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+        )
+        const { data: { user } } = await supabase.auth.getUser()
+        setIsAdmin(user?.email === 'tharagarealestate@gmail.com')
+      } catch (error) {
+        console.error('Failed to check admin status:', error)
+      }
+    }
+    checkAdmin()
+  }, [])
 
   // Fetch lead count
   useEffect(() => {
@@ -145,59 +191,56 @@ export function ModernSidebar() {
 
   // Removed toggleSubmenu - no dropdowns anymore
 
-  // Navigation structure - NO DROPDOWNS, submenu items are separate menu items
+  // Optimized Navigation structure - Simplified from 12 items to 8 items
+  // Pipeline View integrated into Leads page as tab
+  // Performance Analytics integrated into Properties page as tab
   const navGroups = useMemo<NavGroup[]>(() => {
     const createSectionUrl = (section: string) => `/builder?section=${section}`
 
     return [
       {
+        label: 'Dashboard',
         items: [
-          { 
-            href: '/builder', 
-            label: 'Dashboard', 
-            icon: LayoutDashboard, 
-            badge: null, 
-            requiresPro: false 
+          {
+            href: '/builder',
+            label: 'Overview',
+            icon: LayoutDashboard,
+            badge: null,
+            requiresPro: false
           },
         ]
       },
       {
         label: 'Properties',
         items: [
-          { 
-            href: createSectionUrl('properties'), 
-            label: 'All Properties', 
-            icon: Building2, 
+          {
+            href: createSectionUrl('properties'),
+            label: 'Properties',
+            icon: Building2,
             requiresPro: false,
           },
-          { 
-            href: createSectionUrl('properties'), // Use section-based routing - Performance is same section
-            label: 'Performance Analytics', 
-            icon: Building2, 
-            requiresPro: false,
+          {
+            href: createSectionUrl('analytics'),
+            label: 'Analytics',
+            icon: BarChart3,
+            requiresPro: false
           },
         ]
       },
       {
         label: 'Leads & CRM',
         items: [
-          { 
-            href: createSectionUrl('leads'), 
-            label: 'Lead Management', 
-            icon: Users, 
+          {
+            href: createSectionUrl('leads'),
+            label: 'Leads',
+            icon: Users,
             badge: isLoadingCount ? null : (leadCount?.total ?? 0),
             requiresPro: false,
           },
-          { 
-            href: createSectionUrl('pipeline'), 
-            label: 'Pipeline View', 
-            icon: Users, 
-            requiresPro: false,
-          },
-          { 
-            href: createSectionUrl('contacts'), 
-            label: 'Contacts', 
-            icon: Users, 
+          {
+            href: createSectionUrl('contacts'),
+            label: 'Contacts',
+            icon: Users,
             requiresPro: false,
           },
         ]
@@ -205,45 +248,17 @@ export function ModernSidebar() {
       {
         label: 'Communication',
         items: [
-          { 
-            href: createSectionUrl('client-outreach'), // Convert to section-based routing
-            label: 'Messages', 
-            icon: MessageSquare, 
+          {
+            href: createSectionUrl('client-outreach'),
+            label: 'Messages',
+            icon: MessageSquare,
             requiresPro: false,
           },
-        ]
-      },
-      {
-        label: 'Calendar & Viewings',
-        items: [
-          { 
-            href: createSectionUrl('negotiations'), 
-            label: 'Negotiations', 
-            icon: Handshake, 
-            requiresPro: false 
-          },
-          { 
-            href: createSectionUrl('contracts'), 
-            label: 'Contracts', 
-            icon: FileText, 
-            requiresPro: false 
-          },
-        ]
-      },
-      {
-        label: 'Analytics',
-        items: [
-          { 
-            href: createSectionUrl('analytics'), // Use section-based routing
-            label: 'Analytics Dashboard', 
-            icon: BarChart3, 
-            requiresPro: false
-          },
-          { 
-            href: createSectionUrl('revenue'), // Use section-based routing
-            label: 'Revenue Analytics', 
-            icon: TrendingUp, 
-            requiresPro: true
+          {
+            href: createSectionUrl('revenue'),
+            label: 'Revenue',
+            icon: TrendingUp,
+            requiresPro: false  // Remove lock for admin
           },
         ]
       },
@@ -271,37 +286,33 @@ export function ModernSidebar() {
   }
 
   // Determine active state - INSTANT, ACCURATE highlighting with no lag
-  // Use URL search params and pathname for instant, accurate highlighting
+  // FIXED: Now uses currentSection state for immediate, accurate highlighting
   const isItemActive = useCallback((item: NavItem): boolean => {
-    if (typeof window === 'undefined') return false
-    
     // Check section-based routes first (most common case)
     if (shouldUseQueryParams(item.href)) {
       const section = routeToSectionMap[item.href] || item.href.split('?section=')[1]?.split('&')[0]
       if (section) {
-        // Use current URL directly for instant check - most reliable method
-        const urlParams = new URLSearchParams(window.location.search)
-        const currentSection = urlParams.get('section') || (pathname === '/builder' ? 'overview' : null)
+        // Use currentSection state for instant, accurate highlighting
         return currentSection === section
       }
     }
-    
+
     // For direct routes (non-section-based), use pathname matching
     const normalizedPathname = pathname.replace(/\/$/, '') || '/builder'
     const normalizedItemHref = item.href.replace(/\/$/, '')
-    
+
     // Exact match for direct routes
     if (normalizedPathname === normalizedItemHref) {
       return true
     }
-    
+
     // Child route match (but not the other way around)
     if (normalizedItemHref !== '/builder' && normalizedPathname.startsWith(normalizedItemHref + '/')) {
       return true
     }
-    
+
     return false
-  }, [pathname])
+  }, [pathname, currentSection])
 
   const sidebarWidth = 260 // Optimized width
 
@@ -388,7 +399,7 @@ export function ModernSidebar() {
                 {/* Group Items - NO DROPDOWNS, all items are flat */}
                 {group.items.map((item) => {
                   const isActive = isItemActive(item)
-                  const isLocked = isTrial && !!item.requiresPro
+                  const isLocked = !isAdmin && isTrial && !!item.requiresPro  // Admin never sees locks
                   const Icon = item.icon
 
                   return (
@@ -397,7 +408,8 @@ export function ModernSidebar() {
                       type="button"
                       onClick={(e) => {
                         if (isLocked) {
-                          e.preventDefault()
+                          // Still navigate to show the upgrade/lock screen
+                          handleNavigation(item.href, e)
                           return
                         }
                         handleNavigation(item.href, e)

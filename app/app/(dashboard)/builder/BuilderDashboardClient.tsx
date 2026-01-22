@@ -6,7 +6,8 @@ import { getSupabase } from '@/lib/supabase'
 import { UnifiedSinglePageDashboard } from './_components/UnifiedSinglePageDashboard'
 
 export default function BuilderDashboardClient() {
-  const [user, setUser] = useState<any>({ id: 'verified', email: 'builder@tharaga.co.in' })
+  const [user, setUser] = useState<any>(null)
+  const [authLoading, setAuthLoading] = useState(true)
   const pathname = usePathname()
   
   // Initialize activeSection from URL on mount
@@ -129,6 +130,7 @@ export default function BuilderDashboardClient() {
 
         // User is authenticated and has builder role (or is admin owner)
         setUser(user)
+        setAuthLoading(false)
       } catch (err) {
         console.error('[Builder] Auth check failed:', err)
         // On error, redirect to home for security
@@ -155,7 +157,21 @@ export default function BuilderDashboardClient() {
     }
   }
 
-  // Render immediately - NO blocking loading state (matches admin dashboard pattern)
+  // Show minimal loading state during auth check
+  if (authLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-amber-400"></div>
+      </div>
+    )
+  }
+
+  // Don't render if no user (will redirect)
+  if (!user) {
+    return null
+  }
+
+  // Render dashboard only for authenticated users
   return (
     <UnifiedSinglePageDashboard
       activeSection={activeSection}

@@ -33,29 +33,33 @@ export function CRMSyncStatus({ status }: CRMSyncStatusProps) {
 
   if (!status || !status.connected) {
     return (
-      <motion.div
-        initial={{ opacity: 0, y: -10 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="bg-gradient-to-r from-amber-500/10 to-orange-500/10 border border-amber-500/30 rounded-xl p-4"
-      >
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-amber-500/20 flex items-center justify-center">
-              <Link2 className="w-5 h-5 text-amber-400" />
+      <Fragment>
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-gradient-to-r from-amber-500/10 to-orange-500/10 border border-amber-500/30 rounded-xl p-4"
+        >
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-lg bg-amber-500/20 flex items-center justify-center">
+                <Link2 className="w-5 h-5 text-amber-400" />
+              </div>
+              <div>
+                <h3 className="text-sm font-semibold text-white">ZOHO CRM Not Connected</h3>
+                <p className="text-xs text-slate-400">Connect ZOHO CRM to automatically sync leads and deals</p>
+              </div>
             </div>
-            <div>
-              <h3 className="text-sm font-semibold text-white">ZOHO CRM Not Connected</h3>
-              <p className="text-xs text-slate-400">Connect ZOHO CRM to automatically sync leads and deals</p>
-            </div>
+            <button
+              onClick={() => setShowCRMPanel(true)}
+              className="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-lg text-sm font-semibold transition-colors"
+            >
+              Connect Now
+            </button>
           </div>
-          <a
-            href="/builder/settings/zoho"
-            className="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-lg text-sm font-semibold transition-colors"
-          >
-            Connect Now
-          </a>
-        </div>
-      </motion.div>
+        </motion.div>
+
+        {showCRMPanel && <InlineCRMPanel onClose={() => setShowCRMPanel(false)} />}
+      </Fragment>
     )
   }
 
@@ -182,4 +186,3 @@ export function CRMSyncStatus({ status }: CRMSyncStatusProps) {
     </Fragment>
   )
 }
-

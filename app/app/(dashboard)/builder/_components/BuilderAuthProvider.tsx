@@ -98,10 +98,15 @@ export function BuilderAuthProvider({ children }: BuilderAuthProviderProps) {
           supabase.from('profiles').select('role').eq('id', user.id).maybeSingle()
         ])
 
-        const isAdmin = 
-          userRolesResult.data?.some((r: any) => r.role === 'admin') || 
-          profileResult.data?.role === 'admin' || 
+        // Admin check: email match OR role match in database
+        const userEmail = user.email || ''
+        const isAdminByEmail = userEmail === 'tharagarealestate@gmail.com'
+        const isAdminByRole =
+          userRolesResult.data?.some((r: any) => r.role === 'admin') ||
+          profileResult.data?.role === 'admin' ||
           false
+
+        const isAdmin = isAdminByEmail || isAdminByRole
 
         // User is authenticated - check for builder profile
         const { data: builderProfile, error: profileError } = await supabase
@@ -114,7 +119,6 @@ export function BuilderAuthProvider({ children }: BuilderAuthProviderProps) {
 
         // Admin users bypass builder profile requirement
         if (isAdmin) {
-          const userEmail = user.email || null
           // For admin users, use builderProfile.id if exists, otherwise use user.id as builderId
           // This ensures admin users can access all builder features even without a builder profile
           const adminBuilderId = builderProfile?.id || user.id
@@ -164,10 +168,8 @@ export function BuilderAuthProvider({ children }: BuilderAuthProviderProps) {
           return
         }
 
-        // Get user email from auth
-        const userEmail = user.email || null
-
         // Fully authenticated builder with complete profile
+        // (userEmail already declared above)
         setAuthState({
           isAuthenticated: true,
           isLoading: false,

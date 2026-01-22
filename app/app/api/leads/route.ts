@@ -106,7 +106,7 @@ export async function OPTIONS(request: NextRequest) {
     status: 204,
     headers: {
       'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'GET, OPTIONS',
+      'Access-Control-Allow-Methods': 'GET, POST, PUT, PATCH, DELETE, OPTIONS',
       'Access-Control-Allow-Headers': 'Content-Type, Authorization',
       'Access-Control-Max-Age': '86400',
     },
@@ -160,9 +160,34 @@ export const GET = secureApiRoute(
     // =============================================
     // FETCH LEADS WITH SCORING
     // =============================================
-    
-    // First, get all leads for this builder from the leads table
-    // We'll adapt to use the existing leads table structure
+
+    // Check if user is admin (from BOTH user_roles and profiles tables)
+    let isAdmin = false;
+
+    // Check user_roles table first
+    const { data: userRoleData } = await supabase
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', user.id)
+      .eq('role', 'admin')
+      .maybeSingle();
+
+    if (userRoleData) {
+      isAdmin = true;
+    } else {
+      // Check profiles table as fallback
+      const { data: profileData } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', user.id)
+        .maybeSingle();
+
+      if (profileData?.role === 'admin') {
+        isAdmin = true;
+      }
+    }
+
+    // Build query - admins see ALL leads, builders see only their own
     let leadsQuery = supabase
       .from('leads')
       .select(`
@@ -180,9 +205,13 @@ export const GET = secureApiRoute(
           title,
           location
         )
-      `)
-      .eq('builder_id', user.id);
-    
+      `);
+
+    // Only filter by builder_id if NOT admin
+    if (!isAdmin) {
+      leadsQuery = leadsQuery.eq('builder_id', user.id);
+    }
+
     // Apply score filters
     if (query.score_min !== undefined) {
       leadsQuery = leadsQuery.gte('score', query.score_min);
@@ -556,3 +585,285 @@ export const GET = secureApiRoute(
     auditResourceType: AuditResourceTypes.LEAD
   }
 );
+
+// =============================================
+// POST - Create New Lead
+// =============================================
+
+export const POST = secureApiRoute(
+  async (request: NextRequest, user) => {
+    const supabase = createRouteHandlerClient({ cookies });
+
+    try {
+      const body = await request.json();
+      const { property_id, builder_id, name, email, phone, message, source, budget } = body;
+
+      // Validation
+      if (!property_id || !builder_id || !name) {
+        return NextResponse.json({
+          success: false,
+          error: 'Validation Error',
+          errorType: 'VALIDATION_ERROR',
+          message: 'Missing required fields: property_id, builder_id, name',
+        }, { status: 400 });
+      }
+
+      if (!email && !phone) {
+        return NextResponse.json({
+          success: false,
+          error: 'Validation Error',
+          errorType: 'VALIDATION_ERROR',
+          message: 'At least one of email or phone must be provided',
+        }, { status: 400 });
+      }
+
+      // Calculate initial score
+      let initialScore = 5;
+      if (email && phone) initialScore += 1;
+      if (message && message.length > 50) initialScore += 1;
+      if (budget && budget > 0) initialScore += 1;
+
+      // Create lead
+      const { data, error } = await supabase
+        .from('leads')
+        .insert([{
+          property_id,
+          builder_id,
+          name,
+          email: email || null,
+          phone: phone || null,
+          message: message || null,
+          source: source || null,
+          budget: budget || null,
+          score: Math.min(initialScore, 10),
+          status: 'new',
+        }])
+        .select()
+        .single();
+
+      if (error) {
+        console.error('[API/Leads/POST] Database error:', error);
+        const classifiedError = classifySupabaseError(error, data);
+        return NextResponse.json({
+          success: false,
+          error: classifiedError.message,
+          errorType: classifiedError.type,
+          message: classifiedError.userMessage,
+          retryable: classifiedError.retryable,
+        }, { status: classifiedError.statusCode || 500 });
+      }
+
+      return NextResponse.json({
+        success: true,
+        data,
+        message: 'Lead created successfully',
+      }, { status: 201 });
+
+    } catch (error: any) {
+      console.error('[API/Leads/POST] Error:', error);
+      return NextResponse.json({
+        success: false,
+        error: 'Internal Server Error',
+        errorType: 'UNKNOWN_ERROR',
+        message: error.message || 'Failed to create lead',
+        retryable: true,
+      }, { status: 500 });
+    }
+  },
+  {
+    requireAuth: true,
+    requireRole: ['builder', 'admin'],
+    requirePermission: Permissions.LEAD_CREATE,
+    rateLimit: 'api',
+    auditAction: AuditActions.CREATE,
+    auditResourceType: AuditResourceTypes.LEAD,
+  }
+);
+
+// =============================================
+// PUT/PATCH - Update Lead
+// =============================================
+
+export const PUT = secureApiRoute(
+  async (request: NextRequest, user) => {
+    const supabase = createRouteHandlerClient({ cookies });
+
+    try {
+      const body = await request.json();
+      const { id, ...updates } = body;
+
+      if (!id) {
+        return NextResponse.json({
+          success: false,
+          error: 'Validation Error',
+          errorType: 'VALIDATION_ERROR',
+          message: 'Lead ID is required',
+        }, { status: 400 });
+      }
+
+      // Check if lead exists and user has access
+      const { data: existing, error: fetchError } = await supabase
+        .from('leads')
+        .select('builder_id')
+        .eq('id', id)
+        .single();
+
+      if (fetchError || !existing) {
+        return NextResponse.json({
+          success: false,
+          error: 'Not Found',
+          errorType: 'NOT_FOUND',
+          message: 'Lead not found',
+        }, { status: 404 });
+      }
+
+      // Check authorization (unless admin)
+      if (user.role !== 'admin' && existing.builder_id !== user.id) {
+        return NextResponse.json({
+          success: false,
+          error: 'Forbidden',
+          errorType: 'AUTH_ERROR',
+          message: 'Not authorized to update this lead',
+        }, { status: 403 });
+      }
+
+      // Update lead
+      const { data, error } = await supabase
+        .from('leads')
+        .update(updates)
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (error) {
+        console.error('[API/Leads/PUT] Database error:', error);
+        const classifiedError = classifySupabaseError(error, data);
+        return NextResponse.json({
+          success: false,
+          error: classifiedError.message,
+          errorType: classifiedError.type,
+          message: classifiedError.userMessage,
+          retryable: classifiedError.retryable,
+        }, { status: classifiedError.statusCode || 500 });
+      }
+
+      return NextResponse.json({
+        success: true,
+        data,
+        message: 'Lead updated successfully',
+      });
+
+    } catch (error: any) {
+      console.error('[API/Leads/PUT] Error:', error);
+      return NextResponse.json({
+        success: false,
+        error: 'Internal Server Error',
+        errorType: 'UNKNOWN_ERROR',
+        message: error.message || 'Failed to update lead',
+        retryable: true,
+      }, { status: 500 });
+    }
+  },
+  {
+    requireAuth: true,
+    requireRole: ['builder', 'admin'],
+    requirePermission: Permissions.LEAD_UPDATE,
+    rateLimit: 'api',
+    auditAction: AuditActions.UPDATE,
+    auditResourceType: AuditResourceTypes.LEAD,
+  }
+);
+
+export const PATCH = PUT; // PATCH uses same logic as PUT
+
+// =============================================
+// DELETE - Delete Lead
+// =============================================
+
+export const DELETE = secureApiRoute(
+  async (request: NextRequest, user) => {
+    const supabase = createRouteHandlerClient({ cookies });
+
+    try {
+      const { searchParams } = request.nextUrl;
+      const id = searchParams.get('id');
+
+      if (!id) {
+        return NextResponse.json({
+          success: false,
+          error: 'Validation Error',
+          errorType: 'VALIDATION_ERROR',
+          message: 'Lead ID is required',
+        }, { status: 400 });
+      }
+
+      // Check if lead exists and user has access
+      const { data: existing, error: fetchError } = await supabase
+        .from('leads')
+        .select('builder_id')
+        .eq('id', id)
+        .single();
+
+      if (fetchError || !existing) {
+        return NextResponse.json({
+          success: false,
+          error: 'Not Found',
+          errorType: 'NOT_FOUND',
+          message: 'Lead not found',
+        }, { status: 404 });
+      }
+
+      // Check authorization (unless admin)
+      if (user.role !== 'admin' && existing.builder_id !== user.id) {
+        return NextResponse.json({
+          success: false,
+          error: 'Forbidden',
+          errorType: 'AUTH_ERROR',
+          message: 'Not authorized to delete this lead',
+        }, { status: 403 });
+      }
+
+      // Delete lead
+      const { error } = await supabase
+        .from('leads')
+        .delete()
+        .eq('id', id);
+
+      if (error) {
+        console.error('[API/Leads/DELETE] Database error:', error);
+        const classifiedError = classifySupabaseError(error, null);
+        return NextResponse.json({
+          success: false,
+          error: classifiedError.message,
+          errorType: classifiedError.type,
+          message: classifiedError.userMessage,
+          retryable: classifiedError.retryable,
+        }, { status: classifiedError.statusCode || 500 });
+      }
+
+      return NextResponse.json({
+        success: true,
+        message: 'Lead deleted successfully',
+      });
+
+    } catch (error: any) {
+      console.error('[API/Leads/DELETE] Error:', error);
+      return NextResponse.json({
+        success: false,
+        error: 'Internal Server Error',
+        errorType: 'UNKNOWN_ERROR',
+        message: error.message || 'Failed to delete lead',
+        retryable: true,
+      }, { status: 500 });
+    }
+  },
+  {
+    requireAuth: true,
+    requireRole: ['builder', 'admin'],
+    requirePermission: Permissions.LEAD_DELETE,
+    rateLimit: 'api',
+    auditAction: AuditActions.DELETE,
+    auditResourceType: AuditResourceTypes.LEAD,
+  }
+);
+// Force rebuild at Wed, Jan 21, 2026  7:25:12 AM

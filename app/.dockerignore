@@ -1,0 +1,17 @@
+# Reduce Docker build context and speed up layer export
+node_modules
+.next
+.vercel
+.git
+coverage
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+.DS_Store
+*.local
+.env*
+**/*.test.*
+**/__tests__
+.vscode
+.idea

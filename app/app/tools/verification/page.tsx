@@ -1,14 +1,21 @@
 "use client"
 
 import * as React from 'react'
+import Breadcrumb from '@/components/Breadcrumb'
 import { verifyRera, verifyTitle, getFraudScore, getPredictiveAnalytics } from '@/lib/api'
+import { PageWrapper } from '@/components/ui/PageWrapper'
+import { PageHeader } from '@/components/ui/PageHeader'
+import { SectionWrapper } from '@/components/ui/SectionWrapper'
+import { GlassCard } from '@/components/ui/glass-card'
+import { PremiumButton } from '@/components/ui/premium-button'
+import { DESIGN_TOKENS } from '@/lib/design-system'
 
 function Section({ title, children }: { title: string; children: React.ReactNode }){
   return (
-    <section className="rounded-xl border border-plum/10 bg-brandWhite p-4 space-y-3">
-      <h2 className="font-semibold">{title}</h2>
+    <GlassCard variant="dark" glow border className="p-4 space-y-3">
+      <h2 className={`font-semibold ${DESIGN_TOKENS.colors.text.primary}`}>{title}</h2>
       {children}
-    </section>
+    </GlassCard>
   )
 }
 
@@ -36,8 +43,8 @@ export default function VerificationTools(){
   const [fraud, setFraud] = React.useState<any>(null)
 
   // Predictive
-  const [city, setCity] = React.useState('Bengaluru')
-  const [locality, setLocality] = React.useState('Indiranagar')
+  const [city, setCity] = React.useState('Chennai')
+  const [locality, setLocality] = React.useState('Anna Nagar')
   const [pred, setPred] = React.useState<any>(null)
 
   const onRera = async ()=> setReraRes(await verifyRera({ rera_id: reraId, state: reraState, project_name: projectName, promoter_name: promoterName }))
@@ -46,8 +53,21 @@ export default function VerificationTools(){
   const onPredict = async ()=> setPred(await getPredictiveAnalytics({ city, locality, sqft, price_inr: price }))
 
   return (
-    <main className="mx-auto max-w-5xl px-6 py-8 space-y-6">
-      <h1 className="text-2xl font-bold text-plum">Verification & risk tools</h1>
+    <PageWrapper>
+      <Breadcrumb items={[
+        { label: 'Home', href: '/' },
+        { label: 'Tools', href: '/sitemap' },
+        { label: 'Verification Tools' }
+      ]} />
+      
+      <PageHeader
+        title="Verification & Risk Tools"
+        description="Verify RERA compliance, title documents, fraud risk, and predictive analytics"
+        className="text-center mb-8"
+      />
+
+      <SectionWrapper noPadding>
+        <div className="space-y-6">
 
       <Section title="RERA verification">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
@@ -56,16 +76,16 @@ export default function VerificationTools(){
           <input className="rounded-lg border px-3 py-2" placeholder="Project name" value={projectName} onChange={(e)=>setProjectName(e.target.value)} />
           <input className="rounded-lg border px-3 py-2" placeholder="Promoter name" value={promoterName} onChange={(e)=>setPromoterName(e.target.value)} />
         </div>
-        <div className="flex gap-3"><button className="rounded-lg border px-3 py-2" onClick={onRera}>Verify RERA</button></div>
+        <div className="flex gap-3"><PremiumButton variant="secondary" size="sm" onClick={onRera}>Verify RERA</PremiumButton></div>
         {reraRes && (
-          <div className="rounded-lg border border-plum/10 p-3 text-sm">
-            <div>Status: <span className="font-semibold">{reraRes.status}</span> · Verified: <span className="font-semibold">{String(reraRes.verified)}</span> · Confidence: {Math.round((reraRes.confidence||0)*100)}%</div>
-            {reraRes.source_url && <a className="text-plum underline" href={reraRes.source_url} target="_blank" rel="noopener">Open portal</a>}
+          <div className={`rounded-lg border ${DESIGN_TOKENS.colors.border.default} p-3 text-sm`}>
+            <div className={DESIGN_TOKENS.colors.text.secondary}>Status: <span className={`font-semibold ${DESIGN_TOKENS.colors.text.primary}`}>{reraRes.status}</span> · Verified: <span className={`font-semibold ${DESIGN_TOKENS.colors.text.primary}`}>{String(reraRes.verified)}</span> · Confidence: {Math.round((reraRes.confidence||0)*100)}%</div>
+            {reraRes.source_url && <a className={`${DESIGN_TOKENS.colors.text.accent} underline`} href={reraRes.source_url} target="_blank" rel="noopener">Open portal</a>}
           </div>
         )}
       </Section>
 
-      <Section title="Blockchain title verification">
+      <Section title="Document snapshot immutability (proof-of-snapshot)">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
           <input className="rounded-lg border px-3 py-2" placeholder="Property ID" value={propId} onChange={(e)=>setPropId(e.target.value)} />
           <input className="rounded-lg border px-3 py-2 font-mono" placeholder="Document hash (hex)" value={docHash} onChange={(e)=>setDocHash(e.target.value)} />
@@ -73,12 +93,12 @@ export default function VerificationTools(){
             {['polygon','ethereum','other'].map(n => <option key={n} value={n}>{n}</option>)}
           </select>
         </div>
-        <div className="flex gap-3"><button className="rounded-lg border px-3 py-2" onClick={onTitle}>Verify title</button></div>
+        <div className="flex gap-3"><PremiumButton variant="secondary" size="sm" onClick={onTitle}>Verify title</PremiumButton></div>
         {titleRes && (
-          <div className="rounded-lg border border-plum/10 p-3 text-sm">
-            <div>Verified: <span className="font-semibold">{String(titleRes.verified)}</span> · Confidence: {Math.round((titleRes.confidence||0)*100)}%</div>
-            <div className="font-mono break-words">TX: {titleRes.transaction_hash}</div>
-            {titleRes.explorer_url && <a className="text-plum underline" href={titleRes.explorer_url} target="_blank" rel="noopener">Open explorer</a>}
+          <div className={`rounded-lg border ${DESIGN_TOKENS.colors.border.default} p-3 text-sm`}>
+            <div className={DESIGN_TOKENS.colors.text.secondary}>Verified: <span className={`font-semibold ${DESIGN_TOKENS.colors.text.primary}`}>{String(titleRes.verified)}</span> · Confidence: {Math.round((titleRes.confidence||0)*100)}%</div>
+            <div className={`font-mono break-words ${DESIGN_TOKENS.colors.text.primary}`}>TX: {titleRes.transaction_hash}</div>
+            {titleRes.explorer_url && <a className={`${DESIGN_TOKENS.colors.text.accent} underline`} href={titleRes.explorer_url} target="_blank" rel="noopener">Open explorer</a>}
           </div>
         )}
       </Section>
@@ -94,12 +114,12 @@ export default function VerificationTools(){
           <label className="inline-flex items-center gap-2 text-sm"><input type="checkbox" checked={hasRera} onChange={(e)=>setHasRera(e.target.checked)} /> RERA</label>
           <label className="inline-flex items-center gap-2 text-sm"><input type="checkbox" checked={hasTitle} onChange={(e)=>setHasTitle(e.target.checked)} /> Title docs</label>
         </div>
-        <div className="flex gap-3"><button className="rounded-lg border px-3 py-2" onClick={onFraud}>Compute score</button></div>
+        <div className="flex gap-3"><PremiumButton variant="secondary" size="sm" onClick={onFraud}>Compute score</PremiumButton></div>
         {fraud && (
-          <div className="rounded-lg border border-plum/10 p-3 text-sm">
-            <div className="text-lg font-bold">Risk: {fraud.risk_score}/100 · {fraud.risk_level}</div>
+          <div className={`rounded-lg border ${DESIGN_TOKENS.colors.border.default} p-3 text-sm`}>
+            <div className={`text-lg font-bold ${DESIGN_TOKENS.colors.text.primary}`}>Risk: {fraud.risk_score}/100 · {fraud.risk_level}</div>
             <ul className="list-disc pl-5">
-              {(fraud.reasons||[]).map((r:string,i:number)=>(<li key={i}>{r}</li>))}
+              {(fraud.reasons||[]).map((r:string,i:number)=>(<li key={i} className={DESIGN_TOKENS.colors.text.secondary}>{r}</li>))}
             </ul>
           </div>
         )}
@@ -110,15 +130,17 @@ export default function VerificationTools(){
           <input className="rounded-lg border px-3 py-2" placeholder="City" value={city} onChange={(e)=>setCity(e.target.value)} />
           <input className="rounded-lg border px-3 py-2" placeholder="Locality" value={locality} onChange={(e)=>setLocality(e.target.value)} />
         </div>
-        <div className="flex gap-3"><button className="rounded-lg border px-3 py-2" onClick={onPredict}>Predict</button></div>
+        <div className="flex gap-3"><PremiumButton variant="secondary" size="sm" onClick={onPredict}>Predict</PremiumButton></div>
         {pred && (
-          <div className="rounded-lg border border-plum/10 p-3 text-sm">
-            <div>1-year appreciation: <span className="font-semibold">{pred.price_appreciation_1y_pct}%</span></div>
-            <div>3-year appreciation: <span className="font-semibold">{pred.price_appreciation_3y_pct}%</span></div>
-            <div>Expected rent yield: <span className="font-semibold">{pred.expected_rent_yield_pct}%</span></div>
+          <div className={`rounded-lg border ${DESIGN_TOKENS.colors.border.default} p-3 text-sm`}>
+            <div className={DESIGN_TOKENS.colors.text.secondary}>1-year appreciation: <span className={`font-semibold ${DESIGN_TOKENS.colors.text.primary}`}>{pred.price_appreciation_1y_pct}%</span></div>
+            <div className={DESIGN_TOKENS.colors.text.secondary}>3-year appreciation: <span className={`font-semibold ${DESIGN_TOKENS.colors.text.primary}`}>{pred.price_appreciation_3y_pct}%</span></div>
+            <div className={DESIGN_TOKENS.colors.text.secondary}>Expected rent yield: <span className={`font-semibold ${DESIGN_TOKENS.colors.text.primary}`}>{pred.expected_rent_yield_pct}%</span></div>
           </div>
         )}
       </Section>
-    </main>
+        </div>
+      </SectionWrapper>
+    </PageWrapper>
   )
 }

@@ -4,68 +4,113 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Direct-to-Builder Deals</title>
-  <link rel="stylesheet" href="/css/brand.css" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            fgMuted: 'rgb(107, 114, 128)',
+            border: 'rgb(229, 231, 235)',
+            muted: 'rgb(243, 244, 246)',
+          }
+        }
+      }
+    }
+  </script>
   <style>
-    body{ padding:24px; }
-    header{ display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; }
-    h1.h1{ margin:0 0 8px }
-    .wrap{ display:grid; grid-template-columns: 320px 1fr; gap:16px }
-    .field{ display:flex; flex-direction:column; gap:6px; margin-bottom:10px }
-    table{ width:100%; border-collapse:collapse }
-    th,td{ text-align:left; padding:8px 10px; border-bottom:1px solid #eee }
+    .visually-hidden {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border-width: 0;
+    }
   </style>
 </head>
-<body>
-  <header>
-    <div>
-      <h1 class="h1">Direct-to-Builder Deals</h1>
-      <p class="sub" style="color:#666;margin:0">Manage pricing, discounts, and instant buyer chat with audit trail.</p>
-    </div>
-    <div style="display:flex;align-items:center;gap:10px">
-      <button id="startFree" class="btn" style="background:#facc15;color:#111;border-color:#facc15;width:auto">Start free</button>
-      <a href="/" style="color:#111;text-decoration:none">← Back</a>
-    </div>
-  </header>
-
-  <div class="wrap">
-    <aside class="card" aria-label="Deal controls">
-      <div class="field"><label for="base">Base Price (₹/sqft)</label><input id="base" class="input" type="number" value="7200" /></div>
-      <div class="field"><label for="disc">Discount (%)</label><input id="disc" class="input" type="number" value="5" /></div>
-      <div class="field"><label for="exp">Offer Expires</label><input id="exp" class="input" type="date" /></div>
-      <div class="field"><label for="pay">Payment Schedule</label>
-        <select id="pay">
-          <option>Construction Linked</option>
-          <option>20-80 Plan</option>
-          <option>10-90 Plan</option>
-        </select>
+<body class="bg-white">
+  <main class="mx-auto max-w-5xl px-6 py-8">
+    <div class="flex items-center justify-between mb-6">
+      <div>
+        <h1 class="text-2xl font-bold mb-2">Direct-to-Builder Deals</h1>
+        <p class="text-sm text-fgMuted">Manage pricing, discounts, and instant buyer chat with audit trail.</p>
       </div>
-      <button id="apply" class="btn">Apply Offer</button>
-    </aside>
+      <div class="flex items-center gap-3">
+        <button id="startFree" class="px-4 py-2 bg-yellow-400 text-gray-900 font-semibold rounded border border-yellow-400 hover:bg-yellow-500 transition-colors">Start free</button>
+        <a href="/" class="text-sm text-fgMuted hover:text-gray-900 underline">← Back</a>
+      </div>
+    </div>
 
-    <main class="card" aria-label="Quotes and chat">
-      <h2 style="margin:0 0 10px">Live Quotes</h2>
-      <table aria-describedby="qdesc">
-        <caption id="qdesc" class="visually-hidden">Buyer quotes table</caption>
-        <thead><tr><th>Buyer</th><th>Area (sqft)</th><th>Quote (₹)</th><th>Status</th></tr></thead>
-        <tbody id="quotes"></tbody>
-      </table>
-
-      <div style="margin-top:14px; display:grid; grid-template-columns: 1fr 260px; gap:12px;">
-        <section class="card" style="padding:10px">
-          <h3 style="margin:0 0 8px">Chat</h3>
-          <div id="chat" style="height:160px;border:1px solid #eee;border-radius:10px;padding:8px;overflow:auto; background:#fafafa"></div>
-          <div style="display:flex; gap:8px; margin-top:8px;">
-            <input id="msg" class="input" placeholder="Type message" />
-            <button id="send" class="btn" style="width:auto">Send</button>
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+      <aside class="lg:col-span-1 border border-border rounded p-4 bg-white">
+        <h2 class="text-lg font-semibold mb-4">Deal Controls</h2>
+        <div class="space-y-4">
+          <div>
+            <label for="base" class="block text-sm font-medium mb-2">Base Price (₹/sqft)</label>
+            <input id="base" class="w-full px-3 py-2 text-sm border border-border rounded focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" type="number" value="7200" />
           </div>
-        </section>
-        <section>
-          <h3 style="margin:0 0 8px">Offer Summary</h3>
-          <div id="sum" class="card" style="padding:10px"></div>
-        </section>
-      </div>
-    </main>
-  </div>
+          <div>
+            <label for="disc" class="block text-sm font-medium mb-2">Discount (%)</label>
+            <input id="disc" class="w-full px-3 py-2 text-sm border border-border rounded focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" type="number" value="5" />
+          </div>
+          <div>
+            <label for="exp" class="block text-sm font-medium mb-2">Offer Expires</label>
+            <input id="exp" class="w-full px-3 py-2 text-sm border border-border rounded focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" type="date" />
+          </div>
+          <div>
+            <label for="pay" class="block text-sm font-medium mb-2">Payment Schedule</label>
+            <select id="pay" class="w-full px-3 py-2 text-sm border border-border rounded focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+              <option>Construction Linked</option>
+              <option>20-80 Plan</option>
+              <option>10-90 Plan</option>
+            </select>
+          </div>
+          <button id="apply" class="w-full px-4 py-2 bg-blue-600 text-white font-semibold rounded hover:bg-blue-700 transition-colors">Apply Offer</button>
+        </div>
+      </aside>
+
+      <main class="lg:col-span-2 space-y-6">
+        <div class="border border-border rounded overflow-hidden">
+          <div class="bg-muted/40 px-3 py-2 border-b border-border">
+            <h2 class="text-lg font-semibold">Live Quotes</h2>
+          </div>
+          <div class="overflow-auto">
+            <table class="min-w-[720px] w-full text-sm">
+              <thead>
+                <tr class="bg-muted/40">
+                  <th class="text-left p-3">Buyer</th>
+                  <th class="text-left p-3">Area (sqft)</th>
+                  <th class="text-left p-3">Quote (₹)</th>
+                  <th class="text-left p-3">Status</th>
+                </tr>
+              </thead>
+              <tbody id="quotes">
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <section class="md:col-span-2 border border-border rounded p-4 bg-white">
+            <h3 class="text-base font-semibold mb-3">Chat</h3>
+            <div id="chat" class="h-40 border border-border rounded p-3 overflow-auto bg-gray-50 mb-3 text-sm"></div>
+            <div class="flex gap-2">
+              <input id="msg" class="flex-1 px-3 py-2 text-sm border border-border rounded focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="Type message" />
+              <button id="send" class="px-4 py-2 bg-blue-600 text-white font-semibold rounded text-sm hover:bg-blue-700 transition-colors">Send</button>
+            </div>
+          </section>
+          <section class="border border-border rounded p-4 bg-white">
+            <h3 class="text-base font-semibold mb-3">Offer Summary</h3>
+            <div id="sum" class="text-sm space-y-2"></div>
+          </section>
+        </div>
+      </main>
+    </div>
+  </main>
 
   <script>
     (function(){
@@ -89,7 +134,6 @@
       const exp = document.getElementById('exp');
       const pay = document.getElementById('pay');
       const sum = document.getElementById('sum');
-      const apply = document.getElementById('apply');
 
       const quotesEl = document.getElementById('quotes');
       const chat = document.getElementById('chat');
@@ -116,12 +160,13 @@
 
         quotesEl.innerHTML = buyers.map(b => {
           const quote = Math.round(bp*multiplier*b.sqft);
-          return '<tr><td>' + b.name + '</td><td>' + b.sqft + '</td><td>' + rupee(quote) + '</td><td><span class="pill">New</span></td></tr>';
+          return '<tr class="border-t border-border"><td class="p-3 font-medium">' + b.name + '</td><td class="p-3">' + b.sqft + '</td><td class="p-3">' + rupee(quote) + '</td><td class="p-3"><span class="px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded-full">New</span></td></tr>';
         }).join('');
       }
 
       function chatLine(who, text){
         const el = document.createElement('div');
+        el.className = 'mb-2';
         el.innerHTML = '<strong>' + who + ':</strong> ' + text;
         chat.appendChild(el);
         chat.scrollTop = chat.scrollHeight;

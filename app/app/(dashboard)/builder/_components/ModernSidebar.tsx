@@ -143,8 +143,6 @@ export function ModernSidebar() {
     '/builder/properties/performance': 'properties', // Performance analytics is a subsection
     '/builder/pipeline': 'pipeline',
     '/builder/viewings': 'viewings',
-    '/builder/negotiations': 'negotiations',
-    '/builder/contracts': 'contracts',
     '/builder/contacts': 'contacts',
     '/builder/messaging': 'client-outreach', // Messages uses client-outreach section
     '/builder/analytics': 'analytics', // Need to add analytics section

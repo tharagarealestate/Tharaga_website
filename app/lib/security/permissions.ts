@@ -54,12 +54,18 @@ export const Permissions = {
  */
 export async function hasPermission(
   userId: string,
-  permission: string
+  permission: string,
+  userEmail?: string  // Optional email parameter to bypass database lookup for admin
 ): Promise<boolean> {
   try {
+    // CRITICAL FIX: Admin owner email gets full permissions immediately (bypasses ALL database checks)
+    if (userEmail === 'tharagarealestate@gmail.com') {
+      return true
+    }
+
     const supabase = getSupabase()
 
-    // CRITICAL FIX: Admin owner email gets full permissions immediately (bypasses database checks)
+    // Fallback: Try to get user from current session if email wasn't provided
     const { data: { user } } = await supabase.auth.getUser()
     if (user?.email === 'tharagarealestate@gmail.com') {
       return true

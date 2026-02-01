@@ -2,11 +2,12 @@
 
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { 
-  Link2, RefreshCw, CheckCircle2, AlertCircle, XCircle, 
-  Settings, Activity, Database, TrendingUp 
+import {
+  Link2, RefreshCw, CheckCircle2, AlertCircle, XCircle,
+  Settings, Activity, Database, TrendingUp
 } from 'lucide-react'
 import { CRMSyncStatus } from '../../leads/_components/CRMSyncStatus'
+import { InlineCRMPanel } from '../../leads/_components/InlineCRMPanel'
 
 /**
  * CRM Content Component
@@ -80,11 +81,8 @@ export function CRMContent() {
   }
 
   const handleConnect = async () => {
-    // Open connection dialog in a new tab/window instead of redirecting
-    // Or handle connection inline if API supports it
+    // CRITICAL FIX: Open inline CRM panel instead of external navigation
     setShowConnectDialog(true)
-    // For now, we'll show a message that connection should be done via settings
-    // In a full implementation, you might want to implement OAuth flow inline
   }
 
   return (
@@ -126,10 +124,7 @@ export function CRMContent() {
                   </div>
                 </div>
                 <button
-                  onClick={() => {
-                    // Open settings in new tab instead of redirecting
-                    window.open('/builder/settings/zoho', '_blank')
-                  }}
+                  onClick={() => setShowConnectDialog(true)}
                   className="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-lg text-sm font-semibold transition-colors"
                 >
                   Connect Now
@@ -286,13 +281,18 @@ export function CRMContent() {
               {syncing ? 'Syncing...' : 'Sync Now'}
             </button>
             <button
-              onClick={() => window.open('/builder/settings/zoho', '_blank')}
+              onClick={() => setShowConnectDialog(true)}
               className="px-4 py-2 bg-slate-700/50 hover:bg-slate-700/70 border border-slate-600/50 text-white rounded-lg text-sm font-semibold transition-all"
             >
               Manage Settings
             </button>
           </div>
         </div>
+      )}
+
+      {/* CRITICAL FIX: Inline CRM Panel - No external navigation */}
+      {showConnectDialog && (
+        <InlineCRMPanel onClose={() => setShowConnectDialog(false)} />
       )}
     </div>
   )

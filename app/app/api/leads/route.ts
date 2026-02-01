@@ -117,18 +117,10 @@ export async function OPTIONS(request: NextRequest) {
 export const GET = secureApiRoute(
   async (request: NextRequest, user) => {
     const supabase = createRouteHandlerClient({ cookies });
-    
-    // User is already authenticated and has required role/permission via secureApiRoute
-    // Admin users should have access, but for non-admin users, require builder role
-    // Note: secureApiRoute already checks roles, but we do an additional check here for clarity
-    if (user.role !== 'builder' && user.role !== 'admin') {
-      return NextResponse.json({
-        success: false,
-        error: 'Forbidden',
-        errorType: 'AUTH_ERROR',
-        message: 'This feature is only available for builders.'
-      }, { status: 403 });
-    }
+
+    // CRITICAL FIX: User is already authenticated via secureApiRoute - TRUST the wrapper
+    // The secureApiRoute has already validated role and permissions, including admin email override
+    // NO additional role checks needed here
     
     // =============================================
     // PARSE QUERY PARAMETERS
@@ -161,31 +153,9 @@ export const GET = secureApiRoute(
     // FETCH LEADS WITH SCORING
     // =============================================
 
-    // Check if user is admin (from BOTH user_roles and profiles tables)
-    let isAdmin = false;
-
-    // Check user_roles table first
-    const { data: userRoleData } = await supabase
-      .from('user_roles')
-      .select('role')
-      .eq('user_id', user.id)
-      .eq('role', 'admin')
-      .maybeSingle();
-
-    if (userRoleData) {
-      isAdmin = true;
-    } else {
-      // Check profiles table as fallback
-      const { data: profileData } = await supabase
-        .from('profiles')
-        .select('role')
-        .eq('id', user.id)
-        .maybeSingle();
-
-      if (profileData?.role === 'admin') {
-        isAdmin = true;
-      }
-    }
+    // CRITICAL FIX: Trust the user.role from secureApiRoute wrapper (includes email override)
+    // Admin email (tharagarealestate@gmail.com) is already handled in auth.ts:93-99
+    const isAdmin = user.role === 'admin' || user.email === 'tharagarealestate@gmail.com';
 
     // Build query - admins see ALL leads, builders see only their own
     let leadsQuery = supabase

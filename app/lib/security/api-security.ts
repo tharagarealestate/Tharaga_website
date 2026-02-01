@@ -95,7 +95,8 @@ export function secureApiRoute<T extends z.ZodSchema>(
 
         // 4. Permission check
         if (options.requirePermission && user) {
-          const hasPerm = await hasPermission(user.id, options.requirePermission)
+          // CRITICAL FIX: Pass user email to hasPermission for admin override
+          const hasPerm = await hasPermission(user.id, options.requirePermission, user.email)
           if (!hasPerm) {
             await logSecurityEvent(
               req,

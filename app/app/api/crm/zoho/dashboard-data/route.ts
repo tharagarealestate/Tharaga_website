@@ -1,115 +1,158 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { secureApiRoute } from '@/lib/security/api-security'
 import { Permissions } from '@/lib/security/permissions'
+import { createClient } from '@/lib/supabase/server'
+import { ZohoClient } from '@/lib/integrations/crm/zohoClient'
 
 /**
  * GET /api/crm/zoho/dashboard-data
  *
- * Returns mock/sample CRM data for the inline dashboard
- * In production, this would fetch real data from ZOHO CRM API
+ * Fetches real-time CRM data from ZOHO CRM API
+ * Shows contacts, deals, and statistics for the inline dashboard
  */
 export const GET = secureApiRoute(
   async (request: NextRequest, user) => {
     try {
-      // For now, return mock data
-      // In production, fetch from ZOHO CRM API using stored credentials
-      const mockData = {
-        stats: {
-          total_contacts: 247,
-          new_contacts_this_month: 23,
-          active_deals: 12,
-          deal_value: 8500000, // ₹85 lakhs
-          conversion_rate: 32
-        },
-        contacts: [
-          {
-            id: '1',
-            name: 'Rajesh Kumar',
-            email: 'rajesh.k@example.com',
-            phone: '+91 98765 43210',
-            status: 'active',
-            created_at: '2025-01-15'
+      const supabase = await createClient()
+      const zohoClient = new ZohoClient()
+
+      // Check if Zoho CRM is connected
+      const { data: integration } = await supabase
+        .from('integrations')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('provider', 'zoho')
+        .eq('type', 'crm')
+        .single()
+
+      // If not connected, return mock data with flag
+      if (!integration || !integration.connected) {
+        return NextResponse.json({
+          connected: false,
+          mock: true,
+          message: 'Zoho CRM not connected. Showing sample data.',
+          stats: {
+            total_contacts: 0,
+            new_contacts_this_month: 0,
+            active_deals: 0,
+            deal_value: 0,
+            conversion_rate: 0
           },
-          {
-            id: '2',
-            name: 'Priya Sharma',
-            email: 'priya.sharma@example.com',
-            phone: '+91 98765 43211',
-            status: 'active',
-            created_at: '2025-01-14'
-          },
-          {
-            id: '3',
-            name: 'Amit Patel',
-            email: 'amit.p@example.com',
-            phone: '+91 98765 43212',
-            status: 'active',
-            created_at: '2025-01-13'
-          },
-          {
-            id: '4',
-            name: 'Sneha Reddy',
-            email: 'sneha.r@example.com',
-            phone: '+91 98765 43213',
-            status: 'active',
-            created_at: '2025-01-12'
-          },
-          {
-            id: '5',
-            name: 'Vikram Singh',
-            email: 'vikram.s@example.com',
-            phone: '+91 98765 43214',
-            status: 'active',
-            created_at: '2025-01-11'
-          }
-        ],
-        deals: [
-          {
-            id: '1',
-            name: 'Premium Villa - Koramangala',
-            account_name: 'Rajesh Kumar',
-            amount: 3500000,
-            stage: 'Negotiation',
-            probability: 75,
-            closing_date: '2025-02-15'
-          },
-          {
-            id: '2',
-            name: '3BHK Apartment - Whitefield',
-            account_name: 'Priya Sharma',
-            amount: 2200000,
-            stage: 'Proposal',
-            probability: 60,
-            closing_date: '2025-02-28'
-          },
-          {
-            id: '3',
-            name: 'Luxury Penthouse - Indiranagar',
-            account_name: 'Amit Patel',
-            amount: 5500000,
-            stage: 'Contract Sent',
-            probability: 90,
-            closing_date: '2025-02-05'
-          },
-          {
-            id: '4',
-            name: '2BHK Apartment - Electronic City',
-            account_name: 'Sneha Reddy',
-            amount: 1500000,
-            stage: 'Qualification',
-            probability: 40,
-            closing_date: '2025-03-15'
-          }
-        ]
+          contacts: [],
+          deals: []
+        }, { status: 200 })
       }
 
-      return NextResponse.json(mockData, { status: 200 })
+      // Load credentials and fetch real data from Zoho
+      const credentials = await zohoClient.loadCredentials(user.id)
+
+      if (!credentials) {
+        throw new Error('Failed to load Zoho credentials')
+      }
+
+      // Fetch contacts and deals in parallel
+      const [contactsResponse, dealsResponse] = await Promise.all([
+        zohoClient.makeRequest(
+          'GET',
+          `${credentials.api_domain}/crm/v2/Contacts`,
+          credentials.access_token,
+          undefined,
+          { per_page: 200, sort_by: 'Created_Time', sort_order: 'desc' }
+        ),
+        zohoClient.makeRequest(
+          'GET',
+          `${credentials.api_domain}/crm/v2/Deals`,
+          credentials.access_token,
+          undefined,
+          { per_page: 200, sort_by: 'Created_Time', sort_order: 'desc' }
+        )
+      ])
+
+      // Process contacts
+      const contacts = (contactsResponse.data || []).map((contact: any) => ({
+        id: contact.id,
+        name: contact.Full_Name || `${contact.First_Name || ''} ${contact.Last_Name || ''}`.trim(),
+        email: contact.Email,
+        phone: contact.Phone || contact.Mobile,
+        status: contact.Lead_Status || 'active',
+        created_at: contact.Created_Time,
+        lead_score: contact.Lead_Score || 0,
+        budget_min: contact.Budget_Min,
+        budget_max: contact.Budget_Max,
+        preferred_location: contact.Preferred_Location,
+        property_type: contact.Property_Type
+      }))
+
+      // Process deals
+      const deals = (dealsResponse.data || []).map((deal: any) => ({
+        id: deal.id,
+        name: deal.Deal_Name,
+        account_name: deal.Contact_Name?.name || deal.Account_Name?.name || 'Unknown',
+        amount: deal.Amount || 0,
+        stage: deal.Stage,
+        probability: deal.Probability || 0,
+        closing_date: deal.Closing_Date,
+        property_name: deal.Property_Name,
+        property_location: deal.Property_Location,
+        property_type: deal.Property_Type,
+        created_at: deal.Created_Time
+      }))
+
+      // Calculate statistics
+      const now = new Date()
+      const thisMonthStart = new Date(now.getFullYear(), now.getMonth(), 1)
+
+      const newContactsThisMonth = contacts.filter(
+        (c: any) => new Date(c.created_at) >= thisMonthStart
+      ).length
+
+      const activeDeals = deals.filter(
+        (d: any) => !['Closed Won', 'Closed Lost', 'Closed-Won', 'Closed-Lost'].includes(d.stage)
+      )
+
+      const totalDealValue = activeDeals.reduce((sum: number, d: any) => sum + (d.amount || 0), 0)
+
+      const closedWonDeals = deals.filter(
+        (d: any) => ['Closed Won', 'Closed-Won'].includes(d.stage)
+      )
+
+      const conversionRate = deals.length > 0
+        ? Math.round((closedWonDeals.length / deals.length) * 100)
+        : 0
+
+      return NextResponse.json({
+        connected: true,
+        mock: false,
+        stats: {
+          total_contacts: contacts.length,
+          new_contacts_this_month: newContactsThisMonth,
+          active_deals: activeDeals.length,
+          deal_value: totalDealValue,
+          conversion_rate: conversionRate
+        },
+        contacts: contacts.slice(0, 50), // Return top 50 contacts
+        deals: activeDeals.slice(0, 50) // Return top 50 active deals
+      }, { status: 200 })
+
     } catch (error: any) {
       console.error('[CRM Dashboard Data Error]:', error)
-      return NextResponse.json(
-        { error: 'Failed to fetch CRM data', message: error.message },
-        { status: 500 }
-      )
+
+      // Return mock data with error flag for graceful degradation
+      return NextResponse.json({
+        connected: false,
+        mock: true,
+        error: true,
+        message: error.message || 'Failed to fetch CRM data',
+        stats: {
+          total_contacts: 0,
+          new_contacts_this_month: 0,
+          active_deals: 0,
+          deal_value: 0,
+          conversion_rate: 0
+        },
+        contacts: [],
+        deals: []
+      }, { status: 200 }) // Return 200 to prevent UI errors
     }
   },
   {

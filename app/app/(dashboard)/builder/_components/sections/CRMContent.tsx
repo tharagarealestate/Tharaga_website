@@ -7,18 +7,19 @@ import {
   Settings, Activity, Database, TrendingUp
 } from 'lucide-react'
 import { CRMSyncStatus } from '../../leads/_components/CRMSyncStatus'
-import { InlineCRMPanel } from '../../leads/_components/InlineCRMPanel'
+import { CRMDashboard } from './CRMDashboard'
 
 /**
  * CRM Content Component
  * Displays all CRM-related features and integrations inline
  * No redirects - all functionality works within the page
+ * Shows full-page CRM dashboard when connected
  */
 export function CRMContent() {
   const [crmStatus, setCrmStatus] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [syncing, setSyncing] = useState(false)
-  const [showConnectDialog, setShowConnectDialog] = useState(false)
+  const [showDashboard, setShowDashboard] = useState(false)
 
   // Fetch CRM status on mount
   useEffect(() => {
@@ -85,6 +86,11 @@ export function CRMContent() {
     setShowConnectDialog(true)
   }
 
+  // Show full CRM dashboard if connected or if user clicked to view dashboard
+  if (showDashboard) {
+    return <CRMDashboard onClose={() => setShowDashboard(false)} embedded={true} />
+  }
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -96,6 +102,14 @@ export function CRMContent() {
           <h2 className="text-xl font-bold text-white">CRM Integration</h2>
           <p className="text-sm text-slate-400">Manage your CRM connections and sync settings</p>
         </div>
+        {crmStatus?.connected && (
+          <button
+            onClick={() => setShowDashboard(true)}
+            className="ml-auto px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-lg text-sm font-semibold transition-colors"
+          >
+            View Dashboard
+          </button>
+        )}
       </div>
 
       {/* CRM Status */}
@@ -124,7 +138,7 @@ export function CRMContent() {
                   </div>
                 </div>
                 <button
-                  onClick={() => setShowConnectDialog(true)}
+                  onClick={() => window.open('/builder/settings/zoho', '_blank')}
                   className="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-lg text-sm font-semibold transition-colors"
                 >
                   Connect Now
@@ -281,18 +295,13 @@ export function CRMContent() {
               {syncing ? 'Syncing...' : 'Sync Now'}
             </button>
             <button
-              onClick={() => setShowConnectDialog(true)}
+              onClick={() => setShowDashboard(true)}
               className="px-4 py-2 bg-slate-700/50 hover:bg-slate-700/70 border border-slate-600/50 text-white rounded-lg text-sm font-semibold transition-all"
             >
-              Manage Settings
+              View Dashboard
             </button>
           </div>
         </div>
-      )}
-
-      {/* CRITICAL FIX: Inline CRM Panel - No external navigation */}
-      {showConnectDialog && (
-        <InlineCRMPanel onClose={() => setShowConnectDialog(false)} />
       )}
     </div>
   )

@@ -63,15 +63,8 @@ export async function hasPermission(
       return true
     }
 
+    // Get user role and permissions from database
     const supabase = getSupabase()
-
-    // Fallback: Try to get user from current session if email wasn't provided
-    const { data: { user } } = await supabase.auth.getUser()
-    if (user?.email === 'tharagarealestate@gmail.com') {
-      return true
-    }
-
-    // Get user role and permissions
     const { data: profile, error } = await supabase
       .from('profiles')
       .select('role, permissions')

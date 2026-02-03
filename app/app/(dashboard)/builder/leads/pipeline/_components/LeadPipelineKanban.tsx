@@ -180,61 +180,50 @@ export default function LeadPipelineKanban() {
     if (!user?.id) return;
     setLoading(true);
     try {
-      const { data, error } = await supabase
-        .from("lead_pipeline")
-        .select(
-          `
-            *,
-            lead:lead_scores!lead_pipeline_lead_id_fkey (
-              id,
-              user_id,
-              score,
-              category,
-              user:profiles!lead_scores_user_id_fkey (
-                id,
-                full_name,
-                email,
-                phone,
-                company_name
-              )
-            )
-          `
-        )
-        .eq("builder_id", user.id)
-        .order("stage_order", { ascending: true })
-        .order("entered_stage_at", { ascending: false });
+      // CRITICAL FIX: Use API endpoint instead of direct Supabase query
+      // This ensures admin email bypass and proper authentication flow
+      const response = await fetch('/api/leads/pipeline');
 
-      if (error) throw error;
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || `HTTP ${response.status}: ${response.statusText}`);
+      }
 
+      const result = await response.json();
+
+      if (!result.success || !result.data) {
+        throw new Error(result.message || 'Failed to fetch pipeline data');
+      }
+
+      // Extract pipeline data from API response
+      const pipelineByStage = result.data.pipeline;
+      const data = Object.entries(pipelineByStage).flatMap(([stage, items]: [string, any]) =>
+        (items || []).map((item: any) => ({
+          ...item,
+          stage,
+          lead: item.lead
+        }))
+      );
+
+      // Normalize data from API response
       const normalized: PipelineLead[] =
         data?.map((item: any) => {
           const stage = (item.stage || "new") as PipelineStage;
-          const leadScore = item.lead?.score;
-          const leadUser = item.lead?.user;
+          const leadData = Array.isArray(item.lead) ? item.lead[0] : item.lead;
+          const leadScore = leadData?.score;
 
           return {
             id: item.id,
             lead_id: item.lead_id,
-            builder_id: item.builder_id,
+            builder_id: user.id, // Use current user ID
             stage,
             stage_order: item.stage_order ?? STAGE_ORDER[stage],
-            entered_stage_at: item.entered_stage_at,
-            days_in_stage:
-              typeof item.days_in_stage === "number"
-                ? item.days_in_stage
-                : item.days_in_stage === null
-                ? null
-                : Number(item.days_in_stage) || 0,
-            deal_value:
-              item.deal_value !== null && item.deal_value !== undefined
-                ? Number(item.deal_value)
-                : null,
+            entered_stage_at: item.entered_stage_at || item.created_at,
+            days_in_stage: item.days_in_stage || 0,
+            deal_value: item.deal_value ? Number(item.deal_value) : null,
             expected_close_date: item.expected_close_date,
-            probability:
-              item.probability !== null && item.probability !== undefined
-                ? Number(item.probability)
-                : null,
-            last_activity_at: item.last_activity_at,
+            probability: item.probability ? Number(item.probability) : null,
+            last_activity_at: item.last_activity_at || leadData?.last_activity,
             last_activity_type: item.last_activity_type,
             next_followup_date: item.next_followup_date,
             notes: item.notes,
@@ -243,19 +232,13 @@ export default function LeadPipelineKanban() {
             created_at: item.created_at,
             updated_at: item.updated_at,
             closed_at: item.closed_at,
-            lead_email: leadUser?.email ?? "",
-            lead_name:
-              leadUser?.full_name ||
-              leadUser?.email ||
-              "Unidentified Lead",
-            lead_phone: leadUser?.phone ?? null,
-            lead_score:
-              leadScore !== null && leadScore !== undefined
-                ? Number(leadScore)
-                : 0,
-            lead_category: item.lead?.category ?? "Cold Lead",
+            lead_email: leadData?.email ?? "",
+            lead_name: leadData?.name || leadData?.email || "Unidentified Lead",
+            lead_phone: leadData?.phone ?? null,
+            lead_score: leadScore ? Number(leadScore) : 0,
+            lead_category: leadData?.category ?? "Cold Lead",
             total_views: 0,
-            last_activity: item.last_activity_at,
+            last_activity: item.last_activity_at || leadData?.last_activity,
           };
         }) ?? [];
 

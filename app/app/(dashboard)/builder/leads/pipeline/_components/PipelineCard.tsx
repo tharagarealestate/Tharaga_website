@@ -8,11 +8,16 @@ import {
   Clock,
   DollarSign,
   Eye,
+  Flame,
   Mail,
   MessageCircle,
   Phone,
+  Snowflake,
+  Sparkles,
   Star,
+  Sun,
   TrendingUp,
+  Zap,
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 
@@ -40,10 +45,10 @@ const PipelineCard = memo(function PipelineCard({
     []
   );
 
-  const scoreColor = getScoreBadgeColor(lead.lead_score);
-  const categoryLabel = getCategoryLabel(lead.lead_category);
+  const scoreStyles = getScoreStyles(lead.lead_score);
+  const categoryInfo = getCategoryInfo(lead.lead_category);
   const lastSeen = lead.last_activity_at
-    ? `Last seen ${formatDistanceToNow(new Date(lead.last_activity_at), {
+    ? `${formatDistanceToNow(new Date(lead.last_activity_at), {
         addSuffix: true,
       })}`
     : null;
@@ -61,79 +66,96 @@ const PipelineCard = memo(function PipelineCard({
   return (
     <motion.div
       whileHover={{ scale: 1.02, y: -2 }}
-      className={`cursor-grab rounded-xl border border-gray-200 bg-white p-4 shadow-sm transition-all hover:shadow-md ${
-        isDragging ? "rotate-3" : ""
+      className={`cursor-grab rounded-xl border border-slate-700/50 bg-gradient-to-br from-slate-800/95 via-slate-800/90 to-slate-900/95 p-4 shadow-lg backdrop-blur-sm transition-all hover:border-slate-600/50 hover:shadow-xl ${
+        isDragging ? "rotate-3 shadow-2xl ring-2 ring-amber-500/50" : ""
       }`}
     >
+      {/* Header */}
       <div className="mb-3 flex items-start justify-between gap-2">
         <div className="min-w-0 flex-1">
-          <h4 className="truncate text-sm font-semibold text-gray-900">
+          <h4 className="truncate text-sm font-semibold text-white">
             {lead.lead_name || "Unnamed Lead"}
           </h4>
           {lead.lead_email ? (
-            <p className="truncate text-xs text-gray-600">{lead.lead_email}</p>
+            <p className="truncate text-xs text-slate-400">{lead.lead_email}</p>
           ) : null}
         </div>
-        <span
-          className={`${scoreColor} flex items-center gap-1 rounded-full px-2 py-1 text-xs font-bold text-white`}
+        <motion.span
+          whileHover={{ scale: 1.1 }}
+          className={`${scoreStyles.bg} ${scoreStyles.border} flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs font-bold ${scoreStyles.text} shadow-sm`}
         >
           <Star className="h-3 w-3" />
           {lead.lead_score.toFixed(1)}
-        </span>
+        </motion.span>
       </div>
 
-      <div className="mb-3 flex items-center gap-2 text-xs font-medium text-gray-700">
-        <span>{categoryLabel}</span>
+      {/* Category & Days Badge */}
+      <div className="mb-3 flex items-center gap-2">
+        <span className={`flex items-center gap-1.5 rounded-lg ${categoryInfo.bg} ${categoryInfo.border} border px-2.5 py-1 text-xs font-medium ${categoryInfo.text}`}>
+          {categoryInfo.icon}
+          {categoryInfo.label}
+        </span>
         {lead.days_in_stage && lead.days_in_stage > 7 ? (
-          <span className="flex items-center gap-1 rounded-full bg-amber-50 px-2 py-0.5 text-xs text-amber-600">
+          <span className="flex items-center gap-1 rounded-lg bg-amber-500/10 border border-amber-500/30 px-2 py-1 text-xs text-amber-400">
             <Clock className="h-3 w-3" />
             {lead.days_in_stage}d
           </span>
         ) : null}
       </div>
 
+      {/* Deal Value */}
       {lead.deal_value ? (
-        <div className="mb-3 flex items-center justify-between rounded-lg bg-emerald-50 p-2 text-sm">
-          <div className="flex items-center gap-2 font-semibold text-emerald-900">
-            <DollarSign className="h-4 w-4 text-emerald-600" />
+        <div className="mb-3 flex items-center justify-between rounded-xl bg-emerald-500/10 border border-emerald-500/30 p-2.5">
+          <div className="flex items-center gap-2 font-semibold text-emerald-400">
+            <div className="p-1 rounded-lg bg-emerald-500/20">
+              <DollarSign className="h-4 w-4" />
+            </div>
             {formatCurrency(Number(lead.deal_value))}
           </div>
           {probability !== null ? (
-            <span className="text-xs font-medium text-emerald-700">
-              {probability}% probability
+            <span className="text-xs font-medium text-emerald-500/80">
+              {probability}% win
             </span>
           ) : null}
         </div>
       ) : null}
 
+      {/* Info Section */}
       <div className="mb-3 space-y-2 text-xs">
         {lastSeen ? (
-          <div className="flex items-center gap-2 text-gray-600">
+          <div className="flex items-center gap-2 text-slate-400">
             <Eye className="h-3 w-3" />
-            <span>{lastSeen}</span>
+            <span>Active {lastSeen}</span>
           </div>
         ) : null}
         {followUpDate ? (
-          <div className="flex items-center gap-2 rounded bg-orange-50 px-2 py-1 text-orange-600">
+          <div className={`flex items-center gap-2 rounded-lg px-2 py-1.5 ${
+            overdueFollowUp
+              ? 'bg-red-500/10 border border-red-500/30 text-red-400'
+              : 'bg-orange-500/10 border border-orange-500/30 text-orange-400'
+          }`}>
             <Calendar className="h-3 w-3" />
             <span>Follow up: {followUpDate.toLocaleDateString()}</span>
+            {overdueFollowUp && <AlertCircle className="h-3 w-3 ml-auto" />}
           </div>
         ) : null}
         {expectedClose ? (
-          <div className="flex items-center gap-2 text-blue-600">
+          <div className="flex items-center gap-2 text-blue-400">
             <TrendingUp className="h-3 w-3" />
-            <span>Expected close: {expectedClose.toLocaleDateString()}</span>
+            <span>Close: {expectedClose.toLocaleDateString()}</span>
           </div>
         ) : null}
       </div>
 
+      {/* Notes */}
       {lead.notes ? (
-        <div className="mb-3 line-clamp-2 rounded bg-gray-50 p-2 text-xs text-gray-700">
+        <div className="mb-3 line-clamp-2 rounded-lg bg-slate-700/30 border border-slate-700/50 p-2.5 text-xs text-slate-300">
           {lead.notes}
         </div>
       ) : null}
 
-      <div className="flex items-center gap-2 border-t border-gray-100 pt-3 text-xs font-medium">
+      {/* Action Buttons */}
+      <div className="flex items-center gap-2 border-t border-slate-700/50 pt-3">
         {lead.lead_phone ? (
           <button
             type="button"
@@ -141,9 +163,9 @@ const PipelineCard = memo(function PipelineCard({
               event.stopPropagation();
               window.location.href = `tel:${lead.lead_phone}`;
             }}
-            className="flex flex-1 items-center justify-center gap-1 rounded-lg bg-blue-50 px-2 py-1.5 text-blue-600 transition-colors hover:bg-blue-100"
+            className="flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-blue-500/10 border border-blue-500/30 px-2 py-2 text-xs font-medium text-blue-400 transition-all hover:bg-blue-500/20 hover:scale-105 active:scale-95"
           >
-            <Phone className="h-3 w-3" />
+            <Phone className="h-3.5 w-3.5" />
             Call
           </button>
         ) : null}
@@ -154,9 +176,9 @@ const PipelineCard = memo(function PipelineCard({
               event.stopPropagation();
               window.location.href = `mailto:${lead.lead_email}`;
             }}
-            className="flex flex-1 items-center justify-center gap-1 rounded-lg bg-purple-50 px-2 py-1.5 text-purple-600 transition-colors hover:bg-purple-100"
+            className="flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-purple-500/10 border border-purple-500/30 px-2 py-2 text-xs font-medium text-purple-400 transition-all hover:bg-purple-500/20 hover:scale-105 active:scale-95"
           >
-            <Mail className="h-3 w-3" />
+            <Mail className="h-3.5 w-3.5" />
             Email
           </button>
         ) : null}
@@ -166,18 +188,23 @@ const PipelineCard = memo(function PipelineCard({
             event.stopPropagation();
             // Placeholder for opening detail modal.
           }}
-          className="flex flex-1 items-center justify-center gap-1 rounded-lg bg-gray-50 px-2 py-1.5 text-gray-600 transition-colors hover:bg-gray-100"
+          className="flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-slate-700/50 border border-slate-600/50 px-2 py-2 text-xs font-medium text-slate-300 transition-all hover:bg-slate-700 hover:scale-105 active:scale-95"
         >
-          <MessageCircle className="h-3 w-3" />
+          <MessageCircle className="h-3.5 w-3.5" />
           View
         </button>
       </div>
 
-      {overdueFollowUp ? (
-        <div className="mt-2 flex items-center gap-2 rounded bg-red-50 px-2 py-1 text-xs text-red-600">
-          <AlertCircle className="h-3 w-3" />
+      {/* Overdue Alert */}
+      {overdueFollowUp && !followUpDate ? (
+        <motion.div
+          initial={{ opacity: 0, y: 5 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mt-2 flex items-center gap-2 rounded-lg bg-red-500/10 border border-red-500/30 px-2.5 py-1.5 text-xs text-red-400"
+        >
+          <AlertCircle className="h-3.5 w-3.5" />
           <span className="font-medium">Overdue follow-up!</span>
-        </div>
+        </motion.div>
       ) : null}
     </motion.div>
   );
@@ -185,29 +212,131 @@ const PipelineCard = memo(function PipelineCard({
 
 export default PipelineCard;
 
-function getScoreBadgeColor(score: number) {
-  if (score >= 9) return "bg-red-500";
-  if (score >= 7) return "bg-orange-500";
-  if (score >= 5) return "bg-blue-500";
-  return "bg-gray-400";
-}
-
-function getCategoryLabel(category?: string | null) {
-  if (!category) return "Lead";
-  const normalized = category.toLowerCase();
-  const map: Record<string, string> = {
-    "hot lead": "🔥 Hot",
-    hot: "🔥 Hot",
-    "warm lead": "☀️ Warm",
-    warm: "☀️ Warm",
-    "developing lead": "🌱 Developing",
-    developing: "🌱 Developing",
-    "cold lead": "❄️ Cold",
-    cold: "❄️ Cold",
-    "low quality": "💤 Low",
-    low: "💤 Low",
-    "low_quality": "💤 Low",
+function getScoreStyles(score: number) {
+  if (score >= 9) return {
+    bg: "bg-gradient-to-r from-red-500/20 to-orange-500/20",
+    border: "border-red-500/40",
+    text: "text-red-400"
   };
-  return map[normalized] || category;
+  if (score >= 7) return {
+    bg: "bg-gradient-to-r from-orange-500/20 to-amber-500/20",
+    border: "border-orange-500/40",
+    text: "text-orange-400"
+  };
+  if (score >= 5) return {
+    bg: "bg-gradient-to-r from-blue-500/20 to-cyan-500/20",
+    border: "border-blue-500/40",
+    text: "text-blue-400"
+  };
+  return {
+    bg: "bg-slate-700/50",
+    border: "border-slate-600/50",
+    text: "text-slate-400"
+  };
 }
 
+function getCategoryInfo(category?: string | null) {
+  if (!category) return {
+    label: "Lead",
+    icon: <Sparkles className="h-3 w-3" />,
+    bg: "bg-slate-700/50",
+    border: "border-slate-600/50",
+    text: "text-slate-300"
+  };
+
+  const normalized = category.toLowerCase();
+
+  const categoryMap: Record<string, {
+    label: string;
+    icon: React.ReactNode;
+    bg: string;
+    border: string;
+    text: string;
+  }> = {
+    "hot lead": {
+      label: "Hot",
+      icon: <Flame className="h-3 w-3" />,
+      bg: "bg-red-500/10",
+      border: "border-red-500/30",
+      text: "text-red-400"
+    },
+    "hot": {
+      label: "Hot",
+      icon: <Flame className="h-3 w-3" />,
+      bg: "bg-red-500/10",
+      border: "border-red-500/30",
+      text: "text-red-400"
+    },
+    "warm lead": {
+      label: "Warm",
+      icon: <Sun className="h-3 w-3" />,
+      bg: "bg-orange-500/10",
+      border: "border-orange-500/30",
+      text: "text-orange-400"
+    },
+    "warm": {
+      label: "Warm",
+      icon: <Sun className="h-3 w-3" />,
+      bg: "bg-orange-500/10",
+      border: "border-orange-500/30",
+      text: "text-orange-400"
+    },
+    "developing lead": {
+      label: "Developing",
+      icon: <Zap className="h-3 w-3" />,
+      bg: "bg-yellow-500/10",
+      border: "border-yellow-500/30",
+      text: "text-yellow-400"
+    },
+    "developing": {
+      label: "Developing",
+      icon: <Zap className="h-3 w-3" />,
+      bg: "bg-yellow-500/10",
+      border: "border-yellow-500/30",
+      text: "text-yellow-400"
+    },
+    "cold lead": {
+      label: "Cold",
+      icon: <Snowflake className="h-3 w-3" />,
+      bg: "bg-blue-500/10",
+      border: "border-blue-500/30",
+      text: "text-blue-400"
+    },
+    "cold": {
+      label: "Cold",
+      icon: <Snowflake className="h-3 w-3" />,
+      bg: "bg-blue-500/10",
+      border: "border-blue-500/30",
+      text: "text-blue-400"
+    },
+    "low quality": {
+      label: "Low",
+      icon: <Sparkles className="h-3 w-3" />,
+      bg: "bg-slate-700/50",
+      border: "border-slate-600/50",
+      text: "text-slate-400"
+    },
+    "low": {
+      label: "Low",
+      icon: <Sparkles className="h-3 w-3" />,
+      bg: "bg-slate-700/50",
+      border: "border-slate-600/50",
+      text: "text-slate-400"
+    },
+    "low_quality": {
+      label: "Low",
+      icon: <Sparkles className="h-3 w-3" />,
+      bg: "bg-slate-700/50",
+      border: "border-slate-600/50",
+      text: "text-slate-400"
+    },
+  };
+
+  return categoryMap[normalized] || {
+    label: category,
+    icon: <Sparkles className="h-3 w-3" />,
+    bg: "bg-slate-700/50",
+    border: "border-slate-600/50",
+    text: "text-slate-300"
+  };
+}

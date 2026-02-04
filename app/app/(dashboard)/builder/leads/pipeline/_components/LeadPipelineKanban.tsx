@@ -11,7 +11,7 @@ import {
   useSensor,
   useSensors,
 } from "@dnd-kit/core";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   BarChart3,
   CheckCircle2,
@@ -153,6 +153,7 @@ export default function LeadPipelineKanban() {
     useState<Record<PipelineStage, PipelineLead[]>>(INITIAL_STAGE_STATE);
   const [stats, setStats] = useState<PipelineStats | null>(null);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [dragging, setDragging] = useState<PipelineLead | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [filterScore, setFilterScore] = useState<number | null>(null);
@@ -176,9 +177,13 @@ export default function LeadPipelineKanban() {
     };
   }, [supabase]);
 
-  const fetchPipelineData = useCallback(async () => {
+  const fetchPipelineData = useCallback(async (isRefresh = false) => {
     if (!user?.id) return;
-    setLoading(true);
+    if (isRefresh) {
+      setRefreshing(true);
+    } else {
+      setLoading(true);
+    }
     try {
       // CRITICAL FIX: Use API endpoint instead of direct Supabase query
       // This ensures admin email bypass and proper authentication flow
@@ -191,12 +196,13 @@ export default function LeadPipelineKanban() {
 
       const result = await response.json();
 
-      if (!result.success || !result.data) {
+      // CRITICAL FIX: Check success flag properly - empty data is NOT an error
+      if (!result.success) {
         throw new Error(result.message || 'Failed to fetch pipeline data');
       }
 
-      // API returns flat array of pipeline items
-      const data = result.data;
+      // API returns flat array of pipeline items - empty is valid
+      const data = result.data || [];
 
       // Normalize data from API response
       const normalized: PipelineLead[] =
@@ -251,6 +257,7 @@ export default function LeadPipelineKanban() {
       toast.error("Failed to load pipeline data");
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
   }, [supabase, user]);
 
@@ -272,8 +279,15 @@ export default function LeadPipelineKanban() {
           table: "lead_pipeline",
           filter: `builder_id=eq.${user.id}`,
         },
-        () => {
-          fetchPipelineData();
+        (payload) => {
+          // Use refresh mode for real-time updates (non-blocking)
+          fetchPipelineData(true);
+          // Show subtle notification for real-time updates
+          if (payload.eventType === 'INSERT') {
+            toast.info("New lead added to pipeline", { duration: 2000 });
+          } else if (payload.eventType === 'UPDATE') {
+            toast.info("Pipeline updated", { duration: 1500 });
+          }
         }
       )
       .subscribe();
@@ -456,11 +470,44 @@ export default function LeadPipelineKanban() {
 
   if (loading) {
     return (
-      <BuilderPageWrapper title="Lead Pipeline" description="Drag & drop to move leads through your sales process">
-        <div className="flex h-96 items-center justify-center">
-          <div className="text-center">
-            <div className="mx-auto mb-4 h-16 w-16 animate-spin rounded-full border-4 border-amber-500 border-t-transparent" />
-            <p className="text-slate-300">Loading pipeline…</p>
+      <BuilderPageWrapper title="Lead Pipeline" description="Drag & drop to move leads through your sales process" noContainer={true}>
+        <div className="space-y-6">
+          {/* Stats skeleton */}
+          <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-6">
+            {[1, 2, 3, 4, 5, 6].map((i) => (
+              <div key={i} className="bg-gradient-to-br from-slate-800/95 to-slate-900/95 rounded-xl p-4 animate-pulse">
+                <div className="w-10 h-10 rounded-lg bg-slate-700/50 mb-3" />
+                <div className="h-7 w-20 bg-slate-700/50 rounded mb-2" />
+                <div className="h-4 w-16 bg-slate-700/30 rounded" />
+              </div>
+            ))}
+          </div>
+
+          {/* Pipeline skeleton */}
+          <div className="flex gap-4 overflow-x-auto pb-4">
+            {[1, 2, 3, 4, 5, 6, 7].map((i) => (
+              <div key={i} className="w-80 flex-shrink-0 rounded-2xl overflow-hidden animate-pulse">
+                <div className="bg-gradient-to-br from-slate-700/30 to-slate-800/30 p-4 border border-slate-700/30">
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="w-10 h-10 rounded-xl bg-slate-700/50" />
+                    <div className="flex-1">
+                      <div className="h-4 w-24 bg-slate-700/50 rounded mb-1" />
+                      <div className="h-3 w-32 bg-slate-700/30 rounded" />
+                    </div>
+                    <div className="h-7 w-8 bg-slate-700/50 rounded-full" />
+                  </div>
+                </div>
+                <div className="bg-slate-800/30 border-x border-b border-slate-700/30 p-3 space-y-3 min-h-[200px]">
+                  {[1, 2].map((j) => (
+                    <div key={j} className="bg-slate-700/30 rounded-xl p-4">
+                      <div className="h-4 w-32 bg-slate-600/50 rounded mb-2" />
+                      <div className="h-3 w-24 bg-slate-600/30 rounded mb-3" />
+                      <div className="h-8 w-full bg-slate-600/20 rounded" />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       </BuilderPageWrapper>
@@ -480,11 +527,12 @@ export default function LeadPipelineKanban() {
           <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
             <div className="flex gap-3">
               <button
-                onClick={fetchPipelineData}
-                className="flex items-center gap-2 rounded-lg border border-slate-600 bg-gradient-to-br from-slate-800/95 to-slate-900/95 px-4 py-2 text-white transition-colors hover:bg-slate-700/50"
+                onClick={() => fetchPipelineData(true)}
+                disabled={refreshing}
+                className="flex items-center gap-2 rounded-lg border border-slate-600 bg-gradient-to-br from-slate-800/95 to-slate-900/95 px-4 py-2 text-white transition-all hover:bg-slate-700/50 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                <RefreshCw className="h-4 w-4" />
-                Refresh
+                <RefreshCw className={`h-4 w-4 transition-transform ${refreshing ? 'animate-spin' : ''}`} />
+                {refreshing ? 'Refreshing...' : 'Refresh'}
               </button>
               <button className="flex items-center gap-2 rounded-lg border border-slate-600 bg-gradient-to-br from-slate-800/95 to-slate-900/95 px-4 py-2 text-white transition-colors hover:bg-slate-700/50">
                 <Download className="h-4 w-4" />
@@ -573,19 +621,37 @@ export default function LeadPipelineKanban() {
         onDragStart={handleDragStart}
         onDragEnd={handleDragEnd}
       >
-        <div className="flex gap-4 overflow-x-auto pb-4" style={{ WebkitOverflowScrolling: 'touch', scrollSnapType: 'x mandatory' }}>
-          {visibleStages.map((stage) => {
-            const stageLeads = getFilteredLeads(leads[stage.id]);
-            const stageStats = stats?.stages[stage.id];
-            return (
-              <PipelineColumn
-                key={stage.id}
-                stage={stage}
-                leads={stageLeads}
-                stats={stageStats}
-              />
-            );
-          })}
+        <div className="relative">
+          {/* Refreshing overlay - subtle indicator */}
+          <AnimatePresence>
+            {refreshing && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="absolute inset-0 z-10 bg-slate-900/20 backdrop-blur-[1px] rounded-2xl flex items-start justify-center pt-8 pointer-events-none"
+              >
+                <div className="flex items-center gap-2 bg-slate-800/90 border border-amber-500/30 rounded-full px-4 py-2 shadow-lg">
+                  <RefreshCw className="h-4 w-4 text-amber-400 animate-spin" />
+                  <span className="text-sm text-amber-300 font-medium">Syncing...</span>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+          <div className="flex gap-4 overflow-x-auto pb-4" style={{ WebkitOverflowScrolling: 'touch', scrollSnapType: 'x mandatory' }}>
+            {visibleStages.map((stage) => {
+              const stageLeads = getFilteredLeads(leads[stage.id]);
+              const stageStats = stats?.stages[stage.id];
+              return (
+                <PipelineColumn
+                  key={stage.id}
+                  stage={stage}
+                  leads={stageLeads}
+                  stats={stageStats}
+                />
+              );
+            })}
+          </div>
         </div>
         <DragOverlay>
           {dragging ? (

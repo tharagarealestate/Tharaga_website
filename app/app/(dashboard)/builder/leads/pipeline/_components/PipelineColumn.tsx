@@ -8,7 +8,8 @@ import {
   useSortable,
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
-import { Plus, TrendingUp, DollarSign, Clock } from "lucide-react";
+import { motion } from "framer-motion";
+import { Plus, TrendingUp, DollarSign, Clock, Sparkles } from "lucide-react";
 
 import PipelineCard from "./PipelineCard";
 import type { PipelineLead, StageConfig, StageSnapshot } from "./types";
@@ -19,63 +20,99 @@ interface PipelineColumnProps {
   stats?: StageSnapshot;
 }
 
+// Modern dark theme color palette
 const COLOR_MAP: Record<
   string,
-  { bg: string; border: string; text: string; badge: string }
+  {
+    bg: string;
+    border: string;
+    text: string;
+    badge: string;
+    headerBg: string;
+    iconBg: string;
+    glow: string;
+  }
 > = {
   blue: {
-    bg: "bg-blue-50",
-    border: "border-blue-200",
-    text: "text-blue-700",
-    badge: "bg-blue-600",
+    bg: "bg-gradient-to-br from-blue-500/10 to-blue-600/5",
+    border: "border-blue-500/30",
+    text: "text-blue-400",
+    badge: "bg-gradient-to-r from-blue-500 to-blue-600",
+    headerBg: "from-blue-500/20 via-blue-600/10 to-transparent",
+    iconBg: "bg-blue-500/20 border-blue-500/30",
+    glow: "ring-blue-500/50",
   },
   cyan: {
-    bg: "bg-cyan-50",
-    border: "border-cyan-200",
-    text: "text-cyan-700",
-    badge: "bg-cyan-600",
+    bg: "bg-gradient-to-br from-cyan-500/10 to-cyan-600/5",
+    border: "border-cyan-500/30",
+    text: "text-cyan-400",
+    badge: "bg-gradient-to-r from-cyan-500 to-cyan-600",
+    headerBg: "from-cyan-500/20 via-cyan-600/10 to-transparent",
+    iconBg: "bg-cyan-500/20 border-cyan-500/30",
+    glow: "ring-cyan-500/50",
   },
   purple: {
-    bg: "bg-purple-50",
-    border: "border-purple-200",
-    text: "text-purple-700",
-    badge: "bg-purple-600",
+    bg: "bg-gradient-to-br from-purple-500/10 to-purple-600/5",
+    border: "border-purple-500/30",
+    text: "text-purple-400",
+    badge: "bg-gradient-to-r from-purple-500 to-purple-600",
+    headerBg: "from-purple-500/20 via-purple-600/10 to-transparent",
+    iconBg: "bg-purple-500/20 border-purple-500/30",
+    glow: "ring-purple-500/50",
   },
   orange: {
-    bg: "bg-orange-50",
-    border: "border-orange-200",
-    text: "text-orange-700",
-    badge: "bg-orange-600",
+    bg: "bg-gradient-to-br from-orange-500/10 to-orange-600/5",
+    border: "border-orange-500/30",
+    text: "text-orange-400",
+    badge: "bg-gradient-to-r from-orange-500 to-orange-600",
+    headerBg: "from-orange-500/20 via-orange-600/10 to-transparent",
+    iconBg: "bg-orange-500/20 border-orange-500/30",
+    glow: "ring-orange-500/50",
   },
   amber: {
-    bg: "bg-amber-50",
-    border: "border-amber-200",
-    text: "text-amber-700",
-    badge: "bg-amber-600",
+    bg: "bg-gradient-to-br from-amber-500/10 to-amber-600/5",
+    border: "border-amber-500/30",
+    text: "text-amber-400",
+    badge: "bg-gradient-to-r from-amber-500 to-amber-600",
+    headerBg: "from-amber-500/20 via-amber-600/10 to-transparent",
+    iconBg: "bg-amber-500/20 border-amber-500/30",
+    glow: "ring-amber-500/50",
   },
   violet: {
-    bg: "bg-violet-50",
-    border: "border-violet-200",
-    text: "text-violet-700",
-    badge: "bg-violet-600",
+    bg: "bg-gradient-to-br from-violet-500/10 to-violet-600/5",
+    border: "border-violet-500/30",
+    text: "text-violet-400",
+    badge: "bg-gradient-to-r from-violet-500 to-violet-600",
+    headerBg: "from-violet-500/20 via-violet-600/10 to-transparent",
+    iconBg: "bg-violet-500/20 border-violet-500/30",
+    glow: "ring-violet-500/50",
   },
   indigo: {
-    bg: "bg-indigo-50",
-    border: "border-indigo-200",
-    text: "text-indigo-700",
-    badge: "bg-indigo-600",
+    bg: "bg-gradient-to-br from-indigo-500/10 to-indigo-600/5",
+    border: "border-indigo-500/30",
+    text: "text-indigo-400",
+    badge: "bg-gradient-to-r from-indigo-500 to-indigo-600",
+    headerBg: "from-indigo-500/20 via-indigo-600/10 to-transparent",
+    iconBg: "bg-indigo-500/20 border-indigo-500/30",
+    glow: "ring-indigo-500/50",
   },
   emerald: {
-    bg: "bg-emerald-50",
-    border: "border-emerald-200",
-    text: "text-emerald-700",
-    badge: "bg-emerald-600",
+    bg: "bg-gradient-to-br from-emerald-500/10 to-emerald-600/5",
+    border: "border-emerald-500/30",
+    text: "text-emerald-400",
+    badge: "bg-gradient-to-r from-emerald-500 to-emerald-600",
+    headerBg: "from-emerald-500/20 via-emerald-600/10 to-transparent",
+    iconBg: "bg-emerald-500/20 border-emerald-500/30",
+    glow: "ring-emerald-500/50",
   },
   red: {
-    bg: "bg-red-50",
-    border: "border-red-200",
-    text: "text-red-700",
-    badge: "bg-red-600",
+    bg: "bg-gradient-to-br from-red-500/10 to-red-600/5",
+    border: "border-red-500/30",
+    text: "text-red-400",
+    badge: "bg-gradient-to-r from-red-500 to-red-600",
+    headerBg: "from-red-500/20 via-red-600/10 to-transparent",
+    iconBg: "bg-red-500/20 border-red-500/30",
+    glow: "ring-red-500/50",
   },
 };
 
@@ -117,68 +154,107 @@ export default function PipelineColumn({
   };
 
   return (
-    <div
+    <motion.div
       ref={setNodeRef}
-      className={`flex max-h-[calc(100vh-300px)] w-80 flex-shrink-0 flex-col transition-all duration-200 ${
-        isOver ? "ring-2 ring-blue-500 ring-offset-2" : ""
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      className={`flex max-h-[calc(100vh-300px)] w-80 flex-shrink-0 flex-col rounded-2xl overflow-hidden transition-all duration-300 ${
+        isOver
+          ? `ring-2 ${colors.glow} ring-offset-2 ring-offset-slate-900 scale-[1.02]`
+          : ""
       }`}
+      style={{ scrollSnapAlign: 'start' }}
     >
-      <div className={`${colors.bg} ${colors.border} border-2 rounded-t-2xl p-4`}>
-        <div className="mb-3 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <StageIcon className={`h-5 w-5 ${colors.text}`} />
-            <h3 className={`font-bold ${colors.text}`}>{stage.label}</h3>
-          </div>
-          <span className={`${colors.badge} rounded-full px-2 py-1 text-sm font-bold text-white`}>
-            {leads.length}
-          </span>
-        </div>
-        <p className="mb-3 text-xs text-gray-600">{stage.description}</p>
+      {/* Modern Header */}
+      <div className={`${colors.bg} border ${colors.border} backdrop-blur-xl p-4 relative overflow-hidden`}>
+        {/* Gradient overlay */}
+        <div className={`absolute inset-0 bg-gradient-to-br ${colors.headerBg} pointer-events-none`} />
 
-        {stats && stats.count > 0 ? (
-          <div className="grid grid-cols-3 gap-2 text-xs">
-            <StageStat icon={TrendingUp} label="Count" value={stats.count} />
-            <StageStat
-              icon={DollarSign}
-              label="Value"
-              value={formatCurrency(stats.value)}
-            />
-            <StageStat
-              icon={Clock}
-              label="Days"
-              value={Math.round(stats.avg_days)}
-            />
+        <div className="relative z-10">
+          <div className="mb-3 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className={`p-2.5 rounded-xl ${colors.iconBg} border backdrop-blur-sm`}>
+                <StageIcon className={`h-5 w-5 ${colors.text}`} />
+              </div>
+              <div>
+                <h3 className="font-bold text-white text-sm">{stage.label}</h3>
+                <p className="text-[10px] text-slate-400 mt-0.5">{stage.description}</p>
+              </div>
+            </div>
+            <motion.span
+              key={leads.length}
+              initial={{ scale: 1.2 }}
+              animate={{ scale: 1 }}
+              className={`${colors.badge} rounded-full px-3 py-1.5 text-sm font-bold text-white shadow-lg`}
+            >
+              {leads.length}
+            </motion.span>
           </div>
-        ) : null}
+
+          {stats && stats.count > 0 ? (
+            <div className="grid grid-cols-3 gap-2 mt-3">
+              <StageStat icon={TrendingUp} label="Count" value={stats.count} color={colors.text} />
+              <StageStat
+                icon={DollarSign}
+                label="Value"
+                value={formatCurrency(stats.value)}
+                color={colors.text}
+              />
+              <StageStat
+                icon={Clock}
+                label="Avg Days"
+                value={Math.round(stats.avg_days)}
+                color={colors.text}
+              />
+            </div>
+          ) : null}
+        </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto border-x-2 border-b-2 border-gray-200 bg-gray-50 p-3 rounded-b-2xl">
+      {/* Cards Container */}
+      <div className="flex-1 overflow-y-auto border-x border-b border-slate-700/50 bg-slate-800/30 backdrop-blur-sm p-3 rounded-b-2xl">
         <SortableContext
           items={sortedLeads.map((lead) => lead.id)}
           strategy={verticalListSortingStrategy}
         >
           <div className="space-y-3">
             {sortedLeads.length > 0 ? (
-              sortedLeads.map((lead) => <SortableCard key={lead.id} lead={lead} />)
+              sortedLeads.map((lead, index) => (
+                <motion.div
+                  key={lead.id}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.05 }}
+                >
+                  <SortableCard lead={lead} />
+                </motion.div>
+              ))
             ) : (
-              <div className="flex flex-col items-center justify-center py-12 text-center">
-                <StageIcon className="mb-3 h-12 w-12 text-gray-300" />
-                <p className="text-sm text-gray-500">No leads in this stage</p>
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="flex flex-col items-center justify-center py-12 text-center"
+              >
+                <div className={`p-4 rounded-2xl ${colors.iconBg} border mb-4`}>
+                  <StageIcon className={`h-8 w-8 ${colors.text} opacity-50`} />
+                </div>
+                <p className="text-sm text-slate-400 mb-1">No leads in this stage</p>
+                <p className="text-xs text-slate-500">Drag leads here or add new ones</p>
                 {stage.id === "new" ? (
                   <button
                     type="button"
-                    className="mt-4 flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm text-white transition-colors hover:bg-blue-700"
+                    className={`mt-4 flex items-center gap-2 rounded-xl ${colors.badge} px-4 py-2.5 text-sm font-medium text-white transition-all hover:scale-105 hover:shadow-lg active:scale-95`}
                   >
                     <Plus className="h-4 w-4" />
                     Add Lead
                   </button>
                 ) : null}
-              </div>
+              </motion.div>
             )}
           </div>
         </SortableContext>
       </div>
-    </div>
+    </motion.div>
   );
 }
 
@@ -186,18 +262,20 @@ function StageStat({
   icon: Icon,
   label,
   value,
+  color,
 }: {
   icon: any;
   label: string;
   value: string | number;
+  color: string;
 }) {
   return (
-    <div className="rounded-lg bg-white/70 p-2">
-      <div className="mb-1 flex items-center gap-1 text-gray-600">
-        <Icon className="h-3 w-3" />
+    <div className="rounded-lg bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 p-2">
+      <div className="mb-1 flex items-center gap-1 text-slate-400 text-[10px]">
+        <Icon className={`h-3 w-3 ${color}`} />
         <span>{label}</span>
       </div>
-      <p className="font-bold text-gray-900">{value}</p>
+      <p className="font-bold text-white text-sm">{value}</p>
     </div>
   );
 }
@@ -211,9 +289,14 @@ function SortableCard({ lead }: { lead: PipelineLead }) {
   };
 
   return (
-    <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
+    <div
+      ref={setNodeRef}
+      style={style}
+      {...attributes}
+      {...listeners}
+      className={`transition-all duration-200 ${isDragging ? 'opacity-50 scale-95' : ''}`}
+    >
       <PipelineCard lead={lead} isDragging={isDragging} />
     </div>
   );
 }
-

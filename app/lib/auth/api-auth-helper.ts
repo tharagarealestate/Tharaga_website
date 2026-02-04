@@ -105,6 +105,20 @@ export async function getAuthenticatedUser(request: NextRequest): Promise<AuthRe
       }
     }
 
+    // CRITICAL FIX: Admin owner email gets full admin role immediately (bypasses ALL database checks)
+    // This ensures the admin owner (tharagarealestate@gmail.com) can access ALL features
+    if (user.email === 'tharagarealestate@gmail.com') {
+      return {
+        user: {
+          id: user.id,
+          email: user.email,
+          role: 'admin',
+        },
+        supabase,
+        error: null,
+      }
+    }
+
     // Step 5: Get user role from profile
     let role: string | undefined
     try {
@@ -165,8 +179,12 @@ export async function requireBuilder(request: NextRequest): Promise<{
     }
   }
 
-  // Check if user is a builder
-  if (authResult.user.role !== 'builder') {
+  // CRITICAL FIX: Check if user is admin owner - they get FULL access to builder features
+  const isAdminOwner = authResult.user.email === 'tharagarealestate@gmail.com'
+  const isAdmin = authResult.user.role === 'admin' || isAdminOwner
+
+  // Check if user is a builder OR admin (admins can access builder features)
+  if (authResult.user.role !== 'builder' && !isAdmin) {
     return {
       user: authResult.user,
       builder: null,
@@ -186,6 +204,17 @@ export async function requireBuilder(request: NextRequest): Promise<{
       .select('id')
       .eq('user_id', authResult.user.id)
       .single()
+
+    // CRITICAL FIX: Admin users get access even without builder profile
+    // They get a virtual builder profile using their user ID
+    if (isAdmin) {
+      return {
+        user: { ...authResult.user, role: 'admin' },
+        builder: builder || { id: authResult.user.id }, // Use user ID if no builder profile
+        supabase: authResult.supabase,
+        error: null,
+      }
+    }
 
     if (builderError || !builder) {
       return {
@@ -208,6 +237,17 @@ export async function requireBuilder(request: NextRequest): Promise<{
     }
   } catch (error: any) {
     console.error('[API Auth] Error fetching builder profile:', error)
+
+    // CRITICAL FIX: Admin users should still have access even if builder query fails
+    if (isAdmin) {
+      return {
+        user: { ...authResult.user, role: 'admin' },
+        builder: { id: authResult.user.id },
+        supabase: authResult.supabase,
+        error: null,
+      }
+    }
+
     return {
       user: authResult.user,
       builder: null,

@@ -31,43 +31,52 @@ export const GET = secureApiRoute(
 
     try {
       // CRITICAL FIX: Trust the user.role from secureApiRoute wrapper (includes email override)
+      // Admin sees ALL pipeline leads, builders see only their own
       const isAdmin = user.role === 'admin' || user.email === 'tharagarealestate@gmail.com'
 
-      // Build query - admins see ALL pipeline leads, builders see only their own
+      // Build query with proper admin bypass
       let query = supabase
         .from('lead_pipeline')
         .select(`
           id,
           lead_id,
+          builder_id,
           stage,
-          position,
+          stage_order,
+          entered_stage_at,
+          days_in_stage,
+          deal_value,
+          expected_close_date,
+          probability,
+          last_activity_at,
+          last_activity_type,
+          next_followup_date,
+          notes,
+          loss_reason,
+          loss_details,
           created_at,
           updated_at,
-          notes,
-          expected_close_date,
-          lead:leads (
+          closed_at,
+          lead:leads!lead_id (
             id,
-            name,
-            email,
-            phone,
-            score,
             category,
-            budget_min,
-            budget_max,
-            preferred_location,
-            preferred_property_type,
-            created_at,
-            last_activity
+            score,
+            user:user_id (
+              email,
+              full_name,
+              phone
+            )
           )
         `)
-        .order('position', { ascending: true })
+        .order('stage_order', { ascending: true })
+        .order('entered_stage_at', { ascending: false })
 
       // CRITICAL: Only filter by builder_id for non-admin users
       if (!isAdmin) {
         query = query.eq('builder_id', user.id)
       }
 
-      const { data: pipelineData, error } = await query
+      const { data, error } = await query
 
       if (error) {
         console.error('[Pipeline API Error]:', error)
@@ -79,33 +88,11 @@ export const GET = secureApiRoute(
         }, { status: 500 })
       }
 
-      // Group leads by stage
-      const pipelineByStage = {
-        new: [],
-        contacted: [],
-        qualified: [],
-        proposal: [],
-        negotiation: [],
-        closed_won: [],
-        closed_lost: []
-      }
-
-      if (pipelineData) {
-        pipelineData.forEach((item: any) => {
-          const stage = item.stage || 'new'
-          if (pipelineByStage[stage as keyof typeof pipelineByStage]) {
-            pipelineByStage[stage as keyof typeof pipelineByStage].push(item)
-          }
-        })
-      }
-
       return NextResponse.json({
         success: true,
-        data: {
-          pipeline: pipelineByStage,
-          total: pipelineData?.length || 0,
-          is_admin: isAdmin
-        }
+        data: data || [],
+        total: data?.length || 0,
+        is_admin: isAdmin
       }, { status: 200 })
 
     } catch (error: any) {

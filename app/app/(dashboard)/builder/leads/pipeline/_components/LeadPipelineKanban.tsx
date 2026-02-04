@@ -195,21 +195,15 @@ export default function LeadPipelineKanban() {
         throw new Error(result.message || 'Failed to fetch pipeline data');
       }
 
-      // Extract pipeline data from API response
-      const pipelineByStage = result.data.pipeline;
-      const data = Object.entries(pipelineByStage).flatMap(([stage, items]: [string, any]) =>
-        (items || []).map((item: any) => ({
-          ...item,
-          stage,
-          lead: item.lead
-        }))
-      );
+      // API returns flat array of pipeline items
+      const data = result.data;
 
       // Normalize data from API response
       const normalized: PipelineLead[] =
         data?.map((item: any) => {
           const stage = (item.stage || "new") as PipelineStage;
           const leadData = Array.isArray(item.lead) ? item.lead[0] : item.lead;
+          const leadUser = leadData?.user;
           const leadScore = leadData?.score;
 
           return {
@@ -232,9 +226,9 @@ export default function LeadPipelineKanban() {
             created_at: item.created_at,
             updated_at: item.updated_at,
             closed_at: item.closed_at,
-            lead_email: leadData?.email ?? "",
-            lead_name: leadData?.name || leadData?.email || "Unidentified Lead",
-            lead_phone: leadData?.phone ?? null,
+            lead_email: leadUser?.email ?? "",
+            lead_name: leadUser?.full_name || leadUser?.email || "Unidentified Lead",
+            lead_phone: leadUser?.phone ?? null,
             lead_score: leadScore ? Number(leadScore) : 0,
             lead_category: leadData?.category ?? "Cold Lead",
             total_views: 0,

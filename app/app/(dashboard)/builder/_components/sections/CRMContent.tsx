@@ -82,8 +82,8 @@ export function CRMContent() {
   }
 
   const handleConnect = async () => {
-    // CRITICAL FIX: Open inline CRM panel instead of external navigation
-    setShowConnectDialog(true)
+    // CRITICAL FIX: Show full CRM dashboard for connection flow
+    setShowDashboard(true)
   }
 
   // Show full CRM dashboard if connected or if user clicked to view dashboard
@@ -138,7 +138,7 @@ export function CRMContent() {
                   </div>
                 </div>
                 <button
-                  onClick={() => window.open('/builder/settings/zoho', '_blank')}
+                  onClick={() => setShowDashboard(true)}
                   className="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-lg text-sm font-semibold transition-colors"
                 >
                   Connect Now

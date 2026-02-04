@@ -172,12 +172,12 @@ export function CRMSyncStatus({ status }: CRMSyncStatusProps) {
             >
               Open CRM
             </button>
-            <a
-              href="/builder/settings/zoho"
+            <button
+              onClick={() => setShowCRMPanel(true)}
               className="px-4 py-2 bg-white/10 hover:bg-white/20 border border-white/20 rounded-lg text-white text-sm font-semibold transition-all"
             >
               Manage
-            </a>
+            </button>
           </div>
         </div>
       </motion.div>

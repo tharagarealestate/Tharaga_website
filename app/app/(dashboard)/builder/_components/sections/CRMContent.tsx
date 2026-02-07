@@ -29,7 +29,12 @@ export function CRMContent() {
         const response = await fetch('/api/crm/zoho/status')
         if (response.ok) {
           const data = await response.json()
-          setCrmStatus(data.success ? data.data : null)
+          // Handle both old format (data.success && data.data) and new format (data directly)
+          if (data.success !== false) {
+            setCrmStatus(data.data || data)
+          } else {
+            setCrmStatus(null)
+          }
         } else {
           setCrmStatus(null)
         }

@@ -1,84 +1,129 @@
 // =============================================
-// ZOHO CRM OAUTH - CONNECT
-// Redirects user to Zoho consent screen
+// ZOHO CRM OAUTH - CONNECT API
+// GET /api/crm/zoho/connect - No role restrictions
+// Returns OAuth URL for Zoho CRM connection
 // =============================================
-import { NextRequest, NextResponse } from 'next/server';
-import { requireBuilder, createErrorResponse } from '@/lib/auth/api-auth-helper';
-import { zohoClient } from '@/lib/integrations/crm/zohoClient';
+import { NextRequest, NextResponse } from 'next/server'
+import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
+import { cookies } from 'next/headers'
 
-export const runtime = 'nodejs';
-export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs'
+export const dynamic = 'force-dynamic'
 
-export async function GET(request: NextRequest) {
-  try {
-    // Enhanced authentication with better error handling
-    const { user, builder, supabase, error: authError } = await requireBuilder(request);
-    
-    if (authError) {
-      const statusCode = authError.type === 'NOT_BUILDER' ? 403 : 
-                        authError.type === 'CONFIG_ERROR' ? 500 : 401;
-      return createErrorResponse(authError as any, statusCode);
-    }
-
-    if (!builder || !supabase) {
-      return NextResponse.json(
-        { 
-          success: false,
-          error: 'Builder profile not found',
-          errorType: 'NOT_FOUND',
-          message: 'Please complete your builder profile setup to connect Zoho CRM.',
-        },
-        { status: 404 }
-      );
-    }
-
-    // Check if already connected
-    const { data: existingConnection } = await supabase
-      .from('integrations')
-      .select('id, is_active, is_connected')
-      .eq('builder_id', builder.id)
-      .eq('integration_type', 'crm')
-      .eq('provider', 'zoho')
-      .single();
-
-    if (existingConnection?.is_active && existingConnection?.is_connected) {
-      return NextResponse.json({
-        error: 'Zoho CRM is already connected',
-        already_connected: true,
-        integration_id: existingConnection.id,
-      }, { status: 400 });
-    }
-
-    // Generate OAuth URL with builder_id in state
-    const authUrl = zohoClient.getAuthUrl(user!.id);
-
-    return NextResponse.json({ 
-      success: true,
-      auth_url: authUrl,
-      message: 'Redirect user to this URL to connect Zoho CRM',
-      expires_in: 600, // OAuth URL valid for 10 minutes
-    });
-  } catch (error: any) {
-    console.error('Error initiating Zoho connection:', error);
-    return NextResponse.json(
-      { 
-        error: error.message || 'Failed to initiate Zoho connection',
-        success: false,
-      },
-      { status: 500 }
-    );
-  }
+// CORS headers for all responses
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'GET, OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type, Authorization',
 }
 
+// Handle OPTIONS for CORS preflight
+export async function OPTIONS() {
+  return new NextResponse(null, { status: 204, headers: corsHeaders })
+}
 
+// =============================================
+// GET - Get Zoho OAuth URL (NO ROLE RESTRICTIONS)
+// =============================================
+export async function GET(request: NextRequest) {
+  try {
+    const supabase = createRouteHandlerClient({ cookies })
 
+    // Simple auth check - just get the user, NO ROLE RESTRICTIONS
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
 
+    if (authError || !user) {
+      return NextResponse.json({
+        success: false,
+        error: 'Please log in to connect Zoho CRM',
+        errorType: 'AUTH_REQUIRED'
+      }, { status: 401, headers: corsHeaders })
+    }
 
+    // Check if already connected - try multiple column schemas
+    let existingConnection = null
 
+    // Try with builder_id first
+    try {
+      const { data } = await supabase
+        .from('integrations')
+        .select('id, is_active, is_connected, connected, active')
+        .eq('builder_id', user.id)
+        .eq('integration_type', 'crm')
+        .eq('provider', 'zoho')
+        .single()
+      existingConnection = data
+    } catch (e) {
+      // Table might not have builder_id column
+    }
 
+    // Try with user_id
+    if (!existingConnection) {
+      try {
+        const { data } = await supabase
+          .from('integrations')
+          .select('id, is_active, is_connected, connected, active')
+          .eq('user_id', user.id)
+          .eq('provider', 'zoho')
+          .single()
+        existingConnection = data
+      } catch (e) {
+        // No existing connection
+      }
+    }
 
+    const isConnected = existingConnection?.is_connected || existingConnection?.connected
+    const isActive = existingConnection?.is_active || existingConnection?.active
 
+    if (isConnected && isActive) {
+      return NextResponse.json({
+        success: false,
+        error: 'Zoho CRM is already connected',
+        already_connected: true,
+        integration_id: existingConnection?.id,
+      }, { status: 400, headers: corsHeaders })
+    }
 
+    // Generate OAuth URL
+    const clientId = process.env.ZOHO_CLIENT_ID
+    const redirectUri = process.env.ZOHO_REDIRECT_URI || `${process.env.NEXT_PUBLIC_SITE_URL}/api/crm/zoho/callback`
 
+    if (!clientId) {
+      return NextResponse.json({
+        success: false,
+        error: 'Zoho CRM integration not configured',
+        message: 'Please configure ZOHO_CLIENT_ID environment variable',
+      }, { status: 500, headers: corsHeaders })
+    }
 
+    // Build the OAuth authorization URL
+    const scope = 'ZohoCRM.modules.ALL,ZohoCRM.settings.ALL,ZohoCRM.users.READ'
+    const state = Buffer.from(JSON.stringify({
+      user_id: user.id,
+      timestamp: Date.now()
+    })).toString('base64')
 
+    const authUrl = new URL('https://accounts.zoho.com/oauth/v2/auth')
+    authUrl.searchParams.set('client_id', clientId)
+    authUrl.searchParams.set('redirect_uri', redirectUri)
+    authUrl.searchParams.set('scope', scope)
+    authUrl.searchParams.set('response_type', 'code')
+    authUrl.searchParams.set('access_type', 'offline')
+    authUrl.searchParams.set('prompt', 'consent')
+    authUrl.searchParams.set('state', state)
+
+    return NextResponse.json({
+      success: true,
+      auth_url: authUrl.toString(),
+      message: 'Redirect user to this URL to connect Zoho CRM',
+      expires_in: 600, // OAuth URL valid for 10 minutes
+    }, { status: 200, headers: corsHeaders })
+
+  } catch (error: any) {
+    console.error('Error initiating Zoho connection:', error)
+    return NextResponse.json({
+      success: false,
+      error: error.message || 'Failed to initiate Zoho connection',
+    }, { status: 500, headers: corsHeaders })
+  }
+}

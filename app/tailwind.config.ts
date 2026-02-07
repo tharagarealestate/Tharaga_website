@@ -41,6 +41,37 @@ const config: Config = {
           400: 'rgb(var(--primary-400) / <alpha-value>)',
           300: 'rgb(var(--primary-300) / <alpha-value>)',
         },
+        // Brand Colors for Homepage
+        brand: {
+          'gradient-light': '#E8F1FF',
+          'gradient-dark': '#C9DBF8',
+          'accent-blue': '#3A6FF8',
+          'accent-purple': '#6A5ACD',
+        },
+        // Section Backgrounds
+        section: {
+          'light': '#F7FAFF',
+          'dark-from': '#0F172A',
+          'dark-to': '#1E293B',
+        },
+        // Glass Effects
+        glass: {
+          'bg': 'rgba(255, 255, 255, 0.15)',
+          'border': 'rgba(255, 255, 255, 0.25)',
+        },
+        // Text Colors
+        text: {
+          'primary': '#0F172A',
+          'secondary': '#475569',
+          'light': '#F8FAFC',
+          'muted': '#94A3B8',
+        },
+        // CTA Colors
+        cta: {
+          'primary': '#3A6FF8',
+          'hover': '#1E40AF',
+          'success': '#22C55E',
+        },
         gold: {
           900: 'rgb(var(--gold-900) / <alpha-value>)',
           800: 'rgb(var(--gold-800) / <alpha-value>)',
@@ -158,9 +189,96 @@ const config: Config = {
         md: '8px',
         lg: '12px',
       },
+      // Glassmorphism utilities
+      backdropBlur: {
+        xs: '2px',
+        '4xl': '72px',
+        'glass': '12px',
+      },
+      backdropSaturate: {
+        180: '180%',
+      },
+      // Premium animations
+      animation: {
+        'fade-in': 'fadeIn 0.3s ease-in-out',
+        'slide-in-right': 'slideInRight 0.3s ease-out',
+        'slide-in-left': 'slideInLeft 0.3s ease-out',
+        'slide-in-up': 'slideInUp 0.3s ease-out',
+        'scale-in': 'scaleIn 0.2s ease-out',
+        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+        'shimmer': 'shimmer 2s infinite',
+        'float': 'float 20s infinite ease-in-out',
+        'glow': 'glow 2s ease-in-out infinite alternate',
+      },
+      keyframes: {
+        fadeIn: {
+          '0%': { opacity: '0' },
+          '100%': { opacity: '1' },
+        },
+        slideInRight: {
+          '0%': { transform: 'translateX(100%)', opacity: '0' },
+          '100%': { transform: 'translateX(0)', opacity: '1' },
+        },
+        slideInLeft: {
+          '0%': { transform: 'translateX(-100%)', opacity: '0' },
+          '100%': { transform: 'translateX(0)', opacity: '1' },
+        },
+        slideInUp: {
+          '0%': { transform: 'translateY(100%)', opacity: '0' },
+          '100%': { transform: 'translateY(0)', opacity: '1' },
+        },
+        scaleIn: {
+          '0%': { transform: 'scale(0.9)', opacity: '0' },
+          '100%': { transform: 'scale(1)', opacity: '1' },
+        },
+        shimmer: {
+          '0%': { transform: 'translateX(-100%)' },
+          '100%': { transform: 'translateX(100%)' },
+        },
+        float: {
+          '0%, 100%': { transform: 'translate(0, 0) rotate(0deg)' },
+          '25%': { transform: 'translate(50px, -50px) rotate(90deg)' },
+          '50%': { transform: 'translate(100px, 0) rotate(180deg)' },
+          '75%': { transform: 'translate(50px, 50px) rotate(270deg)' },
+        },
+        glow: {
+          '0%': { 
+            boxShadow: '0 0 20px rgba(102, 126, 234, 0.5)',
+          },
+          '100%': { 
+            boxShadow: '0 0 40px rgba(102, 126, 234, 0.8), 0 0 60px rgba(118, 75, 162, 0.5)',
+          },
+        },
+      },
+      // Premium shadows
+      boxShadow: {
+        'glass': '0 8px 32px 0 rgba(31, 38, 135, 0.15)',
+        'glass-lg': '0 8px 32px 0 rgba(31, 38, 135, 0.25)',
+        'glow-indigo': '0 0 20px rgba(102, 126, 234, 0.5)',
+        'glow-purple': '0 0 20px rgba(118, 75, 162, 0.5)',
+      },
     },
   },
-  plugins: [],
+  plugins: [
+    // Custom plugin for glassmorphism
+    function({ addUtilities }: any) {
+      const newUtilities = {
+        '.glass': {
+          background: 'rgba(255, 255, 255, 0.1)',
+          backdropFilter: 'blur(10px) saturate(180%)',
+          WebkitBackdropFilter: 'blur(10px) saturate(180%)',
+          border: '1px solid rgba(255, 255, 255, 0.2)',
+        },
+        '.glass-dark': {
+          background: 'rgba(0, 0, 0, 0.15)',
+          backdropFilter: 'blur(20px) saturate(180%)',
+          WebkitBackdropFilter: 'blur(20px) saturate(180%)',
+          border: '1px solid rgba(255, 255, 255, 0.1)',
+        },
+      };
+      addUtilities(newUtilities);
+    },
+  ],
 }
 
 export default config

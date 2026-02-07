@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   Users, Building2, Phone, Mail, Calendar, TrendingUp, Activity,
-  CheckCircle2, Clock, DollarSign, X, MapPin, Home, IndianRupee
+  CheckCircle2, Clock, DollarSign, X, XCircle, MapPin, Home, IndianRupee
 } from 'lucide-react'
 
 interface CRMDashboardProps {

@@ -19,21 +19,30 @@ export async function verifyAuthToken(token: string): Promise<AuthUser | null> {
   try {
     const supabase = getSupabase()
     const { data: { user }, error } = await supabase.auth.getUser(token)
-    
+
     if (error || !user) {
       return null
     }
-    
+
+    // CRITICAL FIX: Admin owner email gets full access immediately (bypasses all database checks)
+    if (user.email === 'tharagarealestate@gmail.com') {
+      return {
+        id: user.id,
+        email: user.email,
+        role: 'admin'
+      }
+    }
+
     // Get user role from both user_roles and profiles tables
     let role: string | undefined
-    
+
     // Check user_roles table first (primary source)
     try {
       const { data: userRoles } = await supabase
         .from('user_roles')
         .select('role')
         .eq('user_id', user.id)
-      
+
       if (userRoles && userRoles.length > 0) {
         // Prioritize admin role, then builder, then buyer
         if (userRoles.some((r: any) => r.role === 'admin')) {
@@ -49,7 +58,7 @@ export async function verifyAuthToken(token: string): Promise<AuthUser | null> {
     } catch {
       // user_roles table might not exist or have data
     }
-    
+
     // Fallback to profiles table if no role found
     if (!role) {
       try {
@@ -58,13 +67,13 @@ export async function verifyAuthToken(token: string): Promise<AuthUser | null> {
           .select('role')
           .eq('id', user.id)
           .maybeSingle()
-        
+
         role = profile?.role
       } catch {
         // User might not have a profile yet
       }
     }
-    
+
     return {
       id: user.id,
       email: user.email,

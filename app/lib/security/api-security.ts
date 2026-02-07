@@ -73,8 +73,11 @@ export function secureApiRoute<T extends z.ZodSchema>(
 
         // 3. Role check
         if (options.requireRole && user) {
+          // CRITICAL FIX: Admin role has access to ALL features (super-role)
+          // Also check for admin email bypass
+          const isAdminBypass = user.role === 'admin' || user.email === 'tharagarealestate@gmail.com'
           const userRoles = user.role ? [user.role] : []
-          const hasRequiredRole = options.requireRole.some(role => userRoles.includes(role))
+          const hasRequiredRole = isAdminBypass || options.requireRole.some(role => userRoles.includes(role))
 
           if (!hasRequiredRole) {
             await logSecurityEvent(

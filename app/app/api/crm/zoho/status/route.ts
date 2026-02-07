@@ -1,11 +1,10 @@
 // =============================================
 // ZOHO INTEGRATION STATUS API
+// Uses @supabase/ssr createServerClient (NOT deprecated auth-helpers)
 // GET /api/crm/zoho/status - No role restrictions
-// Check connection health and statistics
 // =============================================
 import { NextRequest, NextResponse } from 'next/server'
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
-import { cookies } from 'next/headers'
+import { createClient } from '@/lib/supabase/server'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -27,12 +26,14 @@ export async function OPTIONS() {
 // =============================================
 export async function GET(request: NextRequest) {
   try {
-    const supabase = createRouteHandlerClient({ cookies })
+    // Use the proper @supabase/ssr client (NOT deprecated auth-helpers)
+    const supabase = await createClient()
 
     // Simple auth check - just get the user, NO ROLE RESTRICTIONS
     const { data: { user }, error: authError } = await supabase.auth.getUser()
 
     if (authError || !user) {
+      console.error('[Zoho Status API] Auth error:', authError?.message || 'No user')
       return NextResponse.json({
         connected: false,
         active: false,
@@ -85,7 +86,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Get sync statistics if available
-    let syncStats = []
+    let syncStats: any[] = []
     let mappedRecords = 0
     let fieldMappings = 0
 

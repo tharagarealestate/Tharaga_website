@@ -1,12 +1,11 @@
 // =============================================
 // LEADS API - SIMPLIFIED & ROBUST
-// No complex auth middleware - direct Supabase auth
+// Uses @supabase/ssr createServerClient (NOT deprecated auth-helpers)
 // GET /api/leads - Fetch all leads
 // POST /api/leads - Create new lead
 // =============================================
 import { NextRequest, NextResponse } from 'next/server'
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
-import { cookies } from 'next/headers'
+import { createClient } from '@/lib/supabase/server'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -28,12 +27,14 @@ export async function OPTIONS() {
 // =============================================
 export async function GET(request: NextRequest) {
   try {
-    const supabase = createRouteHandlerClient({ cookies })
+    // Use the proper @supabase/ssr client (NOT deprecated auth-helpers)
+    const supabase = await createClient()
 
     // Simple auth check - just get the user, NO ROLE RESTRICTIONS
     const { data: { user }, error: authError } = await supabase.auth.getUser()
 
     if (authError || !user) {
+      console.error('[Leads API] Auth error:', authError?.message || 'No user')
       return NextResponse.json({
         success: false,
         error: 'Please log in to view leads',
@@ -232,7 +233,8 @@ export async function GET(request: NextRequest) {
 // =============================================
 export async function POST(request: NextRequest) {
   try {
-    const supabase = createRouteHandlerClient({ cookies })
+    // Use the proper @supabase/ssr client (NOT deprecated auth-helpers)
+    const supabase = await createClient()
 
     // Simple auth check - NO ROLE RESTRICTIONS
     const { data: { user }, error: authError } = await supabase.auth.getUser()

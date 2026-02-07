@@ -1,11 +1,10 @@
 // =============================================
 // ZOHO CRM DASHBOARD DATA API
+// Uses @supabase/ssr createServerClient (NOT deprecated auth-helpers)
 // GET /api/crm/zoho/dashboard-data - No role restrictions
-// Fetches real-time CRM data from ZOHO CRM API
 // =============================================
 import { NextRequest, NextResponse } from 'next/server'
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
-import { cookies } from 'next/headers'
+import { createClient } from '@/lib/supabase/server'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -123,12 +122,14 @@ const getMockData = () => ({
 // =============================================
 export async function GET(request: NextRequest) {
   try {
-    const supabase = createRouteHandlerClient({ cookies })
+    // Use the proper @supabase/ssr client (NOT deprecated auth-helpers)
+    const supabase = await createClient()
 
     // Simple auth check - just get the user, NO ROLE RESTRICTIONS
     const { data: { user }, error: authError } = await supabase.auth.getUser()
 
     if (authError || !user) {
+      console.error('[CRM Dashboard API] Auth error:', authError?.message || 'No user')
       return NextResponse.json({
         success: false,
         error: 'Please log in to view CRM data',
@@ -173,10 +174,6 @@ export async function GET(request: NextRequest) {
       return NextResponse.json(getMockData(), { status: 200, headers: corsHeaders })
     }
 
-    // TODO: Implement real Zoho API calls when connected
-    // For now, return mock data with connected flag
-    // The ZohoClient needs proper OAuth tokens to work
-
     // Check if we have valid tokens
     const hasValidTokens = integration.access_token && integration.refresh_token
 
@@ -190,7 +187,6 @@ export async function GET(request: NextRequest) {
     }
 
     // Return mock data for now - real Zoho API integration would go here
-    // TODO: Add real Zoho API calls using the ZohoClient
     return NextResponse.json({
       ...getMockData(),
       connected: true,

@@ -1,10 +1,10 @@
 // =============================================
 // LEADS PIPELINE API - KANBAN VIEW DATA
+// Uses @supabase/ssr createServerClient (NOT deprecated auth-helpers)
 // GET /api/leads/pipeline - No role restrictions
 // =============================================
 import { NextRequest, NextResponse } from 'next/server'
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
-import { cookies } from 'next/headers'
+import { createClient } from '@/lib/supabase/server'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -26,12 +26,14 @@ export async function OPTIONS() {
 // =============================================
 export async function GET(request: NextRequest) {
   try {
-    const supabase = createRouteHandlerClient({ cookies })
+    // Use the proper @supabase/ssr client (NOT deprecated auth-helpers)
+    const supabase = await createClient()
 
     // Simple auth check - just get the user, NO ROLE RESTRICTIONS
     const { data: { user }, error: authError } = await supabase.auth.getUser()
 
     if (authError || !user) {
+      console.error('[Pipeline API] Auth error:', authError?.message || 'No user')
       return NextResponse.json({
         success: false,
         error: 'Please log in to view pipeline',

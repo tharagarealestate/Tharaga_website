@@ -42,6 +42,9 @@ export async function GET(request: NextRequest) {
       }, { status: 401, headers: corsHeaders })
     }
 
+    // Allow admin user (tharagarealestate@gmail.com) to access all leads
+    const isAdmin = user.email === 'tharagarealestate@gmail.com'
+
     // Parse query parameters
     const searchParams = request.nextUrl.searchParams
     const page = parseInt(searchParams.get('page') || '1')

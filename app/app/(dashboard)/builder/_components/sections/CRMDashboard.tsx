@@ -26,12 +26,36 @@ export function CRMDashboard({ onClose, embedded = false }: CRMDashboardProps) {
     async function fetchCRMData() {
       try {
         const response = await fetch('/api/crm/zoho/dashboard-data')
-        if (response.ok) {
-          const data = await response.json()
+        const data = await response.json()
+        
+        // Handle both success and error responses
+        if (response.ok && data && !data.error) {
           setCrmData(data)
+        } else {
+          // Even if there's an error, use mock data if available
+          if (data.stats || data.contacts || data.deals) {
+            setCrmData(data)
+          } else {
+            // Set empty data structure to show the dashboard with empty state
+            setCrmData({
+              connected: false,
+              mock: true,
+              stats: {},
+              contacts: [],
+              deals: []
+            })
+          }
         }
       } catch (error) {
         console.error('Failed to fetch CRM data:', error)
+        // Set empty data structure on error
+        setCrmData({
+          connected: false,
+          mock: true,
+          stats: {},
+          contacts: [],
+          deals: []
+        })
       } finally {
         setLoading(false)
       }
@@ -47,14 +71,18 @@ export function CRMDashboard({ onClose, embedded = false }: CRMDashboardProps) {
     )
   }
 
+  // Always show dashboard, even with empty/mock data
   if (!crmData) {
-    return (
-      <div className="flex flex-col items-center justify-center h-96 text-center">
-        <XCircle className="w-12 h-12 text-red-400 mb-4" />
-        <h3 className="text-lg font-semibold text-white mb-2">Failed to Load CRM Data</h3>
-        <p className="text-sm text-slate-400">Please check your connection and try again</p>
-      </div>
-    )
+    // Fallback to empty structure
+    const emptyData = {
+      connected: false,
+      mock: true,
+      stats: {},
+      contacts: [],
+      deals: []
+    }
+    setCrmData(emptyData)
+    return null // Will re-render with data
   }
 
   const isConnected = crmData.connected && !crmData.mock

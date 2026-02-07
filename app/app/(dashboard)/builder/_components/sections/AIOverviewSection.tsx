@@ -129,14 +129,30 @@ export function AIOverviewSection({ onNavigate }: OverviewSectionProps) {
         headers: { 'Content-Type': 'application/json' }
       })
 
-      if (!response.ok) throw new Error('Failed to fetch data')
-
       const result = await response.json()
-      if (result.success) {
-        setData(result.data)
+      
+      if (!response.ok) {
+        // Handle specific error cases
+        if (response.status === 401) {
+          console.error('[AI Overview] Authentication error:', result.error)
+          // Don't set data to null, show empty state instead
+          setData(null)
+          return
+        }
+        throw new Error(result.error || 'Failed to fetch dashboard data')
       }
-    } catch (error) {
-      console.error('Error fetching dashboard data:', error)
+
+      if (result.success && result.data) {
+        setData(result.data)
+      } else {
+        // If API returns success:false but no error, create empty data structure
+        console.warn('[AI Overview] API returned success:false:', result)
+        setData(null)
+      }
+    } catch (error: any) {
+      console.error('[AI Overview] Error fetching dashboard data:', error)
+      // Set data to null to show error state
+      setData(null)
     } finally {
       setLoading(false)
       setRefreshing(false)

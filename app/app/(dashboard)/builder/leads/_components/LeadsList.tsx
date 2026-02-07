@@ -255,6 +255,25 @@ export function LeadsList({ onSelectLead, initialFilters, showInlineFilters = tr
               return;
             }
             
+            // For AUTH_REQUIRED errors, check if user is actually logged in
+            // If user exists but API says auth required, it might be a role issue
+            // Show empty state instead of error for better UX
+            if (errorType === 'AUTH_REQUIRED' && userId) {
+              console.warn('[LeadsList] Auth error but user exists - might be role/permission issue');
+              setLeads([]);
+              setStats({
+                total_leads: 0,
+                hot_leads: 0,
+                warm_leads: 0,
+                pending_interactions: 0,
+                average_score: 0,
+              });
+              setTotalPages(1);
+              setError(null); // Don't show error if user is logged in
+              resolve();
+              return;
+            }
+            
             throw new Error(errorMessage);
           }
           

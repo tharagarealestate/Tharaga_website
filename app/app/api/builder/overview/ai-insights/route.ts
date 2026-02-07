@@ -1,15 +1,23 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
-import { cookies } from 'next/headers';
+import { createClient } from '@/lib/supabase/server';
 import OpenAI from 'openai';
+
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
 
 // Lazy initialization to avoid build-time errors when API key is not set
 function getOpenAIClient() {
   const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) {
-    throw new Error('OPENAI_API_KEY is not configured');
+    console.warn('OPENAI_API_KEY is not configured - AI insights will be limited');
+    return null;
   }
-  return new OpenAI({ apiKey });
+  try {
+    return new OpenAI({ apiKey });
+  } catch (error) {
+    console.error('Failed to initialize OpenAI client:', error);
+    return null;
+  }
 }
 
 interface DashboardMetrics {
@@ -29,18 +37,22 @@ interface DashboardMetrics {
 
 export async function POST(request: NextRequest) {
   try {
-    const supabase = createRouteHandlerClient({ cookies });
-    const { data: { user } } = await supabase.auth.getUser();
+    const supabase = await createClient();
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
 
-    if (!user) {
+    if (authError || !user) {
+      console.error('[AI Insights API] Auth error:', authError?.message || 'No user');
       return NextResponse.json({
         success: false,
-        error: 'Unauthorized'
+        error: 'Unauthorized - Please log in to view dashboard insights'
       }, { status: 401 });
     }
 
-    // Get builder's metrics
-    const metrics = await getBuilderMetrics(supabase, user.id);
+    // Allow admin user (tharagarealestate@gmail.com) to access
+    const isAdmin = user.email === 'tharagarealestate@gmail.com';
+
+    // Get builder's metrics (for admin, use their own ID or allow all data)
+    const metrics = await getBuilderMetrics(supabase, user.id, isAdmin);
 
     // Generate AI insights using OpenAI
     const aiInsights = await generateAIInsights(metrics);
@@ -67,36 +79,62 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error: any) {
-    console.error('AI Insights error:', error);
+    console.error('[AI Insights API] Error:', error);
+    // Return a graceful error response that the frontend can handle
     return NextResponse.json({
       success: false,
-      error: error.message || 'Failed to generate AI insights'
+      error: error.message || 'Failed to generate AI insights',
+      details: process.env.NODE_ENV === 'development' ? error.stack : undefined
     }, { status: 500 });
   }
 }
 
-async function getBuilderMetrics(supabase: any, userId: string): Promise<DashboardMetrics> {
-  // Get leads data
-  const { data: leads } = await supabase
+async function getBuilderMetrics(supabase: any, userId: string, isAdmin: boolean = false): Promise<DashboardMetrics> {
+  // Build query for leads - admin can see all, builder sees only their own
+  let leadsQuery = supabase
     .from('leads')
     .select('id, created_at, score, category, budget, property_id, status')
-    .eq('builder_id', userId)
     .order('created_at', { ascending: false });
+  
+  if (!isAdmin) {
+    leadsQuery = leadsQuery.eq('builder_id', userId);
+  }
+  
+  const { data: leads, error: leadsError } = await leadsQuery;
+  
+  if (leadsError) {
+    console.error('[AI Insights] Error fetching leads:', leadsError);
+    // Continue with empty array instead of failing
+  }
 
-  // Get properties data
-  const { data: properties } = await supabase
+  // Build query for properties - admin can see all, builder sees only their own
+  let propertiesQuery = supabase
     .from('properties')
-    .select('id, created_at, listing_status')
-    .eq('builder_id', userId);
+    .select('id, created_at, listing_status');
+  
+  if (!isAdmin) {
+    propertiesQuery = propertiesQuery.eq('builder_id', userId);
+  }
+  
+  const { data: properties, error: propertiesError } = await propertiesQuery;
+  
+  if (propertiesError) {
+    console.error('[AI Insights] Error fetching properties:', propertiesError);
+    // Continue with empty array instead of failing
+  }
+  
+  // Ensure we have arrays even if queries failed
+  const safeLeads = leads || [];
+  const safeProperties = properties || [];
 
   // Calculate views and inquiries for each property from leads
   const propertyStats: Record<string, { views: number; inquiries: number }> = {}
-  properties?.forEach((p: any) => {
+  safeProperties.forEach((p: any) => {
     propertyStats[p.id] = { views: 0, inquiries: 0 }
   })
   
   // Count inquiries per property
-  leads?.forEach((lead: any) => {
+  safeLeads.forEach((lead: any) => {
     if (lead.property_id && propertyStats[lead.property_id]) {
       propertyStats[lead.property_id].inquiries++
     }
@@ -119,22 +157,22 @@ async function getBuilderMetrics(supabase: any, userId: string): Promise<Dashboa
   }
 
   // Calculate metrics
-  const total_leads = leads?.length || 0;
+  const total_leads = safeLeads.length;
   // Determine category from score if category field doesn't exist
-  const hot_leads = leads?.filter((l: any) => {
+  const hot_leads = safeLeads.filter((l: any) => {
     if (l.category === 'hot') return true
     if (l.score && l.score >= 8) return true
     return false
-  }).length || 0;
-  const warm_leads = leads?.filter((l: any) => {
+  }).length;
+  const warm_leads = safeLeads.filter((l: any) => {
     if (l.category === 'warm') return true
     if (l.score && l.score >= 6 && l.score < 8) return true
     return false
-  }).length || 0;
-  const total_properties = properties?.length || 0;
-  const active_properties = properties?.filter((p: any) => 
+  }).length;
+  const total_properties = safeProperties.length;
+  const active_properties = safeProperties.filter((p: any) => 
     p.listing_status === 'active' || p.listing_status === 'published' || p.listing_status === 'listed'
-  ).length || 0;
+  ).length;
 
   // Calculate trends
   const leadTrends = calculateTrends(leads || [], 'created_at');
@@ -151,7 +189,7 @@ async function getBuilderMetrics(supabase: any, userId: string): Promise<Dashboa
   }));
 
   // Calculate conversion rate (leads with property_id / total leads)
-  const convertedLeads = leads?.filter((l: any) => l.property_id).length || 0;
+  const convertedLeads = safeLeads.filter((l: any) => l.property_id).length;
   const conversion_rate = total_leads > 0 ? (convertedLeads / total_leads) * 100 : 0;
 
   // Calculate average response time (simplified - would need interaction data)

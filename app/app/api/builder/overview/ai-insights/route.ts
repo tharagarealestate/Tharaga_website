@@ -231,16 +231,32 @@ async function getBuilderMetrics(supabase: any, userId: string, isAdmin: boolean
   // Get revenue data (if available) - try revenue table, fallback to empty array
   let revenue: any[] = []
   try {
-    const { data: revenueData } = await supabase
+    console.log('[getBuilderMetrics] Fetching revenue data...');
+    let revenueQuery = supabase
       .from('revenue')
       .select('*')
-      .eq('builder_id', userId)
       .order('date', { ascending: false })
       .limit(30)
-    revenue = revenueData || []
-  } catch (error) {
+    
+    if (!isAdmin) {
+      console.log('[getBuilderMetrics] Filtering revenue by builder_id:', userId);
+      revenueQuery = revenueQuery.eq('builder_id', userId);
+    } else {
+      console.log('[getBuilderMetrics] Admin user - fetching all revenue data');
+    }
+    
+    const { data: revenueData, error: revenueError } = await revenueQuery;
+    if (revenueError) {
+      throw revenueError;
+    }
+    revenue = revenueData || [];
+    console.log('[getBuilderMetrics] Revenue data fetched:', revenue.length, 'records');
+  } catch (error: any) {
     // Revenue table might not exist, use empty array
-    console.warn('Revenue table not available:', error)
+    console.warn('[getBuilderMetrics] Revenue table not available or query failed:', {
+      message: error.message,
+      code: error.code
+    });
     revenue = []
   }
 

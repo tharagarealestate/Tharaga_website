@@ -1,10 +1,10 @@
 // =============================================
 // ZOHO INTEGRATION STATUS API
-// Uses @supabase/ssr createServerClient (NOT deprecated auth-helpers)
+// Uses request-based Supabase client for reliable auth
 // GET /api/crm/zoho/status - No role restrictions
 // =============================================
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { createClientFromRequest } from '@/lib/supabase/route-handler'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -26,8 +26,8 @@ export async function OPTIONS() {
 // =============================================
 export async function GET(request: NextRequest) {
   try {
-    // Use the proper @supabase/ssr client (NOT deprecated auth-helpers)
-    const supabase = await createClient()
+    // Use request-based client for reliable cookie handling
+    const { supabase } = createClientFromRequest(request)
 
     // Simple auth check - just get the user, NO ROLE RESTRICTIONS
     const { data: { user }, error: authError } = await supabase.auth.getUser()

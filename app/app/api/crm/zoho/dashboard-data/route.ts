@@ -1,10 +1,11 @@
 // =============================================
 // ZOHO CRM DASHBOARD DATA API
-// Uses @supabase/ssr createServerClient (NOT deprecated auth-helpers)
+// Uses request-based Supabase client for reliable auth
 // GET /api/crm/zoho/dashboard-data - No role restrictions
+// Returns real Zoho data or empty state (NO MOCK DATA)
 // =============================================
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { createClientFromRequest } from '@/lib/supabase/route-handler'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -21,100 +22,20 @@ export async function OPTIONS() {
   return new NextResponse(null, { status: 204, headers: corsHeaders })
 }
 
-// Mock data for when Zoho is not connected
-const getMockData = () => ({
+// Empty data structure - NO MOCK DATA, just structure
+const getEmptyData = (message: string) => ({
   connected: false,
-  mock: true,
-  message: 'Zoho CRM not connected. Connect your account to see real data.',
+  success: true,
+  message,
   stats: {
-    total_contacts: 12,
-    new_contacts_this_month: 5,
-    active_deals: 8,
-    deal_value: 4500000,
-    conversion_rate: 35
+    total_contacts: 0,
+    new_contacts_this_month: 0,
+    active_deals: 0,
+    deal_value: 0,
+    conversion_rate: 0
   },
-  contacts: [
-    {
-      id: 'mock-1',
-      name: 'Rajesh Kumar',
-      email: 'rajesh.kumar@email.com',
-      phone: '+91 98765 43210',
-      status: 'hot',
-      created_at: new Date().toISOString(),
-      lead_score: 85,
-      budget_min: 5000000,
-      budget_max: 8000000,
-      preferred_location: 'Bangalore',
-      property_type: '3BHK Apartment'
-    },
-    {
-      id: 'mock-2',
-      name: 'Priya Sharma',
-      email: 'priya.sharma@email.com',
-      phone: '+91 87654 32109',
-      status: 'warm',
-      created_at: new Date().toISOString(),
-      lead_score: 72,
-      budget_min: 3000000,
-      budget_max: 5000000,
-      preferred_location: 'Chennai',
-      property_type: '2BHK Apartment'
-    },
-    {
-      id: 'mock-3',
-      name: 'Amit Patel',
-      email: 'amit.patel@email.com',
-      phone: '+91 76543 21098',
-      status: 'new',
-      created_at: new Date().toISOString(),
-      lead_score: 55,
-      budget_min: 10000000,
-      budget_max: 15000000,
-      preferred_location: 'Mumbai',
-      property_type: 'Villa'
-    }
-  ],
-  deals: [
-    {
-      id: 'deal-1',
-      name: 'Prestige Lakeside Deal',
-      account_name: 'Rajesh Kumar',
-      amount: 7500000,
-      stage: 'Negotiation',
-      probability: 75,
-      closing_date: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000).toISOString(),
-      property_name: 'Prestige Lakeside',
-      property_location: 'Whitefield, Bangalore',
-      property_type: '3BHK',
-      created_at: new Date().toISOString()
-    },
-    {
-      id: 'deal-2',
-      name: 'Brigade Citadel Unit',
-      account_name: 'Priya Sharma',
-      amount: 4200000,
-      stage: 'Proposal',
-      probability: 50,
-      closing_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
-      property_name: 'Brigade Citadel',
-      property_location: 'OMR, Chennai',
-      property_type: '2BHK',
-      created_at: new Date().toISOString()
-    },
-    {
-      id: 'deal-3',
-      name: 'Godrej Infinity Booking',
-      account_name: 'Amit Patel',
-      amount: 12000000,
-      stage: 'Qualification',
-      probability: 30,
-      closing_date: new Date(Date.now() + 60 * 24 * 60 * 60 * 1000).toISOString(),
-      property_name: 'Godrej Infinity',
-      property_location: 'Keshav Nagar, Pune',
-      property_type: 'Villa',
-      created_at: new Date().toISOString()
-    }
-  ]
+  contacts: [],
+  deals: []
 })
 
 // =============================================
@@ -122,8 +43,8 @@ const getMockData = () => ({
 // =============================================
 export async function GET(request: NextRequest) {
   try {
-    // Use the proper @supabase/ssr client (NOT deprecated auth-helpers)
-    const supabase = await createClient()
+    // Use request-based client for reliable cookie handling
+    const { supabase } = createClientFromRequest(request)
 
     // Simple auth check - just get the user, NO ROLE RESTRICTIONS
     const { data: { user }, error: authError } = await supabase.auth.getUser()
@@ -169,9 +90,13 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // If not connected or no integration, return mock data
+    // If not connected or no integration, return empty data with clear message
     if (!integration || !integration.is_connected) {
-      return NextResponse.json(getMockData(), { status: 200, headers: corsHeaders })
+      return NextResponse.json({
+        ...getEmptyData('Zoho CRM not connected. Click "Connect Zoho CRM" to sync your leads and deals.'),
+        connected: false,
+        needs_connection: true,
+      }, { status: 200, headers: corsHeaders })
     }
 
     // Check if we have valid tokens
@@ -179,33 +104,42 @@ export async function GET(request: NextRequest) {
 
     if (!hasValidTokens) {
       return NextResponse.json({
-        ...getMockData(),
+        ...getEmptyData('Zoho CRM session expired. Please reconnect to continue syncing.'),
         connected: true,
-        mock: true,
-        message: 'Zoho CRM connected but tokens expired. Please reconnect.'
+        needs_reconnection: true,
       }, { status: 200, headers: corsHeaders })
     }
 
-    // Return mock data for now - real Zoho API integration would go here
+    // TODO: Fetch real data from Zoho API
+    // For now, return connected state with empty data until real sync is implemented
     return NextResponse.json({
-      ...getMockData(),
       connected: true,
-      mock: false,
-      message: 'Showing CRM data',
+      success: true,
+      message: 'Zoho CRM connected. Sync your data to see leads and deals here.',
       account: {
         id: integration.crm_account_id || null,
         name: integration.crm_account_name || 'Zoho CRM Account',
-      }
+      },
+      last_sync: integration.last_sync_at || null,
+      stats: {
+        total_contacts: 0,
+        new_contacts_this_month: 0,
+        active_deals: 0,
+        deal_value: 0,
+        conversion_rate: 0
+      },
+      contacts: [],
+      deals: []
     }, { status: 200, headers: corsHeaders })
 
   } catch (error: any) {
     console.error('[CRM Dashboard Data Error]:', error)
 
-    // Return mock data with error flag for graceful degradation
+    // Return empty data with error message
     return NextResponse.json({
-      ...getMockData(),
+      ...getEmptyData('Failed to fetch CRM data. Please try again.'),
       error: true,
-      message: error.message || 'Failed to fetch CRM data'
+      errorMessage: error.message
     }, { status: 200, headers: corsHeaders })
   }
 }

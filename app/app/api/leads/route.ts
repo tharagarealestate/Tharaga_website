@@ -1,11 +1,11 @@
 // =============================================
 // LEADS API - SIMPLIFIED & ROBUST
-// Uses @supabase/ssr createServerClient (NOT deprecated auth-helpers)
+// Uses request-based Supabase client for reliable auth in API routes
 // GET /api/leads - Fetch all leads
 // POST /api/leads - Create new lead
 // =============================================
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { createClientFromRequest } from '@/lib/supabase/route-handler'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -27,8 +27,8 @@ export async function OPTIONS() {
 // =============================================
 export async function GET(request: NextRequest) {
   try {
-    // Use the proper @supabase/ssr client (NOT deprecated auth-helpers)
-    const supabase = await createClient()
+    // Use request-based client for reliable cookie handling
+    const { supabase } = createClientFromRequest(request)
 
     // Simple auth check - just get the user, NO ROLE RESTRICTIONS
     const { data: { user }, error: authError } = await supabase.auth.getUser()
@@ -42,8 +42,7 @@ export async function GET(request: NextRequest) {
       }, { status: 401, headers: corsHeaders })
     }
 
-    // Allow admin user (tharagarealestate@gmail.com) to access all leads
-    const isAdmin = user.email === 'tharagarealestate@gmail.com'
+    console.log('[Leads API] Authenticated user:', user.email)
 
     // Parse query parameters
     const searchParams = request.nextUrl.searchParams
@@ -236,8 +235,8 @@ export async function GET(request: NextRequest) {
 // =============================================
 export async function POST(request: NextRequest) {
   try {
-    // Use the proper @supabase/ssr client (NOT deprecated auth-helpers)
-    const supabase = await createClient()
+    // Use request-based client for reliable cookie handling
+    const { supabase } = createClientFromRequest(request)
 
     // Simple auth check - NO ROLE RESTRICTIONS
     const { data: { user }, error: authError } = await supabase.auth.getUser()

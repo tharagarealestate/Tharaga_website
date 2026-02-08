@@ -30,31 +30,28 @@ export function CRMDashboard({ onClose, embedded = false }: CRMDashboardProps) {
       const response = await fetch('/api/crm/zoho/dashboard-data')
       const data = await response.json()
 
-      // Handle both success and error responses
-      if (response.ok && data && !data.error) {
+      // Set the CRM data directly - API now returns real state (no mock data)
+      if (response.ok) {
         setCrmData(data)
       } else {
-        // Even if there's an error, use mock data if available
-        if (data.stats || data.contacts || data.deals) {
-          setCrmData(data)
-        } else {
-          // Set empty data structure to show the dashboard with empty state
-          setCrmData({
-            connected: false,
-            mock: true,
-            stats: {},
-            contacts: [],
-            deals: []
-          })
-        }
+        // Set empty data structure with error
+        setCrmData({
+          connected: false,
+          needs_connection: true,
+          message: data.error || 'Failed to load CRM data',
+          stats: { total_contacts: 0, new_contacts_this_month: 0, active_deals: 0, deal_value: 0, conversion_rate: 0 },
+          contacts: [],
+          deals: []
+        })
       }
     } catch (error) {
       console.error('Failed to fetch CRM data:', error)
       // Set empty data structure on error
       setCrmData({
         connected: false,
-        mock: true,
-        stats: {},
+        needs_connection: true,
+        message: 'Unable to connect to CRM service',
+        stats: { total_contacts: 0, new_contacts_this_month: 0, active_deals: 0, deal_value: 0, conversion_rate: 0 },
         contacts: [],
         deals: []
       })
@@ -105,13 +102,13 @@ export function CRMDashboard({ onClose, embedded = false }: CRMDashboardProps) {
     )
   }
 
-  // Always show dashboard, even with empty/mock data
+  // Always show dashboard, even with empty data
   if (!crmData) {
     // Fallback to empty structure
     const emptyData = {
       connected: false,
-      mock: true,
-      stats: {},
+      needs_connection: true,
+      stats: { total_contacts: 0, new_contacts_this_month: 0, active_deals: 0, deal_value: 0, conversion_rate: 0 },
       contacts: [],
       deals: []
     }
@@ -119,10 +116,12 @@ export function CRMDashboard({ onClose, embedded = false }: CRMDashboardProps) {
     return null // Will re-render with data
   }
 
-  const isConnected = crmData.connected && !crmData.mock
+  const isConnected = crmData.connected === true
+  const needsConnection = crmData.needs_connection || crmData.needs_reconnection || !isConnected
   const stats = crmData.stats || {}
   const contacts = crmData.contacts || []
   const deals = crmData.deals || []
+  const statusMessage = crmData.message || ''
 
   return (
     <div className="w-full h-full flex flex-col bg-slate-900">
@@ -135,7 +134,9 @@ export function CRMDashboard({ onClose, embedded = false }: CRMDashboardProps) {
           <div>
             <h2 className="text-xl font-bold text-white">Zoho CRM Dashboard</h2>
             <p className="text-sm text-slate-400">
-              {isConnected ? 'Connected & Synced' : 'Not Connected - Showing Sample Data'}
+              {isConnected
+                ? (crmData.account?.name || 'Connected & Synced')
+                : 'Not Connected - Connect to see your CRM data'}
             </p>
           </div>
         </div>
@@ -242,24 +243,27 @@ export function CRMDashboard({ onClose, embedded = false }: CRMDashboardProps) {
                 </div>
               </div>
 
-              {!isConnected && (
+              {/* Connection Status Card - Always show when not connected or needs reconnection */}
+              {needsConnection && (
                 <div className="bg-gradient-to-r from-amber-500/10 to-orange-500/10 border border-amber-500/30 rounded-xl p-6">
-                  <div className="flex items-center justify-between">
+                  <div className="flex items-center justify-between flex-wrap gap-4">
                     <div className="flex items-center gap-4">
                       <div className="w-12 h-12 rounded-lg bg-amber-500/20 flex items-center justify-center">
                         <Link2 className="w-6 h-6 text-amber-400" />
                       </div>
                       <div>
-                        <h3 className="text-lg font-semibold text-white">Connect Zoho CRM</h3>
+                        <h3 className="text-lg font-semibold text-white">
+                          {crmData.needs_reconnection ? 'Reconnect Zoho CRM' : 'Connect Zoho CRM'}
+                        </h3>
                         <p className="text-sm text-slate-400">
-                          Currently showing sample data. Connect your Zoho CRM to sync real leads and deals.
+                          {statusMessage || 'Connect your Zoho CRM account to sync leads and deals in real-time.'}
                         </p>
                       </div>
                     </div>
                     <button
                       onClick={handleConnectZoho}
                       disabled={connecting}
-                      className="px-6 py-3 bg-amber-500 hover:bg-amber-600 disabled:bg-amber-500/50 text-slate-900 rounded-lg font-semibold transition-all flex items-center gap-2"
+                      className="px-6 py-3 bg-amber-500 hover:bg-amber-600 disabled:bg-amber-500/50 text-slate-900 rounded-lg font-semibold transition-all flex items-center gap-2 whitespace-nowrap"
                     >
                       {connecting ? (
                         <>
@@ -269,7 +273,7 @@ export function CRMDashboard({ onClose, embedded = false }: CRMDashboardProps) {
                       ) : (
                         <>
                           <ExternalLink className="w-4 h-4" />
-                          Connect Now
+                          {crmData.needs_reconnection ? 'Reconnect' : 'Connect Now'}
                         </>
                       )}
                     </button>
@@ -283,6 +287,24 @@ export function CRMDashboard({ onClose, embedded = false }: CRMDashboardProps) {
                       {connectionError}
                     </div>
                   )}
+                </div>
+              )}
+
+              {/* Connected Status */}
+              {isConnected && !needsConnection && (
+                <div className="bg-gradient-to-r from-green-500/10 to-emerald-500/10 border border-green-500/30 rounded-xl p-6">
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-lg bg-green-500/20 flex items-center justify-center">
+                      <CheckCircle2 className="w-6 h-6 text-green-400" />
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-semibold text-white">Zoho CRM Connected</h3>
+                      <p className="text-sm text-slate-400">
+                        {crmData.account?.name || 'Your CRM account is connected'}
+                        {crmData.last_sync && ` • Last synced: ${new Date(crmData.last_sync).toLocaleString()}`}
+                      </p>
+                    </div>
+                  </div>
                 </div>
               )}
             </motion.div>

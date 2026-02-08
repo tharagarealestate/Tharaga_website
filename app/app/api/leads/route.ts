@@ -27,6 +27,10 @@ export async function OPTIONS() {
 // =============================================
 export async function GET(request: NextRequest) {
   try {
+    // Debug: Log all cookies from request
+    const allCookies = request.cookies.getAll()
+    console.log('[Leads API] Request cookies:', allCookies.map(c => c.name).join(', ') || 'none')
+
     // Use request-based client for reliable cookie handling
     const { supabase } = createClientFromRequest(request)
 
@@ -34,11 +38,15 @@ export async function GET(request: NextRequest) {
     const { data: { user }, error: authError } = await supabase.auth.getUser()
 
     if (authError || !user) {
-      console.error('[Leads API] Auth error:', authError?.message || 'No user')
+      console.error('[Leads API] Auth error:', authError?.message || 'No user', '| Cookies received:', allCookies.length)
       return NextResponse.json({
         success: false,
         error: 'Please log in to view leads',
-        errorType: 'AUTH_REQUIRED'
+        errorType: 'AUTH_REQUIRED',
+        debug: {
+          cookieCount: allCookies.length,
+          authError: authError?.message || 'No user session'
+        }
       }, { status: 401, headers: corsHeaders })
     }
 

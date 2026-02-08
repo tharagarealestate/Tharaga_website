@@ -174,6 +174,7 @@ export function LeadsList({ onSelectLead, initialFilters, showInlineFilters = tr
 
         try {
           const currentPage = filters.page ?? 1;
+          // OPTIMIZED: Reduced initial limit for faster load
           const limit = filters.limit ?? 20;
 
           const params = new URLSearchParams({

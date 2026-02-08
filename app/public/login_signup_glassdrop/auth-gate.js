@@ -348,11 +348,36 @@
           try {
             if (!window.supabase || !window.supabase.auth) {
               const mod = await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm');
-              const client = mod.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+              // CRITICAL: Include auth config for session persistence
+              const client = mod.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+                auth: {
+                  persistSession: true,
+                  autoRefreshToken: true,
+                  detectSessionInUrl: true,
+                  storage: typeof window !== 'undefined' ? window.localStorage : undefined,
+                }
+              });
               try { window.supabase = client; } catch(_) {}
             }
-            await window.supabase?.auth?.setSession({ access_token: msg.access_token, refresh_token: msg.refresh_token });
-          } catch (_) { /* noop */ }
+            // Set session with tokens - this will persist to localStorage
+            const sessionResult = await window.supabase?.auth?.setSession({ 
+              access_token: msg.access_token, 
+              refresh_token: msg.refresh_token 
+            });
+            
+            // Verify session was set successfully
+            if (sessionResult?.data?.session) {
+              console.log('[auth-gate] Session set successfully');
+              // Trigger auth state change to update UI
+              window.dispatchEvent(new CustomEvent('supabase:auth:stateChange', {
+                detail: { session: sessionResult.data.session, user: sessionResult.data.user }
+              }));
+            } else if (sessionResult?.error) {
+              console.error('[auth-gate] Failed to set session:', sessionResult.error);
+            }
+          } catch (err) {
+            console.error('[auth-gate] Error setting session:', err);
+          }
         })();
         return;
       }
@@ -397,7 +422,15 @@
           return;
         }
         const mod = await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm');
-        sClient = mod.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        // CRITICAL: Include auth config for session persistence
+        sClient = mod.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+          auth: {
+            persistSession: true,
+            autoRefreshToken: true,
+            detectSessionInUrl: true,
+            storage: typeof window !== 'undefined' ? window.localStorage : undefined,
+          }
+        });
         try { window.supabase = sClient; } catch(_) {}
       } else {
         try { window.supabase = sClient; } catch(_) {}

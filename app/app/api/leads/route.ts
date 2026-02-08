@@ -200,156 +200,55 @@ export async function GET(request: NextRequest) {
     const { data: leads, error: leadsError, count } = await query
 
     // If query fails, return empty result
-    if (leadsError || !leads || leads.length === 0) {
-      // OPTIMIZED: Fallback to leads table with builder_id filter
-      let leadsQuery = supabase
-        .from('leads')
-        .select('*', { count: 'exact' })
-        // CRITICAL: Filter by builder_id
-        .eq('builder_id', user.id)
+    if (leadsError) {
+      console.error('[Leads API] Error fetching leads:', leadsError)
+      return NextResponse.json({
+        success: true,
+        data: [],
+        pagination: { page, limit, total: 0, totalPages: 0 },
+        stats: { total_leads: 0, hot_leads: 0, warm_leads: 0, average_score: 0 },
+        isEmpty: true
+      }, { status: 200, headers: corsHeaders })
+    }
 
-      // OPTIMIZED: Database-level search filtering
-      if (search) {
-        leadsQuery = leadsQuery.or(`email.ilike.%${search}%,name.ilike.%${search}%,phone.ilike.%${search}%`)
-      }
-      if (scoreMin !== null) {
-        leadsQuery = leadsQuery.gte('score', scoreMin)
-      }
-      if (scoreMax !== null) {
-        leadsQuery = leadsQuery.lte('score', scoreMax)
-      }
-      if (category) {
-        // Map category to score range for leads table
-        const categoryScoreMap: Record<string, [number, number]> = {
-          'Hot Lead': [8, 10],
-          'Warm Lead': [5, 8],
-          'Developing Lead': [3, 5],
-          'Cold Lead': [1, 3],
-          'Low Quality': [0, 1],
-        }
-        const [min, max] = categoryScoreMap[category] || [0, 10]
-        leadsQuery = leadsQuery.gte('score', min).lte('score', max)
-      }
-
-      leadsQuery = leadsQuery
-        .order(sortBy === 'score' ? 'score' : 'created_at', { ascending: sortOrder === 'asc' })
-        .range(offset, offset + limit - 1)
-
-      const { data: leads, error: leadsError, count: leadsCount } = await leadsQuery
-
-      if (leadsError) {
-        console.error('[Leads API] Error fetching leads:', leadsError)
-        return NextResponse.json({
-          success: true,
-          data: [],
-          pagination: { page, limit, total: 0, totalPages: 0 },
-          stats: { total_leads: 0, hot_leads: 0, warm_leads: 0, average_score: 0 },
-          isEmpty: true
-        }, { status: 200, headers: corsHeaders })
-      }
-
-      // Transform leads data
-      const transformedLeads = (leads || []).map(lead => ({
+    // OPTIMIZED: Transform leads data with score breakdown from lead_scores if available
+    const transformedLeads = (leads || []).map((lead: any) => {
+      const scoreData = Array.isArray(lead.lead_scores) && lead.lead_scores.length > 0 
+        ? lead.lead_scores[0] 
+        : null
+      
+      return {
         id: lead.id,
         email: lead.email || '',
         full_name: lead.name || lead.email?.split('@')[0] || 'Unknown',
         phone: lead.phone || null,
         score: lead.score || 0,
-        category: getCategory(lead.score || 0),
+        category: scoreData?.category || getCategory(lead.score || 0),
         created_at: lead.created_at,
         last_activity: lead.updated_at || lead.created_at,
         score_breakdown: {
-          budget_alignment: 0,
-          engagement: 0,
-          property_fit: 0,
-          time_investment: 0,
-          contact_intent: 0,
-          recency: 0
+          budget_alignment: scoreData?.budget_alignment || 0,
+          engagement: scoreData?.engagement_score || 0,
+          property_fit: scoreData?.property_fit || 0,
+          time_investment: scoreData?.time_investment || 0,
+          contact_intent: scoreData?.contact_intent || 0,
+          recency: scoreData?.recency_score || 0
         }
-      }))
-
-      const totalLeads = leadsCount || 0
-      
-      // OPTIMIZED: Calculate stats from database aggregation
-      const stats = await calculateStatsOptimized(supabase, user.id, {
-        category,
-        scoreMin,
-        scoreMax,
-      })
-
-      const responseData = {
-        success: true,
-        data: transformedLeads,
-        pagination: {
-          page,
-          limit,
-          total: totalLeads,
-          totalPages: Math.ceil(totalLeads / limit)
-        },
-        stats,
-        isEmpty: transformedLeads.length === 0
       }
+    })
 
-      // OPTIMIZED: Cache the response
-      leadsCache.set(cacheKey, responseData, CACHE_TTL)
-
-      return NextResponse.json(responseData, {
-        status: 200,
-        headers: {
-          ...corsHeaders,
-          'X-Cache': 'MISS',
-          'Cache-Control': 'public, max-age=20',
-        },
-      })
-    }
-
-    // Transform lead_scores data (use filtered results)
-    const transformedLeads = filteredLeadScores.map((lead: any) => ({
-      id: lead.id,
-      email: lead.profile?.email || '',
-      full_name: lead.profile?.full_name || lead.profile?.email?.split('@')[0] || 'Unknown',
-      phone: lead.profile?.phone || null,
-      avatar_url: lead.profile?.avatar_url || null,
-      score: lead.score || 0,
-      category: lead.category || getCategory(lead.score || 0),
-      created_at: lead.created_at,
-      last_activity: lead.last_activity || lead.updated_at,
-      score_breakdown: {
-        budget_alignment: lead.budget_alignment || 0,
-        engagement: lead.engagement_score || 0,
-        property_fit: lead.property_fit || 0,
-        time_investment: lead.time_investment || 0,
-        contact_intent: lead.contact_intent || 0,
-        recency: lead.recency_score || 0
-      }
-    }))
-
-    // OPTIMIZED: Filter by search if provided (post-query for joined data)
-    // Note: For better performance, consider adding a materialized view or computed column
-    let filteredLeads = transformedLeads
-    if (search) {
-      const searchLower = search.toLowerCase()
-      filteredLeads = transformedLeads.filter(lead =>
-        lead.email.toLowerCase().includes(searchLower) ||
-        lead.full_name.toLowerCase().includes(searchLower) ||
-        (lead.phone && lead.phone.includes(search))
-      )
-    }
-
-    // OPTIMIZED: Get total count from database (already fetched with count: 'exact')
     const totalLeads = count || 0
     
-    // OPTIMIZED: Calculate stats from database aggregation instead of all leads
-    // This is much faster for large datasets
+    // OPTIMIZED: Calculate stats from database aggregation
     const stats = await calculateStatsOptimized(supabase, user.id, {
       category,
       scoreMin,
       scoreMax,
     })
 
-    return NextResponse.json({
+    const responseData = {
       success: true,
-      data: filteredLeads,
+      data: transformedLeads,
       pagination: {
         page,
         limit,
@@ -357,8 +256,20 @@ export async function GET(request: NextRequest) {
         totalPages: Math.ceil(totalLeads / limit)
       },
       stats,
-      isEmpty: filteredLeads.length === 0
-    }, { status: 200, headers: corsHeaders })
+      isEmpty: transformedLeads.length === 0
+    }
+
+    // OPTIMIZED: Cache the response
+    leadsCache.set(cacheKey, responseData, CACHE_TTL)
+
+    return NextResponse.json(responseData, {
+      status: 200,
+      headers: {
+        ...corsHeaders,
+        'X-Cache': 'MISS',
+        'Cache-Control': 'public, max-age=20',
+      },
+    })
 
   } catch (error: any) {
     console.error('[Leads API] Unexpected error:', error)

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { createClientFromRequest } from '@/lib/supabase/route-handler'
 
 export async function GET(req: NextRequest) {
   const url = new URL(req.url)
@@ -10,12 +10,13 @@ export async function GET(req: NextRequest) {
   const dateRange = url.searchParams.get('dateRange') || '30days'
   const limit = Number(url.searchParams.get('limit') || '0') // 0 = no limit, supports pagination
 
-  // Use server-side Supabase client that properly handles cookies
-  const supabase = await createClient()
+  // Use request-based Supabase client for reliable cookie handling
+  const { supabase } = createClientFromRequest(req)
 
   // Get authenticated user from session
   const { data: { user }, error: authError } = await supabase.auth.getUser()
   if (authError || !user) {
+    console.error('[Builder Leads API] Auth error:', authError?.message || 'No user')
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 

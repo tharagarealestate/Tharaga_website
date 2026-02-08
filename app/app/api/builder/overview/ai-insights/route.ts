@@ -59,14 +59,36 @@ export async function POST(request: NextRequest) {
     if (authHeader && authHeader.startsWith('Bearer ')) {
       const token = authHeader.substring(7);
       console.log('[AI Insights API] Verifying token from Authorization header...');
-      // Verify token directly
-      const { data: { user: tokenUser }, error: tokenError } = await supabase.auth.getUser(token);
+      
+      // CRITICAL: Create a new Supabase client with the token in global headers for verification
+      // This ensures the token is properly used for authentication
+      const { createClient } = await import('@supabase/supabase-js');
+      const tokenClient = createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+        {
+          global: {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          },
+        }
+      );
+      
+      // Verify token by getting user
+      const { data: { user: tokenUser }, error: tokenError } = await tokenClient.auth.getUser();
       if (!tokenError && tokenUser) {
         user = tokenUser;
         console.log('[AI Insights API] Authenticated via token:', tokenUser.email);
+        // Use tokenClient for subsequent queries since it has the auth context
+        // But we'll continue using the original supabase client for queries
       } else {
         authError = tokenError;
-        console.error('[AI Insights API] Token verification failed:', tokenError?.message);
+        console.error('[AI Insights API] Token verification failed:', {
+          message: tokenError?.message,
+          status: tokenError?.status,
+          name: tokenError?.name
+        });
       }
     } else {
       // Try cookie-based auth

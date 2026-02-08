@@ -28,10 +28,19 @@ export function CRMDashboard({ onClose, embedded = false }: CRMDashboardProps) {
 
   const fetchCRMData = async () => {
     try {
-      // Get auth token from Supabase session
-      const supabase = getSupabase()
-      const { data: { session } } = await supabase.auth.getSession()
-      const token = session?.access_token
+      // CRITICAL: Get auth token - use window.supabase if available
+      const supabaseClient = (typeof window !== 'undefined' && (window as any).supabase) || getSupabase()
+      let token: string | null = null
+      try {
+        const { data: { session }, error: sessionError } = await supabaseClient.auth.getSession()
+        if (sessionError) {
+          console.warn('[CRMDashboard] Session error:', sessionError.message)
+        }
+        token = session?.access_token || null
+      } catch (err: any) {
+        console.error('[CRMDashboard] Error getting session:', err.message)
+      }
+      
       const headers: HeadersInit = {}
       if (token) {
         headers['Authorization'] = `Bearer ${token}`
@@ -83,10 +92,19 @@ export function CRMDashboard({ onClose, embedded = false }: CRMDashboardProps) {
     setConnectionError(null)
 
     try {
-      // Get auth token
-      const supabase = getSupabase()
-      const { data: { session } } = await supabase.auth.getSession()
-      const token = session?.access_token
+      // CRITICAL: Get auth token - use window.supabase if available
+      const supabaseClient = (typeof window !== 'undefined' && (window as any).supabase) || getSupabase()
+      let token: string | null = null
+      try {
+        const { data: { session }, error: sessionError } = await supabaseClient.auth.getSession()
+        if (sessionError) {
+          console.warn('[CRMDashboard] Connect session error:', sessionError.message)
+        }
+        token = session?.access_token || null
+      } catch (err: any) {
+        console.error('[CRMDashboard] Connect error getting session:', err.message)
+      }
+      
       const headers: HeadersInit = {}
       if (token) {
         headers['Authorization'] = `Bearer ${token}`

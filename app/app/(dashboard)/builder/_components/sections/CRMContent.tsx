@@ -75,10 +75,19 @@ export function CRMContent() {
   const handleSync = async () => {
     setSyncing(true)
     try {
-      // Get auth token
-      const supabase = getSupabase()
-      const { data: { session } } = await supabase.auth.getSession()
-      const token = session?.access_token
+      // CRITICAL: Get auth token - use window.supabase if available
+      const supabaseClient = (typeof window !== 'undefined' && (window as any).supabase) || getSupabase()
+      let token: string | null = null
+      try {
+        const { data: { session }, error: sessionError } = await supabaseClient.auth.getSession()
+        if (sessionError) {
+          console.warn('[CRMContent] Sync session error:', sessionError.message)
+        }
+        token = session?.access_token || null
+      } catch (err: any) {
+        console.error('[CRMContent] Sync error getting session:', err.message)
+      }
+      
       const headers: HeadersInit = { 'Content-Type': 'application/json' }
       if (token) {
         headers['Authorization'] = `Bearer ${token}`
@@ -94,10 +103,19 @@ export function CRMContent() {
         window.dispatchEvent(new CustomEvent('crm-sync-complete'))
         // Refetch status after a delay
         setTimeout(() => {
-          // Get auth token
-        const supabase = getSupabase()
-        const { data: { session } } = await supabase.auth.getSession()
-        const token = session?.access_token
+          // CRITICAL: Get auth token - use window.supabase if available
+        const supabaseClient = (typeof window !== 'undefined' && (window as any).supabase) || getSupabase()
+        let token: string | null = null
+        try {
+          const { data: { session }, error: sessionError } = await supabaseClient.auth.getSession()
+          if (sessionError) {
+            console.warn('[CRMContent] Status session error:', sessionError.message)
+          }
+          token = session?.access_token || null
+        } catch (err: any) {
+          console.error('[CRMContent] Status error getting session:', err.message)
+        }
+        
         const headers: HeadersInit = {}
         if (token) {
           headers['Authorization'] = `Bearer ${token}`

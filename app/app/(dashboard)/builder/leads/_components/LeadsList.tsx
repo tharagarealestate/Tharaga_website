@@ -206,10 +206,28 @@ export function LeadsList({ onSelectLead, initialFilters, showInlineFilters = tr
             params.append('no_response', filters.no_response.toString());
           }
 
+          // CRITICAL: Get auth token - use window.supabase if available
+          const supabaseClient = (typeof window !== 'undefined' && (window as any).supabase) || supabase
+          let token: string | null = null
+          try {
+            const { data: { session }, error: sessionError } = await supabaseClient.auth.getSession()
+            if (sessionError) {
+              console.warn('[LeadsList] Session error:', sessionError.message)
+            }
+            token = session?.access_token || null
+          } catch (err: any) {
+            console.error('[LeadsList] Error getting session:', err.message)
+          }
+          
+          const headers: HeadersInit = { 'Content-Type': 'application/json' }
+          if (token) {
+            headers['Authorization'] = `Bearer ${token}`
+          }
+
           const response = await fetch(`/api/leads?${params.toString()}`, {
             method: 'GET',
-            headers: { 'Content-Type': 'application/json' },
-            credentials: 'include', // Important: Include cookies for auth
+            headers,
+            credentials: 'include',
             signal: controller.signal,
           });
 
@@ -538,9 +556,19 @@ export function LeadsList({ onSelectLead, initialFilters, showInlineFilters = tr
       if (typeof filters.score_min === 'number' && filters.score_min > 0) params.append('score_min', filters.score_min.toString());
       if (typeof filters.score_max === 'number' && filters.score_max < 10) params.append('score_max', filters.score_max.toString());
 
-      // Get auth token from Supabase session
-      const { data: { session } } = await supabase.auth.getSession()
-      const token = session?.access_token
+      // CRITICAL: Get auth token - use window.supabase if available
+      const supabaseClient = (typeof window !== 'undefined' && (window as any).supabase) || supabase
+      let token: string | null = null
+      try {
+        const { data: { session }, error: sessionError } = await supabaseClient.auth.getSession()
+        if (sessionError) {
+          console.warn('[LeadsList] Export session error:', sessionError.message)
+        }
+        token = session?.access_token || null
+      } catch (err: any) {
+        console.error('[LeadsList] Export error getting session:', err.message)
+      }
+      
       const headers: HeadersInit = {}
       if (token) {
         headers['Authorization'] = `Bearer ${token}`

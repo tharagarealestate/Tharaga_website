@@ -43,13 +43,33 @@ export async function GET(request: NextRequest) {
     if (authHeader && authHeader.startsWith('Bearer ')) {
       const token = authHeader.substring(7)
       console.log('[Leads API] Verifying token from Authorization header...')
-      const { data: { user: tokenUser }, error: tokenError } = await supabase.auth.getUser(token)
+      
+      // CRITICAL: Create a new Supabase client with the token in global headers
+      const { createClient } = await import('@supabase/supabase-js')
+      const tokenClient = createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+        {
+          global: {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          },
+        }
+      )
+      
+      const { data: { user: tokenUser }, error: tokenError } = await tokenClient.auth.getUser()
       if (!tokenError && tokenUser) {
         user = tokenUser
         console.log('[Leads API] Authenticated via token:', tokenUser.email)
+        // Update supabase to use tokenClient for queries
+        Object.assign(supabase, tokenClient)
       } else {
         authError = tokenError
-        console.error('[Leads API] Token verification failed:', tokenError?.message)
+        console.error('[Leads API] Token verification failed:', {
+          message: tokenError?.message,
+          status: tokenError?.status
+        })
       }
     } else {
       // Try cookie-based auth

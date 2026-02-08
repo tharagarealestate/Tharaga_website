@@ -130,21 +130,35 @@ export function AIOverviewSection({ onNavigate }: OverviewSectionProps) {
       setRefreshing(true)
       console.log('[AI Overview] Making API request to /api/builder/overview/ai-insights...');
       
-      // Get auth token from Supabase session (stored in localStorage)
-      const supabase = getSupabase()
-      const { data: { session } } = await supabase.auth.getSession()
-      const token = session?.access_token
+      // CRITICAL: Get auth token from Supabase session
+      // Use window.supabase if available (same instance as auth scripts), otherwise use getSupabase()
+      const supabaseClient = (typeof window !== 'undefined' && (window as any).supabase) || getSupabase()
+      
+      let token: string | null = null
+      try {
+        const { data: { session }, error: sessionError } = await supabaseClient.auth.getSession()
+        if (sessionError) {
+          console.error('[AI Overview] Session error:', sessionError.message)
+        }
+        token = session?.access_token || null
+        console.log('[AI Overview] Token extracted:', token ? `present (${token.substring(0, 20)}...)` : 'missing')
+      } catch (err: any) {
+        console.error('[AI Overview] Error getting session:', err.message)
+      }
       
       const headers: HeadersInit = { 'Content-Type': 'application/json' }
       if (token) {
         headers['Authorization'] = `Bearer ${token}`
+        console.log('[AI Overview] Authorization header set')
+      } else {
+        console.warn('[AI Overview] No token available - request will likely fail')
       }
       
       const response = await fetch('/api/builder/overview/ai-insights', {
         method: 'POST',
         headers,
-        credentials: 'include', // Include cookies (for other cookies)
-        cache: 'no-store' // Ensure fresh data
+        credentials: 'include',
+        cache: 'no-store'
       })
 
       console.log('[AI Overview] API response status:', response.status, response.statusText);

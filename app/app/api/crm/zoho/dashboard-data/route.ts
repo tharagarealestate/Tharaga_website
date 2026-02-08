@@ -43,11 +43,33 @@ const getEmptyData = (message: string) => ({
 // =============================================
 export async function GET(request: NextRequest) {
   try {
+    const authHeader = request.headers.get('authorization')
+    console.log('[CRM Dashboard API] Authorization header:', authHeader ? 'present' : 'missing')
+    
     // Use request-based client for reliable cookie handling
     const { supabase } = createClientFromRequest(request)
 
-    // Simple auth check - just get the user, NO ROLE RESTRICTIONS
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    // CRITICAL: If Authorization header is present, verify token directly
+    let user = null
+    let authError = null
+    
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      const token = authHeader.substring(7)
+      console.log('[CRM Dashboard API] Verifying token from Authorization header...')
+      const { data: { user: tokenUser }, error: tokenError } = await supabase.auth.getUser(token)
+      if (!tokenError && tokenUser) {
+        user = tokenUser
+        console.log('[CRM Dashboard API] Authenticated via token:', tokenUser.email)
+      } else {
+        authError = tokenError
+        console.error('[CRM Dashboard API] Token verification failed:', tokenError?.message)
+      }
+    } else {
+      // Try cookie-based auth
+      const result = await supabase.auth.getUser()
+      user = result.data?.user || null
+      authError = result.error || null
+    }
 
     if (authError || !user) {
       console.error('[CRM Dashboard API] Auth error:', authError?.message || 'No user')

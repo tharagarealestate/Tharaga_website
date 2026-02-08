@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { getSupabase } from '@/lib/supabase'
 import {
   Users, Building2, Phone, Mail, Calendar, TrendingUp, Activity,
   CheckCircle2, Clock, DollarSign, X, XCircle, MapPin, Home, IndianRupee,
@@ -27,8 +28,18 @@ export function CRMDashboard({ onClose, embedded = false }: CRMDashboardProps) {
 
   const fetchCRMData = async () => {
     try {
+      // Get auth token from Supabase session
+      const supabase = getSupabase()
+      const { data: { session } } = await supabase.auth.getSession()
+      const token = session?.access_token
+      const headers: HeadersInit = {}
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`
+      }
+      
       const response = await fetch('/api/crm/zoho/dashboard-data', {
-        credentials: 'include', // Important: Include cookies for auth
+        credentials: 'include',
+        headers
       })
       const data = await response.json()
 
@@ -72,8 +83,18 @@ export function CRMDashboard({ onClose, embedded = false }: CRMDashboardProps) {
     setConnectionError(null)
 
     try {
+      // Get auth token
+      const supabase = getSupabase()
+      const { data: { session } } = await supabase.auth.getSession()
+      const token = session?.access_token
+      const headers: HeadersInit = {}
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`
+      }
+      
       const response = await fetch('/api/crm/zoho/connect', {
-        credentials: 'include', // Important: Include cookies for auth
+        credentials: 'include',
+        headers
       })
       const data = await response.json()
 

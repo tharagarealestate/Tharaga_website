@@ -538,8 +538,17 @@ export function LeadsList({ onSelectLead, initialFilters, showInlineFilters = tr
       if (typeof filters.score_min === 'number' && filters.score_min > 0) params.append('score_min', filters.score_min.toString());
       if (typeof filters.score_max === 'number' && filters.score_max < 10) params.append('score_max', filters.score_max.toString());
 
+      // Get auth token from Supabase session
+      const { data: { session } } = await supabase.auth.getSession()
+      const token = session?.access_token
+      const headers: HeadersInit = {}
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`
+      }
+      
       const response = await fetch(`/api/leads/export?format=csv&${params.toString()}`, {
-        credentials: 'include', // Important: Include cookies for auth
+        credentials: 'include',
+        headers
       });
       if (!response.ok) {
         throw new Error('Failed to export leads');

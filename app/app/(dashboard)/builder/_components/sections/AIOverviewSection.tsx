@@ -24,6 +24,7 @@ import {
 } from 'lucide-react'
 import { BuilderPageWrapper } from '../BuilderPageWrapper'
 import { StandardStatsCard } from '../design-system/StandardStatsCard'
+import { getSupabase } from '@/lib/supabase'
 import {
   ResponsiveContainer,
   LineChart as RechartsLineChart,
@@ -129,10 +130,20 @@ export function AIOverviewSection({ onNavigate }: OverviewSectionProps) {
       setRefreshing(true)
       console.log('[AI Overview] Making API request to /api/builder/overview/ai-insights...');
       
+      // Get auth token from Supabase session (stored in localStorage)
+      const supabase = getSupabase()
+      const { data: { session } } = await supabase.auth.getSession()
+      const token = session?.access_token
+      
+      const headers: HeadersInit = { 'Content-Type': 'application/json' }
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`
+      }
+      
       const response = await fetch('/api/builder/overview/ai-insights', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include', // CRITICAL: Include cookies for authentication
+        headers,
+        credentials: 'include', // Include cookies (for other cookies)
         cache: 'no-store' // Ensure fresh data
       })
 

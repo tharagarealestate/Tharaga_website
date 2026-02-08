@@ -42,14 +42,39 @@ export async function POST(request: NextRequest) {
   try {
     // Debug: Log all cookies from request
     const allCookies = request.cookies.getAll();
+    const authHeader = request.headers.get('authorization');
     console.log('[AI Insights API] Request cookies:', allCookies.map(c => c.name).join(', ') || 'none');
+    console.log('[AI Insights API] Authorization header:', authHeader ? 'present' : 'missing');
     
     console.log('[AI Insights API] Step 1: Creating Supabase client from request...');
     const { supabase } = createClientFromRequest(request);
     console.log('[AI Insights API] Step 1: Supabase client created successfully');
     
     console.log('[AI Insights API] Step 2: Getting user authentication...');
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    
+    // CRITICAL: If Authorization header is present, verify token directly
+    let user = null;
+    let authError = null;
+    
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      const token = authHeader.substring(7);
+      console.log('[AI Insights API] Verifying token from Authorization header...');
+      // Verify token directly
+      const { data: { user: tokenUser }, error: tokenError } = await supabase.auth.getUser(token);
+      if (!tokenError && tokenUser) {
+        user = tokenUser;
+        console.log('[AI Insights API] Authenticated via token:', tokenUser.email);
+      } else {
+        authError = tokenError;
+        console.error('[AI Insights API] Token verification failed:', tokenError?.message);
+      }
+    } else {
+      // Try cookie-based auth
+      const result = await supabase.auth.getUser();
+      user = result.data?.user || null;
+      authError = result.error || null;
+    }
+    
     console.log('[AI Insights API] Step 2: Auth result - user:', user?.id ? 'exists' : 'null', 'error:', authError?.message || 'none');
 
     if (authError || !user) {

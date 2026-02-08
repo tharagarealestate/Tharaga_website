@@ -6,6 +6,7 @@ import {
   Link2, RefreshCw, CheckCircle2, AlertCircle, XCircle,
   Settings, Activity, Database, TrendingUp
 } from 'lucide-react'
+import { getSupabase } from '@/lib/supabase'
 import { CRMSyncStatus } from '../../leads/_components/CRMSyncStatus'
 import { CRMDashboard } from './CRMDashboard'
 
@@ -26,8 +27,18 @@ export function CRMContent() {
     const fetchCRMStatus = async () => {
       setLoading(true)
       try {
+        // Get auth token
+        const supabase = getSupabase()
+        const { data: { session } } = await supabase.auth.getSession()
+        const token = session?.access_token
+        const headers: HeadersInit = {}
+        if (token) {
+          headers['Authorization'] = `Bearer ${token}`
+        }
+        
         const response = await fetch('/api/crm/zoho/status', {
-          credentials: 'include', // Important: Include cookies for auth
+          credentials: 'include',
+          headers
         })
         if (response.ok) {
           const data = await response.json()
@@ -64,17 +75,34 @@ export function CRMContent() {
   const handleSync = async () => {
     setSyncing(true)
     try {
+      // Get auth token
+      const supabase = getSupabase()
+      const { data: { session } } = await supabase.auth.getSession()
+      const token = session?.access_token
+      const headers: HeadersInit = { 'Content-Type': 'application/json' }
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`
+      }
+      
       const response = await fetch('/api/crm/zoho/sync', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({ sync_type: 'leads' }),
-        credentials: 'include', // Important: Include cookies for auth
+        credentials: 'include',
       })
       if (response.ok) {
         window.dispatchEvent(new CustomEvent('crm-sync-complete'))
         // Refetch status after a delay
         setTimeout(() => {
-          fetch('/api/crm/zoho/status', { credentials: 'include' })
+          // Get auth token
+        const supabase = getSupabase()
+        const { data: { session } } = await supabase.auth.getSession()
+        const token = session?.access_token
+        const headers: HeadersInit = {}
+        if (token) {
+          headers['Authorization'] = `Bearer ${token}`
+        }
+        fetch('/api/crm/zoho/status', { credentials: 'include', headers })
             .then(res => res.json())
             .then(data => {
               setCrmStatus(data.success ? data.data : null)

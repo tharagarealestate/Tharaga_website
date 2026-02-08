@@ -29,13 +29,34 @@ export async function GET(request: NextRequest) {
   try {
     // Debug: Log all cookies from request
     const allCookies = request.cookies.getAll()
+    const authHeader = request.headers.get('authorization')
     console.log('[Leads API] Request cookies:', allCookies.map(c => c.name).join(', ') || 'none')
+    console.log('[Leads API] Authorization header:', authHeader ? 'present' : 'missing')
 
     // Use request-based client for reliable cookie handling
     const { supabase } = createClientFromRequest(request)
 
-    // Simple auth check - just get the user, NO ROLE RESTRICTIONS
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    // CRITICAL: If Authorization header is present, verify token directly
+    let user = null
+    let authError = null
+    
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      const token = authHeader.substring(7)
+      console.log('[Leads API] Verifying token from Authorization header...')
+      const { data: { user: tokenUser }, error: tokenError } = await supabase.auth.getUser(token)
+      if (!tokenError && tokenUser) {
+        user = tokenUser
+        console.log('[Leads API] Authenticated via token:', tokenUser.email)
+      } else {
+        authError = tokenError
+        console.error('[Leads API] Token verification failed:', tokenError?.message)
+      }
+    } else {
+      // Try cookie-based auth
+      const result = await supabase.auth.getUser()
+      user = result.data?.user || null
+      authError = result.error || null
+    }
 
     if (authError || !user) {
       console.error('[Leads API] Auth error:', authError?.message || 'No user', '| Cookies received:', allCookies.length)

@@ -102,25 +102,25 @@ export function CRMContent() {
       if (response.ok) {
         window.dispatchEvent(new CustomEvent('crm-sync-complete'))
         // Refetch status after a delay
-        setTimeout(() => {
+        setTimeout(async () => {
           // CRITICAL: Get auth token - use window.supabase if available
-        const supabaseClient = (typeof window !== 'undefined' && (window as any).supabase) || getSupabase()
-        let token: string | null = null
-        try {
-          const { data: { session }, error: sessionError } = await supabaseClient.auth.getSession()
-          if (sessionError) {
-            console.warn('[CRMContent] Status session error:', sessionError.message)
+          const supabaseClient = (typeof window !== 'undefined' && (window as any).supabase) || getSupabase()
+          let token: string | null = null
+          try {
+            const { data: { session }, error: sessionError } = await supabaseClient.auth.getSession()
+            if (sessionError) {
+              console.warn('[CRMContent] Status session error:', sessionError.message)
+            }
+            token = session?.access_token || null
+          } catch (err: any) {
+            console.error('[CRMContent] Status error getting session:', err.message)
           }
-          token = session?.access_token || null
-        } catch (err: any) {
-          console.error('[CRMContent] Status error getting session:', err.message)
-        }
-        
-        const headers: HeadersInit = {}
-        if (token) {
-          headers['Authorization'] = `Bearer ${token}`
-        }
-        fetch('/api/crm/zoho/status', { credentials: 'include', headers })
+          
+          const headers: HeadersInit = {}
+          if (token) {
+            headers['Authorization'] = `Bearer ${token}`
+          }
+          fetch('/api/crm/zoho/status', { credentials: 'include', headers })
             .then(res => res.json())
             .then(data => {
               setCrmStatus(data.success ? data.data : null)

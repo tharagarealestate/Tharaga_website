@@ -132,7 +132,8 @@ export function AIOverviewSection({ onNavigate }: OverviewSectionProps) {
       const response = await fetch('/api/builder/overview/ai-insights', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        credentials: 'include' // Ensure cookies are sent
+        credentials: 'include', // CRITICAL: Include cookies for authentication
+        cache: 'no-store' // Ensure fresh data
       })
 
       console.log('[AI Overview] API response status:', response.status, response.statusText);

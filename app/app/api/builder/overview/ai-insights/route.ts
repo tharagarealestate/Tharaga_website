@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { createClientFromRequest } from '@/lib/supabase/route-handler';
 import OpenAI from 'openai';
 
 export const runtime = 'nodejs';
@@ -40,8 +40,12 @@ export async function POST(request: NextRequest) {
   console.log('[AI Insights API] Request started at', new Date().toISOString());
   
   try {
-    console.log('[AI Insights API] Step 1: Creating Supabase client...');
-    const supabase = await createClient();
+    // Debug: Log all cookies from request
+    const allCookies = request.cookies.getAll();
+    console.log('[AI Insights API] Request cookies:', allCookies.map(c => c.name).join(', ') || 'none');
+    
+    console.log('[AI Insights API] Step 1: Creating Supabase client from request...');
+    const { supabase } = createClientFromRequest(request);
     console.log('[AI Insights API] Step 1: Supabase client created successfully');
     
     console.log('[AI Insights API] Step 2: Getting user authentication...');
@@ -60,7 +64,9 @@ export async function POST(request: NextRequest) {
         debug: {
           hasAuthError: !!authError,
           authErrorMessage: authError?.message,
-          hasUser: !!user
+          hasUser: !!user,
+          cookieCount: allCookies.length,
+          cookieNames: allCookies.map(c => c.name)
         }
       }, { status: 401 });
     }

@@ -126,22 +126,78 @@ export async function GET(request: NextRequest) {
       }, { status: 400, headers: corsHeaders })
     }
 
-    // Generate OAuth URL
+    // Generate OAuth URL with comprehensive validation
     const clientId = process.env.ZOHO_CLIENT_ID
+    const clientSecret = process.env.ZOHO_CLIENT_SECRET
     const redirectUri = process.env.ZOHO_REDIRECT_URI || `${process.env.NEXT_PUBLIC_SITE_URL}/api/crm/zoho/callback`
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXT_PUBLIC_APP_URL
 
+    // CRITICAL: Validate Client ID exists
     if (!clientId) {
       return NextResponse.json({
         success: false,
         error: 'Zoho CRM integration not configured',
-        message: 'Please configure ZOHO_CLIENT_ID environment variable',
+        message: 'ZOHO_CLIENT_ID environment variable is not set',
+        help: {
+          step1: 'Go to https://api-console.zoho.in (for India) or https://api-console.zoho.com (for International)',
+          step2: 'Create a new Server-based Application',
+          step3: 'Copy the Client ID and Client Secret',
+          step4: 'Add them to your Netlify environment variables: ZOHO_CLIENT_ID and ZOHO_CLIENT_SECRET',
+          step5: 'Set ZOHO_REDIRECT_URI to match your callback URL exactly',
+        },
+        requiredEnvVars: ['ZOHO_CLIENT_ID', 'ZOHO_CLIENT_SECRET', 'ZOHO_REDIRECT_URI'],
       }, { status: 500, headers: corsHeaders })
     }
 
-    // Build the OAuth authorization URL
-    // CRITICAL: Use accounts.zoho.in for Indian accounts, accounts.zoho.com for international
-    // Check environment variable or default to .in for Indian real estate
-    const accountsUrl = process.env.ZOHO_ACCOUNTS_URL || 'https://accounts.zoho.in'
+    // Validate Client ID format (Zoho Client IDs start with "1000.")
+    if (!clientId.startsWith('1000.')) {
+      console.warn('[Zoho Connect API] Client ID format may be incorrect. Zoho Client IDs typically start with "1000."')
+    }
+
+    // Validate redirect URI is set
+    if (!redirectUri || redirectUri.includes('undefined')) {
+      return NextResponse.json({
+        success: false,
+        error: 'Redirect URI not configured',
+        message: 'ZOHO_REDIRECT_URI is not set or NEXT_PUBLIC_SITE_URL is missing',
+        currentRedirectUri: redirectUri,
+        help: {
+          step1: 'Set ZOHO_REDIRECT_URI environment variable to your callback URL',
+          step2: `Example: ${siteUrl ? `${siteUrl}/api/crm/zoho/callback` : 'https://your-site.netlify.app/api/crm/zoho/callback'}`,
+          step3: 'Ensure this EXACT URL is also set in your Zoho app settings',
+        },
+      }, { status: 500, headers: corsHeaders })
+    }
+
+    // Determine correct accounts URL based on Client ID region
+    // Indian accounts typically use .in, International use .com
+    // Try to detect based on Client ID or use environment variable
+    let accountsUrl = process.env.ZOHO_ACCOUNTS_URL
+    
+    // If not explicitly set, try to determine from Client ID or default to .in for Indian real estate
+    if (!accountsUrl) {
+      // Check if we should use .in or .com
+      // For now, default to .in for Indian market, but allow override
+      accountsUrl = 'https://accounts.zoho.in'
+      console.log('[Zoho Connect API] Using default accounts URL for India:', accountsUrl)
+      console.log('[Zoho Connect API] If your Zoho account is International, set ZOHO_ACCOUNTS_URL=https://accounts.zoho.com')
+    }
+
+    // Validate redirect URI format
+    try {
+      const redirectUrlObj = new URL(redirectUri)
+      if (!redirectUrlObj.protocol.startsWith('http')) {
+        throw new Error('Redirect URI must use http:// or https://')
+      }
+    } catch (e: any) {
+      return NextResponse.json({
+        success: false,
+        error: 'Invalid redirect URI format',
+        message: e.message || 'Redirect URI must be a valid URL',
+        currentRedirectUri: redirectUri,
+      }, { status: 500, headers: corsHeaders })
+    }
+
     const scope = 'ZohoCRM.modules.ALL,ZohoCRM.settings.ALL,ZohoCRM.users.READ'
     const state = Buffer.from(JSON.stringify({
       user_id: user.id,
@@ -159,10 +215,41 @@ export async function GET(request: NextRequest) {
     
     console.log('[Zoho Connect API] Generated OAuth URL:', {
       accountsUrl,
-      clientId: clientId ? `${clientId.substring(0, 10)}...` : 'missing',
+      clientId: clientId ? `${clientId.substring(0, 15)}...` : 'missing',
+      clientIdLength: clientId?.length || 0,
       redirectUri,
-      scope
+      scope,
+      clientSecret: clientSecret ? '***configured***' : 'missing'
     })
+
+    // Return OAuth URL with helpful diagnostic info
+    return NextResponse.json({
+      success: true,
+      auth_url: authUrl.toString(),
+      message: 'Redirect user to this URL to connect Zoho CRM',
+      expires_in: 600, // OAuth URL valid for 10 minutes
+      diagnostic: {
+        accountsUrl,
+        redirectUri,
+        clientIdPrefix: clientId.substring(0, 15),
+        hasClientSecret: !!clientSecret,
+        region: accountsUrl.includes('.in') ? 'India' : 'International',
+      },
+      troubleshooting: {
+        ifInvalidClient: 'If you see "Invalid Client" error:',
+        steps: [
+          '1. Verify ZOHO_CLIENT_ID in Netlify matches your Zoho app Client ID exactly',
+          '2. Check if your Zoho app is in the correct region (India vs International)',
+          '3. Ensure ZOHO_ACCOUNTS_URL matches your Zoho account region',
+          '4. Verify the redirect URI in Zoho app settings matches ZOHO_REDIRECT_URI exactly',
+          '5. Make sure your Zoho app is active and not deleted',
+        ],
+        zohoConsoleUrls: {
+          india: 'https://api-console.zoho.in',
+          international: 'https://api-console.zoho.com',
+        },
+      },
+    }, { status: 200, headers: corsHeaders })
 
     return NextResponse.json({
       success: true,

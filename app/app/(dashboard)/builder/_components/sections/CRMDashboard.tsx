@@ -118,16 +118,57 @@ export function CRMDashboard({ onClose, embedded = false }: CRMDashboardProps) {
 
       if (data.success && data.auth_url) {
         // Open Zoho OAuth in a new window
-        window.open(data.auth_url, '_blank', 'width=600,height=700')
+        const popup = window.open(data.auth_url, 'zoho_oauth', 'width=600,height=700,scrollbars=yes,resizable=yes')
+        
+        if (!popup) {
+          setConnectionError('Popup blocked. Please allow popups for this site and try again.')
+          return
+        }
 
         // Show message to user
         setConnectionError('Please complete the authorization in the popup window. After authorizing, refresh this page.')
+        
+        // Listen for popup close
+        const checkPopup = setInterval(() => {
+          if (popup.closed) {
+            clearInterval(checkPopup)
+            // Refresh data after popup closes
+            setTimeout(fetchCRMData, 2000)
+          }
+        }, 1000)
+        
+        // Clean up after 5 minutes
+        setTimeout(() => clearInterval(checkPopup), 300000)
       } else if (data.already_connected) {
         setConnectionError('Zoho CRM is already connected!')
         // Refresh data
         await fetchCRMData()
       } else {
-        setConnectionError(data.error || data.message || 'Failed to initiate connection')
+        // Enhanced error display with troubleshooting
+        let errorMsg = data.error || data.message || 'Failed to initiate connection'
+        
+        if (data.help) {
+          errorMsg += '\n\nConfiguration Required:'
+          if (data.help.step1) errorMsg += `\n${data.help.step1}`
+          if (data.help.step2) errorMsg += `\n${data.help.step2}`
+          if (data.help.step3) errorMsg += `\n${data.help.step3}`
+          if (data.help.step4) errorMsg += `\n${data.help.step4}`
+          if (data.help.step5) errorMsg += `\n${data.help.step5}`
+        }
+        
+        if (data.troubleshooting) {
+          errorMsg += '\n\nTroubleshooting:'
+          if (data.troubleshooting.ifInvalidClient) {
+            errorMsg += `\n${data.troubleshooting.ifInvalidClient}`
+          }
+          if (data.troubleshooting.steps) {
+            data.troubleshooting.steps.forEach((step: string) => {
+              errorMsg += `\n${step}`
+            })
+          }
+        }
+        
+        setConnectionError(errorMsg)
       }
     } catch (error: any) {
       console.error('Failed to connect Zoho:', error)
@@ -322,12 +363,17 @@ export function CRMDashboard({ onClose, embedded = false }: CRMDashboardProps) {
                     </button>
                   </div>
                   {connectionError && (
-                    <div className={`mt-4 p-3 rounded-lg text-sm ${
-                      connectionError.includes('already connected') || connectionError.includes('popup')
+                    <div className={`mt-4 p-4 rounded-lg text-sm whitespace-pre-line ${
+                      connectionError.includes('already connected') || connectionError.includes('popup') || connectionError.includes('Please complete')
                         ? 'bg-blue-500/20 text-blue-300 border border-blue-500/30'
                         : 'bg-red-500/20 text-red-300 border border-red-500/30'
                     }`}>
-                      {connectionError}
+                      <div className="font-semibold mb-2">⚠️ {connectionError.split('\n')[0]}</div>
+                      {connectionError.includes('\n') && (
+                        <div className="text-xs mt-2 opacity-90">
+                          {connectionError.split('\n').slice(1).join('\n')}
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>

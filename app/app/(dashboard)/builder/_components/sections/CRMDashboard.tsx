@@ -4,7 +4,8 @@ import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   Users, Building2, Phone, Mail, Calendar, TrendingUp, Activity,
-  CheckCircle2, Clock, DollarSign, X, XCircle, MapPin, Home, IndianRupee
+  CheckCircle2, Clock, DollarSign, X, XCircle, MapPin, Home, IndianRupee,
+  Link2, RefreshCw, ExternalLink
 } from 'lucide-react'
 
 interface CRMDashboardProps {
@@ -21,47 +22,80 @@ export function CRMDashboard({ onClose, embedded = false }: CRMDashboardProps) {
   const [loading, setLoading] = useState(true)
   const [crmData, setCrmData] = useState<any>(null)
   const [activeTab, setActiveTab] = useState<'overview' | 'contacts' | 'deals'>('overview')
+  const [connecting, setConnecting] = useState(false)
+  const [connectionError, setConnectionError] = useState<string | null>(null)
 
-  useEffect(() => {
-    async function fetchCRMData() {
-      try {
-        const response = await fetch('/api/crm/zoho/dashboard-data')
-        const data = await response.json()
-        
-        // Handle both success and error responses
-        if (response.ok && data && !data.error) {
+  const fetchCRMData = async () => {
+    try {
+      const response = await fetch('/api/crm/zoho/dashboard-data')
+      const data = await response.json()
+
+      // Handle both success and error responses
+      if (response.ok && data && !data.error) {
+        setCrmData(data)
+      } else {
+        // Even if there's an error, use mock data if available
+        if (data.stats || data.contacts || data.deals) {
           setCrmData(data)
         } else {
-          // Even if there's an error, use mock data if available
-          if (data.stats || data.contacts || data.deals) {
-            setCrmData(data)
-          } else {
-            // Set empty data structure to show the dashboard with empty state
-            setCrmData({
-              connected: false,
-              mock: true,
-              stats: {},
-              contacts: [],
-              deals: []
-            })
-          }
+          // Set empty data structure to show the dashboard with empty state
+          setCrmData({
+            connected: false,
+            mock: true,
+            stats: {},
+            contacts: [],
+            deals: []
+          })
         }
-      } catch (error) {
-        console.error('Failed to fetch CRM data:', error)
-        // Set empty data structure on error
-        setCrmData({
-          connected: false,
-          mock: true,
-          stats: {},
-          contacts: [],
-          deals: []
-        })
-      } finally {
-        setLoading(false)
       }
+    } catch (error) {
+      console.error('Failed to fetch CRM data:', error)
+      // Set empty data structure on error
+      setCrmData({
+        connected: false,
+        mock: true,
+        stats: {},
+        contacts: [],
+        deals: []
+      })
+    } finally {
+      setLoading(false)
     }
+  }
+
+  useEffect(() => {
     fetchCRMData()
   }, [])
+
+  // Handle Connect to Zoho CRM
+  const handleConnectZoho = async () => {
+    setConnecting(true)
+    setConnectionError(null)
+
+    try {
+      const response = await fetch('/api/crm/zoho/connect')
+      const data = await response.json()
+
+      if (data.success && data.auth_url) {
+        // Open Zoho OAuth in a new window
+        window.open(data.auth_url, '_blank', 'width=600,height=700')
+
+        // Show message to user
+        setConnectionError('Please complete the authorization in the popup window. After authorizing, refresh this page.')
+      } else if (data.already_connected) {
+        setConnectionError('Zoho CRM is already connected!')
+        // Refresh data
+        await fetchCRMData()
+      } else {
+        setConnectionError(data.error || data.message || 'Failed to initiate connection')
+      }
+    } catch (error: any) {
+      console.error('Failed to connect Zoho:', error)
+      setConnectionError(error.message || 'Failed to connect to Zoho CRM')
+    } finally {
+      setConnecting(false)
+    }
+  }
 
   if (loading) {
     return (
@@ -209,10 +243,46 @@ export function CRMDashboard({ onClose, embedded = false }: CRMDashboardProps) {
               </div>
 
               {!isConnected && (
-                <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-4">
-                  <p className="text-sm text-amber-300">
-                    <strong>Note:</strong> This is sample data. Connect your Zoho CRM account to see real data.
-                  </p>
+                <div className="bg-gradient-to-r from-amber-500/10 to-orange-500/10 border border-amber-500/30 rounded-xl p-6">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 rounded-lg bg-amber-500/20 flex items-center justify-center">
+                        <Link2 className="w-6 h-6 text-amber-400" />
+                      </div>
+                      <div>
+                        <h3 className="text-lg font-semibold text-white">Connect Zoho CRM</h3>
+                        <p className="text-sm text-slate-400">
+                          Currently showing sample data. Connect your Zoho CRM to sync real leads and deals.
+                        </p>
+                      </div>
+                    </div>
+                    <button
+                      onClick={handleConnectZoho}
+                      disabled={connecting}
+                      className="px-6 py-3 bg-amber-500 hover:bg-amber-600 disabled:bg-amber-500/50 text-slate-900 rounded-lg font-semibold transition-all flex items-center gap-2"
+                    >
+                      {connecting ? (
+                        <>
+                          <RefreshCw className="w-4 h-4 animate-spin" />
+                          Connecting...
+                        </>
+                      ) : (
+                        <>
+                          <ExternalLink className="w-4 h-4" />
+                          Connect Now
+                        </>
+                      )}
+                    </button>
+                  </div>
+                  {connectionError && (
+                    <div className={`mt-4 p-3 rounded-lg text-sm ${
+                      connectionError.includes('already connected') || connectionError.includes('popup')
+                        ? 'bg-blue-500/20 text-blue-300 border border-blue-500/30'
+                        : 'bg-red-500/20 text-red-300 border border-red-500/30'
+                    }`}>
+                      {connectionError}
+                    </div>
+                  )}
                 </div>
               )}
             </motion.div>

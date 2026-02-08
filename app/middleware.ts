@@ -109,9 +109,50 @@ export async function middleware(req: NextRequest) {
   // Admin routes are now handled by Next.js, not Netlify redirects
 
   // 3) Check if route is public
-  const isPublicRoute = PUBLIC_ROUTES.some(route => 
+  const isPublicRoute = PUBLIC_ROUTES.some(route =>
     pathname === route || pathname.startsWith(`${route}/`)
   )
+
+  // 3.5) API routes - just refresh session, no role checking
+  // This is CRITICAL for API auth to work properly
+  const isApiRoute = pathname.startsWith('/api/')
+  if (isApiRoute) {
+    try {
+      // Create Supabase client for session refresh
+      const supabase = createServerClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+        {
+          cookies: {
+            getAll() {
+              return req.cookies.getAll()
+            },
+            setAll(cookiesToSet) {
+              cookiesToSet.forEach(({ name, value, options }) => {
+                req.cookies.set(name, value)
+                response.cookies.set({
+                  name,
+                  value,
+                  ...options,
+                })
+              })
+            },
+          },
+        }
+      )
+
+      // Refresh the session by calling getUser()
+      // This updates the cookies with fresh tokens if needed
+      await supabase.auth.getUser()
+
+      // Return response with refreshed cookies
+      return response
+    } catch (error) {
+      console.error('Middleware API session refresh error:', error)
+      // Allow through even on error - let API handle auth
+      return response
+    }
+  }
 
   // 4) Role-based route protection (only for protected routes)
   if (!isPublicRoute) {
@@ -272,5 +313,10 @@ export const config = {
     '/my-dashboard',
     // Localized routes — handle only explicit locale prefixes (non-root)
     '/(en|ta|hi)/:path*',
+    // CRITICAL: API routes need middleware for session refresh
+    // Without this, API routes don't get fresh tokens
+    '/api/leads/:path*',
+    '/api/crm/:path*',
+    '/api/builder/:path*',
   ],
 }

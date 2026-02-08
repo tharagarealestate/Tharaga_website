@@ -26,7 +26,9 @@ export function CRMContent() {
     const fetchCRMStatus = async () => {
       setLoading(true)
       try {
-        const response = await fetch('/api/crm/zoho/status')
+        const response = await fetch('/api/crm/zoho/status', {
+          credentials: 'include', // Important: Include cookies for auth
+        })
         if (response.ok) {
           const data = await response.json()
           // Handle both old format (data.success && data.data) and new format (data directly)
@@ -66,12 +68,13 @@ export function CRMContent() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ sync_type: 'leads' }),
+        credentials: 'include', // Important: Include cookies for auth
       })
       if (response.ok) {
         window.dispatchEvent(new CustomEvent('crm-sync-complete'))
         // Refetch status after a delay
         setTimeout(() => {
-          fetch('/api/crm/zoho/status')
+          fetch('/api/crm/zoho/status', { credentials: 'include' })
             .then(res => res.json())
             .then(data => {
               setCrmStatus(data.success ? data.data : null)

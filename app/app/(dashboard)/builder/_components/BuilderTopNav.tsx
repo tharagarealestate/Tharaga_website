@@ -84,9 +84,10 @@ export function BuilderTopNav() {
     let cancelled = false
     async function fetchLeadCount() {
       try {
-        const res = await fetch('/api/leads/count', { 
+        const res = await fetch('/api/leads/count', {
           next: { revalidate: 0 } as any,
-          cache: 'no-store'
+          cache: 'no-store',
+          credentials: 'include', // Important: Include cookies for auth
         })
         if (!res.ok) throw new Error('Failed to fetch')
         const json = await res.json()

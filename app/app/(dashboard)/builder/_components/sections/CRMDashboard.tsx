@@ -27,7 +27,9 @@ export function CRMDashboard({ onClose, embedded = false }: CRMDashboardProps) {
 
   const fetchCRMData = async () => {
     try {
-      const response = await fetch('/api/crm/zoho/dashboard-data')
+      const response = await fetch('/api/crm/zoho/dashboard-data', {
+        credentials: 'include', // Important: Include cookies for auth
+      })
       const data = await response.json()
 
       // Set the CRM data directly - API now returns real state (no mock data)
@@ -70,7 +72,9 @@ export function CRMDashboard({ onClose, embedded = false }: CRMDashboardProps) {
     setConnectionError(null)
 
     try {
-      const response = await fetch('/api/crm/zoho/connect')
+      const response = await fetch('/api/crm/zoho/connect', {
+        credentials: 'include', // Important: Include cookies for auth
+      })
       const data = await response.json()
 
       if (data.success && data.auth_url) {

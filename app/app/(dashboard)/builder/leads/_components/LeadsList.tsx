@@ -209,6 +209,7 @@ export function LeadsList({ onSelectLead, initialFilters, showInlineFilters = tr
           const response = await fetch(`/api/leads?${params.toString()}`, {
             method: 'GET',
             headers: { 'Content-Type': 'application/json' },
+            credentials: 'include', // Important: Include cookies for auth
             signal: controller.signal,
           });
 
@@ -537,7 +538,9 @@ export function LeadsList({ onSelectLead, initialFilters, showInlineFilters = tr
       if (typeof filters.score_min === 'number' && filters.score_min > 0) params.append('score_min', filters.score_min.toString());
       if (typeof filters.score_max === 'number' && filters.score_max < 10) params.append('score_max', filters.score_max.toString());
 
-      const response = await fetch(`/api/leads/export?format=csv&${params.toString()}`);
+      const response = await fetch(`/api/leads/export?format=csv&${params.toString()}`, {
+        credentials: 'include', // Important: Include cookies for auth
+      });
       if (!response.ok) {
         throw new Error('Failed to export leads');
       }

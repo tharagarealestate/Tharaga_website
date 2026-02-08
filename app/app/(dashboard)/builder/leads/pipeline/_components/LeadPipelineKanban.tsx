@@ -187,7 +187,25 @@ export default function LeadPipelineKanban() {
     try {
       // CRITICAL FIX: Use API endpoint instead of direct Supabase query
       // This ensures admin email bypass and proper authentication flow
-      const response = await fetch('/api/leads/pipeline');
+
+      // Get auth token for Authorization header
+      let token: string | null = null
+      try {
+        const { data: { session } } = await supabase.auth.getSession()
+        token = session?.access_token || null
+      } catch (err) {
+        console.warn('[LeadPipelineKanban] Error getting session:', err)
+      }
+
+      const headers: HeadersInit = {}
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`
+      }
+
+      const response = await fetch('/api/leads/pipeline', {
+        credentials: 'include',
+        headers
+      });
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));

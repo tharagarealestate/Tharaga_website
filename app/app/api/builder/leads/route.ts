@@ -10,11 +10,50 @@ export async function GET(req: NextRequest) {
   const dateRange = url.searchParams.get('dateRange') || '30days'
   const limit = Number(url.searchParams.get('limit') || '0') // 0 = no limit, supports pagination
 
-  // Use request-based Supabase client for reliable cookie handling
-  const { supabase } = createClientFromRequest(req)
+  const authHeader = req.headers.get('authorization')
+  console.log('[Builder Leads API] Authorization header:', authHeader ? 'present' : 'missing')
 
-  // Get authenticated user from session
-  const { data: { user }, error: authError } = await supabase.auth.getUser()
+  // Use request-based Supabase client for reliable cookie handling
+  let { supabase } = createClientFromRequest(req)
+
+  // CRITICAL: If Authorization header is present, verify token directly
+  let user = null
+  let authError = null
+
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    const token = authHeader.substring(7)
+    console.log('[Builder Leads API] Verifying token from Authorization header...')
+
+    // CRITICAL: Create a new Supabase client with the token in global headers
+    const { createClient } = await import('@supabase/supabase-js')
+    const tokenClient = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        global: {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      }
+    )
+
+    const { data: { user: tokenUser }, error: tokenError } = await tokenClient.auth.getUser()
+    if (!tokenError && tokenUser) {
+      user = tokenUser
+      console.log('[Builder Leads API] Authenticated via token:', tokenUser.email)
+      supabase = tokenClient as any
+    } else {
+      authError = tokenError
+      console.error('[Builder Leads API] Token verification failed:', tokenError?.message)
+    }
+  } else {
+    // Try cookie-based auth
+    const result = await supabase.auth.getUser()
+    user = result.data?.user || null
+    authError = result.error || null
+  }
+
   if (authError || !user) {
     console.error('[Builder Leads API] Auth error:', authError?.message || 'No user')
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })

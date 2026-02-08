@@ -26,11 +26,49 @@ export async function OPTIONS() {
 // =============================================
 export async function GET(request: NextRequest) {
   try {
-    // Use request-based client for reliable cookie handling
-    const { supabase } = createClientFromRequest(request)
+    const authHeader = request.headers.get('authorization')
+    console.log('[Zoho Status API] Authorization header:', authHeader ? 'present' : 'missing')
 
-    // Simple auth check - just get the user, NO ROLE RESTRICTIONS
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    // Use request-based client for reliable cookie handling
+    let { supabase } = createClientFromRequest(request)
+
+    // CRITICAL: If Authorization header is present, verify token directly
+    let user = null
+    let authError = null
+
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      const token = authHeader.substring(7)
+      console.log('[Zoho Status API] Verifying token from Authorization header...')
+
+      // CRITICAL: Create a new Supabase client with the token in global headers
+      const { createClient } = await import('@supabase/supabase-js')
+      const tokenClient = createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+        {
+          global: {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          },
+        }
+      )
+
+      const { data: { user: tokenUser }, error: tokenError } = await tokenClient.auth.getUser()
+      if (!tokenError && tokenUser) {
+        user = tokenUser
+        console.log('[Zoho Status API] Authenticated via token:', tokenUser.email)
+        supabase = tokenClient as any
+      } else {
+        authError = tokenError
+        console.error('[Zoho Status API] Token verification failed:', tokenError?.message)
+      }
+    } else {
+      // Try cookie-based auth
+      const result = await supabase.auth.getUser()
+      user = result.data?.user || null
+      authError = result.error || null
+    }
 
     if (authError || !user) {
       console.error('[Zoho Status API] Auth error:', authError?.message || 'No user')

@@ -138,43 +138,40 @@ export async function GET(request: NextRequest) {
       })
     }
 
-    // OPTIMIZED: Build query with builder_id filter to only get this builder's leads
-    // Note: lead_scores doesn't have builder_id, so we need to join with leads table
-    // For now, we'll use the leads table directly which has builder_id
-    // This is CRITICAL for performance - without this, we'd fetch all leads
+    // OPTIMIZED: Since lead_scores doesn't have builder_id, we'll use leads table directly
+    // which has builder_id and is properly indexed. This is much faster.
+    // We can still get score data from lead_scores via a join if needed, but for performance,
+    // we'll prioritize the leads table which has builder_id filtering.
+    
+    // Try leads table first (has builder_id and is faster for filtering)
     let query = supabase
-      .from('lead_scores')
+      .from('leads')
       .select(`
         id,
-        user_id,
+        name,
+        email,
+        phone,
         score,
-        category,
-        engagement_score,
-        budget_alignment,
-        property_fit,
-        time_investment,
-        contact_intent,
-        recency_score,
-        last_activity,
         created_at,
         updated_at,
-        profile:profiles!user_id (
-          id,
-          email,
-          full_name,
-          phone,
-          avatar_url
-        ),
-        leads:leads!user_id (
-          builder_id
+        builder_id,
+        lead_scores:lead_scores!user_id (
+          category,
+          engagement_score,
+          budget_alignment,
+          property_fit,
+          time_investment,
+          contact_intent,
+          recency_score,
+          last_activity
         )
       `, { count: 'exact' })
-      // CRITICAL: Filter by builder_id through leads relationship
-      // We'll filter post-query if needed, but try to filter via join
+      // CRITICAL: Filter by builder_id to only get this builder's leads
+      .eq('builder_id', user.id)
 
     // OPTIMIZED: Apply filters at database level (not post-query)
-    if (category) {
-      query = query.eq('category', category)
+    if (search) {
+      query = query.or(`email.ilike.%${search}%,name.ilike.%${search}%,phone.ilike.%${search}%`)
     }
     if (scoreMin !== null) {
       query = query.gte('score', scoreMin)
@@ -182,40 +179,28 @@ export async function GET(request: NextRequest) {
     if (scoreMax !== null) {
       query = query.lte('score', scoreMax)
     }
-
-    // OPTIMIZED: Database-level search filtering (if search provided)
-    // This is much faster than post-query filtering
-    if (search) {
-      // Use text search on profile fields via join
-      // Note: Supabase doesn't support ilike on joined tables directly,
-      // so we'll filter post-query for search, but still limit results first
+    if (category) {
+      // Map category to score range for leads table
+      const categoryScoreMap: Record<string, [number, number]> = {
+        'Hot Lead': [8, 10],
+        'Warm Lead': [5, 8],
+        'Developing Lead': [3, 5],
+        'Cold Lead': [1, 3],
+        'Low Quality': [0, 1],
+      }
+      const [min, max] = categoryScoreMap[category] || [0, 10]
+      query = query.gte('score', min).lte('score', max)
     }
 
     // OPTIMIZED: Apply sorting and pagination at database level
     query = query
-      .order(sortBy, { ascending: sortOrder === 'asc' })
+      .order(sortBy === 'score' ? 'score' : 'created_at', { ascending: sortOrder === 'asc' })
       .range(offset, offset + limit - 1)
 
-    const { data: leadScores, error: leadScoresError, count } = await query
+    const { data: leads, error: leadsError, count } = await query
 
-    // OPTIMIZED: Filter by builder_id if we got data from lead_scores
-    // Since lead_scores doesn't have builder_id directly, we filter by checking leads relationship
-    let filteredLeadScores = leadScores || []
-    if (leadScores && leadScores.length > 0) {
-      // Filter to only include leads that belong to this builder
-      filteredLeadScores = leadScores.filter((lead: any) => {
-        // Check if any associated lead has this builder_id
-        if (lead.leads && Array.isArray(lead.leads)) {
-          return lead.leads.some((l: any) => l.builder_id === user.id)
-        }
-        // If no leads relationship, we need to check via a separate query
-        // For now, include it and filter later via leads table
-        return true
-      })
-    }
-
-    // If lead_scores fails or is empty, try the leads table
-    if (leadScoresError || !filteredLeadScores || filteredLeadScores.length === 0) {
+    // If query fails, return empty result
+    if (leadsError || !leads || leads.length === 0) {
       // OPTIMIZED: Fallback to leads table with builder_id filter
       let leadsQuery = supabase
         .from('leads')

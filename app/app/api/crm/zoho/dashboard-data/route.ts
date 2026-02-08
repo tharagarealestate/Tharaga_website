@@ -140,10 +140,15 @@ export async function GET(request: NextRequest) {
       }, { status: 200, headers: corsHeaders })
     }
 
-    // Check if we have valid tokens
-    const hasValidTokens = integration.access_token && integration.refresh_token
+    // Get tokens from config
+    const config = integration.config as any
+    const accessToken = config?.access_token
+    const refreshToken = config?.refresh_token
+    const apiDomain = config?.api_domain || 'https://www.zohoapis.in'
+    const expiresAt = config?.expires_at ? new Date(config.expires_at) : null
 
-    if (!hasValidTokens) {
+    // Check if token is expired and needs refresh
+    if (!accessToken || !refreshToken) {
       return NextResponse.json({
         ...getEmptyData('Zoho CRM session expired. Please reconnect to continue syncing.'),
         connected: true,
@@ -151,27 +156,164 @@ export async function GET(request: NextRequest) {
       }, { status: 200, headers: corsHeaders })
     }
 
-    // TODO: Fetch real data from Zoho API
-    // For now, return connected state with empty data until real sync is implemented
-    return NextResponse.json({
-      connected: true,
-      success: true,
-      message: 'Zoho CRM connected. Sync your data to see leads and deals here.',
-      account: {
-        id: integration.crm_account_id || null,
-        name: integration.crm_account_name || 'Zoho CRM Account',
-      },
-      last_sync: integration.last_sync_at || null,
-      stats: {
-        total_contacts: 0,
-        new_contacts_this_month: 0,
-        active_deals: 0,
-        deal_value: 0,
-        conversion_rate: 0
-      },
-      contacts: [],
-      deals: []
-    }, { status: 200, headers: corsHeaders })
+    // Check if token needs refresh (5 minutes buffer)
+    if (expiresAt && expiresAt.getTime() - Date.now() < 300000) {
+      // Token expired or expiring soon - mark for reconnection
+      return NextResponse.json({
+        ...getEmptyData('Zoho CRM session expired. Please reconnect to continue syncing.'),
+        connected: true,
+        needs_reconnection: true,
+      }, { status: 200, headers: corsHeaders })
+    }
+
+    // Fetch real data from Zoho API
+    try {
+      const { zohoClient } = await import('@/lib/integrations/crm/zohoClient')
+      
+      // Fetch contacts
+      let contacts: any[] = []
+      let totalContacts = 0
+      let newContactsThisMonth = 0
+      
+      try {
+        const contactsResponse = await fetch(
+          `${apiDomain}/crm/v2/Contacts?per_page=100&sort_by=Created_Time&sort_order=desc`,
+          {
+            headers: {
+              'Authorization': `Zoho-oauthtoken ${accessToken}`,
+              'Content-Type': 'application/json',
+            },
+          }
+        )
+        
+        if (contactsResponse.ok) {
+          const contactsData = await contactsResponse.json()
+          contacts = (contactsData.data || []).slice(0, 50) // Limit to 50 for display
+          totalContacts = contactsData.info?.count || contacts.length
+          
+          // Count new contacts this month
+          const thisMonth = new Date()
+          thisMonth.setDate(1)
+          thisMonth.setHours(0, 0, 0, 0)
+          
+          newContactsThisMonth = contacts.filter((contact: any) => {
+            const createdTime = new Date(contact.Created_Time)
+            return createdTime >= thisMonth
+          }).length
+        }
+      } catch (contactsError) {
+        console.error('[CRM Dashboard] Error fetching contacts:', contactsError)
+      }
+
+      // Fetch deals
+      let deals: any[] = []
+      let activeDeals = 0
+      let dealValue = 0
+      
+      try {
+        const dealsResponse = await fetch(
+          `${apiDomain}/crm/v2/Deals?per_page=100&sort_by=Created_Time&sort_order=desc`,
+          {
+            headers: {
+              'Authorization': `Zoho-oauthtoken ${accessToken}`,
+              'Content-Type': 'application/json',
+            },
+          }
+        )
+        
+        if (dealsResponse.ok) {
+          const dealsData = await dealsResponse.json()
+          deals = (dealsData.data || []).slice(0, 50) // Limit to 50 for display
+          
+          // Calculate active deals and total value
+          deals.forEach((deal: any) => {
+            const stage = deal.Stage || ''
+            const isActive = !stage.includes('Closed') && !stage.includes('Lost')
+            if (isActive) {
+              activeDeals++
+              dealValue += parseFloat(deal.Amount || 0)
+            }
+          })
+        }
+      } catch (dealsError) {
+        console.error('[CRM Dashboard] Error fetching deals:', dealsError)
+      }
+
+      // Calculate conversion rate
+      const totalDeals = deals.length
+      const closedWonDeals = deals.filter((deal: any) => 
+        (deal.Stage || '').includes('Closed Won') || (deal.Stage || '').includes('Won')
+      ).length
+      const conversionRate = totalDeals > 0 ? (closedWonDeals / totalDeals) * 100 : 0
+
+      return NextResponse.json({
+        connected: true,
+        success: true,
+        message: 'Zoho CRM connected successfully.',
+        account: {
+          id: integration.crm_account_id || null,
+          name: integration.crm_account_name || 'Zoho CRM Account',
+        },
+        last_sync: integration.last_sync_at || null,
+        stats: {
+          total_contacts: totalContacts,
+          new_contacts_this_month: newContactsThisMonth,
+          active_deals: activeDeals,
+          deal_value: dealValue,
+          conversion_rate: Math.round(conversionRate * 10) / 10
+        },
+        contacts: contacts.map((contact: any) => ({
+          id: contact.id,
+          name: contact.Full_Name || `${contact.First_Name || ''} ${contact.Last_Name || ''}`.trim() || contact.Email,
+          email: contact.Email,
+          phone: contact.Mobile || contact.Phone,
+          created_time: contact.Created_Time,
+          modified_time: contact.Modified_Time,
+        })),
+        deals: deals.map((deal: any) => ({
+          id: deal.id,
+          name: deal.Deal_Name,
+          amount: parseFloat(deal.Amount || 0),
+          stage: deal.Stage,
+          closing_date: deal.Closing_Date,
+          created_time: deal.Created_Time,
+          modified_time: deal.Modified_Time,
+        }))
+      }, { status: 200, headers: corsHeaders })
+      
+    } catch (fetchError: any) {
+      console.error('[CRM Dashboard] Error fetching Zoho data:', fetchError)
+      
+      // If it's an auth error, mark for reconnection
+      if (fetchError.message?.includes('Authentication') || fetchError.message?.includes('INVALID_TOKEN')) {
+        return NextResponse.json({
+          ...getEmptyData('Zoho CRM session expired. Please reconnect to continue syncing.'),
+          connected: true,
+          needs_reconnection: true,
+        }, { status: 200, headers: corsHeaders })
+      }
+      
+      // Otherwise return connected state with empty data
+      return NextResponse.json({
+        connected: true,
+        success: true,
+        message: 'Zoho CRM connected. Unable to fetch data at the moment.',
+        account: {
+          id: integration.crm_account_id || null,
+          name: integration.crm_account_name || 'Zoho CRM Account',
+        },
+        last_sync: integration.last_sync_at || null,
+        stats: {
+          total_contacts: 0,
+          new_contacts_this_month: 0,
+          active_deals: 0,
+          deal_value: 0,
+          conversion_rate: 0
+        },
+        contacts: [],
+        deals: []
+      }, { status: 200, headers: corsHeaders })
+    }
 
   } catch (error: any) {
     console.error('[CRM Dashboard Data Error]:', error)

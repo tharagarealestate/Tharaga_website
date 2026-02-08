@@ -139,13 +139,16 @@ export async function GET(request: NextRequest) {
     }
 
     // Build the OAuth authorization URL
+    // CRITICAL: Use accounts.zoho.in for Indian accounts, accounts.zoho.com for international
+    // Check environment variable or default to .in for Indian real estate
+    const accountsUrl = process.env.ZOHO_ACCOUNTS_URL || 'https://accounts.zoho.in'
     const scope = 'ZohoCRM.modules.ALL,ZohoCRM.settings.ALL,ZohoCRM.users.READ'
     const state = Buffer.from(JSON.stringify({
       user_id: user.id,
       timestamp: Date.now()
     })).toString('base64')
 
-    const authUrl = new URL('https://accounts.zoho.com/oauth/v2/auth')
+    const authUrl = new URL(`${accountsUrl}/oauth/v2/auth`)
     authUrl.searchParams.set('client_id', clientId)
     authUrl.searchParams.set('redirect_uri', redirectUri)
     authUrl.searchParams.set('scope', scope)
@@ -153,6 +156,13 @@ export async function GET(request: NextRequest) {
     authUrl.searchParams.set('access_type', 'offline')
     authUrl.searchParams.set('prompt', 'consent')
     authUrl.searchParams.set('state', state)
+    
+    console.log('[Zoho Connect API] Generated OAuth URL:', {
+      accountsUrl,
+      clientId: clientId ? `${clientId.substring(0, 10)}...` : 'missing',
+      redirectUri,
+      scope
+    })
 
     return NextResponse.json({
       success: true,

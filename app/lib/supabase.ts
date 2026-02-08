@@ -4,9 +4,17 @@ import { createClient, SupabaseClient } from '@supabase/supabase-js'
 let clientInstance: SupabaseClient | null = null
 
 export function getSupabase(): SupabaseClient {
-  // Return cached instance if available (client-side only)
-  if (typeof window !== 'undefined' && clientInstance) {
-    return clientInstance
+  // CRITICAL: Use window.supabase if available (same instance as auth scripts)
+  // This prevents multiple GoTrueClient instances
+  if (typeof window !== 'undefined') {
+    if ((window as any).supabase && (window as any).supabase.auth) {
+      return (window as any).supabase
+    }
+    
+    // Return cached instance if available
+    if (clientInstance) {
+      return clientInstance
+    }
   }
 
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL

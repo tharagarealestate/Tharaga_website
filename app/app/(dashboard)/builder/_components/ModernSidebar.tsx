@@ -113,7 +113,20 @@ export function ModernSidebar() {
     let mounted = true
     async function fetchLeadCount() {
       try {
-        const res = await fetch('/api/builder/leads?limit=1', { credentials: 'include' })
+        // Get auth token
+        const supabaseClient = (typeof window !== 'undefined' && (window as any).supabase) || getSupabase()
+        const { data: { session } } = await supabaseClient.auth.getSession()
+        const token = session?.access_token
+        
+        const headers: HeadersInit = {}
+        if (token) {
+          headers['Authorization'] = `Bearer ${token}`
+        }
+        
+        const res = await fetch('/api/builder/leads?limit=1', { 
+          credentials: 'include',
+          headers
+        })
         if (!mounted) return
         if (res.ok) {
           const data = await res.json()

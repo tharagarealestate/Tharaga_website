@@ -113,10 +113,23 @@ export async function middleware(req: NextRequest) {
     pathname === route || pathname.startsWith(`${route}/`)
   )
 
-  // 3.5) API routes - just refresh session, no role checking
-  // This is CRITICAL for API auth to work properly
+  // 3.5) API routes handling
   const isApiRoute = pathname.startsWith('/api/')
   if (isApiRoute) {
+    // CRITICAL: Skip session refresh for public API routes (auth, webhooks, public)
+    // These routes handle their own auth or don't need auth at all
+    const isPublicApiRoute =
+      pathname.startsWith('/api/auth') ||
+      pathname.startsWith('/api/webhooks') ||
+      pathname.startsWith('/api/public')
+
+    if (isPublicApiRoute) {
+      // Let public API routes through without any session handling
+      return response
+    }
+
+    // For protected API routes, refresh the session
+    // This is CRITICAL for API auth to work properly
     try {
       // Create Supabase client for session refresh
       const supabase = createServerClient(

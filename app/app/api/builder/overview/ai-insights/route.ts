@@ -36,35 +36,81 @@ interface DashboardMetrics {
 }
 
 export async function POST(request: NextRequest) {
+  const startTime = Date.now();
+  console.log('[AI Insights API] Request started at', new Date().toISOString());
+  
   try {
+    console.log('[AI Insights API] Step 1: Creating Supabase client...');
     const supabase = await createClient();
+    console.log('[AI Insights API] Step 1: Supabase client created successfully');
+    
+    console.log('[AI Insights API] Step 2: Getting user authentication...');
     const { data: { user }, error: authError } = await supabase.auth.getUser();
+    console.log('[AI Insights API] Step 2: Auth result - user:', user?.id ? 'exists' : 'null', 'error:', authError?.message || 'none');
 
     if (authError || !user) {
-      console.error('[AI Insights API] Auth error:', authError?.message || 'No user');
+      console.error('[AI Insights API] Auth error:', {
+        error: authError?.message,
+        code: authError?.status,
+        user: user ? 'exists' : 'null'
+      });
       return NextResponse.json({
         success: false,
-        error: 'Unauthorized - Please log in to view dashboard insights'
+        error: 'Unauthorized - Please log in to view dashboard insights',
+        debug: {
+          hasAuthError: !!authError,
+          authErrorMessage: authError?.message,
+          hasUser: !!user
+        }
       }, { status: 401 });
     }
 
     // Allow admin user (tharagarealestate@gmail.com) to access
     const isAdmin = user.email === 'tharagarealestate@gmail.com';
+    console.log('[AI Insights API] Step 3: User check - ID:', user.id, 'Email:', user.email, 'IsAdmin:', isAdmin);
 
-    // Get builder's metrics (for admin, use their own ID or allow all data)
+    console.log('[AI Insights API] Step 4: Fetching builder metrics...');
     const metrics = await getBuilderMetrics(supabase, user.id, isAdmin);
+    console.log('[AI Insights API] Step 4: Metrics fetched - Leads:', metrics.total_leads, 'Properties:', metrics.total_properties);
 
-    // Generate AI insights using OpenAI
-    const aiInsights = await generateAIInsights(metrics);
+    // Generate insights with timeout protection (25 seconds max for Netlify)
+    console.log('[AI Insights API] Step 5: Generating AI insights...');
+    const aiInsights = await Promise.race([
+      generateAIInsights(metrics),
+      new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('AI insights timeout')), 20000)
+      )
+    ]).catch((error) => {
+      console.warn('[AI Insights API] AI insights generation failed or timed out:', error.message);
+      return generateAIInsights(metrics); // Will return fallback
+    }) as Promise<any>;
+    console.log('[AI Insights API] Step 5: AI insights generated');
 
-    // Generate market research insights (simulated Perplexity-style research)
+    console.log('[AI Insights API] Step 6: Generating market insights...');
     const marketInsights = await generateMarketInsights(metrics);
+    console.log('[AI Insights API] Step 6: Market insights generated');
 
-    // Detect anomalies
+    console.log('[AI Insights API] Step 7: Detecting anomalies...');
     const anomalies = detectAnomalies(metrics);
+    console.log('[AI Insights API] Step 7: Anomalies detected:', anomalies.length);
 
-    // Generate actionable recommendations
-    const recommendations = await generateRecommendations(metrics, aiInsights, anomalies);
+    console.log('[AI Insights API] Step 8: Generating recommendations...');
+    let recommendations: any[];
+    try {
+      recommendations = await Promise.race([
+        generateRecommendations(metrics, aiInsights, anomalies),
+        new Promise<any[]>((_, reject) => 
+          setTimeout(() => reject(new Error('Recommendations timeout')), 15000)
+        )
+      ]);
+    } catch (error: any) {
+      console.warn('[AI Insights API] Recommendations generation failed or timed out:', error.message);
+      recommendations = getFallbackRecommendations(metrics, anomalies);
+    }
+    console.log('[AI Insights API] Step 8: Recommendations generated:', recommendations.length);
+
+    const duration = Date.now() - startTime;
+    console.log('[AI Insights API] Request completed successfully in', duration, 'ms');
 
     return NextResponse.json({
       success: true,
@@ -75,21 +121,39 @@ export async function POST(request: NextRequest) {
         anomalies,
         recommendations,
         generatedAt: new Date().toISOString()
+      },
+      debug: {
+        duration: `${duration}ms`,
+        timestamp: new Date().toISOString()
       }
     });
 
   } catch (error: any) {
-    console.error('[AI Insights API] Error:', error);
+    const duration = Date.now() - startTime;
+    console.error('[AI Insights API] Error after', duration, 'ms:', {
+      message: error.message,
+      stack: error.stack,
+      name: error.name,
+      cause: error.cause
+    });
+    
     // Return a graceful error response that the frontend can handle
     return NextResponse.json({
       success: false,
       error: error.message || 'Failed to generate AI insights',
-      details: process.env.NODE_ENV === 'development' ? error.stack : undefined
+      debug: {
+        errorType: error.name || 'UnknownError',
+        duration: `${duration}ms`,
+        timestamp: new Date().toISOString(),
+        details: process.env.NODE_ENV === 'development' ? error.stack : undefined
+      }
     }, { status: 500 });
   }
 }
 
 async function getBuilderMetrics(supabase: any, userId: string, isAdmin: boolean = false): Promise<DashboardMetrics> {
+  console.log('[getBuilderMetrics] Starting with userId:', userId, 'isAdmin:', isAdmin);
+  
   // Build query for leads - admin can see all, builder sees only their own
   let leadsQuery = supabase
     .from('leads')
@@ -97,35 +161,59 @@ async function getBuilderMetrics(supabase: any, userId: string, isAdmin: boolean
     .order('created_at', { ascending: false });
   
   if (!isAdmin) {
+    console.log('[getBuilderMetrics] Filtering leads by builder_id:', userId);
     leadsQuery = leadsQuery.eq('builder_id', userId);
+  } else {
+    console.log('[getBuilderMetrics] Admin user - fetching all leads');
   }
   
+  console.log('[getBuilderMetrics] Executing leads query...');
   const { data: leads, error: leadsError } = await leadsQuery;
   
   if (leadsError) {
-    console.error('[AI Insights] Error fetching leads:', leadsError);
+    console.error('[getBuilderMetrics] Error fetching leads:', {
+      message: leadsError.message,
+      code: leadsError.code,
+      details: leadsError.details,
+      hint: leadsError.hint
+    });
     // Continue with empty array instead of failing
+  } else {
+    console.log('[getBuilderMetrics] Leads fetched successfully:', leads?.length || 0, 'leads');
   }
 
   // Build query for properties - admin can see all, builder sees only their own
+  console.log('[getBuilderMetrics] Building properties query...');
   let propertiesQuery = supabase
     .from('properties')
     .select('id, created_at, listing_status');
   
   if (!isAdmin) {
+    console.log('[getBuilderMetrics] Filtering properties by builder_id:', userId);
     propertiesQuery = propertiesQuery.eq('builder_id', userId);
+  } else {
+    console.log('[getBuilderMetrics] Admin user - fetching all properties');
   }
   
+  console.log('[getBuilderMetrics] Executing properties query...');
   const { data: properties, error: propertiesError } = await propertiesQuery;
   
   if (propertiesError) {
-    console.error('[AI Insights] Error fetching properties:', propertiesError);
+    console.error('[getBuilderMetrics] Error fetching properties:', {
+      message: propertiesError.message,
+      code: propertiesError.code,
+      details: propertiesError.details,
+      hint: propertiesError.hint
+    });
     // Continue with empty array instead of failing
+  } else {
+    console.log('[getBuilderMetrics] Properties fetched successfully:', properties?.length || 0, 'properties');
   }
   
   // Ensure we have arrays even if queries failed
   const safeLeads = leads || [];
   const safeProperties = properties || [];
+  console.log('[getBuilderMetrics] Safe arrays - Leads:', safeLeads.length, 'Properties:', safeProperties.length);
 
   // Calculate views and inquiries for each property from leads
   const propertyStats: Record<string, { views: number; inquiries: number }> = {}
@@ -175,11 +263,13 @@ async function getBuilderMetrics(supabase: any, userId: string, isAdmin: boolean
   ).length;
 
   // Calculate trends
-  const leadTrends = calculateTrends(leads || [], 'created_at');
+  console.log('[getBuilderMetrics] Calculating trends...');
+  const leadTrends = calculateTrends(safeLeads, 'created_at');
   const revenueTrends = revenue?.map((r: any) => ({
     date: r.date,
     revenue: r.amount || 0
   })) || [];
+  console.log('[getBuilderMetrics] Trends calculated - Lead trends:', leadTrends.length, 'Revenue trends:', revenueTrends.length);
 
   // Property performance
   const propertyPerformance = Object.entries(propertyStats).map(([property_id, stats]) => ({
@@ -199,7 +289,7 @@ async function getBuilderMetrics(supabase: any, userId: string, isAdmin: boolean
   const total_revenue = revenue?.reduce((sum: number, r: any) => sum + (r.amount || 0), 0) || 0;
   const monthly_revenue = revenue?.slice(0, 30).reduce((sum: number, r: any) => sum + (r.amount || 0), 0) || 0;
 
-  return {
+  const result = {
     total_leads,
     hot_leads,
     warm_leads,
@@ -213,6 +303,16 @@ async function getBuilderMetrics(supabase: any, userId: string, isAdmin: boolean
     property_performance: propertyPerformance,
     revenue_trends: revenueTrends
   };
+  
+  console.log('[getBuilderMetrics] Final metrics calculated:', {
+    total_leads: result.total_leads,
+    total_properties: result.total_properties,
+    conversion_rate: result.conversion_rate.toFixed(2) + '%',
+    lead_trends_count: result.lead_trends.length,
+    property_performance_count: result.property_performance.length
+  });
+  
+  return result;
 }
 
 function calculateTrends(data: any[], dateField: string): Array<{ date: string; count: number }> {
@@ -241,9 +341,33 @@ function calculateTrends(data: any[], dateField: string): Array<{ date: string; 
 }
 
 async function generateAIInsights(metrics: DashboardMetrics): Promise<any> {
+  console.log('[generateAIInsights] Starting AI insights generation...');
   try {
     const openai = getOpenAIClient();
     
+    if (!openai) {
+      console.warn('[generateAIInsights] OpenAI client not available, returning fallback insights');
+      return {
+        keyFindings: [
+          `You have ${metrics.total_leads} total leads with ${metrics.hot_leads} hot leads requiring immediate attention.`,
+          `Your conversion rate is ${metrics.conversion_rate.toFixed(1)}% - ${metrics.conversion_rate > 15 ? 'excellent' : 'needs improvement'}.`,
+          `Active properties: ${metrics.active_properties} out of ${metrics.total_properties} total properties.`
+        ],
+        performanceSummary: `Your dashboard shows ${metrics.total_leads} leads with ${metrics.hot_leads} high-priority opportunities. Conversion rate is ${metrics.conversion_rate.toFixed(1)}%.`,
+        trendAnalysis: metrics.lead_trends.length > 0 
+          ? `Lead generation trends show activity over the past ${metrics.lead_trends.length} days.`
+          : 'Insufficient data for trend analysis.',
+        opportunities: [
+          metrics.hot_leads > 0 ? `Focus on ${metrics.hot_leads} hot leads for immediate conversion.` : 'Build lead pipeline through marketing efforts.',
+          metrics.conversion_rate < 10 ? 'Improve lead nurturing to increase conversion rate.' : 'Maintain current conversion strategies.'
+        ],
+        risks: metrics.total_leads === 0 
+          ? ['No leads in pipeline - urgent action needed to generate leads.'] 
+          : []
+      };
+    }
+    
+    console.log('[generateAIInsights] OpenAI client available, generating insights...');
     const prompt = `Analyze the following real estate builder dashboard metrics and provide AI-powered insights:
 
 Metrics:
@@ -284,15 +408,33 @@ Return only valid JSON.`;
     });
 
     const result = JSON.parse(completion.choices[0].message.content || '{}');
+    console.log('[generateAIInsights] OpenAI insights generated successfully');
     return result;
-  } catch (error) {
-    console.error('OpenAI insights error:', error);
+  } catch (error: any) {
+    console.error('[generateAIInsights] OpenAI error:', {
+      message: error.message,
+      name: error.name,
+      status: error.status,
+      code: error.code
+    });
+    // Return meaningful fallback insights based on metrics
     return {
-      keyFindings: ['AI insights temporarily unavailable'],
-      performanceSummary: 'Analyzing your dashboard metrics...',
-      trendAnalysis: 'Trend analysis in progress...',
-      opportunities: [],
-      risks: []
+      keyFindings: [
+        `You have ${metrics.total_leads} total leads with ${metrics.hot_leads} hot leads requiring immediate attention.`,
+        `Your conversion rate is ${metrics.conversion_rate.toFixed(1)}% - ${metrics.conversion_rate > 15 ? 'excellent' : 'needs improvement'}.`,
+        `Active properties: ${metrics.active_properties} out of ${metrics.total_properties} total properties.`
+      ],
+      performanceSummary: `Your dashboard shows ${metrics.total_leads} leads with ${metrics.hot_leads} high-priority opportunities. Conversion rate is ${metrics.conversion_rate.toFixed(1)}%.`,
+      trendAnalysis: metrics.lead_trends.length > 0 
+        ? `Lead generation trends show activity over the past ${metrics.lead_trends.length} days.`
+        : 'Insufficient data for trend analysis.',
+      opportunities: [
+        metrics.hot_leads > 0 ? `Focus on ${metrics.hot_leads} hot leads for immediate conversion.` : 'Build lead pipeline through marketing efforts.',
+        metrics.conversion_rate < 10 ? 'Improve lead nurturing to increase conversion rate.' : 'Maintain current conversion strategies.'
+      ],
+      risks: metrics.total_leads === 0 
+        ? ['No leads in pipeline - urgent action needed to generate leads.'] 
+        : []
     };
   }
 }
@@ -389,8 +531,14 @@ async function generateRecommendations(
   aiInsights: any,
   anomalies: any[]
 ): Promise<any[]> {
+  console.log('[generateRecommendations] Starting recommendations generation...');
   try {
     const openai = getOpenAIClient();
+    
+    if (!openai) {
+      console.warn('[generateRecommendations] OpenAI client not available, returning fallback recommendations');
+      return getFallbackRecommendations(metrics, anomalies);
+    }
     
     const prompt = `Based on the following real estate builder metrics and insights, generate 5-7 actionable recommendations:
 
@@ -425,27 +573,86 @@ Return only valid JSON with a "recommendations" array.`;
     });
 
     const result = JSON.parse(completion.choices[0].message.content || '{"recommendations": []}');
+    console.log('[generateRecommendations] OpenAI recommendations generated:', result.recommendations?.length || 0);
     return result.recommendations || [];
-  } catch (error) {
-    console.error('Recommendations error:', error);
+  } catch (error: any) {
+    console.error('[generateRecommendations] Error:', {
+      message: error.message,
+      name: error.name,
+      status: error.status
+    });
     // Fallback recommendations
-    return [
-      {
-        title: 'Focus on Hot Leads',
-        description: `You have ${metrics.hot_leads} hot leads. Prioritize immediate follow-up.`,
-        priority: 'high',
-        category: 'leads',
-        impact: 'High conversion potential',
-        effort: 'low'
-      },
-      {
-        title: 'Improve Conversion Rate',
-        description: `Current conversion rate is ${metrics.conversion_rate.toFixed(1)}%. Implement lead nurturing.`,
-        priority: 'medium',
-        category: 'leads',
-        impact: 'Increase revenue from existing leads',
-        effort: 'medium'
-      }
-    ];
+    return getFallbackRecommendations(metrics, anomalies);
   }
+}
+
+function getFallbackRecommendations(metrics: DashboardMetrics, anomalies: any[]): any[] {
+  const recommendations: any[] = [];
+  
+  if (metrics.hot_leads > 0) {
+    recommendations.push({
+      title: 'Focus on Hot Leads',
+      description: `You have ${metrics.hot_leads} hot leads. Prioritize immediate follow-up.`,
+      priority: 'high',
+      category: 'leads',
+      impact: 'High conversion potential',
+      effort: 'low'
+    });
+  }
+  
+  if (metrics.conversion_rate < 10) {
+    recommendations.push({
+      title: 'Improve Conversion Rate',
+      description: `Current conversion rate is ${metrics.conversion_rate.toFixed(1)}%. Implement lead nurturing.`,
+      priority: 'medium',
+      category: 'leads',
+      impact: 'Increase revenue from existing leads',
+      effort: 'medium'
+    });
+  }
+  
+  if (metrics.total_leads === 0) {
+    recommendations.push({
+      title: 'Generate More Leads',
+      description: 'No leads in pipeline. Focus on marketing and lead generation.',
+      priority: 'high',
+      category: 'leads',
+      impact: 'Build sales pipeline',
+      effort: 'high'
+    });
+  }
+  
+  if (metrics.active_properties < metrics.total_properties) {
+    recommendations.push({
+      title: 'Activate More Properties',
+      description: `${metrics.total_properties - metrics.active_properties} properties are inactive. Review and activate them.`,
+      priority: 'medium',
+      category: 'properties',
+      impact: 'Increase property visibility',
+      effort: 'low'
+    });
+  }
+  
+  // Add anomaly-based recommendations
+  anomalies.forEach(anomaly => {
+    recommendations.push({
+      title: anomaly.title,
+      description: anomaly.recommendation,
+      priority: anomaly.severity === 'high' ? 'high' : 'medium',
+      category: 'operations',
+      impact: 'Address performance issue',
+      effort: 'medium'
+    });
+  });
+  
+  return recommendations.length > 0 ? recommendations : [
+    {
+      title: 'Monitor Dashboard Regularly',
+      description: 'Keep track of your leads and properties to identify opportunities.',
+      priority: 'low',
+      category: 'operations',
+      impact: 'Better decision making',
+      effort: 'low'
+    }
+  ];
 }

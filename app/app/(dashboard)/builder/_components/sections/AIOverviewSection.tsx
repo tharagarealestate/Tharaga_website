@@ -122,27 +122,51 @@ export function AIOverviewSection({ onNavigate }: OverviewSectionProps) {
   const [selectedPeriod, setSelectedPeriod] = useState<'7d' | '30d' | '90d'>('30d')
 
   const fetchData = useCallback(async () => {
+    const startTime = Date.now();
+    console.log('[AI Overview] fetchData started at', new Date().toISOString());
+    
     try {
       setRefreshing(true)
+      console.log('[AI Overview] Making API request to /api/builder/overview/ai-insights...');
+      
       const response = await fetch('/api/builder/overview/ai-insights', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' }
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include' // Ensure cookies are sent
       })
 
+      console.log('[AI Overview] API response status:', response.status, response.statusText);
       const result = await response.json()
+      console.log('[AI Overview] API response data:', {
+        success: result.success,
+        hasData: !!result.data,
+        error: result.error,
+        debug: result.debug
+      });
       
       if (!response.ok) {
         // Handle specific error cases
         if (response.status === 401) {
-          console.error('[AI Overview] Authentication error:', result.error)
+          console.error('[AI Overview] Authentication error:', result.error, result.debug)
           // Don't set data to null, show empty state instead
           setData(null)
           return
         }
+        console.error('[AI Overview] API error response:', {
+          status: response.status,
+          error: result.error,
+          debug: result.debug
+        });
         throw new Error(result.error || 'Failed to fetch dashboard data')
       }
 
       if (result.success && result.data) {
+        console.log('[AI Overview] Successfully loaded data:', {
+          metrics: result.data.metrics ? 'present' : 'missing',
+          aiInsights: result.data.aiInsights ? 'present' : 'missing',
+          marketInsights: result.data.marketInsights ? 'present' : 'missing',
+          duration: result.debug?.duration
+        });
         setData(result.data)
       } else {
         // If API returns success:false but no error, create empty data structure
@@ -150,12 +174,19 @@ export function AIOverviewSection({ onNavigate }: OverviewSectionProps) {
         setData(null)
       }
     } catch (error: any) {
-      console.error('[AI Overview] Error fetching dashboard data:', error)
+      const duration = Date.now() - startTime;
+      console.error('[AI Overview] Error fetching dashboard data after', duration, 'ms:', {
+        message: error.message,
+        name: error.name,
+        stack: error.stack
+      });
       // Set data to null to show error state
       setData(null)
     } finally {
       setLoading(false)
       setRefreshing(false)
+      const duration = Date.now() - startTime;
+      console.log('[AI Overview] fetchData completed in', duration, 'ms');
     }
   }, [])
 
@@ -208,12 +239,17 @@ export function AIOverviewSection({ onNavigate }: OverviewSectionProps) {
       >
         <div className="text-center py-12">
           <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
-          <p className="text-slate-400">Failed to load dashboard data</p>
+          <p className="text-slate-400 mb-2">Failed to load dashboard data</p>
+          <p className="text-xs text-slate-500 mb-4">
+            Check browser console for detailed error logs
+          </p>
           <button
             onClick={fetchData}
-            className="mt-4 px-4 py-2 bg-amber-500 text-white rounded-lg hover:bg-amber-600 transition"
+            disabled={refreshing}
+            className="mt-4 px-4 py-2 bg-amber-500 text-white rounded-lg hover:bg-amber-600 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 mx-auto"
           >
-            Retry
+            <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
+            {refreshing ? 'Retrying...' : 'Retry'}
           </button>
         </div>
       </BuilderPageWrapper>

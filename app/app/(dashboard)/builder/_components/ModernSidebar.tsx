@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { useEffect, useMemo, useState, useCallback } from 'react'
 import { cn } from '@/lib/utils'
+import { getSupabase } from '@/lib/supabase'
 import { useTrialStatus } from './TrialStatusManager'
 import {
   LayoutDashboard,

@@ -1,18 +1,73 @@
-export type ClientRecParams = { session_id?: string; user_id?: string; num_results?: number }
+/**
+ * API Client Utility - Handles authentication for API requests
+ * 
+ * CRITICAL: Supabase client-side uses localStorage, not cookies.
+ * We need to extract the session token and send it as Authorization header.
+ */
 
-export async function fetchRecommendationsClient(params: ClientRecParams) {
-  const { session_id, user_id, num_results = 6 } = params
-  const res = await fetch(`/api/recommendations`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ session_id, user_id, num_results }),
-  })
-  if (!res.ok) throw new Error(`client recs failed: ${res.status}`)
-  return res.json()
+import { getSupabase } from './supabase'
+
+/**
+ * Get the current session token from Supabase
+ * Returns null if not authenticated
+ */
+export async function getAuthToken(): Promise<string | null> {
+  try {
+    const supabase = getSupabase()
+    const { data: { session }, error } = await supabase.auth.getSession()
+    
+    if (error || !session?.access_token) {
+      console.warn('[API Client] No session token available:', error?.message)
+      return null
+    }
+    
+    return session.access_token
+  } catch (error) {
+    console.error('[API Client] Error getting auth token:', error)
+    return null
+  }
 }
 
-export function readCookie(name: string): string | null {
-  const m = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'))
-  return m ? decodeURIComponent(m[2]) : null
+/**
+ * Fetch with automatic authentication
+ * Automatically includes Authorization header if user is authenticated
+ */
+export async function authenticatedFetch(
+  url: string,
+  options: RequestInit = {}
+): Promise<Response> {
+  // Get auth token
+  const token = await getAuthToken()
+  
+  // Prepare headers
+  const headers = new Headers(options.headers || {})
+  
+  // Add auth token if available
+  if (token) {
+    headers.set('Authorization', `Bearer ${token}`)
+  }
+  
+  // Ensure Content-Type is set for POST/PUT requests
+  if (!headers.has('Content-Type') && (options.method === 'POST' || options.method === 'PUT')) {
+    headers.set('Content-Type', 'application/json')
+  }
+  
+  // Merge with existing options
+  const fetchOptions: RequestInit = {
+    ...options,
+    headers,
+    credentials: 'include', // Still include cookies (for other cookies)
+  }
+  
+  return fetch(url, fetchOptions)
 }
 
+/**
+ * Create authenticated fetch wrapper for specific endpoints
+ */
+export function createAuthenticatedFetcher(baseUrl: string = '') {
+  return async (endpoint: string, options: RequestInit = {}) => {
+    const url = baseUrl ? `${baseUrl}${endpoint}` : endpoint
+    return authenticatedFetch(url, options)
+  }
+}

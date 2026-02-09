@@ -158,9 +158,44 @@ export async function GET(request: NextRequest) {
       }, { status: 500, headers: corsHeaders })
     }
 
-    // Validate Client ID format (Zoho Client IDs start with "1000.")
+    // CRITICAL: Validate Client ID format (Zoho Client IDs start with "1000.")
     if (!clientId.startsWith('1000.')) {
-      console.warn('[Zoho Connect API] Client ID format may be incorrect. Zoho Client IDs typically start with "1000."')
+      console.error('[Zoho Connect API] Client ID format is incorrect!', {
+        clientId: `${clientId.substring(0, 20)}...`,
+        length: clientId.length,
+        expectedFormat: 'Should start with "1000."',
+      })
+      return NextResponse.json({
+        success: false,
+        error: 'Invalid Client ID format',
+        message: `Client ID does not match Zoho format. Zoho Client IDs must start with "1000."`,
+        help: {
+          step1: 'Verify your Client ID in Zoho API Console',
+          step2: 'Ensure you copied the full Client ID (starts with 1000.)',
+          step3: 'Check that there are no extra spaces or characters',
+          step4: 'Re-add the Client ID to your environment variables',
+        },
+        diagnostic: {
+          clientIdPrefix: clientId.substring(0, 20),
+          clientIdLength: clientId.length,
+        },
+      }, { status: 500, headers: corsHeaders })
+    }
+    
+    // Validate Client Secret exists
+    if (!clientSecret) {
+      console.error('[Zoho Connect API] ZOHO_CLIENT_SECRET is missing!')
+      return NextResponse.json({
+        success: false,
+        error: 'Zoho CRM integration not fully configured',
+        message: 'ZOHO_CLIENT_SECRET environment variable is not set',
+        help: {
+          step1: 'Go to your Zoho API Console',
+          step2: 'Copy the Client Secret from your application',
+          step3: 'Add it to your Netlify environment variables as ZOHO_CLIENT_SECRET',
+          step4: 'Redeploy your site after adding the variable',
+        },
+      }, { status: 500, headers: corsHeaders })
     }
 
     // Validate redirect URI is set

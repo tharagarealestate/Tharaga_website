@@ -26,9 +26,21 @@ export function CRMDashboard({ onClose, embedded = false }: CRMDashboardProps) {
   const [activeTab, setActiveTab] = useState<'overview' | 'contacts' | 'deals'>('overview')
   const [connecting, setConnecting] = useState(false)
   const [connectionError, setConnectionError] = useState<string | null>(null)
+  const isFetchingRef = useRef(false) // OPTIMIZED: Track if fetch is in progress
+  const hasInitialFetchRef = useRef(false) // OPTIMIZED: Track if initial fetch completed
 
   const fetchCRMData = async () => {
+    // OPTIMIZED: Prevent duplicate concurrent requests
+    if (isFetchingRef.current) {
+      console.log('[CRMDashboard] Fetch already in progress, skipping duplicate call');
+      return;
+    }
+
+    setLoading(true)
     try {
+      // OPTIMIZED: Set fetching flag
+      isFetchingRef.current = true;
+
       // CRITICAL: Get auth token - use window.supabase if available
       const supabaseClient = (typeof window !== 'undefined' && (window as any).supabase) || getSupabase()
       let token: string | null = null
@@ -47,7 +59,8 @@ export function CRMDashboard({ onClose, embedded = false }: CRMDashboardProps) {
         headers['Authorization'] = `Bearer ${token}`
       }
       
-      const response = await fetch('/api/crm/zoho/dashboard-data', {
+      // OPTIMIZED: Use request deduplication to prevent duplicate API calls
+      const response = await requestDeduplicator.deduplicateFetch('/api/crm/zoho/dashboard-data', {
         credentials: 'include',
         headers
       })

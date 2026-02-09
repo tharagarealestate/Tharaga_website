@@ -1,8 +1,9 @@
 "use client"
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { getSupabase } from '@/lib/supabase'
+import { requestDeduplicator } from '@/lib/utils/request-deduplication'
 import {
   Users, Building2, Phone, Mail, Calendar, TrendingUp, Activity,
   CheckCircle2, Clock, DollarSign, X, XCircle, MapPin, Home, IndianRupee,
@@ -78,13 +79,19 @@ export function CRMDashboard({ onClose, embedded = false }: CRMDashboardProps) {
         deals: []
       })
     } finally {
+      // OPTIMIZED: Reset fetching flag
+      isFetchingRef.current = false;
       setLoading(false)
     }
   }
 
+  // OPTIMIZED: Single initial fetch, prevent duplicate calls
   useEffect(() => {
-    fetchCRMData()
-  }, [])
+    if (!hasInitialFetchRef.current) {
+      hasInitialFetchRef.current = true;
+      fetchCRMData();
+    }
+  }, []) // Only run once on mount
 
   // Handle Connect to Zoho CRM
   const handleConnectZoho = async () => {
@@ -114,7 +121,7 @@ export function CRMDashboard({ onClose, embedded = false }: CRMDashboardProps) {
         credentials: 'include',
         headers
       })
-      const data = await response.json()
+          const data = await response.json()
 
       if (data.success && data.auth_url) {
         // OPTIMIZED: Redirect directly to Zoho OAuth (no popup)

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   TrendingUp,
@@ -48,6 +48,7 @@ import { AnomalyAlerts } from './overview-components/AnomalyAlerts'
 import { RecommendationsPanel } from './overview-components/RecommendationsPanel'
 import { TrendSparkline } from './overview-components/TrendSparkline'
 import { PerformanceHeatmap } from './overview-components/PerformanceHeatmap'
+import { requestDeduplicator } from '@/lib/utils/request-deduplication'
 
 interface DashboardData {
   metrics: {
@@ -121,12 +122,22 @@ export function AIOverviewSection({ onNavigate }: OverviewSectionProps) {
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
   const [selectedPeriod, setSelectedPeriod] = useState<'7d' | '30d' | '90d'>('30d')
+  const isFetchingRef = useRef(false) // OPTIMIZED: Track if fetch is in progress
+  const hasInitialFetchRef = useRef(false) // OPTIMIZED: Track if initial fetch completed
 
   const fetchData = useCallback(async () => {
+    // OPTIMIZED: Prevent duplicate concurrent requests
+    if (isFetchingRef.current) {
+      console.log('[AI Overview] Fetch already in progress, skipping duplicate call');
+      return;
+    }
+
     const startTime = Date.now();
     console.log('[AI Overview] fetchData started at', new Date().toISOString());
     
     try {
+      // OPTIMIZED: Set fetching flag
+      isFetchingRef.current = true;
       setRefreshing(true)
       console.log('[AI Overview] Making API request to /api/builder/overview/ai-insights...');
       
@@ -154,7 +165,8 @@ export function AIOverviewSection({ onNavigate }: OverviewSectionProps) {
         console.warn('[AI Overview] No token available - request will likely fail')
       }
       
-      const response = await fetch('/api/builder/overview/ai-insights', {
+      // OPTIMIZED: Use request deduplication to prevent duplicate API calls
+      const response = await requestDeduplicator.deduplicateFetch('/api/builder/overview/ai-insights', {
         method: 'POST',
         headers,
         credentials: 'include',
@@ -209,6 +221,8 @@ export function AIOverviewSection({ onNavigate }: OverviewSectionProps) {
       // Set data to null to show error state
       setData(null)
     } finally {
+      // OPTIMIZED: Reset fetching flag
+      isFetchingRef.current = false;
       setLoading(false)
       setRefreshing(false)
       const duration = Date.now() - startTime;
@@ -216,9 +230,13 @@ export function AIOverviewSection({ onNavigate }: OverviewSectionProps) {
     }
   }, [])
 
+  // OPTIMIZED: Single initial fetch, prevent duplicate calls
   useEffect(() => {
-    fetchData()
-  }, [fetchData])
+    if (!hasInitialFetchRef.current) {
+      hasInitialFetchRef.current = true;
+      fetchData();
+    }
+  }, []) // Only run once on mount
 
   const getTrendIcon = (value: number, reverse = false) => {
     if (reverse) {

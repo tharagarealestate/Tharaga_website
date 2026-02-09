@@ -198,15 +198,26 @@ export default function AnalyticsDashboard({
   const [refreshing, setRefreshing] = useState(false);
   const [selectedPeriod, setSelectedPeriod] = useState<string>(period);
   const [showComparison, setShowComparison] = useState(compareWithPrevious);
+  const isFetchingRef = useRef(false); // OPTIMIZED: Track if fetch is in progress
+  const hasInitialFetchRef = useRef(false); // OPTIMIZED: Track if initial fetch completed
 
   const fetchAnalytics = useCallback(
     async (refresh = false) => {
+      // OPTIMIZED: Prevent duplicate concurrent requests
+      if (isFetchingRef.current && !refresh) {
+        console.log('[AnalyticsDashboard] Fetch already in progress, skipping duplicate call');
+        return;
+      }
+
       if (refresh) {
         setRefreshing(true);
       } else {
         setLoading(true);
       }
       try {
+        // OPTIMIZED: Set fetching flag
+        isFetchingRef.current = true;
+
         const params = new URLSearchParams({
           period: selectedPeriod,
           compare: showComparison ? 'true' : 'false',
@@ -215,7 +226,8 @@ export default function AnalyticsDashboard({
           params.set('builderId', builderId);
         }
 
-        const response = await fetch(`/api/analytics/dashboard?${params.toString()}`, {
+        // OPTIMIZED: Use request deduplication to prevent duplicate API calls
+        const response = await requestDeduplicator.deduplicateFetch(`/api/analytics/dashboard?${params.toString()}`, {
           cache: 'no-store',
         });
 
@@ -228,6 +240,8 @@ export default function AnalyticsDashboard({
       } catch (error) {
         console.error('[AnalyticsDashboard] fetch error', error);
       } finally {
+        // OPTIMIZED: Reset fetching flag
+        isFetchingRef.current = false;
         setLoading(false);
         setRefreshing(false);
       }
@@ -248,11 +262,20 @@ export default function AnalyticsDashboard({
     URL.revokeObjectURL(url);
   }, [data, selectedPeriod]);
 
+  // OPTIMIZED: Single initial fetch, prevent duplicate calls
   useEffect(() => {
-    fetchAnalytics();
-    const interval = setInterval(() => fetchAnalytics(true), 5 * 60 * 1000);
+    if (!hasInitialFetchRef.current) {
+      hasInitialFetchRef.current = true;
+      fetchAnalytics();
+    }
+    // Set up polling for refresh (only after initial fetch)
+    const interval = setInterval(() => {
+      if (hasInitialFetchRef.current) {
+        fetchAnalytics(true);
+      }
+    }, 5 * 60 * 1000);
     return () => clearInterval(interval);
-  }, [fetchAnalytics]);
+  }, []); // Only run once on mount, don't depend on fetchAnalytics
 
   if (loading) {
     return (

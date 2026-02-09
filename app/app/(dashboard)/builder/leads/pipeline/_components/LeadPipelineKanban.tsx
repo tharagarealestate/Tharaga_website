@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState, useRef } from "react";
 import {
   DndContext,
   DragEndEvent,
@@ -158,6 +158,8 @@ export default function LeadPipelineKanban() {
   const [searchQuery, setSearchQuery] = useState("");
   const [filterScore, setFilterScore] = useState<number | null>(null);
   const [showClosedStages, setShowClosedStages] = useState(false);
+  const isFetchingRef = useRef(false); // OPTIMIZED: Track if fetch is in progress
+  const hasInitialFetchRef = useRef(false); // OPTIMIZED: Track if initial fetch completed
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -179,12 +181,23 @@ export default function LeadPipelineKanban() {
 
   const fetchPipelineData = useCallback(async (isRefresh = false) => {
     if (!user?.id) return;
+
+    // OPTIMIZED: Prevent duplicate concurrent requests
+    if (isFetchingRef.current && !isRefresh) {
+      console.log('[LeadPipelineKanban] Fetch already in progress, skipping duplicate call');
+      return;
+    }
+
     if (isRefresh) {
       setRefreshing(true);
     } else {
       setLoading(true);
     }
+
     try {
+      // OPTIMIZED: Set fetching flag
+      isFetchingRef.current = true;
+
       // CRITICAL FIX: Use API endpoint instead of direct Supabase query
       // This ensures admin email bypass and proper authentication flow
 
@@ -202,7 +215,8 @@ export default function LeadPipelineKanban() {
         headers['Authorization'] = `Bearer ${token}`
       }
 
-      const response = await fetch('/api/leads/pipeline', {
+      // OPTIMIZED: Use request deduplication to prevent duplicate API calls
+      const response = await requestDeduplicator.deduplicateFetch('/api/leads/pipeline', {
         credentials: 'include',
         headers
       });
@@ -274,16 +288,20 @@ export default function LeadPipelineKanban() {
       console.error("Error fetching pipeline", err);
       toast.error("Failed to load pipeline data");
     } finally {
+      // OPTIMIZED: Reset fetching flag
+      isFetchingRef.current = false;
       setLoading(false);
       setRefreshing(false);
     }
   }, [supabase, user]);
 
+  // OPTIMIZED: Single initial fetch, prevent duplicate calls
   useEffect(() => {
-    if (user?.id) {
+    if (user?.id && !hasInitialFetchRef.current) {
+      hasInitialFetchRef.current = true;
       fetchPipelineData();
     }
-  }, [user, fetchPipelineData]);
+  }, [user?.id]); // Only depend on user.id, not the entire fetchPipelineData function
 
   useEffect(() => {
     if (!user?.id) return;

@@ -248,13 +248,23 @@ export class ZohoClient {
     builder_id: string;
     tokens: ZohoTokens;
   }): Promise<void> {
+    console.log('[ZohoClient] Saving connection for builder:', params.builder_id);
     const expiresAt = new Date(Date.now() + params.tokens.expires_in * 1000);
 
-    // Get organization info
-    const orgInfo = await this.getOrganization(params.tokens.access_token, params.tokens.api_domain);
+    // Get organization info (with error handling)
+    let orgInfo = { org_id: 'unknown', company_name: 'Unknown Organization' };
+    try {
+      console.log('[ZohoClient] Fetching organization info...');
+      orgInfo = await this.getOrganization(params.tokens.access_token, params.tokens.api_domain);
+      console.log('[ZohoClient] Organization info:', orgInfo);
+    } catch (orgError: any) {
+      console.error('[ZohoClient] Failed to get organization info (continuing anyway):', orgError.message);
+      // Continue with default values - connection can still be saved
+    }
 
     // Save to database
-    const { error } = await (await this.getSupabase())
+    console.log('[ZohoClient] Upserting integration record...');
+    const { data, error } = await (await this.getSupabase())
       .from('integrations')
       .upsert({
         builder_id: params.builder_id,
@@ -270,14 +280,26 @@ export class ZohoClient {
         crm_account_name: orgInfo.company_name,
         is_active: true,
         is_connected: true,
+        connected_at: new Date().toISOString(),
       }, {
         onConflict: 'builder_id,integration_type,provider',
       });
 
-    if (error) throw error;
+    if (error) {
+      console.error('[ZohoClient] Database error saving connection:', error);
+      throw error;
+    }
 
-    // Set up default field mappings
-    await this.createDefaultFieldMappings(params.builder_id);
+    console.log('[ZohoClient] Integration saved successfully:', data);
+
+    // Set up default field mappings (non-blocking)
+    try {
+      await this.createDefaultFieldMappings(params.builder_id);
+      console.log('[ZohoClient] Default field mappings created');
+    } catch (mappingError: any) {
+      console.error('[ZohoClient] Failed to create field mappings (non-critical):', mappingError.message);
+      // Don't throw - field mappings are not critical for connection
+    }
   }
 
   /**

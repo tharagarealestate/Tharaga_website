@@ -13,13 +13,21 @@ export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams;
     const code = searchParams.get('code');
-    const state = searchParams.get('state'); // This is the builder_id
+    const state = searchParams.get('state');
     const error = searchParams.get('error');
     const errorDescription = searchParams.get('error_description');
 
+    console.log('[Zoho Callback] Received callback:', {
+      hasCode: !!code,
+      hasState: !!state,
+      hasError: !!error,
+      error,
+      errorDescription,
+    });
+
     // Check for OAuth errors
     if (error) {
-      console.error('OAuth error:', error, errorDescription);
+      console.error('[Zoho Callback] OAuth error:', error, errorDescription);
       const baseUrl = new URL(request.url).origin
       return NextResponse.redirect(
         `${baseUrl}/builder?section=crm&zoho_error=${encodeURIComponent(error)}&description=${encodeURIComponent(errorDescription || 'Unknown error')}`
@@ -28,13 +36,25 @@ export async function GET(request: NextRequest) {
 
     // Validate parameters
     if (!code || !state) {
+      console.error('[Zoho Callback] Missing required parameters:', { code: !!code, state: !!state });
       const baseUrl = new URL(request.url).origin
       return NextResponse.redirect(
         `${baseUrl}/builder?section=crm&zoho_error=missing_params`
       );
     }
 
-    const builder_id = state;
+    // CRITICAL FIX: Decode state parameter (it's base64 encoded JSON)
+    let builder_id: string;
+    try {
+      const decodedState = Buffer.from(state, 'base64').toString('utf-8');
+      const stateData = JSON.parse(decodedState);
+      builder_id = stateData.user_id;
+      console.log('[Zoho Callback] Decoded state:', { builder_id, timestamp: stateData.timestamp });
+    } catch (decodeError) {
+      // Fallback: if decoding fails, try using state directly (for backward compatibility)
+      console.warn('[Zoho Callback] Failed to decode state, using as-is:', decodeError);
+      builder_id = state;
+    }
 
     // Verify builder exists and is authenticated
     const supabase = await createClient();
@@ -61,9 +81,20 @@ export async function GET(request: NextRequest) {
     // Exchange code for tokens
     let tokens;
     try {
+      console.log('[Zoho Callback] Exchanging code for tokens...');
       tokens = await zohoClient.exchangeCodeForTokens(code);
+      console.log('[Zoho Callback] Token exchange successful:', {
+        hasAccessToken: !!tokens.access_token,
+        hasRefreshToken: !!tokens.refresh_token,
+        expiresIn: tokens.expires_in,
+        apiDomain: tokens.api_domain,
+      });
     } catch (tokenError: any) {
-      console.error('Token exchange error:', tokenError);
+      console.error('[Zoho Callback] Token exchange error:', {
+        message: tokenError.message,
+        response: tokenError.response?.data,
+        status: tokenError.response?.status,
+      });
       const baseUrl = new URL(request.url).origin
       return NextResponse.redirect(
         `${baseUrl}/builder?section=crm&zoho_error=token_exchange_failed&message=${encodeURIComponent(tokenError.message || 'Token exchange failed')}`
@@ -72,12 +103,18 @@ export async function GET(request: NextRequest) {
 
     // Save connection to database
     try {
+      console.log('[Zoho Callback] Saving connection to database...');
       await zohoClient.saveConnection({
         builder_id,
         tokens,
       });
+      console.log('[Zoho Callback] Connection saved successfully');
     } catch (saveError: any) {
-      console.error('Connection save error:', saveError);
+      console.error('[Zoho Callback] Connection save error:', {
+        message: saveError.message,
+        stack: saveError.stack,
+        builder_id,
+      });
       const baseUrl = new URL(request.url).origin
       return NextResponse.redirect(
         `${baseUrl}/builder?section=crm&zoho_error=save_failed&message=${encodeURIComponent(saveError.message || 'Failed to save connection')}`

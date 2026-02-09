@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { BuilderPageWrapper } from '../_components/BuilderPageWrapper';
 import {
@@ -29,6 +29,7 @@ import {
 } from 'lucide-react';
 import { GlassLoadingOverlay } from '@/components/ui/loading-spinner';
 import { StandardStatsCard } from '../_components/design-system/StandardStatsCard';
+import { requestDeduplicator } from '@/lib/utils/request-deduplication';
 import {
   ResponsiveContainer,
   PieChart,

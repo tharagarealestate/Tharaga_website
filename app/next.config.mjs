@@ -32,6 +32,20 @@ const nextConfig = {
     }
     // Fix for Netlify: ensure proper module resolution
     config.resolve.modules = ['node_modules', path.resolve(__dirname, 'node_modules')]
+    
+    // Ensure proper module resolution for client components
+    config.resolve.extensionAlias = {
+      '.js': ['.js', '.ts', '.tsx'],
+      '.jsx': ['.jsx', '.tsx'],
+    }
+    
+    // Prevent tree-shaking of named exports in api-client
+    if (!isServer) {
+      config.optimization = config.optimization || {}
+      config.optimization.usedExports = true
+      config.optimization.sideEffects = true
+    }
+    
     return config
   },
   compiler: {

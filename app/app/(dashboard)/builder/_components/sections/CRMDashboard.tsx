@@ -117,28 +117,12 @@ export function CRMDashboard({ onClose, embedded = false }: CRMDashboardProps) {
       const data = await response.json()
 
       if (data.success && data.auth_url) {
-        // Open Zoho OAuth in a new window
-        const popup = window.open(data.auth_url, 'zoho_oauth', 'width=600,height=700,scrollbars=yes,resizable=yes')
-        
-        if (!popup) {
-          setConnectionError('Popup blocked. Please allow popups for this site and try again.')
-          return
-        }
-
-        // Show message to user
-        setConnectionError('Please complete the authorization in the popup window. After authorizing, refresh this page.')
-        
-        // Listen for popup close
-        const checkPopup = setInterval(() => {
-          if (popup.closed) {
-            clearInterval(checkPopup)
-            // Refresh data after popup closes
-            setTimeout(fetchCRMData, 2000)
-          }
-        }, 1000)
-        
-        // Clean up after 5 minutes
-        setTimeout(() => clearInterval(checkPopup), 300000)
+        // OPTIMIZED: Redirect directly to Zoho OAuth (no popup)
+        // This provides a smoother experience and avoids popup blockers
+        // The callback will redirect back to this page automatically
+        window.location.href = data.auth_url
+        // Don't set connecting to false - let the redirect happen
+        return
       } else if (data.already_connected) {
         setConnectionError('Zoho CRM is already connected!')
         // Refresh data

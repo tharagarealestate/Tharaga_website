@@ -8,7 +8,7 @@ import { LeadsList, type Lead } from '../../leads/_components/LeadsList'
 import { FilterProvider } from '@/contexts/FilterContext'
 import AdvancedFilters from '../../leads/_components/AdvancedFilters'
 import { StandardStatsCard } from '../design-system/StandardStatsCard'
-import { CRMContent } from './CRMContent'
+import { CRMDashboard } from './CRMDashboard'
 import dynamic from 'next/dynamic'
 import { SectionLoader } from './SectionLoader'
 
@@ -169,7 +169,7 @@ export function LeadsSection({ onNavigate }: LeadsSectionProps) {
                 className="bg-gradient-to-br from-slate-800/95 via-slate-800/95 to-slate-900/95 glow-border rounded-xl overflow-hidden shadow-2xl"
               >
                 <div className="p-6 sm:p-8">
-                  <CRMContent />
+                  <CRMDashboard embedded={true} />
                 </div>
               </motion.div>
             )}

@@ -126,11 +126,20 @@ export async function GET(request: NextRequest) {
       }, { status: 400, headers: corsHeaders })
     }
 
-    // Generate OAuth URL with comprehensive validation
-    const clientId = process.env.ZOHO_CLIENT_ID
-    const clientSecret = process.env.ZOHO_CLIENT_SECRET
-    const redirectUri = process.env.ZOHO_REDIRECT_URI || `${process.env.NEXT_PUBLIC_SITE_URL}/api/crm/zoho/callback`
+    // OPTIMIZED: Generate OAuth URL with comprehensive validation
+    // Check both production and development environment variables
+    const clientId = process.env.ZOHO_CLIENT_ID || process.env.NEXT_PUBLIC_ZOHO_CLIENT_ID
+    const clientSecret = process.env.ZOHO_CLIENT_SECRET || process.env.NEXT_PUBLIC_ZOHO_CLIENT_SECRET
+    const redirectUri = process.env.ZOHO_REDIRECT_URI || process.env.NEXT_PUBLIC_ZOHO_REDIRECT_URI || `${process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXT_PUBLIC_APP_URL}/api/crm/zoho/callback`
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXT_PUBLIC_APP_URL
+    
+    console.log('[Zoho Connect API] Environment check:', {
+      hasClientId: !!clientId,
+      clientIdPrefix: clientId ? `${clientId.substring(0, 15)}...` : 'missing',
+      hasClientSecret: !!clientSecret,
+      redirectUri,
+      siteUrl,
+    })
 
     // CRITICAL: Validate Client ID exists
     if (!clientId) {

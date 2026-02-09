@@ -20,21 +20,17 @@ export async function GET(request: NextRequest) {
     // Check for OAuth errors
     if (error) {
       console.error('OAuth error:', error, errorDescription);
+      const baseUrl = new URL(request.url).origin
       return NextResponse.redirect(
-        new URL(
-          `/builder/settings?tab=integrations&zoho_error=${encodeURIComponent(error)}&description=${encodeURIComponent(errorDescription || 'Unknown error')}`,
-          request.url
-        )
+        `${baseUrl}/builder?section=crm&zoho_error=${encodeURIComponent(error)}&description=${encodeURIComponent(errorDescription || 'Unknown error')}`
       );
     }
 
     // Validate parameters
     if (!code || !state) {
+      const baseUrl = new URL(request.url).origin
       return NextResponse.redirect(
-        new URL(
-          '/builder/settings?tab=integrations&zoho_error=missing_params',
-          request.url
-        )
+        `${baseUrl}/builder?section=crm&zoho_error=missing_params`
       );
     }
 
@@ -47,22 +43,18 @@ export async function GET(request: NextRequest) {
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     
     if (authError || !user) {
+      const baseUrl = new URL(request.url).origin
       return NextResponse.redirect(
-        new URL(
-          '/builder/settings?tab=integrations&zoho_error=unauthorized',
-          request.url
-        )
+        `${baseUrl}/builder?section=crm&zoho_error=unauthorized`
       );
     }
 
     // Verify builder_id matches authenticated user (security check)
     if (builder_id !== user.id) {
       console.error('Builder ID mismatch:', { builder_id, user_id: user.id });
+      const baseUrl = new URL(request.url).origin
       return NextResponse.redirect(
-        new URL(
-          '/builder/settings?tab=integrations&zoho_error=invalid_user',
-          request.url
-        )
+        `${baseUrl}/builder?section=crm&zoho_error=invalid_user`
       );
     }
 
@@ -72,11 +64,9 @@ export async function GET(request: NextRequest) {
       tokens = await zohoClient.exchangeCodeForTokens(code);
     } catch (tokenError: any) {
       console.error('Token exchange error:', tokenError);
+      const baseUrl = new URL(request.url).origin
       return NextResponse.redirect(
-        new URL(
-          `/builder/settings?tab=integrations&zoho_error=token_exchange_failed&message=${encodeURIComponent(tokenError.message || 'Token exchange failed')}`,
-          request.url
-        )
+        `${baseUrl}/builder?section=crm&zoho_error=token_exchange_failed&message=${encodeURIComponent(tokenError.message || 'Token exchange failed')}`
       );
     }
 
@@ -88,11 +78,9 @@ export async function GET(request: NextRequest) {
       });
     } catch (saveError: any) {
       console.error('Connection save error:', saveError);
+      const baseUrl = new URL(request.url).origin
       return NextResponse.redirect(
-        new URL(
-          `/builder/settings?tab=integrations&zoho_error=save_failed&message=${encodeURIComponent(saveError.message || 'Failed to save connection')}`,
-          request.url
-        )
+        `${baseUrl}/builder?section=crm&zoho_error=save_failed&message=${encodeURIComponent(saveError.message || 'Failed to save connection')}`
       );
     }
 
@@ -101,20 +89,17 @@ export async function GET(request: NextRequest) {
       console.error('Initial sync failed:', err)
     );
 
-    // Redirect to success page
+    // OPTIMIZED: Redirect to builder dashboard with CRM section (not settings page)
+    // This keeps user in context and shows the CRM dashboard directly
+    const baseUrl = new URL(request.url).origin
     return NextResponse.redirect(
-      new URL(
-        '/builder/settings?tab=integrations&zoho_connected=true',
-        request.url
-      )
+      `${baseUrl}/builder?section=crm&zoho_connected=true`
     );
   } catch (error: any) {
     console.error('Error handling OAuth callback:', error);
+    const baseUrl = new URL(request.url).origin
     return NextResponse.redirect(
-      new URL(
-        `/builder/settings?tab=integrations&zoho_error=callback_failed&message=${encodeURIComponent(error.message || 'Callback processing failed')}`,
-        request.url
-      )
+      `${baseUrl}/builder?section=crm&zoho_error=callback_failed&message=${encodeURIComponent(error.message || 'Callback processing failed')}`
     );
   }
 }

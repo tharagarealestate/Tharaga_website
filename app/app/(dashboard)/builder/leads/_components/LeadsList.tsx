@@ -12,6 +12,7 @@ import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { EmptyState } from '@/components/ui/empty-state';
 import { SkeletonListItem } from '@/components/ui/skeleton-loader';
 import { useToast } from '@/components/ui/toast';
+import { requestDeduplicator } from '@/lib/utils/request-deduplication';
 
 export interface Lead {
   id: string;
@@ -143,9 +144,36 @@ export function LeadsList({ onSelectLead, initialFilters, showInlineFilters = tr
 
   const fetchControllerRef = useRef<AbortController | null>(null);
   const fetchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const isFetchingRef = useRef(false); // OPTIMIZED: Track if fetch is in progress
+  const lastFetchKeyRef = useRef<string | null>(null); // OPTIMIZED: Track last fetch to prevent duplicates
 
   const fetchLeads = useCallback(async () => {
     if (!userId) return;
+
+    // OPTIMIZED: Prevent duplicate concurrent requests
+    if (isFetchingRef.current) {
+      console.log('[LeadsList] Fetch already in progress, skipping duplicate call');
+      return;
+    }
+
+    // Generate fetch key from current filters to detect duplicate requests
+    const fetchKey = JSON.stringify({
+      userId,
+      page: filters.page ?? 1,
+      limit: filters.limit ?? 20,
+      search: filters.search,
+      category: filters.category,
+      scoreMin: filters.score_min,
+      scoreMax: filters.score_max,
+      sortBy: filters.sort_by,
+      sortOrder: filters.sort_order,
+    });
+
+    // OPTIMIZED: Skip if this is the exact same request as the last one
+    if (lastFetchKeyRef.current === fetchKey && isFetchingRef.current) {
+      console.log('[LeadsList] Identical request already in progress, skipping');
+      return;
+    }
 
     // Cancel previous request if still pending
     if (fetchControllerRef.current) {
@@ -161,7 +189,7 @@ export function LeadsList({ onSelectLead, initialFilters, showInlineFilters = tr
     const controller = new AbortController();
     fetchControllerRef.current = controller;
 
-    // Debounce rapid filter changes (300ms delay)
+    // OPTIMIZED: Debounce rapid filter changes (300ms delay) but track state
     return new Promise<void>((resolve) => {
       fetchTimeoutRef.current = setTimeout(async () => {
         if (controller.signal.aborted) {
@@ -169,6 +197,9 @@ export function LeadsList({ onSelectLead, initialFilters, showInlineFilters = tr
           return;
         }
 
+        // OPTIMIZED: Set fetching flag to prevent duplicates
+        isFetchingRef.current = true;
+        lastFetchKeyRef.current = fetchKey;
         setLoading(true);
         setError(null);
 
@@ -225,12 +256,16 @@ export function LeadsList({ onSelectLead, initialFilters, showInlineFilters = tr
             headers['Authorization'] = `Bearer ${token}`
           }
 
-          const response = await fetch(`/api/leads?${params.toString()}`, {
-            method: 'GET',
-            headers,
-            credentials: 'include',
-            signal: controller.signal,
-          });
+          // OPTIMIZED: Use request deduplication to prevent duplicate API calls
+          const response = await requestDeduplicator.deduplicateFetch(
+            `/api/leads?${params.toString()}`,
+            {
+              method: 'GET',
+              headers,
+              credentials: 'include',
+              signal: controller.signal,
+            }
+          );
 
           // Handle aborted requests
           if (controller.signal.aborted) {
@@ -375,6 +410,8 @@ export function LeadsList({ onSelectLead, initialFilters, showInlineFilters = tr
           console.error('[LeadsList] Fetch error:', err);
           setError(err instanceof Error ? err.message : 'Failed to load leads');
         } finally {
+          // OPTIMIZED: Reset fetching flag
+          isFetchingRef.current = false;
           if (!controller.signal.aborted) {
             setLoading(false);
           }
@@ -385,19 +422,38 @@ export function LeadsList({ onSelectLead, initialFilters, showInlineFilters = tr
     });
   }, [filters, trackBehavior, userId, onStatsUpdate]);
 
-  // Store fetchLeads in a ref to avoid stale closures
-  // Initialize as null to prevent "Cannot access before initialization" error
+  // OPTIMIZED: Store fetchLeads in a ref to avoid stale closures
   const fetchLeadsRef = useRef<(() => Promise<void>) | null>(null);
+  const hasInitialFetchRef = useRef(false); // Track if initial fetch completed
+  const filtersRef = useRef(filters); // Track last filters to detect changes
+
   useEffect(() => {
     fetchLeadsRef.current = fetchLeads;
-  }, [fetchLeads]);
+    filtersRef.current = filters;
+  }, [fetchLeads, filters]);
 
-  // Separate effect for filters - this prevents infinite loops
+  // OPTIMIZED: Single consolidated effect for initial load and filter changes
+  // This prevents duplicate fetches on mount
   useEffect(() => {
     if (!userId || !fetchLeadsRef.current) return;
 
-    // Use ref to avoid stale closure issues
-    fetchLeadsRef.current();
+    // OPTIMIZED: Only fetch once on initial mount
+    if (!hasInitialFetchRef.current) {
+      hasInitialFetchRef.current = true;
+      // Small delay to ensure filters are initialized
+      const timeoutId = setTimeout(() => {
+        if (fetchLeadsRef.current) {
+          fetchLeadsRef.current();
+        }
+      }, 100);
+      return () => clearTimeout(timeoutId);
+    }
+
+    // OPTIMIZED: For subsequent filter changes, use debounced fetch
+    // The fetchLeads callback already has debouncing built-in
+    if (hasInitialFetchRef.current && fetchLeadsRef.current) {
+      fetchLeadsRef.current();
+    }
 
     // Cleanup on unmount
     return () => {
@@ -408,7 +464,37 @@ export function LeadsList({ onSelectLead, initialFilters, showInlineFilters = tr
         clearTimeout(fetchTimeoutRef.current);
       }
     };
-  }, [userId, filters.page, filters.limit, filters.search, filters.category, filters.score_min, filters.score_max, filters.budget_min, filters.budget_max, filters.location, filters.property_type, filters.has_interactions, filters.no_response, filters.sort_by, filters.sort_order]);
+  }, [userId]); // OPTIMIZED: Only depend on userId for initial fetch
+
+  // OPTIMIZED: Separate effect for filter changes (after initial load)
+  // This prevents initial double-fetch while still responding to filter changes
+  useEffect(() => {
+    if (!userId || !fetchLeadsRef.current || !hasInitialFetchRef.current) return;
+
+    // Debounce filter changes - fetchLeads already has debouncing, but add extra protection
+    const timeoutId = setTimeout(() => {
+      if (fetchLeadsRef.current && hasInitialFetchRef.current) {
+        fetchLeadsRef.current();
+      }
+    }, 300);
+
+    return () => clearTimeout(timeoutId);
+  }, [
+    filters.page,
+    filters.limit,
+    filters.search,
+    filters.category,
+    filters.score_min,
+    filters.score_max,
+    filters.budget_min,
+    filters.budget_max,
+    filters.location,
+    filters.property_type,
+    filters.has_interactions,
+    filters.no_response,
+    filters.sort_by,
+    filters.sort_order,
+  ]);
 
   // Real-time subscriptions - separate from fetchLeads to prevent infinite loops
   useEffect(() => {

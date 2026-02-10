@@ -7,7 +7,7 @@ import type { RecommendationItem } from '@/types/recommendations'
 import { Tooltip } from '@/components/ui/Tooltip'
 import { isSaved, saveItem, removeItem } from '@/lib/saved'
 import { LeadModal } from '@/components/lead/LeadModal'
-import { fetchRecommendationsClient, readCookie } from '@/lib/api-client'
+import * as apiClient from '@/lib/api-client'
 
 type Props = {
   items?: RecommendationItem[]
@@ -28,14 +28,14 @@ export function RecommendationsCarousel({ items = [], isLoading = false, error =
     if (hasRetriedRef.current) return
     if (error || items.length === 0) {
       hasRetriedRef.current = true
-      let sid = readCookie('thg_sid')
+      let sid = apiClient.readCookie('thg_sid')
       if (!sid) {
         // create a client-side session id if missing
         sid = `sid_${Date.now().toString(36)}_${Math.random().toString(36).slice(2)}`
         document.cookie = `thg_sid=${encodeURIComponent(sid)}; path=/; max-age=${60 * 60 * 24 * 180}; samesite=lax`;
       }
       setRetrying(true)
-      fetchRecommendationsClient({ session_id: sid, num_results: 6 })
+      apiClient.fetchRecommendationsClient({ session_id: sid, num_results: 6 })
         .then((data) => {
           setClientItems(Array.isArray(data.items) ? data.items : [])
           setClientError(null)

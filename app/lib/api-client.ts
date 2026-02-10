@@ -128,6 +128,3 @@ export async function fetchRecommendationsClient(params: {
   return response.json()
 }
 
-// Explicit re-exports to ensure webpack can resolve them during build
-export { readCookie, fetchRecommendationsClient }
-

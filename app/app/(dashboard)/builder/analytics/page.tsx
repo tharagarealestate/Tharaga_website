@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { BuilderPageWrapper } from '../_components/BuilderPageWrapper';
 import {
@@ -199,8 +199,8 @@ export default function AnalyticsDashboard({
   const [refreshing, setRefreshing] = useState(false);
   const [selectedPeriod, setSelectedPeriod] = useState<string>(period);
   const [showComparison, setShowComparison] = useState(compareWithPrevious);
-  const isFetchingRef = useRef(false); // OPTIMIZED: Track if fetch is in progress
-  const hasInitialFetchRef = useRef(false); // OPTIMIZED: Track if initial fetch completed
+  const isFetchingRef = React.useRef(false); // OPTIMIZED: Track if fetch is in progress
+  const hasInitialFetchRef = React.useRef(false); // OPTIMIZED: Track if initial fetch completed
 
   const fetchAnalytics = useCallback(
     async (refresh = false) => {

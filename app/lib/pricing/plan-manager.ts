@@ -1,10 +1,16 @@
 import { createClient } from '@supabase/supabase-js';
 import Razorpay from 'razorpay';
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+let _supabase: ReturnType<typeof createClient> | null = null;
+function getSupabaseAdmin() {
+  if (!_supabase) {
+    _supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
+  }
+  return _supabase;
+}
 
 const razorpay = process.env.RAZORPAY_KEY_ID && process.env.RAZORPAY_KEY_SECRET
   ? new Razorpay({
@@ -28,7 +34,7 @@ export class PlanManager {
   }> {
     try {
       // Get current subscription
-      const { data: currentSub } = await supabase
+      const { data: currentSub } = await getSupabaseAdmin()
         .from('builder_subscriptions')
         .select('*, plan:property_plans(*)')
         .eq('builder_id', builderId)
@@ -40,7 +46,7 @@ export class PlanManager {
       }
 
       // Get new plan
-      const { data: newPlan } = await supabase
+      const { data: newPlan } = await getSupabaseAdmin()
         .from('property_plans')
         .select('*')
         .eq('id', newPlanId)
@@ -79,7 +85,7 @@ export class PlanManager {
       const amountDue = proratedCharge - proratedCredit;
 
       // Update subscription in database
-      const { error: updateError } = await supabase
+      const { error: updateError } = await getSupabaseAdmin()
         .from('builder_subscriptions')
         .update({
           plan_id: newPlanId,
@@ -94,7 +100,7 @@ export class PlanManager {
       }
 
       // Log plan change
-      await supabase.from('plan_change_history').insert({
+      await getSupabaseAdmin().from('plan_change_history').insert({
         builder_id: builderId,
         from_plan_id: currentSub.plan_id,
         to_plan_id: newPlanId,
@@ -109,7 +115,7 @@ export class PlanManager {
 
       // Send email notification
       try {
-        const { data: profile } = await supabase
+        const { data: profile } = await getSupabaseAdmin()
           .from('profiles')
           .select('email')
           .eq('id', builderId)
@@ -165,7 +171,7 @@ export class PlanManager {
   }> {
     try {
       // Get current subscription
-      const { data: currentSub } = await supabase
+      const { data: currentSub } = await getSupabaseAdmin()
         .from('builder_subscriptions')
         .select('*, plan:property_plans(*)')
         .eq('builder_id', builderId)
@@ -177,7 +183,7 @@ export class PlanManager {
       }
 
       // Get new plan
-      const { data: newPlan } = await supabase
+      const { data: newPlan } = await getSupabaseAdmin()
         .from('property_plans')
         .select('*')
         .eq('id', newPlanId)
@@ -194,7 +200,7 @@ export class PlanManager {
       }
 
       // Check if current property count fits in new plan
-      const { count: activeCount } = await supabase
+      const { count: activeCount } = await getSupabaseAdmin()
         .from('properties')
         .select('id', { count: 'exact', head: true })
         .eq('builder_id', builderId)
@@ -210,7 +216,7 @@ export class PlanManager {
       // Schedule downgrade at period end (no immediate downgrade)
       const periodEnd = new Date(currentSub.current_period_end);
 
-      await supabase
+      await getSupabaseAdmin()
         .from('builder_subscriptions')
         .update({
           cancel_at_period_end: true,
@@ -219,7 +225,7 @@ export class PlanManager {
         .eq('builder_id', builderId);
 
       // Store pending downgrade info
-      await supabase.from('plan_change_history').insert({
+      await getSupabaseAdmin().from('plan_change_history').insert({
         builder_id: builderId,
         from_plan_id: currentSub.plan_id,
         to_plan_id: newPlanId,
@@ -235,7 +241,7 @@ export class PlanManager {
 
       // Send email notification
       try {
-        const { data: profile } = await supabase
+        const { data: profile } = await getSupabaseAdmin()
           .from('profiles')
           .select('email')
           .eq('id', builderId)
@@ -285,7 +291,7 @@ export class PlanManager {
     message: string;
   }> {
     try {
-      await supabase
+      await getSupabaseAdmin()
         .from('builder_subscriptions')
         .update({
           cancel_at_period_end: false,

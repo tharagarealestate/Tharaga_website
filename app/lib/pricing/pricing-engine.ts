@@ -1,9 +1,16 @@
-import { createClient } from '@supabase/supabase-js';
+import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+let _supabase: SupabaseClient | null = null;
+function getSupabase() {
+  if (!_supabase) {
+    _supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
+  }
+  return _supabase;
+}
+
 
 export interface Plan {
   id: string;
@@ -26,7 +33,7 @@ export class PricingEngine {
    * Get recommended plan based on property count
    */
   async getRecommendedPlan(propertyCount: number): Promise<Plan | null> {
-    const { data: plans } = await supabase
+    const { data: plans } = await getSupabase()
       .from('property_plans')
       .select('*')
       .eq('is_active', true)
@@ -76,7 +83,7 @@ export class PricingEngine {
    * Get all available plans
    */
   async getAllPlans(): Promise<Plan[]> {
-    const { data: plans } = await supabase
+    const { data: plans } = await getSupabase()
       .from('property_plans')
       .select('*')
       .eq('is_active', true)
@@ -96,7 +103,7 @@ export class PricingEngine {
     planName?: string;
   }> {
     // Get subscription
-    const { data: subscription } = await supabase
+    const { data: subscription } = await getSupabase()
       .from('builder_subscriptions')
       .select('*, plan:property_plans(*)')
       .eq('builder_id', builderId)
@@ -113,7 +120,7 @@ export class PricingEngine {
     }
 
     // Count active properties
-    const { count: activeCount } = await supabase
+    const { count: activeCount } = await getSupabase()
       .from('properties')
       .select('id', { count: 'exact', head: true })
       .eq('builder_id', builderId)
@@ -168,7 +175,7 @@ export class PricingEngine {
     currentLimit?: number;
     newLimit?: number | null;
   }> {
-    const { data, error } = await supabase
+    const { data, error } = await getSupabase()
       .rpc('suggest_plan_upgrade', { p_builder_id: builderId });
 
     if (error || !data) {
@@ -225,7 +232,7 @@ export class PricingEngine {
    * Get pricing comparison
    */
   async getPricingComparison(currentPlanId: string, targetPlanId: string) {
-    const { data: plans } = await supabase
+    const { data: plans } = await getSupabase()
       .from('property_plans')
       .select('*')
       .in('id', [currentPlanId, targetPlanId]);

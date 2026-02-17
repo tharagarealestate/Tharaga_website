@@ -1,3 +1,3 @@
-export { Card, CardContent } from './Card'
+export { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter, MetricCard } from './Card'
 
 

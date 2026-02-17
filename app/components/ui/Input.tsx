@@ -1,19 +1,43 @@
-"use client"
+'use client'
 
-import * as React from 'react'
-import clsx from 'clsx'
+import { forwardRef, type InputHTMLAttributes } from 'react'
+import { cn } from '@/lib/utils'
 
-type InputProps = React.InputHTMLAttributes<HTMLInputElement>
+interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
+  label?: string
+  error?: string
+  hint?: string
+}
 
-export const Input = React.forwardRef<HTMLInputElement, InputProps>(function Input({ className, ...props }, ref) {
-  return (
-    <input
-      ref={ref}
-      className={clsx(
-        'w-full rounded-md border border-border bg-canvas text-fg placeholder:text-fgMuted px-3 py-2 min-h-[44px] shadow-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 ring-offset-canvas focus-visible:ring-[color:var(--color-accent-muted)]',
-        className,
-      )}
-      {...props}
-    />
-  )
-})
+export const Input = forwardRef<HTMLInputElement, InputProps>(
+  ({ label, error, hint, className, id, ...props }, ref) => {
+    const inputId = id || label?.toLowerCase().replace(/\s+/g, '-')
+
+    return (
+      <div className="space-y-1.5">
+        {label && (
+          <label htmlFor={inputId} className="block text-sm font-medium text-zinc-300">
+            {label}
+          </label>
+        )}
+        <input
+          ref={ref}
+          id={inputId}
+          className={cn(
+            'w-full h-10 px-3 bg-zinc-900 border rounded-lg text-sm text-zinc-100',
+            'placeholder:text-zinc-500',
+            'transition-colors duration-150',
+            'focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500/50',
+            error ? 'border-red-500/50' : 'border-zinc-700 hover:border-zinc-600',
+            className
+          )}
+          {...props}
+        />
+        {error && <p className="text-xs text-red-400">{error}</p>}
+        {hint && !error && <p className="text-xs text-zinc-500">{hint}</p>}
+      </div>
+    )
+  }
+)
+
+Input.displayName = 'Input'

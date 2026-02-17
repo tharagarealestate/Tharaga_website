@@ -1,10 +1,16 @@
 import { createClient } from '@supabase/supabase-js';
 import Razorpay from 'razorpay';
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+let _supabase: ReturnType<typeof createClient> | null = null;
+function getSupabaseAdmin() {
+  if (!_supabase) {
+    _supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
+  }
+  return _supabase;
+}
 
 const razorpay = process.env.RAZORPAY_KEY_ID && process.env.RAZORPAY_KEY_SECRET
   ? new Razorpay({
@@ -26,7 +32,7 @@ export class SubscriptionManager {
   }> {
     try {
       // Check if already has subscription
-      const { data: existing } = await supabase
+      const { data: existing } = await getSupabaseAdmin()
         .from('builder_subscriptions')
         .select('id, status')
         .eq('builder_id', builderId)
@@ -40,13 +46,13 @@ export class SubscriptionManager {
       }
 
       // Start trial using database function
-      const { data: subscriptionId, error } = await supabase
+      const { data: subscriptionId, error } = await getSupabaseAdmin()
         .rpc('start_trial', { p_builder_id: builderId });
 
       if (error) throw error;
 
       // Get subscription details
-      const { data: subscription } = await supabase
+      const { data: subscription } = await getSupabaseAdmin()
         .from('builder_subscriptions')
         .select('trial_ends_at')
         .eq('id', subscriptionId)
@@ -93,7 +99,7 @@ export class SubscriptionManager {
       }
 
       // Get current subscription
-      const { data: currentSub } = await supabase
+      const { data: currentSub } = await getSupabaseAdmin()
         .from('builder_subscriptions')
         .select('*, builder:profiles(*)')
         .eq('builder_id', builderId)
@@ -108,7 +114,7 @@ export class SubscriptionManager {
       }
 
       // Get plan details
-      const { data: plan } = await supabase
+      const { data: plan } = await getSupabaseAdmin()
         .from('tharaga_plan')
         .select('*')
         .eq('is_active', true)
@@ -161,7 +167,7 @@ export class SubscriptionManager {
       });
 
       // Convert trial to paid in database
-      const { error } = await supabase.rpc('convert_trial_to_paid', {
+      const { error } = await getSupabaseAdmin().rpc('convert_trial_to_paid', {
         p_builder_id: builderId,
         p_billing_cycle: billingCycle,
         p_razorpay_subscription_id: razorpaySub.id
@@ -171,7 +177,7 @@ export class SubscriptionManager {
 
       // Update Razorpay customer ID if new
       if (!currentSub.razorpay_customer_id) {
-        await supabase
+        await getSupabaseAdmin()
           .from('builder_subscriptions')
           .update({ razorpay_customer_id: customerId })
           .eq('builder_id', builderId);
@@ -213,7 +219,7 @@ export class SubscriptionManager {
     effectiveDate?: string;
   }> {
     try {
-      const { data: subscription } = await supabase
+      const { data: subscription } = await getSupabaseAdmin()
         .from('builder_subscriptions')
         .select('*')
         .eq('builder_id', builderId)
@@ -241,7 +247,7 @@ export class SubscriptionManager {
           }
         }
 
-        await supabase
+        await getSupabaseAdmin()
           .from('builder_subscriptions')
           .update({
             status: 'cancelled',
@@ -251,7 +257,7 @@ export class SubscriptionManager {
           .eq('builder_id', builderId);
 
         // Log event
-        await supabase.from('subscription_events').insert({
+        await getSupabaseAdmin().from('subscription_events').insert({
           builder_id: builderId,
           subscription_id: subscription.id,
           event_type: 'subscription_cancelled',
@@ -267,7 +273,7 @@ export class SubscriptionManager {
 
       } else {
         // Cancel at period end
-        await supabase
+        await getSupabaseAdmin()
           .from('builder_subscriptions')
           .update({
             cancel_at_period_end: true,
@@ -311,7 +317,7 @@ export class SubscriptionManager {
     message: string;
   }> {
     try {
-      await supabase
+      await getSupabaseAdmin()
         .from('builder_subscriptions')
         .update({
           cancel_at_period_end: false,
@@ -320,14 +326,14 @@ export class SubscriptionManager {
         .eq('builder_id', builderId);
 
       // Log event
-      const { data: sub } = await supabase
+      const { data: sub } = await getSupabaseAdmin()
         .from('builder_subscriptions')
         .select('id')
         .eq('builder_id', builderId)
         .single();
 
       if (sub) {
-        await supabase.from('subscription_events').insert({
+        await getSupabaseAdmin().from('subscription_events').insert({
           builder_id: builderId,
           subscription_id: sub.id,
           event_type: 'subscription_resumed',
@@ -367,7 +373,7 @@ export class SubscriptionManager {
         };
       }
 
-      const { data: currentSub } = await supabase
+      const { data: currentSub } = await getSupabaseAdmin()
         .from('builder_subscriptions')
         .select('*')
         .eq('builder_id', builderId)
@@ -389,7 +395,7 @@ export class SubscriptionManager {
       }
 
       // Get new price
-      const { data: plan } = await supabase
+      const { data: plan } = await getSupabaseAdmin()
         .from('tharaga_plan')
         .select('monthly_price, yearly_price')
         .eq('is_active', true)
@@ -436,7 +442,7 @@ export class SubscriptionManager {
       });
 
       // Update database
-      await supabase
+      await getSupabaseAdmin()
         .from('builder_subscriptions')
         .update({
           billing_cycle: newCycle,
@@ -446,7 +452,7 @@ export class SubscriptionManager {
         .eq('builder_id', builderId);
 
       // Log event
-      await supabase.from('subscription_events').insert({
+      await getSupabaseAdmin().from('subscription_events').insert({
         builder_id: builderId,
         subscription_id: currentSub.id,
         event_type: 'billing_cycle_changed',
@@ -487,7 +493,7 @@ export class SubscriptionManager {
     price?: number;
     cancelAtPeriodEnd?: boolean;
   }> {
-    const { data: subscription } = await supabase
+    const { data: subscription } = await getSupabaseAdmin()
       .from('builder_subscriptions')
       .select('*')
       .eq('builder_id', builderId)

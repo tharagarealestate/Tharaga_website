@@ -1,9 +1,15 @@
 import { createClient } from '@supabase/supabase-js';
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+let _supabase: ReturnType<typeof createClient> | null = null;
+function getSupabaseAdmin() {
+  if (!_supabase) {
+    _supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
+  }
+  return _supabase;
+}
 
 export class TrialManager {
   /**
@@ -15,7 +21,7 @@ export class TrialManager {
     metadata?: any
   ): Promise<void> {
     try {
-      const { data: analytics } = await supabase
+      const { data: analytics } = await getSupabaseAdmin()
         .from('trial_analytics')
         .select('*')
         .eq('builder_id', builderId)
@@ -43,7 +49,7 @@ export class TrialManager {
           break;
       }
 
-      await supabase
+      await getSupabaseAdmin()
         .from('trial_analytics')
         .update(updates)
         .eq('builder_id', builderId);
@@ -66,7 +72,7 @@ export class TrialManager {
     };
     recommendation: string;
   }> {
-    const { data: analytics } = await supabase
+    const { data: analytics } = await getSupabaseAdmin()
       .from('trial_analytics')
       .select('*')
       .eq('builder_id', builderId)
@@ -136,7 +142,7 @@ export class TrialManager {
     propertiesAdded: number;
     leadsReceived: number;
   } | null> {
-    const { data: subscription } = await supabase
+    const { data: subscription } = await getSupabaseAdmin()
       .from('builder_subscriptions')
       .select('is_trial, trial_ends_at')
       .eq('builder_id', builderId)
@@ -170,7 +176,7 @@ export class TrialManager {
     const threeDaysFromNow = new Date();
     threeDaysFromNow.setDate(threeDaysFromNow.getDate() + 3);
 
-    const { data: trialEnding } = await supabase
+    const { data: trialEnding } = await getSupabaseAdmin()
       .from('builder_subscriptions')
       .select('*, builder:profiles(*)')
       .eq('status', 'trial')

@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { PricingEngine } from '@/lib/pricing/pricing-engine';
 
+export const dynamic = 'force-dynamic';
+
 export async function POST(request: NextRequest) {
   try {
     const { propertyCount } = await request.json();

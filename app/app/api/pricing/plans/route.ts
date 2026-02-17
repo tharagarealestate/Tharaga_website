@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { PricingEngine } from '@/lib/pricing/pricing-engine';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(request: NextRequest) {
   try {
     const engine = new PricingEngine();

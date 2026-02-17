@@ -2,10 +2,18 @@ import { NextRequest, NextResponse } from 'next/server';
 import crypto from 'crypto';
 import { createClient } from '@supabase/supabase-js';
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+export const dynamic = 'force-dynamic';
+
+let _supabase: ReturnType<typeof createClient> | null = null;
+function supabase() {
+  if (!_supabase) {
+    _supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
+  }
+  return _supabase;
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -80,19 +88,19 @@ async function handleSubscriptionActivated(subscription: any) {
     return;
   }
 
-  await supabase
+  await supabase()
     .from('builder_subscriptions')
     .update({ status: 'active' })
     .eq('razorpay_subscription_id', subscription.id);
 
-  const { data: sub } = await supabase
+  const { data: sub } = await supabase()
     .from('builder_subscriptions')
     .select('id')
     .eq('razorpay_subscription_id', subscription.id)
     .single();
 
   if (sub) {
-    await supabase.from('subscription_events').insert({
+    await supabase().from('subscription_events').insert({
       builder_id: builderId,
       subscription_id: sub.id,
       event_type: 'subscription_activated',
@@ -107,13 +115,13 @@ async function handlePaymentSuccess(payment: any) {
   if (!builderId) return;
   
   // Get subscription ID
-  const { data: subscription } = await supabase
+  const { data: subscription } = await supabase()
     .from('builder_subscriptions')
     .select('id')
     .eq('razorpay_subscription_id', payment.subscription_id)
     .single();
 
-  await supabase.from('payment_history').insert({
+  await supabase().from('payment_history').insert({
     builder_id: builderId,
     subscription_id: subscription?.id,
     razorpay_payment_id: payment.id,
@@ -141,7 +149,7 @@ async function handlePaymentSuccess(payment: any) {
   
   // Log event
   if (subscription) {
-    await supabase.from('subscription_events').insert({
+    await supabase().from('subscription_events').insert({
       builder_id: builderId,
       subscription_id: subscription.id,
       event_type: 'payment_succeeded',
@@ -152,7 +160,7 @@ async function handlePaymentSuccess(payment: any) {
 }
 
 async function handleSubscriptionCancelled(subscription: any) {
-  await supabase
+  await supabase()
     .from('builder_subscriptions')
       .update({
       status: 'cancelled',
@@ -160,14 +168,14 @@ async function handleSubscriptionCancelled(subscription: any) {
       })
       .eq('razorpay_subscription_id', subscription.id);
 
-  const { data: sub } = await supabase
+  const { data: sub } = await supabase()
     .from('builder_subscriptions')
     .select('id, builder_id')
     .eq('razorpay_subscription_id', subscription.id)
     .single();
 
   if (sub) {
-    await supabase.from('subscription_events').insert({
+    await supabase().from('subscription_events').insert({
       builder_id: sub.builder_id,
       subscription_id: sub.id,
       event_type: 'subscription_cancelled',
@@ -178,14 +186,14 @@ async function handleSubscriptionCancelled(subscription: any) {
 }
 
 async function handleSubscriptionPaused(subscription: any) {
-  await supabase
+  await supabase()
     .from('builder_subscriptions')
     .update({ status: 'paused' })
     .eq('razorpay_subscription_id', subscription.id);
 }
 
 async function handleSubscriptionResumed(subscription: any) {
-  await supabase
+  await supabase()
     .from('builder_subscriptions')
     .update({ status: 'active' })
     .eq('razorpay_subscription_id', subscription.id);
@@ -196,7 +204,7 @@ async function handlePaymentFailed(payment: any) {
   if (!builderId) return;
   
   // Get subscription
-  const { data: subscription } = await supabase
+  const { data: subscription } = await supabase()
     .from('builder_subscriptions')
     .select('id')
     .eq('razorpay_customer_id', payment.customer_id)
@@ -209,7 +217,7 @@ async function handlePaymentFailed(payment: any) {
       .eq('id', subscription.id);
   }
 
-  await supabase.from('payment_history').insert({
+  await supabase().from('payment_history').insert({
     builder_id: builderId,
     subscription_id: subscription?.id,
     razorpay_payment_id: payment.id,
@@ -220,7 +228,7 @@ async function handlePaymentFailed(payment: any) {
 
   // Log event
   if (subscription) {
-    await supabase.from('subscription_events').insert({
+    await supabase().from('subscription_events').insert({
       builder_id: builderId,
       subscription_id: subscription.id,
       event_type: 'payment_failed',

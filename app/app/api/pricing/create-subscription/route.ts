@@ -6,6 +6,8 @@ import { secureApiRoute } from '@/lib/security/api-security';
 import { AuditActions, AuditResourceTypes } from '@/lib/security/audit';
 import { z } from 'zod';
 
+export const dynamic = 'force-dynamic';
+
 const razorpay = process.env.RAZORPAY_KEY_ID && process.env.RAZORPAY_KEY_SECRET
   ? new Razorpay({
       key_id: process.env.RAZORPAY_KEY_ID,

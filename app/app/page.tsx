@@ -1,351 +1,329 @@
-'use client';
-
-import { Footer } from '@/components/sections/Footer'
-import { PageWrapper } from '@/components/ui/PageWrapper'
-import { PageHeader } from '@/components/ui/PageHeader'
-import { SectionWrapper } from '@/components/ui/SectionWrapper'
-import { PremiumButton } from '@/components/ui/premium-button'
-import { GlassCard } from '@/components/ui/glass-card'
-import { SkeletonStatsCard } from '@/components/ui/skeleton-loader'
 import Link from 'next/link'
-import { motion } from 'framer-motion'
-import { useState, useEffect } from 'react'
+import { Header } from '@/components/layout/Header'
+import { Footer } from '@/components/layout/Footer'
 import {
-  Home,
-  Building2,
   Shield,
   Zap,
+  Building2,
   TrendingUp,
-  CheckCircle2,
-  ArrowRight,
+  Brain,
   Users,
-  Award,
-  MapPin,
-  DollarSign
+  ArrowRight,
+  CheckCircle2,
+  BarChart3,
+  MessageSquare,
+  Target,
+  Calculator,
+  Sparkles,
 } from 'lucide-react'
 
 export default function HomePage() {
-  const [statsLoading, setStatsLoading] = useState(true);
-  const [stats, setStats] = useState({
-    properties: '12k+',
-    savings: '₹3-5L',
-    brokerage: '100%',
-    coverage: 'Tamil Nadu'
-  });
-
-  // Simulate loading stats data
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setStatsLoading(false);
-    }, 1000);
-    return () => clearTimeout(timer);
-  }, []);
-
   return (
-    <PageWrapper>
-      <main className="pt-20 sm:pt-32 pb-16">
-          <div className="space-y-6">
-            {/* Hero Section */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="text-center mb-8"
-            >
-              {/* Eyebrow Badge */}
-              <motion.div
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: 0.1 }}
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-amber-500/20 border border-amber-400/50 text-amber-100 mb-6"
-              >
-                <Shield className="h-4 w-4" />
-                <span className="text-sm font-semibold">Tamil Nadu • Broker-Free • AI-Powered</span>
-              </motion.div>
+    <>
+      <Header />
 
-              {/* Main Headline */}
-              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white mb-4 leading-tight">
-                The Operating System for
-                <span className="block mt-2 bg-gradient-to-r from-amber-600 via-amber-500 to-amber-400 bg-clip-text text-transparent">
-                  Tamil Nadu Real Estate
-                </span>
+      <main>
+        {/* Hero Section */}
+        <section className="relative min-h-[90vh] flex items-center pt-16 overflow-hidden">
+          {/* Subtle gradient background */}
+          <div className="absolute inset-0 bg-gradient-to-b from-zinc-950 via-zinc-950 to-zinc-900" />
+          <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-amber-500/5 rounded-full blur-[120px]" />
+
+          <div className="relative container-page py-20 md:py-32">
+            <div className="max-w-4xl mx-auto text-center">
+              {/* Eyebrow */}
+              <div className="inline-flex items-center gap-2 px-4 py-2 mb-8 text-sm font-medium text-amber-400 bg-amber-500/10 border border-amber-500/20 rounded-full">
+                <Sparkles className="w-4 h-4" />
+                AI-Powered &middot; Zero Commission &middot; RERA Verified
+              </div>
+
+              {/* Headline */}
+              <h1 className="mb-6">
+                <span className="block text-zinc-100">Build your real estate</span>
+                <span className="block text-gradient-brand">empire with AI</span>
               </h1>
 
               {/* Subtitle */}
-              <p className="text-lg sm:text-xl text-slate-300 max-w-3xl mx-auto mb-8">
-                India's first AI-powered zero-commission real estate platform.
-                <strong className="text-white"> Connect directly with verified builders</strong> and save ₹3-5 lakhs on brokerage.
+              <p className="text-lg md:text-xl text-zinc-400 max-w-2xl mx-auto mb-10 leading-relaxed">
+                India&apos;s first AI-powered zero-commission platform.
+                Connect directly with verified builders, score leads with AI,
+                and automate your entire sales pipeline.
               </p>
 
               {/* CTA Buttons */}
-              <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-8">
-                <PremiumButton
-                  variant="gold"
-                  size="lg"
-                  shimmer
-                  asChild
-                  className="w-full sm:w-auto"
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16">
+                <Link
+                  href="/property-listing"
+                  className="inline-flex items-center gap-2 h-12 px-8 bg-amber-500 text-zinc-950 font-semibold rounded-xl hover:bg-amber-400 transition-all active:scale-[0.98] shadow-lg shadow-amber-500/20"
                 >
-                  <Link href="/property-listing" className="inline-flex items-center gap-3">
-                    Explore Properties
-                    <ArrowRight className="h-5 w-5" />
-                  </Link>
-                </PremiumButton>
-                <PremiumButton
-                  variant="outline"
-                  size="lg"
-                  asChild
-                  className="w-full sm:w-auto"
+                  Explore Properties
+                  <ArrowRight className="w-4 h-4" />
+                </Link>
+                <Link
+                  href="/pricing"
+                  className="inline-flex items-center gap-2 h-12 px-8 border border-zinc-700 text-zinc-200 font-medium rounded-xl hover:bg-zinc-800 hover:border-zinc-600 transition-all"
                 >
-                  <Link href="/pricing" className="inline-flex items-center gap-3">
-                    For Builders
-                    <Building2 className="h-5 w-5" />
-                  </Link>
-                </PremiumButton>
+                  For Builders
+                  <Building2 className="w-4 h-4" />
+                </Link>
               </div>
-            </motion.div>
 
-            {/* Statistics Grid */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-              className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 mb-8"
-            >
-              {statsLoading ? (
-                // Show skeleton loaders while loading
-                Array.from({ length: 4 }).map((_, index) => (
-                  <SkeletonStatsCard key={index} />
-                ))
-              ) : (
-                // Show actual stats after loading
-                [
-                  { icon: Home, value: stats.properties, label: 'Verified Properties', delay: 0.1 },
-                  { icon: Users, value: stats.savings, label: 'Avg. Savings', delay: 0.15 },
-                  { icon: Award, value: stats.brokerage, label: 'Zero Brokerage', delay: 0.2 },
-                  { icon: MapPin, value: stats.coverage, label: 'Coverage', delay: 0.25 }
-                ].map((stat, index) => (
-                  <motion.div
-                    key={index}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: stat.delay }}
-                    whileHover={{ scale: 1.02, transition: { duration: 0.2 } }}
-                  >
-                    <GlassCard variant="dark" glow border className="p-6 cursor-pointer">
-                      <div className="flex items-center justify-between mb-4">
-                        <stat.icon className="h-8 w-8 text-amber-300" />
-                        <TrendingUp className="h-4 w-4 text-emerald-400" />
-                      </div>
-                      <p className="text-2xl font-bold text-white mb-1">{stat.value}</p>
-                      <p className="text-sm text-slate-400">{stat.label}</p>
-                    </GlassCard>
-                  </motion.div>
-                ))
-              )}
-            </motion.div>
-
-            {/* Features Section */}
-            <SectionWrapper title="Why Choose Tharaga?" description="Experience the future of real estate with our cutting-edge platform">
-              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {/* Stats Strip */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-3xl mx-auto">
                 {[
-                  {
-                    icon: Shield,
-                    title: 'RERA Verified',
-                    description: 'All properties and builders are RERA-certified and verified',
-                    gradient: 'from-emerald-500/20 to-emerald-600/20'
-                  },
-                  {
-                    icon: Zap,
-                    title: 'Zero Commission',
-                    description: 'Save ₹3-5 lakhs by connecting directly with builders',
-                    gradient: 'from-amber-500/20 to-amber-600/20'
-                  },
-                  {
-                    icon: Building2,
-                    title: 'Direct Connect',
-                    description: 'Talk directly to verified builders, no middlemen',
-                    gradient: 'from-blue-500/20 to-blue-600/20'
-                  },
-                  {
-                    icon: TrendingUp,
-                    title: 'AI-Powered Search',
-                    description: 'Find your perfect property with intelligent recommendations',
-                    gradient: 'from-purple-500/20 to-purple-600/20'
-                  },
-                  {
-                    icon: CheckCircle2,
-                    title: 'Transparent Pricing',
-                    description: 'No hidden costs, clear pricing from verified sources',
-                    gradient: 'from-rose-500/20 to-rose-600/20'
-                  },
-                  {
-                    icon: Award,
-                    title: 'Premium Support',
-                    description: '24/7 dedicated support throughout your journey',
-                    gradient: 'from-cyan-500/20 to-cyan-600/20'
-                  }
-                ].map((feature, index) => (
-                  <motion.div
-                    key={index}
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 0.4 + index * 0.05 }}
-                  >
-                    <GlassCard variant="dark" glow border hover className="p-6">
-                    <div className={`p-3 bg-gradient-to-r ${feature.gradient} rounded-lg w-fit mb-4`}>
-                      <feature.icon className="h-6 w-6 text-white" />
+                  { value: '12,000+', label: 'Verified Properties' },
+                  { value: '₹3-5L', label: 'Avg. Savings' },
+                  { value: '0%', label: 'Brokerage' },
+                  { value: 'Tamil Nadu', label: 'Coverage' },
+                ].map((stat) => (
+                  <div key={stat.label} className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-4 text-center">
+                    <p className="text-xl md:text-2xl font-bold font-mono text-amber-400 mb-1">{stat.value}</p>
+                    <p className="text-xs text-zinc-500">{stat.label}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Products/Features Section */}
+        <section className="section-gap border-t border-zinc-800/50">
+          <div className="container-page">
+            <div className="text-center mb-12">
+              <p className="text-sm font-medium text-amber-400 mb-3">PLATFORM</p>
+              <h2 className="text-zinc-100 mb-4">Everything you need to close deals faster</h2>
+              <p className="text-zinc-400 max-w-2xl mx-auto">
+                A complete operating system for real estate — from lead capture to closing, powered by AI at every step.
+              </p>
+            </div>
+
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {[
+                {
+                  icon: Brain,
+                  title: 'AI Lead Scoring',
+                  description: 'Automatically score and classify leads using behavioral signals, budget alignment, and engagement patterns.',
+                  badge: 'AI-Powered',
+                },
+                {
+                  icon: Target,
+                  title: 'Smart Pipeline',
+                  description: 'Kanban-style pipeline with 9 stages, automated stage tracking, and weighted deal values.',
+                  badge: 'CRM',
+                },
+                {
+                  icon: BarChart3,
+                  title: 'Analytics Dashboard',
+                  description: 'Real-time metrics, conversion funnels, geographic heat maps, and revenue forecasting.',
+                  badge: 'Analytics',
+                },
+                {
+                  icon: MessageSquare,
+                  title: 'Multi-Channel Messaging',
+                  description: 'Send personalized messages via Email, WhatsApp, and SMS — all from one dashboard.',
+                  badge: 'Automation',
+                },
+                {
+                  icon: Zap,
+                  title: 'Workflow Automation',
+                  description: 'Visual workflow builder with behavioral triggers, AI-generated nurture sequences, and auto-assignment.',
+                  badge: 'AI-Powered',
+                },
+                {
+                  icon: Shield,
+                  title: 'RERA Compliance',
+                  description: 'Built-in RERA verification, project monitoring, and compliance tracking for Tamil Nadu.',
+                  badge: 'Trust',
+                },
+              ].map((feature) => (
+                <div
+                  key={feature.title}
+                  className="group bg-zinc-900 border border-zinc-800 rounded-xl p-6 hover:border-zinc-700 transition-all duration-200"
+                >
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="p-2.5 bg-amber-500/10 rounded-lg text-amber-400">
+                      <feature.icon className="w-5 h-5" />
                     </div>
-                    <h3 className="text-lg font-bold text-white mb-2">
-                      {feature.title}
-                    </h3>
-                    <p className="text-sm text-slate-400">
-                      {feature.description}
-                    </p>
-                    </GlassCard>
-                  </motion.div>
-                ))}
+                    <span className="text-xs font-medium text-zinc-500 bg-zinc-800 px-2.5 py-1 rounded-full">
+                      {feature.badge}
+                    </span>
+                  </div>
+                  <h3 className="text-lg font-semibold text-zinc-100 mb-2 group-hover:text-amber-400 transition-colors">
+                    {feature.title}
+                  </h3>
+                  <p className="text-sm text-zinc-400 leading-relaxed">
+                    {feature.description}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* Smart Calculators Section */}
+        <section className="section-gap bg-zinc-900/30 border-t border-zinc-800/50">
+          <div className="container-page">
+            <div className="text-center mb-12">
+              <p className="text-sm font-medium text-amber-400 mb-3">TOOLS</p>
+              <h2 className="text-zinc-100 mb-4">Smart calculators for informed decisions</h2>
+              <p className="text-zinc-400 max-w-2xl mx-auto">
+                AI-powered financial tools built for the Indian real estate market.
+              </p>
+            </div>
+
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {[
+                { icon: TrendingUp, title: 'ROI Calculator', desc: 'Rental yield, appreciation, and total returns', href: '/tools/roi' },
+                { icon: Calculator, title: 'EMI Calculator', desc: 'Home loan EMI, interest, and amortization', href: '/tools/emi' },
+                { icon: Building2, title: 'Budget Planner', desc: 'Plan budget and find affordable properties', href: '/tools/budget-planner' },
+                { icon: Shield, title: 'Loan Eligibility', desc: 'Check home loan eligibility with TN banks', href: '/tools/loan-eligibility' },
+                { icon: Target, title: 'Neighborhood Finder', desc: 'Find the perfect area for your needs', href: '/tools/neighborhood-finder' },
+                { icon: BarChart3, title: 'Property Valuation', desc: 'Accurate valuation with RERA data', href: '/tools/property-valuation' },
+              ].map((tool) => (
+                <Link
+                  key={tool.title}
+                  href={tool.href}
+                  className="group bg-zinc-900 border border-zinc-800 rounded-xl p-6 hover:border-amber-500/30 transition-all duration-200"
+                >
+                  <div className="p-2.5 bg-zinc-800 rounded-lg text-zinc-400 group-hover:bg-amber-500/10 group-hover:text-amber-400 transition-colors w-fit mb-4">
+                    <tool.icon className="w-5 h-5" />
+                  </div>
+                  <h3 className="text-base font-semibold text-zinc-100 mb-1.5 group-hover:text-amber-400 transition-colors">
+                    {tool.title}
+                  </h3>
+                  <p className="text-sm text-zinc-500 mb-4">{tool.desc}</p>
+                  <span className="inline-flex items-center gap-1 text-xs font-medium text-amber-400 opacity-0 group-hover:opacity-100 transition-opacity">
+                    Calculate Now <ArrowRight className="w-3 h-3" />
+                  </span>
+                </Link>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* How It Works */}
+        <section className="section-gap border-t border-zinc-800/50">
+          <div className="container-page">
+            <div className="text-center mb-12">
+              <p className="text-sm font-medium text-amber-400 mb-3">HOW IT WORKS</p>
+              <h2 className="text-zinc-100 mb-4">From sign-up to closing in 3 steps</h2>
+            </div>
+
+            <div className="grid md:grid-cols-3 gap-8 max-w-4xl mx-auto">
+              {[
+                { step: '01', title: 'Sign up free', desc: 'Create your builder account in 30 seconds. No credit card required. Get instant access to all features.' },
+                { step: '02', title: 'Add properties & capture leads', desc: 'Upload your listings, configure lead forms, and let AI score and classify every inquiry automatically.' },
+                { step: '03', title: 'Close deals with AI', desc: 'Use smart pipeline, automated follow-ups, and AI insights to convert leads into buyers faster.' },
+              ].map((item) => (
+                <div key={item.step} className="text-center">
+                  <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-400 font-mono font-bold text-sm mb-4">
+                    {item.step}
+                  </div>
+                  <h3 className="text-lg font-semibold text-zinc-100 mb-2">{item.title}</h3>
+                  <p className="text-sm text-zinc-400 leading-relaxed">{item.desc}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* For Buyers Section */}
+        <section className="section-gap bg-zinc-900/30 border-t border-zinc-800/50">
+          <div className="container-page">
+            <div className="grid lg:grid-cols-2 gap-12 items-center">
+              <div>
+                <p className="text-sm font-medium text-amber-400 mb-3">FOR BUYERS</p>
+                <h2 className="text-zinc-100 mb-4">Find your dream home, commission-free</h2>
+                <p className="text-zinc-400 mb-8 leading-relaxed">
+                  Browse verified properties directly from builders. No middlemen, no hidden charges,
+                  no brokerage. Save ₹3-5 lakhs on every purchase.
+                </p>
+                <ul className="space-y-3 mb-8">
+                  {[
+                    'RERA-verified properties only',
+                    'Direct builder connection — zero brokerage',
+                    'AI-powered property recommendations',
+                    'Smart calculators for financial planning',
+                    'Real-time property market insights',
+                  ].map((item) => (
+                    <li key={item} className="flex items-center gap-3 text-sm text-zinc-300">
+                      <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                      {item}
+                    </li>
+                  ))}
+                </ul>
+                <Link
+                  href="/property-listing"
+                  className="inline-flex items-center gap-2 h-11 px-6 bg-amber-500 text-zinc-950 font-semibold rounded-xl hover:bg-amber-400 transition-all active:scale-[0.98]"
+                >
+                  Browse Properties <ArrowRight className="w-4 h-4" />
+                </Link>
               </div>
-            </SectionWrapper>
 
-            {/* Smart Calculators Section */}
-            <SectionWrapper title="Smart Calculators & Tools" description="Make informed decisions with our AI-powered calculators">
-
-              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                {[
-                  {
-                    icon: TrendingUp,
-                    title: 'ROI Calculator',
-                    description: 'Calculate rental yield, appreciation, and total returns',
-                    href: '/tools/roi',
-                    gradient: 'from-amber-500/20 to-amber-600/20'
-                  },
-                  {
-                    icon: DollarSign,
-                    title: 'EMI Calculator',
-                    description: 'Calculate home loan EMI, interest, and amortization',
-                    href: '/tools/emi',
-                    gradient: 'from-emerald-500/20 to-emerald-600/20'
-                  },
-                  {
-                    icon: Building2,
-                    title: 'Budget Planner',
-                    description: 'Plan your budget and find affordable properties',
-                    href: '/tools/budget-planner',
-                    gradient: 'from-blue-500/20 to-blue-600/20'
-                  },
-                  {
-                    icon: Shield,
-                    title: 'Loan Eligibility',
-                    description: 'Check your home loan eligibility with TN banks',
-                    href: '/tools/loan-eligibility',
-                    gradient: 'from-purple-500/20 to-purple-600/20'
-                  },
-                  {
-                    icon: MapPin,
-                    title: 'Neighborhood Finder',
-                    description: 'Find the perfect neighborhood for your needs',
-                    href: '/tools/neighborhood-finder',
-                    gradient: 'from-rose-500/20 to-rose-600/20'
-                  },
-                  {
-                    icon: Award,
-                    title: 'Property Valuation',
-                    description: 'Get accurate property valuation with RERA data',
-                    href: '/tools/property-valuation',
-                    gradient: 'from-cyan-500/20 to-cyan-600/20'
-                  }
-                ].map((tool, index) => (
-                  <motion.div
-                    key={index}
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 0.5 + index * 0.05 }}
-                  >
-                    <Link
-                      href={tool.href}
-                      className="block p-6 bg-slate-800/50 rounded-lg border border-slate-700/30 hover:border-amber-300/30 transition-all duration-300 hover:-translate-y-1 group"
-                    >
-                      <div className={`p-3 bg-gradient-to-r ${tool.gradient} rounded-lg w-fit mb-4`}>
-                        <tool.icon className="h-6 w-6 text-white" />
-                      </div>
-                      <h3 className="text-lg font-bold text-white mb-2 group-hover:text-amber-300 transition-colors">
-                        {tool.title}
-                      </h3>
-                      <p className="text-sm text-slate-400 mb-4">
-                        {tool.description}
-                      </p>
-                      <div className="flex items-center text-amber-300 text-sm font-medium">
-                        Calculate Now
-                        <ArrowRight className="h-4 w-4 ml-2 group-hover:translate-x-1 transition-transform" />
-                      </div>
-                    </Link>
-                  </motion.div>
-                ))}
+              {/* Visual placeholder */}
+              <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-8">
+                <div className="space-y-4">
+                  {[
+                    { label: 'Savings on brokerage', value: '₹3-5 Lakhs', color: 'text-emerald-400' },
+                    { label: 'Verified builders', value: '500+', color: 'text-amber-400' },
+                    { label: 'Properties listed', value: '12,000+', color: 'text-blue-400' },
+                    { label: 'Average response time', value: '< 2 hours', color: 'text-purple-400' },
+                  ].map((stat) => (
+                    <div key={stat.label} className="flex items-center justify-between p-4 bg-zinc-800/50 rounded-xl">
+                      <span className="text-sm text-zinc-400">{stat.label}</span>
+                      <span className={`text-lg font-bold font-mono ${stat.color}`}>{stat.value}</span>
+                    </div>
+                  ))}
+                </div>
               </div>
-            </SectionWrapper>
+            </div>
+          </div>
+        </section>
 
-            {/* Call to Action Section */}
-            <GlassCard variant="gold" glow border className="p-8 sm:p-12 text-center">
-              <motion.div
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: 0.6 }}
-              >
-                <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4">
-                  Ready to Find Your Dream Home?
-                </h2>
-                <p className="text-lg sm:text-xl text-slate-300 mb-8 max-w-2xl mx-auto">
-                  Join thousands of smart investors who saved lakhs on brokerage with Tharaga
+        {/* CTA Section */}
+        <section className="section-gap border-t border-zinc-800/50">
+          <div className="container-page">
+            <div className="relative bg-zinc-900 border border-zinc-800 rounded-2xl p-8 md:p-16 text-center overflow-hidden">
+              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[400px] h-[200px] bg-amber-500/10 rounded-full blur-[80px]" />
+
+              <div className="relative">
+                <h2 className="text-zinc-100 mb-4">Ready to transform your real estate business?</h2>
+                <p className="text-zinc-400 max-w-xl mx-auto mb-8">
+                  Join builders who are closing deals faster with AI-powered lead scoring,
+                  automated workflows, and real-time analytics.
                 </p>
                 <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-                  <PremiumButton
-                    variant="gold"
-                    size="lg"
-                    shimmer
-                    asChild
-                    className="w-full sm:w-auto"
+                  <Link
+                    href="/pricing"
+                    className="inline-flex items-center gap-2 h-12 px-8 bg-amber-500 text-zinc-950 font-semibold rounded-xl hover:bg-amber-400 transition-all active:scale-[0.98] shadow-lg shadow-amber-500/20"
                   >
-                    <Link href="/property-listing" className="inline-flex items-center gap-3">
-                      Start Exploring Now
-                      <ArrowRight className="h-5 w-5" />
-                    </Link>
-                  </PremiumButton>
-                  <PremiumButton
-                    variant="ghost"
-                    size="lg"
-                    asChild
+                    Start Free Trial <ArrowRight className="w-4 h-4" />
+                  </Link>
+                  <Link
+                    href="/about"
+                    className="inline-flex items-center gap-2 h-12 px-8 text-zinc-400 hover:text-zinc-200 font-medium transition-colors"
                   >
-                    <Link href="/about">
-                      Learn More About Us
-                    </Link>
-                  </PremiumButton>
+                    Learn more
+                  </Link>
                 </div>
-              </motion.div>
-            </GlassCard>
-
-            {/* Trust Indicators */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.7 }}
-              className="grid gap-4 sm:grid-cols-3 text-center"
-            >
-              {[
-                { value: '100% Free', label: 'No Hidden Charges' },
-                { value: 'RERA Certified', label: 'Government Verified' },
-                { value: '24/7 Support', label: 'Always Here to Help' }
-              ].map((item, index) => (
-                <GlassCard key={index} variant="dark" glow border className="p-4 text-center">
-                  <p className="text-lg font-bold text-amber-300 mb-1">{item.value}</p>
-                  <p className="text-sm text-slate-400">{item.label}</p>
-                </GlassCard>
-              ))}
-            </motion.div>
+                <div className="flex items-center justify-center gap-6 mt-6 text-xs text-zinc-500">
+                  <span className="flex items-center gap-1.5">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" /> 14-day free trial
+                  </span>
+                  <span className="flex items-center gap-1.5">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" /> No credit card required
+                  </span>
+                  <span className="flex items-center gap-1.5">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" /> Cancel anytime
+                  </span>
+                </div>
+              </div>
+            </div>
           </div>
-        </main>
+        </section>
+      </main>
 
-        {/* Footer */}
-        <Footer />
-    </PageWrapper>
+      <Footer />
+    </>
   )
 }

@@ -35,16 +35,16 @@ async function verifyAdminAccess() {
 }
 
 export default async function AdminDashboardLayout({ children }: { children: ReactNode }) {
-  // ADVANCED SECURITY: Verify admin email access on every request
   await verifyAdminAccess()
 
   return (
     <ReactQueryProvider>
-      <div className="min-h-screen bg-slate-950 text-white overflow-x-hidden">
-        {/* Use global homepage header from RootLayout; keep local main spacing */}
-        <main className="mx-auto max-w-7xl px-4 sm:px-6 py-6 sm:py-8" style={{ paddingLeft: 'max(16px, env(safe-area-inset-left))', paddingRight: 'max(16px, env(safe-area-inset-right))' }}>
-          <AdminNav />
-          {children}
+      <div className="min-h-screen bg-zinc-950 text-zinc-100 overflow-x-hidden">
+        <AdminNav />
+        <main className="lg:ml-56 min-h-screen">
+          <div className="w-full px-4 sm:px-6 lg:px-8 xl:px-10 py-6 sm:py-8">
+            {children}
+          </div>
         </main>
       </div>
     </ReactQueryProvider>

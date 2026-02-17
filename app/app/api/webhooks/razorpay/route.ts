@@ -138,7 +138,7 @@ async function handlePaymentSuccess(payment: any) {
     const periodEnd = new Date();
     periodEnd.setMonth(periodEnd.getMonth() + 1); // Assuming monthly, adjust if needed
 
-    await supabase
+    await supabase()
       .from('builder_subscriptions')
       .update({
         current_period_start: new Date().toISOString(),
@@ -211,7 +211,7 @@ async function handlePaymentFailed(payment: any) {
     .single();
 
   if (subscription) {
-    await supabase
+    await supabase()
       .from('builder_subscriptions')
       .update({ status: 'past_due' })
       .eq('id', subscription.id);

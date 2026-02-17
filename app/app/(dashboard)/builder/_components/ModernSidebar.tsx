@@ -336,8 +336,8 @@ export function ModernSidebar() {
       className={cn(
         "fixed left-0 top-0 bottom-0 z-[1000]",
         "flex flex-col",
-        "bg-gradient-to-br from-slate-800/95 via-slate-800/95 to-slate-900/95",
-        "border-r border-slate-700/50",
+        "bg-gradient-to-br from-zinc-950 via-zinc-950 to-zinc-950",
+        "border-r border-zinc-800",
         "shadow-2xl",
         "hidden lg:flex"
       )}
@@ -347,7 +347,7 @@ export function ModernSidebar() {
       {/* Content Container */}
       <div className="relative z-10 flex flex-col h-full">
         {/* Header - Minimal Gaps */}
-        <div className="flex-shrink-0 px-3 py-2.5 border-b border-slate-700/50">
+        <div className="flex-shrink-0 px-3 py-2.5 border-b border-zinc-800">
           {/* Home Button - No Container, Top Left, Small */}
           <Link 
             href="/" 
@@ -360,7 +360,7 @@ export function ModernSidebar() {
           {/* Brand - Tighter Spacing */}
           <div className="flex items-center gap-2 mb-2.5">
             <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-amber-400 via-amber-500 to-amber-600 flex items-center justify-center shadow-lg">
-              <Sparkles className="w-4 h-4 text-slate-900" />
+              <Sparkles className="w-4 h-4 text-zinc-950" />
             </div>
             <div className="flex flex-col">
               <span className="font-bold text-white text-sm leading-tight">THARAGA</span>
@@ -370,7 +370,7 @@ export function ModernSidebar() {
 
           {/* Search - Compact */}
           <div className="relative">
-            <Search className="absolute left-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
+            <Search className="absolute left-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-zinc-500" />
             <input
               type="text"
               value={searchQuery}
@@ -379,12 +379,12 @@ export function ModernSidebar() {
               onBlur={() => setIsSearchFocused(false)}
               placeholder="Search..."
               className={cn(
-                "w-full pl-8 pr-2 py-1.5 bg-slate-800/50 backdrop-blur-sm",
-                "border rounded-lg text-white placeholder:text-slate-400 text-xs",
+                "w-full pl-8 pr-2 py-1.5 bg-zinc-900 backdrop-blur-sm",
+                "border rounded-lg text-white placeholder:text-zinc-500 text-xs",
                 "focus:outline-none transition-all duration-200",
                 isSearchFocused 
-                  ? "glow-border bg-slate-800/70 shadow-sm" 
-                  : "border-slate-700/50 hover:border-slate-600/50"
+                  ? "glow-border bg-zinc-800 shadow-sm" 
+                  : "border-zinc-800 hover:border-zinc-700"
               )}
             />
           </div>
@@ -403,7 +403,7 @@ export function ModernSidebar() {
               >
                 {/* Group Label */}
                 {group.label && (
-                  <div className="px-2.5 py-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                  <div className="px-2.5 py-1 text-[10px] font-bold text-zinc-500 uppercase tracking-wider">
                     {group.label}
                   </div>
                 )}
@@ -428,15 +428,15 @@ export function ModernSidebar() {
                       }}
                       className={cn(
                         "relative w-full flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm transition-all duration-150 group text-left",
-                        "hover:bg-slate-700/40",
+                        "hover:bg-zinc-800/60",
                         isActive
                           ? "bg-amber-500/20 text-white border-l-2 border-l-amber-400"
-                          : "text-slate-300 hover:text-white border-l-2 border-l-transparent"
+                          : "text-zinc-400 hover:text-white border-l-2 border-l-transparent"
                       )}
                     >
                       <Icon className={cn(
                         "w-4 h-4 flex-shrink-0 transition-colors duration-150",
-                        isActive ? "text-amber-400" : "text-slate-400 group-hover:text-amber-300"
+                        isActive ? "text-amber-400" : "text-zinc-500 group-hover:text-amber-300"
                       )} />
 
                       <span className="flex-1 font-medium text-sm truncate min-w-0">{item.label}</span>
@@ -450,7 +450,7 @@ export function ModernSidebar() {
 
                       {/* Lock Icon */}
                       {isLocked && (
-                        <span className="text-xs text-slate-500">🔒</span>
+                        <span className="text-xs text-zinc-600">🔒</span>
                       )}
                     </button>
                   )

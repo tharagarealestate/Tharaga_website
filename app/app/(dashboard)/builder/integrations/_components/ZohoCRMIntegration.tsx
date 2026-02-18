@@ -110,7 +110,7 @@ export default function ZohoCRMIntegration() {
       setConnecting(true);
       setError('');
       
-      const response = await fetch('/api/integrations/zoho/connect', {
+      const response = await fetch('/api/crm/zoho/connect', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ data_center: dataCenter })
@@ -178,7 +178,7 @@ export default function ZohoCRMIntegration() {
       setSyncing(true);
       setError('');
       
-      const response = await fetch('/api/integrations/zoho/sync', {
+      const response = await fetch('/api/crm/zoho/sync', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

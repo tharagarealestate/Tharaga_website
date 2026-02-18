@@ -74,7 +74,7 @@ export function LeadCard({
   const handleOpenCRM = async () => {
     setOpeningCRM(true)
     try {
-      const response = await fetch('/api/integrations/zoho/open-with-lead', {
+      const response = await fetch('/api/crm/zoho/open-with-lead', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ lead_id: lead.id }),

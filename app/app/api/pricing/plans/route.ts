@@ -8,7 +8,7 @@ export async function GET(request: NextRequest) {
     const engine = new PricingEngine();
     const plans = await engine.getAllPlans();
 
-    return NextResponse.json({
+    const res = NextResponse.json({
       success: true,
       plans: plans.map(plan => ({
         id: plan.id,
@@ -34,6 +34,8 @@ export async function GET(request: NextRequest) {
         isPopular: plan.is_popular
       }))
     });
+    res.headers.set('Cache-Control', 'public, s-maxage=300, stale-while-revalidate=600');
+    return res;
 
   } catch (error: any) {
     console.error('Get plans error:', error);

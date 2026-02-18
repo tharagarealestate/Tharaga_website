@@ -746,7 +746,7 @@ export async function GET(request: NextRequest) {
       engagement,
     };
     
-    return NextResponse.json({
+    const res = NextResponse.json({
       success: true,
       data: analytics,
       period: {
@@ -754,7 +754,9 @@ export async function GET(request: NextRequest) {
         end: end.toISOString(),
       },
     });
-    
+    res.headers.set('Cache-Control', 'private, s-maxage=60, stale-while-revalidate=120');
+    return res;
+
   } catch (error) {
     console.error('[API/Analytics/Dashboard] Error:', error);
     return NextResponse.json(

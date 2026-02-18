@@ -100,7 +100,7 @@ function IntegrationsPageContent() {
     const fetchZohoStatus = async () => {
       try {
         setLoadingZoho(true)
-        const response = await fetch('/api/integrations/zoho/status', {
+        const response = await fetch('/api/crm/zoho/status', {
           credentials: 'include',
         })
         

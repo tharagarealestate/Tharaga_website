@@ -75,7 +75,7 @@ export async function GET(request: NextRequest) {
       ? ((totalInquiries / totalViews) * 100).toFixed(1)
       : '0.0';
 
-    return NextResponse.json({
+    const res = NextResponse.json({
       totalLeads,
       hotLeads,
       warmLeads,
@@ -86,6 +86,8 @@ export async function GET(request: NextRequest) {
       conversionRate: parseFloat(conversionRate),
       timestamp: new Date().toISOString(),
     });
+    res.headers.set('Cache-Control', 'private, s-maxage=30, stale-while-revalidate=60');
+    return res;
   } catch (error: any) {
     console.error('Realtime stats API error:', error);
     return NextResponse.json(

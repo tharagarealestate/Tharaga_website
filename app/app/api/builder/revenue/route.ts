@@ -197,7 +197,7 @@ export async function GET(request: NextRequest) {
         status: c.status
       })) || []
 
-    return NextResponse.json({
+    const res = NextResponse.json({
       success: true,
       data: {
         // Current Revenue
@@ -249,7 +249,9 @@ export async function GET(request: NextRequest) {
           thisYear: yearlyRevenue
         }
       }
-    })
+    });
+    res.headers.set('Cache-Control', 'private, s-maxage=60, stale-while-revalidate=120');
+    return res;
   } catch (error: any) {
     console.error('[Revenue API] Error:', error)
     return NextResponse.json(

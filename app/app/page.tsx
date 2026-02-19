@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { Header } from '@/components/layout/Header'
 import { Footer } from '@/components/layout/Footer'
+import { AuthButton } from '@/components/ui/AuthButton'
 import {
   Shield,
   Zap,
@@ -314,12 +315,11 @@ export default function HomePage() {
                   >
                     Start Free Trial <ArrowRight className="w-4 h-4" />
                   </Link>
-                  <Link
-                    href="/login_signup_glassdrop/"
+                  <AuthButton
                     className="inline-flex items-center gap-2 h-12 px-8 border border-zinc-700 text-zinc-300 hover:text-zinc-100 hover:border-zinc-600 font-medium rounded-xl transition-all"
                   >
                     Sign In
-                  </Link>
+                  </AuthButton>
                 </div>
                 <div className="flex items-center justify-center gap-6 mt-6 text-xs text-zinc-500">
                   <span className="flex items-center gap-1.5">

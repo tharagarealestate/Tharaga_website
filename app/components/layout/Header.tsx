@@ -1,11 +1,12 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils'
 import { Menu, X, ChevronDown, Sparkles, LogIn } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
+import { openAuthModal } from '@/components/ui/AuthButton'
 
 const navLinks = [
   { label: 'Properties', href: '/property-listing' },
@@ -41,6 +42,11 @@ export function Header() {
     setMobileOpen(false)
     setDropdownOpen(null)
   }, [pathname])
+
+  const handleSignIn = useCallback(() => {
+    setMobileOpen(false)
+    openAuthModal()
+  }, [])
 
   return (
     <header
@@ -113,14 +119,12 @@ export function Header() {
             ))}
           </div>
 
-          {/* Right side — single Sign In button */}
+          {/* Right side — Sign In opens auth-gate popup */}
           <div className="hidden md:flex items-center gap-3">
-            <Link href="/login_signup_glassdrop/">
-              <Button variant="primary" size="sm">
-                <LogIn className="w-3.5 h-3.5 mr-1.5" />
-                Sign In
-              </Button>
-            </Link>
+            <Button variant="primary" size="sm" onClick={handleSignIn}>
+              <LogIn className="w-3.5 h-3.5 mr-1.5" />
+              Sign In
+            </Button>
           </div>
 
           {/* Mobile toggle */}
@@ -162,12 +166,10 @@ export function Header() {
               </div>
             ))}
             <div className="pt-4 border-t border-zinc-800">
-              <Link href="/login_signup_glassdrop/">
-                <Button variant="primary" size="md" className="w-full">
-                  <LogIn className="w-4 h-4 mr-2" />
-                  Sign In
-                </Button>
-              </Link>
+              <Button variant="primary" size="md" className="w-full" onClick={handleSignIn}>
+                <LogIn className="w-4 h-4 mr-2" />
+                Sign In
+              </Button>
             </div>
           </div>
         </div>

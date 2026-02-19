@@ -4,6 +4,7 @@ import { Plus_Jakarta_Sans, Inter } from 'next/font/google'
 import { NextIntlClientProvider } from 'next-intl'
 import { ToastProvider } from '@/components/ui/toast'
 import { NotificationProvider } from '@/contexts/NotificationContext'
+import Script from 'next/script'
 
 export const runtime = 'nodejs'
 
@@ -48,6 +49,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link rel="icon" href="/favicon.ico" sizes="any" />
       </head>
       <body className="font-body antialiased">
+        {/* Auth-gate: iframe modal controller for login/signup popup */}
+        <Script src="/auth-gate.js" strategy="afterInteractive" />
         <NextIntlClientProvider locale="en" messages={{}}>
           <NotificationProvider>
             <ToastProvider>

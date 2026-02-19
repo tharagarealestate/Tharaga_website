@@ -5,10 +5,9 @@ const footerLinks = {
   Product: [
     { label: 'Property Search', href: '/property-listing' },
     { label: 'Builder Dashboard', href: '/builder' },
-    { label: 'AI Lead Scoring', href: '/pricing' },
-    { label: 'Automation', href: '/pricing' },
-    { label: 'CRM', href: '/pricing' },
-    { label: 'Analytics', href: '/pricing' },
+    { label: 'Buyer Dashboard', href: '/buyer' },
+    { label: 'Pricing', href: '/pricing' },
+    { label: 'Trial Signup', href: '/trial-signup' },
   ],
   Tools: [
     { label: 'ROI Calculator', href: '/tools/roi' },
@@ -19,15 +18,15 @@ const footerLinks = {
     { label: 'Neighborhood Finder', href: '/tools/neighborhood-finder' },
   ],
   Resources: [
-    { label: 'Pricing', href: '/pricing' },
     { label: 'About', href: '/about' },
     { label: 'Chennai Market', href: '/chennai/chennai' },
-    { label: 'RERA Verification', href: '/tools/roi' },
+    { label: 'RERA Verification', href: '/tools/verification' },
+    { label: 'Help', href: '/help' },
   ],
   Legal: [
     { label: 'Privacy Policy', href: '/privacy' },
     { label: 'Terms of Service', href: '/terms' },
-    { label: 'Refund Policy', href: '/refund-policy' },
+    { label: 'Refund Policy', href: '/refund' },
   ],
 }
 

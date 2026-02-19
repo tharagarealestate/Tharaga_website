@@ -5,6 +5,7 @@ import { BuilderAuthProvider } from './_components/BuilderAuthProvider'
 import { ModernSidebar } from './_components/ModernSidebar'
 import { TrialUpgradeBanner } from './_components/TrialUpgradeBanner'
 import { AIAssistant } from './_components/AIAssistant'
+import { Breadcrumb } from '@/components/ui/Breadcrumb'
 
 export default function BuilderDashboardLayout({ children }: { children: ReactNode }) {
   return (
@@ -16,9 +17,13 @@ export default function BuilderDashboardLayout({ children }: { children: ReactNo
 
           {/* Main content — offset by sidebar width on desktop */}
           <main
-            className="lg:ml-[260px] min-h-screen transition-[margin] duration-200"
+            className="lg:ml-[256px] min-h-screen transition-[margin] duration-200"
           >
             <div className="w-full px-4 sm:px-6 lg:px-8 xl:px-10 py-6 sm:py-8">
+              {/* Breadcrumb navigation */}
+              <div className="mb-4">
+                <Breadcrumb />
+              </div>
               {children}
             </div>
           </main>

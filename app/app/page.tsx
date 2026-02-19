@@ -7,7 +7,6 @@ import {
   Building2,
   TrendingUp,
   Brain,
-  Users,
   ArrowRight,
   CheckCircle2,
   BarChart3,
@@ -17,6 +16,60 @@ import {
   Sparkles,
 } from 'lucide-react'
 
+const features = [
+  {
+    icon: Brain,
+    title: 'AI Lead Scoring',
+    description: 'Automatically score and classify leads using behavioral signals, budget alignment, and engagement patterns.',
+    badge: 'AI-Powered',
+    href: '/builder?section=leads',
+  },
+  {
+    icon: Target,
+    title: 'Smart Pipeline',
+    description: 'Kanban-style pipeline with 9 stages, automated stage tracking, and weighted deal values.',
+    badge: 'CRM',
+    href: '/builder?section=contacts',
+  },
+  {
+    icon: BarChart3,
+    title: 'Analytics Dashboard',
+    description: 'Real-time metrics, conversion funnels, geographic heat maps, and revenue forecasting.',
+    badge: 'Analytics',
+    href: '/builder?section=analytics',
+  },
+  {
+    icon: MessageSquare,
+    title: 'Multi-Channel Messaging',
+    description: 'Send personalized messages via Email, WhatsApp, and SMS — all from one dashboard.',
+    badge: 'Automation',
+    href: '/builder?section=client-outreach',
+  },
+  {
+    icon: Zap,
+    title: 'Workflow Automation',
+    description: 'Visual workflow builder with behavioral triggers, AI-generated nurture sequences, and auto-assignment.',
+    badge: 'AI-Powered',
+    href: '/builder?section=overview',
+  },
+  {
+    icon: Shield,
+    title: 'RERA Compliance',
+    description: 'Built-in RERA verification, project monitoring, and compliance tracking for Tamil Nadu.',
+    badge: 'Trust',
+    href: '/tools/verification',
+  },
+]
+
+const tools = [
+  { icon: TrendingUp, title: 'ROI Calculator', desc: 'Rental yield, appreciation, and total returns', href: '/tools/roi' },
+  { icon: Calculator, title: 'EMI Calculator', desc: 'Home loan EMI, interest, and amortization', href: '/tools/emi' },
+  { icon: Building2, title: 'Budget Planner', desc: 'Plan budget and find affordable properties', href: '/tools/budget-planner' },
+  { icon: Shield, title: 'Loan Eligibility', desc: 'Check home loan eligibility with TN banks', href: '/tools/loan-eligibility' },
+  { icon: Target, title: 'Neighborhood Finder', desc: 'Find the perfect area for your needs', href: '/tools/neighborhood-finder' },
+  { icon: BarChart3, title: 'Property Valuation', desc: 'Accurate valuation with RERA data', href: '/tools/property-valuation' },
+]
+
 export default function HomePage() {
   return (
     <>
@@ -25,32 +78,27 @@ export default function HomePage() {
       <main>
         {/* Hero Section */}
         <section className="relative min-h-[90vh] flex items-center pt-16 overflow-hidden">
-          {/* Subtle gradient background */}
           <div className="absolute inset-0 bg-gradient-to-b from-zinc-950 via-zinc-950 to-zinc-900" />
           <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-amber-500/5 rounded-full blur-[120px]" />
 
           <div className="relative container-page py-20 md:py-32">
             <div className="max-w-4xl mx-auto text-center">
-              {/* Eyebrow */}
               <div className="inline-flex items-center gap-2 px-4 py-2 mb-8 text-sm font-medium text-amber-400 bg-amber-500/10 border border-amber-500/20 rounded-full">
                 <Sparkles className="w-4 h-4" />
                 AI-Powered &middot; Zero Commission &middot; RERA Verified
               </div>
 
-              {/* Headline */}
               <h1 className="mb-6">
                 <span className="block text-zinc-100">Build your real estate</span>
                 <span className="block text-gradient-brand">empire with AI</span>
               </h1>
 
-              {/* Subtitle */}
               <p className="text-lg md:text-xl text-zinc-400 max-w-2xl mx-auto mb-10 leading-relaxed">
                 India&apos;s first AI-powered zero-commission platform.
                 Connect directly with verified builders, score leads with AI,
                 and automate your entire sales pipeline.
               </p>
 
-              {/* CTA Buttons */}
               <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16">
                 <Link
                   href="/property-listing"
@@ -60,15 +108,14 @@ export default function HomePage() {
                   <ArrowRight className="w-4 h-4" />
                 </Link>
                 <Link
-                  href="/pricing"
+                  href="/trial-signup"
                   className="inline-flex items-center gap-2 h-12 px-8 border border-zinc-700 text-zinc-200 font-medium rounded-xl hover:bg-zinc-800 hover:border-zinc-600 transition-all"
                 >
-                  For Builders
+                  Builder Dashboard
                   <Building2 className="w-4 h-4" />
                 </Link>
               </div>
 
-              {/* Stats Strip */}
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-3xl mx-auto">
                 {[
                   { value: '12,000+', label: 'Verified Properties' },
@@ -86,7 +133,7 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* Products/Features Section */}
+        {/* Features Section — clickable cards */}
         <section className="section-gap border-t border-zinc-800/50">
           <div className="container-page">
             <div className="text-center mb-12">
@@ -98,50 +145,14 @@ export default function HomePage() {
             </div>
 
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {[
-                {
-                  icon: Brain,
-                  title: 'AI Lead Scoring',
-                  description: 'Automatically score and classify leads using behavioral signals, budget alignment, and engagement patterns.',
-                  badge: 'AI-Powered',
-                },
-                {
-                  icon: Target,
-                  title: 'Smart Pipeline',
-                  description: 'Kanban-style pipeline with 9 stages, automated stage tracking, and weighted deal values.',
-                  badge: 'CRM',
-                },
-                {
-                  icon: BarChart3,
-                  title: 'Analytics Dashboard',
-                  description: 'Real-time metrics, conversion funnels, geographic heat maps, and revenue forecasting.',
-                  badge: 'Analytics',
-                },
-                {
-                  icon: MessageSquare,
-                  title: 'Multi-Channel Messaging',
-                  description: 'Send personalized messages via Email, WhatsApp, and SMS — all from one dashboard.',
-                  badge: 'Automation',
-                },
-                {
-                  icon: Zap,
-                  title: 'Workflow Automation',
-                  description: 'Visual workflow builder with behavioral triggers, AI-generated nurture sequences, and auto-assignment.',
-                  badge: 'AI-Powered',
-                },
-                {
-                  icon: Shield,
-                  title: 'RERA Compliance',
-                  description: 'Built-in RERA verification, project monitoring, and compliance tracking for Tamil Nadu.',
-                  badge: 'Trust',
-                },
-              ].map((feature) => (
-                <div
+              {features.map((feature) => (
+                <Link
                   key={feature.title}
-                  className="group bg-zinc-900 border border-zinc-800 rounded-xl p-6 hover:border-zinc-700 transition-all duration-200"
+                  href={feature.href}
+                  className="group bg-zinc-900 border border-zinc-800 rounded-xl p-6 hover:border-amber-500/30 hover:bg-zinc-900/80 transition-all duration-200"
                 >
                   <div className="flex items-start justify-between mb-4">
-                    <div className="p-2.5 bg-amber-500/10 rounded-lg text-amber-400">
+                    <div className="p-2.5 bg-amber-500/10 rounded-lg text-amber-400 group-hover:bg-amber-500/20 transition-colors">
                       <feature.icon className="w-5 h-5" />
                     </div>
                     <span className="text-xs font-medium text-zinc-500 bg-zinc-800 px-2.5 py-1 rounded-full">
@@ -151,16 +162,19 @@ export default function HomePage() {
                   <h3 className="text-lg font-semibold text-zinc-100 mb-2 group-hover:text-amber-400 transition-colors">
                     {feature.title}
                   </h3>
-                  <p className="text-sm text-zinc-400 leading-relaxed">
+                  <p className="text-sm text-zinc-400 leading-relaxed mb-3">
                     {feature.description}
                   </p>
-                </div>
+                  <span className="inline-flex items-center gap-1 text-xs font-medium text-amber-400 opacity-0 group-hover:opacity-100 transition-opacity">
+                    Learn more <ArrowRight className="w-3 h-3" />
+                  </span>
+                </Link>
               ))}
             </div>
           </div>
         </section>
 
-        {/* Smart Calculators Section */}
+        {/* Smart Calculators */}
         <section className="section-gap bg-zinc-900/30 border-t border-zinc-800/50">
           <div className="container-page">
             <div className="text-center mb-12">
@@ -172,14 +186,7 @@ export default function HomePage() {
             </div>
 
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {[
-                { icon: TrendingUp, title: 'ROI Calculator', desc: 'Rental yield, appreciation, and total returns', href: '/tools/roi' },
-                { icon: Calculator, title: 'EMI Calculator', desc: 'Home loan EMI, interest, and amortization', href: '/tools/emi' },
-                { icon: Building2, title: 'Budget Planner', desc: 'Plan budget and find affordable properties', href: '/tools/budget-planner' },
-                { icon: Shield, title: 'Loan Eligibility', desc: 'Check home loan eligibility with TN banks', href: '/tools/loan-eligibility' },
-                { icon: Target, title: 'Neighborhood Finder', desc: 'Find the perfect area for your needs', href: '/tools/neighborhood-finder' },
-                { icon: BarChart3, title: 'Property Valuation', desc: 'Accurate valuation with RERA data', href: '/tools/property-valuation' },
-              ].map((tool) => (
+              {tools.map((tool) => (
                 <Link
                   key={tool.title}
                   href={tool.href}
@@ -211,7 +218,7 @@ export default function HomePage() {
 
             <div className="grid md:grid-cols-3 gap-8 max-w-4xl mx-auto">
               {[
-                { step: '01', title: 'Sign up free', desc: 'Create your builder account in 30 seconds. No credit card required. Get instant access to all features.' },
+                { step: '01', title: 'Create your account', desc: 'Sign up as a builder or buyer in 30 seconds. No credit card required. Get instant access to all features.' },
                 { step: '02', title: 'Add properties & capture leads', desc: 'Upload your listings, configure lead forms, and let AI score and classify every inquiry automatically.' },
                 { step: '03', title: 'Close deals with AI', desc: 'Use smart pipeline, automated follow-ups, and AI insights to convert leads into buyers faster.' },
               ].map((item) => (
@@ -223,6 +230,15 @@ export default function HomePage() {
                   <p className="text-sm text-zinc-400 leading-relaxed">{item.desc}</p>
                 </div>
               ))}
+            </div>
+
+            <div className="text-center mt-10">
+              <Link
+                href="/trial-signup"
+                className="inline-flex items-center gap-2 text-sm font-medium text-amber-400 hover:text-amber-300 transition-colors"
+              >
+                Get started now <ArrowRight className="w-4 h-4" />
+              </Link>
             </div>
           </div>
         </section>
@@ -260,7 +276,6 @@ export default function HomePage() {
                 </Link>
               </div>
 
-              {/* Visual placeholder */}
               <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-8">
                 <div className="space-y-4">
                   {[
@@ -294,16 +309,16 @@ export default function HomePage() {
                 </p>
                 <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
                   <Link
-                    href="/pricing"
+                    href="/trial-signup"
                     className="inline-flex items-center gap-2 h-12 px-8 bg-amber-500 text-zinc-950 font-semibold rounded-xl hover:bg-amber-400 transition-all active:scale-[0.98] shadow-lg shadow-amber-500/20"
                   >
                     Start Free Trial <ArrowRight className="w-4 h-4" />
                   </Link>
                   <Link
-                    href="/about"
-                    className="inline-flex items-center gap-2 h-12 px-8 text-zinc-400 hover:text-zinc-200 font-medium transition-colors"
+                    href="/login_signup_glassdrop/"
+                    className="inline-flex items-center gap-2 h-12 px-8 border border-zinc-700 text-zinc-300 hover:text-zinc-100 hover:border-zinc-600 font-medium rounded-xl transition-all"
                   >
-                    Learn more
+                    Sign In
                   </Link>
                 </div>
                 <div className="flex items-center justify-center gap-6 mt-6 text-xs text-zinc-500">

@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
 import { ReactQueryProvider } from '@/components/providers/ReactQueryProvider'
 import AdminNav from '@/components/admin/AdminNav'
+import { AdminBreadcrumb } from '@/components/admin/AdminBreadcrumb'
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 
@@ -43,6 +44,9 @@ export default async function AdminDashboardLayout({ children }: { children: Rea
         <AdminNav />
         <main className="lg:ml-56 min-h-screen">
           <div className="w-full px-4 sm:px-6 lg:px-8 xl:px-10 py-6 sm:py-8">
+            <div className="mb-4">
+              <AdminBreadcrumb />
+            </div>
             {children}
           </div>
         </main>

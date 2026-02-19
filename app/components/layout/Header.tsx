@@ -4,19 +4,23 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils'
-import { Menu, X, ChevronDown, Sparkles } from 'lucide-react'
+import { Menu, X, ChevronDown, Sparkles, LogIn } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 
 const navLinks = [
   { label: 'Properties', href: '/property-listing' },
-  { label: 'Tools', href: '/tools/roi', children: [
-    { label: 'ROI Calculator', href: '/tools/roi' },
-    { label: 'EMI Calculator', href: '/tools/emi' },
-    { label: 'Budget Planner', href: '/tools/budget-planner' },
-    { label: 'Loan Eligibility', href: '/tools/loan-eligibility' },
-    { label: 'Neighborhood Finder', href: '/tools/neighborhood-finder' },
-    { label: 'Property Valuation', href: '/tools/property-valuation' },
-  ]},
+  {
+    label: 'Tools',
+    href: '/tools/roi',
+    children: [
+      { label: 'ROI Calculator', href: '/tools/roi' },
+      { label: 'EMI Calculator', href: '/tools/emi' },
+      { label: 'Budget Planner', href: '/tools/budget-planner' },
+      { label: 'Loan Eligibility', href: '/tools/loan-eligibility' },
+      { label: 'Neighborhood Finder', href: '/tools/neighborhood-finder' },
+      { label: 'Property Valuation', href: '/tools/property-valuation' },
+    ],
+  },
   { label: 'Pricing', href: '/pricing' },
   { label: 'About', href: '/about' },
 ]
@@ -109,13 +113,13 @@ export function Header() {
             ))}
           </div>
 
-          {/* Right side */}
+          {/* Right side — single Sign In button */}
           <div className="hidden md:flex items-center gap-3">
-            <Link href="/auth/login">
-              <Button variant="ghost" size="sm">Sign in</Button>
-            </Link>
-            <Link href="/auth/signup">
-              <Button variant="primary" size="sm">Start Free</Button>
+            <Link href="/login_signup_glassdrop/">
+              <Button variant="primary" size="sm">
+                <LogIn className="w-3.5 h-3.5 mr-1.5" />
+                Sign In
+              </Button>
             </Link>
           </div>
 
@@ -157,12 +161,12 @@ export function Header() {
                 )}
               </div>
             ))}
-            <div className="pt-4 border-t border-zinc-800 flex flex-col gap-2">
-              <Link href="/auth/login">
-                <Button variant="outline" size="md" className="w-full">Sign in</Button>
-              </Link>
-              <Link href="/auth/signup">
-                <Button variant="primary" size="md" className="w-full">Start Free</Button>
+            <div className="pt-4 border-t border-zinc-800">
+              <Link href="/login_signup_glassdrop/">
+                <Button variant="primary" size="md" className="w-full">
+                  <LogIn className="w-4 h-4 mr-2" />
+                  Sign In
+                </Button>
               </Link>
             </div>
           </div>

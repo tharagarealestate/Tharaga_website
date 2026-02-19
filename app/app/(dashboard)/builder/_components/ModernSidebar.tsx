@@ -14,17 +14,22 @@ import {
   BarChart3,
   TrendingUp,
   Search,
-  ArrowLeft,
   Sparkles,
+  Plug,
+  CreditCard,
+  Shield,
+  ChevronLeft,
+  HelpCircle,
+  Workflow,
+  UserCircle,
 } from 'lucide-react'
-import { motion, AnimatePresence } from 'framer-motion'
 
 interface NavItem {
   href: string
   label: string
   icon: React.ComponentType<{ className?: string }>
   badge?: number | null
-  requiresPro?: boolean
+  kbd?: string
 }
 
 interface NavGroup {
@@ -39,17 +44,16 @@ interface LeadCountData {
 }
 
 /**
- * Modern Sidebar - Inspired by GitHub, Linear, Vercel
- * 
- * Features:
- * - All navigation uses client-side routing (no page reloads)
- * - Fast, smooth transitions with zero lag
- * - Perfect alignment and minimal gaps
- * - Modern dark theme with amber accents
- * - Smooth dropdown animations
- * - Active state indicators
- * - Search functionality
- * - Badge notifications
+ * ModernSidebar — Supabase-inspired dashboard navigation
+ *
+ * Design:
+ * - Organized into clear groups: Core, Manage, Engage, Insights
+ * - Back button returns to homepage
+ * - Settings/integrations pinned at bottom
+ * - Active state: left amber border + subtle bg tint
+ * - Flat items, no dropdowns
+ * - Keyboard shortcut hints on hover
+ * - Search with / shortcut
  */
 export function ModernSidebar() {
   const pathname = usePathname()
@@ -58,40 +62,32 @@ export function ModernSidebar() {
   const [isLoadingCount, setIsLoadingCount] = useState(true)
   const [isAdmin, setIsAdmin] = useState(false)
   const [currentSection, setCurrentSection] = useState<string>('overview')
-  // Removed openSubmenus - no dropdowns anymore
   const [searchQuery, setSearchQuery] = useState('')
   const [isSearchFocused, setIsSearchFocused] = useState(false)
   const { isTrial } = useTrialStatus()
 
-  // Track current section from URL for accurate highlighting (FIXES HIGHLIGHTING BUG)
+  // Track current section from URL
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const updateSection = () => {
-        const params = new URLSearchParams(window.location.search)
-        const section = params.get('section') || (pathname === '/builder' ? 'overview' : '')
-        setCurrentSection(section)
-      }
+    if (typeof window === 'undefined') return
+    const updateSection = () => {
+      const params = new URLSearchParams(window.location.search)
+      const section = params.get('section') || (pathname === '/builder' ? 'overview' : '')
+      setCurrentSection(section)
+    }
+    updateSection()
 
-      updateSection()
-
-      // Listen for section changes
-      const handleSectionChange = (e: any) => {
-        if (e.detail?.section) {
-          setCurrentSection(e.detail.section)
-        }
-      }
-
-      window.addEventListener('dashboard-section-change', handleSectionChange)
-      window.addEventListener('popstate', updateSection)
-
-      return () => {
-        window.removeEventListener('dashboard-section-change', handleSectionChange)
-        window.removeEventListener('popstate', updateSection)
-      }
+    const handleSectionChange = (e: any) => {
+      if (e.detail?.section) setCurrentSection(e.detail.section)
+    }
+    window.addEventListener('dashboard-section-change', handleSectionChange)
+    window.addEventListener('popstate', updateSection)
+    return () => {
+      window.removeEventListener('dashboard-section-change', handleSectionChange)
+      window.removeEventListener('popstate', updateSection)
     }
   }, [pathname])
 
-  // Check if user is admin
+  // Check admin
   useEffect(() => {
     async function checkAdmin() {
       try {
@@ -102,9 +98,7 @@ export function ModernSidebar() {
         )
         const { data: { user } } = await supabase.auth.getUser()
         setIsAdmin(user?.email === 'tharagarealestate@gmail.com')
-      } catch (error) {
-        console.error('Failed to check admin status:', error)
-      }
+      } catch { /* silently fail */ }
     }
     checkAdmin()
   }, [])
@@ -114,20 +108,13 @@ export function ModernSidebar() {
     let mounted = true
     async function fetchLeadCount() {
       try {
-        // Get auth token
         const supabaseClient = (typeof window !== 'undefined' && (window as any).supabase) || getSupabase()
         const { data: { session } } = await supabaseClient.auth.getSession()
         const token = session?.access_token
-        
         const headers: HeadersInit = {}
-        if (token) {
-          headers['Authorization'] = `Bearer ${token}`
-        }
-        
-        const res = await fetch('/api/builder/leads?limit=1', { 
-          credentials: 'include',
-          headers
-        })
+        if (token) headers['Authorization'] = `Bearer ${token}`
+
+        const res = await fetch('/api/builder/leads?limit=1', { credentials: 'include', headers })
         if (!mounted) return
         if (res.ok) {
           const data = await res.json()
@@ -138,9 +125,7 @@ export function ModernSidebar() {
             warm: leads.filter((l: any) => l.category === 'Warm Lead').length || 0,
           })
         }
-      } catch (error) {
-        console.error('Failed to fetch lead count:', error)
-      } finally {
+      } catch { /* silently fail */ } finally {
         if (mounted) setIsLoadingCount(false)
       }
     }
@@ -148,318 +133,247 @@ export function ModernSidebar() {
     return () => { mounted = false }
   }, [])
 
-  // Route to section mapping for unified dashboard
-  // ALL routes now use section-based navigation for no page reload
+  // Keyboard shortcut: "/" to focus search
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === '/' && !isSearchFocused && document.activeElement?.tagName !== 'INPUT') {
+        e.preventDefault()
+        const input = document.querySelector<HTMLInputElement>('[data-sidebar-search]')
+        input?.focus()
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [isSearchFocused])
+
+  // Section URL mapping
   const routeToSectionMap: Record<string, string> = {
     '/builder': 'overview',
     '/builder/leads': 'leads',
     '/builder/properties': 'properties',
-    '/builder/properties/performance': 'properties', // Performance analytics is a subsection
+    '/builder/properties/performance': 'properties',
     '/builder/pipeline': 'pipeline',
     '/builder/viewings': 'viewings',
     '/builder/contacts': 'contacts',
-    '/builder/messaging': 'client-outreach', // Messages uses client-outreach section
-    '/builder/analytics': 'analytics', // Need to add analytics section
-    '/builder/revenue': 'revenue', // Need to add revenue section
+    '/builder/messaging': 'client-outreach',
+    '/builder/analytics': 'analytics',
+    '/builder/revenue': 'revenue',
   }
 
-  // Enhanced client-side navigation - INSTANT HIGHLIGHTING, NO LAG
+  // Client-side navigation
   const handleNavigation = useCallback((href: string, e?: React.MouseEvent) => {
-    if (e) {
-      e.preventDefault()
-      e.stopPropagation()
-    }
+    if (e) { e.preventDefault(); e.stopPropagation() }
     if (typeof window === 'undefined') return
-    
-    // Prevent double navigation
+
     const currentHref = window.location.pathname + window.location.search
-    if (currentHref === href || currentHref === href + '/') {
-      return // Already on this page
-    }
-    
-    // Check if it's a section-based route
+    if (currentHref === href || currentHref === href + '/') return
+
     let section: string | null = null
     if (href.startsWith('/builder?section=')) {
       section = href.split('?section=')[1]?.split('&')[0] || null
     } else {
       section = routeToSectionMap[href] || null
     }
-    
+
     if (section) {
-      // Section-based navigation - update URL without reload
       router.push(`/builder?section=${section}`, { scroll: false })
-      // Dispatch event immediately for instant UI update
-      window.dispatchEvent(new CustomEvent('dashboard-section-change', { 
-        detail: { section } 
-      }))
+      window.dispatchEvent(new CustomEvent('dashboard-section-change', { detail: { section } }))
     } else if (href.startsWith('/builder/')) {
-      // Builder routes - use Next.js router for smooth transition
       router.push(href, { scroll: false })
     } else {
-      // External routes
       window.location.href = href
     }
   }, [router])
 
-  // Removed toggleSubmenu - no dropdowns anymore
-
-  // Optimized Navigation structure - Simplified from 12 items to 8 items
-  // Pipeline View integrated into Leads page as tab
-  // Performance Analytics integrated into Properties page as tab
+  // Navigation groups — Supabase-style
   const navGroups = useMemo<NavGroup[]>(() => {
-    const createSectionUrl = (section: string) => `/builder?section=${section}`
-
+    const s = (section: string) => `/builder?section=${section}`
     return [
       {
-        label: 'Dashboard',
         items: [
-          {
-            href: '/builder',
-            label: 'Overview',
-            icon: LayoutDashboard,
-            badge: null,
-            requiresPro: false
-          },
-        ]
+          { href: '/builder', label: 'Overview', icon: LayoutDashboard, kbd: 'G O' },
+        ],
       },
       {
-        label: 'Properties',
+        label: 'Manage',
         items: [
-          {
-            href: createSectionUrl('properties'),
-            label: 'Properties',
-            icon: Building2,
-            requiresPro: false,
-          },
-          {
-            href: createSectionUrl('analytics'),
-            label: 'Analytics',
-            icon: BarChart3,
-            requiresPro: false
-          },
-        ]
+          { href: s('properties'), label: 'Properties', icon: Building2, kbd: 'G P' },
+          { href: s('leads'), label: 'Leads', icon: Users, badge: isLoadingCount ? null : (leadCount?.total ?? 0), kbd: 'G L' },
+          { href: s('contacts'), label: 'Contacts', icon: UserCircle },
+        ],
       },
       {
-        label: 'Leads & CRM',
+        label: 'Engage',
         items: [
-          {
-            href: createSectionUrl('leads'),
-            label: 'Leads',
-            icon: Users,
-            badge: isLoadingCount ? null : (leadCount?.total ?? 0),
-            requiresPro: false,
-          },
-          {
-            href: createSectionUrl('contacts'),
-            label: 'Contacts',
-            icon: Users,
-            requiresPro: false,
-          },
-        ]
+          { href: s('client-outreach'), label: 'Messages', icon: MessageSquare, kbd: 'G M' },
+          { href: s('overview'), label: 'Automations', icon: Workflow },
+        ],
       },
       {
-        label: 'Communication',
+        label: 'Insights',
         items: [
-          {
-            href: createSectionUrl('client-outreach'),
-            label: 'Messages',
-            icon: MessageSquare,
-            requiresPro: false,
-          },
-          {
-            href: createSectionUrl('revenue'),
-            label: 'Revenue',
-            icon: TrendingUp,
-            requiresPro: false  // Remove lock for admin
-          },
-        ]
+          { href: s('analytics'), label: 'Analytics', icon: BarChart3, kbd: 'G A' },
+          { href: s('revenue'), label: 'Revenue', icon: TrendingUp, kbd: 'G R' },
+        ],
       },
     ]
   }, [leadCount, isLoadingCount])
 
-  // Filter items based on search
+  // Bottom navigation items
+  const bottomItems: NavItem[] = useMemo(() => [
+    { href: '/builder/integrations', label: 'Integrations', icon: Plug },
+    { href: '/builder/billing', label: 'Billing', icon: CreditCard },
+    { href: '/builder/rera-compliance', label: 'RERA', icon: Shield },
+    { href: '/help', label: 'Help', icon: HelpCircle },
+  ], [])
+
+  // Search filter
   const filteredGroups = useMemo(() => {
-    if (!searchQuery.trim()) {
-      return navGroups
-    }
-    
-    const query = searchQuery.toLowerCase()
-    return navGroups.map(group => ({
-      ...group,
-      items: group.items.filter(item => 
-        item.label.toLowerCase().includes(query)
-      )
-    })).filter(group => group.items.length > 0)
+    if (!searchQuery.trim()) return navGroups
+    const q = searchQuery.toLowerCase()
+    return navGroups
+      .map((g) => ({ ...g, items: g.items.filter((i) => i.label.toLowerCase().includes(q)) }))
+      .filter((g) => g.items.length > 0)
   }, [navGroups, searchQuery])
 
-  // Check if route uses section-based navigation
-  const shouldUseQueryParams = (href: string): boolean => {
-    return href.startsWith('/builder?section=') || href in routeToSectionMap
-  }
-
-  // Determine active state - INSTANT, ACCURATE highlighting with no lag
-  // FIXED: Now uses currentSection state for immediate, accurate highlighting
+  // Active state check
   const isItemActive = useCallback((item: NavItem): boolean => {
-    // Check section-based routes first (most common case)
-    if (shouldUseQueryParams(item.href)) {
-      const section = routeToSectionMap[item.href] || item.href.split('?section=')[1]?.split('&')[0]
-      if (section) {
-        // Use currentSection state for instant, accurate highlighting
-        return currentSection === section
-      }
-    }
-
-    // For direct routes (non-section-based), use pathname matching
-    const normalizedPathname = pathname.replace(/\/$/, '') || '/builder'
-    const normalizedItemHref = item.href.replace(/\/$/, '')
-
-    // Exact match for direct routes
-    if (normalizedPathname === normalizedItemHref) {
-      return true
-    }
-
-    // Child route match (but not the other way around)
-    if (normalizedItemHref !== '/builder' && normalizedPathname.startsWith(normalizedItemHref + '/')) {
-      return true
-    }
-
+    const section = routeToSectionMap[item.href] || item.href.split('?section=')[1]?.split('&')[0]
+    if (section) return currentSection === section
+    const np = pathname.replace(/\/$/, '') || '/builder'
+    const nh = item.href.replace(/\/$/, '')
+    if (np === nh) return true
+    if (nh !== '/builder' && np.startsWith(nh + '/')) return true
     return false
   }, [pathname, currentSection])
 
-  const sidebarWidth = 260 // Optimized width
+  const sidebarWidth = 256
 
   return (
-    <motion.aside
-      initial={{ x: -sidebarWidth }}
-      animate={{ x: 0 }}
-      transition={{ type: 'spring', damping: 30, stiffness: 300 }}
+    <aside
       className={cn(
-        "fixed left-0 top-0 bottom-0 z-[1000]",
-        "flex flex-col",
-        "bg-gradient-to-br from-zinc-950 via-zinc-950 to-zinc-950",
-        "border-r border-zinc-800",
-        "shadow-2xl",
-        "hidden lg:flex"
+        'fixed left-0 top-0 bottom-0 z-[1000]',
+        'flex flex-col',
+        'bg-zinc-950 border-r border-zinc-800',
+        'hidden lg:flex'
       )}
       style={{ width: `${sidebarWidth}px` }}
-      aria-label="Main navigation sidebar"
+      aria-label="Dashboard navigation"
     >
-      {/* Content Container */}
-      <div className="relative z-10 flex flex-col h-full">
-        {/* Header - Minimal Gaps */}
-        <div className="flex-shrink-0 px-3 py-2.5 border-b border-zinc-800">
-          {/* Home Button - No Container, Top Left, Small */}
-          <Link 
-            href="/" 
-            className="inline-flex items-center gap-1.5 text-xs font-semibold text-amber-300 hover:text-amber-200 transition-colors mb-2.5"
-          >
-            <ArrowLeft className="w-3.5 h-3.5" />
-            <span>HOME</span>
-          </Link>
+      {/* Header: Back, Brand, Search */}
+      <div className="flex-shrink-0 px-3 pt-3 pb-2 border-b border-zinc-800/70">
+        <Link
+          href="/"
+          className="inline-flex items-center gap-1.5 text-[11px] font-medium text-zinc-500 hover:text-zinc-300 transition-colors mb-3 group"
+        >
+          <ChevronLeft className="w-3 h-3 group-hover:-translate-x-0.5 transition-transform" />
+          Back to Home
+        </Link>
 
-          {/* Brand - Tighter Spacing */}
-          <div className="flex items-center gap-2 mb-2.5">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-amber-400 via-amber-500 to-amber-600 flex items-center justify-center shadow-lg">
-              <Sparkles className="w-4 h-4 text-zinc-950" />
-            </div>
-            <div className="flex flex-col">
-              <span className="font-bold text-white text-sm leading-tight">THARAGA</span>
-              <span className="text-amber-300 text-[10px] font-medium leading-tight">Builder Portal</span>
-            </div>
+        <div className="flex items-center gap-2.5 mb-3">
+          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center shadow-lg shadow-amber-500/20">
+            <Sparkles className="w-4 h-4 text-zinc-950" />
           </div>
-
-          {/* Search - Compact */}
-          <div className="relative">
-            <Search className="absolute left-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-zinc-500" />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              onFocus={() => setIsSearchFocused(true)}
-              onBlur={() => setIsSearchFocused(false)}
-              placeholder="Search..."
-              className={cn(
-                "w-full pl-8 pr-2 py-1.5 bg-zinc-900 backdrop-blur-sm",
-                "border rounded-lg text-white placeholder:text-zinc-500 text-xs",
-                "focus:outline-none transition-all duration-200",
-                isSearchFocused 
-                  ? "glow-border bg-zinc-800 shadow-sm" 
-                  : "border-zinc-800 hover:border-zinc-700"
-              )}
-            />
+          <div className="flex flex-col min-w-0">
+            <span className="font-bold text-zinc-100 text-sm leading-tight">Tharaga</span>
+            <span className="text-amber-400/80 text-[10px] font-medium leading-tight">Builder Dashboard</span>
           </div>
         </div>
 
-        {/* Navigation - Minimal Gaps */}
-        <nav className="flex-1 overflow-y-auto overflow-x-hidden px-2 py-2 space-y-0.5">
-          <AnimatePresence mode="wait">
-            {filteredGroups.map((group, groupIndex) => (
-              <motion.div
-                key={groupIndex}
-                initial={{ opacity: 0, x: -10 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: groupIndex * 0.03 }}
-                className={cn("space-y-0.5", group.label && "mb-3")}
-              >
-                {/* Group Label */}
-                {group.label && (
-                  <div className="px-2.5 py-1 text-[10px] font-bold text-zinc-500 uppercase tracking-wider">
-                    {group.label}
-                  </div>
-                )}
-
-                {/* Group Items - NO DROPDOWNS, all items are flat */}
-                {group.items.map((item) => {
-                  const isActive = isItemActive(item)
-                  const isLocked = !isAdmin && isTrial && !!item.requiresPro  // Admin never sees locks
-                  const Icon = item.icon
-
-                  return (
-                    <button
-                      key={item.href}
-                      type="button"
-                      onClick={(e) => {
-                        if (isLocked) {
-                          // Still navigate to show the upgrade/lock screen
-                          handleNavigation(item.href, e)
-                          return
-                        }
-                        handleNavigation(item.href, e)
-                      }}
-                      className={cn(
-                        "relative w-full flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm transition-all duration-150 group text-left",
-                        "hover:bg-zinc-800/60",
-                        isActive
-                          ? "bg-amber-500/20 text-white border-l-2 border-l-amber-400"
-                          : "text-zinc-400 hover:text-white border-l-2 border-l-transparent"
-                      )}
-                    >
-                      <Icon className={cn(
-                        "w-4 h-4 flex-shrink-0 transition-colors duration-150",
-                        isActive ? "text-amber-400" : "text-zinc-500 group-hover:text-amber-300"
-                      )} />
-
-                      <span className="flex-1 font-medium text-sm truncate min-w-0">{item.label}</span>
-
-                      {/* Badge */}
-                      {item.badge !== null && item.badge !== undefined && (
-                        <span className="px-1.5 py-0.5 text-[10px] font-bold bg-amber-500/20 text-amber-300 rounded-full border border-amber-400/30">
-                          {item.badge}
-                        </span>
-                      )}
-
-                      {/* Lock Icon */}
-                      {isLocked && (
-                        <span className="text-xs text-zinc-600">🔒</span>
-                      )}
-                    </button>
-                  )
-                })}
-              </motion.div>
-            ))}
-          </AnimatePresence>
-        </nav>
+        <div className="relative">
+          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-zinc-500" />
+          <input
+            data-sidebar-search
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            onFocus={() => setIsSearchFocused(true)}
+            onBlur={() => setIsSearchFocused(false)}
+            placeholder="Search navigation..."
+            className={cn(
+              'w-full pl-8 pr-8 py-1.5 bg-zinc-900/80 border rounded-lg text-zinc-300 placeholder:text-zinc-600 text-xs',
+              'focus:outline-none transition-all duration-150',
+              isSearchFocused
+                ? 'border-amber-500/40 bg-zinc-900'
+                : 'border-zinc-800 hover:border-zinc-700'
+            )}
+          />
+          {!isSearchFocused && !searchQuery && (
+            <kbd className="absolute right-2 top-1/2 -translate-y-1/2 text-[9px] font-mono text-zinc-600 bg-zinc-800 px-1.5 py-0.5 rounded border border-zinc-700/50">/</kbd>
+          )}
+        </div>
       </div>
-    </motion.aside>
+
+      {/* Main navigation */}
+      <nav className="flex-1 overflow-y-auto overflow-x-hidden px-2 py-2">
+        {filteredGroups.map((group, gi) => (
+          <div key={gi} className={cn(group.label && 'mt-5 first:mt-0')}>
+            {group.label && (
+              <div className="px-2.5 py-1 text-[10px] font-semibold text-zinc-500 uppercase tracking-widest">
+                {group.label}
+              </div>
+            )}
+            <div className="space-y-0.5">
+              {group.items.map((item) => {
+                const active = isItemActive(item)
+                const Icon = item.icon
+                return (
+                  <button
+                    key={item.href}
+                    type="button"
+                    onClick={(e) => handleNavigation(item.href, e)}
+                    className={cn(
+                      'relative w-full flex items-center gap-2.5 rounded-lg px-2.5 py-[7px] text-[13px] transition-all duration-100 group text-left',
+                      active
+                        ? 'bg-amber-500/10 text-zinc-100 border-l-2 border-l-amber-400 ml-[-1px]'
+                        : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50 border-l-2 border-l-transparent'
+                    )}
+                  >
+                    <Icon className={cn(
+                      'w-4 h-4 flex-shrink-0 transition-colors',
+                      active ? 'text-amber-400' : 'text-zinc-500 group-hover:text-zinc-300'
+                    )} />
+                    <span className="flex-1 font-medium truncate">{item.label}</span>
+                    {item.badge != null && (
+                      <span className="px-1.5 py-0.5 text-[10px] font-bold bg-amber-500/15 text-amber-300 rounded-full border border-amber-500/20">
+                        {item.badge}
+                      </span>
+                    )}
+                    {item.kbd && (
+                      <span className="hidden group-hover:inline text-[9px] font-mono text-zinc-600">
+                        {item.kbd}
+                      </span>
+                    )}
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+        ))}
+      </nav>
+
+      {/* Bottom: Integrations, Billing, RERA, Help */}
+      <div className="flex-shrink-0 border-t border-zinc-800/70 px-2 py-2 space-y-0.5">
+        {bottomItems.map((item) => {
+          const active = pathname.startsWith(item.href)
+          const Icon = item.icon
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
+              className={cn(
+                'flex items-center gap-2.5 rounded-lg px-2.5 py-[7px] text-[13px] transition-all duration-100 group',
+                active
+                  ? 'bg-amber-500/10 text-zinc-100'
+                  : 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/50'
+              )}
+            >
+              <Icon className={cn('w-4 h-4 flex-shrink-0', active ? 'text-amber-400' : 'text-zinc-600 group-hover:text-zinc-400')} />
+              <span className="font-medium truncate">{item.label}</span>
+            </Link>
+          )
+        })}
+      </div>
+    </aside>
   )
 }

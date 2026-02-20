@@ -26,11 +26,8 @@
     body{
       margin:0;
       font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial;
-      /*background:
-        radial-gradient(1200px 800px at 80% -10%,#1c1c1c 0%,transparent 60%),
-        radial-gradient(900px 700px at -10% 20%,#111111 0%,transparent 60%),
-        var(--bg);
-      color:var(--txt);*/
+      background:var(--bg);
+      color:var(--txt);
     }
     .container{min-height:100%;display:grid;grid-template-rows:auto 1fr auto}
     header{
@@ -138,23 +135,18 @@
     /* Remove fullscreen overlay background/effects */
   
 
-    /* Center the card itself as a floating modal */
+    /* When loaded standalone (not in iframe), center as floating modal */
     .auth-modal {
-      position: fixed;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      animation: popupSlide 0.35s ease-out;
+      position: relative;
       max-height: 95vh;
       overflow-y: auto;
-      z-index: 2147483647;
-      box-shadow: 0 24px 80px rgba(0,0,0,.55), 0 4px 16px rgba(0,0,0,.35);
+      animation: popupSlide 0.35s ease-out;
     }
 
     /* Sweet little animation */
     @keyframes popupSlide {
-      0% { transform: translate(-50%, calc(-50% + 40px)) scale(0.96); opacity: 0; }
-      100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+      0% { transform: translateY(20px) scale(0.96); opacity: 0; }
+      100% { transform: translateY(0) scale(1); opacity: 1; }
     }
 
    .close-btn {

@@ -197,10 +197,10 @@ export function AuthModal() {
     setMsg({ text: 'Redirecting to Google...', ok: true })
     try {
       const supabase = getSupabase()
-      const redirectTo = `${window.location.origin}/login_signup_glassdrop/?post_auth=1&parent_origin=${encodeURIComponent(window.location.origin)}`
+      const redirectTo = `${window.location.origin}/auth/callback`
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
-        options: { redirectTo, skipBrowserRedirect: true, queryParams: { prompt: 'select_account' } },
+        options: { redirectTo, queryParams: { prompt: 'select_account' } },
       })
       if (error || !data?.url) {
         setMsg({ text: 'Could not start Google sign in', ok: false })

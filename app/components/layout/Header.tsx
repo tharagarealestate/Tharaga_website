@@ -2,11 +2,12 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import { cn } from '@/lib/utils'
-import { Menu, X, ChevronDown, Sparkles, LogIn } from 'lucide-react'
+import { Menu, X, ChevronDown, Sparkles, LogIn, LogOut, LayoutDashboard, User } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { openAuthModal } from '@/components/ui/AuthButton'
+import { getSupabase } from '@/lib/supabase'
 
 const navLinks = [
   { label: 'Properties', href: '/property-listing' },
@@ -28,9 +29,17 @@ const navLinks = [
 
 export function Header() {
   const pathname = usePathname()
+  const router = useRouter()
   const [mobileOpen, setMobileOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
   const [dropdownOpen, setDropdownOpen] = useState<string | null>(null)
+  const [userMenuOpen, setUserMenuOpen] = useState(false)
+
+  // Auth state
+  const [user, setUser] = useState<any>(null)
+  const [displayName, setDisplayName] = useState('')
+  const [userEmail, setUserEmail] = useState('')
+  const [dashboardPath, setDashboardPath] = useState('/builder')
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 20)
@@ -41,12 +50,114 @@ export function Header() {
   useEffect(() => {
     setMobileOpen(false)
     setDropdownOpen(null)
+    setUserMenuOpen(false)
   }, [pathname])
+
+  // Check auth state on mount + listen for changes
+  useEffect(() => {
+    let mounted = true
+
+    async function loadUser(authUser: any) {
+      if (!authUser) {
+        if (mounted) {
+          setUser(null)
+          setDisplayName('')
+          setUserEmail('')
+        }
+        return
+      }
+
+      if (mounted) {
+        setUser(authUser)
+        setUserEmail(authUser.email || '')
+        setDisplayName(
+          authUser.user_metadata?.full_name ||
+          authUser.user_metadata?.name ||
+          authUser.email?.split('@')[0] || 'User'
+        )
+      }
+
+      // Fetch profile for better display name
+      try {
+        const supabase = getSupabase()
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('full_name')
+          .eq('id', authUser.id)
+          .single()
+        if (mounted && profile?.full_name) {
+          setDisplayName(profile.full_name)
+        }
+      } catch {}
+
+      // Fetch role for dashboard path
+      try {
+        const supabase = getSupabase()
+        const { data: roles } = await supabase
+          .from('user_roles')
+          .select('role')
+          .eq('user_id', authUser.id)
+        const roleList = (roles || []).map((r: any) => r.role)
+        if (mounted) {
+          if (roleList.includes('buyer')) {
+            setDashboardPath('/my-dashboard')
+          } else {
+            setDashboardPath('/builder')
+          }
+        }
+      } catch {}
+    }
+
+    async function init() {
+      try {
+        const supabase = getSupabase()
+        const { data: { user: authUser } } = await supabase.auth.getUser()
+        loadUser(authUser)
+      } catch {}
+    }
+
+    init()
+
+    // Listen for auth state changes (sign in, sign out, token refresh)
+    try {
+      const supabase = getSupabase()
+      const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+        loadUser(session?.user || null)
+      })
+      return () => {
+        mounted = false
+        subscription.unsubscribe()
+      }
+    } catch {
+      return () => { mounted = false }
+    }
+  }, [])
 
   const handleSignIn = useCallback(() => {
     setMobileOpen(false)
     openAuthModal()
   }, [])
+
+  const handleSignOut = useCallback(async () => {
+    setUserMenuOpen(false)
+    setMobileOpen(false)
+    try {
+      const supabase = getSupabase()
+      await supabase.auth.signOut()
+      setUser(null)
+      setDisplayName('')
+      setUserEmail('')
+      router.push('/')
+    } catch {}
+  }, [router])
+
+  // User initials for avatar
+  const initials = displayName
+    .split(' ')
+    .map(n => n[0])
+    .join('')
+    .toUpperCase()
+    .slice(0, 2) || 'U'
 
   return (
     <header
@@ -119,12 +230,57 @@ export function Header() {
             ))}
           </div>
 
-          {/* Right side — Sign In opens auth-gate popup */}
+          {/* Right side — Auth state */}
           <div className="hidden md:flex items-center gap-3">
-            <Button variant="primary" size="sm" onClick={handleSignIn}>
-              <LogIn className="w-3.5 h-3.5 mr-1.5" />
-              Sign In
-            </Button>
+            {user ? (
+              /* ── Signed in: avatar + dropdown ── */
+              <div
+                className="relative"
+                onMouseEnter={() => setUserMenuOpen(true)}
+                onMouseLeave={() => setUserMenuOpen(false)}
+              >
+                <button className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-zinc-800/60 transition-colors">
+                  <div className="w-7 h-7 rounded-full bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-400 text-xs font-bold">
+                    {initials}
+                  </div>
+                  <span className="text-sm font-medium text-zinc-300 max-w-[120px] truncate">
+                    {displayName}
+                  </span>
+                  <ChevronDown className="w-3 h-3 text-zinc-500" />
+                </button>
+
+                {userMenuOpen && (
+                  <div className="absolute right-0 top-full mt-1 w-56 bg-zinc-900 border border-zinc-800 rounded-xl shadow-xl overflow-hidden animate-scale-in">
+                    <div className="px-4 py-3 border-b border-zinc-800">
+                      <p className="text-sm font-medium text-zinc-200 truncate">{displayName}</p>
+                      <p className="text-xs text-zinc-500 truncate">{userEmail}</p>
+                    </div>
+                    <div className="p-1.5">
+                      <Link
+                        href={dashboardPath}
+                        className="flex items-center gap-2.5 px-3 py-2 text-sm text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800 rounded-lg transition-colors"
+                      >
+                        <LayoutDashboard className="w-4 h-4" />
+                        Dashboard
+                      </Link>
+                      <button
+                        onClick={handleSignOut}
+                        className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-zinc-400 hover:text-red-400 hover:bg-zinc-800 rounded-lg transition-colors"
+                      >
+                        <LogOut className="w-4 h-4" />
+                        Sign out
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : (
+              /* ── Signed out: Sign In button ── */
+              <Button variant="primary" size="sm" onClick={handleSignIn}>
+                <LogIn className="w-3.5 h-3.5 mr-1.5" />
+                Sign In
+              </Button>
+            )}
           </div>
 
           {/* Mobile toggle */}
@@ -166,10 +322,38 @@ export function Header() {
               </div>
             ))}
             <div className="pt-4 border-t border-zinc-800">
-              <Button variant="primary" size="md" className="w-full" onClick={handleSignIn}>
-                <LogIn className="w-4 h-4 mr-2" />
-                Sign In
-              </Button>
+              {user ? (
+                <div className="space-y-2">
+                  <div className="flex items-center gap-3 px-3 py-2">
+                    <div className="w-8 h-8 rounded-full bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-400 text-sm font-bold">
+                      {initials}
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium text-zinc-200 truncate">{displayName}</p>
+                      <p className="text-xs text-zinc-500 truncate">{userEmail}</p>
+                    </div>
+                  </div>
+                  <Link
+                    href={dashboardPath}
+                    className="flex items-center gap-2.5 px-3 py-2.5 text-sm font-medium text-zinc-300 hover:text-zinc-100 hover:bg-zinc-800/50 rounded-lg"
+                  >
+                    <LayoutDashboard className="w-4 h-4" />
+                    Dashboard
+                  </Link>
+                  <button
+                    onClick={handleSignOut}
+                    className="w-full flex items-center gap-2.5 px-3 py-2.5 text-sm font-medium text-red-400 hover:bg-zinc-800/50 rounded-lg"
+                  >
+                    <LogOut className="w-4 h-4" />
+                    Sign out
+                  </button>
+                </div>
+              ) : (
+                <Button variant="primary" size="md" className="w-full" onClick={handleSignIn}>
+                  <LogIn className="w-4 h-4 mr-2" />
+                  Sign In
+                </Button>
+              )}
             </div>
           </div>
         </div>

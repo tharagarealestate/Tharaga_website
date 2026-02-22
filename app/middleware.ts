@@ -20,6 +20,7 @@ const handleI18nRouting = createMiddleware({
 const PUBLIC_ROUTES = [
   '/',
   '/auth',
+  '/auth/callback',
   '/login',
   '/signup',
   '/properties',

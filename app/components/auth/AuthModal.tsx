@@ -120,32 +120,8 @@ export function AuthModal() {
       setMsg({ text: 'Signed in!', ok: true })
       setLoading(false)
 
-      // Role-based redirect
-      const user = data?.user
-      if (user) {
-        try {
-          const { data: roles } = await supabase
-            .from('user_roles')
-            .select('role')
-            .eq('user_id', user.id)
-          const roleList = (roles || []).map((r: any) => r.role)
-          setTimeout(() => {
-            setOpen(false)
-            if (roleList.includes('admin') || roleList.includes('builder')) {
-              window.location.href = '/builder'
-            } else if (roleList.includes('buyer')) {
-              window.location.href = '/my-dashboard'
-            } else {
-              window.location.href = '/builder'
-            }
-          }, 600)
-        } catch {
-          setTimeout(() => {
-            setOpen(false)
-            window.location.href = '/builder'
-          }, 600)
-        }
-      }
+      // Close modal — stay on current page. Header will update via onAuthStateChange.
+      setTimeout(() => setOpen(false), 800)
     } catch (err: any) {
       setMsg({ text: mapAuthError(err), ok: false })
       setLoading(false)

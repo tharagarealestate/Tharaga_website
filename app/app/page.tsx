@@ -95,9 +95,9 @@ export default function HomePage() {
               </h1>
 
               <p className="text-lg md:text-xl text-zinc-400 max-w-2xl mx-auto mb-10 leading-relaxed">
-                India&apos;s first AI-powered zero-commission platform.
-                Connect directly with verified builders, score leads with AI,
-                and automate your entire sales pipeline.
+                India&apos;s AI-powered zero-commission platform.
+                Builders list properties, we handle marketing.
+                Buyers connect directly — no brokers, no hidden fees.
               </p>
 
               <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16">
@@ -108,20 +108,17 @@ export default function HomePage() {
                   Explore Properties
                   <ArrowRight className="w-4 h-4" />
                 </Link>
-                <Link
-                  href="/trial-signup"
+                <AuthButton
                   className="inline-flex items-center gap-2 h-12 px-8 border border-zinc-700 text-zinc-200 font-medium rounded-xl hover:bg-zinc-800 hover:border-zinc-600 transition-all"
                 >
-                  Builder Dashboard
-                  <Building2 className="w-4 h-4" />
-                </Link>
+                  Sign In
+                </AuthButton>
               </div>
 
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-3xl mx-auto">
+              <div className="grid grid-cols-3 gap-4 max-w-2xl mx-auto">
                 {[
-                  { value: '12,000+', label: 'Verified Properties' },
-                  { value: '₹3-5L', label: 'Avg. Savings' },
                   { value: '0%', label: 'Brokerage' },
+                  { value: 'RERA', label: 'Verified Only' },
                   { value: 'Tamil Nadu', label: 'Coverage' },
                 ].map((stat) => (
                   <div key={stat.label} className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-4 text-center">
@@ -253,7 +250,7 @@ export default function HomePage() {
                 <h2 className="text-zinc-100 mb-4">Find your dream home, commission-free</h2>
                 <p className="text-zinc-400 mb-8 leading-relaxed">
                   Browse verified properties directly from builders. No middlemen, no hidden charges,
-                  no brokerage. Save ₹3-5 lakhs on every purchase.
+                  no brokerage. Deal directly and save.
                 </p>
                 <ul className="space-y-3 mb-8">
                   {[
@@ -280,10 +277,10 @@ export default function HomePage() {
               <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-8">
                 <div className="space-y-4">
                   {[
-                    { label: 'Savings on brokerage', value: '₹3-5 Lakhs', color: 'text-emerald-400' },
-                    { label: 'Verified builders', value: '500+', color: 'text-amber-400' },
-                    { label: 'Properties listed', value: '12,000+', color: 'text-blue-400' },
-                    { label: 'Average response time', value: '< 2 hours', color: 'text-purple-400' },
+                    { label: 'Brokerage fees', value: '₹0', color: 'text-emerald-400' },
+                    { label: 'Property verification', value: 'RERA Only', color: 'text-amber-400' },
+                    { label: 'Region coverage', value: 'Tamil Nadu', color: 'text-blue-400' },
+                    { label: 'AI-powered features', value: 'Lead Scoring', color: 'text-purple-400' },
                   ].map((stat) => (
                     <div key={stat.label} className="flex items-center justify-between p-4 bg-zinc-800/50 rounded-xl">
                       <span className="text-sm text-zinc-400">{stat.label}</span>

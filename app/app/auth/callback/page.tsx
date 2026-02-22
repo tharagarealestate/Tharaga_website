@@ -15,7 +15,8 @@ import { Loader2 } from 'lucide-react'
  *    e.g. /auth/callback?code=...
  *    → We call exchangeCodeForSession() explicitly
  *
- * After session is established, we fetch user roles and redirect.
+ * After session is established, redirect to homepage — Header shows auth state.
+ * User clicks Dashboard from Header dropdown when ready.
  */
 export default function AuthCallbackPage() {
   const [status, setStatus] = useState('Signing you in...')
@@ -42,8 +43,7 @@ export default function AuthCallbackPage() {
         }
 
         // ── For implicit flow, detectSessionInUrl handles hash fragments ──
-        // Give Supabase client a moment to process the hash tokens
-        // The client auto-detects #access_token=...&refresh_token=... on init
+        // Give Supabase client time to process the hash tokens
         await new Promise(resolve => setTimeout(resolve, 500))
 
         // ── Get the authenticated user ──
@@ -61,14 +61,13 @@ export default function AuthCallbackPage() {
             setTimeout(() => { window.location.href = '/' }, 1500)
             return
           }
-
-          if (cancelled) return
-          await redirectByRole(supabase, retryUser, setStatus)
-          return
         }
 
         if (cancelled) return
-        await redirectByRole(supabase, user, setStatus)
+
+        // Redirect to homepage — user stays logged in, Header shows their profile
+        setStatus('Welcome! Redirecting...')
+        window.location.href = '/'
       } catch (err) {
         console.error('[Auth Callback] Exception:', err)
         setStatus('Something went wrong. Redirecting...')
@@ -88,35 +87,4 @@ export default function AuthCallbackPage() {
       </div>
     </div>
   )
-}
-
-async function redirectByRole(
-  supabase: any,
-  user: any,
-  setStatus: (s: string) => void
-) {
-  setStatus('Checking your account...')
-
-  try {
-    const { data: roles } = await supabase
-      .from('user_roles')
-      .select('role')
-      .eq('user_id', user.id)
-
-    const roleList = (roles || []).map((r: any) => r.role)
-
-    if (roleList.includes('admin') || roleList.includes('builder')) {
-      setStatus('Welcome back! Opening dashboard...')
-      window.location.href = '/builder'
-    } else if (roleList.includes('buyer')) {
-      setStatus('Welcome back! Opening dashboard...')
-      window.location.href = '/my-dashboard'
-    } else {
-      setStatus('Welcome! Setting up your account...')
-      window.location.href = '/builder'
-    }
-  } catch {
-    // Role fetch failed — default redirect
-    window.location.href = '/builder'
-  }
 }

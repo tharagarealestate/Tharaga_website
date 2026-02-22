@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react'
 import { useEntitlements } from '@/components/ui/FeatureGate'
 import { getSupabase } from '@/lib/supabase'
+import { openAuthModal } from '@/components/auth/AuthModal'
 
 export function HeaderAuth(){
   const { entitlements } = useEntitlements()
@@ -88,21 +89,7 @@ export function HeaderAuth(){
   }, [])
 
   function openAuth(){
-    try {
-      const next = location.pathname + location.search
-      const g = (window as any).authGate
-      if (g && typeof g.openLoginModal === 'function') {
-        g.openLoginModal({ next })
-        return
-      }
-      if (typeof (window as any).__thgOpenAuthModal === 'function') {
-        ;(window as any).__thgOpenAuthModal({ next })
-        return
-      }
-      location.href = `/login?next=${encodeURIComponent(next)}`
-    } catch {
-      location.href = '/login'
-    }
+    openAuthModal()
   }
 
   function handleLogout() {

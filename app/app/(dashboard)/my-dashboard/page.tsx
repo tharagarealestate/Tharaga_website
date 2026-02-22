@@ -24,6 +24,7 @@ import { Suspense } from 'react';
 import { useRouter } from 'next/navigation';
 
 import { getSupabase } from '@/lib/supabase';
+import { openAuthModal } from '@/components/auth/AuthModal';
 import type { RecommendationItem } from '@/types/recommendations';
 import { PageWrapper } from '@/components/ui/PageWrapper';
 import { PageHeader } from '@/components/ui/PageHeader';
@@ -81,13 +82,7 @@ function BuyerDashboardContent() {
           if (typeof window !== 'undefined') {
             window.location.href = '/';
             // Trigger login modal on homepage
-            setTimeout(() => {
-              if (window.__thgOpenAuthModal) {
-                window.__thgOpenAuthModal({ next: '/my-dashboard' });
-              } else if (window.showLoginPromptModal) {
-                window.showLoginPromptModal();
-              }
-            }, 100);
+            setTimeout(() => openAuthModal(), 100);
           }
           return;
         }

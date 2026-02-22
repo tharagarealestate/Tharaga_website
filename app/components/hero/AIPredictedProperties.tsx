@@ -6,6 +6,7 @@ import { ShimmerCard } from '@/components/ui/ShimmerCard'
 import { Lock, TrendingUp, MapPin, Home } from 'lucide-react'
 import Link from 'next/link'
 import Image from 'next/image'
+import { openAuthModal } from '@/components/auth/AuthModal'
 
 interface Property {
   id: string
@@ -99,22 +100,7 @@ export function AIPredictedProperties() {
             Log in to your account to get personalized property recommendations based on your preferences and budget
           </p>
           <button
-            onClick={() => {
-              try {
-                const g = (window as any).authGate
-                if (g && typeof g.openLoginModal === 'function') {
-                  g.openLoginModal({ next: '/' })
-                  return
-                }
-                if (typeof (window as any).__thgOpenAuthModal === 'function') {
-                  (window as any).__thgOpenAuthModal({ next: '/' })
-                  return
-                }
-                window.location.href = '/login'
-              } catch {
-                window.location.href = '/login'
-              }
-            }}
+            onClick={() => openAuthModal()}
             className="inline-block px-6 py-3 bg-yellow-500 hover:bg-yellow-600 text-gray-900 font-semibold rounded-lg transition-colors"
           >
             Login to View Predictions

@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Menu, X, User } from 'lucide-react'
 import Link from 'next/link'
+import { openAuthModal } from '@/components/auth/AuthModal'
 
 export function MobileSiteNav() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
@@ -48,15 +49,7 @@ export function MobileSiteNav() {
         window.location.href = '/my-dashboard'
       } else {
         // Open login modal if not authenticated
-        const next = location.pathname + location.search
-        const authGate = (window as any).authGate
-        if (authGate && typeof authGate.openLoginModal === 'function') {
-          authGate.openLoginModal({ next })
-        } else if (typeof (window as any).__thgOpenAuthModal === 'function') {
-          ;(window as any).__thgOpenAuthModal({ next })
-        } else {
-          location.href = `/login?next=${encodeURIComponent(next)}`
-        }
+        openAuthModal()
       }
     } catch {
       location.href = '/login'

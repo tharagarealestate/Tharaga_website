@@ -38,7 +38,7 @@ export default function SitemapPage() {
       title: 'For Buyers',
       icon: <Users className="w-5 h-5" />,
       links: [
-        { href: '/my-dashboard', label: 'Buyer Dashboard' },
+        { href: '/builder', label: 'Builder Dashboard' },
         { href: '/property-listing', label: 'Property Search' },
         { href: '/saved', label: 'Saved Properties' },
         { href: '/buyer-form', label: 'Buyer Registration' }

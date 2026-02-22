@@ -180,8 +180,8 @@ export function Footer() {
             <h4 className="font-bold text-lg mb-6">Products</h4>
             <ul className="space-y-4">
               <li>
-                <Link href="/my-dashboard" className="text-white/70 hover:text-white transition-colors">
-                  Buyer Dashboard
+                <Link href="/builder" className="text-white/70 hover:text-white transition-colors">
+                  Builder Dashboard
                 </Link>
               </li>
               <li>

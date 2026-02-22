@@ -108,11 +108,13 @@ export default function HomePage() {
                   Explore Properties
                   <ArrowRight className="w-4 h-4" />
                 </Link>
-                <AuthButton
+                <Link
+                  href="/builder"
                   className="inline-flex items-center gap-2 h-12 px-8 border border-zinc-700 text-zinc-200 font-medium rounded-xl hover:bg-zinc-800 hover:border-zinc-600 transition-all"
                 >
-                  Sign In
-                </AuthButton>
+                  Builder Dashboard
+                  <Building2 className="w-4 h-4" />
+                </Link>
               </div>
 
               <div className="grid grid-cols-3 gap-4 max-w-2xl mx-auto">

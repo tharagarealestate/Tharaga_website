@@ -34,25 +34,14 @@ const PUBLIC_ROUTES = [
   '/api/public',
 ]
 
-// Role-based route configuration
+// Role-based route configuration — single builder dashboard
 const ROLE_ROUTES: Record<string, string[]> = {
-  buyer: [
-    '/buyer',
-    '/my-dashboard',
-    '/saved',
-  ],
   builder: [
     '/builder',
     '/builder/dashboard',
     '/builder/properties',
     '/builder/leads',
     '/builder/analytics',
-  ],
-  admin: [
-    '/admin',
-    '/admin/dashboard',
-    '/admin/users',
-    '/admin/verify',
   ],
 }
 
@@ -318,13 +307,9 @@ export const config = {
     '/app',
     '/app/:path*',
     '/admin',
-    '/admin/:path*',
-    // Role-based routes - protect all builder and buyer dashboard routes
-    '/buyer/:path*',
+    // Builder dashboard routes
     '/builder/:path*',
     '/builder',
-    '/my-dashboard/:path*',
-    '/my-dashboard',
     // Localized routes — handle only explicit locale prefixes (non-root)
     '/(en|ta|hi)/:path*',
     // CRITICAL: API routes need middleware for session refresh

@@ -47,7 +47,7 @@ export function MobileBottomNav() {
     { href: '/', icon: Home, label: 'Home' },
     { href: '/property-listing/', icon: Search, label: 'Search' },
     { href: '/saved', icon: Heart, label: 'Saved' },
-    { href: '/my-dashboard', icon: User, label: 'Profile' }
+    { href: '/builder', icon: User, label: 'Dashboard' }
   ];
 
   // Don't show on certain pages (like login, registration)

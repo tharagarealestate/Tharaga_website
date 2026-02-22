@@ -39,7 +39,7 @@ export function Header() {
   const [user, setUser] = useState<any>(null)
   const [displayName, setDisplayName] = useState('')
   const [userEmail, setUserEmail] = useState('')
-  const [dashboardPath, setDashboardPath] = useState('/builder')
+  const dashboardPath = '/builder'
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 20)
@@ -90,49 +90,7 @@ export function Header() {
         }
       } catch {}
 
-      // Fetch role + subscription status for smart dashboard routing
-      try {
-        const supabase = getSupabase()
-        const { data: roles } = await supabase
-          .from('user_roles')
-          .select('role')
-          .eq('user_id', authUser.id)
-        const roleList = (roles || []).map((r: any) => r.role)
-
-        if (mounted) {
-          if (roleList.includes('buyer')) {
-            setDashboardPath('/my-dashboard')
-          } else if (roleList.includes('admin')) {
-            // Admin always goes to builder dashboard
-            setDashboardPath('/builder')
-          } else if (roleList.includes('builder')) {
-            // Existing builder — check if they have active subscription or properties
-            let hasAccess = false
-            try {
-              const { data: sub } = await supabase
-                .from('subscriptions')
-                .select('id')
-                .eq('builder_id', authUser.id)
-                .in('status', ['active', 'trialing'])
-                .limit(1)
-              if (sub && sub.length > 0) hasAccess = true
-            } catch {}
-            if (!hasAccess) {
-              try {
-                const { count } = await supabase
-                  .from('properties')
-                  .select('id', { count: 'exact', head: true })
-                  .eq('builder_id', authUser.id)
-                if (count && count > 0) hasAccess = true
-              } catch {}
-            }
-            setDashboardPath(hasAccess ? '/builder' : '/trial-signup')
-          } else {
-            // No role — new user, send to trial
-            setDashboardPath('/trial-signup')
-          }
-        }
-      } catch {}
+      // Dashboard always routes to /builder — single dashboard for all roles
     }
 
     async function init() {

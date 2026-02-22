@@ -46,7 +46,7 @@ export function MobileSiteNav() {
     try {
       if (isAuthenticated) {
         // Navigate to dashboard if authenticated
-        window.location.href = '/my-dashboard'
+        window.location.href = '/builder'
       } else {
         // Open login modal if not authenticated
         openAuthModal()

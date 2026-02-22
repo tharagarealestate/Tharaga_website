@@ -3,16 +3,53 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "build": "cd app && npm install && npm run build",
+    "start": "cd app && npm start",
+    "vercel-build": "cd app && npm run build",
     "serve": "npx http-server -p 43217 -a 127.0.0.1 -c-1 .",
-    "test:e2e": "PLAYWRIGHT_BASE_URL=http://localhost:43217 start-server-and-test serve http://localhost:43217 'playwright test'"
+    "test": "vitest",
+    "test:ui": "vitest --ui",
+    "test:coverage": "vitest --coverage",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "test:e2e:headed": "playwright test --headed",
+    "test:e2e:debug": "playwright test --debug"
   },
   "devDependencies": {
-    "@playwright/test": "^1.55.0",
+    "@playwright/test": "^1.56.1",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.0",
+    "@testing-library/user-event": "^14.6.1",
     "@types/cors": "^2.8.19",
     "@types/nodemailer": "^7.0.2",
     "@types/pg": "^8.15.5",
+    "@types/qs": "^6.14.0",
+    "@vitejs/plugin-react": "^5.1.0",
     "http-server": "^14.1.1",
+    "jsdom": "^27.1.0",
     "sirv-cli": "^2.0.2",
-    "start-server-and-test": "^2.0.3"
+    "start-server-and-test": "^2.0.3",
+    "vitest": "^4.0.6"
+  },
+  "dependencies": {
+    "@supabase/auth-helpers-nextjs": "^0.10.0",
+    "@supabase/supabase-js": "^2.78.0",
+    "axios": "^1.13.2",
+    "date-fns": "^4.1.0",
+    "dotenv": "^17.2.3",
+    "framer-motion": "^12.27.5",
+    "google-auth-library": "^10.5.0",
+    "googleapis": "^166.0.0",
+    "next": "^16.0.3",
+    "pg": "^8.16.3",
+    "qs": "^6.14.0",
+    "razorpay": "^2.9.2",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "react-resizable-panels": "^4.4.1",
+    "resend": "^6.4.2",
+    "sonner": "^2.0.7",
+    "twilio": "^5.10.5",
+    "zod": "^4.3.5"
   }
 }

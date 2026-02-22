@@ -1,6 +1,13 @@
 "use client"
 
 import * as React from 'react'
+import Breadcrumb from '@/components/Breadcrumb'
+import { useTranslations } from 'next-intl'
+import { PageWrapper } from '@/components/ui/PageWrapper'
+import { PageHeader } from '@/components/ui/PageHeader'
+import { SectionWrapper } from '@/components/ui/SectionWrapper'
+import { GlassCard } from '@/components/ui/glass-card'
+import { DESIGN_TOKENS } from '@/lib/design-system'
 
 const FX: Record<string, number> = { USD: 0.012, AED: 0.044, GBP: 0.0095, EUR: 0.011 }
 
@@ -9,6 +16,7 @@ function fmt(n: number, code: string) {
 }
 
 export default function CurrencyRiskPage() {
+  const t = useTranslations('tools.fx')
   const [amountINR, setAmountINR] = React.useState(10000000)
   const [fx, setFx] = React.useState('USD')
   const [driftPct, setDriftPct] = React.useState(4)
@@ -49,56 +57,69 @@ export default function CurrencyRiskPage() {
   const sim = simulateVaR()
 
   return (
-    <main className="mx-auto max-w-3xl px-6 py-8">
-      <h1 className="text-2xl font-bold text-plum mb-4">Currency risk (NRI)</h1>
-      <div className="rounded-xl border border-plum/10 bg-brandWhite p-4 space-y-4">
+    <PageWrapper>
+      <Breadcrumb items={[
+        { label: 'Home', href: '/' },
+        { label: 'Tools', href: '/sitemap' },
+        { label: 'Currency Risk' }
+      ]} />
+      
+      <PageHeader
+        title={t('title')}
+        description="Analyze currency risk for international property investments"
+        className="text-center mb-8"
+      />
+
+      <SectionWrapper noPadding>
+        <GlassCard variant="dark" glow border className="p-6 sm:p-8 space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
-            <label className="block text-sm mb-1">Investment (INR)</label>
+            <label className="block text-sm mb-1">{t('fields.investment')}</label>
             <input type="number" value={amountINR} onChange={(e)=>setAmountINR(Number(e.target.value||0))} className="w-full rounded-lg border px-3 py-2"/>
           </div>
           <div>
-            <label className="block text-sm mb-1">Currency</label>
+            <label className="block text-sm mb-1">{t('fields.currency')}</label>
             <select value={fx} onChange={(e)=>setFx(e.target.value)} className="w-full rounded-lg border px-3 py-2">
               {Object.keys(FX).map(k => <option key={k} value={k}>{k}</option>)}
             </select>
           </div>
           <div>
-            <label className="block text-sm mb-1">Annual drift ±%</label>
-            <input type="number" step="0.5" value={driftPct} onChange={(e)=>setDriftPct(Number(e.target.value||0))} className="w-full rounded-lg border px-3 py-2"/>
+            <label className="block text-sm mb-1">{t('fields.drift')}</label>
+            <input type="number" step="0.1" value={driftPct} onChange={(e)=>setDriftPct(Number(e.target.value||0))} className="w-full rounded-lg border px-3 py-2"/>
           </div>
           <div>
-            <label className="block text-sm mb-1">Annual vol %</label>
-            <input type="number" step="0.5" value={volPct} onChange={(e)=>setVolPct(Number(e.target.value||0))} className="w-full rounded-lg border px-3 py-2"/>
+            <label className="block text-sm mb-1">{t('fields.volatility')}</label>
+            <input type="number" step="0.1" value={volPct} onChange={(e)=>setVolPct(Number(e.target.value||0))} className="w-full rounded-lg border px-3 py-2"/>
           </div>
           <div>
-            <label className="block text-sm mb-1">Horizon (years)</label>
+            <label className="block text-sm mb-1">{t('fields.horizon')}</label>
             <input type="number" value={horizonY} onChange={(e)=>setHorizonY(Number(e.target.value||0))} className="w-full rounded-lg border px-3 py-2"/>
           </div>
           <div>
-            <label className="block text-sm mb-1">Paths</label>
-            <input type="number" value={paths} onChange={(e)=>setPaths(Math.max(50, Number(e.target.value||0)))} className="w-full rounded-lg border px-3 py-2"/>
+            <label className="block text-sm mb-1">{t('fields.paths')}</label>
+            <input type="number" value={paths} onChange={(e)=>setPaths(Number(e.target.value||0))} className="w-full rounded-lg border px-3 py-2"/>
           </div>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <Card label="Current value" value={fmt(now, fx)} />
-          <Card label="Best case" value={fmt(best, fx)} />
-          <Card label="Worst case" value={fmt(worst, fx)} />
-          <Card label="VaR 5%" value={fmt(sim.p05, fx)} />
-          <Card label="Median" value={fmt(sim.p50, fx)} />
-          <Card label="95th pct" value={fmt(sim.p95, fx)} />
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+          <Card label={t('cards.current')} value={fmt(now, fx)} />
+          <Card label={t('cards.best')} value={fmt(best, fx)} />
+          <Card label={t('cards.worst')} value={fmt(worst, fx)} />
+          <Card label={t('cards.var5')} value={fmt(sim.p05, fx)} />
+          <Card label={t('cards.median')} value={fmt(sim.p50, fx)} />
+          <Card label={t('cards.p95')} value={fmt(sim.p95, fx)} />
         </div>
-        <p className="text-xs text-plum/60">This is a simple scenario analysis. For exact planning, consult a financial advisor.</p>
-      </div>
-    </main>
+        <p className={`text-xs ${DESIGN_TOKENS.colors.text.muted}`}>{t('disclaimer')}</p>
+        </GlassCard>
+      </SectionWrapper>
+    </PageWrapper>
   )
 }
 
 function Card({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-lg border border-plum/10 p-3">
-      <div className="text-xs text-plum/60">{label}</div>
-      <div className="font-semibold">{value}</div>
+    <div className={`rounded-lg border ${DESIGN_TOKENS.colors.border.default} p-3`}>
+      <div className={`text-xs ${DESIGN_TOKENS.colors.text.muted}`}>{label}</div>
+      <div className={`font-semibold ${DESIGN_TOKENS.colors.text.primary}`}>{value}</div>
     </div>
   )
 }

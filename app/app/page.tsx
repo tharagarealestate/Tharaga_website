@@ -19,88 +19,66 @@ import {
   Calculator,
   Sparkles,
   Search,
-  Home,
-  Users,
-  Star,
-  IndianRupee,
-  HeartHandshake,
 } from 'lucide-react'
 
 /* ─── Data ─── */
 
 const badgeColors: Record<string, string> = {
   'AI-Powered': 'text-amber-400 bg-amber-500/10 border-amber-500/20',
-  'CRM': 'text-blue-400 bg-blue-500/10 border-blue-500/20',
-  'Analytics': 'text-orange-400 bg-orange-500/10 border-orange-500/20',
-  'Automation': 'text-purple-400 bg-purple-500/10 border-purple-500/20',
-  'Trust': 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20',
+  CRM: 'text-blue-400 bg-blue-500/10 border-blue-500/20',
+  Analytics: 'text-orange-400 bg-orange-500/10 border-orange-500/20',
+  Automation: 'text-purple-400 bg-purple-500/10 border-purple-500/20',
+  Trust: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20',
 }
 
-const builderFeatures = [
+const features = [
   {
     icon: Brain,
     title: 'AI Lead Scoring',
-    description: 'Automatically score and classify leads using behavioral signals, budget alignment, and engagement patterns.',
+    description:
+      'Automatically score and classify leads using behavioral signals, budget alignment, and engagement patterns.',
     badge: 'AI-Powered',
     href: '/builder?section=leads',
   },
   {
     icon: Target,
     title: 'Smart Pipeline',
-    description: 'Kanban-style pipeline with 9 stages, automated stage tracking, and weighted deal values.',
+    description:
+      'Kanban-style pipeline with 9 stages, automated stage tracking, and weighted deal values.',
     badge: 'CRM',
     href: '/builder?section=contacts',
   },
   {
     icon: BarChart3,
     title: 'Analytics Dashboard',
-    description: 'Real-time metrics, conversion funnels, geographic heat maps, and revenue forecasting.',
+    description:
+      'Real-time metrics, conversion funnels, geographic heat maps, and revenue forecasting.',
     badge: 'Analytics',
     href: '/builder?section=analytics',
   },
   {
     icon: MessageSquare,
     title: 'Multi-Channel Messaging',
-    description: 'Send personalized messages via Email, WhatsApp, and SMS — all from one dashboard.',
+    description:
+      'Send personalized messages via Email, WhatsApp, and SMS — all from one dashboard.',
     badge: 'Automation',
     href: '/builder?section=client-outreach',
   },
   {
     icon: Zap,
     title: 'Workflow Automation',
-    description: 'Visual workflow builder with behavioral triggers, AI-generated nurture sequences, and auto-assignment.',
+    description:
+      'Visual workflow builder with behavioral triggers, AI-generated nurture sequences, and auto-assignment.',
     badge: 'AI-Powered',
     href: '/builder?section=overview',
   },
   {
     icon: Shield,
     title: 'RERA Compliance',
-    description: 'Built-in RERA verification, project monitoring, and compliance tracking for Tamil Nadu.',
+    description:
+      'Built-in RERA verification, project monitoring, and compliance tracking for Tamil Nadu.',
     badge: 'Trust',
     href: '/tools/verification',
-  },
-]
-
-const buyerBenefits = [
-  {
-    icon: IndianRupee,
-    title: 'Zero Brokerage',
-    description: 'Connect directly with builders. No middlemen, no hidden fees, no commission.',
-  },
-  {
-    icon: Shield,
-    title: 'RERA Verified Only',
-    description: 'Every property is verified with RERA compliance. Your investment is protected.',
-  },
-  {
-    icon: Brain,
-    title: 'AI Recommendations',
-    description: 'Get personalized property suggestions based on your budget, lifestyle, and preferences.',
-  },
-  {
-    icon: Calculator,
-    title: 'Smart Financial Tools',
-    description: 'EMI calculator, ROI analysis, loan eligibility — plan your finances with AI.',
   },
 ]
 
@@ -113,39 +91,6 @@ const tools = [
   { icon: BarChart3, title: 'Property Valuation', desc: 'Accurate valuation with RERA data', href: '/tools/property-valuation' },
 ]
 
-const stats = [
-  { value: '0%', label: 'Brokerage', icon: IndianRupee },
-  { value: '100%', label: 'RERA Verified', icon: Shield },
-  { value: '500+', label: 'Properties', icon: Home },
-  { value: '50+', label: 'Builders', icon: Building2 },
-]
-
-const testimonials = [
-  {
-    name: 'Rajesh Kumar',
-    role: 'Home Buyer, Chennai',
-    quote: 'Found my dream home without paying a single rupee in brokerage. The AI recommendations were spot-on.',
-    rating: 5,
-    tag: 'Buyer',
-  },
-  {
-    name: 'Priya Constructions',
-    role: 'Builder, Coimbatore',
-    quote: 'Our lead conversion improved dramatically with the AI scoring. We close 3x faster now.',
-    rating: 5,
-    tag: 'Builder',
-  },
-  {
-    name: 'Arun Shankar',
-    role: 'First-time Buyer, Madurai',
-    quote: 'The EMI calculator and RERA verification gave me complete confidence in my purchase.',
-    rating: 5,
-    tag: 'Buyer',
-  },
-]
-
-/* ─── Component ─── */
-
 export default function HomePage() {
   const [activeTab, setActiveTab] = useState<'buyer' | 'builder'>('buyer')
 
@@ -154,32 +99,32 @@ export default function HomePage() {
       <Header />
 
       <main>
-        {/* ════════ HERO ════════ */}
-        <section className="relative min-h-[92vh] flex items-center pt-16 overflow-hidden">
-          {/* Layered background with animated orbs */}
+        {/* ═══════════════════════════════════════════
+            HERO — Old layout + new toggle UX
+        ═══════════════════════════════════════════ */}
+        <section className="relative min-h-[90vh] flex items-center pt-16 overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-b from-zinc-950 via-zinc-950 to-zinc-900" />
-          <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[700px] h-[700px] bg-amber-500/5 rounded-full blur-[140px] animate-pulse-glow" />
-          <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-amber-500/3 rounded-full blur-[100px] animate-float" />
+          <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-amber-500/5 rounded-full blur-[120px] animate-pulse-glow" />
 
-          <div className="relative container-page py-20 md:py-28">
-            <div className="max-w-5xl mx-auto text-center">
-              {/* Pill badge */}
-              <div className="inline-flex items-center gap-2 px-4 py-2 mb-8 text-sm font-medium text-amber-400 bg-amber-500/10 border border-amber-500/20 rounded-full backdrop-blur-sm">
+          <div className="relative container-page py-20 md:py-32">
+            <div className="max-w-4xl mx-auto text-center">
+              <div className="inline-flex items-center gap-2 px-4 py-2 mb-8 text-sm font-medium text-amber-400 bg-amber-500/10 border border-amber-500/20 rounded-full">
                 <Sparkles className="w-4 h-4" />
                 AI-Powered &middot; Zero Commission &middot; RERA Verified
               </div>
 
               <h1 className="mb-6">
-                <span className="block text-zinc-100">Your real estate journey,</span>
-                <span className="block text-gradient-brand">reimagined with AI</span>
+                <span className="block text-zinc-100">Build your real estate</span>
+                <span className="block text-gradient-brand">empire with AI</span>
               </h1>
 
               <p className="text-lg md:text-xl text-zinc-400 max-w-2xl mx-auto mb-10 leading-relaxed">
-                India&apos;s first AI-powered zero-commission platform. Buyers find dream homes.
-                Builders close deals faster. No brokers. No hidden fees.
+                India&apos;s AI-powered zero-commission platform.
+                Builders list properties, we handle marketing.
+                Buyers connect directly — no brokers, no hidden fees.
               </p>
 
-              {/* ── Dual Audience Toggle ── */}
+              {/* ── Dual Audience Toggle (new UX) ── */}
               <div className="flex items-center justify-center mb-8">
                 <div className="inline-flex bg-zinc-900 border border-zinc-800 rounded-2xl p-1.5">
                   <button
@@ -208,7 +153,7 @@ export default function HomePage() {
               </div>
 
               {/* ── Audience-specific CTA ── */}
-              <div className="min-h-[140px]">
+              <div className="min-h-[120px] mb-16">
                 {activeTab === 'buyer' ? (
                   <div className="animate-fade-in">
                     <p className="text-zinc-400 mb-6 text-base">
@@ -217,16 +162,17 @@ export default function HomePage() {
                     <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
                       <Link
                         href="/property-listing"
-                        className="inline-flex items-center gap-2 h-13 px-8 bg-amber-500 text-zinc-950 font-bold rounded-2xl hover:bg-amber-400 transition-all active:scale-[0.98] shadow-lg shadow-amber-500/25 text-base"
+                        className="inline-flex items-center gap-2 h-12 px-8 bg-amber-500 text-zinc-950 font-semibold rounded-xl hover:bg-amber-400 transition-all active:scale-[0.98] shadow-lg shadow-amber-500/20"
                       >
-                        <Search className="w-5 h-5" />
+                        <Search className="w-4 h-4" />
                         Explore Properties
+                        <ArrowRight className="w-4 h-4" />
                       </Link>
                       <Link
                         href="/tools/emi"
-                        className="inline-flex items-center gap-2 h-13 px-8 border border-zinc-700 text-zinc-200 font-medium rounded-2xl hover:bg-zinc-800 hover:border-zinc-600 transition-all text-base"
+                        className="inline-flex items-center gap-2 h-12 px-8 border border-zinc-700 text-zinc-200 font-medium rounded-xl hover:bg-zinc-800 hover:border-zinc-600 transition-all"
                       >
-                        <Calculator className="w-5 h-5" />
+                        <Calculator className="w-4 h-4" />
                         EMI Calculator
                       </Link>
                     </div>
@@ -239,33 +185,34 @@ export default function HomePage() {
                     <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
                       <Link
                         href="/trial-signup"
-                        className="inline-flex items-center gap-2 h-13 px-8 bg-amber-500 text-zinc-950 font-bold rounded-2xl hover:bg-amber-400 transition-all active:scale-[0.98] shadow-lg shadow-amber-500/25 text-base"
+                        className="inline-flex items-center gap-2 h-12 px-8 bg-amber-500 text-zinc-950 font-semibold rounded-xl hover:bg-amber-400 transition-all active:scale-[0.98] shadow-lg shadow-amber-500/20"
                       >
-                        <Zap className="w-5 h-5" />
+                        <Zap className="w-4 h-4" />
                         Start Free Trial
+                        <ArrowRight className="w-4 h-4" />
                       </Link>
                       <Link
                         href="/builder"
-                        className="inline-flex items-center gap-2 h-13 px-8 border border-zinc-700 text-zinc-200 font-medium rounded-2xl hover:bg-zinc-800 hover:border-zinc-600 transition-all text-base"
+                        className="inline-flex items-center gap-2 h-12 px-8 border border-zinc-700 text-zinc-200 font-medium rounded-xl hover:bg-zinc-800 hover:border-zinc-600 transition-all"
                       >
-                        <BarChart3 className="w-5 h-5" />
-                        View Dashboard
+                        <Building2 className="w-4 h-4" />
+                        Builder Dashboard
                       </Link>
                     </div>
                   </div>
                 )}
               </div>
 
-              {/* ── Stats Row ── */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 max-w-3xl mx-auto mt-12">
-                {stats.map((stat) => (
-                  <div
-                    key={stat.label}
-                    className="group bg-zinc-900/60 border border-zinc-800/80 rounded-2xl p-4 text-center hover:border-amber-500/30 transition-all duration-300"
-                  >
-                    <stat.icon className="w-5 h-5 text-amber-400 mx-auto mb-2 group-hover:scale-110 transition-transform" />
-                    <p className="text-2xl md:text-3xl font-extrabold font-mono text-amber-400 mb-1">{stat.value}</p>
-                    <p className="text-xs text-zinc-500 font-medium uppercase tracking-wider">{stat.label}</p>
+              {/* ── Stats Row (original 3-column) ── */}
+              <div className="grid grid-cols-3 gap-4 max-w-2xl mx-auto">
+                {[
+                  { value: '0%', label: 'Brokerage' },
+                  { value: 'RERA', label: 'Verified Only' },
+                  { value: 'Tamil Nadu', label: 'Coverage' },
+                ].map((stat) => (
+                  <div key={stat.label} className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-4 text-center">
+                    <p className="text-xl md:text-2xl font-bold font-mono text-amber-400 mb-1">{stat.value}</p>
+                    <p className="text-xs text-zinc-500">{stat.label}</p>
                   </div>
                 ))}
               </div>
@@ -273,169 +220,62 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* ════════ SOCIAL PROOF / TESTIMONIALS ════════ */}
-        <section className="py-16 border-t border-zinc-800/50 bg-zinc-900/20">
-          <div className="container-page">
-            <div className="text-center mb-10">
-              <p className="text-sm font-semibold text-amber-400 uppercase tracking-wider mb-3">TRUSTED BY</p>
-              <h2 className="text-2xl md:text-3xl font-bold text-zinc-100">
-                Real people, real results
-              </h2>
-            </div>
-
-            <div className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto">
-              {testimonials.map((t) => (
-                <div
-                  key={t.name}
-                  className="relative bg-zinc-900 border border-zinc-800 rounded-2xl p-6 hover:border-amber-500/20 transition-all duration-300 overflow-hidden"
-                >
-                  {/* Decorative quote mark */}
-                  <span className="absolute top-3 right-4 text-5xl font-serif text-amber-500/[0.07] leading-none select-none">&ldquo;</span>
-
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="flex gap-1">
-                      {Array.from({ length: t.rating }).map((_, i) => (
-                        <Star key={i} className="w-4 h-4 fill-amber-400 text-amber-400" />
-                      ))}
-                    </div>
-                    <span className={`text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full border ${
-                      t.tag === 'Builder'
-                        ? 'text-amber-400 bg-amber-500/10 border-amber-500/20'
-                        : 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20'
-                    }`}>
-                      {t.tag}
-                    </span>
-                  </div>
-                  <p className="text-sm text-zinc-300 leading-relaxed mb-5 relative">
-                    &ldquo;{t.quote}&rdquo;
-                  </p>
-                  <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-full bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-amber-400 text-xs font-bold">
-                      {t.name.split(' ').map(n => n[0]).join('')}
-                    </div>
-                    <div>
-                      <p className="text-sm font-semibold text-zinc-200">{t.name}</p>
-                      <p className="text-xs text-zinc-500">{t.role}</p>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* ════════ FOR BUYERS ════════ */}
+        {/* ═══════════════════════════════════════════
+            PLATFORM FEATURES — Original 6-card grid
+        ═══════════════════════════════════════════ */}
         <section className="section-gap border-t border-zinc-800/50">
           <div className="container-page">
             <div className="text-center mb-12">
-              <div className="inline-flex items-center gap-2 px-3 py-1.5 mb-4 text-xs font-semibold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 rounded-full uppercase tracking-wider">
-                <Home className="w-3.5 h-3.5" />
-                For Home Buyers
-              </div>
-              <h2 className="text-3xl md:text-4xl font-bold text-zinc-100 mb-4">
-                Find your dream home, commission-free
-              </h2>
-              <p className="text-zinc-400 max-w-2xl mx-auto text-base">
-                Browse verified properties directly from builders. No middlemen, no hidden charges, no brokerage.
-              </p>
-            </div>
-
-            <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              {buyerBenefits.map((benefit) => (
-                <div
-                  key={benefit.title}
-                  className="group bg-zinc-900 border border-zinc-800 rounded-2xl p-6 hover:border-emerald-500/30 hover:bg-zinc-900/80 transition-all duration-300"
-                >
-                  <div className="p-3 bg-emerald-500/10 rounded-xl text-emerald-400 w-fit mb-4 group-hover:bg-emerald-500/20 group-hover:scale-110 transition-all duration-300">
-                    <benefit.icon className="w-6 h-6" />
-                  </div>
-                  <h3 className="text-base font-bold text-zinc-100 mb-2 group-hover:text-emerald-400 transition-colors">{benefit.title}</h3>
-                  <p className="text-sm text-zinc-400 leading-relaxed mb-3">{benefit.description}</p>
-                  <span className="inline-flex items-center gap-1 text-xs font-semibold text-emerald-400 opacity-0 group-hover:opacity-100 transition-all group-hover:translate-x-1">
-                    Learn more <ArrowRight className="w-3 h-3" />
-                  </span>
-                </div>
-              ))}
-            </div>
-
-            <div className="text-center mt-10">
-              <Link
-                href="/property-listing"
-                className="inline-flex items-center gap-2 h-12 px-8 bg-emerald-500 text-white font-bold rounded-2xl hover:bg-emerald-400 transition-all active:scale-[0.98] shadow-lg shadow-emerald-500/20"
-              >
-                Browse Properties <ArrowRight className="w-4 h-4" />
-              </Link>
-            </div>
-          </div>
-        </section>
-
-        {/* ════════ FOR BUILDERS ════════ */}
-        <section className="section-gap bg-zinc-900/30 border-t border-zinc-800/50">
-          <div className="container-page">
-            <div className="text-center mb-12">
-              <div className="inline-flex items-center gap-2 px-3 py-1.5 mb-4 text-xs font-semibold text-amber-400 bg-amber-500/10 border border-amber-500/20 rounded-full uppercase tracking-wider">
-                <Building2 className="w-3.5 h-3.5" />
-                For Builders
-              </div>
-              <h2 className="text-3xl md:text-4xl font-bold text-zinc-100 mb-4">
-                Close deals faster with AI
-              </h2>
-              <p className="text-zinc-400 max-w-2xl mx-auto text-base">
+              <p className="text-sm font-medium text-amber-400 mb-3">PLATFORM</p>
+              <h2 className="text-zinc-100 mb-4">Everything you need to close deals faster</h2>
+              <p className="text-zinc-400 max-w-2xl mx-auto">
                 A complete operating system for real estate — from lead capture to closing, powered by AI at every step.
               </p>
             </div>
 
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {builderFeatures.map((feature) => (
+              {features.map((feature) => (
                 <Link
                   key={feature.title}
                   href={feature.href}
-                  className="group bg-zinc-900 border border-zinc-800 rounded-2xl p-6 hover:border-amber-500/30 hover:bg-zinc-900/80 transition-all duration-300"
+                  className="group bg-zinc-900 border border-zinc-800 rounded-xl p-6 hover:border-amber-500/30 hover:bg-zinc-900/80 transition-all duration-200"
                 >
                   <div className="flex items-start justify-between mb-4">
-                    <div className="p-3 bg-amber-500/10 rounded-xl text-amber-400 group-hover:bg-amber-500/20 group-hover:scale-105 transition-all">
+                    <div className="p-2.5 bg-amber-500/10 rounded-lg text-amber-400 group-hover:bg-amber-500/20 transition-colors">
                       <feature.icon className="w-5 h-5" />
                     </div>
-                    <span className={`text-[11px] font-semibold px-2.5 py-1 rounded-full uppercase tracking-wider border ${badgeColors[feature.badge] || 'text-zinc-500 bg-zinc-800 border-zinc-700'}`}>
+                    <span
+                      className={`text-xs font-medium px-2.5 py-1 rounded-full border ${
+                        badgeColors[feature.badge] || 'text-zinc-500 bg-zinc-800 border-zinc-700'
+                      }`}
+                    >
                       {feature.badge}
                     </span>
                   </div>
-                  <h3 className="text-lg font-bold text-zinc-100 mb-2 group-hover:text-amber-400 transition-colors">
+                  <h3 className="text-lg font-semibold text-zinc-100 mb-2 group-hover:text-amber-400 transition-colors">
                     {feature.title}
                   </h3>
                   <p className="text-sm text-zinc-400 leading-relaxed mb-3">
                     {feature.description}
                   </p>
-                  <span className="inline-flex items-center gap-1 text-xs font-semibold text-amber-400 opacity-0 group-hover:opacity-100 transition-all group-hover:translate-x-1">
+                  <span className="inline-flex items-center gap-1 text-xs font-medium text-amber-400 opacity-0 group-hover:opacity-100 transition-opacity">
                     Learn more <ArrowRight className="w-3 h-3" />
                   </span>
                 </Link>
               ))}
             </div>
-
-            <div className="text-center mt-10">
-              <Link
-                href="/trial-signup"
-                className="inline-flex items-center gap-2 h-12 px-8 bg-amber-500 text-zinc-950 font-bold rounded-2xl hover:bg-amber-400 transition-all active:scale-[0.98] shadow-lg shadow-amber-500/20"
-              >
-                Start Free 14-Day Trial <ArrowRight className="w-4 h-4" />
-              </Link>
-            </div>
           </div>
         </section>
 
-        {/* ════════ SMART CALCULATORS ════════ */}
-        <section className="section-gap border-t border-zinc-800/50">
+        {/* ═══════════════════════════════════════════
+            SMART CALCULATORS — Original layout
+        ═══════════════════════════════════════════ */}
+        <section className="section-gap bg-zinc-900/30 border-t border-zinc-800/50">
           <div className="container-page">
             <div className="text-center mb-12">
-              <div className="inline-flex items-center gap-2 px-3 py-1.5 mb-4 text-xs font-semibold text-blue-400 bg-blue-500/10 border border-blue-500/20 rounded-full uppercase tracking-wider">
-                <Calculator className="w-3.5 h-3.5" />
-                Free Tools
-              </div>
-              <h2 className="text-3xl md:text-4xl font-bold text-zinc-100 mb-4">
-                Smart calculators for informed decisions
-              </h2>
-              <p className="text-zinc-400 max-w-2xl mx-auto text-base">
+              <p className="text-sm font-medium text-amber-400 mb-3">TOOLS</p>
+              <h2 className="text-zinc-100 mb-4">Smart calculators for informed decisions</h2>
+              <p className="text-zinc-400 max-w-2xl mx-auto">
                 AI-powered financial tools built for the Indian real estate market.
               </p>
             </div>
@@ -445,16 +285,16 @@ export default function HomePage() {
                 <Link
                   key={tool.title}
                   href={tool.href}
-                  className="group bg-zinc-900 border border-zinc-800 rounded-2xl p-6 hover:border-blue-500/30 transition-all duration-300"
+                  className="group bg-zinc-900 border border-zinc-800 rounded-xl p-6 hover:border-amber-500/30 transition-all duration-200"
                 >
-                  <div className="p-3 bg-zinc-800 rounded-xl text-zinc-400 group-hover:bg-blue-500/10 group-hover:text-blue-400 transition-all w-fit mb-4">
+                  <div className="p-2.5 bg-zinc-800 rounded-lg text-zinc-400 group-hover:bg-amber-500/10 group-hover:text-amber-400 transition-colors w-fit mb-4">
                     <tool.icon className="w-5 h-5" />
                   </div>
-                  <h3 className="text-base font-bold text-zinc-100 mb-1.5 group-hover:text-blue-400 transition-colors">
+                  <h3 className="text-base font-semibold text-zinc-100 mb-1.5 group-hover:text-amber-400 transition-colors">
                     {tool.title}
                   </h3>
                   <p className="text-sm text-zinc-500 mb-4">{tool.desc}</p>
-                  <span className="inline-flex items-center gap-1 text-xs font-semibold text-blue-400 opacity-0 group-hover:opacity-100 transition-all group-hover:translate-x-1">
+                  <span className="inline-flex items-center gap-1 text-xs font-medium text-amber-400 opacity-0 group-hover:opacity-100 transition-opacity">
                     Calculate Now <ArrowRight className="w-3 h-3" />
                   </span>
                 </Link>
@@ -463,54 +303,36 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* ════════ HOW IT WORKS ════════ */}
-        <section className="section-gap bg-zinc-900/30 border-t border-zinc-800/50">
+        {/* ═══════════════════════════════════════════
+            HOW IT WORKS — Original 3-step
+        ═══════════════════════════════════════════ */}
+        <section className="section-gap border-t border-zinc-800/50">
           <div className="container-page">
             <div className="text-center mb-12">
-              <p className="text-sm font-semibold text-amber-400 uppercase tracking-wider mb-3">HOW IT WORKS</p>
-              <h2 className="text-3xl md:text-4xl font-bold text-zinc-100 mb-4">From sign-up to closing in 3 steps</h2>
+              <p className="text-sm font-medium text-amber-400 mb-3">HOW IT WORKS</p>
+              <h2 className="text-zinc-100 mb-4">From sign-up to closing in 3 steps</h2>
             </div>
 
             <div className="grid md:grid-cols-3 gap-8 max-w-4xl mx-auto">
               {[
-                {
-                  step: '01',
-                  icon: Users,
-                  title: 'Create your account',
-                  desc: 'Sign up as a builder or buyer in 30 seconds. No credit card required. Get instant access.',
-                },
-                {
-                  step: '02',
-                  icon: Home,
-                  title: 'Add properties & capture leads',
-                  desc: 'Upload listings, configure lead forms, and let AI score every inquiry automatically.',
-                },
-                {
-                  step: '03',
-                  icon: HeartHandshake,
-                  title: 'Close deals with AI',
-                  desc: 'Smart pipeline, automated follow-ups, and AI insights to convert leads into buyers faster.',
-                },
-              ].map((item, idx) => (
-                <div key={item.step} className="relative text-center group">
-                  {/* Connector line */}
-                  {idx < 2 && (
-                    <div className="hidden md:block absolute top-8 left-[60%] w-[80%] h-px bg-gradient-to-r from-amber-500/30 to-transparent" />
-                  )}
-                  <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-400 mb-5 group-hover:bg-amber-500/20 group-hover:scale-105 transition-all">
-                    <item.icon className="w-7 h-7" />
+                { step: '01', title: 'Create your account', desc: 'Sign up as a builder or buyer in 30 seconds. No credit card required. Get instant access to all features.' },
+                { step: '02', title: 'Add properties & capture leads', desc: 'Upload your listings, configure lead forms, and let AI score and classify every inquiry automatically.' },
+                { step: '03', title: 'Close deals with AI', desc: 'Use smart pipeline, automated follow-ups, and AI insights to convert leads into buyers faster.' },
+              ].map((item) => (
+                <div key={item.step} className="text-center">
+                  <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-400 font-mono font-bold text-sm mb-4">
+                    {item.step}
                   </div>
-                  <div className="text-xs font-mono font-bold text-amber-500/60 mb-2">{item.step}</div>
-                  <h3 className="text-lg font-bold text-zinc-100 mb-2">{item.title}</h3>
-                  <p className="text-sm text-zinc-400 leading-relaxed max-w-xs mx-auto">{item.desc}</p>
+                  <h3 className="text-lg font-semibold text-zinc-100 mb-2">{item.title}</h3>
+                  <p className="text-sm text-zinc-400 leading-relaxed">{item.desc}</p>
                 </div>
               ))}
             </div>
 
-            <div className="text-center mt-12">
+            <div className="text-center mt-10">
               <Link
                 href="/trial-signup"
-                className="inline-flex items-center gap-2 text-sm font-semibold text-amber-400 hover:text-amber-300 transition-colors"
+                className="inline-flex items-center gap-2 text-sm font-medium text-amber-400 hover:text-amber-300 transition-colors"
               >
                 Get started now <ArrowRight className="w-4 h-4" />
               </Link>
@@ -518,40 +340,88 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* ════════ FINAL CTA ════════ */}
+        {/* ═══════════════════════════════════════════
+            FOR BUYERS — Original side-by-side layout
+        ═══════════════════════════════════════════ */}
+        <section className="section-gap bg-zinc-900/30 border-t border-zinc-800/50">
+          <div className="container-page">
+            <div className="grid lg:grid-cols-2 gap-12 items-center">
+              <div>
+                <p className="text-sm font-medium text-amber-400 mb-3">FOR BUYERS</p>
+                <h2 className="text-zinc-100 mb-4">Find your dream home, commission-free</h2>
+                <p className="text-zinc-400 mb-8 leading-relaxed">
+                  Browse verified properties directly from builders. No middlemen, no hidden charges,
+                  no brokerage. Deal directly and save.
+                </p>
+                <ul className="space-y-3 mb-8">
+                  {[
+                    'RERA-verified properties only',
+                    'Direct builder connection — zero brokerage',
+                    'AI-powered property recommendations',
+                    'Smart calculators for financial planning',
+                    'Real-time property market insights',
+                  ].map((item) => (
+                    <li key={item} className="flex items-center gap-3 text-sm text-zinc-300">
+                      <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                      {item}
+                    </li>
+                  ))}
+                </ul>
+                <Link
+                  href="/property-listing"
+                  className="inline-flex items-center gap-2 h-11 px-6 bg-amber-500 text-zinc-950 font-semibold rounded-xl hover:bg-amber-400 transition-all active:scale-[0.98]"
+                >
+                  Browse Properties <ArrowRight className="w-4 h-4" />
+                </Link>
+              </div>
+
+              <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-8">
+                <div className="space-y-4">
+                  {[
+                    { label: 'Brokerage fees', value: '₹0', color: 'text-emerald-400' },
+                    { label: 'Property verification', value: 'RERA Only', color: 'text-amber-400' },
+                    { label: 'Region coverage', value: 'Tamil Nadu', color: 'text-blue-400' },
+                    { label: 'AI-powered features', value: 'Lead Scoring', color: 'text-purple-400' },
+                  ].map((stat) => (
+                    <div key={stat.label} className="flex items-center justify-between p-4 bg-zinc-800/50 rounded-xl">
+                      <span className="text-sm text-zinc-400">{stat.label}</span>
+                      <span className={`text-lg font-bold font-mono ${stat.color}`}>{stat.value}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* ═══════════════════════════════════════════
+            CTA — Original layout
+        ═══════════════════════════════════════════ */}
         <section className="section-gap border-t border-zinc-800/50">
           <div className="container-page">
-            <div className="relative bg-gradient-to-br from-zinc-900 via-zinc-900 to-zinc-800 border border-zinc-800 rounded-3xl p-8 md:p-16 text-center overflow-hidden">
-              {/* Animated glow effects */}
-              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[500px] h-[250px] bg-amber-500/10 rounded-full blur-[100px] animate-pulse-glow" />
-              <div className="absolute bottom-0 right-0 w-[300px] h-[200px] bg-amber-500/5 rounded-full blur-[80px] animate-float" />
+            <div className="relative bg-zinc-900 border border-zinc-800 rounded-2xl p-8 md:p-16 text-center overflow-hidden">
+              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[400px] h-[200px] bg-amber-500/10 rounded-full blur-[80px] animate-pulse-glow" />
 
               <div className="relative">
-                <div className="inline-flex items-center gap-2 px-3 py-1.5 mb-6 text-xs font-semibold text-amber-400 bg-amber-500/10 border border-amber-500/20 rounded-full">
-                  <Sparkles className="w-3.5 h-3.5" />
-                  Free 14-day trial
-                </div>
-
-                <h2 className="text-3xl md:text-4xl font-bold text-zinc-100 mb-4">
-                  Ready to transform your real estate journey?
-                </h2>
-                <p className="text-zinc-400 max-w-xl mx-auto mb-8 text-base">
-                  Join thousands of buyers and builders who are already using Tharaga to buy, sell, and manage properties smarter.
+                <h2 className="text-zinc-100 mb-4">Ready to transform your real estate business?</h2>
+                <p className="text-zinc-400 max-w-xl mx-auto mb-8">
+                  Join builders who are closing deals faster with AI-powered lead scoring,
+                  automated workflows, and real-time analytics.
                 </p>
                 <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
                   <Link
                     href="/trial-signup"
-                    className="inline-flex items-center gap-2 h-13 px-8 bg-amber-500 text-zinc-950 font-bold rounded-2xl hover:bg-amber-400 transition-all active:scale-[0.98] shadow-lg shadow-amber-500/25"
+                    className="inline-flex items-center gap-2 h-12 px-8 bg-amber-500 text-zinc-950 font-semibold rounded-xl hover:bg-amber-400 transition-all active:scale-[0.98] shadow-lg shadow-amber-500/20"
                   >
                     Start Free Trial <ArrowRight className="w-4 h-4" />
                   </Link>
                   <AuthButton
-                    className="inline-flex items-center gap-2 h-13 px-8 border border-zinc-700 text-zinc-300 hover:text-zinc-100 hover:border-zinc-600 font-medium rounded-2xl transition-all"
+                    className="inline-flex items-center gap-2 h-12 px-8 border border-zinc-700 text-zinc-300 hover:text-zinc-100 hover:border-zinc-600 font-medium rounded-xl transition-all"
                   >
                     Sign In
                   </AuthButton>
                 </div>
-                <div className="flex flex-wrap items-center justify-center gap-6 mt-8 text-xs text-zinc-500">
+                <div className="flex items-center justify-center gap-6 mt-6 text-xs text-zinc-500">
                   <span className="flex items-center gap-1.5">
                     <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" /> 14-day free trial
                   </span>
@@ -560,9 +430,6 @@ export default function HomePage() {
                   </span>
                   <span className="flex items-center gap-1.5">
                     <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" /> Cancel anytime
-                  </span>
-                  <span className="flex items-center gap-1.5">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" /> RERA compliant
                   </span>
                 </div>
               </div>

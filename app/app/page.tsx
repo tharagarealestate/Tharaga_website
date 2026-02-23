@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { Header } from '@/components/layout/Header'
-import { Footer } from '@/components/sections/Footer'
+import { Footer } from '@/components/layout/Footer'
 import { AuthButton } from '@/components/ui/AuthButton'
 import {
   Shield,
@@ -22,13 +22,19 @@ import {
   Home,
   Users,
   Star,
-  MapPin,
   IndianRupee,
-  Clock,
   HeartHandshake,
 } from 'lucide-react'
 
 /* ─── Data ─── */
+
+const badgeColors: Record<string, string> = {
+  'AI-Powered': 'text-amber-400 bg-amber-500/10 border-amber-500/20',
+  'CRM': 'text-blue-400 bg-blue-500/10 border-blue-500/20',
+  'Analytics': 'text-orange-400 bg-orange-500/10 border-orange-500/20',
+  'Automation': 'text-purple-400 bg-purple-500/10 border-purple-500/20',
+  'Trust': 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20',
+}
 
 const builderFeatures = [
   {
@@ -120,18 +126,21 @@ const testimonials = [
     role: 'Home Buyer, Chennai',
     quote: 'Found my dream home without paying a single rupee in brokerage. The AI recommendations were spot-on.',
     rating: 5,
+    tag: 'Buyer',
   },
   {
     name: 'Priya Constructions',
     role: 'Builder, Coimbatore',
     quote: 'Our lead conversion improved dramatically with the AI scoring. We close 3x faster now.',
     rating: 5,
+    tag: 'Builder',
   },
   {
     name: 'Arun Shankar',
     role: 'First-time Buyer, Madurai',
     quote: 'The EMI calculator and RERA verification gave me complete confidence in my purchase.',
     rating: 5,
+    tag: 'Buyer',
   },
 ]
 
@@ -147,10 +156,10 @@ export default function HomePage() {
       <main>
         {/* ════════ HERO ════════ */}
         <section className="relative min-h-[92vh] flex items-center pt-16 overflow-hidden">
-          {/* Layered background */}
+          {/* Layered background with animated orbs */}
           <div className="absolute inset-0 bg-gradient-to-b from-zinc-950 via-zinc-950 to-zinc-900" />
-          <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[700px] h-[700px] bg-amber-500/5 rounded-full blur-[140px]" />
-          <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-amber-500/3 rounded-full blur-[100px]" />
+          <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[700px] h-[700px] bg-amber-500/5 rounded-full blur-[140px] animate-pulse-glow" />
+          <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-amber-500/3 rounded-full blur-[100px] animate-float" />
 
           <div className="relative container-page py-20 md:py-28">
             <div className="max-w-5xl mx-auto text-center">
@@ -161,12 +170,8 @@ export default function HomePage() {
               </div>
 
               <h1 className="mb-6">
-                <span className="block text-zinc-100 text-4xl md:text-6xl lg:text-7xl font-extrabold tracking-tight leading-[1.1]">
-                  Your real estate journey,
-                </span>
-                <span className="block text-gradient-brand text-4xl md:text-6xl lg:text-7xl font-extrabold tracking-tight leading-[1.1] mt-2">
-                  reimagined with AI
-                </span>
+                <span className="block text-zinc-100">Your real estate journey,</span>
+                <span className="block text-gradient-brand">reimagined with AI</span>
               </h1>
 
               <p className="text-lg md:text-xl text-zinc-400 max-w-2xl mx-auto mb-10 leading-relaxed">
@@ -282,14 +287,26 @@ export default function HomePage() {
               {testimonials.map((t) => (
                 <div
                   key={t.name}
-                  className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6 hover:border-amber-500/20 transition-all duration-300"
+                  className="relative bg-zinc-900 border border-zinc-800 rounded-2xl p-6 hover:border-amber-500/20 transition-all duration-300 overflow-hidden"
                 >
-                  <div className="flex gap-1 mb-4">
-                    {Array.from({ length: t.rating }).map((_, i) => (
-                      <Star key={i} className="w-4 h-4 fill-amber-400 text-amber-400" />
-                    ))}
+                  {/* Decorative quote mark */}
+                  <span className="absolute top-3 right-4 text-5xl font-serif text-amber-500/[0.07] leading-none select-none">&ldquo;</span>
+
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex gap-1">
+                      {Array.from({ length: t.rating }).map((_, i) => (
+                        <Star key={i} className="w-4 h-4 fill-amber-400 text-amber-400" />
+                      ))}
+                    </div>
+                    <span className={`text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full border ${
+                      t.tag === 'Builder'
+                        ? 'text-amber-400 bg-amber-500/10 border-amber-500/20'
+                        : 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20'
+                    }`}>
+                      {t.tag}
+                    </span>
                   </div>
-                  <p className="text-sm text-zinc-300 leading-relaxed mb-4 italic">
+                  <p className="text-sm text-zinc-300 leading-relaxed mb-5 relative">
                     &ldquo;{t.quote}&rdquo;
                   </p>
                   <div className="flex items-center gap-3">
@@ -329,11 +346,14 @@ export default function HomePage() {
                   key={benefit.title}
                   className="group bg-zinc-900 border border-zinc-800 rounded-2xl p-6 hover:border-emerald-500/30 hover:bg-zinc-900/80 transition-all duration-300"
                 >
-                  <div className="p-3 bg-emerald-500/10 rounded-xl text-emerald-400 w-fit mb-4 group-hover:bg-emerald-500/20 group-hover:scale-105 transition-all">
-                    <benefit.icon className="w-5 h-5" />
+                  <div className="p-3 bg-emerald-500/10 rounded-xl text-emerald-400 w-fit mb-4 group-hover:bg-emerald-500/20 group-hover:scale-110 transition-all duration-300">
+                    <benefit.icon className="w-6 h-6" />
                   </div>
-                  <h3 className="text-base font-bold text-zinc-100 mb-2">{benefit.title}</h3>
-                  <p className="text-sm text-zinc-400 leading-relaxed">{benefit.description}</p>
+                  <h3 className="text-base font-bold text-zinc-100 mb-2 group-hover:text-emerald-400 transition-colors">{benefit.title}</h3>
+                  <p className="text-sm text-zinc-400 leading-relaxed mb-3">{benefit.description}</p>
+                  <span className="inline-flex items-center gap-1 text-xs font-semibold text-emerald-400 opacity-0 group-hover:opacity-100 transition-all group-hover:translate-x-1">
+                    Learn more <ArrowRight className="w-3 h-3" />
+                  </span>
                 </div>
               ))}
             </div>
@@ -376,7 +396,7 @@ export default function HomePage() {
                     <div className="p-3 bg-amber-500/10 rounded-xl text-amber-400 group-hover:bg-amber-500/20 group-hover:scale-105 transition-all">
                       <feature.icon className="w-5 h-5" />
                     </div>
-                    <span className="text-[11px] font-semibold text-zinc-500 bg-zinc-800 px-2.5 py-1 rounded-full uppercase tracking-wider">
+                    <span className={`text-[11px] font-semibold px-2.5 py-1 rounded-full uppercase tracking-wider border ${badgeColors[feature.badge] || 'text-zinc-500 bg-zinc-800 border-zinc-700'}`}>
                       {feature.badge}
                     </span>
                   </div>
@@ -502,9 +522,9 @@ export default function HomePage() {
         <section className="section-gap border-t border-zinc-800/50">
           <div className="container-page">
             <div className="relative bg-gradient-to-br from-zinc-900 via-zinc-900 to-zinc-800 border border-zinc-800 rounded-3xl p-8 md:p-16 text-center overflow-hidden">
-              {/* Glow effects */}
-              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[500px] h-[250px] bg-amber-500/10 rounded-full blur-[100px]" />
-              <div className="absolute bottom-0 right-0 w-[300px] h-[200px] bg-amber-500/5 rounded-full blur-[80px]" />
+              {/* Animated glow effects */}
+              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[500px] h-[250px] bg-amber-500/10 rounded-full blur-[100px] animate-pulse-glow" />
+              <div className="absolute bottom-0 right-0 w-[300px] h-[200px] bg-amber-500/5 rounded-full blur-[80px] animate-float" />
 
               <div className="relative">
                 <div className="inline-flex items-center gap-2 px-3 py-1.5 mb-6 text-xs font-semibold text-amber-400 bg-amber-500/10 border border-amber-500/20 rounded-full">

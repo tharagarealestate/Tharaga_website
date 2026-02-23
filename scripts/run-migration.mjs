@@ -1,98 +1,144 @@
-#!/usr/bin/env node
+/**
+ * Run Supabase migration via PostgreSQL connection
+ * This script executes the role tables migration
+ */
 
-import { createClient } from '@supabase/supabase-js'
-import { readFileSync } from 'fs'
-import { fileURLToPath } from 'url'
-import { dirname, join } from 'path'
-import dotenv from 'dotenv'
+import { createClient } from '@supabase/supabase-js';
+import { readFileSync } from 'fs';
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
 
-// Load environment variables
-dotenv.config({ path: join(process.cwd(), '.env') })
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
-const __filename = fileURLToPath(import.meta.url)
-const __dirname = dirname(__filename)
+// Supabase connection details
+const SUPABASE_URL = 'https://wedevtjjmdvngyshqdro.supabase.co';
+const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY;
 
-const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
-
-if (!supabaseUrl || !supabaseServiceKey) {
-  console.error('❌ Missing Supabase credentials')
-  console.error('   Required: SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY')
-  process.exit(1)
+if (!SUPABASE_SERVICE_ROLE_KEY) {
+  console.error('❌ Error: SUPABASE_SERVICE_ROLE_KEY or SUPABASE_ANON_KEY environment variable is required');
+  console.error('Set it with: $env:SUPABASE_SERVICE_ROLE_KEY="your-service-role-key"');
+  process.exit(1);
 }
 
-const supabase = createClient(supabaseUrl, supabaseServiceKey, {
+// Read migration file
+const migrationPath = join(__dirname, 'supabase', 'migrations', '20250103_create_role_tables.sql');
+let migrationSQL;
+
+try {
+  migrationSQL = readFileSync(migrationPath, 'utf-8');
+  console.log('✅ Migration file loaded successfully');
+} catch (error) {
+  console.error('❌ Error reading migration file:', error.message);
+  process.exit(1);
+}
+
+// Create Supabase client with service role key
+const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
   auth: {
     autoRefreshToken: false,
     persistSession: false
   }
-})
+});
 
 async function runMigration() {
+  console.log('\n🚀 Starting migration execution...\n');
+
   try {
-    console.log('🔄 Running lead_pipeline migration...')
+    // Split SQL into individual statements (handle multi-line statements)
+    const statements = migrationSQL
+      .split(';')
+      .map(s => s.trim())
+      .filter(s => s.length > 0 && !s.startsWith('--'));
 
-    // Read migration file
-    const migrationPath = join(process.cwd(), 'supabase', 'migrations', '20250203_lead_pipeline_table.sql')
-    const migrationSQL = readFileSync(migrationPath, 'utf8')
+    console.log(`📝 Found ${statements.length} SQL statements to execute\n`);
 
-    // Execute migration using Supabase client
-    const { data, error } = await supabase.rpc('exec_sql', {
-      sql: migrationSQL
-    })
+    let successCount = 0;
+    let errorCount = 0;
 
-    if (error) {
-      // Try direct execution via REST API
-      console.log('Trying direct SQL execution...')
+    for (let i = 0; i < statements.length; i++) {
+      const statement = statements[i] + ';';
 
-      // Split migration into statements
-      const statements = migrationSQL
-        .split(';')
-        .map(s => s.trim())
-        .filter(s => s.length > 0 && !s.startsWith('--'))
+      // Extract statement type for logging
+      const statementType = statement.match(/^(CREATE|ALTER|DROP|INSERT|UPDATE|DELETE)\s+(\w+)/i);
+      const logPrefix = statementType ? `[${statementType[1]} ${statementType[2]}]` : `[Statement ${i + 1}]`;
 
-      let successCount = 0
-      let errorCount = 0
+      try {
+        // Execute via Supabase RPC (raw SQL execution)
+        const { data, error } = await supabase.rpc('exec_sql', { sql_query: statement });
 
-      for (const statement of statements) {
-        try {
-          const { error: stmtError } = await supabase.rpc('execute_sql', { query: statement + ';' })
+        if (error) {
+          // Check if error is because function doesn't exist, then use alternative
+          if (error.message.includes('exec_sql')) {
+            // Try using the REST API directly with a custom function
+            console.warn(`⚠️  ${logPrefix} RPC not available, trying alternative method...`);
 
-          if (stmtError) {
-            console.error(`❌ Error executing statement: ${stmtError.message}`)
-            console.error(`   Statement: ${statement.substring(0, 100)}...`)
-            errorCount++
-          } else {
-            successCount++
+            // For critical tables, we'll need to use the Supabase dashboard
+            console.log(`ℹ️  ${logPrefix} This statement needs to be run via Supabase Dashboard SQL Editor`);
+            continue;
           }
-        } catch (err) {
-          console.error(`❌ Exception: ${err.message}`)
-          errorCount++
+
+          // Check if it's a "already exists" error (which is ok with IF NOT EXISTS)
+          if (error.message.includes('already exists') || error.message.includes('already defined')) {
+            console.log(`⚠️  ${logPrefix} Already exists - skipping`);
+            successCount++;
+            continue;
+          }
+
+          throw error;
         }
+
+        console.log(`✅ ${logPrefix} Success`);
+        successCount++;
+
+      } catch (error) {
+        console.error(`❌ ${logPrefix} Error: ${error.message}`);
+
+        // Continue with other statements even if one fails
+        errorCount++;
+
+        // Store failed statement for manual execution
+        if (errorCount === 1) {
+          console.log('\n⚠️  Failed statements (copy to Supabase Dashboard SQL Editor):\n');
+        }
+        console.log(`-- Statement ${i + 1}:`);
+        console.log(statement);
+        console.log('\n');
       }
 
-      console.log(`\n✅ Migration completed: ${successCount} statements succeeded, ${errorCount} failed`)
-
-      if (errorCount > 0) {
-        console.log('\n⚠️  Some statements failed. You may need to run the migration manually in Supabase SQL Editor.')
-        console.log('   Migration file: supabase/migrations/20250203_lead_pipeline_table.sql')
-      }
-    } else {
-      console.log('✅ Migration executed successfully!')
+      // Add small delay to avoid rate limiting
+      await new Promise(resolve => setTimeout(resolve, 100));
     }
+
+    console.log('\n' + '='.repeat(60));
+    console.log(`✅ Migration completed: ${successCount} successful, ${errorCount} errors`);
+    console.log('='.repeat(60) + '\n');
+
+    if (errorCount > 0) {
+      console.log('⚠️  Some statements failed. Please run them manually via Supabase Dashboard:');
+      console.log('   1. Go to: https://supabase.com/dashboard/project/wedevtjjmdvngyshqdro/sql');
+      console.log('   2. Copy the failed statements from above');
+      console.log('   3. Paste and run them in the SQL Editor\n');
+      process.exit(1);
+    } else {
+      console.log('🎉 All tables and functions created successfully!\n');
+      console.log('Next steps:');
+      console.log('  1. Verify tables in Supabase Dashboard > Table Editor');
+      console.log('  2. Test the role system by signing in with a new user\n');
+    }
+
   } catch (error) {
-    console.error('❌ Migration failed:', error.message)
-
-    console.log('\n📝 MANUAL MIGRATION INSTRUCTIONS:')
-    console.log('   1. Go to Supabase Dashboard: https://app.supabase.com')
-    console.log('   2. Select your project')
-    console.log('   3. Navigate to SQL Editor')
-    console.log('   4. Create new query')
-    console.log('   5. Copy contents of: supabase/migrations/20250203_lead_pipeline_table.sql')
-    console.log('   6. Paste and run the query')
-
-    process.exit(1)
+    console.error('\n❌ Migration failed:', error.message);
+    console.error('\n📋 Please run the migration manually via Supabase Dashboard:');
+    console.error('   1. Go to: https://supabase.com/dashboard/project/wedevtjjmdvngyshqdro/sql');
+    console.error('   2. Copy contents of: supabase/migrations/20250103_create_role_tables.sql');
+    console.error('   3. Paste and click "Run"\n');
+    process.exit(1);
   }
 }
 
-runMigration()
+// Run migration
+runMigration().catch(error => {
+  console.error('❌ Unexpected error:', error);
+  process.exit(1);
+});

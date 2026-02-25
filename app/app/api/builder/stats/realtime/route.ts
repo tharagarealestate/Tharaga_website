@@ -13,44 +13,50 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Get builder profile
+    // Admin check — admin sees aggregate stats across ALL builders
+    const isAdmin = user.email === 'tharagarealestate@gmail.com';
+
+    // Get builder profile (optional for admin)
     const { data: builderProfile } = await supabase
       .from('builder_profiles')
       .select('id')
       .eq('user_id', user.id)
-      .single();
+      .maybeSingle();
 
-    if (!builderProfile) {
+    // Non-admin users MUST have a builder profile
+    if (!isAdmin && !builderProfile) {
       return NextResponse.json({ error: 'Builder not found' }, { status: 404 });
     }
 
-    const builderId = builderProfile.id;
+    const builderId = builderProfile?.id || user.id;
+
+    // Build queries — admin sees ALL, builder sees only their own
+    const leadsQuery = supabase
+      .from('leads')
+      .select('id, status, score', { count: 'exact', head: false });
+    const propertiesQuery = supabase
+      .from('properties')
+      .select('id, listing_status', { count: 'exact', head: false });
+    const viewsQuery = supabase
+      .from('properties')
+      .select('view_count');
+    const inquiriesQuery = supabase
+      .from('leads')
+      .select('id', { count: 'exact', head: true });
+
+    if (!isAdmin) {
+      leadsQuery.eq('builder_id', builderId);
+      propertiesQuery.eq('builder_id', builderId);
+      viewsQuery.eq('builder_id', builderId);
+      inquiriesQuery.eq('builder_id', builderId);
+    }
 
     // Get real-time stats
     const [leadsResult, propertiesResult, viewsResult, inquiriesResult] = await Promise.all([
-      // Total leads
-      supabase
-        .from('leads')
-        .select('id, status, score', { count: 'exact', head: false })
-        .eq('builder_id', builderId),
-      
-      // Properties
-      supabase
-        .from('properties')
-        .select('id, listing_status', { count: 'exact', head: false })
-        .eq('builder_id', builderId),
-      
-      // Total views
-      supabase
-        .from('properties')
-        .select('view_count')
-        .eq('builder_id', builderId),
-      
-      // Total inquiries
-      supabase
-        .from('leads')
-        .select('id', { count: 'exact', head: true })
-        .eq('builder_id', builderId),
+      leadsQuery,
+      propertiesQuery,
+      viewsQuery,
+      inquiriesQuery,
     ]);
 
     const totalLeads = leadsResult.count || 0;

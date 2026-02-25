@@ -182,7 +182,8 @@ export function OverviewSection({ onNavigate }: OverviewProps) {
     return Array.from(map.values()).sort((a, b) => b.dealValue - a.dealValue)
   })() : []
 
-  const isLoading = statsLoading || leadsLoading
+  // Show loading only on initial load — once ANY data resolves, show the dashboard
+  const isLoading = statsLoading && leadsLoading && pipelineLoading
 
   if (isLoading) {
     return (

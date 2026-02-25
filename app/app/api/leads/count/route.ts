@@ -22,25 +22,38 @@ export async function GET(request: NextRequest) {
       );
     }
     
+    // Admin check — admin sees counts across ALL builders
+    const isAdmin = user.email === 'tharagarealestate@gmail.com';
+
     const { data: profile } = await supabase
       .from('profiles')
       .select('role')
       .eq('id', user.id)
       .maybeSingle();
-    
-    if (!profile || profile.role !== 'builder') {
+
+    // Allow admin OR builder role
+    if (!isAdmin && (!profile || profile.role !== 'builder')) {
       return NextResponse.json(
         { success: true, data: { total: 0, hot: 0, warm: 0, pending_interactions: 0 } },
         { status: 200 }
       );
     }
-    
-    // Get counts - use Promise.all for parallel queries
+
+    // Build queries — admin sees ALL, builder sees only their own
+    const totalQuery = supabase.from('leads').select('*', { count: 'exact', head: true });
+    const hotQuery = supabase.from('leads').select('*', { count: 'exact', head: true }).gte('score', 9);
+    const warmQuery = supabase.from('leads').select('*', { count: 'exact', head: true }).gte('score', 7).lt('score', 9);
+    const pendingQuery = supabase.from('lead_interactions').select('*', { count: 'exact', head: true }).eq('status', 'pending');
+
+    if (!isAdmin) {
+      totalQuery.eq('builder_id', user.id);
+      hotQuery.eq('builder_id', user.id);
+      warmQuery.eq('builder_id', user.id);
+      pendingQuery.eq('builder_id', user.id);
+    }
+
     const [totalResult, hotResult, warmResult, pendingResult] = await Promise.all([
-      supabase.from('leads').select('*', { count: 'exact', head: true }).eq('builder_id', user.id),
-      supabase.from('leads').select('*', { count: 'exact', head: true }).eq('builder_id', user.id).gte('score', 9),
-      supabase.from('leads').select('*', { count: 'exact', head: true }).eq('builder_id', user.id).gte('score', 7).lt('score', 9),
-      supabase.from('lead_interactions').select('*', { count: 'exact', head: true }).eq('builder_id', user.id).eq('status', 'pending'),
+      totalQuery, hotQuery, warmQuery, pendingQuery,
     ]);
     
     return NextResponse.json({

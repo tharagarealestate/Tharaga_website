@@ -3,9 +3,8 @@
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import {
-  User, Bell, Shield, Plug, Globe,
-  Mail, Phone, Building2, Save,
-  MessageSquare, BarChart3, CheckCircle2,
+  User, Bell, Plug, Globe,
+  Save, MessageSquare, BarChart3,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useBuilderDataContext } from '../hooks/useBuilderData'
@@ -15,7 +14,7 @@ interface SettingsSectionProps {
   onNavigate?: (section: string) => void
 }
 
-type SettingsTab = 'profile' | 'notifications' | 'integrations' | 'compliance'
+type SettingsTab = 'profile' | 'notifications' | 'integrations'
 
 export function SettingsSection({ onNavigate }: SettingsSectionProps) {
   const { builderId, userId, companyName, email, isAdmin } = useBuilderDataContext()
@@ -25,8 +24,6 @@ export function SettingsSection({ onNavigate }: SettingsSectionProps) {
     contact_email: '',
     phone: '',
     city: '',
-    rera_number: '',
-    rera_valid_until: '',
   })
   const [isSaving, setIsSaving] = useState(false)
   const [saveMessage, setSaveMessage] = useState('')
@@ -49,8 +46,6 @@ export function SettingsSection({ onNavigate }: SettingsSectionProps) {
             contact_email: profile.contact_email || profile.email || email || '',
             phone: profile.phone || profile.contact_phone || '',
             city: profile.city || profile.location || '',
-            rera_number: profile.rera_number || profile.rera_registration || '',
-            rera_valid_until: profile.rera_valid_until || '',
           })
         } else {
           setProfileData(prev => ({
@@ -98,7 +93,6 @@ export function SettingsSection({ onNavigate }: SettingsSectionProps) {
     { id: 'profile', label: 'Profile', icon: User },
     { id: 'notifications', label: 'Notifications', icon: Bell },
     { id: 'integrations', label: 'Integrations', icon: Plug },
-    { id: 'compliance', label: 'RERA Compliance', icon: Shield },
   ]
 
   return (
@@ -232,32 +226,6 @@ export function SettingsSection({ onNavigate }: SettingsSectionProps) {
             </motion.div>
           )}
 
-          {activeTab === 'compliance' && (
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-              className="bg-zinc-900/60 border border-zinc-800/60 rounded-xl p-6 space-y-4">
-              <h2 className="text-base font-semibold text-zinc-100">RERA Compliance</h2>
-              <p className="text-sm text-zinc-400">Manage your RERA registration and compliance documents.</p>
-              <div className="space-y-3">
-                <div>
-                  <label className="block text-xs text-zinc-500 mb-1.5">RERA Registration Number</label>
-                  <input className="w-full px-3 py-2 bg-zinc-900/80 border border-zinc-800 rounded-lg text-sm text-zinc-300 focus:outline-none focus:border-amber-500/40"
-                    placeholder="TN/01/2024/XXXX"
-                    value={profileData.rera_number}
-                    onChange={(e) => setProfileData(p => ({ ...p, rera_number: e.target.value }))} />
-                </div>
-                <div>
-                  <label className="block text-xs text-zinc-500 mb-1.5">Valid Until</label>
-                  <input type="date" className="w-full px-3 py-2 bg-zinc-900/80 border border-zinc-800 rounded-lg text-sm text-zinc-300 focus:outline-none focus:border-amber-500/40"
-                    value={profileData.rera_valid_until}
-                    onChange={(e) => setProfileData(p => ({ ...p, rera_valid_until: e.target.value }))} />
-                </div>
-              </div>
-              <button onClick={handleSaveProfile} disabled={isSaving}
-                className="flex items-center gap-2 px-4 py-2 bg-amber-500 hover:bg-amber-400 text-zinc-950 rounded-lg text-sm font-semibold transition-colors disabled:opacity-50">
-                <Save className="w-4 h-4" /> Save
-              </button>
-            </motion.div>
-          )}
         </div>
       </div>
     </div>

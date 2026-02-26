@@ -18,6 +18,14 @@ import {
   Loader2,
   AlertCircle,
   CheckCircle2,
+  Shield,
+  ShieldCheck,
+  ShieldAlert,
+  ShieldQuestion,
+  RefreshCw,
+  ExternalLink,
+  BadgeCheck,
+  Clock,
 } from 'lucide-react';
 import { ProgressBar } from '@/components/ui/progress-bar';
 import { useToast } from '@/components/ui/toast';
@@ -118,6 +126,28 @@ export function AdvancedPropertyUploadForm({
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [success, setSuccess] = useState(false);
   const [propertyId, setPropertyId] = useState<string | null>(null);
+
+  // ── RERA verification state ────────────────────────────────────────────
+  const [reraHasRera, setReraHasRera] = useState<boolean | null>(null);
+  const [reraInputNumber, setReraInputNumber] = useState('');
+  const [reraState, setReraState] = useState('Tamil Nadu');
+  type ReraStatus = 'idle' | 'verifying' | 'verified' | 'pending_manual' | 'failed';
+  const [reraStatus, setReraStatus] = useState<ReraStatus>('idle');
+  const [reraResultData, setReraResultData] = useState<{
+    reraNumber?: string;
+    registeredName?: string;
+    registrationType?: string;
+    registrationDate?: string | null;
+    expiryDate?: string | null;
+    promoterName?: string | null;
+    isActive?: boolean;
+    complianceScore?: number;
+    complaintsCount?: number;
+    projectName?: string | null;
+    status?: string | null;
+  } | null>(null);
+  const [reraExemptReason, setReraExemptReason] = useState('');
+  const [reraExemptAcknowledged, setReraExemptAcknowledged] = useState(false);
 
   const [formData, setFormData] = useState<PropertyUploadFormData>({
     title: '',
@@ -256,9 +286,34 @@ export function AdvancedPropertyUploadForm({
         break;
 
       case 6:
+        // Amenities — optional
+        break;
+
       case 7:
+        if (reraHasRera === null) {
+          newErrors.rera = 'Please indicate if this property has RERA registration.';
+        } else if (reraHasRera) {
+          if (!reraInputNumber.trim()) {
+            newErrors.rera = 'Please enter your RERA registration number.';
+          } else if (reraStatus === 'idle') {
+            newErrors.rera = 'Please click "Verify RERA" to authenticate this number.';
+          } else if (reraStatus === 'verifying') {
+            newErrors.rera = 'Verification is in progress. Please wait.';
+          } else if (reraStatus === 'failed') {
+            newErrors.rera = 'RERA verification failed. Check the number and try again.';
+          }
+        } else {
+          // No RERA — require acknowledgment
+          if (!reraExemptReason) {
+            newErrors.rera = 'Please select a reason for RERA exemption.';
+          } else if (!reraExemptAcknowledged) {
+            newErrors.rera = 'Please acknowledge the RERA exemption declaration.';
+          }
+        }
+        break;
+
       case 8:
-        // Optional steps
+        // Metadata — optional
         break;
     }
 
@@ -349,6 +404,57 @@ export function AdvancedPropertyUploadForm({
     }));
   };
 
+  // ── RERA real-time verification ────────────────────────────────────────
+  const verifyRera = useCallback(async () => {
+    const num = reraInputNumber.trim().toUpperCase();
+    if (!num) return;
+    setReraStatus('verifying');
+    setReraResultData(null);
+    try {
+      const res = await fetch('/api/rera/verify', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          rera_number: num,
+          state: reraState,
+          type: 'property',
+        }),
+      });
+      const data = await res.json();
+      if (data.success && data.verified) {
+        setReraStatus('verified');
+        setReraResultData(data.data || null);
+        setFormData((prev) => ({
+          ...prev,
+          rera_id: num,
+          rera_verified: true,
+          property_metadata: {
+            ...prev.property_metadata,
+            rera_number: num,
+          },
+        }));
+      } else if (data.success && !data.verified) {
+        // Number exists but couldn't auto-verify — mark for manual review
+        setReraStatus('pending_manual');
+        setReraResultData(data.data || null);
+        setFormData((prev) => ({
+          ...prev,
+          rera_id: num,
+          rera_verified: false,
+          property_metadata: {
+            ...prev.property_metadata,
+            rera_number: num,
+          },
+        }));
+      } else {
+        setReraStatus('failed');
+      }
+    } catch {
+      setReraStatus('failed');
+    }
+  }, [reraInputNumber, reraState]);
+
   // Common amenities list
   const commonAmenities = [
     'Swimming Pool', 'Gym', 'Park', 'Security', 'Power Backup', 'Lift',
@@ -421,7 +527,7 @@ export function AdvancedPropertyUploadForm({
     { id: 'pricing', label: 'Pricing' },
     { id: 'images', label: 'Images' },
     { id: 'amenities', label: 'Amenities' },
-    { id: 'documents', label: 'Documents' },
+    { id: 'rera', label: 'RERA' },
     { id: 'review', label: 'Review' },
   ];
 
@@ -1086,97 +1192,389 @@ export function AdvancedPropertyUploadForm({
             </div>
           )}
 
-          {/* Step 7: Documents */}
+          {/* Step 7: RERA Verification */}
           {currentStep === 7 && (
             <div className="space-y-6">
               <div>
-                <h2 className="text-2xl sm:text-3xl font-bold mb-6 flex items-center gap-2 text-white">
-                  <FileText className="w-6 h-6 text-amber-300" />
-                  Documents & Certificates
+                <h2 className="text-2xl sm:text-3xl font-bold mb-2 flex items-center gap-2 text-white">
+                  <Shield className="w-6 h-6 text-amber-300" />
+                  RERA Verification
                 </h2>
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium mb-2 text-slate-300">RERA ID</label>
-                    <input
-                      type="text"
-                      value={formData.rera_id}
-                      onChange={(e) =>
-                        setFormData((prev) => ({ ...prev, rera_id: e.target.value }))
-                      }
-                      className="w-full px-4 py-2.5 bg-slate-700/50 border border-slate-600/50 rounded-lg text-white placeholder-slate-400 focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500/50 transition-all"
-                      placeholder="e.g., PRM/KA/RERA/1251/308/PR/171021/004234"
-                    />
-                  </div>
+                <p className="text-sm text-slate-400 mb-6">
+                  All residential and commercial properties above a threshold must be registered under RERA.
+                  We verify directly with the official state portal in real time.
+                </p>
 
-                  <div className="flex items-center gap-2">
-                    <input
-                      type="checkbox"
-                      id="rera_verified"
-                      checked={formData.rera_verified}
-                      onChange={(e) =>
-                        setFormData((prev) => ({ ...prev, rera_verified: e.target.checked }))
-                      }
-                        className="w-4 h-4 accent-amber-500"
-                      />
-                      <label htmlFor="rera_verified" className="text-sm font-medium text-slate-300">
-                      RERA Verified
-                    </label>
-                  </div>
+                {/* ── Has RERA? toggle ──────────────────────────────── */}
+                <div className="grid grid-cols-2 gap-3 mb-6">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setReraHasRera(true);
+                      setReraStatus('idle');
+                      setReraResultData(null);
+                    }}
+                    className={`flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all ${
+                      reraHasRera === true
+                        ? 'border-amber-500 bg-amber-500/10 text-amber-300'
+                        : 'border-slate-600/50 bg-slate-700/30 text-slate-400 hover:border-slate-500'
+                    }`}
+                  >
+                    <ShieldCheck className="w-7 h-7" />
+                    <span className="text-sm font-semibold">Yes, RERA Registered</span>
+                    <span className="text-xs opacity-70 text-center">I have a RERA registration number</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setReraHasRera(false);
+                      setFormData((prev) => ({ ...prev, rera_id: '', rera_verified: false }));
+                    }}
+                    className={`flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all ${
+                      reraHasRera === false
+                        ? 'border-slate-400 bg-slate-700/50 text-slate-200'
+                        : 'border-slate-600/50 bg-slate-700/30 text-slate-400 hover:border-slate-500'
+                    }`}
+                  >
+                    <ShieldQuestion className="w-7 h-7" />
+                    <span className="text-sm font-semibold">Not Applicable</span>
+                    <span className="text-xs opacity-70 text-center">Exempt / Under-construction / Plot</span>
+                  </button>
+                </div>
 
-                  <div>
-                    <label className="block text-sm font-medium mb-2 text-slate-300">RERA Certificate URL</label>
-                    <input
-                      type="url"
-                      value={formData.rera_certificate_url}
-                      onChange={(e) =>
-                        setFormData((prev) => ({
-                          ...prev,
-                          rera_certificate_url: e.target.value,
-                        }))
-                      }
-                      className="w-full px-4 py-2.5 bg-slate-700/50 border border-slate-600/50 rounded-lg text-white placeholder-slate-400 focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500/50 transition-all"
-                      placeholder="https://..."
-                    />
-                  </div>
+                {/* ── RERA Registered flow ─────────────────────────── */}
+                {reraHasRera === true && (
+                  <AnimatePresence mode="wait">
+                    <motion.div
+                      key="has-rera"
+                      initial={{ opacity: 0, y: 8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -8 }}
+                      className="space-y-4"
+                    >
+                      {/* State + Number inputs */}
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        <div>
+                          <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5">
+                            State
+                          </label>
+                          <select
+                            value={reraState}
+                            onChange={(e) => {
+                              setReraState(e.target.value);
+                              setReraStatus('idle');
+                              setReraResultData(null);
+                            }}
+                            className="w-full px-3 py-2.5 bg-slate-700/50 border border-slate-600/50 rounded-lg text-white text-sm focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500/50 transition-all"
+                          >
+                            {[
+                              'Tamil Nadu', 'Karnataka', 'Maharashtra', 'Gujarat',
+                              'Telangana', 'Kerala', 'Delhi', 'Punjab',
+                              'Haryana', 'Rajasthan', 'Uttar Pradesh', 'West Bengal',
+                              'Andhra Pradesh', 'Madhya Pradesh', 'Bihar', 'Odisha',
+                            ].map((s) => (
+                              <option key={s} value={s}>{s}</option>
+                            ))}
+                          </select>
+                        </div>
+                        <div className="sm:col-span-2">
+                          <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5">
+                            RERA Registration Number <span className="text-red-400">*</span>
+                          </label>
+                          <div className="flex gap-2">
+                            <input
+                              type="text"
+                              value={reraInputNumber}
+                              onChange={(e) => {
+                                setReraInputNumber(e.target.value);
+                                if (reraStatus !== 'idle') {
+                                  setReraStatus('idle');
+                                  setReraResultData(null);
+                                }
+                              }}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter') verifyRera();
+                              }}
+                              placeholder={
+                                reraState === 'Tamil Nadu'
+                                  ? 'TN/01/Building/12345/2024'
+                                  : reraState === 'Karnataka'
+                                  ? 'PRM/KA/RERA/1251/308/PR/…'
+                                  : reraState === 'Maharashtra'
+                                  ? 'P51900012345'
+                                  : 'Enter RERA number'
+                              }
+                              className="flex-1 px-4 py-2.5 bg-slate-700/50 border border-slate-600/50 rounded-lg text-white placeholder-slate-500 text-sm focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500/50 transition-all font-mono"
+                            />
+                            <button
+                              type="button"
+                              onClick={verifyRera}
+                              disabled={!reraInputNumber.trim() || reraStatus === 'verifying'}
+                              className="flex items-center gap-2 px-4 py-2.5 bg-amber-500 hover:bg-amber-400 disabled:bg-slate-600 disabled:cursor-not-allowed text-slate-900 disabled:text-slate-400 font-semibold rounded-lg text-sm transition-all whitespace-nowrap"
+                            >
+                              {reraStatus === 'verifying' ? (
+                                <><Loader2 className="w-4 h-4 animate-spin" /> Verifying…</>
+                              ) : (reraStatus === 'verified' || reraStatus === 'pending_manual') ? (
+                                <><RefreshCw className="w-4 h-4" /> Re-verify</>
+                              ) : (
+                                <><Shield className="w-4 h-4" /> Verify RERA</>
+                              )}
+                            </button>
+                          </div>
+                        </div>
+                      </div>
 
-                  <div>
-                    <label className="block text-sm font-medium mb-2 text-slate-300">Occupancy Certificate</label>
-                    <input
-                      type="text"
-                      value={formData.oc_certificate}
-                      onChange={(e) =>
-                        setFormData((prev) => ({ ...prev, oc_certificate: e.target.value }))
-                      }
-                      className="w-full px-4 py-2.5 bg-slate-700/50 border border-slate-600/50 rounded-lg text-white placeholder-slate-400 focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500/50 transition-all"
-                      placeholder="OC Number"
-                    />
-                  </div>
+                      {/* ── Verification result card ─────────────────── */}
+                      <AnimatePresence mode="wait">
+                        {reraStatus === 'verifying' && (
+                          <motion.div
+                            key="verifying"
+                            initial={{ opacity: 0, scale: 0.97 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0.97 }}
+                            className="flex items-center gap-3 p-4 bg-slate-700/40 border border-slate-600/40 rounded-xl"
+                          >
+                            <Loader2 className="w-5 h-5 text-amber-400 animate-spin flex-shrink-0" />
+                            <div>
+                              <p className="text-sm font-semibold text-white">Contacting {reraState} RERA Portal…</p>
+                              <p className="text-xs text-slate-400 mt-0.5">Fetching live registration data. This takes 5–15 seconds.</p>
+                            </div>
+                          </motion.div>
+                        )}
 
-                  <div>
-                    <label className="block text-sm font-medium mb-2 text-slate-300">Completion Certificate</label>
-                    <input
-                      type="text"
-                      value={formData.cc_certificate}
-                      onChange={(e) =>
-                        setFormData((prev) => ({ ...prev, cc_certificate: e.target.value }))
-                      }
-                      className="w-full px-4 py-2.5 bg-slate-700/50 border border-slate-600/50 rounded-lg text-white placeholder-slate-400 focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500/50 transition-all"
-                      placeholder="CC Number"
-                    />
-                  </div>
+                        {reraStatus === 'verified' && reraResultData && (
+                          <motion.div
+                            key="verified"
+                            initial={{ opacity: 0, y: 6 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0 }}
+                            className="border border-emerald-500/30 bg-emerald-500/5 rounded-xl overflow-hidden"
+                          >
+                            {/* Header */}
+                            <div className="flex items-center gap-3 px-4 py-3 bg-emerald-500/10 border-b border-emerald-500/20">
+                              <ShieldCheck className="w-5 h-5 text-emerald-400 flex-shrink-0" />
+                              <div className="flex-1">
+                                <p className="text-sm font-bold text-emerald-300">RERA Verified Successfully</p>
+                                <p className="text-xs text-emerald-400/70">Matched against official {reraState} RERA portal</p>
+                              </div>
+                              {reraResultData.complianceScore != null && (
+                                <div className="text-right flex-shrink-0">
+                                  <p className="text-xs text-slate-400">Compliance</p>
+                                  <p className={`text-lg font-bold ${
+                                    reraResultData.complianceScore >= 70 ? 'text-emerald-400' :
+                                    reraResultData.complianceScore >= 40 ? 'text-amber-400' : 'text-red-400'
+                                  }`}>{reraResultData.complianceScore}%</p>
+                                </div>
+                              )}
+                            </div>
+                            {/* Details grid */}
+                            <div className="grid grid-cols-2 sm:grid-cols-3 gap-px bg-slate-700/20 text-sm">
+                              {[
+                                { label: 'Project Name', value: reraResultData.projectName },
+                                { label: 'Promoter', value: reraResultData.promoterName },
+                                { label: 'Registered As', value: reraResultData.registeredName },
+                                { label: 'Type', value: reraResultData.registrationType },
+                                {
+                                  label: 'Expires',
+                                  value: reraResultData.expiryDate
+                                    ? new Date(reraResultData.expiryDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })
+                                    : null,
+                                },
+                                {
+                                  label: 'Status',
+                                  value: reraResultData.isActive ? 'Active ✓' : 'Inactive ✗',
+                                },
+                              ].filter(r => r.value).map(row => (
+                                <div key={row.label} className="px-4 py-2.5 bg-slate-800/30">
+                                  <p className="text-xs text-slate-500 mb-0.5">{row.label}</p>
+                                  <p className="text-sm text-slate-200 font-medium truncate">{row.value}</p>
+                                </div>
+                              ))}
+                            </div>
+                            {(reraResultData.complaintsCount ?? 0) > 0 && (
+                              <div className="px-4 py-2.5 bg-amber-500/5 border-t border-amber-500/20 flex items-center gap-2">
+                                <AlertCircle className="w-4 h-4 text-amber-400 flex-shrink-0" />
+                                <p className="text-xs text-amber-300">{reraResultData.complaintsCount} complaint(s) on record. Buyers may see this.</p>
+                              </div>
+                            )}
+                          </motion.div>
+                        )}
 
-                  <div>
-                    <label className="block text-sm font-medium mb-2 text-slate-300">Approved Plan URL</label>
-                    <input
-                      type="url"
-                      value={formData.approved_plan_url}
-                      onChange={(e) =>
-                        setFormData((prev) => ({ ...prev, approved_plan_url: e.target.value }))
-                      }
-                      className="w-full px-4 py-2.5 bg-slate-700/50 border border-slate-600/50 rounded-lg text-white placeholder-slate-400 focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500/50 transition-all"
-                      placeholder="https://..."
-                    />
-                  </div>
+                        {reraStatus === 'pending_manual' && (
+                          <motion.div
+                            key="pending"
+                            initial={{ opacity: 0, y: 6 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0 }}
+                            className="border border-amber-500/30 bg-amber-500/5 rounded-xl p-4"
+                          >
+                            <div className="flex items-start gap-3">
+                              <Clock className="w-5 h-5 text-amber-400 flex-shrink-0 mt-0.5" />
+                              <div className="flex-1">
+                                <p className="text-sm font-bold text-amber-300">Queued for Manual Verification</p>
+                                <p className="text-xs text-amber-400/80 mt-1">
+                                  We couldn't auto-verify this number from the portal right now (may be due to portal downtime).
+                                  Your property will be submitted with <strong>rera_verified: false</strong> and our team will
+                                  manually verify within 24 hours before the listing goes live.
+                                </p>
+                                {reraResultData?.projectName && (
+                                  <p className="text-xs text-slate-400 mt-2">Project on record: <span className="text-white">{reraResultData.projectName}</span></p>
+                                )}
+                              </div>
+                            </div>
+                          </motion.div>
+                        )}
+
+                        {reraStatus === 'failed' && (
+                          <motion.div
+                            key="failed"
+                            initial={{ opacity: 0, y: 6 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0 }}
+                            className="border border-red-500/30 bg-red-500/5 rounded-xl p-4"
+                          >
+                            <div className="flex items-start gap-3">
+                              <ShieldAlert className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
+                              <div className="flex-1">
+                                <p className="text-sm font-bold text-red-300">Verification Failed</p>
+                                <p className="text-xs text-red-400/80 mt-1">
+                                  No matching registration found for <span className="font-mono text-red-300">{reraInputNumber.toUpperCase()}</span> in {reraState}.
+                                  Please double-check the number format and try again.
+                                </p>
+                                <a
+                                  href="https://rera.tn.gov.in"
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="inline-flex items-center gap-1 mt-2 text-xs text-amber-400 hover:text-amber-300 transition-colors"
+                                >
+                                  <ExternalLink className="w-3 h-3" />
+                                  Look up on {reraState} RERA portal
+                                </a>
+                              </div>
+                            </div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+
+                      {/* OC / CC below the RERA block */}
+                      {(reraStatus === 'verified' || reraStatus === 'pending_manual') && (
+                        <motion.div
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 border-t border-slate-700/40"
+                        >
+                          <div>
+                            <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5">
+                              Occupancy Certificate No. <span className="text-slate-600">(optional)</span>
+                            </label>
+                            <input
+                              type="text"
+                              value={formData.oc_certificate}
+                              onChange={(e) => setFormData((prev) => ({ ...prev, oc_certificate: e.target.value }))}
+                              className="w-full px-4 py-2.5 bg-slate-700/50 border border-slate-600/50 rounded-lg text-white placeholder-slate-500 text-sm focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500/50 transition-all"
+                              placeholder="OC/2024/XXXXX"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5">
+                              Completion Certificate No. <span className="text-slate-600">(optional)</span>
+                            </label>
+                            <input
+                              type="text"
+                              value={formData.cc_certificate}
+                              onChange={(e) => setFormData((prev) => ({ ...prev, cc_certificate: e.target.value }))}
+                              className="w-full px-4 py-2.5 bg-slate-700/50 border border-slate-600/50 rounded-lg text-white placeholder-slate-500 text-sm focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500/50 transition-all"
+                              placeholder="CC/2024/XXXXX"
+                            />
+                          </div>
+                        </motion.div>
+                      )}
+                    </motion.div>
+                  </AnimatePresence>
+                )}
+
+                {/* ── RERA Not Applicable flow ─────────────────────── */}
+                {reraHasRera === false && (
+                  <AnimatePresence mode="wait">
+                    <motion.div
+                      key="no-rera"
+                      initial={{ opacity: 0, y: 8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -8 }}
+                      className="space-y-4"
+                    >
+                      <div>
+                        <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
+                          Reason for Exemption <span className="text-red-400">*</span>
+                        </label>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                          {[
+                            { value: 'under_construction', label: 'Under Construction', desc: 'Project is ongoing — RERA applied for' },
+                            { value: 'plot_sale', label: 'Plot / Land Sale', desc: 'Plots below threshold area are exempt' },
+                            { value: 'small_project', label: 'Small Project', desc: 'Less than 8 units or 500 sq m plot' },
+                            { value: 'government_project', label: 'Govt. / Authority Project', desc: 'Developed by state housing board' },
+                          ].map((opt) => (
+                            <button
+                              key={opt.value}
+                              type="button"
+                              onClick={() => setReraExemptReason(opt.value)}
+                              className={`text-left p-3 rounded-xl border-2 transition-all ${
+                                reraExemptReason === opt.value
+                                  ? 'border-slate-400 bg-slate-700/60 text-white'
+                                  : 'border-slate-700/50 bg-slate-800/30 text-slate-400 hover:border-slate-600'
+                              }`}
+                            >
+                              <p className="text-sm font-semibold">{opt.label}</p>
+                              <p className="text-xs mt-0.5 opacity-70">{opt.desc}</p>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      {reraExemptReason && (
+                        <motion.div
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          className="flex items-start gap-3 p-4 bg-slate-700/30 border border-slate-600/40 rounded-xl"
+                        >
+                          <input
+                            type="checkbox"
+                            id="exempt-ack"
+                            checked={reraExemptAcknowledged}
+                            onChange={(e) => setReraExemptAcknowledged(e.target.checked)}
+                            className="w-4 h-4 mt-0.5 accent-amber-500 flex-shrink-0 cursor-pointer"
+                          />
+                          <label htmlFor="exempt-ack" className="text-xs text-slate-300 leading-relaxed cursor-pointer">
+                            I declare that this property is exempt from RERA registration as per the
+                            Real Estate (Regulation and Development) Act, 2016. I understand that
+                            providing false information is a punishable offence and the listing may
+                            be removed if found non-compliant.
+                          </label>
+                        </motion.div>
+                      )}
+                    </motion.div>
+                  </AnimatePresence>
+                )}
+
+                {/* Validation error */}
+                {errors.rera && (
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className="flex items-center gap-2 p-3 bg-red-500/10 border border-red-500/30 rounded-lg"
+                  >
+                    <AlertCircle className="w-4 h-4 text-red-400 flex-shrink-0" />
+                    <p className="text-sm text-red-300">{errors.rera}</p>
+                  </motion.div>
+                )}
+
+                {/* Info note */}
+                <div className="flex items-start gap-2 p-3 bg-slate-800/40 border border-slate-700/40 rounded-lg">
+                  <BadgeCheck className="w-4 h-4 text-amber-400/70 flex-shrink-0 mt-0.5" />
+                  <p className="text-xs text-slate-500 leading-relaxed">
+                    RERA-verified properties get a trust badge on Tharaga and rank higher in search results.
+                    Verification happens live against the official state RERA portal.
+                  </p>
                 </div>
               </div>
             </div>

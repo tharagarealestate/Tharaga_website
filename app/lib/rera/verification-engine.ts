@@ -14,8 +14,11 @@ import { tnRERAScraper, TNScrapedData } from './tn-rera-scraper';
 import { z } from 'zod';
 
 // Validation schemas
+// Tamil Nadu RERA dual-format support:
+//   Old (2017–2025): TN/[DistCode]/[Building|Layout|Regularisation-Layout]/[SeqNo]/[Year]
+//   New (2026+):     TNRERA/[DistCode]/[BLG|LO|RLY]/[SeqNo]/[Year]
 const RERA_PATTERNS: Record<string, RegExp> = {
-  'Tamil Nadu': /^TN\/\d{2}\/(Building|Layout|Plot)\/\d{4,6}\/\d{4}$/i,
+  'Tamil Nadu': /^(TN\/\d{1,2}\/(Building|Layout|Regularisation-Layout)\/\d{3,6}\/20\d{2}|TNRERA\/\d{1,2}\/(BLG|LO|RLY)\/\d{3,6}\/20\d{2})$/i,
   'Karnataka': /^PRM\/KA\/RERA\/\d{4}\/\d{4,6}$/i,
   'Maharashtra': /^P\d{8,11}$/i,
   'Gujarat': /^PR\/GJ\/\d{4}\/\d{4,6}$/i,

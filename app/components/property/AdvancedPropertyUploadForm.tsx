@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Upload,
@@ -30,6 +30,70 @@ import {
 import { ProgressBar } from '@/components/ui/progress-bar';
 import { useToast } from '@/components/ui/toast';
 // Using native file inputs instead of react-dropzone
+
+// ── TNRERA Intelligence ────────────────────────────────────────────────────
+// Tamil Nadu has 38 districts; codes are assigned by TNRERA registration
+const TN_DISTRICT_CODES: Record<number, string> = {
+  1: 'Ariyalur', 2: 'Chengalpattu', 3: 'Chennai', 4: 'Coimbatore',
+  5: 'Cuddalore', 6: 'Dharmapuri', 7: 'Dindigul', 8: 'Erode',
+  9: 'Kallakurichi', 10: 'Kancheepuram', 11: 'Krishnagiri', 12: 'Madurai',
+  13: 'Mayiladuthurai', 14: 'Nagapattinam', 15: 'Namakkal', 16: 'Nilgiris',
+  17: 'Perambalur', 18: 'Pudukkottai', 19: 'Ramanathapuram', 20: 'Ranipet',
+  21: 'Salem', 22: 'Sivagangai', 23: 'Tenkasi', 24: 'Thanjavur',
+  25: 'Theni', 26: 'Thoothukudi', 27: 'Tiruchirappalli', 28: 'Tirunelveli',
+  29: 'Tirupattur', 30: 'Tiruppur', 31: 'Tiruvannamalai', 32: 'Tiruvarur',
+  33: 'Vellore', 34: 'Villupuram', 35: 'Virudhunagar', 36: 'Ariyalur (New)',
+  37: 'Tenkasi (New)', 38: 'Ranipet (New)',
+};
+
+interface TNRERADetectedInfo {
+  format: 'old' | 'new';
+  distCode: string;
+  district: string;
+  projectType: string;  // Building / Layout / Regularisation-Layout
+  seq: string;
+  year: string;
+}
+
+function parseTNRERANumber(raw: string): TNRERADetectedInfo | null {
+  const s = raw.trim().toUpperCase();
+  // Old format: TN/XX/(Building|Layout|Regularisation-Layout)/NNNN/YYYY
+  const oldRe = /^TN\/(\d{1,2})\/(BUILDING|LAYOUT|REGULARISATION-LAYOUT)\/(\d{3,6})\/(20\d{2})$/;
+  // New 2026+ format: TNRERA/XX/(BLG|LO|RLY)/NNNN/YYYY
+  const newRe = /^TNRERA\/(\d{1,2})\/(BLG|LO|RLY)\/(\d{3,6})\/(20\d{2})$/;
+  const oldM = s.match(oldRe);
+  if (oldM) {
+    const code = parseInt(oldM[1], 10);
+    const rawType = oldM[2];
+    const typeLabel = rawType === 'BUILDING' ? 'Building' : rawType === 'LAYOUT' ? 'Layout' : 'Regularisation Layout';
+    return { format: 'old', distCode: oldM[1], district: TN_DISTRICT_CODES[code] || `District ${oldM[1]}`, projectType: typeLabel, seq: oldM[3], year: oldM[4] };
+  }
+  const newM = s.match(newRe);
+  if (newM) {
+    const code = parseInt(newM[1], 10);
+    const rawType = newM[2];
+    const typeLabel = rawType === 'BLG' ? 'Building' : rawType === 'LO' ? 'Layout' : 'Regularisation Layout';
+    return { format: 'new', distCode: newM[1], district: TN_DISTRICT_CODES[code] || `District ${newM[1]}`, projectType: typeLabel, seq: newM[3], year: newM[4] };
+  }
+  return null;
+}
+
+function getComplianceGrade(score: number): { grade: string; label: string; color: string } {
+  if (score >= 90) return { grade: 'A', label: 'Excellent', color: 'emerald' };
+  if (score >= 75) return { grade: 'B', label: 'Good', color: 'green' };
+  if (score >= 60) return { grade: 'C', label: 'Fair', color: 'amber' };
+  if (score >= 40) return { grade: 'D', label: 'Below Average', color: 'orange' };
+  return { grade: 'F', label: 'Non-Compliant', color: 'red' };
+}
+
+function getExpiryCountdown(dateStr: string | null | undefined): { days: number; label: string; colorClass: string } | null {
+  if (!dateStr) return null;
+  const days = Math.floor((new Date(dateStr).getTime() - Date.now()) / 86400000);
+  if (days < 0) return { days, label: `Expired ${Math.abs(days)}d ago`, colorClass: 'text-red-400' };
+  if (days <= 90) return { days, label: `Expires in ${days}d ⚠`, colorClass: 'text-red-400' };
+  if (days <= 180) return { days, label: `Expires in ${days}d`, colorClass: 'text-amber-400' };
+  return { days, label: `Valid · ${days}d remaining`, colorClass: 'text-emerald-400' };
+}
 
 interface PropertyUploadFormData {
   // Step 1: Basic Information
@@ -148,6 +212,9 @@ export function AdvancedPropertyUploadForm({
   } | null>(null);
   const [reraExemptReason, setReraExemptReason] = useState('');
   const [reraExemptAcknowledged, setReraExemptAcknowledged] = useState(false);
+  const [reraDetectedInfo, setReraDetectedInfo] = useState<TNRERADetectedInfo | null>(null);
+  const [reraQrDataUrl, setReraQrDataUrl] = useState<string | null>(null);
+  const [showQrCode, setShowQrCode] = useState(false);
 
   const [formData, setFormData] = useState<PropertyUploadFormData>({
     title: '',
@@ -454,6 +521,22 @@ export function AdvancedPropertyUploadForm({
       setReraStatus('failed');
     }
   }, [reraInputNumber, reraState]);
+
+  // Generate QR code when RERA is verified
+  useEffect(() => {
+    if (reraStatus === 'verified' && reraInputNumber) {
+      const num = reraInputNumber.trim().toUpperCase();
+      const qrText = `TNRERA Verified\nNumber: ${num}\nPortal: rera.tn.gov.in\nVerified by Tharaga`;
+      import('qrcode').then((QRCode) => {
+        QRCode.toDataURL(qrText, { width: 180, margin: 1, color: { dark: '#000000', light: '#ffffff' } })
+          .then((url: string) => setReraQrDataUrl(url))
+          .catch(() => {});
+      }).catch(() => {});
+    } else {
+      setReraQrDataUrl(null);
+      setShowQrCode(false);
+    }
+  }, [reraStatus, reraInputNumber]);
 
   // Common amenities list
   const commonAmenities = [
@@ -1264,6 +1347,8 @@ export function AdvancedPropertyUploadForm({
                               setReraState(e.target.value);
                               setReraStatus('idle');
                               setReraResultData(null);
+                              setReraDetectedInfo(null);
+                              setReraQrDataUrl(null);
                             }}
                             className="w-full px-3 py-2.5 bg-slate-700/50 border border-slate-600/50 rounded-lg text-white text-sm focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500/50 transition-all"
                           >
@@ -1286,10 +1371,18 @@ export function AdvancedPropertyUploadForm({
                               type="text"
                               value={reraInputNumber}
                               onChange={(e) => {
-                                setReraInputNumber(e.target.value);
+                                const val = e.target.value;
+                                setReraInputNumber(val);
                                 if (reraStatus !== 'idle') {
                                   setReraStatus('idle');
                                   setReraResultData(null);
+                                  setReraQrDataUrl(null);
+                                }
+                                // Live TNRERA format auto-detection
+                                if (reraState === 'Tamil Nadu') {
+                                  setReraDetectedInfo(parseTNRERANumber(val));
+                                } else {
+                                  setReraDetectedInfo(null);
                                 }
                               }}
                               onKeyDown={(e) => {
@@ -1297,7 +1390,7 @@ export function AdvancedPropertyUploadForm({
                               }}
                               placeholder={
                                 reraState === 'Tamil Nadu'
-                                  ? 'TN/01/Building/12345/2024'
+                                  ? 'TN/01/Building/0001/2024 or TNRERA/01/BLG/0001/2026'
                                   : reraState === 'Karnataka'
                                   ? 'PRM/KA/RERA/1251/308/PR/…'
                                   : reraState === 'Maharashtra'
@@ -1324,6 +1417,40 @@ export function AdvancedPropertyUploadForm({
                         </div>
                       </div>
 
+                      {/* ── TNRERA live format detection chip ──────────── */}
+                      {reraState === 'Tamil Nadu' && reraStatus === 'idle' && (
+                        reraDetectedInfo ? (
+                          <motion.div
+                            initial={{ opacity: 0, y: -4 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            className="flex flex-wrap items-center gap-2 px-3 py-2 bg-slate-700/40 border border-slate-600/40 rounded-lg"
+                          >
+                            <span className="text-xs text-slate-400">Detected:</span>
+                            <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-amber-500/20 text-amber-300">
+                              {reraDetectedInfo.format === 'new' ? '2026+ Format' : 'Classic Format'}
+                            </span>
+                            <span className="px-2 py-0.5 rounded-full text-xs bg-slate-600/60 text-slate-300">
+                              📍 {reraDetectedInfo.district}
+                            </span>
+                            <span className="px-2 py-0.5 rounded-full text-xs bg-slate-600/60 text-slate-300">
+                              🏗 {reraDetectedInfo.projectType}
+                            </span>
+                            <span className="px-2 py-0.5 rounded-full text-xs bg-slate-600/60 text-slate-300">
+                              #{reraDetectedInfo.seq} / {reraDetectedInfo.year}
+                            </span>
+                          </motion.div>
+                        ) : reraInputNumber.trim().length > 5 ? (
+                          <div className="px-3 py-2 bg-slate-800/40 border border-slate-700/40 rounded-lg">
+                            <p className="text-xs text-slate-500">
+                              <span className="text-amber-400/80 font-medium">TNRERA format guide:</span>
+                              {' '}Old: <span className="font-mono">TN/01/Building/0001/2024</span>
+                              {' '}· New 2026+: <span className="font-mono">TNRERA/01/BLG/0001/2026</span>
+                              {' '}· Types: <span className="font-mono">BLG</span>=Building, <span className="font-mono">LO</span>=Layout, <span className="font-mono">RLY</span>=Regularisation
+                            </p>
+                          </div>
+                        ) : null
+                      )}
+
                       {/* ── Verification result card ─────────────────── */}
                       <AnimatePresence mode="wait">
                         {reraStatus === 'verifying' && (
@@ -1337,68 +1464,155 @@ export function AdvancedPropertyUploadForm({
                             <Loader2 className="w-5 h-5 text-amber-400 animate-spin flex-shrink-0" />
                             <div>
                               <p className="text-sm font-semibold text-white">Contacting {reraState} RERA Portal…</p>
-                              <p className="text-xs text-slate-400 mt-0.5">Fetching live registration data. This takes 5–15 seconds.</p>
+                              <p className="text-xs text-slate-400 mt-0.5">
+                                Fetching live registration data directly from{' '}
+                                {reraState === 'Tamil Nadu' ? 'rera.tn.gov.in' : 'the official portal'}.
+                                This takes 5–20 seconds.
+                              </p>
                             </div>
                           </motion.div>
                         )}
 
-                        {reraStatus === 'verified' && reraResultData && (
-                          <motion.div
-                            key="verified"
-                            initial={{ opacity: 0, y: 6 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0 }}
-                            className="border border-emerald-500/30 bg-emerald-500/5 rounded-xl overflow-hidden"
-                          >
-                            {/* Header */}
-                            <div className="flex items-center gap-3 px-4 py-3 bg-emerald-500/10 border-b border-emerald-500/20">
-                              <ShieldCheck className="w-5 h-5 text-emerald-400 flex-shrink-0" />
-                              <div className="flex-1">
-                                <p className="text-sm font-bold text-emerald-300">RERA Verified Successfully</p>
-                                <p className="text-xs text-emerald-400/70">Matched against official {reraState} RERA portal</p>
+                        {reraStatus === 'verified' && reraResultData && (() => {
+                          const grade = reraResultData.complianceScore != null
+                            ? getComplianceGrade(reraResultData.complianceScore)
+                            : null;
+                          const expiry = getExpiryCountdown(reraResultData.expiryDate);
+                          return (
+                            <motion.div
+                              key="verified"
+                              initial={{ opacity: 0, y: 6 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              exit={{ opacity: 0 }}
+                              className="border border-emerald-500/30 bg-emerald-500/5 rounded-xl overflow-hidden"
+                            >
+                              {/* Header */}
+                              <div className="flex items-center gap-3 px-4 py-3 bg-emerald-500/10 border-b border-emerald-500/20">
+                                <ShieldCheck className="w-5 h-5 text-emerald-400 flex-shrink-0" />
+                                <div className="flex-1 min-w-0">
+                                  <p className="text-sm font-bold text-emerald-300">RERA Verified — Live from Portal</p>
+                                  <p className="text-xs text-emerald-400/70 truncate">
+                                    {reraInputNumber.toUpperCase()} · {reraState}
+                                  </p>
+                                </div>
+                                {/* Compliance Grade Badge (MahaRERA-style) */}
+                                {grade && (
+                                  <div className={`flex-shrink-0 w-12 h-12 rounded-xl flex flex-col items-center justify-center border ${
+                                    grade.color === 'emerald' ? 'bg-emerald-500/20 border-emerald-500/40 text-emerald-300' :
+                                    grade.color === 'green' ? 'bg-green-500/20 border-green-500/40 text-green-300' :
+                                    grade.color === 'amber' ? 'bg-amber-500/20 border-amber-500/40 text-amber-300' :
+                                    grade.color === 'orange' ? 'bg-orange-500/20 border-orange-500/40 text-orange-300' :
+                                    'bg-red-500/20 border-red-500/40 text-red-300'
+                                  }`}>
+                                    <span className="text-xl font-black leading-none">{grade.grade}</span>
+                                    <span className="text-[9px] font-semibold opacity-70 leading-none mt-0.5">GRADE</span>
+                                  </div>
+                                )}
                               </div>
-                              {reraResultData.complianceScore != null && (
-                                <div className="text-right flex-shrink-0">
-                                  <p className="text-xs text-slate-400">Compliance</p>
-                                  <p className={`text-lg font-bold ${
-                                    reraResultData.complianceScore >= 70 ? 'text-emerald-400' :
-                                    reraResultData.complianceScore >= 40 ? 'text-amber-400' : 'text-red-400'
-                                  }`}>{reraResultData.complianceScore}%</p>
+
+                              {/* Details grid */}
+                              <div className="grid grid-cols-2 sm:grid-cols-3 gap-px bg-slate-800/40">
+                                {[
+                                  { label: 'Project', value: reraResultData.projectName },
+                                  { label: 'Promoter', value: reraResultData.promoterName },
+                                  { label: 'Registered As', value: reraResultData.registeredName },
+                                  { label: 'Project Type', value: reraResultData.registrationType },
+                                  {
+                                    label: 'Registered On',
+                                    value: reraResultData.registrationDate
+                                      ? new Date(reraResultData.registrationDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })
+                                      : null,
+                                  },
+                                  {
+                                    label: 'Status',
+                                    value: reraResultData.isActive ? '● Active' : '○ Inactive',
+                                  },
+                                ].filter(r => r.value).map(row => (
+                                  <div key={row.label} className="px-4 py-2.5 bg-slate-800/30">
+                                    <p className="text-xs text-slate-500 mb-0.5">{row.label}</p>
+                                    <p className={`text-sm font-medium truncate ${row.label === 'Status' ? (reraResultData.isActive ? 'text-emerald-400' : 'text-red-400') : 'text-slate-200'}`}>
+                                      {row.value}
+                                    </p>
+                                  </div>
+                                ))}
+                              </div>
+
+                              {/* Expiry countdown bar */}
+                              {expiry && (
+                                <div className={`px-4 py-2.5 border-t border-slate-700/30 flex items-center justify-between`}>
+                                  <div className="flex items-center gap-2">
+                                    <Clock className={`w-3.5 h-3.5 flex-shrink-0 ${expiry.colorClass}`} />
+                                    <span className="text-xs text-slate-400">
+                                      Validity: {reraResultData.expiryDate
+                                        ? new Date(reraResultData.expiryDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })
+                                        : '—'}
+                                    </span>
+                                  </div>
+                                  <span className={`text-xs font-semibold ${expiry.colorClass}`}>{expiry.label}</span>
                                 </div>
                               )}
-                            </div>
-                            {/* Details grid */}
-                            <div className="grid grid-cols-2 sm:grid-cols-3 gap-px bg-slate-700/20 text-sm">
-                              {[
-                                { label: 'Project Name', value: reraResultData.projectName },
-                                { label: 'Promoter', value: reraResultData.promoterName },
-                                { label: 'Registered As', value: reraResultData.registeredName },
-                                { label: 'Type', value: reraResultData.registrationType },
-                                {
-                                  label: 'Expires',
-                                  value: reraResultData.expiryDate
-                                    ? new Date(reraResultData.expiryDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })
-                                    : null,
-                                },
-                                {
-                                  label: 'Status',
-                                  value: reraResultData.isActive ? 'Active ✓' : 'Inactive ✗',
-                                },
-                              ].filter(r => r.value).map(row => (
-                                <div key={row.label} className="px-4 py-2.5 bg-slate-800/30">
-                                  <p className="text-xs text-slate-500 mb-0.5">{row.label}</p>
-                                  <p className="text-sm text-slate-200 font-medium truncate">{row.value}</p>
+
+                              {/* Complaints warning */}
+                              {(reraResultData.complaintsCount ?? 0) > 0 && (
+                                <div className="px-4 py-2.5 bg-amber-500/5 border-t border-amber-500/20 flex items-center gap-2">
+                                  <AlertCircle className="w-4 h-4 text-amber-400 flex-shrink-0" />
+                                  <p className="text-xs text-amber-300">
+                                    <strong>{reraResultData.complaintsCount} complaint(s)</strong> on record with TNRERA.
+                                    This will be shown to buyers viewing your property.
+                                  </p>
                                 </div>
-                              ))}
-                            </div>
-                            {(reraResultData.complaintsCount ?? 0) > 0 && (
-                              <div className="px-4 py-2.5 bg-amber-500/5 border-t border-amber-500/20 flex items-center gap-2">
-                                <AlertCircle className="w-4 h-4 text-amber-400 flex-shrink-0" />
-                                <p className="text-xs text-amber-300">{reraResultData.complaintsCount} complaint(s) on record. Buyers may see this.</p>
+                              )}
+
+                              {/* Grade explanation + QR Code section */}
+                              <div className="px-4 py-3 border-t border-slate-700/30 flex items-center justify-between gap-3 flex-wrap">
+                                {grade && (
+                                  <p className="text-xs text-slate-500">
+                                    Grade <strong className="text-slate-300">{grade.grade}</strong> — {grade.label}
+                                    {reraResultData.complianceScore != null && ` (${reraResultData.complianceScore}% compliance score)`}
+                                  </p>
+                                )}
+                                <div className="flex items-center gap-2 ml-auto">
+                                  {reraQrDataUrl && (
+                                    <button
+                                      type="button"
+                                      onClick={() => setShowQrCode(v => !v)}
+                                      className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-700/60 hover:bg-slate-700 border border-slate-600/50 rounded-lg text-xs text-slate-300 transition-colors"
+                                    >
+                                      <BadgeCheck className="w-3.5 h-3.5 text-amber-400" />
+                                      {showQrCode ? 'Hide QR' : 'Show QR Code'}
+                                    </button>
+                                  )}
+                                  <a
+                                    href={`https://rera.tn.gov.in`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="flex items-center gap-1 text-xs text-amber-400/80 hover:text-amber-300 transition-colors"
+                                  >
+                                    <ExternalLink className="w-3 h-3" />
+                                    TNRERA Portal
+                                  </a>
+                                </div>
                               </div>
-                            )}
-                          </motion.div>
-                        )}
+
+                              {/* QR Code display */}
+                              {showQrCode && reraQrDataUrl && (
+                                <motion.div
+                                  initial={{ opacity: 0, height: 0 }}
+                                  animate={{ opacity: 1, height: 'auto' }}
+                                  exit={{ opacity: 0, height: 0 }}
+                                  className="px-4 pb-4 border-t border-slate-700/30 pt-3 flex flex-col items-center gap-2"
+                                >
+                                  <p className="text-xs text-slate-400 text-center">
+                                    Buyers scan this QR to verify your RERA directly on rera.tn.gov.in
+                                  </p>
+                                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                                  <img src={reraQrDataUrl} alt="RERA QR Code" className="w-36 h-36 rounded-lg border border-slate-600/40" />
+                                  <p className="text-xs font-mono text-slate-500">{reraInputNumber.toUpperCase()}</p>
+                                </motion.div>
+                              )}
+                            </motion.div>
+                          );
+                        })()}
 
                         {reraStatus === 'pending_manual' && (
                           <motion.div
@@ -1413,13 +1627,24 @@ export function AdvancedPropertyUploadForm({
                               <div className="flex-1">
                                 <p className="text-sm font-bold text-amber-300">Queued for Manual Verification</p>
                                 <p className="text-xs text-amber-400/80 mt-1">
-                                  We couldn't auto-verify this number from the portal right now (may be due to portal downtime).
-                                  Your property will be submitted with <strong>rera_verified: false</strong> and our team will
-                                  manually verify within 24 hours before the listing goes live.
+                                  Couldn't auto-verify right now — portal may be temporarily down.
+                                  Your property will be submitted and our team will manually verify
+                                  against <strong>rera.tn.gov.in</strong> within 24 hours before listing goes live.
                                 </p>
                                 {reraResultData?.projectName && (
-                                  <p className="text-xs text-slate-400 mt-2">Project on record: <span className="text-white">{reraResultData.projectName}</span></p>
+                                  <p className="text-xs text-slate-400 mt-2">
+                                    Project on record: <span className="text-white font-medium">{reraResultData.projectName}</span>
+                                  </p>
                                 )}
+                                <a
+                                  href="https://rera.tn.gov.in"
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="inline-flex items-center gap-1 mt-2 text-xs text-amber-400 hover:text-amber-300 transition-colors"
+                                >
+                                  <ExternalLink className="w-3 h-3" />
+                                  Verify manually on TNRERA portal
+                                </a>
                               </div>
                             </div>
                           </motion.div>
@@ -1431,27 +1656,37 @@ export function AdvancedPropertyUploadForm({
                             initial={{ opacity: 0, y: 6 }}
                             animate={{ opacity: 1, y: 0 }}
                             exit={{ opacity: 0 }}
-                            className="border border-red-500/30 bg-red-500/5 rounded-xl p-4"
+                            className="border border-red-500/30 bg-red-500/5 rounded-xl p-4 space-y-3"
                           >
                             <div className="flex items-start gap-3">
                               <ShieldAlert className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
                               <div className="flex-1">
-                                <p className="text-sm font-bold text-red-300">Verification Failed</p>
+                                <p className="text-sm font-bold text-red-300">Not Found on Portal</p>
                                 <p className="text-xs text-red-400/80 mt-1">
-                                  No matching registration found for <span className="font-mono text-red-300">{reraInputNumber.toUpperCase()}</span> in {reraState}.
-                                  Please double-check the number format and try again.
+                                  No registration found for{' '}
+                                  <span className="font-mono text-red-300">{reraInputNumber.toUpperCase()}</span>{' '}
+                                  in {reraState}. Check the number and format carefully.
                                 </p>
-                                <a
-                                  href="https://rera.tn.gov.in"
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="inline-flex items-center gap-1 mt-2 text-xs text-amber-400 hover:text-amber-300 transition-colors"
-                                >
-                                  <ExternalLink className="w-3 h-3" />
-                                  Look up on {reraState} RERA portal
-                                </a>
                               </div>
                             </div>
+                            {reraState === 'Tamil Nadu' && (
+                              <div className="bg-slate-800/50 rounded-lg p-3 text-xs text-slate-400 space-y-1">
+                                <p className="font-semibold text-slate-300 mb-1.5">TNRERA Format Guide</p>
+                                <p>• <span className="font-mono text-slate-300">TN/01/Building/0001/2024</span> — Old format (pre-2026)</p>
+                                <p>• <span className="font-mono text-slate-300">TNRERA/01/BLG/0001/2026</span> — New 2026 format</p>
+                                <p>• Types: <span className="font-mono">BLG</span> = Building, <span className="font-mono">LO</span> = Layout, <span className="font-mono">RLY</span> = Regularisation Layout</p>
+                                <p>• District codes: 01=Ariyalur, 03=Chennai, 04=Coimbatore, 12=Madurai, 21=Salem, 27=Tiruchirappalli</p>
+                              </div>
+                            )}
+                            <a
+                              href="https://rera.tn.gov.in"
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1 text-xs text-amber-400 hover:text-amber-300 transition-colors"
+                            >
+                              <ExternalLink className="w-3 h-3" />
+                              Search on {reraState === 'Tamil Nadu' ? 'TNRERA' : reraState + ' RERA'} portal
+                            </a>
                           </motion.div>
                         )}
                       </AnimatePresence>
@@ -1503,16 +1738,30 @@ export function AdvancedPropertyUploadForm({
                       exit={{ opacity: 0, y: -8 }}
                       className="space-y-4"
                     >
+                      {/* Mandatory threshold info card */}
+                      <div className="p-3 bg-amber-500/5 border border-amber-500/20 rounded-xl">
+                        <p className="text-xs font-semibold text-amber-400 mb-1.5">⚠ RERA is Mandatory if:</p>
+                        <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs text-slate-400">
+                          <span>• Plot area <strong className="text-slate-200">&gt; 500 sq m</strong></span>
+                          <span>• More than <strong className="text-slate-200">8 units</strong> in project</span>
+                          <span>• Apartment / Villa / Commercial property</span>
+                          <span>• Any ongoing construction for sale</span>
+                        </div>
+                        <p className="text-xs text-slate-500 mt-1.5">
+                          Only plots under 500 sq m, renovation works, and government housing board projects are exempt.
+                        </p>
+                      </div>
+
                       <div>
                         <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
                           Reason for Exemption <span className="text-red-400">*</span>
                         </label>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                           {[
-                            { value: 'under_construction', label: 'Under Construction', desc: 'Project is ongoing — RERA applied for' },
-                            { value: 'plot_sale', label: 'Plot / Land Sale', desc: 'Plots below threshold area are exempt' },
-                            { value: 'small_project', label: 'Small Project', desc: 'Less than 8 units or 500 sq m plot' },
-                            { value: 'government_project', label: 'Govt. / Authority Project', desc: 'Developed by state housing board' },
+                            { value: 'rera_applied', label: 'RERA Applied — Pending', desc: 'Application submitted, number not yet assigned' },
+                            { value: 'small_plot', label: 'Small Plot ≤ 500 sq m', desc: 'Land area below mandatory threshold' },
+                            { value: 'small_project', label: 'Small Project ≤ 8 Units', desc: 'Total units in project within limit' },
+                            { value: 'government_project', label: 'Govt. / Housing Board', desc: 'TNHB / CMDA / Authority developed project' },
                           ].map((opt) => (
                             <button
                               key={opt.value}
@@ -1520,7 +1769,7 @@ export function AdvancedPropertyUploadForm({
                               onClick={() => setReraExemptReason(opt.value)}
                               className={`text-left p-3 rounded-xl border-2 transition-all ${
                                 reraExemptReason === opt.value
-                                  ? 'border-slate-400 bg-slate-700/60 text-white'
+                                  ? 'border-amber-500/60 bg-amber-500/10 text-white'
                                   : 'border-slate-700/50 bg-slate-800/30 text-slate-400 hover:border-slate-600'
                               }`}
                             >
@@ -1545,10 +1794,11 @@ export function AdvancedPropertyUploadForm({
                             className="w-4 h-4 mt-0.5 accent-amber-500 flex-shrink-0 cursor-pointer"
                           />
                           <label htmlFor="exempt-ack" className="text-xs text-slate-300 leading-relaxed cursor-pointer">
-                            I declare that this property is exempt from RERA registration as per the
-                            Real Estate (Regulation and Development) Act, 2016. I understand that
-                            providing false information is a punishable offence and the listing may
-                            be removed if found non-compliant.
+                            I declare that this property is genuinely exempt from RERA registration under the
+                            Real Estate (Regulation and Development) Act, 2016 and Tamil Nadu RERA rules.
+                            I understand that providing false information is a punishable offence under Section 60
+                            of RERA and may result in penalties up to ₹1 lakh per day. The listing will be
+                            removed if found non-compliant by Tharaga or TNRERA authorities.
                           </label>
                         </motion.div>
                       )}
@@ -1571,10 +1821,16 @@ export function AdvancedPropertyUploadForm({
                 {/* Info note */}
                 <div className="flex items-start gap-2 p-3 bg-slate-800/40 border border-slate-700/40 rounded-lg">
                   <BadgeCheck className="w-4 h-4 text-amber-400/70 flex-shrink-0 mt-0.5" />
-                  <p className="text-xs text-slate-500 leading-relaxed">
-                    RERA-verified properties get a trust badge on Tharaga and rank higher in search results.
-                    Verification happens live against the official state RERA portal.
-                  </p>
+                  <div className="text-xs text-slate-500 leading-relaxed space-y-0.5">
+                    <p>
+                      <span className="text-amber-400/80 font-medium">RERA-verified properties</span> get a trust badge,
+                      rank higher in Tharaga search, and show a compliance grade (A–F) to buyers — just like MahaRERA&apos;s 5-star grading.
+                    </p>
+                    <p>
+                      Verification is live against <strong className="text-slate-400">rera.tn.gov.in</strong>.
+                      No Indian portal does this in real time — this is Tharaga&apos;s competitive edge.
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>

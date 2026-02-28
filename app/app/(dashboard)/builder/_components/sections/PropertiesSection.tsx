@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
 import {
   Building2, MapPin, Eye, TrendingUp, Plus,
@@ -33,6 +34,7 @@ interface PropertyItem {
 
 export function PropertiesSection({ onNavigate }: PropertiesProps) {
   const { isAdmin } = useBuilderDataContext()
+  const router = useRouter()
   const [viewMode, setViewMode] = useState<ViewMode>('grid')
   const [searchQuery, setSearchQuery] = useState('')
 
@@ -94,7 +96,10 @@ export function PropertiesSection({ onNavigate }: PropertiesProps) {
           </div>
           <p className="text-sm text-zinc-500 mt-1">{stats.total} properties managed</p>
         </div>
-        <button className="flex items-center gap-1.5 px-4 py-2 bg-amber-500 hover:bg-amber-400 text-zinc-950 rounded-lg text-sm font-semibold transition-colors">
+        <button
+          onClick={() => router.push('/builders/add-property')}
+          className="flex items-center gap-1.5 px-4 py-2 bg-amber-500 hover:bg-amber-400 text-zinc-950 rounded-lg text-sm font-semibold transition-colors"
+        >
           <Plus className="w-4 h-4" /> Add Property
         </button>
       </div>

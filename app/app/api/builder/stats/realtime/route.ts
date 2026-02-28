@@ -16,19 +16,8 @@ export async function GET(request: NextRequest) {
     // Admin check — admin sees aggregate stats across ALL builders
     const isAdmin = user.email === 'tharagarealestate@gmail.com';
 
-    // Get builder profile (optional for admin)
-    const { data: builderProfile } = await supabase
-      .from('builder_profiles')
-      .select('id')
-      .eq('user_id', user.id)
-      .maybeSingle();
-
-    // Non-admin users MUST have a builder profile
-    if (!isAdmin && !builderProfile) {
-      return NextResponse.json({ error: 'Builder not found' }, { status: 404 });
-    }
-
-    const builderId = builderProfile?.id || user.id;
+    // Use user.id directly as builder_id — consistent with /api/builder/properties
+    const builderId = user.id;
 
     // Build queries — admin sees ALL, builder sees only their own
     const leadsQuery = supabase

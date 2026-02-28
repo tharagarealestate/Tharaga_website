@@ -276,35 +276,8 @@ export const POST = secureApiRoute(
       );
     } else {
       // Builder uploading for themselves
-      // Get builder_id from user's builder profile
-      const { data: builderProfile } = await supabase
-        .from('builder_profiles')
-        .select('user_id')
-        .eq('user_id', user.id)
-        .single();
-      
-      if (!builderProfile) {
-        return NextResponse.json(
-          { error: 'Builder profile not found' },
-          { status: 404 }
-        );
-      }
-      
-      // Get builder ID from builders table
-      const { data: builder } = await supabase
-        .from('builders')
-        .select('id')
-        .eq('id', user.id) // Assuming builder.id matches user.id
-        .single();
-      
-      if (!builder) {
-        return NextResponse.json(
-          { error: 'Builder not found' },
-          { status: 404 }
-        );
-      }
-      
-      targetBuilderId = builder.id;
+      // Use user.id directly as builder_id — consistent with /api/builder/properties and stats APIs
+      targetBuilderId = user.id;
     }
     
     // Convert data URLs to storage URLs for images, videos, and floor plans

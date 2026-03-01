@@ -1,12 +1,26 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getSupabase } from '@/lib/supabase';
+import { cookies } from 'next/headers';
+import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
+import { createClient } from '@supabase/supabase-js';
 
 // Use nodejs runtime for proper cookie support
 export const runtime = 'nodejs';
 
+function getServiceSupabase() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
+  const key =
+    process.env.SUPABASE_SERVICE_ROLE_KEY ||
+    process.env.SUPABASE_SERVICE_ROLE ||
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
+    process.env.SUPABASE_ANON_KEY;
+  if (!url || !key) throw new Error('Supabase env not configured');
+  return createClient(url, key, { auth: { autoRefreshToken: false, persistSession: false } });
+}
+
 export async function GET(request: NextRequest) {
   try {
-    const supabase = getSupabase();
+    // Use cookie-based auth client — reads session from browser cookies
+    const supabase = createRouteHandlerClient({ cookies });
     const { data: { user }, error: authError } = await supabase.auth.getUser();
 
     if (authError || !user) {
@@ -15,32 +29,24 @@ export async function GET(request: NextRequest) {
 
     // Admin check — admin sees aggregate stats across ALL builders
     const isAdmin = user.email === 'tharagarealestate@gmail.com';
-
-    // Use user.id directly as builder_id — consistent with /api/builder/properties
     const builderId = user.id;
 
+    // Use service role client for data queries to bypass RLS
+    const svc = getServiceSupabase();
+
     // Build queries — admin sees ALL, builder sees only their own
-    const leadsQuery = supabase
-      .from('leads')
-      .select('id, status, score', { count: 'exact', head: false });
-    const propertiesQuery = supabase
-      .from('properties')
-      .select('id, listing_status', { count: 'exact', head: false });
-    const viewsQuery = supabase
-      .from('properties')
-      .select('view_count');
-    const inquiriesQuery = supabase
-      .from('leads')
-      .select('id', { count: 'exact', head: true });
+    let leadsQuery = svc.from('leads').select('id, status, score', { count: 'exact', head: false });
+    let propertiesQuery = svc.from('properties').select('id, listing_status', { count: 'exact', head: false });
+    let viewsQuery = svc.from('properties').select('view_count');
+    let inquiriesQuery = svc.from('leads').select('id', { count: 'exact', head: true });
 
     if (!isAdmin) {
-      leadsQuery.eq('builder_id', builderId);
-      propertiesQuery.eq('builder_id', builderId);
-      viewsQuery.eq('builder_id', builderId);
-      inquiriesQuery.eq('builder_id', builderId);
+      leadsQuery = leadsQuery.eq('builder_id', builderId);
+      propertiesQuery = propertiesQuery.eq('builder_id', builderId);
+      viewsQuery = viewsQuery.eq('builder_id', builderId);
+      inquiriesQuery = inquiriesQuery.eq('builder_id', builderId);
     }
 
-    // Get real-time stats
     const [leadsResult, propertiesResult, viewsResult, inquiriesResult] = await Promise.all([
       leadsQuery,
       propertiesQuery,
@@ -57,7 +63,7 @@ export async function GET(request: NextRequest) {
 
     const totalProperties = propertiesResult.count || 0;
     const activeProperties = (propertiesResult.data || []).filter(
-      (p: any) => (p.listing_status || 'active') === 'active'
+      (p: any) => ['active', 'available'].includes(p.listing_status || 'active')
     ).length;
 
     const totalViews = (viewsResult.data || []).reduce(
@@ -66,7 +72,7 @@ export async function GET(request: NextRequest) {
     );
 
     const totalInquiries = inquiriesResult.count || 0;
-    const conversionRate = totalViews > 0 
+    const conversionRate = totalViews > 0
       ? ((totalInquiries / totalViews) * 100).toFixed(1)
       : '0.0';
 
@@ -91,14 +97,3 @@ export async function GET(request: NextRequest) {
     );
   }
 }
-
-
-
-
-
-
-
-
-
-
-

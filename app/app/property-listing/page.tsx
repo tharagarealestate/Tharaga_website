@@ -184,7 +184,7 @@ function AIMatchBadge({ score }: { score: number }) {
 // ─── Skeleton Card ────────────────────────────────────────────────────────────
 function SkeletonCard() {
   return (
-    <div className="bg-white/[0.03] border border-white/[0.06] rounded-2xl overflow-hidden">
+    <div className="bg-zinc-900/50 border border-zinc-800/50 rounded-xl overflow-hidden">
       <motion.div
         animate={{ opacity: [0.3, 0.6, 0.3] }}
         transition={{ duration: 1.6, repeat: Infinity }}
@@ -254,7 +254,7 @@ function PropertyCardGrid({ property, index }: { property: Property; index: numb
           onClick={() => router.push('/property/' + slug)}
           onMouseEnter={() => setHover(true)}
           onMouseLeave={() => setHover(false)}
-          className="group relative bg-white/[0.04] border border-white/[0.08] rounded-2xl overflow-hidden cursor-pointer hover:border-amber-500/30 transition-all duration-300 hover:shadow-2xl hover:shadow-amber-500/[0.07]"
+          className="group relative bg-zinc-900/40 border border-zinc-800/60 rounded-xl overflow-hidden cursor-pointer hover:border-amber-500/40 transition-all duration-300 hover:shadow-xl hover:shadow-amber-500/[0.07]"
         >
           {/* Image */}
           <div className="relative h-56 overflow-hidden bg-zinc-900/60">
@@ -342,7 +342,7 @@ function PropertyCardGrid({ property, index }: { property: Property; index: numb
           </div>
           <motion.div
             animate={hover ? { opacity: 1 } : { opacity: 0 }}
-            className="absolute inset-0 pointer-events-none rounded-2xl border border-amber-500/20"
+            className="absolute inset-0 pointer-events-none rounded-xl border border-amber-500/20"
           />
         </div>
       </TiltCard>
@@ -367,7 +367,7 @@ function PropertyCardList({ property, index }: { property: Property; index: numb
       animate={{ opacity: 1, x: 0 }}
       transition={{ delay: index * 0.03, type: 'spring', stiffness: 300, damping: 28 }}
       onClick={() => router.push('/property/' + slug)}
-      className="group flex gap-4 p-4 bg-white/[0.03] border border-white/[0.07] rounded-2xl cursor-pointer hover:border-amber-500/25 hover:bg-white/[0.05] transition-all"
+      className="group flex gap-4 p-4 bg-zinc-900/40 border border-zinc-800/60 rounded-xl cursor-pointer hover:border-amber-500/30 hover:bg-zinc-900/60 transition-all"
     >
       <div className="relative w-48 h-36 flex-shrink-0 rounded-xl overflow-hidden bg-zinc-900">
         {imgSrc ? (
@@ -436,9 +436,9 @@ function AISearchBar({ value, onChange, onSubmit }: { value: string; onChange: (
   return (
     <motion.div
       animate={{ borderColor: focused ? 'rgba(245,158,11,0.5)' : 'rgba(255,255,255,0.08)' }}
-      className="relative flex items-center bg-white/[0.04] backdrop-blur-xl border rounded-2xl overflow-hidden shadow-xl shadow-black/20"
+      className="relative flex items-center bg-zinc-900/80 backdrop-blur-xl border rounded-2xl overflow-hidden shadow-xl shadow-black/20"
     >
-      <div className="flex items-center gap-2 pl-5 pr-3 border-r border-white/[0.07] flex-shrink-0">
+      <div className="flex items-center gap-2 pl-5 pr-3 border-r border-zinc-800 flex-shrink-0">
         <motion.div animate={{ rotate: [0, 360] }} transition={{ duration: 8, repeat: Infinity, ease: 'linear' }}>
           <Brain className="w-4 h-4 text-amber-400" />
         </motion.div>
@@ -686,20 +686,20 @@ function Pagination({ pagination, onPageChange }: { pagination: PaginationState;
   return (
     <div className="flex items-center justify-center gap-1.5 mt-12">
       <button onClick={() => onPageChange(page - 1)} disabled={!pagination.has_prev}
-        className="flex items-center gap-1.5 px-4 py-2 bg-white/[0.04] border border-white/[0.08] rounded-xl text-sm text-zinc-400 disabled:opacity-30 disabled:cursor-not-allowed hover:border-amber-500/30 hover:text-amber-400 transition-all">
+        className="flex items-center gap-1.5 px-4 py-2 bg-zinc-900/60 border border-zinc-800 rounded-xl text-sm text-zinc-400 disabled:opacity-30 disabled:cursor-not-allowed hover:border-amber-500/30 hover:text-amber-400 transition-all">
         <ChevronLeft className="w-4 h-4" /> Prev
       </button>
       {pages.map((p, i) =>
         p === '...' ? <span key={'e' + i} className="px-2 text-zinc-600">...</span> : (
           <button key={p} onClick={() => onPageChange(p as number)}
             className={cn('w-9 h-9 rounded-xl text-sm font-semibold transition-all',
-              page === p ? 'bg-amber-500 text-zinc-950 shadow-lg shadow-amber-500/25' : 'bg-white/[0.04] border border-white/[0.08] text-zinc-400 hover:border-amber-500/30 hover:text-amber-400')}>
+              page === p ? 'bg-amber-500 text-zinc-950 shadow-lg shadow-amber-500/25' : 'bg-zinc-900/60 border border-zinc-800 text-zinc-400 hover:border-amber-500/30 hover:text-amber-400')}>
             {p}
           </button>
         )
       )}
       <button onClick={() => onPageChange(page + 1)} disabled={!pagination.has_next}
-        className="flex items-center gap-1.5 px-4 py-2 bg-white/[0.04] border border-white/[0.08] rounded-xl text-sm text-zinc-400 disabled:opacity-30 disabled:cursor-not-allowed hover:border-amber-500/30 hover:text-amber-400 transition-all">
+        className="flex items-center gap-1.5 px-4 py-2 bg-zinc-900/60 border border-zinc-800 rounded-xl text-sm text-zinc-400 disabled:opacity-30 disabled:cursor-not-allowed hover:border-amber-500/30 hover:text-amber-400 transition-all">
         Next <ChevronRight className="w-4 h-4" />
       </button>
     </div>
@@ -834,14 +834,14 @@ function PropertyListingContent() {
                 className={cn('px-3 py-1 rounded-full text-[11px] font-semibold border transition-all duration-200',
                   filters.bhk_type.includes(bhk)
                     ? 'bg-amber-500/20 text-amber-400 border-amber-500/30 shadow-sm shadow-amber-500/10'
-                    : 'bg-white/[0.04] text-zinc-500 border-white/[0.08] hover:border-amber-500/20 hover:text-zinc-300')}>
+                    : 'bg-zinc-900/60 text-zinc-500 border-zinc-800 hover:border-amber-500/20 hover:text-zinc-300')}>
                 {bhk}
               </button>
             ))}
             <button
               onClick={() => setFilters(f => ({ ...f, rera_verified: !f.rera_verified }))}
               className={cn('flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-semibold border transition-all duration-200',
-                filters.rera_verified ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30' : 'bg-white/[0.04] text-zinc-500 border-white/[0.08] hover:border-emerald-500/20 hover:text-zinc-300')}>
+                filters.rera_verified ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30' : 'bg-zinc-900/60 text-zinc-500 border-zinc-800 hover:border-emerald-500/20 hover:text-zinc-300')}>
               <Shield className="w-3 h-3" /> RERA Verified
             </button>
           </motion.div>
@@ -849,7 +849,7 @@ function PropertyListingContent() {
       </div>
 
       {/* Toolbar */}
-      <div className="sticky top-0 z-30 bg-zinc-950/90 backdrop-blur-xl border-b border-white/[0.06] shadow-xl shadow-black/20">
+      <div className="sticky top-0 z-30 bg-zinc-950/90 backdrop-blur-xl border-b border-zinc-800/60 shadow-xl shadow-black/20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center gap-3 py-3">
             <div className="flex-1 min-w-0 hidden sm:block">
@@ -868,7 +868,7 @@ function PropertyListingContent() {
             {/* Sort */}
             <div className="relative" ref={sortMenuRef}>
               <button onClick={() => setShowSortMenu(s => !s)}
-                className="flex items-center gap-1.5 px-3 py-2 bg-white/[0.04] border border-white/[0.08] rounded-xl text-[11px] text-zinc-400 hover:border-amber-500/25 hover:text-zinc-300 transition-all">
+                className="flex items-center gap-1.5 px-3 py-2 bg-zinc-900/60 border border-zinc-800 rounded-xl text-[11px] text-zinc-400 hover:border-amber-500/25 hover:text-zinc-300 transition-all">
                 <ArrowUpDown className="w-3 h-3" />
                 {SORT_OPTIONS.find(s => s.id === sortBy)?.label || 'Sort'}
                 <ChevronDown className="w-3 h-3" />
@@ -891,7 +891,7 @@ function PropertyListingContent() {
             </div>
 
             {/* View mode */}
-            <div className="flex items-center bg-white/[0.04] border border-white/[0.08] rounded-xl p-0.5">
+            <div className="flex items-center bg-zinc-900 border border-zinc-800 rounded-xl p-0.5">
               <button onClick={() => setViewMode('grid')} className={cn('p-1.5 rounded-lg transition-colors', viewMode === 'grid' ? 'bg-zinc-700 text-zinc-100' : 'text-zinc-500 hover:text-zinc-300')}>
                 <LayoutGrid className="w-3.5 h-3.5" />
               </button>
@@ -904,7 +904,7 @@ function PropertyListingContent() {
             <button
               onClick={() => setShowFilters(true)}
               className={cn('flex items-center gap-1.5 px-3 py-2 rounded-xl text-[11px] font-semibold border transition-all',
-                activeFilterCount > 0 ? 'bg-amber-500/15 text-amber-400 border-amber-500/25' : 'bg-white/[0.04] border-white/[0.08] text-zinc-400 hover:border-amber-500/20 hover:text-zinc-300')}>
+                activeFilterCount > 0 ? 'bg-amber-500/15 text-amber-400 border-amber-500/25' : 'bg-zinc-900/60 border-zinc-800 text-zinc-400 hover:border-amber-500/20 hover:text-zinc-300')}>
               <SlidersHorizontal className="w-3.5 h-3.5" />
               Filters
               {activeFilterCount > 0 && (

@@ -1,8 +1,56 @@
+import createNextIntlPlugin from 'next-intl/plugin'
+import path from 'path'
+import { fileURLToPath } from 'url'
+
+// ESM-safe __dirname replacement
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
+// Attempt to load bundle analyzer when ANALYZE=true and dependency is present
+let withBundleAnalyzer = (config) => config
+try {
+  const mod = await import('@next/bundle-analyzer')
+  if (mod?.default) {
+    withBundleAnalyzer = mod.default({ enabled: process.env.ANALYZE === 'true' })
+  }
+} catch {}
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
   experimental: {
     typedRoutes: true,
+    serverActions: {
+      bodySizeLimit: '2mb',
+    },
+  },
+  webpack: (config, { isServer }) => {
+    // Ensure '@' alias resolves to the app directory during bundling (Netlify/Linux envs)
+    config.resolve = config.resolve || {}
+    config.resolve.alias = config.resolve.alias || {}
+    if (!config.resolve.alias['@']) {
+      config.resolve.alias['@'] = path.resolve(__dirname)
+    }
+    // Fix for Netlify: ensure proper module resolution
+    config.resolve.modules = ['node_modules', path.resolve(__dirname, 'node_modules')]
+    
+    // Ensure proper module resolution for client components
+    config.resolve.extensionAlias = {
+      '.js': ['.js', '.ts', '.tsx'],
+      '.jsx': ['.jsx', '.tsx'],
+    }
+    
+    // Prevent tree-shaking of named exports in api-client
+    if (!isServer) {
+      config.optimization = config.optimization || {}
+      config.optimization.usedExports = true
+      config.optimization.sideEffects = true
+    }
+    
+    return config
+  },
+  compiler: {
+    // Strip console.* in production build except errors/warnings
+    removeConsole: { exclude: ['error', 'warn'] },
   },
   // Allow production builds to succeed even with type or lint errors
   // This prevents CI/CD failures from non-critical TS/ESLint issues
@@ -12,13 +60,66 @@ const nextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
   },
+  async headers() {
+    return [
+      {
+        source: '/:all*(svg|png|jpg|jpeg|webp|avif|gif|ico|js|css|woff2)',
+        headers: [
+          { key: 'Cache-Control', value: 'public, max-age=31536000, immutable' },
+        ],
+      },
+      {
+        // Security headers for all pages
+        source: '/:path*',
+        headers: [
+          { key: 'X-Frame-Options', value: 'DENY' },
+          { key: 'X-Content-Type-Options', value: 'nosniff' },
+          { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
+          { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=()' },
+          {
+            key: 'Content-Security-Policy',
+            // CRITICAL: Match netlify.toml CSP exactly - 'unsafe-inline' and 'unsafe-eval' are REQUIRED for Next.js App Router hydration
+            // This is the standard Next.js solution and ensures dashboards work permanently
+            // Next.js generates all inline scripts at build time (safe), not from user input
+            value: "default-src 'self'; img-src 'self' https: data:; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://www.gstatic.com https://www.google.com https://www.googletagmanager.com https://js.stripe.com https://checkout.razorpay.com https://unpkg.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com https://r2cdn.perplexity.ai data:; media-src 'self' https: data: blob:; connect-src 'self' https://api.tharaga.co.in https://wedevtjjmdvngyshqdro.supabase.co https://www.googleapis.com https://securetoken.googleapis.com https://identitytoolkit.googleapis.com https://api.stripe.com https://api.razorpay.com; frame-src 'self' https://www.google.com https://www.gstatic.com https://accounts.google.com https://wedevtjjmdvngyshqdro.supabase.co https://js.stripe.com https://api.razorpay.com https://checkout.razorpay.com; frame-ancestors 'self' https://tharaga.co.in https://www.tharaga.co.in https://auth.tharaga.co.in; base-uri 'self'; upgrade-insecure-requests;"
+          },
+          { key: 'Strict-Transport-Security', value: 'max-age=31536000; includeSubDomains; preload' }
+        ],
+      },
+    ]
+  },
   
   async rewrites() {
     // Ensure /api in Next dev maps to real backend if proxy not present
+    // BUT: Exclude Next.js API routes that should be handled locally
     const apiBase = process.env.NEXT_PUBLIC_API_URL
     const rules = []
     if (apiBase) {
-      rules.push({ source: '/api/:path*', destination: `${apiBase}/api/:path*` })
+      // Only rewrite specific API routes to external backend
+      // Exclude routes handled by Next.js API routes (leads, builder, admin, etc.)
+      // These routes are handled by app/app/api/* route handlers
+      const externalApiRoutes = [
+        '/api/recommendations',
+        '/api/interactions',
+        '/api/microsite/:path*',
+        '/api/calendar/:path*',
+        '/api/billing/:path*',
+        '/api/admin/usage',
+        '/api/analytics/:path*',
+        '/api/properties-list',
+      ]
+      
+      // Rewrite only specific external API routes
+      externalApiRoutes.forEach(route => {
+        rules.push({ 
+          source: route, 
+          destination: `${apiBase}${route}` 
+        })
+      })
+      
+      // Fallback: rewrite other /api routes that don't match Next.js routes
+      // This is a catch-all but Next.js routes take precedence
+      // Note: Next.js API routes in app/app/api/* will be handled first
     }
     // Support legacy deep links under /app/* by rewriting to the new structure.
     // Example: /app/saas/pricing -> /saas/pricing
@@ -27,17 +128,39 @@ const nextConfig = {
     rules.push({ source: '/app/:path*', destination: '/:path*' })
     // Back-compat: legacy underscore embed path -> new embed path
     rules.push({ source: '/_embed/:path*', destination: '/embed/:path*' })
+    // Map legacy static paths if present in public
+    // NOTE: /property-listing is now handled by the App Router page at app/app/property-listing/page.tsx,
+    // so we intentionally do NOT rewrite it to the legacy static HTML anymore.
+    rules.push({ source: '/search-filter-home', destination: '/search-filter-home/index.html' })
+    // Homepage is now served by Next.js App Router page.tsx (SSR)
+    // Legacy static index.html is no longer needed
     return rules
   },
   images: {
+    formats: ['image/avif', 'image/webp'],
+    // Mobile-optimized image sizes
+    deviceSizes: [640, 750, 828, 1080, 1200, 1920],
+    imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
+    // Enable image optimization
+    minimumCacheTTL: 60,
     remotePatterns: [
       { protocol: 'https', hostname: 'picsum.photos' },
       { protocol: 'https', hostname: 'images.unsplash.com' },
       { protocol: 'https', hostname: 'res.cloudinary.com' },
       // Allow Supabase Storage public bucket images
-      { protocol: 'https', hostname: 'wedevtjjmdvngyshqdro.supabase.co' }
+      { protocol: 'https', hostname: 'wedevtjjmdvngyshqdro.supabase.co' },
+      // Avatar service used on homepage
+      { protocol: 'https', hostname: 'i.pravatar.cc' },
     ],
   },
+  // Mobile performance optimizations
+  compress: true,
+  poweredByHeader: false,
+  swcMinify: true,
 };
 
-export default nextConfig;
+// Enable next-intl for the App Router. This wires up the
+// i18n/request.ts configuration used at runtime.
+const withNextIntl = createNextIntlPlugin()
+
+export default withBundleAnalyzer(withNextIntl(nextConfig));

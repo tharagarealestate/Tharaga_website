@@ -1,136 +1,237 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@400;600;700;900&display=swap');
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* Premium Design Tokens */
+/* ============================================
+   THARAGA DESIGN SYSTEM — Design Tokens
+   ============================================ */
+
 @layer base {
   :root {
-    /* PRIMARY: Deep Sapphire - Trust, Intelligence, Wealth */
-    --primary-950: 7 19 40;      /* #071328 - Deepest navy */
-    --primary-900: 10 30 61;     /* #0A1E3D - Foundation */
-    --primary-800: 15 45 82;     /* #0F2D52 - Authority */
-    --primary-700: 26 65 115;    /* #1A4173 - Royal blue */
-    --primary-600: 37 99 235;    /* #2563EB - Current primary */
-    --primary-500: 59 130 246;   /* #3B82F6 - Sky blue */
-    --primary-400: 96 165 250;   /* #60A5FA - Light blue */
-    --primary-300: 147 197 253;  /* #93C5FD - Pale blue */
+    /* Background Surfaces */
+    --bg-primary: #09090b;
+    --bg-secondary: #18181b;
+    --bg-tertiary: #27272a;
+    --bg-elevated: #1c1c1f;
+    --bg-overlay: rgba(0, 0, 0, 0.6);
 
-    /* ACCENT: Champagne Gold - Luxury, Success */
-    --gold-900: 124 92 46;       /* #7C5C2E - Antique gold */
-    --gold-800: 161 119 60;      /* #A1773C - Dark gold */
-    --gold-700: 184 134 11;      /* #B8860B - Rich gold */
-    --gold-600: 201 154 30;      /* #C99A1E - Medium gold */
-    --gold-500: 212 175 55;      /* #D4AF37 - Classic gold */
-    --gold-400: 229 200 109;     /* #E5C86D - Light gold */
-    --gold-300: 244 229 178;     /* #F4E5B2 - Champagne */
-    --gold-200: 250 242 217;     /* #FAF2D9 - Pale champagne */
+    /* Brand — Amber/Gold (Real Estate Luxury) */
+    --brand: #f59e0b;
+    --brand-hover: #fbbf24;
+    --brand-muted: #92400e;
+    --brand-subtle: rgba(245, 158, 11, 0.1);
+    --brand-glow: rgba(245, 158, 11, 0.15);
 
-    /* SECONDARY: Emerald - Growth, Prosperity */
-    --emerald-900: 6 78 59;      /* #064E3B - Deep forest */
-    --emerald-800: 6 95 70;      /* #065F46 - Forest green */
-    --emerald-700: 4 120 87;     /* #047857 - Emerald */
-    --emerald-600: 5 150 105;    /* #059669 - Medium emerald */
-    --emerald-500: 16 185 129;   /* #10B981 - Fresh green */
-    --emerald-400: 52 211 153;   /* #34D399 - Light emerald */
-    --emerald-300: 110 231 183;  /* #6EE7B7 - Mint */
+    /* Text */
+    --text-primary: #fafafa;
+    --text-secondary: #a1a1aa;
+    --text-muted: #71717a;
+    --text-inverse: #09090b;
 
-    /* NEUTRALS: Warm Grays - Professional Luxury */
-    --gray-950: 15 18 25;        /* #0F1219 - Pure black */
-    --gray-900: 31 41 55;        /* #1F2937 - Charcoal */
-    --gray-800: 55 65 81;        /* #374151 - Dark gray */
-    --gray-700: 75 85 99;        /* #4B5563 - Steel */
-    --gray-600: 107 114 128;     /* #6B7280 - Medium gray */
-    --gray-500: 156 163 175;     /* #9CA3AF - Light gray */
-    --gray-400: 209 213 219;     /* #D1D5DB - Pale gray */
-    --gray-300: 229 231 235;     /* #E5E7EB - Off-white */
-    --gray-200: 243 244 246;     /* #F3F4F6 - Almost white */
-    --gray-100: 249 250 251;     /* #F9FAFB - Pure white */
-    --gray-50: 252 252 253;      /* #FCFCFD - Ultra white */
+    /* Borders */
+    --border: #27272a;
+    --border-hover: #3f3f46;
+    --border-active: #52525b;
+    --border-brand: rgba(245, 158, 11, 0.3);
 
-    /* SEMANTIC COLORS */
-    --success: 16 185 129;       /* Emerald-500 */
-    --warning: 245 158 11;       /* Amber-500 */
-    --danger: 220 38 38;         /* Red-600 */
-    --info: 37 99 235;           /* Primary-600 */
+    /* Semantic */
+    --success: #22c55e;
+    --success-muted: rgba(34, 197, 94, 0.1);
+    --warning: #f59e0b;
+    --warning-muted: rgba(245, 158, 11, 0.1);
+    --danger: #ef4444;
+    --danger-muted: rgba(239, 68, 68, 0.1);
+    --info: #3b82f6;
+    --info-muted: rgba(59, 130, 246, 0.1);
 
-    /* GRADIENTS */
-    --gradient-hero: linear-gradient(135deg, rgb(var(--primary-950)) 0%, rgb(var(--primary-800)) 50%, rgb(var(--primary-700)) 100%);
-    --gradient-gold: linear-gradient(135deg, rgb(var(--gold-600)) 0%, rgb(var(--gold-500)) 50%, rgb(var(--gold-400)) 100%);
-    --gradient-emerald: linear-gradient(135deg, rgb(var(--emerald-700)) 0%, rgb(var(--emerald-500)) 100%);
-    --gradient-card: linear-gradient(180deg, rgb(var(--gray-50)) 0%, rgb(var(--gray-100)) 100%);
+    /* Shadows */
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+    --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4);
+    --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.5);
+    --shadow-xl: 0 16px 48px rgba(0, 0, 0, 0.6);
+    --shadow-brand: 0 0 24px rgba(245, 158, 11, 0.15);
 
-    /* SHADOWS - Premium Depth */
-    --shadow-sm: 0 1px 2px 0 rgb(var(--primary-950) / 0.05);
-    --shadow: 0 2px 8px 0 rgb(var(--primary-900) / 0.10);
-    --shadow-md: 0 4px 16px 0 rgb(var(--primary-900) / 0.12);
-    --shadow-lg: 0 8px 24px 0 rgb(var(--primary-900) / 0.15);
-    --shadow-xl: 0 12px 32px 0 rgb(var(--primary-900) / 0.18);
-    --shadow-2xl: 0 16px 48px 0 rgb(var(--primary-900) / 0.22);
-    --shadow-gold: 0 8px 32px 0 rgb(var(--gold-600) / 0.25);
-    --shadow-emerald: 0 8px 24px 0 rgb(var(--emerald-600) / 0.20);
+    /* Radius */
+    --radius-sm: 6px;
+    --radius-md: 8px;
+    --radius-lg: 12px;
+    --radius-xl: 16px;
+    --radius-2xl: 24px;
+    --radius-full: 9999px;
 
-    /* GLASSMORPHISM */
-    --glass-bg: rgba(255, 255, 255, 0.85);
-    --glass-blur: blur(20px);
-    --glass-border: 1px solid rgb(var(--gold-500) / 0.15);
+    /* Transitions */
+    --transition-fast: 100ms ease;
+    --transition-base: 150ms ease;
+    --transition-slow: 300ms ease;
 
-    /* TYPOGRAPHY */
-    --font-display: 'Playfair Display', 'Merriweather', Georgia, serif;
+    /* Z-index scale */
+    --z-dropdown: 50;
+    --z-sticky: 100;
+    --z-modal-backdrop: 200;
+    --z-modal: 210;
+    --z-toast: 300;
+    --z-tooltip: 400;
+
+    /* Typography */
+    --font-display: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     --font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-    --font-mono: 'JetBrains Mono', 'Roboto Mono', Consolas, monospace;
+    --font-mono: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
   }
 
-  /* Dark mode (if needed) */
-  .dark {
-    --gray-950: 249 250 251;  /* Invert for dark mode */
-    /* Extend dark-mode tokens here as needed */
+  /* Base HTML */
+  html {
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    font-family: var(--font-body);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    scroll-behavior: smooth;
   }
-}
 
-/* Base elements */
-html, body {
-  background: rgb(var(--gray-50));
-  color: rgb(var(--gray-900));
-  font-family: var(--font-body);
-}
+  body {
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    margin: 0;
+    min-height: 100vh;
+  }
 
-@layer base {
+  /* Typography Scale */
   h1, h2, h3, h4, h5, h6 {
     font-family: var(--font-display);
     font-weight: 700;
-    margin: 0 0 0.5em 0;
+    letter-spacing: -0.02em;
+    line-height: 1.2;
+    color: var(--text-primary);
+  }
+
+  h1 { font-size: clamp(2.25rem, 5vw, 4.5rem); font-weight: 800; line-height: 1.08; }
+  h2 { font-size: clamp(1.875rem, 3.5vw, 2.25rem); line-height: 1.15; }
+  h3 { font-size: clamp(1.25rem, 2vw, 1.5rem); letter-spacing: -0.01em; }
+  h4 { font-size: 1.125rem; letter-spacing: -0.01em; }
+
+  p { line-height: 1.6; color: var(--text-secondary); }
+
+  a {
+    color: var(--brand);
+    text-decoration: none;
+    transition: color var(--transition-fast);
+  }
+  a:hover { color: var(--brand-hover); }
+
+  ::selection {
+    background: rgba(245, 158, 11, 0.3);
+    color: var(--text-primary);
+  }
+
+  /* Focus styles */
+  :focus-visible {
+    outline: 2px solid var(--brand);
+    outline-offset: 2px;
+    border-radius: var(--radius-sm);
   }
 }
 
-/* UTILITY CLASSES */
-/* Custom slow pulse animation for floating background shapes */
-@keyframes pulse-slow {
-  0%, 100% { transform: scale(1); opacity: 0.6; }
-  50% { transform: scale(1.06); opacity: 1; }
-}
+/* ============================================
+   UTILITY CLASSES
+   ============================================ */
+
 @layer utilities {
-  .text-gradient-gold {
-    @apply bg-gradient-to-r from-gold-600 via-gold-500 to-gold-400 bg-clip-text text-transparent;
+  /* Text Gradient */
+  .text-gradient-brand {
+    background: linear-gradient(135deg, #f59e0b, #fbbf24, #f59e0b);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
   }
 
-  .glass-card {
-    @apply bg-white/85 backdrop-blur-xl border border-gold-500/15 shadow-lg;
+  /* Glass Effect (use sparingly) */
+  .glass {
+    background: rgba(24, 24, 27, 0.7);
+    backdrop-filter: blur(16px) saturate(1.5);
+    -webkit-backdrop-filter: blur(16px) saturate(1.5);
+    border: 1px solid var(--border);
   }
 
-  .btn-gold {
-    @apply bg-gradient-to-r from-gold-600 to-gold-500 text-primary-950 font-semibold px-6 py-3 rounded-lg shadow-gold hover:shadow-gold hover:-translate-y-0.5 transition-all duration-200;
+  /* Brand Glow */
+  .glow-brand {
+    box-shadow: var(--shadow-brand);
   }
 
-  .btn-primary {
-    @apply bg-primary-600 text-white font-semibold px-6 py-3 rounded-lg shadow-lg hover:bg-primary-700 hover:shadow-xl hover:-translate-y-0.5 transition-all duration-200;
+  /* Skeleton Loading */
+  .skeleton {
+    background: linear-gradient(90deg, var(--bg-tertiary) 25%, var(--bg-elevated) 50%, var(--bg-tertiary) 75%);
+    background-size: 200% 100%;
+    animation: skeleton-pulse 1.5s ease-in-out infinite;
+    border-radius: var(--radius-md);
   }
-  .animate-pulse-slow {
-    animation: pulse-slow 6s ease-in-out infinite;
+
+  /* Container */
+  .container-page {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 1rem;
   }
-  .animate-pulse-slow-delay {
-    animation: pulse-slow 6s ease-in-out infinite;
-    animation-delay: 1s;
-  }
+  @media (min-width: 640px) { .container-page { padding: 0 1.5rem; } }
+  @media (min-width: 1024px) { .container-page { padding: 0 2rem; } }
+
+  /* Section spacing */
+  .section-gap { padding-top: 5rem; padding-bottom: 5rem; }
+  @media (min-width: 768px) { .section-gap { padding-top: 6rem; padding-bottom: 6rem; } }
+
+  /* Scrollbar */
+  .scrollbar-thin::-webkit-scrollbar { width: 6px; height: 6px; }
+  .scrollbar-thin::-webkit-scrollbar-track { background: transparent; }
+  .scrollbar-thin::-webkit-scrollbar-thumb { background: var(--border-hover); border-radius: 3px; }
+  .scrollbar-thin::-webkit-scrollbar-thumb:hover { background: var(--border-active); }
 }
+
+/* ============================================
+   ANIMATIONS
+   ============================================ */
+
+@keyframes skeleton-pulse {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slide-up {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes scale-in {
+  from { opacity: 0; transform: scale(0.96); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.animate-fade-in { animation: fade-in 200ms ease-out; }
+.animate-slide-up { animation: slide-up 300ms ease-out; }
+.animate-scale-in { animation: scale-in 200ms ease-out; }
+
+/* Enhanced animations for homepage */
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+@keyframes pulse-glow {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 1; }
+}
+@keyframes slide-in-left {
+  from { opacity: 0; transform: translateX(-20px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+@keyframes slide-in-right {
+  from { opacity: 0; transform: translateX(20px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+.animate-float { animation: float 6s ease-in-out infinite; }
+.animate-pulse-glow { animation: pulse-glow 4s ease-in-out infinite; }
+.animate-slide-in-left { animation: slide-in-left 500ms ease-out; }
+.animate-slide-in-right { animation: slide-in-right 500ms ease-out; }

@@ -1,0 +1,315 @@
+# Tharaga Project Context
+
+## Project Overview
+
+**Project Name**: Tharaga
+**Website**: https://tharaga.co.in
+**Tech Stack**: Supabase + [Add your frontend framework]
+**Database**: PostgreSQL (via Supabase)
+
+## Project Description
+[Add description of what Tharaga does - your business domain, key features, target users]
+
+Example:
+- Industry/Domain: [e.g., E-commerce, SaaS, Education, etc.]
+- Primary Purpose: [What problem does Tharaga solve?]
+- Key Features: [List main features]
+
+## Database Architecture
+
+### Core Tables
+[Document your main database tables and their relationships]
+
+#### Example Structure:
+```
+users (from auth.users)
+├── profiles (1:1) - Extended user information
+├── [your_table_1] (1:many)
+└── [your_table_2] (1:many)
+```
+
+### Key Entities
+
+#### Profiles
+- **Purpose**: Stores extended user profile information
+- **Key Columns**: user_id, full_name, avatar_url, etc.
+- **RLS**: Users can view all, update only their own
+
+#### [Your Table Name]
+- **Purpose**: [What this table stores]
+- **Key Columns**: [List important columns]
+- **RLS**: [Describe access rules]
+
+## Authentication & Authorization
+
+### User Roles
+Define your user roles and permissions:
+
+- **Admin**: [Describe admin capabilities]
+- **User**: [Describe regular user capabilities]
+- **[Other Role]**: [Describe other role capabilities]
+
+### Authentication Methods
+- [ ] Email/Password
+- [ ] OAuth (Google, GitHub, etc.)
+- [ ] Magic Link
+- [ ] Phone/SMS
+
+## Row Level Security (RLS) Patterns
+
+### Standard Patterns Used
+Document the RLS patterns you commonly use in this project:
+
+1. **User-Owned Resources**: Resources where user_id = auth.uid()
+2. **Public Read/Authenticated Write**: [Which tables use this?]
+3. **Role-Based Access**: [Which tables use role-based access?]
+4. **Team/Organization-Based**: [If applicable]
+
+## Database Naming Conventions
+
+### Tables
+- Use snake_case, plural nouns
+- Example: `users`, `blog_posts`, `product_categories`
+
+### Columns
+- Use snake_case
+- Foreign keys: `{table_singular}_id`
+- Timestamps: `created_at`, `updated_at`
+- Booleans: `is_active`, `has_verified_email`
+
+### Indexes
+- Format: `idx_{table}_{column(s)}`
+- Example: `idx_posts_user_id_created_at`
+
+## Common Query Patterns
+
+### Get User with Related Data
+```sql
+-- Example: Customize for your project
+SELECT
+  u.id,
+  u.email,
+  p.full_name,
+  p.avatar_url
+FROM auth.users u
+LEFT JOIN profiles p ON u.id = p.user_id
+WHERE u.id = auth.uid();
+```
+
+### [Your Common Query Pattern]
+```sql
+-- Add queries you frequently use in this project
+```
+
+## Migration Strategy
+
+### Migration Workflow
+1. Create migration: `supabase migration new migration_name`
+2. Write SQL with rollback comments
+3. Test locally: `supabase db reset`
+4. Apply to dev/staging
+5. Review and apply to production
+
+### Critical Tables
+List tables that require extra caution when modifying:
+- `auth.users` - Never modify directly
+- `profiles` - [Why it's critical]
+- [Other critical tables]
+
+## Storage Buckets
+
+### Configured Buckets
+Document your Supabase storage buckets:
+
+#### avatars
+- **Purpose**: User profile pictures
+- **Public**: Yes
+- **Max File Size**: 2MB
+- **Allowed Types**: image/jpeg, image/png, image/webp
+- **RLS**: Users can upload to their own folder
+
+#### [Other Bucket]
+- **Purpose**: [Description]
+- **Public**: [Yes/No]
+- **RLS**: [Access rules]
+
+## Edge Functions
+
+### Deployed Functions
+List any Supabase Edge Functions:
+
+#### function-name
+- **Purpose**: [What it does]
+- **Trigger**: [How it's invoked]
+- **Returns**: [Return type]
+
+## API Endpoints
+
+### Public Endpoints
+- `GET /api/public/...` - [Description]
+
+### Authenticated Endpoints
+- `GET /api/user/...` - [Description]
+- `POST /api/user/...` - [Description]
+
+## Environment Variables
+
+### Required Variables
+```
+SUPABASE_URL=your_supabase_url
+SUPABASE_ANON_KEY=your_anon_key
+[Other environment variables]
+```
+
+### Optional Variables
+```
+[Optional configuration]
+```
+
+## Business Rules & Constraints
+
+### Data Validation Rules
+Document important business rules encoded in your database:
+
+1. **[Rule Name]**: [Description]
+   - Implemented as: CHECK constraint / trigger / RLS policy
+   - Location: [Table/function name]
+
+2. **Email Verification Required for [Action]**
+   - Implemented as: [How it's enforced]
+
+### Workflow Rules
+1. **[Workflow Name]**: [Step-by-step description]
+
+## Testing Strategy
+
+### Test Data
+- Test users: [How to create/access]
+- Sample data: [How to seed]
+
+### Testing Checklist
+- [ ] RLS policies tested for each role
+- [ ] Migrations tested with rollback
+- [ ] Edge cases handled
+- [ ] Performance tested with realistic data volume
+
+## Common Development Tasks
+
+### Adding a New Table
+1. Create migration file
+2. Define table structure with standard columns
+3. Add indexes on foreign keys and commonly queried columns
+4. Enable RLS
+5. Create RLS policies
+6. Add trigger for updated_at
+7. Document in this file
+
+### Adding a New User Role
+1. Update profiles table (if role stored there)
+2. Update RLS policies to account for new role
+3. Document role permissions above
+4. Test access patterns
+
+## Performance Considerations
+
+### Indexed Columns
+List columns that should always be indexed:
+- All foreign key columns
+- Columns used in WHERE clauses frequently
+- Columns used in ORDER BY clauses
+
+### Slow Queries
+Document any known slow queries and optimizations:
+- [Query description]: [Optimization applied]
+
+## Deployment Process
+
+### Local Development
+```bash
+# Start Supabase
+supabase start
+
+# Reset database
+supabase db reset
+
+# Apply migrations
+supabase db push
+```
+
+### Production Deployment
+1. [Step 1]
+2. [Step 2]
+3. [Step 3]
+
+## Troubleshooting
+
+### Common Issues
+
+#### RLS Prevents Access to Data
+- Check if RLS is enabled: [How to verify]
+- Verify policy exists: [How to check]
+- Test as specific user: [How to test]
+
+#### Migration Fails
+- [Common error 1]: [Solution]
+- [Common error 2]: [Solution]
+
+## Code Review Checklist
+
+### For Database Changes
+- [ ] Migration has descriptive name
+- [ ] Rollback strategy documented
+- [ ] Indexes added on foreign keys
+- [ ] RLS enabled and policies created
+- [ ] Updated_at trigger added if applicable
+- [ ] Changes documented in this file
+- [ ] Tested in local environment
+- [ ] No breaking changes to existing queries
+
+### For RLS Policies
+- [ ] Policy name is descriptive
+- [ ] Policy is as simple as possible
+- [ ] Performance impact considered
+- [ ] Tested with different user roles
+- [ ] No data leaks through related tables
+
+## Resources
+
+### Internal Documentation
+- Database schema diagrams: [Link]
+- API documentation: [Link]
+- Postman collection: [Link]
+
+### External Resources
+- Supabase Docs: https://supabase.com/docs
+- PostgreSQL Docs: https://www.postgresql.org/docs/
+
+## Team Conventions
+
+### Git Commit Messages for DB Changes
+```
+feat(db): add user_preferences table
+fix(db): correct RLS policy on posts table
+migrate(db): add email_verified column to profiles
+```
+
+### PR Review Requirements
+- [ ] Reviewed by [role]
+- [ ] Tested in staging environment
+- [ ] Database changes documented
+- [ ] Breaking changes highlighted
+
+## Notes & Reminders
+
+### Important Decisions
+Document architectural decisions:
+- [Date]: [Decision made and reasoning]
+
+### Future Improvements
+- [ ] [Planned improvement 1]
+- [ ] [Planned improvement 2]
+
+---
+
+**Last Updated**: [Date]
+**Maintained By**: [Team/Person]

@@ -1,0 +1,19 @@
+{
+  "buildCommand": "cd app && npm run build",
+  "installCommand": "cd app && npm install",
+  "crons": [
+    {
+      "path": "/api/newsletter/collect-insights",
+      "schedule": "0 * * * *"
+    },
+    {
+      "path": "/api/newsletter/send-weekly",
+      "schedule": "0 10 * * 1"
+    },
+    {
+      "path": "/api/cron/process-properties",
+      "schedule": "*/5 * * * *"
+    }
+  ]
+}
+

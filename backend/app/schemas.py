@@ -31,6 +31,23 @@ class RecommendationResponse(BaseModel):
     items: List[RecommendationItem]
 
 
+# --- Event collection for learning ---
+class InteractionEvent(BaseModel):
+    user_id: str
+    session_id: str
+    property_id: str
+    event: str  # view | favorite | contact | share | scroll_50 | scroll_90 | time_on_page_30s | time_on_page_60s
+    value: float = 1.0
+    ts: Optional[float] = None
+
+class BatchInteractionRequest(BaseModel):
+    events: List[InteractionEvent] = Field(default_factory=list)
+
+class BatchInteractionResponse(BaseModel):
+    ok: bool
+    accepted: int
+
+
 # --- Anti-fraud and verification schemas ---
 
 class ReraVerifyRequest(BaseModel):
@@ -38,6 +55,7 @@ class ReraVerifyRequest(BaseModel):
     state: Optional[str] = Field(default=None, description="State or UT for RERA portal (e.g., KA, TN, MH)")
     project_name: Optional[str] = None
     promoter_name: Optional[str] = None
+    property_id: Optional[str] = Field(default=None, description="Property ID to associate snapshot with")
 
 
 class ReraVerifyResponse(BaseModel):
@@ -126,3 +144,28 @@ class CityTrend(BaseModel):
 class MarketTrendsResponse(BaseModel):
     items: List[CityTrend]
 
+
+# Data Collection Schemas
+class DataCollectionRequest(BaseModel):
+    property_id: str
+    force_refresh: bool = False
+
+
+class DataCollectionResponse(BaseModel):
+    success: bool
+    property_id: str
+    data_quality_score: float
+    data_completeness_score: float
+    fields_collected: int
+    sources_used: List[str]
+    message: str
+
+
+class DataQualityResponse(BaseModel):
+    property_id: str
+    data_quality_score: float
+    data_completeness_score: float
+    fields_filled: int
+    fields_total: int
+    sources: List[str]
+    last_updated: Optional[str] = None

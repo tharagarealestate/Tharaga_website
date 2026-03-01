@@ -1,24 +1,50 @@
 import { NextRequest, NextResponse } from 'next/server'
-export const runtime = 'edge'
-import { getSupabase } from '@/lib/supabase'
+import { cookies } from 'next/headers'
+import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
+import { createClient } from '@supabase/supabase-js'
+
+// Use nodejs runtime so createRouteHandlerClient can read cookies
+export const runtime = 'nodejs'
+
+function getServiceSupabase() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL
+  const key =
+    process.env.SUPABASE_SERVICE_ROLE_KEY ||
+    process.env.SUPABASE_SERVICE_ROLE ||
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
+    process.env.SUPABASE_ANON_KEY
+  if (!url || !key) throw new Error('Supabase env not configured')
+  return createClient(url, key, { auth: { autoRefreshToken: false, persistSession: false } })
+}
 
 export async function GET(req: NextRequest) {
   try {
-    const supabase = getSupabase()
-    
-    // Get authenticated user - NO DEMO FALLBACK
+    // Use cookie-based auth client — works correctly in nodejs runtime
+    const supabase = createRouteHandlerClient({ cookies })
+
     const { data: { user }, error: authError } = await supabase.auth.getUser()
     if (authError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
-    
-    // Use real authenticated user ID as builder_id
+
+    // Admin email gets full access across all builders
+    const isAdmin = user.email === 'tharagarealestate@gmail.com'
     const builderId = user.id
-    const { data, error } = await supabase
+
+    // Use service role client for the data query to bypass RLS
+    const serviceClient = getServiceSupabase()
+
+    let query = serviceClient
       .from('properties')
-      .select('id,title,city,locality,price_inr,images,bedrooms,sqft,listed_at,listing_status')
-      .eq('builder_id', builderId)
-      .order('listed_at', { ascending: false })
+      .select('id,title,city,locality,price_inr,images,bedrooms,sqft,listed_at,listing_status,builder_id')
+      .order('listed_at', { ascending: false, nullsFirst: false })
+      .order('created_at', { ascending: false })
+
+    if (!isAdmin) {
+      query = query.eq('builder_id', builderId)
+    }
+
+    const { data, error } = await query
 
     if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
@@ -33,12 +59,12 @@ export async function GET(req: NextRequest) {
       sqft: typeof p.sqft === 'number' ? p.sqft : null,
       listed_at: p.listed_at || null,
       status: p.listing_status || 'active',
-      views: 0, // TODO: Fetch from analytics
-      inquiries: 0, // TODO: Fetch from leads
+      views: 0,
+      inquiries: 0,
     }))
 
     const res = NextResponse.json({ items })
-    res.headers.set('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=60')
+    res.headers.set('Cache-Control', 'private, s-maxage=30, stale-while-revalidate=60')
     return res
   } catch (e: any) {
     return NextResponse.json({ error: e?.message || 'Unexpected error' }, { status: 500 })

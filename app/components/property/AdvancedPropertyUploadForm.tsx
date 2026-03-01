@@ -409,6 +409,7 @@ export function AdvancedPropertyUploadForm({
     try {
       const response = await fetch('/api/properties/upload-advanced', {
         method: 'POST',
+        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
         },

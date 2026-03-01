@@ -135,8 +135,8 @@ const advancedPropertyUploadSchema = z.object({
   negotiable: z.boolean().default(true),
   base_price: z.number().optional(),
   
-  // Status & Availability
-  listing_status: z.enum(['active', 'inactive', 'sold', 'rented', 'pending']).default('pending'),
+  // Status & Availability — default to 'active' so uploads appear immediately in the public listing
+  listing_status: z.enum(['active', 'inactive', 'sold', 'rented', 'pending']).default('active'),
   listing_type: z.enum(['sale', 'rent']).default('sale'),
   availability_status: z.enum(['available', 'sold', 'under-offer', 'reserved']).default('available'),
   possession_status: z.enum(['ready-to-move', 'under-construction']).optional(),
@@ -232,51 +232,41 @@ export const POST = secureApiRoute(
     const body = await request.json();
     const validatedData = advancedPropertyUploadSchema.parse(body);
     
-    // Check if user is admin uploading for a builder
-    const { data: userProfile } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', user.id)
-      .single();
-    
-    const isAdmin = userProfile?.role === 'admin';
+    // Determine if the user is admin — consistent with withAuth() email-based check
+    const isAdmin = user.role === 'admin' || user.email === 'tharagarealestate@gmail.com';
     let targetBuilderId: string | null = null;
-    
+
     if (isAdmin && validatedData.uploaded_for_builder_id) {
-      // Admin uploading for a builder - verify assignment
-      const { data: assignment } = await supabase
-        .from('admin_builder_assignments')
-        .select('*')
-        .eq('admin_user_id', user.id)
-        .eq('builder_id', validatedData.uploaded_for_builder_id)
-        .eq('is_active', true)
-        .single();
-      
-      if (!assignment) {
-        return NextResponse.json(
-          { error: 'You are not assigned to manage this builder' },
-          { status: 403 }
-        );
+      // Admin uploading for a specific builder - verify assignment if non-owner admin
+      if (user.email !== 'tharagarealestate@gmail.com') {
+        const { data: assignment } = await supabase
+          .from('admin_builder_assignments')
+          .select('*')
+          .eq('admin_user_id', user.id)
+          .eq('builder_id', validatedData.uploaded_for_builder_id)
+          .eq('is_active', true)
+          .single();
+
+        if (!assignment) {
+          return NextResponse.json(
+            { error: 'You are not assigned to manage this builder' },
+            { status: 403 }
+          );
+        }
+
+        const permissions = assignment.permissions as any;
+        if (!permissions?.upload_properties) {
+          return NextResponse.json(
+            { error: 'You do not have permission to upload properties for this builder' },
+            { status: 403 }
+          );
+        }
       }
-      
-      // Check permissions
-      const permissions = assignment.permissions as any;
-      if (!permissions?.upload_properties) {
-        return NextResponse.json(
-          { error: 'You do not have permission to upload properties for this builder' },
-          { status: 403 }
-        );
-      }
-      
+
       targetBuilderId = validatedData.uploaded_for_builder_id;
-    } else if (isAdmin && !validatedData.uploaded_for_builder_id) {
-      return NextResponse.json(
-        { error: 'Admin must specify builder_id when uploading' },
-        { status: 400 }
-      );
     } else {
-      // Builder uploading for themselves
-      // Use user.id directly as builder_id — consistent with /api/builder/properties and stats APIs
+      // Builder or admin uploading for themselves — use user.id as builder_id
+      // Consistent with /api/builder/properties and /api/builder/stats/realtime
       targetBuilderId = user.id;
     }
     

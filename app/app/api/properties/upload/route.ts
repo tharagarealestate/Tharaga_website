@@ -74,7 +74,7 @@ export const POST = secureApiRoute(
       description: description || null,
       images: images ? (Array.isArray(images) ? images : [images]) : [],
       processing_status: 'pending',
-      listing_status: 'draft',
+      listing_status: 'active',
       processing_metadata: {
         uploaded_at: new Date().toISOString()
       }

@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import {
   Building2, MapPin, Eye, TrendingUp, Plus,
   LayoutGrid, List, Search, Users,
-  Star, Shield, ArrowLeft, RefreshCw,
+  Star, Shield, ArrowLeft, RefreshCw, ExternalLink,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useBuilderDataContext, useRealtimeData, formatINR } from '../hooks/useBuilderData'
@@ -144,7 +144,16 @@ export function PropertiesSection({ onNavigate }: PropertiesProps) {
             <p className="text-sm text-zinc-500 mt-1">{stats.total} properties managed</p>
           </div>
           <div className="flex items-center gap-2">
-            {/* Refresh button */}
+            {/* View public listing */}
+            <a
+              href="/property-listing"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1.5 px-3 py-2 bg-zinc-900/60 border border-zinc-800 rounded-lg text-zinc-400 hover:text-zinc-200 hover:border-zinc-700 text-sm font-medium transition-colors"
+            >
+              <ExternalLink className="w-3.5 h-3.5" /> Public Listing
+            </a>
+            {/* Refresh */}
             <button
               onClick={() => setRefreshKey(k => k + 1)}
               title="Refresh"

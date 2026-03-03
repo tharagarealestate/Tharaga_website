@@ -58,26 +58,23 @@ export default function AddPropertyPage() {
   }
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-slate-800/95 via-slate-800/95 to-slate-900/95">
-      <div className="mx-auto max-w-5xl px-6 py-8 sm:px-8 sm:py-12">
-        {/* Header Section with Billing Design System */}
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4 }}
-          className="mb-8"
+    <main className="min-h-screen bg-zinc-950">
+      {/* Top nav bar */}
+      <div className="sticky top-0 z-10 flex items-center gap-3 px-4 sm:px-6 py-3 bg-zinc-950/95 backdrop-blur border-b border-zinc-800/60">
+        <button
+          onClick={handleCancel}
+          className="flex items-center gap-2 px-3 py-1.5 bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 rounded-lg text-sm text-zinc-400 hover:text-zinc-200 transition-colors"
         >
-          <h1 className="text-3xl sm:text-4xl font-bold text-white mb-4">
-            List your property
-          </h1>
-        </motion.div>
+          ← Back to Dashboard
+        </button>
+        <span className="text-sm text-zinc-500">New Property Listing</span>
+      </div>
 
-        {/* Form Container with Billing Design System */}
+      <div className="mx-auto max-w-4xl px-4 sm:px-6 py-8">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, delay: 0.1 }}
-          className="bg-slate-800/95 glow-border rounded-xl shadow-2xl border border-slate-700/50 p-6 sm:p-8"
+          transition={{ duration: 0.3 }}
         >
           <AdvancedPropertyUploadForm
             onSuccess={handleSuccess}

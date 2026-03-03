@@ -1,27 +1,44 @@
 import { NextRequest, NextResponse } from 'next/server'
-export const runtime = 'edge'
-import { getSupabase } from '@/lib/supabase'
+import { cookies } from 'next/headers'
+import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
+import { createClient } from '@supabase/supabase-js'
+
+// nodejs runtime so createRouteHandlerClient can read cookies
+export const runtime = 'nodejs'
 
 const ADMIN_EMAIL = 'tharagarealestate@gmail.com'
 
+function getServiceSupabase() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL
+  const key =
+    process.env.SUPABASE_SERVICE_ROLE_KEY ||
+    process.env.SUPABASE_SERVICE_ROLE ||
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  if (!url || !key) throw new Error('Supabase env not configured')
+  return createClient(url, key, { auth: { autoRefreshToken: false, persistSession: false } })
+}
+
 export async function GET(req: NextRequest) {
   try {
-    const supabase = getSupabase()
-
+    // Cookie-based auth client for user identity
+    const supabase = createRouteHandlerClient({ cookies })
     const { data: { user }, error: authError } = await supabase.auth.getUser()
     if (authError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const userEmail = user.email || ''
-    const isAdmin = userEmail === ADMIN_EMAIL
+    const isAdmin = (user.email || '') === ADMIN_EMAIL
 
-    // Admin sees ALL properties; builder sees only their own
-    let query = supabase
+    // Use service role client to bypass RLS for the data query
+    const serviceClient = getServiceSupabase()
+
+    let query = serviceClient
       .from('properties')
       .select('id,title,city,locality,price_inr,images,bedrooms,sqft,listed_at,listing_status,builder_id,is_verified,property_type')
-      .order('listed_at', { ascending: false })
+      .order('listed_at', { ascending: false, nullsFirst: false })
+      .order('created_at', { ascending: false })
 
+    // Admin sees all properties; builder sees only their own
     if (!isAdmin) {
       query = query.eq('builder_id', user.id)
     }
@@ -37,7 +54,6 @@ export async function GET(req: NextRequest) {
       } else if (typeof p.images === 'string') {
         try { const a = JSON.parse(p.images); firstImage = Array.isArray(a) ? (a[0] || null) : null } catch { firstImage = null }
       }
-
       return {
         id: p.id,
         title: p.title,
@@ -57,7 +73,7 @@ export async function GET(req: NextRequest) {
     })
 
     const res = NextResponse.json({ items })
-    res.headers.set('Cache-Control', 'no-store')
+    res.headers.set('Cache-Control', 'private, no-store')
     return res
   } catch (e: any) {
     return NextResponse.json({ error: e?.message || 'Unexpected error' }, { status: 500 })

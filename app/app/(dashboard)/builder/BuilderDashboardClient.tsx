@@ -1,17 +1,24 @@
 'use client'
 
 import { useState, useEffect, useCallback, Suspense } from 'react'
-import { usePathname, useSearchParams, useRouter } from 'next/navigation'
-import { getSupabase } from '@/lib/supabase'
+import { useSearchParams, useRouter } from 'next/navigation'
+import { useBuilderAuth } from './_components/BuilderAuthProvider'
 import { UnifiedSinglePageDashboard } from './_components/UnifiedSinglePageDashboard'
 
+/**
+ * BuilderDashboardClient — uses BuilderAuthProvider context (set in layout.tsx).
+ * NO duplicate auth check here — BuilderAuthProvider handles auth for ALL children.
+ * This eliminates the race condition / infinite spinner caused by a second
+ * standalone supabase.auth.getUser() call that could hang independently.
+ */
 function BuilderDashboardInner() {
-  const [user, setUser] = useState<any>(null)
-  const [authLoading, setAuthLoading] = useState(true)
   const router = useRouter()
   const searchParams = useSearchParams()
 
-  // Derive activeSection from URL search params — reactive, no polling needed
+  // Consume auth from BuilderAuthProvider (already wraps us via layout.tsx)
+  const { isAuthenticated, isLoading: authLoading } = useBuilderAuth()
+
+  // Derive activeSection from URL search params
   const sectionFromUrl = searchParams.get('section') || 'overview'
   const [activeSection, setActiveSection] = useState<string>(sectionFromUrl)
 
@@ -34,48 +41,14 @@ function BuilderDashboardInner() {
     }
   }, [])
 
-  // Auth check with role verification
+  // Redirect if not authenticated after auth resolves
   useEffect(() => {
-    if (typeof window === 'undefined') return
-
-    async function checkAuthAndRole() {
-      try {
-        const supabase = getSupabase()
-        const { data: { user }, error: userError } = await supabase.auth.getUser()
-
-        if (userError || !user) {
-          window.location.href = '/'
-          return
-        }
-
-        const userEmail = user.email || ''
-        const isAdminOwner = userEmail === 'tharagarealestate@gmail.com'
-
-        if (!isAdminOwner) {
-          const { data: roles, error: rolesError } = await supabase
-            .from('user_roles')
-            .select('role')
-            .eq('user_id', user.id)
-            .eq('role', 'builder')
-
-          if (rolesError || !roles || roles.length === 0) {
-            window.location.href = '/?error=unauthorized'
-            return
-          }
-        }
-
-        setUser(user)
-        setAuthLoading(false)
-      } catch (err) {
-        console.error('[Builder] Auth check failed:', err)
-        window.location.href = '/?error=auth_error'
-      }
+    if (!authLoading && !isAuthenticated) {
+      router.push('/?login=true')
     }
+  }, [authLoading, isAuthenticated, router])
 
-    checkAuthAndRole()
-  }, [])
-
-  // Handle section change — use Next.js router instead of window.history
+  // Handle section change — use Next.js router
   const handleSectionChange = useCallback((section: string) => {
     setActiveSection(section)
     router.push(`/builder?section=${section}`, { scroll: false })
@@ -89,7 +62,7 @@ function BuilderDashboardInner() {
     )
   }
 
-  if (!user) return null
+  if (!isAuthenticated) return null
 
   return (
     <UnifiedSinglePageDashboard

@@ -1,8 +1,18 @@
 "use client"
 
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react'
+import { createContext, useContext, useState, useEffect, useRef, ReactNode } from 'react'
 import { getSupabase } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
+
+/** Wrap any promise with a timeout so DB queries never hang forever */
+function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
+  return Promise.race([
+    promise,
+    new Promise<T>((_, reject) =>
+      setTimeout(() => reject(new Error(`Query timed out after ${ms}ms`)), ms)
+    ),
+  ])
+}
 
 /**
  * Builder Auth Provider - Authenticated Builders Only
@@ -49,6 +59,7 @@ interface BuilderAuthProviderProps {
 
 export function BuilderAuthProvider({ children }: BuilderAuthProviderProps) {
   const router = useRouter()
+  const safetyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [authState, setAuthState] = useState<{
     isAuthenticated: boolean
     isLoading: boolean
@@ -70,10 +81,27 @@ export function BuilderAuthProvider({ children }: BuilderAuthProviderProps) {
   useEffect(() => {
     let mounted = true
 
+    // Hard safety net: if auth hasn't resolved within 10 seconds, force-resolve as unauthenticated
+    safetyTimerRef.current = setTimeout(() => {
+      if (mounted) {
+        setAuthState(prev => {
+          if (prev.isLoading) {
+            console.warn('[BuilderAuthProvider] Auth timed out after 10s — forcing unauthenticated state')
+            return { isAuthenticated: false, isLoading: false, builderId: null, userId: null, builderProfile: null }
+          }
+          return prev
+        })
+      }
+    }, 10000)
+
     async function checkAuth() {
       try {
         const supabase = getSupabase()
-        const { data: { user }, error: userError } = await supabase.auth.getUser()
+        // 8-second timeout on getUser to prevent network hang
+        const { data: { user }, error: userError } = await withTimeout(
+          supabase.auth.getUser(),
+          8000
+        )
 
         if (!mounted) return
 
@@ -91,12 +119,14 @@ export function BuilderAuthProvider({ children }: BuilderAuthProviderProps) {
           return
         }
 
-        // Check if user is admin first (admins bypass builder profile requirement)
-        // Check both user_roles table and profiles table for admin role
-        const [userRolesResult, profileResult] = await Promise.all([
-          supabase.from('user_roles').select('role').eq('user_id', user.id),
-          supabase.from('profiles').select('role').eq('id', user.id).maybeSingle()
-        ])
+        // Check admin role — both queries race with 5s timeout each
+        const [userRolesResult, profileResult] = await withTimeout(
+          Promise.all([
+            supabase.from('user_roles').select('role').eq('user_id', user.id),
+            supabase.from('profiles').select('role').eq('id', user.id).maybeSingle(),
+          ]),
+          5000
+        )
 
         // Admin check: email match OR role match in database
         const userEmail = user.email || ''
@@ -108,12 +138,15 @@ export function BuilderAuthProvider({ children }: BuilderAuthProviderProps) {
 
         const isAdmin = isAdminByEmail || isAdminByRole
 
-        // User is authenticated - check for builder profile
-        const { data: builderProfile, error: profileError } = await supabase
-          .from('builder_profiles')
-          .select('id, company_name, user_id')
-          .eq('user_id', user.id)
-          .maybeSingle()
+        // Fetch builder profile — 5s timeout
+        const { data: builderProfile, error: profileError } = await withTimeout(
+          supabase
+            .from('builder_profiles')
+            .select('id, company_name, user_id')
+            .eq('user_id', user.id)
+            .maybeSingle(),
+          5000
+        )
 
         if (!mounted) return
 
@@ -223,6 +256,7 @@ export function BuilderAuthProvider({ children }: BuilderAuthProviderProps) {
 
     return () => {
       mounted = false
+      if (safetyTimerRef.current) clearTimeout(safetyTimerRef.current)
       clearInterval(interval)
       subscription.unsubscribe()
     }

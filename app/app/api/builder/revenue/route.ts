@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getSupabase } from '@/lib/supabase'
+import { getBuilderUser, ADMIN_EMAIL } from '../_lib/auth'
+
+export const runtime = 'nodejs'
+export const dynamic = 'force-dynamic'
 
 /**
  * Real-time Revenue API
@@ -8,16 +11,19 @@ import { getSupabase } from '@/lib/supabase'
  * - Payment history (subscription payments, etc.)
  * - Property sales
  * - Affiliate commissions
+ *
+ * Fix (2026-03-05): switched from getSupabase().auth.getUser() (no-op server-side)
+ * to getBuilderUser(req) which reads Bearer token from Authorization header — same
+ * pattern as properties, stats/realtime, and subscription routes.
  */
 export async function GET(request: NextRequest) {
   try {
-    const supabase = getSupabase()
-    
-    // Get authenticated user
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
-    if (authError || !user) {
+    // ── Auth: Accept Bearer token (localStorage sessions) OR cookie ──────
+    const authed = await getBuilderUser(request)
+    if (!authed) {
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 })
     }
+    const { user, isAdmin, serviceClient: supabase } = authed
 
     // Get builder profile
     const { data: builderProfile } = await supabase
@@ -30,27 +36,30 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ success: false, error: 'Builder profile not found' }, { status: 404 })
     }
 
-    // Check subscription - Revenue is Pro/Enterprise feature only
-    const { data: subscription } = await supabase
-      .from('user_subscriptions')
-      .select('status, pricing_plans(plan_type)')
-      .eq('user_id', user.id)
-      .in('status', ['active', 'trialing'])
-      .single()
+    // ── Subscription gate: admins always bypass; others need Pro/Enterprise ──
+    if (!isAdmin) {
+      const { data: subscription } = await supabase
+        .from('builder_subscriptions')
+        .select('status, tier')
+        .eq('builder_id', builderProfile.id)
+        .in('status', ['active', 'trialing'])
+        .single()
 
-    const planType = (subscription?.pricing_plans as any)?.plan_type
-    const hasAccess = subscription && 
-      (planType === 'builder_pro' || planType === 'builder_enterprise')
+      const hasAccess = subscription &&
+        (subscription.tier === 'professional' ||
+         subscription.tier === 'enterprise' ||
+         subscription.status === 'trialing')
 
-    if (!hasAccess) {
-      return NextResponse.json(
-        { 
-          success: false, 
-          error: 'Revenue feature requires Builder Pro or Enterprise subscription',
-          requiresUpgrade: true 
-        },
-        { status: 403 }
-      )
+      if (!hasAccess) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: 'Revenue feature requires Professional or Enterprise plan',
+            requiresUpgrade: true,
+          },
+          { status: 403 }
+        )
+      }
     }
 
     const builderId = builderProfile.id
@@ -65,11 +74,12 @@ export async function GET(request: NextRequest) {
     // ============================================
     // 1. COMMISSION TRANSACTIONS (Closed Deals)
     // ============================================
-    const { data: commissions, error: commError } = await supabase
+    const commQuery = supabase
       .from('commission_transactions')
       .select('commission_amount, deal_value, status, created_at, lead_id, property_id')
-      .eq('user_id', user.id)
       .in('status', ['completed', 'pending'])
+    if (!isAdmin) commQuery.eq('user_id', user.id)
+    const { data: commissions, error: commError } = await commQuery
 
     // Handle case where table might not exist or no permissions
     if (commError) {
@@ -98,11 +108,12 @@ export async function GET(request: NextRequest) {
     // ============================================
     // 2. PAYMENT HISTORY (Subscription Revenue)
     // ============================================
-    const { data: payments, error: payError } = await supabase
+    const payQuery = supabase
       .from('payment_history')
       .select('amount, status, payment_type, created_at, paid_at')
-      .eq('user_id', user.id)
       .in('status', ['succeeded', 'pending'])
+    if (!isAdmin) payQuery.eq('user_id', user.id)
+    const { data: payments, error: payError } = await payQuery
 
     if (payError) {
       console.error('[Revenue API] Payment error:', payError)
@@ -167,11 +178,12 @@ export async function GET(request: NextRequest) {
     // 6. PIPELINE VALUE (Potential Revenue)
     // ============================================
     // Get hot/warm leads and calculate potential commission
-    const { data: leads } = await supabase
+    const leadsQuery = supabase
       .from('leads')
       .select('id, category, property_interest, builder_id')
-      .eq('builder_id', builderId)
       .in('category', ['hot', 'warm'])
+    if (!isAdmin) leadsQuery.eq('builder_id', builderId)
+    const { data: leads } = await leadsQuery
 
     const avgPropertyPrice = properties && properties.length > 0
       ? properties.reduce((sum, p) => sum + Number(p.price || 0), 0) / properties.length
@@ -252,12 +264,10 @@ export async function GET(request: NextRequest) {
     });
     res.headers.set('Cache-Control', 'private, s-maxage=60, stale-while-revalidate=120');
     return res;
-  } catch (error: any) {
-    console.error('[Revenue API] Error:', error)
-    return NextResponse.json(
-      { success: false, error: error.message || 'Failed to fetch revenue data' },
-      { status: 500 }
-    )
+  } catch (error: unknown) {
+    const msg = error instanceof Error ? error.message : 'Failed to fetch revenue data'
+    console.error('[Revenue API] Error:', msg)
+    return NextResponse.json({ success: false, error: msg }, { status: 500 })
   }
 }
 

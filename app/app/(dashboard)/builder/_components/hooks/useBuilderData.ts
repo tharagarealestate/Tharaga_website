@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useBuilderAuth } from '../BuilderAuthProvider'
+import { getSupabase } from '@/lib/supabase'
 
 /**
  * Shared hook for real-time Supabase data fetching across all dashboard sections.
@@ -91,6 +92,18 @@ export function useRealtimeData<T>(
     const fetchId = ++fetchCountRef.current
 
     try {
+      // Get the current session access token so server-side routes can auth via Bearer header.
+      // Supabase sessions are stored in localStorage (not cookies), so we must send the token
+      // explicitly — createRouteHandlerClient({ cookies }) on the server won't find it.
+      let accessToken: string | null = null
+      try {
+        const supabase = getSupabase()
+        const { data: { session } } = await supabase.auth.getSession()
+        accessToken = session?.access_token || null
+      } catch {
+        // Non-fatal — requests without token will get 401 and be handled by hook
+      }
+
       // AbortController for timeout
       const controller = new AbortController()
       const timeoutId = setTimeout(() => controller.abort(), 10000)
@@ -99,7 +112,10 @@ export function useRealtimeData<T>(
         method,
         credentials: 'include',
         cache: 'no-store',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(accessToken ? { 'Authorization': `Bearer ${accessToken}` } : {}),
+        },
         signal: controller.signal,
       }
 

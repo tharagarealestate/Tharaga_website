@@ -1,35 +1,23 @@
-"use client"
-
-import React from 'react'
-import Breadcrumb from '@/components/Breadcrumb'
+'use client'
+import ToolPageShell from '../_components/ToolPageShell'
 import { PropertyValuation } from '@/components/lead-capture/PropertyValuation'
-import { PageWrapper } from '@/components/ui/PageWrapper'
-import { PageHeader } from '@/components/ui/PageHeader'
-import { SectionWrapper } from '@/components/ui/SectionWrapper'
-import { GlassCard } from '@/components/ui/glass-card'
-import { DESIGN_TOKENS } from '@/lib/design-system'
 
-export default function PropertyValuationPage(){
+export default function PropertyValuationPage() {
   return (
-    <PageWrapper>
-      <Breadcrumb items={[
-        { label: 'Home', href: '/' },
-        { label: 'Tools', href: '/sitemap' },
-        { label: 'Property Valuation' }
-      ]} />
-      
-      <PageHeader
-        title="Property Valuation"
-        description="Get accurate property valuation with RERA integration and market analysis"
-        className="text-center mb-8"
-      />
-
-      <SectionWrapper noPadding>
-        <GlassCard variant="dark" glow border className="p-6 sm:p-8">
-          <PropertyValuation />
-        </GlassCard>
-      </SectionWrapper>
-    </PageWrapper>
+    <ToolPageShell
+      icon="BarChart3"
+      badge="Valuation Intelligence"
+      title="Property Valuation"
+      subtitle="AI-Powered RERA Analysis"
+      description="Get an instant AI estimate of your property's market value using RERA-verified comparable sales data and Chennai micro-market trends."
+      accent="amber"
+      stats={[
+        { label: 'RERA Records', value: '1.2M+' },
+        { label: 'Accuracy Rate', value: '94%' },
+        { label: 'Markets Tracked', value: '340+' },
+      ]}
+    >
+      <PropertyValuation />
+    </ToolPageShell>
   )
 }
-

@@ -1,35 +1,23 @@
-"use client"
-
-import React from 'react'
-import Breadcrumb from '@/components/Breadcrumb'
+'use client'
+import ToolPageShell from '../_components/ToolPageShell'
 import { EMICalculator } from '@/components/lead-capture/EMICalculator'
-import { PageWrapper } from '@/components/ui/PageWrapper'
-import { PageHeader } from '@/components/ui/PageHeader'
-import { SectionWrapper } from '@/components/ui/SectionWrapper'
-import { GlassCard } from '@/components/ui/glass-card'
-import { DESIGN_TOKENS } from '@/lib/design-system'
 
-export default function EMIPage(){
+export default function EMIPage() {
   return (
-    <PageWrapper>
-      <Breadcrumb items={[
-        { label: 'Home', href: '/' },
-        { label: 'Tools', href: '/sitemap' },
-        { label: 'EMI Calculator' }
-      ]} />
-      
-      <PageHeader
-        title="EMI Calculator"
-        description="Calculate home loan EMI, total interest, and amortization schedule"
-        className="text-center mb-8"
-      />
-
-      <SectionWrapper noPadding>
-        <GlassCard variant="dark" glow border className="p-6 sm:p-8">
-          <EMICalculator />
-        </GlassCard>
-      </SectionWrapper>
-    </PageWrapper>
+    <ToolPageShell
+      icon="Calculator"
+      badge="Loan Intelligence"
+      title="EMI Calculator"
+      subtitle="AI-Powered Loan Analysis"
+      description="Calculate home loan EMI, total interest payable, and unlock a full amortization schedule with live rate comparisons from 12+ banks."
+      accent="amber"
+      stats={[
+        { label: 'Lowest SBI Rate', value: '8.40%' },
+        { label: 'Banks Compared', value: '12+' },
+        { label: 'Avg Tenure', value: '20 Yrs' },
+      ]}
+    >
+      <EMICalculator />
+    </ToolPageShell>
   )
 }
-

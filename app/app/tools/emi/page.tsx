@@ -1,11 +1,11 @@
-'use client'
+import { Calculator } from 'lucide-react'
 import ToolPageShell from '../_components/ToolPageShell'
 import { EMICalculator } from '@/components/lead-capture/EMICalculator'
 
 export default function EMIPage() {
   return (
     <ToolPageShell
-      icon="Calculator"
+      icon={Calculator}
       badge="Loan Intelligence"
       title="EMI Calculator"
       subtitle="AI-Powered Loan Analysis"

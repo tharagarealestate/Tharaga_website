@@ -1,11 +1,11 @@
-'use client'
+import { PiggyBank } from 'lucide-react'
 import ToolPageShell from '../_components/ToolPageShell'
 import { BudgetPlanner } from '@/components/lead-capture/BudgetPlanner'
 
 export default function BudgetPlannerPage() {
   return (
     <ToolPageShell
-      icon="PiggyBank"
+      icon={PiggyBank}
       badge="Budget Intelligence"
       title="Budget Planner"
       subtitle="AI-Powered Affordability Analysis"

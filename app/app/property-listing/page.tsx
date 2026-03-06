@@ -895,7 +895,7 @@ function PropertyListingContent() {
   }
 
   return (
-    <div className="min-h-screen text-zinc-100">
+    <div className="min-h-screen bg-zinc-950 text-zinc-100">
       <NeuralBackground />
 
       {/* ── Hero ── */}

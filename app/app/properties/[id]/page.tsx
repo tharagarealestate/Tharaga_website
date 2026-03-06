@@ -336,7 +336,20 @@ export default async function PropertyPage({ params }: { params: { id: string } 
   const { property: p, builder, similar, reviews } = data
 
   return (
-    <main className="min-h-screen bg-slate-950">
+    <main className="relative min-h-screen bg-zinc-950 text-zinc-100">
+      {/* Neural background — CSS only, no JS */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden -z-10" aria-hidden>
+        <div className="absolute inset-0 bg-gradient-to-b from-zinc-950 via-zinc-950 to-black" />
+        <div className="absolute inset-0 opacity-[0.03]"
+          style={{ backgroundImage: 'linear-gradient(rgba(251,191,36,1) 1px,transparent 1px),linear-gradient(90deg,rgba(251,191,36,1) 1px,transparent 1px)', backgroundSize: '64px 64px' }} />
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[900px] h-[500px] rounded-full"
+          style={{ background: 'radial-gradient(ellipse,rgba(251,191,36,0.06) 0%,transparent 70%)' }} />
+        <div className="absolute w-96 h-96 rounded-full blur-3xl bg-amber-500/5"
+          style={{ top: '10%', left: '5%', animation: 'tool-orb-1 20s ease-in-out infinite' }} />
+        <div className="absolute w-72 h-72 rounded-full blur-3xl bg-purple-500/4"
+          style={{ bottom: '15%', right: '8%', animation: 'tool-orb-2 24s ease-in-out infinite' }} />
+      </div>
+
       <Breadcrumb items={[
         { label: 'Home', href: '/' },
         { label: 'Properties', href: '/property-listing' },
@@ -346,30 +359,30 @@ export default async function PropertyPage({ params }: { params: { id: string } 
         <ClientGallery images={p.images} tourUrl={p.tourUrl} brochureUrl={p.brochureUrl} propertyId={p.id} />
       </section>
       <div className="mx-auto max-w-7xl px-3 sm:px-4 py-4 sm:py-6 grid grid-cols-1 lg:grid-cols-10 gap-4 sm:gap-6" style={{ paddingLeft: 'max(12px, env(safe-area-inset-left))', paddingRight: 'max(12px, env(safe-area-inset-right))' }}>
-        <div className="lg:col-span-7 space-y-6">
+        <div className="lg:col-span-7 space-y-5">
           <Overview p={p} />
           <KeyHighlights property={p} />
-          <PriceComparison 
-            propertyId={p.id} 
-            pricePerSqft={p.pricePerSqftINR} 
+          <PriceComparison
+            propertyId={p.id}
+            pricePerSqft={p.pricePerSqftINR}
             locality={p.locality}
             city={p.city}
           />
-          <div className="bg-slate-800/95 glow-border rounded-lg p-6">
+          <div className="bg-white/[0.04] backdrop-blur-xl border border-white/[0.08] rounded-2xl p-6">
             <RERAVerification propertyId={p.id} reraId={p.reraId} />
           </div>
-          <div className="bg-slate-800/95 glow-border rounded-lg p-6">
+          <div className="bg-white/[0.04] backdrop-blur-xl border border-white/[0.08] rounded-2xl p-6">
             <RiskFlags propertyId={p.id} priceINR={p.priceINR} sqft={p.sqft} reraId={p.reraId} />
           </div>
           <Description text={p.description} />
           <Amenities items={p.amenities} />
           <FloorPlan images={p.floorPlans} />
           {p.city === 'Chennai' && (
-            <div className="bg-slate-800/95 glow-border rounded-lg p-6">
+            <div className="bg-white/[0.04] backdrop-blur-xl border border-white/[0.08] rounded-2xl p-6">
               <ChennaiInsights propertyId={p.id} locality={p.locality || ''} />
             </div>
           )}
-          <div className="bg-slate-800/95 glow-border rounded-lg p-6">
+          <div className="bg-white/[0.04] backdrop-blur-xl border border-white/[0.08] rounded-2xl p-6">
             <AppreciationPrediction propertyId={p.id} />
           </div>
           {(p.locality || p.city) && (
@@ -387,7 +400,7 @@ export default async function PropertyPage({ params }: { params: { id: string } 
         <div className="lg:col-span-3 space-y-4">
           <StickySidebar p={p} />
           <ShareProperty propertyId={p.id} title={p.title} />
-          <div className="bg-slate-800/95 glow-border rounded-lg p-6">
+          <div className="bg-white/[0.04] backdrop-blur-xl border border-white/[0.08] rounded-2xl p-6">
             <ClientMatchScore propertyId={p.id} />
           </div>
         </div>
@@ -402,11 +415,11 @@ export default async function PropertyPage({ params }: { params: { id: string } 
 
 function Overview({ p }: { p: any }) {
   return (
-    <div className="bg-slate-800/95 glow-border rounded-lg p-6 space-y-4">
-      <h1 className="text-3xl font-bold text-white">{p.title}</h1>
-      <div className="flex items-center gap-2 text-amber-300">
+    <div className="bg-white/[0.04] backdrop-blur-xl border border-white/[0.08] rounded-2xl p-6 space-y-4">
+      <h1 className="text-3xl font-bold text-zinc-100">{p.title}</h1>
+      <div className="flex items-center gap-2 text-amber-400">
         <MapPin size={18} />
-        <a className="hover:underline text-white hover:text-amber-300 transition-colors" href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(p.address || `${p.locality||''} ${p.city||''}`)}`} target="_blank" rel="noreferrer">
+        <a className="hover:underline text-zinc-300 hover:text-amber-400 transition-colors" href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(p.address || `${p.locality||''} ${p.city||''}`)}`} target="_blank" rel="noreferrer">
           {p.address || `${p.locality || ''}, ${p.city || ''}`}
         </a>
       </div>
@@ -424,18 +437,18 @@ function Overview({ p }: { p: any }) {
 
 function Spec({ icon, label, value }: { icon: React.ReactNode; label: string; value: React.ReactNode }) {
   return (
-    <div className="bg-slate-700/50 border border-amber-300/30 rounded-lg p-3 flex items-center gap-2 text-sm">
-      <div className="text-amber-300">{icon}</div>
-      <div className="text-slate-400 text-xs uppercase font-semibold">{label}</div>
-      <div className="ml-auto font-medium text-white">{value}</div>
+    <div className="bg-white/[0.06] border border-white/[0.08] rounded-xl p-3 flex flex-col items-center gap-1 text-sm">
+      <div className="text-amber-400">{icon}</div>
+      <div className="text-zinc-500 text-[10px] uppercase font-semibold tracking-wider">{label}</div>
+      <div className="font-semibold text-zinc-100">{value}</div>
     </div>
   )
 }
 
 function Description({ text }: { text: string }) {
   return (
-    <div className="bg-slate-800/95 glow-border rounded-lg p-6 prose max-w-none">
-      <h2 className="text-2xl font-bold text-white mb-4">Description</h2>
+    <div className="bg-white/[0.04] backdrop-blur-xl border border-white/[0.08] rounded-2xl p-6 prose max-w-none prose-invert">
+      <h2 className="text-2xl font-bold text-zinc-100 mb-4">Description</h2>
       <ClientExpandableText text={text} maxWords={300} />
     </div>
   )
@@ -445,14 +458,16 @@ function Amenities({ items }: { items: string[] }){
   if (!items?.length) return null
   const premium = new Set(['swimming pool','pool','gym','clubhouse','garden'])
   return (
-    <div className="bg-slate-800/95 glow-border rounded-lg p-6">
-      <h2 className="text-2xl font-bold text-white mb-4">Amenities</h2>
-      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-2">
+    <div className="bg-white/[0.04] backdrop-blur-xl border border-white/[0.08] rounded-2xl p-6">
+      <h2 className="text-2xl font-bold text-zinc-100 mb-4">Amenities</h2>
+      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-2">
         {items.map((a, i)=> {
           const label = String(a || '')
           const isPremium = premium.has(label.toLowerCase())
           return (
-            <div key={i} className={isPremium ? 'rounded-lg border-2 border-amber-300 bg-amber-500/20 px-3 py-2 text-sm text-amber-300 font-medium' : 'rounded-lg border border-amber-300/30 bg-slate-700/50 px-3 py-2 text-sm text-white'}>{label}</div>
+            <div key={i} className={isPremium
+              ? 'rounded-xl border border-amber-400/40 bg-amber-500/10 px-3 py-2 text-sm text-amber-400 font-semibold text-center'
+              : 'rounded-xl border border-white/[0.08] bg-white/[0.04] px-3 py-2 text-sm text-zinc-300 text-center'}>{label}</div>
           )
         })}
       </div>
@@ -464,9 +479,9 @@ function FloorPlan({ images }: { images: string[] }){
   if (!images?.length) return null
   const first = images[0]
   return (
-    <div className="bg-slate-800/95 glow-border rounded-lg p-6">
-      <h2 className="text-2xl font-bold text-white mb-4">Floor Plan & Layout</h2>
-      <div className="relative h-80 bg-slate-700/50 border border-amber-300/30 rounded-lg overflow-hidden">
+    <div className="bg-white/[0.04] backdrop-blur-xl border border-white/[0.08] rounded-2xl p-6">
+      <h2 className="text-2xl font-bold text-zinc-100 mb-4">Floor Plan & Layout</h2>
+      <div className="relative h-80 bg-white/[0.03] border border-white/[0.08] rounded-xl overflow-hidden">
         <Image src={first} alt="Floor plan" fill className="object-contain" loading="lazy" sizes="100vw" />
       </div>
     </div>
@@ -485,18 +500,18 @@ function Financials({ price }: { price?: number|null; sqft?: number|null }){
   const stamp = Math.round(base * 0.06)
   const total = base + reg + stamp
   return (
-    <div className="bg-slate-800/95 glow-border rounded-lg p-6">
-      <h2 className="text-2xl font-bold text-white mb-4">Financial Breakdown</h2>
+    <div className="bg-white/[0.04] backdrop-blur-xl border border-white/[0.08] rounded-2xl p-6">
+      <h2 className="text-2xl font-bold text-zinc-100 mb-4">Financial Breakdown</h2>
       <div className="grid md:grid-cols-2 gap-4">
-        <div className="bg-slate-700/50 border border-amber-300/30 rounded-lg p-4 space-y-2">
+        <div className="bg-white/[0.04] border border-white/[0.08] rounded-xl p-4 space-y-2">
           <Row label="Base Price" value={formatINR(base)} />
           <Row label="Registration (5%)" value={formatINR(reg)} />
           <Row label="Stamp Duty (6%)" value={formatINR(stamp)} />
           <Row label="GST" value="₹0" />
-          <hr className="border-amber-300/30" />
+          <hr className="border-white/10" />
           <Row label="Total" value={formatINR(total)} bold />
         </div>
-        <div className="bg-slate-700/50 border border-amber-300/30 rounded-lg p-4">
+        <div className="bg-white/[0.04] border border-white/[0.08] rounded-xl p-4">
           <ClientEMICalculator defaultPrincipal={Math.min(base, Math.max(0, base - (base*0.2)))} />
         </div>
       </div>
@@ -507,8 +522,8 @@ function Financials({ price }: { price?: number|null; sqft?: number|null }){
 function Row({ label, value, bold }: { label: string; value: React.ReactNode; bold?: boolean }){
   return (
     <div className="flex items-center justify-between py-1">
-      <div className="text-white text-sm">{label}</div>
-      <div className={bold ? 'font-bold text-amber-300 text-lg' : 'font-medium text-white'}>{value}</div>
+      <div className="text-zinc-400 text-sm">{label}</div>
+      <div className={bold ? 'font-bold text-amber-400 text-lg' : 'font-medium text-zinc-100'}>{value}</div>
     </div>
   )
 }
@@ -518,20 +533,20 @@ function Row({ label, value, bold }: { label: string; value: React.ReactNode; bo
 function BuilderInfo({ builder }: { p: any; builder: any }){
   if (!builder) return null
   return (
-    <div className="bg-slate-800/95 glow-border rounded-lg p-6">
-      <h2 className="text-2xl font-bold text-white mb-4">Builder Information</h2>
-      <div className="bg-slate-700/50 border border-amber-300/30 rounded-lg p-4 flex items-center gap-4">
+    <div className="bg-white/[0.04] backdrop-blur-xl border border-white/[0.08] rounded-2xl p-6">
+      <h2 className="text-2xl font-bold text-zinc-100 mb-4">Builder Information</h2>
+      <div className="bg-white/[0.04] border border-white/[0.08] rounded-xl p-4 flex items-center gap-4">
         {builder.logoUrl ? (
-          <div className="relative w-24 h-24">
+          <div className="relative w-24 h-24 rounded-xl overflow-hidden bg-white/[0.06]">
             <Image src={builder.logoUrl} alt={builder.name} fill className="object-contain" />
           </div>
         ) : null}
         <div className="space-y-1">
-          <div className="text-xl font-semibold text-white">{builder.name}</div>
-          <div className="text-sm text-white">Founded: {builder.founded || '—'}</div>
-          <div className="text-sm text-white">Total Projects: {builder.totalProjects || '—'}</div>
-          <div className="flex items-center gap-1 text-amber-300"><Star size={16}/> <span className="font-medium">{builder.reputationScore || '4.7'}/5</span> <span className="text-white">({builder.reviewsCount || 120} reviews)</span></div>
-          <a href={`/builders?name=${encodeURIComponent(builder.name)}`} className="text-amber-300 text-sm hover:underline">View All Properties by Builder</a>
+          <div className="text-xl font-semibold text-zinc-100">{builder.name}</div>
+          <div className="text-sm text-zinc-400">Founded: {builder.founded || '—'}</div>
+          <div className="text-sm text-zinc-400">Total Projects: {builder.totalProjects || '—'}</div>
+          <div className="flex items-center gap-1 text-amber-400"><Star size={16}/> <span className="font-medium">{builder.reputationScore || '4.7'}/5</span> <span className="text-zinc-400">({builder.reviewsCount || 120} reviews)</span></div>
+          <a href={`/builders?name=${encodeURIComponent(builder.name)}`} className="text-amber-400 text-sm hover:underline">View All Properties by Builder</a>
         </div>
       </div>
     </div>
@@ -542,19 +557,21 @@ function BuilderInfo({ builder }: { p: any; builder: any }){
 function SimilarProperties({ items }: { items: any[] }){
   if (!items?.length) return null
   return (
-    <div className="bg-slate-800/95 glow-border rounded-lg p-6">
-      <h2 className="text-2xl font-bold text-white mb-4">You Might Also Like</h2>
+    <div className="bg-white/[0.04] backdrop-blur-xl border border-white/[0.08] rounded-2xl p-6">
+      <h2 className="text-2xl font-bold text-zinc-100 mb-4">You Might Also Like</h2>
       <ClientCompareChart items={items} />
       <div className="grid md:grid-cols-3 gap-4 mt-4">
         {items.slice(0, 6).map((it)=> (
-          <div key={it.id} className="bg-slate-700/50 border border-amber-300/30 rounded-lg overflow-hidden hover:border-amber-300 transition-colors">
+          <div key={it.id} className="bg-white/[0.04] border border-white/[0.08] rounded-xl overflow-hidden hover:border-amber-400/40 transition-colors group">
             <div className="relative h-40">
-              {it.image ? <Image src={it.image} alt={it.title} fill className="object-cover" /> : <div className="h-full bg-slate-700"/>}
+              {it.image
+                ? <Image src={it.image} alt={it.title} fill className="object-cover group-hover:scale-105 transition-transform duration-500" />
+                : <div className="h-full bg-white/[0.04]"/>}
             </div>
             <div className="p-3">
-              <div className="font-bold text-white line-clamp-1">{it.title}</div>
-              <div className="text-sm text-white">{it.locality || it.city || ''}</div>
-              <div className="text-sm text-amber-300 font-bold mt-1">{formatINR(it.priceINR)} {it.pricePerSqftINR ? <span className="text-white">(₹{it.pricePerSqftINR}/sqft)</span> : null}</div>
+              <div className="font-semibold text-zinc-100 line-clamp-1">{it.title}</div>
+              <div className="text-sm text-zinc-500">{it.locality || it.city || ''}</div>
+              <div className="text-sm text-amber-400 font-bold mt-1">{formatINR(it.priceINR)} {it.pricePerSqftINR ? <span className="text-zinc-400 font-normal">(₹{it.pricePerSqftINR}/sqft)</span> : null}</div>
             </div>
           </div>
         ))}
@@ -571,13 +588,13 @@ function Reviews({ items }: { items: any[] }){
   const qualAvg = avg(items.map(i=> i.categories?.quality))
   const ameAvg = avg(items.map(i=> i.categories?.amenities))
   return (
-    <div className="bg-slate-800/95 glow-border rounded-lg p-6">
-      <h2 className="text-2xl font-bold text-white mb-4">Reviews & Ratings</h2>
-      <div className="bg-slate-700/50 border border-amber-300/30 rounded-lg p-4">
-        <div className="flex items-center gap-2 text-amber-300">
-          <Star/> <span className="text-xl font-semibold text-white">{overall}/5</span> <span className="text-white">(from {items.length} reviews)</span>
+    <div className="bg-white/[0.04] backdrop-blur-xl border border-white/[0.08] rounded-2xl p-6">
+      <h2 className="text-2xl font-bold text-zinc-100 mb-4">Reviews & Ratings</h2>
+      <div className="bg-white/[0.04] border border-white/[0.08] rounded-xl p-4">
+        <div className="flex items-center gap-2 text-amber-400">
+          <Star size={18}/> <span className="text-xl font-semibold text-zinc-100">{overall}/5</span> <span className="text-zinc-400 text-sm">(from {items.length} reviews)</span>
         </div>
-        <div className="mt-3 grid md:grid-cols-4 gap-2 text-sm text-white">
+        <div className="mt-3 grid md:grid-cols-4 gap-2 text-sm text-zinc-400">
           <div>Location: {locAvg || '—'}/5</div>
           <div>Value for Money: {valAvg || '—'}/5</div>
           <div>Builder Quality: {qualAvg || '—'}/5</div>
@@ -585,13 +602,13 @@ function Reviews({ items }: { items: any[] }){
         </div>
         <div className="mt-4 space-y-3">
           {items.map((r)=> (
-            <div key={r.id} className="border-t border-amber-300/30 pt-3">
+            <div key={r.id} className="border-t border-white/[0.06] pt-3">
               <div className="flex items-center gap-2">
-                {r.avatar ? <Image src={r.avatar} alt={r.name} width={32} height={32} className="rounded-full" /> : <div className="w-8 h-8 rounded-full bg-slate-600"/>}
-                <div className="font-medium text-white">{r.name}</div>
-                <div className="ml-auto text-sm text-white">{r.date ? new Date(r.date).toLocaleDateString() : ''}</div>
+                {r.avatar ? <Image src={r.avatar} alt={r.name} width={32} height={32} className="rounded-full" /> : <div className="w-8 h-8 rounded-full bg-white/10"/>}
+                <div className="font-medium text-zinc-200">{r.name}</div>
+                <div className="ml-auto text-xs text-zinc-500">{r.date ? new Date(r.date).toLocaleDateString() : ''}</div>
               </div>
-              <div className="text-sm text-white mt-1">{r.text}</div>
+              <div className="text-sm text-zinc-400 mt-1">{r.text}</div>
             </div>
           ))}
         </div>
@@ -609,14 +626,14 @@ function avg(nums: Array<number|null|undefined>){
 function StickySidebar({ p }: { p: any }){
   return (
     <div className="lg:sticky lg:top-4">
-      <div className="bg-slate-800/95 border-2 border-amber-300 rounded-lg p-6 space-y-4">
-        <div className="text-3xl font-bold text-amber-300">{formatINR(p.priceINR)}</div>
-        {p.pricePerSqftINR ? <div className="text-sm text-white">₹{p.pricePerSqftINR}/sqft</div> : null}
-        <div className="flex items-center gap-2 text-emerald-400 text-sm"><ShieldCheck size={16}/> RERA Approved</div>
-        <div className="flex items-center gap-1 text-amber-300 text-sm"><Star size={16}/> <span className="text-white">Builder reputation: 5.0 (120 reviews)</span></div>
-        <div className="rounded-lg bg-emerald-500/20 border border-emerald-300/50 text-emerald-300 p-3 text-sm">
-          <div className="font-bold mb-2">Verified by AI</div>
-          <ul className="list-disc ml-5 space-y-1">
+      <div className="bg-white/[0.05] backdrop-blur-2xl border border-amber-400/30 rounded-2xl p-6 space-y-4 shadow-2xl shadow-amber-500/5">
+        <div className="text-3xl font-black text-amber-400 tracking-tight">{formatINR(p.priceINR)}</div>
+        {p.pricePerSqftINR ? <div className="text-sm text-zinc-500">₹{p.pricePerSqftINR}/sqft</div> : null}
+        <div className="flex items-center gap-2 text-emerald-400 text-sm font-medium"><ShieldCheck size={15}/> RERA Approved</div>
+        <div className="flex items-center gap-1.5 text-amber-400 text-sm"><Star size={15}/> <span className="text-zinc-400">Builder reputation: 5.0 (120 reviews)</span></div>
+        <div className="rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 p-3 text-sm">
+          <div className="font-semibold mb-2 text-emerald-300">Verified by AI</div>
+          <ul className="space-y-1 text-emerald-400/80">
             <li>✓ RERA Approved</li>
             <li>✓ Title Clear</li>
             <li>✓ Builder Verified</li>
@@ -633,9 +650,9 @@ function StickySidebar({ p }: { p: any }){
 
 function MobileBar({ p }: { p: any }){
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-40 bg-slate-800/95 border-t border-amber-300/30 p-3 flex items-center justify-between lg:hidden" style={{ boxShadow: '0 -4px 20px rgba(252, 211, 77, 0.1)' }}>
-      <div className="font-bold text-amber-300">{formatINR(p.priceINR)}</div>
-      <button className="rounded-lg bg-amber-500 hover:bg-amber-600 border border-amber-300/50 text-slate-900 font-bold px-4 py-2 transition-colors" style={{ boxShadow: '0 0 15px rgba(252, 211, 77, 0.3)' }}>Schedule Visit</button>
+    <div className="fixed bottom-0 left-0 right-0 z-40 bg-zinc-950/95 backdrop-blur-xl border-t border-white/[0.08] p-3 flex items-center justify-between lg:hidden" style={{ boxShadow: '0 -4px 20px rgba(252, 211, 77, 0.08)' }}>
+      <div className="font-bold text-amber-400">{formatINR(p.priceINR)}</div>
+      <button className="rounded-xl bg-amber-500 hover:bg-amber-400 text-zinc-950 font-bold px-4 py-2 transition-colors text-sm" style={{ boxShadow: '0 0 15px rgba(252, 211, 77, 0.25)' }}>Schedule Visit</button>
       <a href={`https://wa.me/?text=${encodeURIComponent(typeof location !== 'undefined' ? (location.href || '') : '')}`} className="fixed bottom-20 right-4 rounded-full bg-green-500 hover:bg-green-600 text-white w-12 h-12 flex items-center justify-center shadow-lg transition-colors" aria-label="WhatsApp">WA</a>
     </div>
   )

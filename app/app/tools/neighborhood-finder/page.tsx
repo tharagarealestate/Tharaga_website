@@ -1,11 +1,11 @@
-'use client'
+import { MapPin } from 'lucide-react'
 import ToolPageShell from '../_components/ToolPageShell'
 import { NeighborhoodFinder } from '@/components/lead-capture/NeighborhoodFinder'
 
 export default function NeighborhoodFinderPage() {
   return (
     <ToolPageShell
-      icon="MapPin"
+      icon={MapPin}
       badge="Area Intelligence"
       title="Neighborhood Finder"
       subtitle="AI-Powered Location Matching"

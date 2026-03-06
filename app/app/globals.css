@@ -236,6 +236,18 @@
 .animate-slide-in-left { animation: slide-in-left 500ms ease-out; }
 .animate-slide-in-right { animation: slide-in-right 500ms ease-out; }
 
+/* ── CSS-only orb animations for ToolPageShell (no framer-motion needed) ── */
+@keyframes tool-orb-1 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33%       { transform: translate(24px, -18px) scale(1.06); }
+  66%       { transform: translate(-16px, 12px) scale(0.96); }
+}
+@keyframes tool-orb-2 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33%       { transform: translate(-20px, 20px) scale(1.04); }
+  66%       { transform: translate(16px, -12px) scale(0.97); }
+}
+
 /* ── Amber slider — AI-world tool pages ── */
 .slider-amber {
   -webkit-appearance: none;

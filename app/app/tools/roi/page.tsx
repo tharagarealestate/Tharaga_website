@@ -1,11 +1,11 @@
-'use client'
+import { TrendingUp } from 'lucide-react'
 import ToolPageShell from '../_components/ToolPageShell'
 import { ROICalculator } from '@/components/lead-capture/ROICalculator'
 
 export default function RoiPage() {
   return (
     <ToolPageShell
-      icon="TrendingUp"
+      icon={TrendingUp}
       badge="Investment Intelligence"
       title="ROI Calculator"
       subtitle="AI-Powered Returns Analysis"

@@ -1,11 +1,11 @@
-'use client'
+import { Building2 } from 'lucide-react'
 import ToolPageShell from '../_components/ToolPageShell'
 import { LoanEligibilityCalculator } from '@/components/lead-capture/LoanEligibilityCalculator'
 
 export default function LoanEligibilityPage() {
   return (
     <ToolPageShell
-      icon="Building2"
+      icon={Building2}
       badge="Credit Intelligence"
       title="Loan Eligibility"
       subtitle="AI-Powered Bank Matching"

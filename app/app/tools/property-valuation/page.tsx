@@ -1,11 +1,11 @@
-'use client'
+import { BarChart3 } from 'lucide-react'
 import ToolPageShell from '../_components/ToolPageShell'
 import { PropertyValuation } from '@/components/lead-capture/PropertyValuation'
 
 export default function PropertyValuationPage() {
   return (
     <ToolPageShell
-      icon="BarChart3"
+      icon={BarChart3}
       badge="Valuation Intelligence"
       title="Property Valuation"
       subtitle="AI-Powered RERA Analysis"

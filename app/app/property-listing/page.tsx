@@ -232,7 +232,7 @@ function PropertyCardGrid({ property, index }: { property: Property; index: numb
       transition={{ duration: 0.5, delay: Math.min(index * 0.06, 0.4), ease: [0.25, 0.46, 0.45, 0.94] }}
     >
       <TiltCard className="group">
-        <div className="relative rounded-2xl overflow-hidden border border-zinc-800/60 bg-zinc-900/50 backdrop-blur-sm hover:border-amber-500/30 transition-colors duration-300 shadow-xl shadow-black/20">
+        <a href={`/properties/${n.id}`} className="block relative rounded-2xl overflow-hidden border border-zinc-800/60 bg-zinc-900/50 backdrop-blur-sm hover:border-amber-500/30 transition-colors duration-300 shadow-xl shadow-black/20 cursor-pointer">
           {/* Image */}
           <div className="relative h-52 overflow-hidden bg-zinc-800">
             {img ? (
@@ -265,7 +265,7 @@ function PropertyCardGrid({ property, index }: { property: Property; index: numb
                 )}
               </div>
               <button
-                onClick={() => setLiked(l => !l)}
+                onClick={(e) => { e.preventDefault(); e.stopPropagation(); setLiked(l => !l) }}
                 className="w-7 h-7 flex items-center justify-center rounded-full bg-black/60 backdrop-blur-md border border-zinc-700/50 transition-colors hover:border-rose-500/40"
               >
                 <Heart className={cn('w-3.5 h-3.5 transition-colors', liked ? 'fill-rose-500 text-rose-500' : 'text-zinc-400')} />
@@ -316,6 +316,7 @@ function PropertyCardGrid({ property, index }: { property: Property; index: numb
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
+                onClick={(e) => { e.preventDefault(); e.stopPropagation() }}
                 className="flex items-center gap-1 px-3 py-1.5 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/20 hover:border-amber-500/40 rounded-lg text-[11px] font-semibold text-amber-400 transition-all"
               >
                 <Phone className="w-3 h-3" /> Contact
@@ -325,7 +326,7 @@ function PropertyCardGrid({ property, index }: { property: Property; index: numb
 
           {/* Bottom amber accent line */}
           <div className="absolute bottom-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-amber-500/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-        </div>
+        </a>
       </TiltCard>
     </motion.div>
   )
@@ -345,11 +346,12 @@ function PropertyCardList({ property, index }: { property: Property; index: numb
   const propType = n.type
 
   return (
-    <motion.div
+    <motion.a
+      href={`/properties/${n.id}`}
       initial={{ opacity: 0, x: -16 }}
       animate={{ opacity: 1, x: 0 }}
       transition={{ duration: 0.4, delay: Math.min(index * 0.04, 0.3) }}
-      className="group flex gap-4 p-4 rounded-2xl border border-zinc-800/60 bg-zinc-900/50 backdrop-blur-sm hover:border-amber-500/25 hover:bg-zinc-900/70 transition-all duration-300"
+      className="group flex gap-4 p-4 rounded-2xl border border-zinc-800/60 bg-zinc-900/50 backdrop-blur-sm hover:border-amber-500/25 hover:bg-zinc-900/70 transition-all duration-300 cursor-pointer"
     >
       {/* Image */}
       <div className="w-32 h-24 flex-shrink-0 rounded-xl overflow-hidden bg-zinc-800 relative">
@@ -383,7 +385,7 @@ function PropertyCardList({ property, index }: { property: Property; index: numb
           </div>
           <div className="flex items-center gap-2 flex-shrink-0">
             <AIScoreRing score={score} />
-            <button onClick={() => setLiked(l => !l)}>
+            <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); setLiked(l => !l) }}>
               <Heart className={cn('w-4 h-4 transition-colors', liked ? 'fill-rose-500 text-rose-500' : 'text-zinc-600 hover:text-zinc-400')} />
             </button>
           </div>
@@ -409,12 +411,12 @@ function PropertyCardList({ property, index }: { property: Property; index: numb
           <span className="text-sm font-bold text-amber-400">
             {priceINR ? formatINR(priceINR) : 'Contact'}
           </span>
-          <button className="text-[11px] text-amber-400 hover:text-amber-300 flex items-center gap-1 transition-colors">
+          <span className="text-[11px] text-amber-400 hover:text-amber-300 flex items-center gap-1 transition-colors">
             View details <ArrowRight className="w-3 h-3" />
-          </button>
+          </span>
         </div>
       </div>
-    </motion.div>
+    </motion.a>
   )
 }
 

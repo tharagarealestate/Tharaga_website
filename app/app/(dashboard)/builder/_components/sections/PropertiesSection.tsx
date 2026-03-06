@@ -244,12 +244,15 @@ export function PropertiesSection({ onNavigate }: PropertiesProps) {
                 const statusKey = (property.status || 'active').toLowerCase()
                 const status = statusColors[statusKey] || statusColors.active
                 return (
-                  <motion.div
+                  <motion.a
                     key={property.id}
+                    href={`/properties/${property.id}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
                     initial={{ opacity: 0, y: 12 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: i * 0.03 }}
-                    className="bg-zinc-900/40 border border-zinc-800/60 rounded-xl overflow-hidden hover:border-amber-500/30 hover:shadow-lg hover:shadow-amber-500/[0.05] transition-all cursor-pointer group"
+                    className="bg-zinc-900/40 border border-zinc-800/60 rounded-xl overflow-hidden hover:border-amber-500/30 hover:shadow-lg hover:shadow-amber-500/[0.05] transition-all cursor-pointer group block"
                   >
                     {/* Image */}
                     <div className="h-44 bg-zinc-800/50 flex items-center justify-center relative overflow-hidden">
@@ -294,7 +297,7 @@ export function PropertiesSection({ onNavigate }: PropertiesProps) {
                         <p className="text-[11px] text-zinc-600 mt-1">{property.sqft.toLocaleString()} sq.ft</p>
                       )}
                     </div>
-                  </motion.div>
+                  </motion.a>
                 )
               })
             )}
@@ -316,7 +319,8 @@ export function PropertiesSection({ onNavigate }: PropertiesProps) {
                 const statusKey = (property.status || 'active').toLowerCase()
                 const status = statusColors[statusKey] || statusColors.active
                 return (
-                  <div key={property.id} className="grid grid-cols-[1fr_130px_130px_110px_80px] gap-4 px-4 py-3 hover:bg-zinc-800/30 transition-colors cursor-pointer">
+                  <a key={property.id} href={`/properties/${property.id}`} target="_blank" rel="noopener noreferrer"
+                    className="grid grid-cols-[1fr_130px_130px_110px_80px] gap-4 px-4 py-3 hover:bg-zinc-800/30 transition-colors cursor-pointer">
                     <div>
                       <p className="text-sm font-medium text-zinc-200 truncate">{property.title}</p>
                       <p className="text-xs text-zinc-500">
@@ -332,7 +336,7 @@ export function PropertiesSection({ onNavigate }: PropertiesProps) {
                       </span>
                     </div>
                     <span className="text-xs text-zinc-400 self-center tabular-nums">{property.views || 0}</span>
-                  </div>
+                  </a>
                 )
               })}
             </div>

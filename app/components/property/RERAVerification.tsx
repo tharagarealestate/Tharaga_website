@@ -1,9 +1,9 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { ExternalLink, AlertCircle, Clock } from 'lucide-react'
+import { ExternalLink, AlertCircle, ShieldCheck, ShieldOff, Clock } from 'lucide-react'
 import { getSupabase } from '@/lib/supabase'
-import { RERABadge } from '@/components/rera/RERABadge'
+import { cn } from '@/lib/utils'
 
 interface RERAVerificationProps {
   propertyId: string
@@ -27,7 +27,13 @@ interface RERARegistration {
   raw_data: any
 }
 
-const LEGAL_DISCLAIMER = "Legal disclaimer: The information and verification artifacts provided on this page are automated snapshots of public records and uploaded documents as of the timestamp shown. These artifacts are intended for informational purposes only and do not constitute legal advice, title insurance, or a guarantee of property ownership or transferability. For formal legal confirmation and title transfer, consult a licensed property lawyer or the appropriate government registry."
+const STATUS_CONFIG = {
+  active:    { color: 'text-emerald-400', bg: 'bg-emerald-500/10', border: 'border-emerald-500/20', label: 'Active' },
+  expired:   { color: 'text-red-400',     bg: 'bg-red-500/10',     border: 'border-red-500/20',     label: 'Expired' },
+  suspended: { color: 'text-red-400',     bg: 'bg-red-500/10',     border: 'border-red-500/20',     label: 'Suspended' },
+  cancelled: { color: 'text-red-400',     bg: 'bg-red-500/10',     border: 'border-red-500/20',     label: 'Cancelled' },
+  pending:   { color: 'text-amber-400',   bg: 'bg-amber-500/10',   border: 'border-amber-500/20',   label: 'Pending' },
+}
 
 export default function RERAVerification({ propertyId, reraId }: RERAVerificationProps) {
   const [registration, setRegistration] = useState<RERARegistration | null>(null)
@@ -35,17 +41,14 @@ export default function RERAVerification({ propertyId, reraId }: RERAVerificatio
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    if (propertyId) {
-      loadRERARegistration()
-    }
+    if (propertyId) loadRERARegistration()
   }, [propertyId])
 
   async function loadRERARegistration() {
     try {
       setLoading(true)
       const supabase = getSupabase()
-      
-      // Try to fetch from new rera_registrations table first
+
       const { data: reraData, error: reraError } = await supabase
         .from('rera_registrations')
         .select('*')
@@ -54,29 +57,21 @@ export default function RERAVerification({ propertyId, reraId }: RERAVerificatio
         .limit(1)
         .maybeSingle()
 
-      if (!reraError && reraData) {
-        setRegistration(reraData)
-        return
-      }
+      if (!reraError && reraData) { setRegistration(reraData); return }
 
-      // Fallback: try to fetch by RERA number if provided
       if (reraId) {
-        const { data: reraByNumber, error: reraByNumberError } = await supabase
+        const { data: byNum } = await supabase
           .from('rera_registrations')
           .select('*')
           .eq('rera_number', reraId)
           .order('created_at', { ascending: false })
           .limit(1)
           .maybeSingle()
-
-        if (!reraByNumberError && reraByNumber) {
-          setRegistration(reraByNumber)
-          return
-        }
+        if (byNum) { setRegistration(byNum); return }
       }
 
-      // If no registration found, check old rera_snapshots table for backward compatibility
-      const { data: snapshotData, error: snapshotError } = await supabase
+      // Fallback: rera_snapshots table
+      const { data: snap } = await supabase
         .from('rera_snapshots')
         .select('*')
         .eq('property_id', propertyId)
@@ -84,176 +79,168 @@ export default function RERAVerification({ propertyId, reraId }: RERAVerificatio
         .limit(1)
         .maybeSingle()
 
-      if (!snapshotError && snapshotData) {
-        // Map old snapshot format to new registration format
+      if (snap) {
         setRegistration({
-          id: snapshotData.id,
-          rera_number: snapshotData.rera_id,
-          rera_state: snapshotData.state,
-          project_name: snapshotData.project_name || null,
-          promoter_name: snapshotData.developer_name || null,
+          id: snap.id,
+          rera_number: snap.rera_id,
+          rera_state: snap.state,
+          project_name: snap.project_name || null,
+          promoter_name: snap.developer_name || null,
           registration_date: null,
-          expiry_date: snapshotData.expiry_date || null,
-          status: (snapshotData.status?.toLowerCase() as any) || 'pending',
-          verified: snapshotData.data_source !== 'SYNTHETIC',
-          verification_status: snapshotData.data_source === 'SYNTHETIC' ? 'pending' : 'verified',
+          expiry_date: snap.expiry_date || null,
+          status: (snap.status?.toLowerCase() as any) || 'pending',
+          verified: snap.data_source !== 'SYNTHETIC',
+          verification_status: snap.data_source === 'SYNTHETIC' ? 'pending' : 'verified',
           compliance_score: null,
-          is_active: snapshotData.status?.toLowerCase() === 'active',
-          last_verified_at: snapshotData.collected_at,
-          raw_data: snapshotData,
+          is_active: snap.status?.toLowerCase() === 'active',
+          last_verified_at: snap.collected_at,
+          raw_data: snap,
         })
       }
     } catch (err: any) {
-      console.error('Error loading RERA registration:', err)
       setError(err.message)
     } finally {
       setLoading(false)
     }
   }
 
-  if (!reraId && !registration) {
+  const displayId = registration?.rera_number || reraId
+  const status = registration?.status
+  const statusCfg = status ? (STATUS_CONFIG[status] || STATUS_CONFIG.pending) : null
+  const isSynthetic = registration?.raw_data?.data_source === 'SYNTHETIC'
+  const compliance = registration?.compliance_score
+
+  /* ── No RERA ── */
+  if (!reraId && !registration && !loading) {
     return (
       <div>
-        <h3 className="text-xl font-bold text-white mb-4">RERA Verification</h3>
-        <div className="bg-amber-500/20 border border-amber-300/50 rounded-lg p-4">
-          <div className="flex items-center gap-2 text-amber-300">
-            <AlertCircle className="w-5 h-5" />
-            <span className="font-bold">RERA not available — manual verification recommended</span>
-          </div>
-          <p className="text-sm text-amber-200 mt-2">
-            This property does not have a RERA registration number. We recommend verifying property documents manually.
+        <div className="flex items-center gap-2 mb-3">
+          <ShieldOff size={13} className="text-zinc-600" />
+          <h3 className="text-xs font-semibold text-zinc-300 uppercase tracking-widest">RERA Verification</h3>
+        </div>
+        <div className="bg-amber-500/[0.07] border border-amber-500/20 rounded-xl p-3">
+          <p className="text-xs text-amber-400 font-medium">No RERA ID — manual verification recommended</p>
+          <p className="text-[11px] text-zinc-500 mt-1 leading-relaxed">
+            This property doesn't have a RERA registration number on file. Verify property documents independently.
           </p>
         </div>
       </div>
     )
   }
 
+  /* ── Loading ── */
   if (loading) {
     return (
       <div>
-        <h3 className="text-xl font-bold text-white mb-4">RERA Verification</h3>
-        <div className="flex items-center gap-3">
-          <Clock className="w-5 h-5 animate-spin text-amber-300" />
-          <span className="text-white">Loading RERA verification...</span>
+        <div className="flex items-center gap-2 mb-3">
+          <ShieldCheck size={13} className="text-zinc-600" />
+          <h3 className="text-xs font-semibold text-zinc-300 uppercase tracking-widest">RERA Verification</h3>
+        </div>
+        <div className="flex items-center gap-2">
+          <Clock size={12} className="text-amber-400 animate-spin" />
+          <span className="text-xs text-zinc-500">Loading RERA data…</span>
         </div>
       </div>
     )
   }
 
+  /* ── Error ── */
   if (error) {
     return (
       <div>
-        <h3 className="text-xl font-bold text-white mb-4">RERA Verification</h3>
-        <div className="bg-red-500/20 border border-red-300/50 rounded-lg p-4">
-          <div className="flex items-center gap-2 text-red-300">
-            <AlertCircle className="w-5 h-5" />
-            <span className="font-bold">Error loading RERA data</span>
-          </div>
-          <p className="text-sm text-red-200 mt-2">{error}</p>
+        <div className="flex items-center gap-2 mb-3">
+          <AlertCircle size={13} className="text-red-400" />
+          <h3 className="text-xs font-semibold text-zinc-300 uppercase tracking-widest">RERA Verification</h3>
         </div>
+        <p className="text-xs text-red-400">{error}</p>
       </div>
     )
   }
 
-  const displayReraId = registration?.rera_number || reraId
-  const isSynthetic = registration?.raw_data?.data_source === 'SYNTHETIC'
-
   return (
-    <div className="space-y-4">
-      <h3 className="text-xl font-bold text-white mb-4">RERA Verification</h3>
-      {/* RERA Badge and Display */}
-      <div className="flex items-center gap-4">
-        <RERABadge
-          verified={registration?.verified || false}
-          reraNumber={displayReraId || undefined}
-          status={registration?.status || null}
-          expiryDate={registration?.expiry_date || null}
-          complianceScore={registration?.compliance_score || null}
-          size="lg"
-          variant="card"
-        />
-        <div className="flex-1">
-          <div className="flex items-center gap-2">
-            <span className="font-medium text-gray-900">
-              RERA Number: <span className="font-mono">{displayReraId}</span>
-            </span>
-            {registration && (
-              <a
-                href={`https://www.tn-rera.in/search?rera_number=${displayReraId}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-sm text-primary-600 hover:text-primary-700 flex items-center gap-1"
-              >
-                Verify on Portal
-                <ExternalLink className="w-4 h-4" />
-              </a>
-            )}
-          </div>
-          {registration?.last_verified_at && (
-            <div className="text-sm text-gray-600 mt-1">
-              Last verified on {new Date(registration.last_verified_at).toLocaleString()}
-              {isSynthetic && (
-                <span className="ml-2 px-2 py-0.5 bg-amber-100 text-amber-800 rounded text-xs">
-                  SYNTHETIC DATA
-                </span>
-              )}
-            </div>
-          )}
+    <div className="space-y-3">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <ShieldCheck size={13} className={registration?.verified ? 'text-emerald-400' : 'text-zinc-500'} />
+          <h3 className="text-xs font-semibold text-zinc-300 uppercase tracking-widest">RERA Verification</h3>
         </div>
+        {statusCfg && (
+          <span className={cn(
+            'text-[10px] font-semibold px-2 py-0.5 rounded-full border',
+            statusCfg.bg, statusCfg.border, statusCfg.color,
+          )}>
+            {statusCfg.label}
+          </span>
+        )}
       </div>
 
-      {/* Additional RERA Details */}
+      {/* RERA number */}
+      {displayId && (
+        <div className="bg-white/[0.03] border border-white/[0.06] rounded-xl px-3 py-2.5 flex items-center justify-between gap-2">
+          <span className="font-mono text-xs text-amber-300 tracking-wider">{displayId}</span>
+          <a
+            href={`https://www.tn-rera.in/search?rera_number=${displayId}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1 text-[10px] text-zinc-500 hover:text-amber-400 transition-colors flex-shrink-0"
+          >
+            Verify <ExternalLink size={9} />
+          </a>
+        </div>
+      )}
+
+      {/* Details rows */}
       {registration && (
-        <div className="bg-slate-700/50 border border-amber-300/30 rounded-lg p-4 space-y-2 text-sm">
+        <div className="space-y-1.5">
           {registration.project_name && (
-            <div>
-              <span className="font-bold text-white">Project:</span>{' '}
-              <span className="text-white">{registration.project_name}</span>
+            <div className="flex items-start justify-between py-1.5 border-b border-white/[0.04]">
+              <span className="text-[11px] text-zinc-500">Project</span>
+              <span className="text-[11px] text-zinc-200 font-medium text-right max-w-[60%]">{registration.project_name}</span>
             </div>
           )}
           {registration.promoter_name && (
-            <div>
-              <span className="font-bold text-white">Promoter:</span>{' '}
-              <span className="text-white">{registration.promoter_name}</span>
-            </div>
-          )}
-          {registration.status && (
-            <div>
-              <span className="font-bold text-white">Status:</span>{' '}
-              <span className="text-white capitalize">{registration.status}</span>
+            <div className="flex items-start justify-between py-1.5 border-b border-white/[0.04]">
+              <span className="text-[11px] text-zinc-500">Promoter</span>
+              <span className="text-[11px] text-zinc-200 font-medium text-right max-w-[60%]">{registration.promoter_name}</span>
             </div>
           )}
           {registration.expiry_date && (
-            <div>
-              <span className="font-bold text-white">Expiry:</span>{' '}
-              <span className="text-white">{new Date(registration.expiry_date).toLocaleDateString()}</span>
+            <div className="flex items-start justify-between py-1.5 border-b border-white/[0.04]">
+              <span className="text-[11px] text-zinc-500">Expires</span>
+              <span className="text-[11px] text-zinc-200 font-medium">
+                {new Date(registration.expiry_date).toLocaleDateString('en-IN', { month: 'short', year: 'numeric' })}
+              </span>
             </div>
           )}
-          {registration.compliance_score !== null && (
-            <div>
-              <span className="font-bold text-white">Compliance Score:</span>{' '}
-              <span className="text-white">{registration.compliance_score}%</span>
+          {compliance !== null && compliance !== undefined && (
+            <div className="pt-1.5">
+              <div className="flex items-center justify-between mb-1.5">
+                <span className="text-[10px] text-zinc-600 uppercase tracking-widest">Compliance</span>
+                <span className="text-[10px] font-semibold text-zinc-400">{compliance}%</span>
+              </div>
+              <div className="h-1 w-full bg-white/[0.05] rounded-full overflow-hidden">
+                <div
+                  className={cn(
+                    'h-full rounded-full',
+                    compliance >= 80 ? 'bg-emerald-500' : compliance >= 50 ? 'bg-amber-500' : 'bg-red-500',
+                    'opacity-70',
+                  )}
+                  style={{ width: `${compliance}%` }}
+                />
+              </div>
             </div>
           )}
         </div>
       )}
 
-      {/* Legal Disclaimer */}
-      <div className="bg-slate-700/50 border-l-4 border-amber-300/50 p-3 text-xs text-white">
-        <p>{LEGAL_DISCLAIMER}</p>
-        <a href="/how-verification-works" className="text-amber-300 hover:text-amber-400 mt-2 inline-block transition-colors">
-          How verification works →
-        </a>
-      </div>
+      {/* Verified timestamp */}
+      {registration?.last_verified_at && (
+        <p className="text-[10px] text-zinc-600">
+          Last verified {new Date(registration.last_verified_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+          {isSynthetic && <span className="ml-2 text-zinc-700">· Synthetic data</span>}
+        </p>
+      )}
     </div>
   )
 }
-
-
-
-
-
-
-
-
-

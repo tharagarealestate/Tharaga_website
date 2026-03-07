@@ -19,7 +19,6 @@ import AppreciationPrediction from '@/components/property/AppreciationPrediction
 import ClientMarketAnalysis from '@/components/property/ClientMarketAnalysis'
 import PropertyDocuments from '@/components/property/PropertyDocuments'
 import LocationInsights from '@/components/property/LocationInsights'
-import KeyHighlights from '@/components/property/KeyHighlights'
 import PriceComparison from '@/components/property/PriceComparison'
 import ShareProperty from '@/components/property/ShareProperty'
 import PropertySectionNav from '@/components/property/PropertySectionNav'
@@ -666,11 +665,6 @@ export default async function PropertyPage({ params }: { params: { id: string } 
             <section id="intelligence" className="py-10 border-b border-white/[0.04] scroll-mt-[104px]">
               <SectionLabel>AI Intelligence</SectionLabel>
 
-              {/* Key highlights */}
-              <div className="mb-6">
-                <KeyHighlights property={p} />
-              </div>
-
               {/* RERA + Risk grid */}
               <div className="grid md:grid-cols-2 gap-4 mb-5">
                 <div className="bg-white/[0.04] backdrop-blur-xl border border-white/[0.08] rounded-2xl p-5">
@@ -681,8 +675,8 @@ export default async function PropertyPage({ params }: { params: { id: string } 
                 </div>
               </div>
 
-              {/* Appreciation prediction */}
-              <div className="bg-white/[0.04] backdrop-blur-xl border border-white/[0.08] rounded-2xl p-5 mb-4">
+              {/* Appreciation prediction — self-contained card, returns null when no data */}
+              <div className="mb-4">
                 <AppreciationPrediction propertyId={p.id} />
               </div>
 
@@ -727,6 +721,19 @@ export default async function PropertyPage({ params }: { params: { id: string } 
               <BuilderInfo builder={builder} p={p} />
               <SimilarProperties items={similar} />
               <Reviews items={reviews} />
+
+              {/* Global legal footnote */}
+              <div className="mt-8 pt-6 border-t border-white/[0.04]">
+                <p className="text-[10px] text-zinc-700 leading-relaxed italic max-w-2xl">
+                  Legal notice: AI-generated scores, RERA snapshots, risk flags, and appreciation forecasts on this page are
+                  automated informational snapshots as of the date shown. They do not constitute legal advice, title insurance,
+                  or a guarantee of property ownership. For formal legal confirmation consult a licensed property lawyer or
+                  the appropriate government registry.
+                </p>
+                <a href="/how-verification-works" className="text-[10px] text-zinc-600 hover:text-zinc-400 transition-colors mt-1.5 inline-block">
+                  How verification works →
+                </a>
+              </div>
             </section>
           </div>
 

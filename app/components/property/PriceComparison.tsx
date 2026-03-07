@@ -1,8 +1,9 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { TrendingUp, TrendingDown, Minus, Loader2 } from 'lucide-react'
+import { TrendingUp, TrendingDown, Minus } from 'lucide-react'
 import { getSupabase } from '@/lib/supabase'
+import { cn } from '@/lib/utils'
 
 interface PriceComparisonProps {
   propertyId: string
@@ -15,21 +16,13 @@ export default function PriceComparison({ propertyId, pricePerSqft, locality, ci
   const [avgPrice, setAvgPrice] = useState<number | null>(null)
   const [loading, setLoading] = useState(true)
 
-  useEffect(() => {
-    fetchAveragePrice()
-  }, [locality, city])
+  useEffect(() => { fetchAveragePrice() }, [locality, city])
 
   async function fetchAveragePrice() {
-    if (!locality || !pricePerSqft) {
-      setLoading(false)
-      return
-    }
-
+    if (!locality || !pricePerSqft) { setLoading(false); return }
     try {
       setLoading(true)
       const supabase = getSupabase()
-      
-      // Calculate average price per sqft for the locality
       const { data, error } = await supabase
         .from('properties')
         .select('price_inr, sqft, carpet_area, super_built_up_area')
@@ -41,100 +34,79 @@ export default function PriceComparison({ propertyId, pricePerSqft, locality, ci
         .limit(50)
 
       if (error) throw error
-
-      if (data && data.length > 0) {
-        // Calculate price per sqft for each property and get average
-        const validPrices = data
-          .map(p => {
-            const area = p.carpet_area || p.sqft || p.super_built_up_area
-            const price = p.price_inr
-            if (!area || !price || area <= 0) return null
-            return price / area
-          })
-          .filter((p): p is number => p !== null)
-
-        if (validPrices.length > 0) {
-          const average = validPrices.reduce((a, b) => a + b, 0) / validPrices.length
-          setAvgPrice(Math.round(average))
-        }
+      if (data?.length) {
+        const valid = data.map(p => {
+          const area = p.carpet_area || p.sqft || p.super_built_up_area
+          return (area && p.price_inr && area > 0) ? p.price_inr / area : null
+        }).filter((x): x is number => x !== null)
+        if (valid.length) setAvgPrice(Math.round(valid.reduce((a, b) => a + b, 0) / valid.length))
       }
-    } catch (error) {
-      console.error('Error fetching average price:', error)
-    } finally {
-      setLoading(false)
-    }
+    } catch {}
+    finally { setLoading(false) }
   }
 
   if (!pricePerSqft) return null
 
-  const difference = avgPrice ? pricePerSqft - avgPrice : null
-  const percentage = avgPrice && difference ? Math.round((difference / avgPrice) * 100) : null
-  const isAbove = difference !== null && difference > 0
-  const isBelow = difference !== null && difference < 0
+  const diff = avgPrice ? pricePerSqft - avgPrice : null
+  const pct  = avgPrice && diff ? Math.round((diff / avgPrice) * 100) : null
+  const above = diff !== null && diff > 0
+  const below = diff !== null && diff < 0
 
   return (
-    <div className="bg-slate-800/95 glow-border rounded-lg p-6">
-      <h2 className="text-2xl font-bold text-white mb-4">Price Comparison</h2>
-      
-      <div className="grid md:grid-cols-2 gap-4">
-        <div className="bg-slate-700/50 border border-amber-300/30 rounded-lg p-4">
-          <div className="text-sm text-slate-400 mb-1">This Property</div>
-          <div className="text-2xl font-bold text-amber-300">₹{pricePerSqft.toLocaleString('en-IN')}/sqft</div>
+    <div className="space-y-4">
+      {/* Price comparison row */}
+      <div className="grid grid-cols-2 gap-3">
+        <div className="bg-white/[0.04] border border-white/[0.07] rounded-xl p-4">
+          <p className="text-[10px] text-zinc-600 uppercase tracking-widest mb-1">This Property</p>
+          <p className="text-xl font-black text-amber-400">₹{pricePerSqft.toLocaleString('en-IN')}</p>
+          <p className="text-[10px] text-zinc-600 mt-0.5">per sqft</p>
         </div>
 
-        {loading ? (
-          <div className="bg-slate-700/50 border border-amber-300/30 rounded-lg p-4 flex items-center justify-center">
-            <Loader2 className="h-5 w-5 text-amber-300 animate-spin" />
-          </div>
-        ) : avgPrice ? (
-          <div className="bg-slate-700/50 border border-amber-300/30 rounded-lg p-4">
-            <div className="text-sm text-slate-400 mb-1">Average in {locality}</div>
-            <div className="text-2xl font-bold text-white">₹{avgPrice.toLocaleString('en-IN')}/sqft</div>
-          </div>
-        ) : (
-          <div className="bg-slate-700/50 border border-amber-300/30 rounded-lg p-4">
-            <div className="text-sm text-slate-400 mb-1">Average in {locality}</div>
-            <div className="text-lg text-white">Insufficient data</div>
-          </div>
-        )}
+        <div className="bg-white/[0.04] border border-white/[0.07] rounded-xl p-4">
+          <p className="text-[10px] text-zinc-600 uppercase tracking-widest mb-1">
+            {locality ? `Avg in ${locality}` : 'Area Average'}
+          </p>
+          {loading ? (
+            <div className="flex items-center gap-2 pt-1">
+              <div className="h-3.5 w-3.5 rounded-full border-2 border-amber-500/30 border-t-amber-400 animate-spin" />
+              <span className="text-xs text-zinc-600">Loading…</span>
+            </div>
+          ) : avgPrice ? (
+            <>
+              <p className="text-xl font-black text-zinc-200">₹{avgPrice.toLocaleString('en-IN')}</p>
+              <p className="text-[10px] text-zinc-600 mt-0.5">per sqft</p>
+            </>
+          ) : (
+            <p className="text-sm text-zinc-500 pt-1">Insufficient data</p>
+          )}
+        </div>
       </div>
 
-      {percentage !== null && (
-        <div className={`mt-4 p-4 rounded-lg border ${
-          isAbove 
-            ? 'bg-red-500/20 border-red-300/50' 
-            : isBelow 
-            ? 'bg-green-500/20 border-green-300/50' 
-            : 'bg-blue-500/20 border-blue-300/50'
-        }`}>
-          <div className="flex items-center gap-2">
-            {isAbove && <TrendingUp size={20} className="text-red-300" />}
-            {isBelow && <TrendingDown size={20} className="text-green-300" />}
-            {!isAbove && !isBelow && <Minus size={20} className="text-blue-300" />}
-            <div className={`font-semibold ${
-              isAbove ? 'text-red-300' : isBelow ? 'text-green-300' : 'text-blue-300'
-            }`}>
-              {isAbove ? `${Math.abs(percentage)}% above` : isBelow ? `${Math.abs(percentage)}% below` : 'At'} average price in this area
-            </div>
-          </div>
+      {/* Comparison verdict */}
+      {pct !== null && (
+        <div className={cn(
+          'flex items-center gap-2.5 px-4 py-3 rounded-xl border',
+          above
+            ? 'bg-red-500/[0.06] border-red-500/15'
+            : below
+            ? 'bg-emerald-500/[0.06] border-emerald-500/15'
+            : 'bg-white/[0.04] border-white/[0.07]',
+        )}>
+          {above && <TrendingUp size={14} className="text-red-400 flex-shrink-0" />}
+          {below && <TrendingDown size={14} className="text-emerald-400 flex-shrink-0" />}
+          {!above && !below && <Minus size={14} className="text-zinc-500 flex-shrink-0" />}
+          <span className={cn(
+            'text-sm font-semibold',
+            above ? 'text-red-400' : below ? 'text-emerald-400' : 'text-zinc-400',
+          )}>
+            {above
+              ? `${Math.abs(pct)}% above area average`
+              : below
+              ? `${Math.abs(pct)}% below area average — good value`
+              : 'At area average price'}
+          </span>
         </div>
       )}
     </div>
   )
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

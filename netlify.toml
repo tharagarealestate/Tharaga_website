@@ -1,8 +1,26 @@
 [build]
-  base = "app"
-  command = "npm install && npm --prefix ../netlify/functions install --no-audit --no-fund --omit=dev && node ../scripts/ensure-next-public-env.mjs && node ../scripts/copy-static.cjs && npm run build"
-  publish = ".next"
-  functions = "../netlify/functions"
+  command = "cd app && rm -rf .next && npm install --legacy-peer-deps && npm --prefix ../netlify/functions install --no-audit --no-fund --omit=dev && node ../scripts/ensure-next-public-env.mjs && node ../scripts/copy-static.cjs && npm run build"
+  publish = "app/.next"
+  functions = "netlify/functions"
+
+[build.environment]
+  NODE_VERSION = "20"
+  NPM_FLAGS = "--legacy-peer-deps"
+  # RERA Verification System - Set these in Netlify Dashboard for production
+  # USE_SYNTHETIC_RERA=false
+  # RERA_PARTNER_API_URL=https://wedevtjjmdvngyshqdro.supabase.co/functions/v1/rera-partner
+  # RERA_PARTNER_API_KEY=your-key-here
+  # RERA_MONITOR_API_KEY=your-key-here
+  # SUPABASE_SERVICE_ROLE_KEY=your-key-here
+
+# NOTE: AWS Lambda has a 4KB limit on environment variables per function.
+# Netlify passes ALL site environment variables to ALL functions by default.
+# If you exceed this limit, you'll see: "Your environment variables exceed the 4KB limit"
+# 
+# SOLUTION: Remove duplicate environment variables in Netlify Dashboard:
+# 1. Remove SUPABASE_SERVICE_ROLE (keep only SUPABASE_SERVICE_ROLE_KEY)
+# 2. Review and remove any other unused/duplicate variables
+# 3. See NETLIFY_ENV_VAR_4KB_FIX.md for detailed instructions
 
 [[plugins]]
   package = "@netlify/plugin-nextjs"
@@ -31,10 +49,7 @@
   to = "/auth-email-landing/"
   status = 301
 
-[[redirects]]
-  from = "/login_signup_glassdrop"
-  to = "/login_signup_glassdrop/"
-  status = 301
+# Removed /login_signup_glassdrop redirect - using snippets auth system instead
 
 [[redirects]]
   from = "/auth-landing"
@@ -51,10 +66,14 @@
   to = "/snippets/"
   status = 301
 
-[[redirects]]
-  from = "/pricing"
-  to = "/pricing/"
-  status = 301
+# Removed /pricing redirect - Next.js App Router handles both /pricing and /pricing/ naturally
+
+## Admin Panel - Let Next.js handle /admin routes (commented out to allow Next.js routing)
+# [[redirects]]
+#   from = "/admin"
+#   to = "/admin/index.html"
+#   status = 200
+#   force = true
 
 # Listings API
 [[redirects]]
@@ -75,15 +94,22 @@
   status = 200
   force = true
 
-[[redirects]]
-  from = "/api/leads"
-  to = "/.netlify/functions/lead-create"
-  status = 200
-  force = true
+# DISABLED: Use Next.js API route instead of Netlify function
+# [[redirects]]
+#   from = "/api/leads"
+#   to = "/.netlify/functions/lead-create"
+#   status = 200
+#   force = true
 
 [[redirects]]
   from = "/api/digest-send"
   to = "/.netlify/functions/digest-send"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/api/update-admin-role"
+  to = "/.netlify/functions/update-admin-role"
   status = 200
   force = true
 
@@ -144,6 +170,50 @@
   status = 200
   force = true
 
+## User role management endpoints
+[[redirects]]
+  from = "/api/user/roles"
+  to = "/.netlify/functions/user-roles"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/api/user/add-role"
+  to = "/.netlify/functions/user-add-role"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/api/user/switch-role"
+  to = "/.netlify/functions/user-switch-role"
+  status = 200
+  force = true
+
+## Admin endpoints (Phase 4)
+[[redirects]]
+  from = "/api/admin/builders"
+  to = "/.netlify/functions/admin-get-builders"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/api/admin/verify-builder"
+  to = "/.netlify/functions/admin-verify-builder"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/api/admin/stats"
+  to = "/.netlify/functions/admin-stats"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/api/send-verification-email"
+  to = "/.netlify/functions/send-verification-email"
+  status = 200
+  force = true
+
 ## Stripe endpoints
 [[redirects]]
   from = "/api/checkout"
@@ -176,17 +246,44 @@
   status = 200
   force = true
 
-## Proxy API to Cloud Run to avoid browser CORS and keep origin stable
-[[redirects]]
-  from = "/api/*"
-  to = "https://api.tharaga.co.in/:splat"
-  status = 200
-  force = true
+## Proxy SPECIFIC API routes to Cloud Run backend
+## IMPORTANT: Next.js API routes in app/app/api/* take precedence
+## Only proxy routes that don't exist in Next.js API routes
+## Next.js routes handled locally: /api/leads/*, /api/builder/*, /api/analytics/*, /api/me/*, /api/properties/*, /api/admin/metrics/*, /api/team-members/*, /api/tracking/*, /api/trial/*, /api/health/*, /api/__vitals
+## External backend routes (proxied): Only routes NOT in Next.js
+## Note: Netlify redirects are evaluated BEFORE Next.js routes, so we need to be specific
+## The catch-all below is commented out - Next.js routes will handle their own paths
+# [[redirects]]
+#   from = "/api/*"
+#   to = "https://api.tharaga.co.in/:splat"
+#   status = 200
+#   force = true
 
 [[headers]]
   for = "/assets/*"
   [headers.values]
     Cache-Control = "public, max-age=31536000, immutable"
+
+# Aggressive cache-busting for JavaScript files - always fetch latest
+[[headers]]
+  for = "/*.js"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"
+
+[[headers]]
+  for = "/role-manager*.js"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"
+
+[[headers]]
+  for = "/admin/*.html"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"
+
+[[headers]]
+  for = "/snippets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"
 
 [[headers]]
   for = "/*"
@@ -195,8 +292,9 @@
     X-Content-Type-Options = "nosniff"
     Referrer-Policy = "no-referrer"
     Permissions-Policy = "geolocation=(), microphone()"
-    # CSP broadened: Firebase, Supabase, analytics, Stripe, Razorpay
-    Content-Security-Policy = "default-src 'self'; img-src 'self' https: data:; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://www.gstatic.com https://www.google.com https://www.googletagmanager.com https://js.stripe.com https://checkout.razorpay.com; style-src 'self' 'unsafe-inline'; media-src 'self' https: data: blob:; connect-src 'self' https://api.tharaga.co.in https://wedevtjjmdvngyshqdro.supabase.co https://www.googleapis.com https://securetoken.googleapis.com https://identitytoolkit.googleapis.com https://api.stripe.com https://api.razorpay.com; frame-src 'self' https://www.google.com https://www.gstatic.com https://js.stripe.com https://api.razorpay.com https://checkout.razorpay.com; frame-ancestors 'self' https://tharaga.co.in https://www.tharaga.co.in https://auth.tharaga.co.in; base-uri 'self'"
+    # CSP broadened: Firebase, Supabase, analytics, Stripe, Razorpay, Google Fonts, unpkg
+    # Note: 'unsafe-inline' required for Next.js hydration and auth scripts
+    Content-Security-Policy = "default-src 'self'; img-src 'self' https: data:; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://www.gstatic.com https://www.google.com https://www.googletagmanager.com https://js.stripe.com https://checkout.razorpay.com https://unpkg.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com https://r2cdn.perplexity.ai; media-src 'self' https: data: blob:; connect-src 'self' https://api.tharaga.co.in https://*.supabase.co wss://*.supabase.co https://www.googleapis.com https://securetoken.googleapis.com https://identitytoolkit.googleapis.com https://api.stripe.com https://api.razorpay.com https://accounts.zoho.in https://accounts.zoho.com https://www.zohoapis.in https://www.zohoapis.com; frame-src 'self' https://www.google.com https://www.gstatic.com https://accounts.google.com https://*.supabase.co https://accounts.zoho.in https://accounts.zoho.com https://js.stripe.com https://api.razorpay.com https://checkout.razorpay.com; frame-ancestors 'self' https://tharaga.co.in https://www.tharaga.co.in https://auth.tharaga.co.in; base-uri 'self'"
 
 ## Rely on /api proxy; no public API base URL exposed
 

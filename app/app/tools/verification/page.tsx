@@ -33,11 +33,12 @@ const TN_DISTRICT_CODES: Record<string, string> = {
 }
 
 // ─── Format Regexes ───────────────────────────────────────────────────────────
-const CLASSIC_RE = /^TN\/(\d{2})\/(Building|Layout|Regularisation-Layout)\/(\d{4})\/(\d{4})$/i
-const NEW2026_RE = /^TNRERA\/(\d{2})\/(BLG|LO|RLY)\/(\d{4})\/(\d{4})$/i
+const CLASSIC_RE = /^TN\/(\d{1,2})\/(Building|Layout|Regularisation-Layout)\/(\d{1,6})\/(\d{4})$/i
+const NEW2026_RE = /^TNRERA\/(\d{1,2})\/(BLG|LO|RLY)\/(\d{1,6})\/(\d{4})$/i
 
 const PROJECT_TYPE_MAP: Record<string, string> = {
   Building: 'Building', Layout: 'Layout', 'Regularisation-Layout': 'Regularisation Layout',
+  BUILDING: 'Building', LAYOUT: 'Layout', 'REGULARISATION-LAYOUT': 'Regularisation Layout',
   BLG: 'Building', LO: 'Layout', RLY: 'Regularisation Layout',
 }
 
@@ -54,18 +55,18 @@ interface ParsedRERA {
 
 function parseRERA(input: string): ParsedRERA {
   const s = input.trim().toUpperCase()
-  const classic = s.match(/^TN\/(\d{2})\/(BUILDING|LAYOUT|REGULARISATION-LAYOUT)\/(\d{4})\/(\d{4})$/)
+  const classic = s.match(/^TN\/(\d{1,2})\/(BUILDING|LAYOUT|REGULARISATION-LAYOUT)\/(\d{1,6})\/(\d{4})$/)
   if (classic) {
-    const distCode = classic[1]
+    const distCode = classic[1].padStart(2, '0')
     return {
       format: 'classic', distCode, distName: TN_DISTRICT_CODES[distCode] || 'Unknown',
       projectType: PROJECT_TYPE_MAP[classic[2]] || classic[2],
       seq: classic[3], year: classic[4], isValid: true, raw: input.trim(),
     }
   }
-  const newFmt = s.match(/^TNRERA\/(\d{2})\/(BLG|LO|RLY)\/(\d{4})\/(\d{4})$/)
+  const newFmt = s.match(/^TNRERA\/(\d{1,2})\/(BLG|LO|RLY)\/(\d{1,6})\/(\d{4})$/)
   if (newFmt) {
-    const distCode = newFmt[1]
+    const distCode = newFmt[1].padStart(2, '0')
     return {
       format: 'new2026', distCode, distName: TN_DISTRICT_CODES[distCode] || 'Unknown',
       projectType: PROJECT_TYPE_MAP[newFmt[2]] || newFmt[2],

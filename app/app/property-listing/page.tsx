@@ -31,7 +31,7 @@ interface Filters {
 }
 
 // ─── Constants ───────────────────────────────────────────────────────────────
-const CITIES = ['Chennai', 'Bengaluru', 'Coimbatore', 'Madurai', 'Hyderabad', 'Mumbai', 'Pune']
+const CITIES = ['Chennai']
 const PROPERTY_TYPES = ['Apartment', 'Villa', 'Plot', 'Penthouse', 'Studio', 'Duplex', 'Commercial']
 const BHK_OPTIONS = ['1RK', '1BHK', '2BHK', '3BHK', '4BHK', '5BHK+']
 const SORT_OPTIONS = [
@@ -46,7 +46,7 @@ const AI_PROMPTS = [
   'Gated community in ECR…',
   'Studio apartment for investment…',
   'RERA-verified luxury homes…',
-  '2BHK with parking in Bangalore…',
+  '2BHK with parking near OMR…',
 ]
 const BUDGET_PRESETS = [
   { label: 'Under ₹30L', max: 3000000 },
@@ -1018,7 +1018,7 @@ function PropertyListingContent() {
             {[
               { icon: TrendingUp, label: 'Live Listings', val: allProperties.length },
               { icon: Shield, label: 'RERA Verified', val: allProperties.filter(p => norm(p).isVerified).length },
-              { icon: Star, label: 'Cities', val: new Set(allProperties.map(p => norm(p).city).filter(Boolean)).size },
+              { icon: MapPin, label: 'Localities', val: new Set(allProperties.map(p => norm(p).locality).filter(Boolean)).size },
             ].map(({ icon: Icon, label, val }) => (
               <div key={label} className="flex items-center gap-2 text-xs text-zinc-500">
                 <Icon className="w-3.5 h-3.5 text-amber-400/60" />

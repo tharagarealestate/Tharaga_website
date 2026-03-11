@@ -61,7 +61,7 @@ export const DEMO_DATA = {
           property: {
             id: 'demo-prop-1',
             title: 'Luxury 3BHK Apartment',
-            location: 'Whitefield, Bangalore',
+            location: 'Perumbakkam, Chennai',
           },
         },
       },
@@ -82,7 +82,7 @@ export const DEMO_DATA = {
           property: {
             id: 'demo-prop-2',
             title: 'Premium Villa',
-            location: 'Indiranagar, Bangalore',
+            location: 'Anna Nagar, Chennai',
           },
         },
       },
@@ -103,7 +103,7 @@ export const DEMO_DATA = {
           property: {
             id: 'demo-prop-3',
             title: 'Modern 2BHK Flat',
-            location: 'Koramangala, Bangalore',
+            location: 'Velachery, Chennai',
           },
         },
       },
@@ -133,7 +133,7 @@ export const DEMO_DATA = {
         property: {
           id: 'demo-prop-2',
           title: 'Premium Villa',
-          location: 'Indiranagar, Bangalore',
+          location: 'Anna Nagar, Chennai',
         },
       },
       {
@@ -149,7 +149,7 @@ export const DEMO_DATA = {
         property: {
           id: 'demo-prop-1',
           title: 'Luxury 3BHK Apartment',
-          location: 'Whitefield, Bangalore',
+          location: 'Perumbakkam, Chennai',
         },
       },
     ],
@@ -176,7 +176,7 @@ export const DEMO_DATA = {
           property: {
             id: 'demo-prop-1',
             title: 'Luxury 3BHK Apartment',
-            location: 'Whitefield, Bangalore',
+            location: 'Perumbakkam, Chennai',
           },
         },
       },
@@ -199,7 +199,7 @@ export const DEMO_DATA = {
         property: {
           id: 'demo-prop-3',
           title: 'Modern 2BHK Flat',
-          location: 'Koramangala, Bangalore',
+          location: 'Velachery, Chennai',
         },
       },
     },

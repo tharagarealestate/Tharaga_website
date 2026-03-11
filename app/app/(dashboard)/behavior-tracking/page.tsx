@@ -400,8 +400,8 @@ function BehaviorTrackingTester() {
     },
 
     async trackSearch() {
-      await tracking.trackSearch('2BHK in Bangalore', {
-        city: 'Bangalore',
+      await tracking.trackSearch('2BHK in Chennai', {
+        city: 'Chennai',
         bhk: '2',
         priceRange: '50L-1Cr',
         resultsCount: 25,

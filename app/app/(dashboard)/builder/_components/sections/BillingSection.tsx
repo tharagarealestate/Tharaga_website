@@ -70,7 +70,7 @@ export function BillingSection({ onNavigate }: BillingSectionProps) {
             <div>
               <h2 className="text-sm font-semibold text-zinc-100">Current Plan: {trialStatus.isTrial ? 'Free Trial' : 'Professional'}</h2>
               <p className="text-xs text-zinc-500">
-                {trialStatus.isTrial ? trialStatus.formattedDaysLeft : 'Next billing: March 1, 2024'}
+                {trialStatus.isTrial ? trialStatus.formattedDaysLeft : `Subscription active`}
               </p>
             </div>
           </div>

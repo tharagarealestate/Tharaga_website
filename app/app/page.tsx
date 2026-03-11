@@ -157,7 +157,7 @@ export default function HomePage() {
                 {activeTab === 'buyer' ? (
                   <div className="animate-fade-in">
                     <p className="text-zinc-400 mb-6 text-base">
-                      Browse 500+ RERA-verified properties across Tamil Nadu — zero brokerage, direct from builders.
+                      Browse RERA-verified properties in Chennai — zero brokerage, direct from builders.
                     </p>
                     <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
                       <Link
@@ -380,7 +380,7 @@ export default function HomePage() {
                   {[
                     { label: 'Brokerage fees', value: '₹0', color: 'text-emerald-400' },
                     { label: 'Property verification', value: 'RERA Only', color: 'text-amber-400' },
-                    { label: 'Region coverage', value: 'Tamil Nadu', color: 'text-blue-400' },
+                    { label: 'Region coverage', value: 'Chennai', color: 'text-blue-400' },
                     { label: 'AI-powered features', value: 'Lead Scoring', color: 'text-purple-400' },
                   ].map((stat) => (
                     <div key={stat.label} className="flex items-center justify-between p-4 bg-zinc-800/50 rounded-xl">

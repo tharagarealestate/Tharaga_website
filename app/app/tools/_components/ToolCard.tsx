@@ -65,7 +65,7 @@ export default function ToolCard({
         {[
           { label: 'RERA Compliant' },
           { label: 'Real-time Data' },
-          { label: 'Trusted by 2000+ Buyers' },
+          { label: 'Chennai Market Intelligence' },
         ].map(({ label }) => (
           <span key={label} className="text-xs text-zinc-500 flex items-center gap-1.5">
             <span className="w-1 h-1 rounded-full bg-amber-500/60 inline-block" />

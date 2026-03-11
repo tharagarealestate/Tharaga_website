@@ -133,7 +133,7 @@ export default function PricingPage() {
                 <div className="flex flex-wrap items-center justify-center gap-2">
                   <TrustBadge type="verified" label="100% Secure" size="sm" />
                   <TrustBadge type="certified" label="RERA Certified" size="sm" />
-                  <TrustBadge type="award" label="Trusted by 500+ Builders" size="sm" />
+                  <TrustBadge type="award" label="Chennai's #1 Builder Platform" size="sm" />
                 </div>
               </div>
             </div>

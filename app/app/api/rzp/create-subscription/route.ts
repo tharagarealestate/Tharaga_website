@@ -1,185 +1,168 @@
 // =============================================
-// RAZORPAY SUBSCRIPTION CREATION
-// Creates Razorpay subscription with builder_id in notes
+// RAZORPAY SUBSCRIPTION CREATION — THARAGA PRO
+// Single plan: ₹4,999/month | ₹49,992/year
+// Auto-creates Razorpay plan on first call
 // =============================================
 
-import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
-import Razorpay from 'razorpay';
+import { NextRequest, NextResponse } from 'next/server'
+import { createClient } from '@/lib/supabase/server'
+import Razorpay from 'razorpay'
 
-let razorpayInstance: Razorpay | null = null;
+export const runtime = 'nodejs'
+export const dynamic = 'force-dynamic'
 
-function getRazorpayClient(): Razorpay {
-  if (!razorpayInstance) {
-    razorpayInstance = new Razorpay({
-      key_id: process.env.RAZORPAY_KEY_ID || '',
-      key_secret: process.env.RAZORPAY_KEY_SECRET || '',
-    });
-  }
-  return razorpayInstance;
+// Module-level plan ID cache (persists across requests in warm serverless container)
+const _planCache: Record<string, string> = {}
+
+function getRazorpay(): Razorpay {
+  return new Razorpay({
+    key_id: process.env.RAZORPAY_KEY_ID!,
+    key_secret: process.env.RAZORPAY_KEY_SECRET!,
+  })
 }
 
-export const runtime = 'nodejs';
-
 /**
- * Create Razorpay subscription
+ * Get or create a Razorpay Plan for Tharaga Pro.
+ * Priority: env var → module cache → create new plan in Razorpay
  */
+async function getOrCreatePlanId(billing_cycle: 'monthly' | 'yearly'): Promise<string> {
+  const isYearly = billing_cycle === 'yearly'
+  const envKey = isYearly ? 'RZP_PLAN_PRO_ANNUAL' : 'RZP_PLAN_PRO_MONTHLY'
+
+  // 1. Env var (fastest path — set after first run)
+  if (process.env[envKey]) return process.env[envKey]!
+
+  // 2. Module-level cache (within same process lifetime)
+  if (_planCache[billing_cycle]) return _planCache[billing_cycle]
+
+  // 3. Create plan programmatically in Razorpay
+  const rzp = getRazorpay()
+  const plan = await (rzp.plans as any).create({
+    period: isYearly ? 'yearly' : 'monthly',
+    interval: 1,
+    item: {
+      name: isYearly ? 'Tharaga Pro (Annual)' : 'Tharaga Pro',
+      amount: isYearly ? 4999200 : 499900, // paise: ₹49,992 | ₹4,999
+      currency: 'INR',
+      description: isYearly
+        ? 'Tharaga Pro Annual — Everything Unlimited. Save 17%.'
+        : 'Tharaga Pro — Everything Unlimited. Chennai\'s #1 Builder Platform.',
+    },
+    notes: {
+      plan_type: 'tharaga_pro',
+      billing_cycle,
+    },
+  })
+
+  _planCache[billing_cycle] = plan.id
+
+  // Log for operator to set in env (avoids recreating on cold starts)
+  console.log(
+    `✅ Razorpay plan created: ${plan.id}\n` +
+    `   Add to .env: ${envKey}=${plan.id}`
+  )
+
+  return plan.id
+}
+
 export async function POST(req: NextRequest) {
+  // Validate Razorpay credentials
+  if (!process.env.RAZORPAY_KEY_ID || !process.env.RAZORPAY_KEY_SECRET) {
+    return NextResponse.json({ error: 'Razorpay not configured' }, { status: 500 })
+  }
+
   try {
-    const supabase = await createClient();
-
-    // Get authenticated user
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    const supabase = await createClient()
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
     if (authError || !user) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Verify user is a builder
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', user.id)
-      .single();
+    const body = await req.json().catch(() => ({}))
+    const billing_cycle: 'monthly' | 'yearly' =
+      body.billing_cycle === 'yearly' ? 'yearly' : 'monthly'
 
-    if (profile?.role !== 'builder') {
-      return NextResponse.json(
-        { error: 'Only builders can create subscriptions' },
-        { status: 403 }
-      );
-    }
+    const rzp = getRazorpay()
 
-    const body = await req.json();
-    const { plan = 'starter', annual = false, email, phone, customer = {}, notes = {} } = body;
-
-    // Validate Razorpay credentials
-    if (!process.env.RAZORPAY_KEY_ID || !process.env.RAZORPAY_KEY_SECRET) {
-      return NextResponse.json(
-        { error: 'Razorpay not configured' },
-        { status: 500 }
-      );
-    }
-
-    // Get plan IDs from environment - New pricing structure (Starter, Professional, Enterprise)
-    const plan_starter_monthly = process.env.RZP_PLAN_STARTER_MONTHLY;
-    const plan_starter_annual = process.env.RZP_PLAN_STARTER_ANNUAL;
-    const plan_professional_monthly = process.env.RZP_PLAN_PROFESSIONAL_MONTHLY;
-    const plan_professional_annual = process.env.RZP_PLAN_PROFESSIONAL_ANNUAL;
-    const plan_enterprise_monthly = process.env.RZP_PLAN_ENTERPRISE_MONTHLY;
-    const plan_enterprise_annual = process.env.RZP_PLAN_ENTERPRISE_ANNUAL;
-
-    // Validate at least monthly plans are configured
-    if (!plan_starter_monthly || !plan_professional_monthly || !plan_enterprise_monthly) {
-      return NextResponse.json(
-        { error: 'Razorpay plan IDs not configured. Please set RZP_PLAN_STARTER_MONTHLY, RZP_PLAN_PROFESSIONAL_MONTHLY, and RZP_PLAN_ENTERPRISE_MONTHLY' },
-        { status: 500 }
-      );
-    }
-
-    // Determine plan ID based on tier and billing cycle
-    const plan_id = (() => {
-      if (plan === 'starter') {
-        return annual ? (plan_starter_annual || plan_starter_monthly) : plan_starter_monthly;
-      }
-      if (plan === 'professional' || plan === 'pro') {
-        return annual ? (plan_professional_annual || plan_professional_monthly) : plan_professional_monthly;
-      }
-      if (plan === 'enterprise') {
-        return annual ? (plan_enterprise_annual || plan_enterprise_monthly) : plan_enterprise_monthly;
-      }
-      // Fallback to professional if plan not recognized
-      console.warn(`Unknown plan "${plan}", defaulting to professional`);
-      return annual ? (plan_professional_annual || plan_professional_monthly) : plan_professional_monthly;
-    })();
-
-    // Create or get customer
-    let customer_id = customer.id || null;
-    if (!customer_id) {
-      const cust = await getRazorpayClient().customers.create({
-        name: customer.name || user.user_metadata?.name || '',
-        email: email || user.email || customer.email || '',
-        contact: phone || user.user_metadata?.phone || customer.contact || '',
-        notes: {
-          ...notes,
-          builder_id: user.id, // Store builder_id in customer notes too
-        },
-      });
-      customer_id = cust.id;
-    }
-
-    // Create subscription with builder_id in notes
-    const subscription = await getRazorpayClient().subscriptions.create({
-      plan_id,
-      customer_notify: 1,
-      total_count: annual ? 12 : 1, // For monthly plans, total_count=1 (auto-renew); for annual, set appropriate count
-      customer_id,
-      notes: {
-        ...notes,
-        builder_id: user.id, // ✅ CRITICAL: Store builder_id for webhook extraction
-        user_id: user.id,
-        email: email || user.email,
-        plan,
-        annual: String(annual),
-        source: notes.source || 'pricing_page',
-      },
-    });
-
-    // Store subscription in database
+    // ─── Create or reuse Razorpay customer ───────────────────────────────────
+    let customer_id: string | undefined
     try {
-      const now = new Date();
-      const periodEnd = new Date(now);
-      periodEnd.setMonth(periodEnd.getMonth() + (annual ? 12 : 1));
+      const { data: existingSub } = await supabase
+        .from('builder_subscriptions')
+        .select('razorpay_customer_id')
+        .eq('builder_id', user.id)
+        .not('razorpay_customer_id', 'is', null)
+        .maybeSingle()
 
-      await supabase
-        .from('user_subscriptions')
-        .upsert({
-          user_id: user.id,
+      if (existingSub?.razorpay_customer_id) {
+        customer_id = existingSub.razorpay_customer_id
+      } else {
+        const cust = await (rzp.customers as any).create({
+          name: user.user_metadata?.full_name || user.user_metadata?.name || user.email!.split('@')[0],
+          email: user.email!,
+          contact: user.user_metadata?.phone || '',
+          notes: { builder_id: user.id },
+        })
+        customer_id = cust.id
+      }
+    } catch (e) {
+      console.warn('[Razorpay] Customer upsert failed (continuing):', e)
+    }
+
+    // ─── Get or create plan ───────────────────────────────────────────────────
+    const plan_id = await getOrCreatePlanId(billing_cycle)
+
+    // ─── Create subscription ──────────────────────────────────────────────────
+    const subscription = await (rzp.subscriptions as any).create({
+      plan_id,
+      customer_id,
+      customer_notify: 1,
+      quantity: 1,
+      total_count: billing_cycle === 'yearly' ? 10 : 120, // 10 years max
+      notes: {
+        builder_id: user.id,
+        user_id: user.id,
+        email: user.email,
+        plan: 'tharaga_pro',
+        billing_cycle,
+      },
+    })
+
+    // ─── Persist to builder_subscriptions ────────────────────────────────────
+    await supabase
+      .from('builder_subscriptions')
+      .upsert(
+        {
+          builder_id: user.id,
           razorpay_subscription_id: subscription.id,
           razorpay_customer_id: customer_id,
-          status: subscription.status === 'created' ? 'active' : subscription.status,
-          billing_cycle: annual ? 'yearly' : 'monthly',
-          current_period_start: now.toISOString(),
-          current_period_end: periodEnd.toISOString(),
-          metadata: {
-            plan,
-            annual,
-            razorpay_plan_id: plan_id,
-            ...notes,
-          },
-        }, {
-          onConflict: 'razorpay_subscription_id',
-        });
-    } catch (dbError) {
-      console.error('Error storing subscription in database:', dbError);
-      // Continue even if DB update fails - subscription is created in Razorpay
-    }
+          razorpay_plan_id: plan_id,
+          tier: 'trial',          // Stays trial until payment is verified
+          status: 'created',
+          billing_cycle,
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: 'builder_id' }
+      )
+      .then(({ error }) => {
+        if (error) console.warn('[Razorpay] DB upsert failed:', error.message)
+      })
 
     return NextResponse.json({
-      id: subscription.id,
+      subscription_id: subscription.id,
       short_url: subscription.short_url,
-      status: subscription.status,
-      customer_id,
-    });
-
+      key_id: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
+      prefill: {
+        name: user.user_metadata?.full_name || user.user_metadata?.name || '',
+        email: user.email || '',
+        contact: user.user_metadata?.phone || '',
+      },
+    })
   } catch (error: any) {
-    console.error('❌ Razorpay subscription creation error:', error);
+    console.error('[Razorpay] create-subscription error:', error)
     return NextResponse.json(
       { error: error.message || 'Failed to create subscription' },
       { status: 500 }
-    );
+    )
   }
 }
-
-
-
-
-
-
-
-
-
-
-
-

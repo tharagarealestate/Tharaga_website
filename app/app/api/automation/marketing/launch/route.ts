@@ -412,19 +412,18 @@ export async function POST(request: NextRequest) {
           status:          'active',
           target_audience: content.targetAudience,
           content_data: {
-            email_subject:   content.emailSubject,
-            email_body_html: content.emailBodyHTML,
-            social_post:     content.socialPost,
-            whatsapp_msg:    content.whatsappMsg,
-            highlights:      content.highlights,
+            email_subject:      content.emailSubject,
+            email_body_html:    content.emailBodyHTML,
+            social_post:        content.socialPost,
+            whatsapp_msg:       content.whatsappMsg,
+            whatsapp_share_link: waShareUrl,
+            highlights:         content.highlights,
           },
           analysis_data: {
-            price_segment:     content.priceSegment,
-            target_audience:   content.targetAudience,
+            price_segment:   content.priceSegment,
+            target_audience: content.targetAudience,
           },
-          whatsapp_share_link: waShareUrl,
-          social_post_text:    content.socialPost,
-          scheduled_at:        new Date().toISOString(),
+          scheduled_at: new Date().toISOString(),
         })
         .select('id')
         .single()

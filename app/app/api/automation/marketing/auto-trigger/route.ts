@@ -301,7 +301,7 @@ export async function POST(req: NextRequest) {
     // Fetch property data to verify it exists and get status
     const { data: property, error: propertyError } = await supabase
       .from('properties')
-      .select('id, builder_id, status, marketing_automation_enabled')
+      .select('id, builder_id, status, listing_status, marketing_automation_enabled')
       .eq('id', property_id)
       .single()
 
@@ -312,13 +312,15 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    // Only trigger if property is active and automation is enabled
-    if (property.status !== 'active' || property.marketing_automation_enabled === false) {
+    // Only trigger if property is listed/active
+    // Note: properties table uses listing_status (not status)
+    const activeStatuses = ['active', 'available', 'published']
+    const effectiveStatus = (property as any).listing_status || (property as any).status || ''
+    if (!activeStatuses.includes(effectiveStatus) && effectiveStatus !== '') {
       return NextResponse.json({
         success: false,
-        error: 'Property is not active or marketing automation is disabled',
-        property_status: property.status,
-        automation_enabled: property.marketing_automation_enabled,
+        error: 'Property is not active',
+        listing_status: effectiveStatus,
       }, { status: 400 })
     }
 

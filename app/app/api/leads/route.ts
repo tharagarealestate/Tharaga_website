@@ -403,6 +403,24 @@ export async function POST(request: NextRequest) {
       leadsCache.invalidate(`stats:${builderId}`)
     }
 
+    // ── Fire-and-forget: email notifications + drip sequence + SmartScore ──
+    // Non-blocking — lead creation already succeeded, these run in background
+    const baseUrl = request.nextUrl.origin || 'https://tharaga.co.in'
+    Promise.all([
+      // 1. Notify builder + send buyer confirmation + schedule drip
+      fetch(`${baseUrl}/api/automation/email/notify-lead`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ lead_id: lead.id, property_id }),
+      }).catch(e => console.error('[Leads] notify-lead error:', e)),
+      // 2. Calculate AI SmartScore for the new lead
+      fetch(`${baseUrl}/api/smartscore/calculate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ lead_id: lead.id }),
+      }).catch(e => console.error('[Leads] smartscore error:', e)),
+    ]).catch(() => {})
+
     return NextResponse.json({
       ok: true, success: true, id: lead.id,
       message: 'Enquiry submitted successfully'

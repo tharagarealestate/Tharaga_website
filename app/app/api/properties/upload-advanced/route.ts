@@ -412,23 +412,19 @@ export const POST = secureApiRoute(
         // Non-critical
       });
     
-    // Trigger AI automation marketing (fire and forget)
-    try {
-      const marketingUrl = new URL('/api/automation/marketing/auto-trigger', request.url)
-      fetch(marketingUrl.toString(), {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          property_id: property.id,
-        }),
-      }).catch(err => {
-        console.error('[Property Upload] Marketing automation trigger failed (non-critical):', err)
-      })
-    } catch (triggerError) {
-      console.error('[Property Upload] Error triggering marketing automation (non-critical):', triggerError)
-    }
+    // Trigger AI marketing automation (fire and forget) — parallel execution
+    const _mktPayload = JSON.stringify({ property_id: property.id })
+    const _mktHeaders = { 'Content-Type': 'application/json' }
+    Promise.all([
+      // Primary: self-contained launch (works without API keys, sends builder email instantly)
+      fetch(new URL('/api/automation/marketing/launch', request.url).toString(), {
+        method: 'POST', headers: _mktHeaders, body: _mktPayload,
+      }).catch(e => console.error('[Property Upload] launch trigger failed (non-critical):', e)),
+      // Secondary: intelligence-engine route (AI-enhanced, graceful fallback)
+      fetch(new URL('/api/automation/marketing/auto-trigger', request.url).toString(), {
+        method: 'POST', headers: _mktHeaders, body: _mktPayload,
+      }).catch(e => console.error('[Property Upload] auto-trigger failed (non-critical):', e)),
+    ]).catch(() => {})
     
     return NextResponse.json({
       success: true,

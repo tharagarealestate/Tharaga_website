@@ -129,7 +129,14 @@ export const POST = secureApiRoute(
       // Non-critical - processing can happen via cron
     }
 
-    // 4. Return immediate response to user
+    // 4. Trigger AI marketing automation (fire and forget)
+    const _mktBody    = JSON.stringify({ property_id: property.id })
+    const _mktHeaders = { 'Content-Type': 'application/json' }
+    fetch(new URL('/api/automation/marketing/launch', request.url).toString(), {
+      method: 'POST', headers: _mktHeaders, body: _mktBody,
+    }).catch(e => console.error('[Property Upload] launch trigger failed (non-critical):', e))
+
+    // 5. Return immediate response to user
     return NextResponse.json({
       success: true,
       message: 'Property uploaded successfully. Generating leads...',

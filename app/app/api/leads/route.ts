@@ -150,10 +150,9 @@ export async function GET(request: NextRequest) {
         id,
         name,
         email,
-        phone,
-        score,
+        phone_number,
+        lead_score,
         created_at,
-        updated_at,
         builder_id,
         lead_scores:lead_scores!user_id (
           category,
@@ -171,13 +170,13 @@ export async function GET(request: NextRequest) {
 
     // OPTIMIZED: Apply filters at database level (not post-query)
     if (search) {
-      query = query.or(`email.ilike.%${search}%,name.ilike.%${search}%,phone.ilike.%${search}%`)
+      query = query.or(`email.ilike.%${search}%,name.ilike.%${search}%,phone_number.ilike.%${search}%`)
     }
     if (scoreMin !== null) {
-      query = query.gte('score', scoreMin)
+      query = query.gte('lead_score', scoreMin)
     }
     if (scoreMax !== null) {
-      query = query.lte('score', scoreMax)
+      query = query.lte('lead_score', scoreMax)
     }
     if (category) {
       // Map category to score range for leads table
@@ -189,12 +188,12 @@ export async function GET(request: NextRequest) {
         'Low Quality': [0, 1],
       }
       const [min, max] = categoryScoreMap[category] || [0, 10]
-      query = query.gte('score', min).lte('score', max)
+      query = query.gte('lead_score', min).lte('lead_score', max)
     }
 
     // OPTIMIZED: Apply sorting and pagination at database level
     query = query
-      .order(sortBy === 'score' ? 'score' : 'created_at', { ascending: sortOrder === 'asc' })
+      .order(sortBy === 'score' ? 'lead_score' : 'created_at', { ascending: sortOrder === 'asc' })
       .range(offset, offset + limit - 1)
 
     const { data: leads, error: leadsError, count } = await query
@@ -221,11 +220,11 @@ export async function GET(request: NextRequest) {
         id: lead.id,
         email: lead.email || '',
         full_name: lead.name || lead.email?.split('@')[0] || 'Unknown',
-        phone: lead.phone || null,
-        score: lead.score || 0,
-        category: scoreData?.category || getCategory(lead.score || 0),
+        phone: lead.phone_number || null,
+        score: lead.lead_score || 0,
+        category: scoreData?.category || getCategory(lead.lead_score || 0),
         created_at: lead.created_at,
-        last_activity: lead.updated_at || lead.created_at,
+        last_activity: lead.created_at,
         score_breakdown: {
           budget_alignment: scoreData?.budget_alignment || 0,
           engagement: scoreData?.engagement_score || 0,
@@ -293,8 +292,7 @@ export async function POST(request: NextRequest) {
   try {
     const { supabase } = createClientFromRequest(request)
     const body = await request.json()
-    const { name, email, phone, message, property_id, score,
-            preferred_contact, timeline } = body
+    const { name, email, phone, message, property_id, score } = body
 
     // ── Try authenticated path first ──────────────────────────────────────
     const { data: { user } } = await supabase.auth.getUser()
@@ -312,13 +310,11 @@ export async function POST(request: NextRequest) {
         .insert({
           name: name || email?.split('@')[0] || phone || 'Unknown',
           email: email || null,
-          phone: phone || null,
+          phone_number: phone || null,
           message,
           property_id: property_id || null,
-          score: score || 5,
+          lead_score: Math.min(Math.max(score || 5, 0), 10),
           builder_id: user.id,
-          preferred_contact: preferred_contact || null,
-          timeline: timeline || null,
         })
         .select()
         .single()
@@ -368,32 +364,56 @@ export async function POST(request: NextRequest) {
 
     const builderId = property?.builder_id || null
 
-    // Rule-based smart score based on what contact info was provided
-    const initialScore = phone && email ? 20 : phone ? 15 : 10
+    // Rule-based smart score based on what contact info was provided (clamped to 0-10 range)
+    const initialScore = phone && email ? 8 : phone ? 6 : 4
 
-    const { data: lead, error: insertError } = await serviceClient
+    // Build insert payload — no preferred_contact / timeline (columns don't exist in schema)
+    const leadPayload: Record<string, any> = {
+      name: name || 'Anonymous Buyer',
+      email: email || null,
+      phone_number: phone || null,
+      message: message || `Enquiry about: ${property?.title || property_id}`,
+      property_id,
+      builder_id: builderId,
+      lead_score: initialScore,
+      status: 'new',
+      source: 'property_page',
+      created_at: new Date().toISOString(),
+    }
+
+    let lead: any = null
+    let insertError: any = null
+
+    // First attempt: with builder_id
+    const { data: lead1, error: err1 } = await serviceClient
       .from('leads')
-      .insert({
-        name: name || 'Anonymous Buyer',
-        email: email || null,
-        phone: phone || null,
-        message: message || `Enquiry about: ${property?.title || property_id}`,
-        property_id,
-        builder_id: builderId,
-        score: initialScore,
-        status: 'new',
-        source: 'property_page',
-        preferred_contact: preferred_contact || 'phone',
-        timeline: timeline || null,
-        created_at: new Date().toISOString(),
-      })
+      .insert(leadPayload)
       .select()
       .single()
 
-    if (insertError) {
+    if (err1) {
+      // If FK constraint fails on builder_id, retry without it so lead is never lost
+      if (err1.code === '23503' && err1.message?.includes('builder_id')) {
+        console.warn('[Leads API] builder_id FK constraint — retrying without builder_id')
+        const { data: lead2, error: err2 } = await serviceClient
+          .from('leads')
+          .insert({ ...leadPayload, builder_id: null })
+          .select()
+          .single()
+        lead = lead2
+        insertError = err2
+      } else {
+        lead = lead1
+        insertError = err1
+      }
+    } else {
+      lead = lead1
+    }
+
+    if (insertError || !lead) {
       console.error('[Leads API] Public insert error:', insertError)
       return NextResponse.json({
-        success: false, error: 'Failed to submit enquiry', message: insertError.message
+        success: false, error: 'Failed to submit enquiry', message: insertError?.message
       }, { status: 500, headers: corsHeaders })
     }
 
@@ -470,19 +490,19 @@ async function calculateStatsOptimized(
       // Fallback to leads table
       let leadsStatsQuery = supabase
         .from('leads')
-        .select('score', { count: 'exact' })
+        .select('lead_score', { count: 'exact' })
         .eq('builder_id', builderId)
 
       if (filters.scoreMin !== null && filters.scoreMin !== undefined) {
-        leadsStatsQuery = leadsStatsQuery.gte('score', filters.scoreMin)
+        leadsStatsQuery = leadsStatsQuery.gte('lead_score', filters.scoreMin)
       }
       if (filters.scoreMax !== null && filters.scoreMax !== undefined) {
-        leadsStatsQuery = leadsStatsQuery.lte('score', filters.scoreMax)
+        leadsStatsQuery = leadsStatsQuery.lte('lead_score', filters.scoreMax)
       }
 
       const { data: allLeads, count: leadsCount } = await leadsStatsQuery
 
-      const scores = (allLeads || []).map((l: any) => l.score || 0)
+      const scores = (allLeads || []).map((l: any) => l.lead_score || 0)
       const total = leadsCount || 0
       const hotLeads = scores.filter((s: number) => s >= 8).length
       const warmLeads = scores.filter((s: number) => s >= 5 && s < 8).length

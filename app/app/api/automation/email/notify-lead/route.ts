@@ -11,9 +11,19 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { getAdminClient } from '@/lib/supabase/admin'
 
+export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
+
+// Inline client per request — avoids Netlify serverless cold-start crash with singletons
+async function getDb() {
+  const { createClient } = await import('@supabase/supabase-js')
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    { auth: { autoRefreshToken: false, persistSession: false } }
+  )
+}
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -289,7 +299,7 @@ function dripEmail3HTML(opts: { buyerName: string; propertyTitle: string; proper
 
 // ─── Schedule drip sequence for a lead ────────────────────────────────────────
 
-async function scheduleDripSequence(db: ReturnType<typeof getAdminClient>, opts: {
+async function scheduleDripSequence(db: any, opts: {
   leadId: string
   propertyId: string
   builderId: string
@@ -373,12 +383,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: false, error: 'lead_id required' }, { status: 400 })
     }
 
-    const db = getAdminClient()
+    const db = await getDb()
 
     // ── Fetch lead ──────────────────────────────────────────────────────────
     const { data: lead, error: leadErr } = await db
       .from('leads')
-      .select('id,name,email,phone,message,score,builder_id,property_id')
+      .select('id,name,email,phone_number,message,lead_score,builder_id,property_id')
       .eq('id', lead_id)
       .single()
 
@@ -433,18 +443,18 @@ export async function POST(request: NextRequest) {
         builderName,
         leadName:      lead.name || 'Unknown Buyer',
         leadEmail:     lead.email || '',
-        leadPhone:     lead.phone || '',
+        leadPhone:     lead.phone_number || '',
         propertyTitle,
         propertyId:    effectivePropertyId || '',
         message:       lead.message || '',
-        score:         lead.score || 0,
-        leadId:        lead.id,
+        score:         lead.lead_score || 0,
+        leadId:        String(lead.id),
       })
       const msgId = await sendViaResend(
         builderEmail,
         `🔔 New Lead: ${lead.name || 'Someone'} enquired about "${propertyTitle}"`,
         html,
-        { type: 'builder-notification', lead_id: lead.id, builder_id: builderId || '' }
+        { type: 'builder-notification', lead_id: String(lead.id), builder_id: builderId || '' }
       )
       results.builder_email = msgId ? 'sent' : 'skipped_no_key'
 
@@ -459,7 +469,7 @@ export async function POST(request: NextRequest) {
         provider_message_id: msgId || null,
         sent_at:             msgId ? new Date().toISOString() : null,
         metadata:            { type: 'builder_notification' },
-      }).catch(() => {})
+      }).catch((e: any) => console.warn('[NotifyLead] delivery log error:', e.message))
     }
 
     // ── B. Buyer confirmation ───────────────────────────────────────────────
@@ -476,7 +486,7 @@ export async function POST(request: NextRequest) {
         lead.email,
         `✅ Enquiry received for "${propertyTitle}" — builder contacts you within 2 hrs`,
         html,
-        { type: 'buyer-confirmation', lead_id: lead.id }
+        { type: 'buyer-confirmation', lead_id: String(lead.id) }
       )
       results.buyer_email = msgId ? 'sent' : 'skipped_no_key'
 
@@ -491,13 +501,13 @@ export async function POST(request: NextRequest) {
         provider_message_id: msgId || null,
         sent_at:             msgId ? new Date().toISOString() : null,
         metadata:            { type: 'buyer_confirmation' },
-      }).catch(() => {})
+      }).catch((e: any) => console.warn('[NotifyLead] delivery log error:', e.message))
     }
 
     // ── C. Schedule buyer drip sequence ────────────────────────────────────
     if (lead.email && effectivePropertyId && builderId) {
       await scheduleDripSequence(db, {
-        leadId:        lead.id,
+        leadId:        String(lead.id),
         propertyId:    effectivePropertyId,
         builderId,
         buyerName:     lead.name || 'There',

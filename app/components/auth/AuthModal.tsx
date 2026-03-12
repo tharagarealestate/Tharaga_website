@@ -173,7 +173,12 @@ export function AuthModal() {
     setMsg({ text: 'Redirecting to Google...', ok: true })
     try {
       const supabase = getSupabase()
-      const redirectTo = `${window.location.origin}/auth/callback`
+      // Pass the current page as `next` so auth/callback redirects back here.
+      // For builder pages → lands on /builder; for other pages → lands there too.
+      // Default fallback is /builder since most OAuth sign-ins are builder-initiated.
+      const currentPath = typeof window !== 'undefined' ? window.location.pathname : '/builder'
+      const nextPath = currentPath.startsWith('/builder') ? currentPath : '/builder'
+      const redirectTo = `${window.location.origin}/auth/callback?next=${encodeURIComponent(nextPath)}`
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: { redirectTo, queryParams: { prompt: 'select_account' } },

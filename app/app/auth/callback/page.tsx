@@ -15,8 +15,8 @@ import { Loader2 } from 'lucide-react'
  *    e.g. /auth/callback?code=...
  *    → We call exchangeCodeForSession() explicitly
  *
- * After session is established, redirect to homepage — Header shows auth state.
- * User clicks Dashboard from Header dropdown when ready.
+ * After session is established, redirect to `next` param or /builder by default.
+ * Builder-focused: signing in almost always means going to the dashboard.
  */
 export default function AuthCallbackPage() {
   const [status, setStatus] = useState('Signing you in...')
@@ -24,12 +24,29 @@ export default function AuthCallbackPage() {
   useEffect(() => {
     let cancelled = false
 
+    // Helper: getUser with timeout so it NEVER hangs forever
+    async function getUserWithTimeout(timeoutMs = 4000) {
+      const supabase = getSupabase()
+      return Promise.race([
+        supabase.auth.getUser(),
+        new Promise<{ data: { user: null }; error: Error }>((resolve) =>
+          setTimeout(
+            () => resolve({ data: { user: null }, error: new Error('timeout') }),
+            timeoutMs
+          )
+        ),
+      ])
+    }
+
     async function handleAuth() {
       try {
         const supabase = getSupabase()
 
-        // ── Handle PKCE flow (code in query params) ──
+        // Read destination — where to send the user after auth
         const params = new URLSearchParams(window.location.search)
+        const next = params.get('next') || '/builder'
+
+        // ── Handle PKCE flow (code in query params) ──
         const code = params.get('code')
         if (code) {
           setStatus('Exchanging auth code...')
@@ -43,17 +60,22 @@ export default function AuthCallbackPage() {
         }
 
         // ── For implicit flow, detectSessionInUrl handles hash fragments ──
-        // Give Supabase client time to process the hash tokens
+        // Give Supabase client time to process hash tokens
         await new Promise(resolve => setTimeout(resolve, 500))
 
-        // ── Get the authenticated user ──
+        if (cancelled) return
+
+        // ── Get the authenticated user — with guaranteed timeout ──
         setStatus('Loading your profile...')
-        const { data: { user }, error: userError } = await supabase.auth.getUser()
+        const { data: { user }, error: userError } = await getUserWithTimeout(4000)
 
         if (userError || !user) {
+          if (cancelled) return
           // Session might not be ready yet — wait and retry once
           await new Promise(resolve => setTimeout(resolve, 1000))
-          const { data: { user: retryUser } } = await supabase.auth.getUser()
+          if (cancelled) return
+
+          const { data: { user: retryUser } } = await getUserWithTimeout(3000)
 
           if (!retryUser) {
             console.error('[Auth Callback] No user after retry')
@@ -65,13 +87,19 @@ export default function AuthCallbackPage() {
 
         if (cancelled) return
 
-        // Redirect to homepage — user stays logged in, Header shows their profile
-        setStatus('Welcome! Redirecting...')
-        window.location.href = '/'
+        // ── Success — redirect to builder dashboard (or `next` param) ──
+        setStatus('Welcome back! Loading dashboard...')
+        // Small pause so the success message is visible
+        await new Promise(resolve => setTimeout(resolve, 400))
+        if (!cancelled) {
+          window.location.href = next
+        }
       } catch (err) {
         console.error('[Auth Callback] Exception:', err)
-        setStatus('Something went wrong. Redirecting...')
-        setTimeout(() => { window.location.href = '/' }, 1500)
+        if (!cancelled) {
+          setStatus('Something went wrong. Redirecting...')
+          setTimeout(() => { window.location.href = '/' }, 1500)
+        }
       }
     }
 
@@ -82,8 +110,12 @@ export default function AuthCallbackPage() {
   return (
     <div className="min-h-screen bg-zinc-950 flex items-center justify-center">
       <div className="text-center space-y-4">
-        <Loader2 className="w-8 h-8 text-amber-500 animate-spin mx-auto" />
-        <p className="text-sm text-zinc-400">{status}</p>
+        {/* Amber spinner matching AI-world design */}
+        <div className="relative w-12 h-12 mx-auto">
+          <div className="absolute inset-0 rounded-full border-2 border-amber-500/20" />
+          <div className="absolute inset-0 rounded-full border-t-2 border-amber-500 animate-spin" />
+        </div>
+        <p className="text-sm text-zinc-400 animate-pulse">{status}</p>
       </div>
     </div>
   )

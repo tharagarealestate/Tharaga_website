@@ -2,21 +2,51 @@
 
 import { useState, useEffect, useCallback, Suspense } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
+import dynamic from 'next/dynamic'
 import { useBuilderAuth } from './_components/BuilderAuthProvider'
-import { UnifiedSinglePageDashboard } from './_components/UnifiedSinglePageDashboard'
 
 /**
  * BuilderDashboardClient — uses BuilderAuthProvider context (set in layout.tsx).
- * NO duplicate auth check here — BuilderAuthProvider handles auth for ALL children.
- * This eliminates the race condition / infinite spinner caused by a second
- * standalone supabase.auth.getUser() call that could hang independently.
+ *
+ * Auth is entirely handled by BuilderAuthProvider in the layout:
+ *  - loading  → full-screen spinner (provider renders that, NOT this component)
+ *  - unauthed → BuilderAuthGate (provider renders that, NOT this component)
+ *  - authed   → this component renders with full dashboard
+ *
+ * NO duplicate auth check / redirect here. The previous router.push('/?login=true')
+ * was redundant AND caused a race-condition redirect in React 18 concurrent mode
+ * when onAuthStateChange fired SIGNED_IN mid-flight and briefly flashed
+ * isAuthenticated=false before the re-resolve completed.
  */
+
+// Dynamic import — defers the heavy dashboard bundle until after auth resolves.
+// This is the primary fix for the "initial load lag": auth check is fast (< 1s),
+// then the dashboard JS chunk streams in in the background.
+const UnifiedSinglePageDashboard = dynamic(
+  () =>
+    import('./_components/UnifiedSinglePageDashboard').then(
+      (m) => ({ default: m.UnifiedSinglePageDashboard })
+    ),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="flex flex-col items-center gap-4">
+          <div className="relative w-10 h-10">
+            <div className="absolute inset-0 rounded-full border-2 border-amber-500/20" />
+            <div className="absolute inset-0 rounded-full border-t-2 border-amber-500 animate-spin" />
+          </div>
+          <p className="text-zinc-500 text-sm animate-pulse">Loading dashboard…</p>
+        </div>
+      </div>
+    ),
+  }
+)
+
 function BuilderDashboardInner() {
   const router = useRouter()
   const searchParams = useSearchParams()
-
-  // Consume auth from BuilderAuthProvider (already wraps us via layout.tsx)
-  const { isAuthenticated, isLoading: authLoading } = useBuilderAuth()
+  const { isAuthenticated } = useBuilderAuth()
 
   // Derive activeSection from URL search params
   const sectionFromUrl = searchParams.get('section') || 'overview'
@@ -34,34 +64,23 @@ function BuilderDashboardInner() {
         setActiveSection(event.detail.section)
       }
     }
-
     window.addEventListener('dashboard-section-change', handleCustomSectionChange as EventListener)
     return () => {
       window.removeEventListener('dashboard-section-change', handleCustomSectionChange as EventListener)
     }
   }, [])
 
-  // Redirect if not authenticated after auth resolves
-  useEffect(() => {
-    if (!authLoading && !isAuthenticated) {
-      router.push('/?login=true')
-    }
-  }, [authLoading, isAuthenticated, router])
-
   // Handle section change — use Next.js router
-  const handleSectionChange = useCallback((section: string) => {
-    setActiveSection(section)
-    router.push(`/builder?section=${section}`, { scroll: false })
-  }, [router])
+  const handleSectionChange = useCallback(
+    (section: string) => {
+      setActiveSection(section)
+      router.push(`/builder?section=${section}`, { scroll: false })
+    },
+    [router]
+  )
 
-  if (authLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-10 w-10 border-2 border-zinc-700 border-t-amber-400" />
-      </div>
-    )
-  }
-
+  // Safety: if somehow mounted while unauthenticated (shouldn't happen — layout gate
+  // prevents it) just render nothing rather than redirecting.
   if (!isAuthenticated) return null
 
   return (
@@ -75,11 +94,16 @@ function BuilderDashboardInner() {
 // Wrap in Suspense because useSearchParams needs it
 export default function BuilderDashboardClient() {
   return (
-    <Suspense fallback={
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-10 w-10 border-2 border-zinc-700 border-t-amber-400" />
-      </div>
-    }>
+    <Suspense
+      fallback={
+        <div className="flex items-center justify-center min-h-[60vh]">
+          <div className="relative w-10 h-10">
+            <div className="absolute inset-0 rounded-full border-2 border-amber-500/20" />
+            <div className="absolute inset-0 rounded-full border-t-2 border-amber-500 animate-spin" />
+          </div>
+        </div>
+      }
+    >
       <BuilderDashboardInner />
     </Suspense>
   )

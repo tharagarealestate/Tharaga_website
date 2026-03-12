@@ -349,8 +349,10 @@ export async function POST(request: NextRequest) {
   const startTime = Date.now()
   let propertyId = ''
   let builderId  = ''
+  let _step = 0 // debug step tracker
 
   try {
+    _step = 1
     const body = await request.json()
     propertyId = body.property_id
 
@@ -358,8 +360,16 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: false, error: 'property_id required' }, { status: 400 })
     }
 
-    const db = getAdminClient()
+    _step = 2
+    // Use direct client to avoid singleton issues in serverless env
+    const { createClient: _createClient } = await import('@supabase/supabase-js')
+    const db = _createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
+      { auth: { autoRefreshToken: false, persistSession: false } }
+    )
 
+    _step = 3
     // ── 1. Fetch full property ──────────────────────────────────────────────
     const { data: property, error: propErr } = await db
       .from('properties')
@@ -368,31 +378,39 @@ export async function POST(request: NextRequest) {
       .single()
 
     if (propErr || !property) {
-      return NextResponse.json({ success: false, error: 'Property not found' }, { status: 404 })
+      return NextResponse.json({ success: false, error: 'Property not found', debug_propErr: propErr?.message }, { status: 404 })
     }
 
-    builderId = property.builder_id
+    _step = 4
+    builderId = property.builder_id || ''
 
     // ── 2. Get builder email from auth ─────────────────────────────────────
     let builderEmail = ''
     let builderName  = 'Builder'
-    try {
-      const { data: { user: builderUser } } = await db.auth.admin.getUserById(builderId)
-      builderEmail = builderUser?.email || ''
-      builderName  = builderUser?.user_metadata?.full_name || builderEmail.split('@')[0] || 'Builder'
-    } catch (e) {
-      console.warn('[Launch] Could not fetch builder user:', (e as Error).message)
+    if (builderId) {
+      try {
+        const { data: { user: builderUser } } = await db.auth.admin.getUserById(builderId)
+        builderEmail = builderUser?.email || ''
+        builderName  = builderUser?.user_metadata?.full_name || builderEmail.split('@')[0] || 'Builder'
+      } catch (e) {
+        console.warn('[Launch] Could not fetch builder user:', (e as Error).message)
+      }
+
+      // Also try builders/profiles table
+      if (!builderEmail) {
+        try {
+          const { data: prof } = await db.from('builders').select('name,email').eq('id', builderId).maybeSingle()
+          if (prof) { builderEmail = (prof as any).email || ''; builderName = (prof as any).name || builderName }
+        } catch (e) {
+          // builders table may not exist — ignore
+        }
+      }
     }
 
-    // Also try builders/profiles table
-    if (!builderEmail) {
-      const { data: prof } = await db.from('builders').select('name,email').eq('id', builderId).maybeSingle()
-        .catch(() => ({ data: null }))
-      if (prof) { builderEmail = prof.email || ''; builderName = prof.name || builderName }
-    }
-
+    _step = 5
     // ── 3. Generate content ─────────────────────────────────────────────────
     let content = generateRuleBasedContent(property as PropertyRow)
+    _step = 6
     content = await enhanceWithAI(property as PropertyRow, content)
 
     // ── 4. Build WhatsApp share link ────────────────────────────────────────
@@ -471,23 +489,30 @@ export async function POST(request: NextRequest) {
     })
 
   } catch (error: any) {
-    console.error('[Launch] Fatal error:', error)
+    console.error('[Launch] Fatal error at step', _step, ':', error)
 
-    // Log failure
+    // Log failure — use inline client to avoid state issues
     if (propertyId) {
-      const db = getAdminClient()
-      await db.from('property_marketing_automation_logs').insert({
-        property_id:     propertyId,
-        builder_id:      builderId || null,
-        campaign_id:     'failed',
-        automation_type: 'launch',
-        status:          'failed',
-        details:         { error: error.message, triggered_via: 'launch-endpoint' },
-      }).catch(() => {})
+      try {
+        const { createClient: _cc } = await import('@supabase/supabase-js')
+        const _db = _cc(
+          process.env.NEXT_PUBLIC_SUPABASE_URL!,
+          process.env.SUPABASE_SERVICE_ROLE_KEY!,
+          { auth: { autoRefreshToken: false, persistSession: false } }
+        )
+        await _db.from('property_marketing_automation_logs').insert({
+          property_id:     propertyId,
+          builder_id:      builderId || null,
+          campaign_id:     null,
+          automation_type: 'launch',
+          status:          'failed',
+          details:         { error: error.message, step: _step, triggered_via: 'launch-endpoint' },
+        })
+      } catch (_logErr) { /* ignore */ }
     }
 
     return NextResponse.json(
-      { success: false, error: 'Marketing launch failed', details: error.message },
+      { success: false, error: 'Marketing launch failed', details: error.message, step: _step },
       { status: 500 }
     )
   }

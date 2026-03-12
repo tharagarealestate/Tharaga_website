@@ -49,7 +49,7 @@ export async function GET(request: NextRequest) {
     if (process.env.OPENAI_API_KEY) {
       const prompt = `Analyze the real estate market for ${area} based on this data:
 
-Properties: ${validProperties.length}
+Properties: ${properties.length}
 Average Price per Sqft: ₹${avgPricePerSqft.toFixed(0)}
 
 Provide market analysis with:

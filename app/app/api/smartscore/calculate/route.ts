@@ -358,14 +358,107 @@ export async function POST(request: NextRequest) {
       }
     }
     
-    // Calculate new scores - try ML service first, fallback to DB function
+    // Calculate new scores
+    // Priority: DB function → rule-based (ML service removed — was localhost:8001 which
+    // always fails on Netlify. Rule-based scoring is reliable and instant.)
     let newScores: SmartScoreResponse[] = [];
-    
+
     try {
-      newScores = await callMLService(scoresNeedingCalculation);
-    } catch (mlError) {
-      console.warn('ML Service unavailable, using DB function:', mlError);
       newScores = await calculateUsingDBFunction(supabase, scoresNeedingCalculation);
+    } catch (dbError) {
+      console.warn('DB function unavailable, using rule-based scoring:', dbError);
+    }
+
+    // Rule-based fallback for any leads that didn't get scored
+    const scoredIds = new Set(newScores.map(s => s.lead_id));
+    const unscoredIds = scoresNeedingCalculation.filter(id => !scoredIds.has(id));
+
+    if (unscoredIds.length > 0) {
+      const { data: leadData } = await supabase
+        .from('leads')
+        .select('id, name, email, phone, message, source, created_at, preferred_contact, timeline')
+        .in('id', unscoredIds);
+
+      for (const lead of (leadData || [])) {
+        // Rule-based scoring: weighted signals from lead profile data
+        let engagement = 0, intent = 0, profile = 0, timing = 0;
+
+        // Profile completeness
+        if (lead.email) profile += 25;
+        if (lead.phone) profile += 30;
+        if (lead.name && lead.name !== 'Anonymous Buyer') profile += 15;
+        if (lead.message && lead.message.length > 20) profile += 15;
+        if (lead.preferred_contact) profile += 10;
+        if (lead.timeline) profile += 20; // timeline = high intent signal
+
+        // Intent signals from message content
+        const msg = (lead.message || '').toLowerCase();
+        if (msg.includes('visit') || msg.includes('site visit')) intent += 35;
+        if (msg.includes('buy') || msg.includes('purchase')) intent += 30;
+        if (msg.includes('ready') || msg.includes('immediate')) intent += 25;
+        if (msg.includes('loan') || msg.includes('emi') || msg.includes('budget')) intent += 20;
+        if (msg.includes('price') || msg.includes('cost')) intent += 15;
+        if (msg.length > 50) intent += 10; // detailed message = more intent
+
+        // Engagement from source
+        if (lead.source === 'property_page') engagement += 30;
+        if (lead.preferred_contact === 'whatsapp') engagement += 20;
+        if (lead.preferred_contact === 'phone') engagement += 15;
+
+        // Timing recency
+        const hoursOld = (Date.now() - new Date(lead.created_at).getTime()) / 3600000;
+        if (hoursOld < 1) timing = 100;
+        else if (hoursOld < 6) timing = 80;
+        else if (hoursOld < 24) timing = 60;
+        else if (hoursOld < 72) timing = 40;
+        else timing = 20;
+
+        const engagementScore = Math.min(engagement, 100);
+        const intentScore = Math.min(intent, 100);
+        const profileScore = Math.min(profile, 100);
+
+        // Weighted composite score
+        const smartscore = Math.round(
+          engagementScore * 0.25 +
+          intentScore * 0.35 +
+          profileScore * 0.25 +
+          timing * 0.15
+        );
+
+        const tier = smartscore >= 80 ? 'hot' : smartscore >= 55 ? 'warm' : 'cold';
+        const nextAction = smartscore >= 80
+          ? 'Call within 1 hour — high conversion probability'
+          : smartscore >= 55
+          ? 'Send personalized WhatsApp follow-up today'
+          : 'Add to nurture sequence';
+
+        newScores.push({
+          lead_id: lead.id,
+          smartscore,
+          conversion_probability: parseFloat((smartscore / 100 * 0.65).toFixed(2)),
+          predicted_ltv: smartscore * 5000,
+          priority_tier: tier,
+          next_best_action: nextAction,
+          optimal_contact_time: new Date(Date.now() + 3600000).toISOString(),
+          confidence_score: 0.75,
+          ai_insights: {
+            score_breakdown: {
+              engagement: engagementScore,
+              intent: intentScore,
+              profile: profileScore,
+              timing,
+            },
+            key_strengths: [
+              lead.phone ? 'Phone number provided' : null,
+              lead.email ? 'Email provided' : null,
+              lead.timeline ? `Timeline: ${lead.timeline}` : null,
+            ].filter(Boolean) as string[],
+            recommendations: [nextAction],
+          },
+          model_version: 'v2.0_rules',
+          scored_at: new Date().toISOString(),
+        });
+      }
     }
     
     // Save to database

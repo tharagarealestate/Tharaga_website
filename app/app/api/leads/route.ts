@@ -284,72 +284,134 @@ export async function GET(request: NextRequest) {
 
 // =============================================
 // POST - Create new lead
+// Supports TWO flows:
+//   1. Authenticated builder manually adding a lead (requires session)
+//   2. PUBLIC buyer submitting a contact form from /properties/[id]
+//      → no session, requires property_id so we can resolve builder_id
 // =============================================
 export async function POST(request: NextRequest) {
   try {
-    // Use request-based client for reliable cookie handling
     const { supabase } = createClientFromRequest(request)
+    const body = await request.json()
+    const { name, email, phone, message, property_id, score,
+            preferred_contact, timeline } = body
 
-    // Simple auth check - NO ROLE RESTRICTIONS
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    // ── Try authenticated path first ──────────────────────────────────────
+    const { data: { user } } = await supabase.auth.getUser()
 
-    if (authError || !user) {
+    if (user) {
+      // Authenticated builder creating a lead manually
+      if (!email && !phone) {
+        return NextResponse.json({
+          success: false, error: 'Provide at least email or phone'
+        }, { status: 400, headers: corsHeaders })
+      }
+
+      const { data: lead, error: insertError } = await supabase
+        .from('leads')
+        .insert({
+          name: name || email?.split('@')[0] || phone || 'Unknown',
+          email: email || null,
+          phone: phone || null,
+          message,
+          property_id: property_id || null,
+          score: score || 5,
+          builder_id: user.id,
+          preferred_contact: preferred_contact || null,
+          timeline: timeline || null,
+        })
+        .select()
+        .single()
+
+      if (insertError) {
+        console.error('[Leads API] Authenticated insert error:', insertError)
+        return NextResponse.json({
+          success: false, error: 'Failed to create lead', message: insertError.message
+        }, { status: 500, headers: corsHeaders })
+      }
+
+      leadsCache.invalidate(`leads:${user.id}`)
+      leadsCache.invalidate(`stats:${user.id}`)
+
       return NextResponse.json({
-        success: false,
-        error: 'Please log in to create leads'
-      }, { status: 401, headers: corsHeaders })
+        ok: true, success: true, id: lead.id, data: lead,
+        message: 'Lead created successfully'
+      }, { status: 201, headers: corsHeaders })
     }
 
-    const body = await request.json()
-    const { name, email, phone, message, property_id, score } = body
-
-    if (!email) {
+    // ── Public buyer contact form (unauthenticated) ───────────────────────
+    // Must have property_id so we can find the builder who owns it
+    if (!property_id) {
       return NextResponse.json({
-        success: false,
-        error: 'Email is required'
+        success: false, error: 'property_id is required for public lead submission'
       }, { status: 400, headers: corsHeaders })
     }
 
-    // Insert into leads table
-    const { data: lead, error: insertError } = await supabase
+    if (!phone && !email) {
+      return NextResponse.json({
+        success: false, error: 'Provide at least a phone number or email'
+      }, { status: 400, headers: corsHeaders })
+    }
+
+    // Look up builder_id from properties table using service role key
+    const { createClient } = await import('@supabase/supabase-js')
+    const serviceClient = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    )
+
+    const { data: property } = await serviceClient
+      .from('properties')
+      .select('id, builder_id, title')
+      .eq('id', property_id)
+      .maybeSingle()
+
+    const builderId = property?.builder_id || null
+
+    // Rule-based smart score based on what contact info was provided
+    const initialScore = phone && email ? 20 : phone ? 15 : 10
+
+    const { data: lead, error: insertError } = await serviceClient
       .from('leads')
       .insert({
-        name: name || email.split('@')[0],
-        email,
-        phone,
-        message,
+        name: name || 'Anonymous Buyer',
+        email: email || null,
+        phone: phone || null,
+        message: message || `Enquiry about: ${property?.title || property_id}`,
         property_id,
-        score: score || 5,
-        builder_id: user.id
+        builder_id: builderId,
+        score: initialScore,
+        status: 'new',
+        source: 'property_page',
+        preferred_contact: preferred_contact || 'phone',
+        timeline: timeline || null,
+        created_at: new Date().toISOString(),
       })
       .select()
       .single()
 
     if (insertError) {
-      console.error('[Leads API] Insert error:', insertError)
+      console.error('[Leads API] Public insert error:', insertError)
       return NextResponse.json({
-        success: false,
-        error: 'Failed to create lead',
-        message: insertError.message
+        success: false, error: 'Failed to submit enquiry', message: insertError.message
       }, { status: 500, headers: corsHeaders })
     }
 
-    // OPTIMIZED: Invalidate cache when new lead is created
-    leadsCache.invalidate(`leads:${user.id}`)
-    leadsCache.invalidate(`stats:${user.id}`)
+    // Invalidate builder's cache so dashboard shows the new lead instantly
+    if (builderId) {
+      leadsCache.invalidate(`leads:${builderId}`)
+      leadsCache.invalidate(`stats:${builderId}`)
+    }
 
     return NextResponse.json({
-      success: true,
-      data: lead,
-      message: 'Lead created successfully'
+      ok: true, success: true, id: lead.id,
+      message: 'Enquiry submitted successfully'
     }, { status: 201, headers: corsHeaders })
 
   } catch (error: any) {
     console.error('[Leads API] POST error:', error)
     return NextResponse.json({
-      success: false,
-      error: 'Failed to create lead',
-      message: error.message
+      success: false, error: 'Failed to process request', message: error.message
     }, { status: 500, headers: corsHeaders })
   }
 }

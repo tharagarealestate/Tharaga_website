@@ -429,9 +429,10 @@ export async function POST(request: NextRequest) {
         builderName  = bu?.user_metadata?.full_name || builderEmail.split('@')[0] || 'Builder'
       } catch {}
       if (!builderEmail) {
-        const { data: bp } = await db.from('builders').select('email,name').eq('id', builderId).maybeSingle()
-          .catch(() => ({ data: null }))
-        if (bp) { builderEmail = bp.email || ''; builderName = bp.name || builderName }
+        try {
+          const { data: bp } = await db.from('builders').select('email,name').eq('id', builderId).maybeSingle()
+          if (bp) { builderEmail = bp.email || ''; builderName = bp.name || builderName }
+        } catch {}
       }
     }
 
@@ -459,7 +460,7 @@ export async function POST(request: NextRequest) {
       results.builder_email = msgId ? 'sent' : 'skipped_no_key'
 
       // Log delivery
-      await db.from('email_delivery_logs').insert({
+      db.from('email_delivery_logs').insert({
         property_id:         effectivePropertyId,
         builder_id:          builderId,
         lead_id:             lead.id,
@@ -469,7 +470,7 @@ export async function POST(request: NextRequest) {
         provider_message_id: msgId || null,
         sent_at:             msgId ? new Date().toISOString() : null,
         metadata:            { type: 'builder_notification' },
-      }).catch((e: any) => console.warn('[NotifyLead] delivery log error:', e.message))
+      }).then(() => {}).catch((e: any) => console.warn('[NotifyLead] delivery log error:', e.message))
     }
 
     // ── B. Buyer confirmation ───────────────────────────────────────────────
@@ -491,7 +492,7 @@ export async function POST(request: NextRequest) {
       results.buyer_email = msgId ? 'sent' : 'skipped_no_key'
 
       // Log delivery
-      await db.from('email_delivery_logs').insert({
+      db.from('email_delivery_logs').insert({
         property_id:         effectivePropertyId,
         builder_id:          builderId,
         lead_id:             lead.id,
@@ -501,7 +502,7 @@ export async function POST(request: NextRequest) {
         provider_message_id: msgId || null,
         sent_at:             msgId ? new Date().toISOString() : null,
         metadata:            { type: 'buyer_confirmation' },
-      }).catch((e: any) => console.warn('[NotifyLead] delivery log error:', e.message))
+      }).then(() => {}).catch((e: any) => console.warn('[NotifyLead] delivery log error:', e.message))
     }
 
     // ── C. Schedule buyer drip sequence ────────────────────────────────────

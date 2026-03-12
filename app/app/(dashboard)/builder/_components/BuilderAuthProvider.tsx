@@ -1,25 +1,10 @@
-"use client"
+'use client'
 
 import { createContext, useContext, useState, useEffect, useRef, ReactNode } from 'react'
 import { getSupabase } from '@/lib/supabase'
-import { useRouter } from 'next/navigation'
+import { BuilderAuthGate } from './BuilderAuthGate'
 
-/** Wrap any promise with a timeout so DB queries never hang forever */
-function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
-  return Promise.race([
-    promise,
-    new Promise<T>((_, reject) =>
-      setTimeout(() => reject(new Error(`Query timed out after ${ms}ms`)), ms)
-    ),
-  ])
-}
-
-/**
- * Builder Auth Provider - Authenticated Builders Only
- * 
- * This provider ensures only authenticated users with valid builder profiles
- * can access the builder dashboard. Users without builder profiles are redirected.
- */
+// ─── Types ────────────────────────────────────────────────────────────────────
 
 interface BuilderAuthContextType {
   isAuthenticated: boolean
@@ -33,245 +18,251 @@ interface BuilderAuthContextType {
   } | null
 }
 
+type AuthStatus =
+  | 'loading'          // initial — checking session
+  | 'authenticated'    // builder profile found, all good
+  | 'unauthenticated'  // no session / session invalid
+  | 'no-profile'       // logged in but no builder profile yet
+
 const BuilderAuthContext = createContext<BuilderAuthContextType | null>(null)
 
 export function useBuilderAuth(): BuilderAuthContextType {
   const context = useContext(BuilderAuthContext)
-  
-  // Provide safe defaults if context is not available
   if (!context) {
-    console.warn('[useBuilderAuth] BuilderAuthProvider context not found, using defaults')
-    return {
-      isAuthenticated: false,
-      isLoading: false,
-      builderId: null,
-      userId: null,
-      builderProfile: null,
-    }
+    return { isAuthenticated: false, isLoading: false, builderId: null, userId: null, builderProfile: null }
   }
-  
   return context
 }
 
-interface BuilderAuthProviderProps {
-  children: ReactNode
-}
+// ─── Provider ─────────────────────────────────────────────────────────────────
 
-export function BuilderAuthProvider({ children }: BuilderAuthProviderProps) {
-  const router = useRouter()
-  const safetyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const [authState, setAuthState] = useState<{
-    isAuthenticated: boolean
-    isLoading: boolean
-    builderId: string | null
-    userId: string | null
-    builderProfile: {
-      id: string
-      company_name: string
-      email: string | null
-    } | null
-  }>({
-    isAuthenticated: false,
-    isLoading: true,
-    builderId: null,
-    userId: null,
-    builderProfile: null,
-  })
+export function BuilderAuthProvider({ children }: { children: ReactNode }) {
+  const [status, setStatus] = useState<AuthStatus>('loading')
+  const [builderId, setBuilderId] = useState<string | null>(null)
+  const [userId, setUserId] = useState<string | null>(null)
+  const [builderProfile, setBuilderProfile] = useState<BuilderAuthContextType['builderProfile']>(null)
+  const mountedRef = useRef(true)
+  // Track whether we have done the initial full auth check so we don't run it twice
+  const resolvedRef = useRef(false)
 
-  useEffect(() => {
-    let mounted = true
+  // ── Core auth resolution ─────────────────────────────────────────────────
+  const resolveAuth = async (skipSessionCheck = false) => {
+    const supabase = getSupabase()
 
-    // Hard safety net: if auth hasn't resolved within 10 seconds, force-resolve as unauthenticated
-    safetyTimerRef.current = setTimeout(() => {
-      if (mounted) {
-        setAuthState(prev => {
-          if (prev.isLoading) {
-            console.warn('[BuilderAuthProvider] Auth timed out after 10s — forcing unauthenticated state')
-            return { isAuthenticated: false, isLoading: false, builderId: null, userId: null, builderProfile: null }
-          }
-          return prev
-        })
-      }
-    }, 10000)
+    try {
+      // STEP 1 — Fast path: read session from localStorage (no network call)
+      // This resolves the loading state immediately so there's never a flash.
+      let userId: string | null = null
+      let userEmail: string = ''
 
-    async function checkAuth() {
-      try {
-        const supabase = getSupabase()
-        // 8-second timeout on getUser to prevent network hang
-        const { data: { user }, error: userError } = await withTimeout(
-          supabase.auth.getUser(),
-          8000
-        )
+      if (!skipSessionCheck) {
+        const { data: sessionData } = await supabase.auth.getSession()
+        const session = sessionData?.session
 
-        if (!mounted) return
-
-        // No user = not authenticated
-        if (userError || !user) {
-          setAuthState({
-            isAuthenticated: false,
-            isLoading: false,
-            builderId: null,
-            userId: null,
-            builderProfile: null,
-          })
-          // Redirect to home or login page
-          router.push('/?login=true')
+        if (!session?.user) {
+          // Definitely not logged in — no session in localStorage at all
+          if (!mountedRef.current) return
+          setStatus('unauthenticated')
+          resolvedRef.current = true
           return
         }
 
-        // Check admin role — both queries race with 5s timeout each
-        const [userRolesResult, profileResult] = await withTimeout(
-          Promise.all([
-            supabase.from('user_roles').select('role').eq('user_id', user.id),
-            supabase.from('profiles').select('role').eq('id', user.id).maybeSingle(),
-          ]),
-          5000
-        )
+        userId = session.user.id
+        userEmail = session.user.email || ''
+      } else {
+        // Called from onAuthStateChange — session is fresh, get user directly
+        const { data: { user }, error } = await supabase.auth.getUser()
+        if (error || !user) {
+          if (!mountedRef.current) return
+          setStatus('unauthenticated')
+          resolvedRef.current = true
+          return
+        }
+        userId = user.id
+        userEmail = user.email || ''
+      }
 
-        // Admin check: email match OR role match in database
-        const userEmail = user.email || ''
-        const isAdminByEmail = userEmail === 'tharagarealestate@gmail.com'
-        const isAdminByRole =
-          userRolesResult.data?.some((r: any) => r.role === 'admin') ||
-          profileResult.data?.role === 'admin' ||
-          false
+      if (!mountedRef.current) return
 
-        const isAdmin = isAdminByEmail || isAdminByRole
+      // STEP 2 — Check admin by email
+      const isAdminByEmail = userEmail === 'tharagarealestate@gmail.com'
 
-        // Fetch builder profile — 5s timeout
-        const { data: builderProfile, error: profileError } = await withTimeout(
+      // STEP 3 — Fetch roles and builder profile in parallel (with 5s guard)
+      const timeout = <T,>(p: Promise<T>): Promise<T> =>
+        Promise.race([
+          p,
+          new Promise<T>((_, rej) => setTimeout(() => rej(new Error('timeout')), 5000)),
+        ])
+
+      const [rolesResult, profileResult] = await Promise.allSettled([
+        timeout(supabase.from('user_roles').select('role').eq('user_id', userId)),
+        timeout(
           supabase
             .from('builder_profiles')
             .select('id, company_name, user_id')
-            .eq('user_id', user.id)
-            .maybeSingle(),
-          5000
-        )
+            .eq('user_id', userId)
+            .maybeSingle()
+        ),
+      ])
 
-        if (!mounted) return
+      if (!mountedRef.current) return
 
-        // Admin users bypass builder profile requirement
-        if (isAdmin) {
-          // For admin users, use builderProfile.id if exists, otherwise use user.id as builderId
-          // This ensures admin users can access all builder features even without a builder profile
-          const adminBuilderId = builderProfile?.id || user.id
-          setAuthState({
-            isAuthenticated: true,
-            isLoading: false,
-            builderId: adminBuilderId, // Use profile ID if exists, otherwise use user.id for admin
-            userId: user.id,
-            builderProfile: builderProfile ? {
-              id: builderProfile.id,
-              company_name: builderProfile.company_name || 'Admin',
-              email: userEmail,
-            } : {
-              id: adminBuilderId, // Use user ID as builderId for admin without profile
-              company_name: 'Admin',
-              email: userEmail,
-            },
-          })
-          return
-        }
+      const roles: string[] =
+        rolesResult.status === 'fulfilled' ? (rolesResult.value.data?.map((r: any) => r.role) ?? []) : []
 
-        // Non-admin users: No builder profile = not authorized
-        if (profileError || !builderProfile) {
-          setAuthState({
-            isAuthenticated: false,
-            isLoading: false,
-            builderId: null,
-            userId: user.id,
-            builderProfile: null,
-          })
-          // Redirect to builder onboarding or home
-          router.push('/?builder-onboarding=true')
-          return
-        }
+      const profile =
+        profileResult.status === 'fulfilled' ? profileResult.value.data : null
 
-        // Check if company_name is filled (required field for non-admin builders)
-        if (!builderProfile.company_name || builderProfile.company_name.trim() === '') {
-          setAuthState({
-            isAuthenticated: false,
-            isLoading: false,
-            builderId: null,
-            userId: user.id,
-            builderProfile: null,
-          })
-          // Redirect to complete profile
-          router.push('/?complete-builder-profile=true')
-          return
-        }
+      const isAdminByRole = roles.includes('admin')
+      const isAdmin = isAdminByEmail || isAdminByRole
 
-        // Fully authenticated builder with complete profile
-        // (userEmail already declared above)
-        setAuthState({
-          isAuthenticated: true,
-          isLoading: false,
-          builderId: builderProfile.id,
-          userId: user.id,
-          builderProfile: {
-            id: builderProfile.id,
-            company_name: builderProfile.company_name,
-            email: userEmail,
-          },
+      // STEP 4 — Determine final status
+      if (isAdmin) {
+        const adminBuilderId = profile?.id ?? userId
+        setBuilderId(adminBuilderId)
+        setUserId(userId)
+        setBuilderProfile({
+          id: adminBuilderId,
+          company_name: profile?.company_name || 'Admin',
+          email: userEmail,
         })
-      } catch (err) {
-        console.error('[BuilderAuthProvider] Auth check error:', err)
-        if (mounted) {
-          setAuthState({
-            isAuthenticated: false,
-            isLoading: false,
-            builderId: null,
-            userId: null,
-            builderProfile: null,
-          })
-          router.push('/?error=auth-failed')
-        }
+        setStatus('authenticated')
+        resolvedRef.current = true
+        return
+      }
+
+      if (!profile || !profile.company_name?.trim()) {
+        // Logged in but no builder profile — show "complete profile" gate variant
+        setUserId(userId)
+        setBuilderId(null)
+        setBuilderProfile(null)
+        setStatus('no-profile')
+        resolvedRef.current = true
+        return
+      }
+
+      // Full builder access
+      setBuilderId(profile.id)
+      setUserId(userId)
+      setBuilderProfile({ id: profile.id, company_name: profile.company_name, email: userEmail })
+      setStatus('authenticated')
+      resolvedRef.current = true
+    } catch (err) {
+      console.error('[BuilderAuthProvider] resolveAuth error:', err)
+      if (!mountedRef.current) return
+      // On unexpected error — show gate rather than infinite loading or redirect
+      if (!resolvedRef.current) {
+        setStatus('unauthenticated')
+        resolvedRef.current = true
       }
     }
+  }
 
-    checkAuth()
+  // ── Mount effect ─────────────────────────────────────────────────────────
+  useEffect(() => {
+    mountedRef.current = true
+    resolvedRef.current = false
 
-    // Re-check auth periodically (every 30 seconds) to catch logout events
-    const interval = setInterval(checkAuth, 30000)
+    // Start auth resolution immediately
+    resolveAuth(false)
 
-    // Listen for auth state changes
+    // Safety valve: if nothing resolved in 8s, force unauthenticated so user
+    // isn't stuck on an infinite spinner
+    const safetyTimer = setTimeout(() => {
+      if (!mountedRef.current || resolvedRef.current) return
+      console.warn('[BuilderAuthProvider] Safety timeout — forcing gate display')
+      setStatus('unauthenticated')
+      resolvedRef.current = true
+    }, 8000)
+
+    // Listen for Supabase auth events
     const supabase = getSupabase()
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (!mounted) return
-      
-      if (event === 'SIGNED_OUT' || !session) {
-        setAuthState({
-          isAuthenticated: false,
-          isLoading: false,
-          builderId: null,
-          userId: null,
-          builderProfile: null,
-        })
-        router.push('/?login=true')
-      } else if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
-        // Re-check auth when user signs in or token refreshes
-        checkAuth()
+      if (!mountedRef.current) return
+
+      if (event === 'SIGNED_OUT') {
+        setBuilderId(null)
+        setUserId(null)
+        setBuilderProfile(null)
+        setStatus('unauthenticated')
+        resolvedRef.current = true
+        return
+      }
+
+      if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') && session?.user) {
+        // Re-resolve with fresh session — skip session check since we have the session
+        resolvedRef.current = false
+        resolveAuth(true)
+      }
+
+      // INITIAL_SESSION: only act if we're still in loading state
+      if (event === 'INITIAL_SESSION') {
+        if (!session?.user && !resolvedRef.current) {
+          setStatus('unauthenticated')
+          resolvedRef.current = true
+        }
+        // If session exists, resolveAuth() from above is already running — no-op
       }
     })
 
     return () => {
-      mounted = false
-      if (safetyTimerRef.current) clearTimeout(safetyTimerRef.current)
-      clearInterval(interval)
+      mountedRef.current = false
+      clearTimeout(safetyTimer)
       subscription.unsubscribe()
     }
-  }, [router])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
+  // ── Context value ─────────────────────────────────────────────────────────
+  const contextValue: BuilderAuthContextType = {
+    isAuthenticated: status === 'authenticated',
+    isLoading: status === 'loading',
+    builderId,
+    userId,
+    builderProfile,
+  }
+
+  // ── Render ────────────────────────────────────────────────────────────────
+
+  // Still resolving — minimal skeleton so there's no flash
+  if (status === 'loading') {
+    return (
+      <BuilderAuthContext.Provider value={contextValue}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-zinc-950">
+          <div className="flex flex-col items-center gap-4">
+            {/* Pulsing amber ring */}
+            <div className="relative w-12 h-12">
+              <div className="absolute inset-0 rounded-full border-2 border-amber-500/20" />
+              <div className="absolute inset-0 rounded-full border-t-2 border-amber-500 animate-spin" />
+            </div>
+            <p className="text-zinc-500 text-sm font-medium animate-pulse">Loading dashboard…</p>
+          </div>
+        </div>
+      </BuilderAuthContext.Provider>
+    )
+  }
+
+  // Not logged in — show beautiful auth gate (no redirect)
+  if (status === 'unauthenticated') {
+    return (
+      <BuilderAuthContext.Provider value={contextValue}>
+        <BuilderAuthGate variant="unauthenticated" />
+      </BuilderAuthContext.Provider>
+    )
+  }
+
+  // Logged in but no builder profile — show completion gate
+  if (status === 'no-profile') {
+    return (
+      <BuilderAuthContext.Provider value={contextValue}>
+        <BuilderAuthGate variant="no-profile" />
+      </BuilderAuthContext.Provider>
+    )
+  }
+
+  // Fully authenticated builder — render dashboard
   return (
-    <BuilderAuthContext.Provider
-      value={{
-        isAuthenticated: authState.isAuthenticated,
-        isLoading: authState.isLoading,
-        builderId: authState.builderId,
-        userId: authState.userId,
-        builderProfile: authState.builderProfile,
-      }}
-    >
+    <BuilderAuthContext.Provider value={contextValue}>
       {children}
     </BuilderAuthContext.Provider>
   )

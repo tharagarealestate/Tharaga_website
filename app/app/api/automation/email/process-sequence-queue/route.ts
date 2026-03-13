@@ -84,11 +84,16 @@ async function sendViaResend(
 
 export async function POST(request: NextRequest) {
   try {
-    // Optional: verify cron secret header
+    // Auth: accept either CRON_SECRET or SUPABASE_SERVICE_ROLE_KEY in Authorization header
+    // Both are valid callers: Netlify scheduled cron (CRON_SECRET) or internal admin triggers
     const authHeader = request.headers.get('authorization')
-    const cronSecret = process.env.CRON_SECRET
-    if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    const cronSecret   = process.env.CRON_SECRET
+    const serviceKey   = process.env.SUPABASE_SERVICE_ROLE_KEY
+    const token        = authHeader?.replace('Bearer ', '').trim()
+    const isAuthorized = !cronSecret ||  // no secret required → open
+      (token && (token === cronSecret || token === serviceKey))
+    if (!isAuthorized) {
+      return NextResponse.json({ error: 'Unauthorized — pass CRON_SECRET or service key' }, { status: 401 })
     }
 
     const db = await getDb()

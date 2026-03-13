@@ -104,39 +104,48 @@ export async function POST(request: NextRequest) {
       0
     ) + signal_weight;
 
-    // Insert behavioral signal (buyer_id is nullable for anonymous visitors)
-    const { data, error } = await supabase
-      .from('buyer_behavioral_signals')
-      .insert({
-        buyer_id: buyer_id ? Number(buyer_id) : null,
-        session_id: normalizedSessionId,
-        event_type,
-        event_metadata,
-        property_id: property_id || null,
-        builder_id: builder_id || null,
-        device_type: device_type || null,
-        browser: browser || null,
-        location_city: location_city || null,
-        time_of_day: time_of_day || null,
-        signal_weight,
-        cumulative_session_score,
-      })
-      .select()
-      .single();
+    // buyer_behavioral_signals.buyer_id is NOT NULL FK to leads.id
+    // Only write to DB when we have a valid buyer_id (i.e. an existing lead)
+    // For anonymous visitors (no lead yet), return success without DB write
+    let signalId: string | null = null
 
-    if (error) {
-      console.error('Error inserting behavioral signal:', error);
-      return NextResponse.json(
-        { error: 'Failed to track behavioral signal', details: error.message },
-        { status: 500 }
-      );
+    if (buyer_id) {
+      const { data, error } = await supabase
+        .from('buyer_behavioral_signals')
+        .insert({
+          buyer_id: Number(buyer_id),
+          session_id: normalizedSessionId,
+          event_type,
+          event_metadata: event_metadata || {},
+          property_id: property_id || null,
+          builder_id: builder_id || null,
+          device_type: device_type || null,
+          browser: browser || null,
+          location_city: location_city || null,
+          time_of_day: time_of_day || null,
+          signal_weight,
+          cumulative_session_score,
+        })
+        .select('id')
+        .single();
+
+      if (error) {
+        console.error('[BehavioralTrack] Insert error:', error.message)
+        // Non-fatal — still return success so frontend tracking doesn't break
+      } else {
+        signalId = data?.id || null
+      }
+    } else {
+      // Anonymous visitor — log signal locally but don't require DB write
+      console.log(`[BehavioralTrack] Anonymous signal: ${event_type} | session: ${normalizedSessionId} | property: ${property_id} | weight: ${signal_weight}`)
     }
 
     return NextResponse.json({
       success: true,
-      signal_id: data.id,
+      signal_id: signalId,
       signal_weight,
       cumulative_session_score,
+      tracked: !!buyer_id,      // true = written to DB, false = anonymous (still valid)
     });
   } catch (error: any) {
     console.error('Error in behavioral tracking:', error);

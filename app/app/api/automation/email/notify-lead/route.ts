@@ -404,7 +404,7 @@ export async function POST(request: NextRequest) {
     if (effectivePropertyId) {
       const { data: p } = await db
         .from('properties')
-        .select('id,title,city,locality,price_inr,bedrooms,sqft,images,amenities')
+        .select('id,title,city,locality,price_inr,bedrooms,sqft,images,amenities,builder_id')
         .eq('id', effectivePropertyId)
         .maybeSingle()
       property = p
@@ -419,18 +419,22 @@ export async function POST(request: NextRequest) {
     if (property?.locality) highlights.push(`Located in ${property.locality}`)
     if (property?.price_inr) highlights.push(`Starting at ${formatINR(property.price_inr)}`)
 
+    // Resolve builderId — use lead.builder_id first, fall back to property.builder_id
+    // (public leads inserted with builder_id:null via FK-safe retry still have builder on the property)
+    const effectiveBuilderId = builderId || property?.builder_id || null
+
     // ── Fetch builder email ─────────────────────────────────────────────────
     let builderEmail = ''
     let builderName  = 'Builder'
-    if (builderId) {
+    if (effectiveBuilderId) {
       try {
-        const { data: { user: bu } } = await db.auth.admin.getUserById(builderId)
+        const { data: { user: bu } } = await db.auth.admin.getUserById(effectiveBuilderId)
         builderEmail = bu?.email || ''
         builderName  = bu?.user_metadata?.full_name || builderEmail.split('@')[0] || 'Builder'
       } catch {}
       if (!builderEmail) {
         try {
-          const { data: bp } = await db.from('builders').select('email,name').eq('id', builderId).maybeSingle()
+          const { data: bp } = await db.from('builders').select('email,name').eq('id', effectiveBuilderId).maybeSingle()
           if (bp) { builderEmail = bp.email || ''; builderName = bp.name || builderName }
         } catch {}
       }
@@ -455,14 +459,14 @@ export async function POST(request: NextRequest) {
         builderEmail,
         `🔔 New Lead: ${lead.name || 'Someone'} enquired about "${propertyTitle}"`,
         html,
-        { type: 'builder-notification', lead_id: String(lead.id), builder_id: builderId || '' }
+        { type: 'builder-notification', lead_id: String(lead.id), builder_id: effectiveBuilderId || '' }
       )
       results.builder_email = msgId ? 'sent' : 'skipped_no_key'
 
       // Log delivery
       db.from('email_delivery_logs').insert({
         property_id:         effectivePropertyId,
-        builder_id:          builderId,
+        builder_id:          effectiveBuilderId,
         lead_id:             lead.id,
         recipient_email:     builderEmail,
         subject:             `New Lead: ${lead.name || 'Unknown'}`,
@@ -494,7 +498,7 @@ export async function POST(request: NextRequest) {
       // Log delivery
       db.from('email_delivery_logs').insert({
         property_id:         effectivePropertyId,
-        builder_id:          builderId,
+        builder_id:          effectiveBuilderId,
         lead_id:             lead.id,
         recipient_email:     lead.email,
         subject:             `Enquiry confirmed — ${propertyTitle}`,
@@ -506,11 +510,12 @@ export async function POST(request: NextRequest) {
     }
 
     // ── C. Schedule buyer drip sequence ────────────────────────────────────
-    if (lead.email && effectivePropertyId && builderId) {
+    // Gate: buyer has email + we know which property (builder_id may be null — that's OK)
+    if (lead.email && effectivePropertyId) {
       await scheduleDripSequence(db, {
         leadId:        String(lead.id),
         propertyId:    effectivePropertyId,
-        builderId,
+        builderId:     effectiveBuilderId || '',
         buyerName:     lead.name || 'There',
         propertyTitle,
         propertyId2:   effectivePropertyId,

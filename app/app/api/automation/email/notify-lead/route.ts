@@ -302,7 +302,7 @@ function dripEmail3HTML(opts: { buyerName: string; propertyTitle: string; proper
 async function scheduleDripSequence(db: any, opts: {
   leadId: string
   propertyId: string
-  builderId: string
+  builderId: string | null
   buyerName: string
   propertyTitle: string
   propertyId2: string
@@ -310,7 +310,7 @@ async function scheduleDripSequence(db: any, opts: {
   price: string
   highlights: string[]
   buyerEmail: string
-}): Promise<void> {
+}): Promise<boolean> {
   if (!opts.buyerEmail) return
 
   const now = new Date()
@@ -355,9 +355,9 @@ async function scheduleDripSequence(db: any, opts: {
   ]
 
   const rows = emails.map(e => ({
-    lead_id:           opts.leadId,
-    property_id:       opts.propertyId,
-    builder_id:        opts.builderId,
+    lead_id:           Number(opts.leadId),            // BIGINT — must be number, not string
+    property_id:       opts.propertyId || null,
+    builder_id:        opts.builderId || null,         // nullable UUID — empty string would fail
     ...e,
     status:            'scheduled',
     attempts:          0,
@@ -366,9 +366,11 @@ async function scheduleDripSequence(db: any, opts: {
 
   const { error } = await db.from('email_sequence_queue').insert(rows)
   if (error) {
-    console.error('[NotifyLead] Drip schedule error:', error.message)
+    console.error('[NotifyLead] Drip schedule error:', error.message, error.details)
+    return false
   } else {
     console.log('[NotifyLead] Drip sequence scheduled for lead', opts.leadId)
+    return true
   }
 }
 
@@ -512,10 +514,10 @@ export async function POST(request: NextRequest) {
     // ── C. Schedule buyer drip sequence ────────────────────────────────────
     // Gate: buyer has email + we know which property (builder_id may be null — that's OK)
     if (lead.email && effectivePropertyId) {
-      await scheduleDripSequence(db, {
+      const dripOk = await scheduleDripSequence(db, {
         leadId:        String(lead.id),
         propertyId:    effectivePropertyId,
-        builderId:     effectiveBuilderId || '',
+        builderId:     effectiveBuilderId || null,
         buyerName:     lead.name || 'There',
         propertyTitle,
         propertyId2:   effectivePropertyId,
@@ -524,7 +526,7 @@ export async function POST(request: NextRequest) {
         highlights,
         buyerEmail:    lead.email,
       })
-      results.drip_sequence = 'scheduled_3_emails'
+      results.drip_sequence = dripOk ? 'scheduled_3_emails' : 'schedule_failed'
     }
 
     return NextResponse.json({

@@ -379,9 +379,7 @@ async function scheduleDripSequence(db: any, opts: {
 
   const { error } = await db.from('email_sequence_queue').insert(rows)
   if (error) {
-    console.error('[NotifyLead] Drip schedule error:', error.message, error.details, error.hint, error.code)
-    // Store error detail for response debugging
-    ;(opts as any)._dripError = `${error.message} | ${error.details || ''} | code:${error.code || ''}`
+    console.error('[NotifyLead] Drip schedule error:', error.message, error.details, error.code)
     return false
   } else {
     console.log('[NotifyLead] Drip sequence scheduled for lead', opts.leadId)
@@ -529,7 +527,7 @@ export async function POST(request: NextRequest) {
     // ── C. Schedule buyer drip sequence ────────────────────────────────────
     // Gate: buyer has email + we know which property (builder_id may be null — that's OK)
     if (lead.email && effectivePropertyId) {
-      const dripOpts: any = {
+      const dripOk = await scheduleDripSequence(db, {
         leadId:        String(lead.id),
         propertyId:    effectivePropertyId,
         builderId:     effectiveBuilderId || null,
@@ -540,11 +538,8 @@ export async function POST(request: NextRequest) {
         price,
         highlights,
         buyerEmail:    lead.email,
-      }
-      const dripOk = await scheduleDripSequence(db, dripOpts)
+      })
       results.drip_sequence = dripOk ? 'scheduled_3_emails' : 'schedule_failed'
-      if (!dripOk && dripOpts._dripError) results.drip_error = dripOpts._dripError
-      results.drip_debug = { leadId: dripOpts.leadId, builderId: dripOpts.builderId, propertyId: dripOpts.propertyId }
     }
 
     return NextResponse.json({

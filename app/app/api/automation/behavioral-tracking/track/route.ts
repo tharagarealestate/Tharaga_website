@@ -36,6 +36,16 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Normalize session_id to UUID format (DB column is uuid type)
+    // If already a valid UUID, use as-is. Otherwise generate a deterministic UUID-like string.
+    const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+    let normalizedSessionId = session_id
+    if (!UUID_RE.test(session_id)) {
+      // Pad/hash any string into a UUID-like format using simple char codes
+      const padded = (session_id + '00000000000000000000000000000000').replace(/[^a-f0-9]/gi, '0').slice(0, 32)
+      normalizedSessionId = `${padded.slice(0,8)}-${padded.slice(8,12)}-4${padded.slice(12,15)}-a${padded.slice(15,18)}-${padded.slice(18,30)}`
+    }
+
     // Validate event_type
     const validEventTypes = [
       'page_view', 'property_view', 'property_favorite',
@@ -99,7 +109,7 @@ export async function POST(request: NextRequest) {
       .from('buyer_behavioral_signals')
       .insert({
         buyer_id: buyer_id ? Number(buyer_id) : null,
-        session_id,
+        session_id: normalizedSessionId,
         event_type,
         event_metadata,
         property_id: property_id || null,

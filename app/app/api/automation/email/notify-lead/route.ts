@@ -418,6 +418,19 @@ async function scheduleDripSequence(db: any, opts: {
 }): Promise<{ ok: boolean; count: number }> {
   if (!opts.buyerEmail) return { ok: false, count: 0 }
 
+  // Dedup guard — skip if this lead already has drip emails scheduled
+  try {
+    const { count: existing } = await db
+      .from('email_sequence_queue')
+      .select('id', { count: 'exact', head: true })
+      .eq('lead_id', Number(opts.leadId))
+      .eq('campaign_type', 'lead_nurture')
+    if (existing && existing > 0) {
+      console.log(`[NotifyLead] Drip already exists for lead ${opts.leadId} (${existing} rows) — skipping`)
+      return { ok: true, count: existing }
+    }
+  } catch { /* ignore dedup check errors */ }
+
   const now = new Date()
   const day = (d: number) => new Date(now.getTime() + d * 24 * 60 * 60 * 1000).toISOString()
 

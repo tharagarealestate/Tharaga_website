@@ -453,10 +453,17 @@ export async function POST(request: NextRequest) {
     try {
       const seg = content.priceSegment
       const loc = property.locality || property.city || 'Chennai'
-      await db.from('property_marketing_strategies').upsert({
-        property_id:     propertyId,
-        builder_id:      builderId || null,
-        pricing_position: seg,
+      // Check if row already exists (upsert requires unique constraint — use delete+insert instead)
+      const { data: existingStrat } = await db
+        .from('property_marketing_strategies')
+        .select('id')
+        .eq('property_id', propertyId)
+        .maybeSingle()
+
+      const stratData = {
+        property_id:          propertyId,
+        builder_id:           builderId || null,
+        pricing_position:     seg,
         target_audience: {
           primary:   content.targetAudience[0] || 'Homebuyers',
           secondary: content.targetAudience.slice(1),
@@ -480,47 +487,67 @@ export async function POST(request: NextRequest) {
           rank_3: 'social_media',
           rank_4: 'seo',
         },
-        campaign_hooks: {
-          launch_hook: content.emailSubject,
-          wa_share:    waShareUrl,
-        },
-        ai_generated:   true,
-        ai_model_used:  process.env.OPENAI_API_KEY ? 'gpt-4o-mini' : 'rule-based',
-        status:         'active',
-      }, { onConflict: 'property_id' })
+        content_themes:       { themes: ['modern', 'investment', 'family'] },
+        campaign_hooks:       { launch_hook: content.emailSubject, wa_share: waShareUrl },
+        budget_allocation:    { email: 40, whatsapp: 30, social: 20, seo: 10 },
+        kpi_targets:          { leads_per_week: 5, site_visits_per_month: 2, conversion_rate: 0.05 },
+        competitive_advantages: { price_segment: seg, locality_advantage: loc },
+        risk_factors:         { market_risk: 'low', competition: 'medium' },
+        ai_generated:         true,
+        ai_model_used:        process.env.OPENAI_API_KEY ? 'gpt-4o-mini' : 'rule-based',
+        status:               'active',
+      }
+
+      if (existingStrat) {
+        await db.from('property_marketing_strategies').update(stratData).eq('id', existingStrat.id)
+      } else {
+        await db.from('property_marketing_strategies').insert(stratData)
+      }
     } catch (e) {
-      console.warn('[Launch] property_marketing_strategies upsert error:', (e as Error).message)
+      console.warn('[Launch] property_marketing_strategies error:', (e as Error).message)
     }
 
     // ── 6c. Auto-generate SEO content entry ────────────────────────────────
     try {
       const loc   = property.locality || property.city || 'Chennai'
       const bhk   = property.bedrooms ? `${property.bedrooms} BHK` : property.property_type || 'Property'
-      const price = property.price_inr
+      const priceStr = property.price_inr
         ? (property.price_inr >= 10_000_000 ? `${(property.price_inr / 10_000_000).toFixed(1)} Crore` : `${(property.price_inr / 100_000).toFixed(0)} Lakh`)
         : ''
       const slug  = `${bhk}-for-sale-in-${loc}-chennai`.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')
 
-      await db.from('seo_content').upsert({
-        property_id:     propertyId,
-        builder_id:      builderId || null,
-        content_type:    'property_listing',
-        title:           `${bhk} for Sale in ${loc}, Chennai${price ? ` — ₹${price}` : ''}`,
+      const { data: existingSeo } = await db
+        .from('seo_content')
+        .select('id')
+        .eq('property_id', propertyId)
+        .maybeSingle()
+
+      const seoData = {
+        property_id:      propertyId,
+        builder_id:       builderId || null,
+        content_type:     'property_listing',
+        title:            `${bhk} for Sale in ${loc}, Chennai${priceStr ? ` — ₹${priceStr}` : ''}`,
         slug,
-        meta_title:      `Buy ${bhk} in ${loc} Chennai | ${property.title} | Tharaga`,
-        meta_description: `${bhk}${property.sqft ? ` · ${property.sqft} sq.ft` : ''} for sale in ${loc}, Chennai${price ? ` at ₹${price}` : ''}. ${content.highlights[0] || ''}. View details, photos & book a site visit on Tharaga.`,
-        focus_keywords:  [
+        meta_title:       `Buy ${bhk} in ${loc} Chennai | ${property.title} | Tharaga`,
+        meta_description: `${bhk}${property.sqft ? ` · ${property.sqft} sq.ft` : ''} for sale in ${loc}, Chennai${priceStr ? ` at ₹${priceStr}` : ''}. ${content.highlights[0] || ''}. View details, photos & book a site visit on Tharaga.`,
+        focus_keywords: [
           `${bhk} for sale in ${loc}`,
           `${bhk} for sale in ${loc} Chennai`,
           `property for sale in ${loc}`,
           `Chennai real estate`,
           `buy ${bhk} Chennai`,
         ],
-        status:          'published',
-        url:             `https://tharaga.co.in/properties/${propertyId}`,
-      }, { onConflict: 'property_id' })
+        status:           'published',
+        url:              `https://tharaga.co.in/properties/${propertyId}`,
+      }
+
+      if (existingSeo) {
+        await db.from('seo_content').update(seoData).eq('id', existingSeo.id)
+      } else {
+        await db.from('seo_content').insert(seoData)
+      }
     } catch (e) {
-      console.warn('[Launch] seo_content upsert error:', (e as Error).message)
+      console.warn('[Launch] seo_content error:', (e as Error).message)
     }
 
     // ── 7. Log automation activity ──────────────────────────────────────────

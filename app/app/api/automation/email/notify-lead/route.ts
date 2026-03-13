@@ -355,13 +355,14 @@ async function scheduleDripSequence(db: any, opts: {
   ]
 
   const rows = emails.map(e => ({
-    lead_id:           Number(opts.leadId),            // BIGINT — must be number, not string
-    property_id:       opts.propertyId || null,
-    builder_id:        opts.builderId || null,         // nullable UUID — empty string would fail
+    lead_id:     Number(opts.leadId),    // BIGINT — must be number not string
+    property_id: opts.propertyId || null,
+    builder_id:  opts.builderId || null, // nullable UUID — empty string would fail
     ...e,
-    status:            'scheduled',
-    attempts:          0,
-    metadata:          { buyer_email: opts.buyerEmail, campaign_type: 'lead_nurture' },
+    status:      'scheduled',
+    attempts:    0,
+    // Note: 'metadata' column omitted — it may not exist in older DB schemas.
+    // If it exists it will use its DEFAULT value.
   }))
 
   const { error } = await db.from('email_sequence_queue').insert(rows)

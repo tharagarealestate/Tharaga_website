@@ -238,6 +238,17 @@ serve(async (req) => {
       fixes.push('email_sequence_queue table not found — skipped')
     }
 
+    // ── Fix 5: Add missing columns to email_sequence_queue ────────────────────
+    if (tableExists) {
+      await client.queryArray(`
+        ALTER TABLE public.email_sequence_queue
+          ADD COLUMN IF NOT EXISTS metadata JSONB DEFAULT '{}'::jsonb,
+          ADD COLUMN IF NOT EXISTS buyer_email TEXT,
+          ADD COLUMN IF NOT EXISTS campaign_type TEXT DEFAULT 'lead_nurture';
+      `)
+      fixes.push('email_sequence_queue: added missing columns metadata, buyer_email, campaign_type')
+    }
+
     await client.end()
 
     return new Response(JSON.stringify({

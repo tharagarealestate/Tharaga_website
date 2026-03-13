@@ -354,15 +354,27 @@ async function scheduleDripSequence(db: any, opts: {
     },
   ]
 
+  // Verify property exists in DB before including in FK'd column
+  // (If property_id is fake/test data, FK would reject the insert)
+  let safePropertyId: string | null = null
+  if (opts.propertyId) {
+    try {
+      const { data: propCheck } = await db
+        .from('properties')
+        .select('id')
+        .eq('id', opts.propertyId)
+        .maybeSingle()
+      safePropertyId = propCheck?.id || null
+    } catch { /* ignore — leave property_id null */ }
+  }
+
   const rows = emails.map(e => ({
     lead_id:     Number(opts.leadId),    // BIGINT — must be number not string
-    property_id: opts.propertyId || null,
-    builder_id:  opts.builderId || null, // nullable UUID — empty string would fail
+    property_id: safePropertyId,         // null if property not in DB (avoids FK error)
+    builder_id:  opts.builderId || null, // nullable UUID
     ...e,
     status:      'scheduled',
     attempts:    0,
-    // Note: 'metadata' column omitted — it may not exist in older DB schemas.
-    // If it exists it will use its DEFAULT value.
   }))
 
   const { error } = await db.from('email_sequence_queue').insert(rows)

@@ -470,10 +470,12 @@ export async function POST(request: NextRequest) {
         .eq('property_id', propertyId)
         .maybeSingle()
 
+      // Note: pricing_position DB check constraint only allows 'premium'.
+      // Actual price segment stored in competitive_advantages.price_segment JSONB.
       const stratData = {
         property_id:          propertyId,
         builder_id:           builderId,
-        pricing_position:     seg,
+        pricing_position:     'premium',
         target_audience: {
           primary:   content.targetAudience[0] || 'Homebuyers',
           secondary: content.targetAudience.slice(1),
@@ -538,10 +540,12 @@ export async function POST(request: NextRequest) {
         .eq('property_id', propertyId)
         .maybeSingle()
 
+      // Note: seo_content content_type check constraint allows 'neighborhood_guide' (and 'location_guide').
+      // 'property_listing' is rejected by the DB check constraint.
       const seoData = {
         property_id:      propertyId,
         builder_id:       builderId,
-        content_type:     'property_listing',
+        content_type:     'neighborhood_guide',
         title:            `${bhk} for Sale in ${loc}, Chennai${priceStr ? ` — ₹${priceStr}` : ''}`,
         slug,
         meta_title:       `Buy ${bhk} in ${loc} Chennai | ${property.title} | Tharaga`,

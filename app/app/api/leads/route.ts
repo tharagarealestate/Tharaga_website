@@ -364,8 +364,17 @@ export async function POST(request: NextRequest) {
 
     const builderId = property?.builder_id || null
 
-    // Rule-based smart score based on what contact info was provided (clamped to 0-10 range)
-    const initialScore = phone && email ? 8 : phone ? 6 : 4
+    // Rule-based smart score — India-optimized (0-10 scale)
+    // Base 3 + signals for contact completeness, intent, and timing
+    let initialScore = 3
+    if (email)  initialScore += 2        // can nurture digitally
+    if (phone)  initialScore += 2        // builder can call directly
+    if (message && message.length > 10)  initialScore += 1   // showed engagement
+    if (property_id)                     initialScore += 1   // property-specific (high intent)
+    // Business hours IST bonus (9am–8pm = UTC+5:30 → UTC 3:30–14:30)
+    const utcHour = new Date().getUTCHours()
+    if (utcHour >= 3 && utcHour <= 14)  initialScore += 0.5 // active during business hours
+    initialScore = Math.min(Math.round(initialScore), 10)
 
     // Build insert payload — no preferred_contact / timeline (columns don't exist in schema)
     const leadPayload: Record<string, any> = {

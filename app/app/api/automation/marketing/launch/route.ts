@@ -396,15 +396,7 @@ export async function POST(request: NextRequest) {
         console.warn('[Launch] Could not fetch builder user:', (e as Error).message)
       }
 
-      // Also try builders/profiles table
-      if (!builderEmail) {
-        try {
-          const { data: prof } = await db.from('builders').select('name,email').eq('id', builderId).maybeSingle()
-          if (prof) { builderEmail = (prof as any).email || ''; builderName = (prof as any).name || builderName }
-        } catch (e) {
-          // builders table may not exist — ignore
-        }
-      }
+      // Note: builders table has no email column — Supabase Auth is the only email source
     }
 
     _step = 5
@@ -455,6 +447,80 @@ export async function POST(request: NextRequest) {
     if (builderEmail) {
       sendBuilderEmail(builderEmail, builderName, property as PropertyRow, content, waShareUrl)
         .catch(e => console.error('[Launch] Builder email error:', e))
+    }
+
+    // ── 6b. Auto-populate property_marketing_strategies ─────────────────────
+    try {
+      const seg = content.priceSegment
+      const loc = property.locality || property.city || 'Chennai'
+      await db.from('property_marketing_strategies').upsert({
+        property_id:     propertyId,
+        builder_id:      builderId || null,
+        pricing_position: seg,
+        target_audience: {
+          primary:   content.targetAudience[0] || 'Homebuyers',
+          secondary: content.targetAudience.slice(1),
+          city:      property.city || 'Chennai',
+          locality:  loc,
+        },
+        usps: {
+          highlights: content.highlights,
+          bedrooms:   property.bedrooms,
+          sqft:       property.sqft,
+          price:      property.price_inr,
+        },
+        messaging_strategy: {
+          hook:         content.emailSubject,
+          whatsapp_msg: content.whatsappMsg,
+          social_post:  content.socialPost,
+        },
+        channel_priorities: {
+          rank_1: 'email_drip',
+          rank_2: 'whatsapp',
+          rank_3: 'social_media',
+          rank_4: 'seo',
+        },
+        campaign_hooks: {
+          launch_hook: content.emailSubject,
+          wa_share:    waShareUrl,
+        },
+        ai_generated:   true,
+        ai_model_used:  process.env.OPENAI_API_KEY ? 'gpt-4o-mini' : 'rule-based',
+        status:         'active',
+      }, { onConflict: 'property_id' })
+    } catch (e) {
+      console.warn('[Launch] property_marketing_strategies upsert error:', (e as Error).message)
+    }
+
+    // ── 6c. Auto-generate SEO content entry ────────────────────────────────
+    try {
+      const loc   = property.locality || property.city || 'Chennai'
+      const bhk   = property.bedrooms ? `${property.bedrooms} BHK` : property.property_type || 'Property'
+      const price = property.price_inr
+        ? (property.price_inr >= 10_000_000 ? `${(property.price_inr / 10_000_000).toFixed(1)} Crore` : `${(property.price_inr / 100_000).toFixed(0)} Lakh`)
+        : ''
+      const slug  = `${bhk}-for-sale-in-${loc}-chennai`.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')
+
+      await db.from('seo_content').upsert({
+        property_id:     propertyId,
+        builder_id:      builderId || null,
+        content_type:    'property_listing',
+        title:           `${bhk} for Sale in ${loc}, Chennai${price ? ` — ₹${price}` : ''}`,
+        slug,
+        meta_title:      `Buy ${bhk} in ${loc} Chennai | ${property.title} | Tharaga`,
+        meta_description: `${bhk}${property.sqft ? ` · ${property.sqft} sq.ft` : ''} for sale in ${loc}, Chennai${price ? ` at ₹${price}` : ''}. ${content.highlights[0] || ''}. View details, photos & book a site visit on Tharaga.`,
+        focus_keywords:  [
+          `${bhk} for sale in ${loc}`,
+          `${bhk} for sale in ${loc} Chennai`,
+          `property for sale in ${loc}`,
+          `Chennai real estate`,
+          `buy ${bhk} Chennai`,
+        ],
+        status:          'published',
+        url:             `https://tharaga.co.in/properties/${propertyId}`,
+      }, { onConflict: 'property_id' })
+    } catch (e) {
+      console.warn('[Launch] seo_content upsert error:', (e as Error).message)
     }
 
     // ── 7. Log automation activity ──────────────────────────────────────────

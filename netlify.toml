@@ -28,6 +28,11 @@
 [[plugins]]
   package = "@netlify/plugin-functions-install-core"
 
+# ─── Scheduled Functions ───────────────────────────────────────────────────────
+# Runs every 30 minutes to process and send due drip emails from email_sequence_queue.
+[functions.process-email-queue]
+  schedule = "*/30 * * * *"
+
 
 
 ## Legacy path aliases — migrate from /app/* to new flat routes

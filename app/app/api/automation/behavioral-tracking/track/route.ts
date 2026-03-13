@@ -1,13 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getSupabase } from '@/lib/supabase';
+import { createClient } from '@supabase/supabase-js';
+
+export const runtime = 'nodejs'
+export const dynamic = 'force-dynamic'
 
 export async function POST(request: NextRequest) {
   try {
-    const supabase = getSupabase();
+    // Use service role to bypass RLS — behavioral signals are platform-level data
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
+      { auth: { autoRefreshToken: false, persistSession: false } }
+    )
+
     const body = await request.json();
 
     const {
-      buyer_id,
+      buyer_id,      // optional — anonymous visitors won't have this
       session_id,
       event_type,
       event_metadata = {},
@@ -19,10 +28,10 @@ export async function POST(request: NextRequest) {
       time_of_day,
     } = body;
 
-    // Validate required fields
-    if (!buyer_id || !session_id || !event_type) {
+    // Only session_id and event_type are required (buyer_id optional for anonymous tracking)
+    if (!session_id || !event_type) {
       return NextResponse.json(
-        { error: 'Missing required fields: buyer_id, session_id, event_type' },
+        { error: 'Missing required fields: session_id, event_type' },
         { status: 400 }
       );
     }
@@ -85,11 +94,11 @@ export async function POST(request: NextRequest) {
       0
     ) + signal_weight;
 
-    // Insert behavioral signal
+    // Insert behavioral signal (buyer_id is nullable for anonymous visitors)
     const { data, error } = await supabase
       .from('buyer_behavioral_signals')
       .insert({
-        buyer_id,
+        buyer_id: buyer_id ? Number(buyer_id) : null,
         session_id,
         event_type,
         event_metadata,

@@ -238,15 +238,49 @@ serve(async (req) => {
       fixes.push('email_sequence_queue table not found — skipped')
     }
 
-    // ── Fix 5: Add missing columns to email_sequence_queue ────────────────────
+    // ── Fix 5: Add ALL potentially missing columns to email_sequence_queue ──────
     if (tableExists) {
-      await client.queryArray(`
-        ALTER TABLE public.email_sequence_queue
-          ADD COLUMN IF NOT EXISTS metadata JSONB DEFAULT '{}'::jsonb,
-          ADD COLUMN IF NOT EXISTS buyer_email TEXT,
-          ADD COLUMN IF NOT EXISTS campaign_type TEXT DEFAULT 'lead_nurture';
+      // Get existing columns
+      const colResult = await client.queryArray(`
+        SELECT column_name FROM information_schema.columns
+        WHERE table_schema = 'public' AND table_name = 'email_sequence_queue'
+        ORDER BY ordinal_position
       `)
-      fixes.push('email_sequence_queue: added missing columns metadata, buyer_email, campaign_type')
+      const existingCols = new Set(colResult.rows.map((r: any) => r[0] as string))
+      fixes.push(`email_sequence_queue existing columns: ${[...existingCols].join(', ')}`)
+
+      // Add each missing column individually (IF NOT EXISTS is safest)
+      const colsToAdd: Array<[string, string]> = [
+        ['property_id',        'UUID REFERENCES public.properties(id) ON DELETE SET NULL'],
+        ['sequence_position',  'INTEGER NOT NULL DEFAULT 1'],
+        ['scheduled_for',      'TIMESTAMPTZ NOT NULL DEFAULT NOW()'],
+        ['subject',            'TEXT NOT NULL DEFAULT \'\''],
+        ['html_content',       'TEXT NOT NULL DEFAULT \'\''],
+        ['text_content',       'TEXT'],
+        ['cta',                'TEXT'],
+        ['status',             "TEXT NOT NULL DEFAULT 'scheduled' CHECK (status IN ('scheduled','sent','delivered','cancelled','paused','deferred'))"],
+        ['provider_message_id','TEXT'],
+        ['sent_at',            'TIMESTAMPTZ'],
+        ['attempts',           'INTEGER DEFAULT 0'],
+        ['max_attempts',       'INTEGER DEFAULT 3'],
+        ['paused_reason',      'TEXT'],
+        ['paused_at',          'TIMESTAMPTZ'],
+        ['metadata',           "JSONB DEFAULT '{}'::jsonb"],
+        ['buyer_email',        'TEXT'],
+        ['campaign_type',      "TEXT DEFAULT 'lead_nurture'"],
+        ['updated_at',         'TIMESTAMPTZ NOT NULL DEFAULT NOW()'],
+      ]
+
+      for (const [col, def] of colsToAdd) {
+        if (!existingCols.has(col)) {
+          try {
+            await client.queryArray(`ALTER TABLE public.email_sequence_queue ADD COLUMN IF NOT EXISTS ${col} ${def}`)
+            fixes.push(`email_sequence_queue: added column ${col}`)
+          } catch (e: any) {
+            fixes.push(`email_sequence_queue: FAILED to add ${col}: ${e.message}`)
+          }
+        }
+      }
     }
 
     await client.end()

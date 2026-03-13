@@ -191,6 +191,30 @@ serve(async (req) => {
     `)
     fixes.push('calculate_listing_performance: added property existence check + top-level EXCEPTION handler')
 
+    // ── Fix 2b: Drop builder_id and property_id FK constraints on email_sequence_queue
+    //    These are optional context columns — FK violations block all drip inserts.
+    //    Keep lead_id FK (required). Drop builder_id/property_id FKs (optional metadata).
+    const dropFkResult = await client.queryArray(`
+      SELECT constraint_name FROM information_schema.table_constraints
+      WHERE table_schema = 'public'
+        AND table_name = 'email_sequence_queue'
+        AND constraint_type = 'FOREIGN KEY'
+    `)
+    const fkNames = dropFkResult.rows.map((r: any) => r[0] as string)
+    fixes.push(`email_sequence_queue FKs found: ${fkNames.join(', ')}`)
+
+    for (const fkName of fkNames) {
+      // Drop all FKs except lead_id FK (which we'll re-add if needed)
+      if (fkName !== 'email_sequence_queue_lead_id_fkey') {
+        try {
+          await client.queryArray(`ALTER TABLE public.email_sequence_queue DROP CONSTRAINT IF EXISTS "${fkName}"`)
+          fixes.push(`email_sequence_queue: dropped FK ${fkName}`)
+        } catch (e: any) {
+          fixes.push(`email_sequence_queue: could not drop FK ${fkName}: ${e.message}`)
+        }
+      }
+    }
+
     // ── Fix 3: email_sequence_queue.lead_id UUID → BIGINT ─────────────────────
     const tableCheck = await client.queryArray(`
       SELECT EXISTS (

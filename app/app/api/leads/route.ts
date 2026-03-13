@@ -432,23 +432,30 @@ export async function POST(request: NextRequest) {
       leadsCache.invalidate(`stats:${builderId}`)
     }
 
-    // ── Fire-and-forget: email notifications + drip sequence + SmartScore ──
-    // Non-blocking — lead creation already succeeded, these run in background
-    const baseUrl = request.nextUrl.origin || 'https://tharaga.co.in'
-    Promise.all([
-      // 1. Notify builder + send buyer confirmation + schedule drip
-      fetch(`${baseUrl}/api/automation/email/notify-lead`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ lead_id: lead.id, property_id }),
-      }).catch(e => console.error('[Leads] notify-lead error:', e)),
-      // 2. Calculate AI SmartScore for the new lead
-      fetch(`${baseUrl}/api/smartscore/calculate`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ lead_id: lead.id }),
-      }).catch(e => console.error('[Leads] smartscore error:', e)),
-    ]).catch(() => {})
+    // ── Await notifications with timeout — ensures drip is scheduled before response ──
+    // In serverless (Netlify/Lambda) the container may freeze right after sending the
+    // response, cutting off un-awaited promises. Awaiting with a 6s timeout ensures
+    // the drip sequence is always scheduled. Lead is already saved so buyer always
+    // gets the 201 — even if notify-lead times out they still have their enquiry.
+    const baseUrl = 'https://tharaga.co.in'
+    await Promise.race([
+      Promise.all([
+        // 1. Notify builder + send buyer confirmation + schedule drip
+        fetch(`${baseUrl}/api/automation/email/notify-lead`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ lead_id: lead.id, property_id }),
+        }).catch(e => console.error('[Leads] notify-lead error:', e.message)),
+        // 2. Calculate AI SmartScore for the new lead
+        fetch(`${baseUrl}/api/smartscore/calculate`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ lead_id: lead.id }),
+        }).catch(e => console.error('[Leads] smartscore error:', e.message)),
+      ]).catch(() => {}),
+      // Timeout: never block the lead response for more than 6 seconds
+      new Promise(resolve => setTimeout(resolve, 6000)),
+    ])
 
     return NextResponse.json({
       ok: true, success: true, id: lead.id,

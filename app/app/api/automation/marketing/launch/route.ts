@@ -410,7 +410,11 @@ export async function POST(request: NextRequest) {
     const waShareUrl = `https://wa.me/?text=${waText}`
 
     // ── 5. Save campaign record ─────────────────────────────────────────────
+    // property_marketing_campaigns also has builder_id NOT NULL — skip when no builder
     let campaignId = 'pending'
+    if (!builderId) {
+      console.warn('[Launch] Skipping campaign insert — no builder_id. Apply migration: ALTER TABLE property_marketing_campaigns ALTER COLUMN builder_id DROP NOT NULL')
+    } else {
     try {
       const { data: campaign, error: campErr } = await db
         .from('property_marketing_campaigns')
@@ -442,6 +446,7 @@ export async function POST(request: NextRequest) {
     } catch (e) {
       console.error('[Launch] Campaign insert error:', (e as Error).message)
     }
+    } // end if (builderId) for campaign
 
     // ── 6. Send builder notification email (fire-and-forget) ────────────────
     if (builderEmail) {
@@ -450,6 +455,11 @@ export async function POST(request: NextRequest) {
     }
 
     // ── 6b. Auto-populate property_marketing_strategies ─────────────────────
+    // NOTE: builder_id is NOT NULL in DB — skip when property has no builder
+    // TODO: apply migration: ALTER TABLE property_marketing_strategies ALTER COLUMN builder_id DROP NOT NULL
+    if (!builderId) {
+      console.warn('[Launch] Skipping property_marketing_strategies — no builder_id on property. Apply migration to allow nullable builder_id.')
+    } else {
     try {
       const seg = content.priceSegment
       const loc = property.locality || property.city || 'Chennai'
@@ -462,7 +472,7 @@ export async function POST(request: NextRequest) {
 
       const stratData = {
         property_id:          propertyId,
-        builder_id:           builderId || null,
+        builder_id:           builderId,
         pricing_position:     seg,
         target_audience: {
           primary:   content.targetAudience[0] || 'Homebuyers',
@@ -506,8 +516,14 @@ export async function POST(request: NextRequest) {
     } catch (e) {
       console.warn('[Launch] property_marketing_strategies error:', (e as Error).message)
     }
+    } // end if (builderId) for strategies
 
     // ── 6c. Auto-generate SEO content entry ────────────────────────────────
+    // NOTE: builder_id is NOT NULL in DB — skip when property has no builder
+    // TODO: apply migration: ALTER TABLE seo_content ALTER COLUMN builder_id DROP NOT NULL
+    if (!builderId) {
+      console.warn('[Launch] Skipping seo_content — no builder_id. Apply migration to allow nullable builder_id.')
+    } else {
     try {
       const loc   = property.locality || property.city || 'Chennai'
       const bhk   = property.bedrooms ? `${property.bedrooms} BHK` : property.property_type || 'Property'
@@ -524,7 +540,7 @@ export async function POST(request: NextRequest) {
 
       const seoData = {
         property_id:      propertyId,
-        builder_id:       builderId || null,
+        builder_id:       builderId,
         content_type:     'property_listing',
         title:            `${bhk} for Sale in ${loc}, Chennai${priceStr ? ` — ₹${priceStr}` : ''}`,
         slug,
@@ -549,13 +565,14 @@ export async function POST(request: NextRequest) {
     } catch (e) {
       console.warn('[Launch] seo_content error:', (e as Error).message)
     }
+    } // end if (builderId) for seo_content
 
     // ── 7. Log automation activity ──────────────────────────────────────────
     try {
       await db.from('property_marketing_automation_logs').insert({
         property_id:    propertyId,
-        builder_id:     builderId,
-        campaign_id:    campaignId,
+        builder_id:     builderId || null,
+        campaign_id:    campaignId === 'pending' ? null : campaignId,
         automation_type: 'launch',
         status:          'success',
         details: {

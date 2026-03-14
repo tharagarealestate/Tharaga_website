@@ -169,7 +169,7 @@ export default function HomePage() {
   const [commandFocused, setCommandFocused] = useState(false)
   const [showLeadModal, setShowLeadModal] = useState(false)
   const [activeLocality, setActiveLocality] = useState<string | null>(null)
-  const [navVisible, setNavVisible] = useState(false)
+  const [navVisible, setNavVisible] = useState(true)
   const [hoveredProperty, setHoveredProperty] = useState<number | null>(null)
   const [userMenuOpen, setUserMenuOpen] = useState(false)
 
@@ -229,10 +229,7 @@ export default function HomePage() {
   const heroOpacity = useTransform(scrollY, [0, 400], [1, 0])
   const heroY = useTransform(scrollY, [0, 400], [0, -60])
 
-  useEffect(() => {
-    const unsub = scrollY.on('change', v => setNavVisible(v > 80))
-    return unsub
-  }, [scrollY])
+  // Nav is always visible — no scroll-based toggle
 
   const handleMouseMove = useCallback((e: React.MouseEvent) => {
     mouseX.set(e.clientX)
@@ -256,14 +253,12 @@ export default function HomePage() {
         style={{ left: springX, top: springY, transform: 'translate(-50%, -50%)' }}
       />
 
-      {/* ── Floating ghost nav (appears on scroll) ── */}
+      {/* ── Sticky nav — always visible ── */}
       <AnimatePresence>
         {navVisible && (
           <motion.nav
-            initial={{ y: -80, opacity: 0 }}
+            initial={{ y: 0, opacity: 1 }}
             animate={{ y: 0, opacity: 1 }}
-            exit={{ y: -80, opacity: 0 }}
-            transition={{ duration: 0.3, ease: 'easeOut' }}
             className="fixed top-0 left-0 right-0 z-50 px-6 py-3 backdrop-blur-2xl bg-zinc-950/85 border-b border-white/[0.06]"
           >
             <div className="max-w-7xl mx-auto flex items-center justify-between">

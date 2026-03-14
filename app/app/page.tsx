@@ -18,13 +18,16 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { motion, useScroll, useTransform, AnimatePresence, useMotionValue, useSpring } from 'framer-motion'
 import {
   Brain, Target, BarChart3, Zap, Shield, ArrowRight, CheckCircle2,
   Building2, Sparkles, TrendingUp, ChevronRight, Activity,
   MessageSquare, Calculator, Star, Users, Search, Eye,
+  LogIn, LogOut, LayoutDashboard, ChevronDown,
 } from 'lucide-react'
-import { AuthButton } from '@/components/ui/AuthButton'
+import { openAuthModal } from '@/components/ui/AuthButton'
+import { getSupabase } from '@/lib/supabase'
 import LeadCaptureForm from '@/components/LeadCaptureForm'
 
 // ─── Intelligence Feed Data ──────────────────────────────────────────────────
@@ -161,12 +164,55 @@ function NeuralLines({ nodes }: { nodes: typeof LOCALITIES }) {
 // ─── Main HomePage ────────────────────────────────────────────────────────────
 export default function HomePage() {
   const containerRef = useRef<HTMLDivElement>(null)
+  const router = useRouter()
   const [commandInput, setCommandInput] = useState('')
   const [commandFocused, setCommandFocused] = useState(false)
   const [showLeadModal, setShowLeadModal] = useState(false)
   const [activeLocality, setActiveLocality] = useState<string | null>(null)
   const [navVisible, setNavVisible] = useState(false)
   const [hoveredProperty, setHoveredProperty] = useState<number | null>(null)
+  const [userMenuOpen, setUserMenuOpen] = useState(false)
+
+  // ── Auth state ──
+  const [user, setUser] = useState<any>(null)
+  const [displayName, setDisplayName] = useState('')
+  const [userEmail, setUserEmail] = useState('')
+
+  useEffect(() => {
+    let mounted = true
+    async function loadUser(authUser: any) {
+      if (!authUser) { if (mounted) { setUser(null); setDisplayName(''); setUserEmail('') } return }
+      if (mounted) {
+        setUser(authUser)
+        setUserEmail(authUser.email || '')
+        setDisplayName(authUser.user_metadata?.full_name || authUser.user_metadata?.name || authUser.email?.split('@')[0] || 'User')
+      }
+      try {
+        const supabase = getSupabase()
+        const { data: profile } = await supabase.from('profiles').select('full_name').eq('id', authUser.id).single()
+        if (mounted && profile?.full_name) setDisplayName(profile.full_name)
+      } catch {}
+    }
+    async function init() {
+      try {
+        const supabase = getSupabase()
+        const { data: { user: authUser } } = await supabase.auth.getUser()
+        loadUser(authUser)
+        const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, session) => loadUser(session?.user || null))
+        return () => { mounted = false; subscription.unsubscribe() }
+      } catch { return () => { mounted = false } }
+    }
+    const cleanup = init()
+    return () => { mounted = false; cleanup.then(fn => fn?.()) }
+  }, [])
+
+  const handleSignOut = useCallback(async () => {
+    setUserMenuOpen(false)
+    try { const supabase = getSupabase(); await supabase.auth.signOut(); setUser(null); setDisplayName(''); setUserEmail(''); router.push('/') } catch {}
+  }, [router])
+
+  const initials = displayName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) || 'U'
+
   const mouseX = useMotionValue(0)
   const mouseY = useMotionValue(0)
   const springX = useSpring(mouseX, { stiffness: 60, damping: 20 })
@@ -234,13 +280,63 @@ export default function HomePage() {
                 <Link href="/builder" className="hover:text-zinc-100 transition-colors">Builder</Link>
               </div>
               <div className="flex items-center gap-3">
-                <AuthButton className="text-xs text-zinc-400 hover:text-zinc-100 transition-colors" />
-                <Link
-                  href="/builder"
-                  className="flex items-center gap-1.5 px-4 py-2 bg-amber-500 hover:bg-amber-400 text-black text-xs font-semibold rounded-lg transition-all"
-                >
-                  Start Free <ChevronRight className="w-3.5 h-3.5" />
-                </Link>
+                {user ? (
+                  /* ── Logged in: avatar + dropdown ── */
+                  <div
+                    className="relative"
+                    onMouseEnter={() => setUserMenuOpen(true)}
+                    onMouseLeave={() => setUserMenuOpen(false)}
+                  >
+                    <button className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-white/[0.06] transition-colors">
+                      <div className="w-7 h-7 rounded-full bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-400 text-[11px] font-bold">
+                        {initials}
+                      </div>
+                      <span className="text-xs font-medium text-zinc-300 max-w-[100px] truncate">{displayName}</span>
+                      <ChevronDown className="w-3 h-3 text-zinc-500" />
+                    </button>
+                    <AnimatePresence>
+                      {userMenuOpen && (
+                        <motion.div
+                          initial={{ opacity: 0, y: -6, scale: 0.97 }}
+                          animate={{ opacity: 1, y: 0, scale: 1 }}
+                          exit={{ opacity: 0, y: -6, scale: 0.97 }}
+                          transition={{ duration: 0.15, ease: 'easeOut' }}
+                          className="absolute right-0 top-full mt-1.5 w-52 bg-zinc-900 border border-zinc-700/60 rounded-xl shadow-2xl overflow-hidden z-50"
+                        >
+                          <div className="px-4 py-3 border-b border-zinc-800">
+                            <p className="text-xs font-semibold text-zinc-200 truncate">{displayName}</p>
+                            <p className="text-[10px] text-zinc-500 truncate">{userEmail}</p>
+                          </div>
+                          <div className="p-1.5 space-y-0.5">
+                            <Link
+                              href="/builder"
+                              className="flex items-center gap-2.5 px-3 py-2 text-xs text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800 rounded-lg transition-colors"
+                            >
+                              <LayoutDashboard className="w-3.5 h-3.5" />
+                              Dashboard
+                            </Link>
+                            <button
+                              onClick={handleSignOut}
+                              className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-zinc-400 hover:text-red-400 hover:bg-zinc-800 rounded-lg transition-colors"
+                            >
+                              <LogOut className="w-3.5 h-3.5" />
+                              Sign out
+                            </button>
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                ) : (
+                  /* ── Not logged in: Sign In button ── */
+                  <button
+                    onClick={() => openAuthModal()}
+                    className="flex items-center gap-1.5 px-4 py-2 bg-amber-500 hover:bg-amber-400 text-black text-xs font-semibold rounded-lg transition-all"
+                  >
+                    <LogIn className="w-3.5 h-3.5" />
+                    Sign In
+                  </button>
+                )}
               </div>
             </div>
           </motion.nav>

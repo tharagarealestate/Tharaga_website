@@ -107,6 +107,13 @@ const nextConfig = {
         '/api/admin/usage',
         '/api/analytics/:path*',
         '/api/properties-list',
+        // Agentic marketing funnel — FastAPI backend
+        '/api/leads/ingest',
+        '/api/leads/meta-webhook',
+        '/api/whatsapp/:path*',
+        '/api/distribution/:path*',
+        '/api/capi/:path*',
+        '/api/visits/:path*',
       ]
       
       // Rewrite only specific external API routes

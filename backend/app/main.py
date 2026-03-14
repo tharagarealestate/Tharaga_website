@@ -968,7 +968,43 @@ except Exception as e:
     logger.warning(f"Partner Portals routes not available: {e}")
     partner_portals_router = None
 
-# Note: Old data collection endpoints removed - replaced with Chennai Phase-1 features 
+# ── Agentic Marketing Funnel Routes (Module 2, 4, 5, 6, 8) ───────────────────
+try:
+    from .routes.leads import router as leads_router
+    app.include_router(leads_router)
+    logger.info("Lead ingest routes included successfully")
+except Exception as e:
+    logger.warning(f"Lead ingest routes not available: {e}")
+
+try:
+    from .routes.whatsapp import router as whatsapp_router
+    app.include_router(whatsapp_router)
+    logger.info("WhatsApp AI chatbot routes included successfully")
+except Exception as e:
+    logger.warning(f"WhatsApp routes not available: {e}")
+
+try:
+    from .routes.distribution import router as distribution_router
+    app.include_router(distribution_router)
+    logger.info("Lead distribution routes included successfully")
+except Exception as e:
+    logger.warning(f"Distribution routes not available: {e}")
+
+try:
+    from .routes.capi import router as capi_router
+    app.include_router(capi_router)
+    logger.info("Meta CAPI routes included successfully")
+except Exception as e:
+    logger.warning(f"CAPI routes not available: {e}")
+
+try:
+    from .routes.visits import router as visits_router
+    app.include_router(visits_router)
+    logger.info("Site visit QR routes included successfully")
+except Exception as e:
+    logger.warning(f"Visit routes not available: {e}")
+
+# Note: Old data collection endpoints removed - replaced with Chennai Phase-1 features
 if __name__ == "__main__":
     import uvicorn
 

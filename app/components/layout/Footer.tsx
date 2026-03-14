@@ -7,7 +7,7 @@ const footerLinks = {
     { label: 'Builder Dashboard', href: '/builder' },
     { label: 'Buyer Dashboard', href: '/buyer' },
     { label: 'Pricing', href: '/pricing' },
-    { label: 'Trial Signup', href: '/trial-signup' },
+    { label: 'Start Free', href: '/builder' },
   ],
   Tools: [
     { label: 'ROI Calculator', href: '/tools/roi' },

@@ -153,7 +153,7 @@ export default function PricingCard({
             onClick={async () => {
               if (price === 0) {
                 // Free plan - redirect to signup
-                window.location.href = '/trial-signup'
+                window.location.href = '/builder'
                 return
               }
               if ((plan as any).id === 'builder_enterprise') {

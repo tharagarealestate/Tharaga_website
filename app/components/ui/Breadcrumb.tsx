@@ -44,7 +44,7 @@ const segmentLabels: Record<string, string> = {
   about: 'About',
   help: 'Help',
   'property-listing': 'Properties',
-  'trial-signup': 'Trial Signup',
+  'trial-signup': 'Builder Dashboard',
   onboard: 'Onboarding',
   performance: 'Performance',
   pipeline: 'Pipeline',

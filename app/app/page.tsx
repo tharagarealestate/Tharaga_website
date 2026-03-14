@@ -236,7 +236,7 @@ export default function HomePage() {
               <div className="flex items-center gap-3">
                 <AuthButton className="text-xs text-zinc-400 hover:text-zinc-100 transition-colors" />
                 <Link
-                  href="/trial-signup"
+                  href="/builder"
                   className="flex items-center gap-1.5 px-4 py-2 bg-amber-500 hover:bg-amber-400 text-black text-xs font-semibold rounded-lg transition-all"
                 >
                   Start Free <ChevronRight className="w-3.5 h-3.5" />
@@ -380,7 +380,7 @@ export default function HomePage() {
               Browse properties
             </Link>
             <span className="text-zinc-700">·</span>
-            <Link href="/trial-signup" className="flex items-center gap-1.5 text-zinc-400 hover:text-amber-400 transition-colors group">
+            <Link href="/builder" className="flex items-center gap-1.5 text-zinc-400 hover:text-amber-400 transition-colors group">
               <Zap className="w-3.5 h-3.5 group-hover:text-amber-400" />
               Start as Builder
             </Link>
@@ -891,7 +891,7 @@ export default function HomePage() {
 
               <div className="flex flex-wrap gap-3">
                 <Link
-                  href="/trial-signup"
+                  href="/builder"
                   className="flex items-center gap-2 px-6 py-3 bg-amber-500 hover:bg-amber-400 text-black font-semibold text-sm rounded-xl transition-all"
                 >
                   <Zap className="w-4 h-4" /> Start Free Trial
@@ -1006,7 +1006,7 @@ export default function HomePage() {
 
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-12">
               <Link
-                href="/trial-signup"
+                href="/builder"
                 className="flex items-center gap-2 px-8 py-4 bg-amber-500 hover:bg-amber-400 text-black font-bold text-base rounded-xl transition-all shadow-lg shadow-amber-500/20"
               >
                 <Zap className="w-5 h-5" />

@@ -362,23 +362,6 @@ export default function HomePage() {
           style={{ opacity: heroOpacity, y: heroY }}
           className="relative z-10 w-full max-w-5xl mx-auto px-6 text-center"
         >
-          {/* Logo mark (no traditional header) */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-            className="flex items-center justify-center gap-3 mb-12"
-          >
-            <div className="w-10 h-10 rounded-xl bg-amber-500/20 border border-amber-400/30 flex items-center justify-center">
-              <Building2 className="w-5 h-5 text-amber-400" />
-            </div>
-            <span className="text-lg font-bold text-zinc-100 tracking-tight">Tharaga</span>
-            <div className="flex items-center gap-1.5 px-3 py-1 bg-amber-500/10 border border-amber-500/20 rounded-full">
-              <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
-              <span className="text-xs font-medium text-amber-400">AI Active</span>
-            </div>
-          </motion.div>
-
           {/* Headline — types itself */}
           <motion.div
             initial={{ opacity: 0, y: 30 }}

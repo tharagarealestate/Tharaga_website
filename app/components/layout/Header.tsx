@@ -31,7 +31,6 @@ export function Header() {
   const pathname = usePathname()
   const router = useRouter()
   const [mobileOpen, setMobileOpen] = useState(false)
-  const [scrolled, setScrolled] = useState(false)
   const [dropdownOpen, setDropdownOpen] = useState<string | null>(null)
   const [userMenuOpen, setUserMenuOpen] = useState(false)
 
@@ -40,12 +39,6 @@ export function Header() {
   const [displayName, setDisplayName] = useState('')
   const [userEmail, setUserEmail] = useState('')
   const dashboardPath = '/builder'
-
-  useEffect(() => {
-    const handleScroll = () => setScrolled(window.scrollY > 20)
-    window.addEventListener('scroll', handleScroll, { passive: true })
-    return () => window.removeEventListener('scroll', handleScroll)
-  }, [])
 
   useEffect(() => {
     setMobileOpen(false)
@@ -146,12 +139,7 @@ export function Header() {
 
   return (
     <header
-      className={cn(
-        'fixed top-0 left-0 right-0 z-[100] transition-all duration-200',
-        scrolled
-          ? 'bg-zinc-950/80 backdrop-blur-xl border-b border-zinc-800/50'
-          : 'bg-transparent'
-      )}
+      className="fixed top-0 left-0 right-0 z-[100] bg-zinc-950/80 backdrop-blur-xl border-b border-white/[0.06] transition-all duration-200"
     >
       <div className="container-page">
         <nav className="flex items-center justify-between h-16">

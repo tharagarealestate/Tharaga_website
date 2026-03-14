@@ -11,6 +11,7 @@ import {
   Lock,
   LogIn,
   ShieldCheck,
+  ShieldX,
   Sparkles,
   UserPlus,
   Zap,
@@ -30,7 +31,7 @@ const STATS = [
   { value: 'AI', label: 'Powered' },
 ]
 
-type GateVariant = 'unauthenticated' | 'no-profile'
+type GateVariant = 'unauthenticated' | 'no-profile' | 'buyer'
 
 interface BuilderAuthGateProps {
   variant?: GateVariant
@@ -117,7 +118,7 @@ export function BuilderAuthGate({ variant = 'unauthenticated' }: BuilderAuthGate
 
                 {/* Headline */}
                 <div className="mb-6">
-                  {variant === 'unauthenticated' ? (
+                  {variant === 'unauthenticated' && (
                     <>
                       <div className="flex items-center gap-2 mb-2">
                         <Lock className="w-4 h-4 text-zinc-500" />
@@ -127,14 +128,26 @@ export function BuilderAuthGate({ variant = 'unauthenticated' }: BuilderAuthGate
                         Access your AI-powered real estate command centre — manage leads, listings, and automations from one place.
                       </p>
                     </>
-                  ) : (
+                  )}
+                  {variant === 'no-profile' && (
                     <>
                       <div className="flex items-center gap-2 mb-2">
                         <UserPlus className="w-4 h-4 text-amber-400" />
-                        <h2 className="text-sm font-medium text-amber-400">Complete your setup</h2>
+                        <h2 className="text-sm font-medium text-amber-400">Builder access required</h2>
                       </div>
                       <p className="text-zinc-300 text-[15px] leading-relaxed">
-                        Your account is ready. Complete your builder profile to unlock the full dashboard.
+                        Your account isn't registered as a builder yet. Apply to get your builder profile and unlock the full dashboard.
+                      </p>
+                    </>
+                  )}
+                  {variant === 'buyer' && (
+                    <>
+                      <div className="flex items-center gap-2 mb-2">
+                        <ShieldX className="w-4 h-4 text-red-400" />
+                        <h2 className="text-sm font-medium text-red-400">Builders only</h2>
+                      </div>
+                      <p className="text-zinc-300 text-[15px] leading-relaxed">
+                        This dashboard is exclusively for registered real estate builders. Your account is registered as a buyer.
                       </p>
                     </>
                   )}
@@ -174,7 +187,7 @@ export function BuilderAuthGate({ variant = 'unauthenticated' }: BuilderAuthGate
                 </div>
 
                 {/* CTAs */}
-                {variant === 'unauthenticated' ? (
+                {variant === 'unauthenticated' && (
                   <div className="space-y-3">
                     <motion.button
                       whileHover={{ scale: 1.015 }}
@@ -193,16 +206,45 @@ export function BuilderAuthGate({ variant = 'unauthenticated' }: BuilderAuthGate
                       Start 14-day free trial — no card required
                     </button>
                   </div>
-                ) : (
-                  <motion.button
-                    whileHover={{ scale: 1.015 }}
-                    whileTap={{ scale: 0.985 }}
-                    onClick={() => (window.location.href = '/onboard')}
-                    className="w-full flex items-center justify-center gap-2.5 py-3 rounded-xl font-semibold text-sm bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-zinc-950 shadow-lg shadow-amber-500/20 transition-all duration-200"
-                  >
-                    <UserPlus className="w-4 h-4" />
-                    Complete Builder Profile
-                  </motion.button>
+                )}
+
+                {variant === 'no-profile' && (
+                  <div className="space-y-3">
+                    <motion.button
+                      whileHover={{ scale: 1.015 }}
+                      whileTap={{ scale: 0.985 }}
+                      onClick={() => (window.location.href = '/onboard')}
+                      className="w-full flex items-center justify-center gap-2.5 py-3 rounded-xl font-semibold text-sm bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-zinc-950 shadow-lg shadow-amber-500/20 transition-all duration-200"
+                    >
+                      <UserPlus className="w-4 h-4" />
+                      Apply as a Builder
+                    </motion.button>
+                    <button
+                      onClick={() => (window.location.href = '/')}
+                      className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm text-zinc-400 hover:text-zinc-200 border border-zinc-700/50 hover:border-zinc-600 bg-transparent hover:bg-zinc-800/40 transition-all duration-200"
+                    >
+                      Back to Homepage
+                    </button>
+                  </div>
+                )}
+
+                {variant === 'buyer' && (
+                  <div className="space-y-3">
+                    <motion.button
+                      whileHover={{ scale: 1.015 }}
+                      whileTap={{ scale: 0.985 }}
+                      onClick={() => (window.location.href = '/property-listing')}
+                      className="w-full flex items-center justify-center gap-2.5 py-3 rounded-xl font-semibold text-sm bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-zinc-950 shadow-lg shadow-amber-500/20 transition-all duration-200"
+                    >
+                      Browse Properties
+                    </motion.button>
+                    <button
+                      onClick={() => (window.location.href = '/')}
+                      className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm text-zinc-400 hover:text-zinc-200 border border-zinc-700/50 hover:border-zinc-600 bg-transparent hover:bg-zinc-800/40 transition-all duration-200"
+                    >
+                      Back to Homepage
+                    </button>
+                  </div>
                 )}
               </div>
 

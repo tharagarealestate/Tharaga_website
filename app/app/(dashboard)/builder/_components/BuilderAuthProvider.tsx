@@ -23,6 +23,7 @@ type AuthStatus =
   | 'authenticated'    // builder profile found, all good
   | 'unauthenticated'  // no session / session invalid
   | 'no-profile'       // logged in but no builder profile yet
+  | 'buyer'            // logged in but is a buyer (not a builder) — access denied
 
 const BuilderAuthContext = createContext<BuilderAuthContextType | null>(null)
 
@@ -131,8 +132,21 @@ export function BuilderAuthProvider({ children }: { children: ReactNode }) {
         return
       }
 
+      // If user has explicit 'buyer' role → deny access (builders only)
+      const isBuyer = roles.includes('buyer') && !roles.includes('builder')
+      if (isBuyer) {
+        setUserId(userId)
+        setBuilderId(null)
+        setBuilderProfile(null)
+        setStatus('buyer')
+        resolvedRef.current = true
+        return
+      }
+
       if (!profile || !profile.company_name?.trim()) {
-        // Logged in but no builder profile — show "complete profile" gate variant
+        // Logged in but no builder profile and no buyer role either.
+        // Could be a new user who registered but hasn't set up builder profile yet.
+        // Show "builders only" gate — do NOT redirect to /onboard automatically.
         setUserId(userId)
         setBuilderId(null)
         setBuilderProfile(null)
@@ -251,21 +265,20 @@ export function BuilderAuthProvider({ children }: { children: ReactNode }) {
     )
   }
 
-  // Logged in but no builder profile — redirect to onboarding
-  // Never show a gate here; it looks like a login loop to the user
-  if (status === 'no-profile') {
-    if (typeof window !== 'undefined') window.location.replace('/onboard')
+  // Logged in as a buyer — access denied (builders only)
+  if (status === 'buyer') {
     return (
       <BuilderAuthContext.Provider value={contextValue}>
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-zinc-950">
-          <div className="flex flex-col items-center gap-4">
-            <div className="relative w-12 h-12">
-              <div className="absolute inset-0 rounded-full border-2 border-amber-500/20" />
-              <div className="absolute inset-0 rounded-full border-t-2 border-amber-500 animate-spin" />
-            </div>
-            <p className="text-zinc-500 text-sm animate-pulse">Setting up your profile…</p>
-          </div>
-        </div>
+        <BuilderAuthGate variant="buyer" />
+      </BuilderAuthContext.Provider>
+    )
+  }
+
+  // Logged in but no builder profile — show "apply as builder" gate
+  if (status === 'no-profile') {
+    return (
+      <BuilderAuthContext.Provider value={contextValue}>
+        <BuilderAuthGate variant="no-profile" />
       </BuilderAuthContext.Provider>
     )
   }

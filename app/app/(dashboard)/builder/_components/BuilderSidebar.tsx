@@ -396,10 +396,9 @@ export function BuilderSidebar() {
           "fixed left-0 top-0 bottom-0 z-[1000] group/sidebar",
           "flex flex-col",
           "relative h-full",
-          "backdrop-blur-xl bg-white/10 border-r border-white/20",
-          "rounded-r-3xl overflow-hidden",
-          "shadow-[0_8px_32px_rgba(0,0,0,0.3)]",
-          "hover:shadow-2xl",
+          "backdrop-blur-xl bg-zinc-950/95 border-r border-white/[0.06]",
+          "overflow-hidden",
+          "shadow-[0_8px_32px_rgba(0,0,0,0.5)]",
           "transition-all duration-[250ms] ease-in-out",
           "hidden lg:flex"
         )}
@@ -410,17 +409,17 @@ export function BuilderSidebar() {
         <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover/sidebar:translate-x-full transition-transform duration-1000 ease-in-out pointer-events-none z-0" />
         
         {/* Content Container - Dark gradient overlay for pricing card effect */}
-        <div className="relative z-10 flex flex-col h-full bg-gradient-to-b from-primary-950/80 via-primary-900/80 to-primary-950/80">
+        <div className="relative z-10 flex flex-col h-full bg-zinc-950">
         {/* Header Section - Compact */}
         <div className="flex-shrink-0 px-3 py-3 border-b border-white/10">
           {/* Brand Logo */}
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-gold-500 to-gold-400 flex items-center justify-center shadow-lg shadow-gold-500/30 shrink-0">
-              <Building className="w-4 h-4 text-primary-950" />
+            <div className="w-8 h-8 rounded-lg bg-amber-500/15 border border-amber-500/25 flex items-center justify-center shrink-0">
+              <Building className="w-4 h-4 text-amber-400" />
             </div>
             <div className="flex flex-col leading-tight">
-              <span className="font-bold text-white text-xs whitespace-nowrap">THARAGA</span>
-              <span className="text-gold-400 text-[9px] font-medium whitespace-nowrap">Builder Portal</span>
+              <span className="font-bold text-zinc-100 text-xs whitespace-nowrap">THARAGA</span>
+              <span className="text-amber-400 text-[9px] font-medium whitespace-nowrap">Builder Portal</span>
             </div>
           </div>
 
@@ -436,7 +435,7 @@ export function BuilderSidebar() {
                 onFocus={() => setIsSearchFocused(true)}
                 onBlur={() => setIsSearchFocused(false)}
                 placeholder="Search..."
-                className="w-full pl-8 pr-2 py-1.5 bg-white/5 backdrop-blur-sm border border-white/10 rounded-lg text-white placeholder:text-gray-400 text-xs focus:outline-none focus:border-gold-500/50 focus:ring-1 focus:ring-gold-500/20 transition-all"
+                className="w-full pl-8 pr-2 py-1.5 bg-white/[0.04] backdrop-blur-sm border border-white/[0.08] rounded-lg text-zinc-200 placeholder:text-zinc-600 text-xs focus:outline-none focus:border-amber-500/50 focus:ring-1 focus:ring-amber-500/20 transition-all"
               />
               <kbd className="absolute right-2 top-1/2 -translate-y-1/2 hidden xl:flex items-center gap-0.5 px-1 py-0.5 text-[9px] font-medium text-gray-400 bg-white/5 border border-white/10 rounded">
                 <span className="text-[7px]">⌘</span>K
@@ -451,7 +450,7 @@ export function BuilderSidebar() {
             <div key={groupIndex} className={cn("space-y-0.5", group.label && "mb-3")}>
               {/* Group Label */}
               {group.label && (
-                <div className="px-2 py-1 text-[9px] font-semibold text-gray-500 uppercase tracking-wider">
+                <div className="px-2 py-1 text-[9px] font-semibold text-zinc-600 uppercase tracking-wider">
                   {group.label}
                 </div>
               )}
@@ -495,17 +494,17 @@ export function BuilderSidebar() {
                       }}
                       className={cn(
                         "flex items-center rounded-lg px-2 py-2 text-xs transition-all duration-150 group relative",
-                        "hover:bg-white/5",
+                        "hover:bg-white/[0.04]",
                         isActive
-                          ? "bg-gold-500/20 text-white border-l-2 glow-border"
-                          : "text-gray-400 hover:text-white",
+                          ? "bg-amber-500/10 text-zinc-100 border-l-2 border-amber-500/70"
+                          : "text-zinc-500 hover:text-zinc-200",
                         isLocked && "opacity-50 cursor-not-allowed",
                         "gap-2"
                       )}
                     >
                       {/* Icon container - Compact */}
                       <div className="flex items-center justify-center shrink-0 w-4 h-4">
-                        <item.icon className={cn("w-4 h-4 transition-colors duration-150", isActive && "text-gold-400")} />
+                        <item.icon className={cn("w-4 h-4 transition-colors duration-150", isActive && "text-amber-400")} />
                       </div>
                       
                       {/* Label - Always visible (static sidebar) */}
@@ -584,8 +583,8 @@ export function BuilderSidebar() {
                                 className={cn(
                                   "block px-2 py-1 text-[11px] rounded-lg transition-colors duration-150",
                                   isSubActive
-                                    ? "text-gold-300 font-medium bg-white/5"
-                                    : "text-gray-400 hover:text-white hover:bg-white/5"
+                                    ? "text-amber-300 font-medium bg-white/[0.04]"
+                                    : "text-zinc-500 hover:text-zinc-200 hover:bg-white/[0.04]"
                                 )}
                               >
                                 {sub.label}
@@ -614,27 +613,27 @@ export function BuilderSidebar() {
                   ? "bg-red-500/15 border-red-500/30 hover:bg-red-500/20"
                   : trialStatus.isUrgent
                   ? "bg-orange-500/15 border-orange-500/30 hover:bg-orange-500/20"
-                  : "bg-gold-500/15 border-gold-500/30 hover:bg-gold-500/20"
+                  : "bg-amber-500/10 border-amber-500/25 hover:bg-amber-500/15"
               )}
             >
               <div className="flex items-center gap-1.5 mb-1">
                 <Clock className={cn(
                   "w-3 h-3",
-                  trialStatus.isExpired ? "text-red-300" : trialStatus.isUrgent ? "text-orange-300" : "text-gold-300"
+                  trialStatus.isExpired ? "text-red-400" : trialStatus.isUrgent ? "text-orange-400" : "text-amber-400"
                 )} />
                 <span className={cn(
                   "text-[10px] font-semibold",
-                  trialStatus.isExpired ? "text-red-100" : trialStatus.isUrgent ? "text-orange-100" : "text-gold-100"
+                  trialStatus.isExpired ? "text-red-300" : trialStatus.isUrgent ? "text-orange-300" : "text-amber-300"
                 )}>
                   {trialStatus.isExpired ? "Trial Expired" : "Trial Active"}
                 </span>
               </div>
               {!trialStatus.isExpired && (
-                <div className="h-1 w-full rounded-full bg-primary-900 overflow-hidden mb-1">
+                <div className="h-1 w-full rounded-full bg-zinc-800 overflow-hidden mb-1">
                   <div
                     className={cn(
                       "h-1 rounded-full transition-all duration-300",
-                      trialStatus.isUrgent ? "bg-orange-400" : "bg-gold-400"
+                      trialStatus.isUrgent ? "bg-orange-400" : "bg-amber-400"
                     )}
                     style={{ width: `${trialStatus.progressPercentage.toFixed(0)}%` }}
                   />
@@ -642,13 +641,13 @@ export function BuilderSidebar() {
               )}
               <div className={cn(
                 "text-[10px]",
-                trialStatus.isExpired 
-                  ? "text-red-400 font-semibold" 
-                  : trialStatus.isUrgent 
-                  ? "text-orange-400 font-medium" 
-                  : "text-gray-300"
+                trialStatus.isExpired
+                  ? "text-red-400 font-semibold"
+                  : trialStatus.isUrgent
+                  ? "text-orange-400 font-medium"
+                  : "text-zinc-400"
               )}>
-                {trialStatus.isExpired 
+                {trialStatus.isExpired
                   ? 'Upgrade Now'
                   : trialStatus.isUrgent
                   ? `⚠️ ${trialStatus.formattedDaysLeft}`
@@ -656,10 +655,10 @@ export function BuilderSidebar() {
               </div>
               {(trialStatus.isExpired || trialStatus.isUrgent) && (
                 <div className="mt-1 flex items-center justify-between">
-                  <span className="text-[9px] text-gray-400">
+                  <span className="text-[9px] text-zinc-500">
                     {trialStatus.trialLeadsUsed}/{trialStatus.trialLeadsLimit} leads
                   </span>
-                  <span className="text-[9px] text-gold-300 font-semibold">→</span>
+                  <span className="text-[9px] text-amber-400 font-semibold">→</span>
                 </div>
               )}
             </Link>
@@ -688,8 +687,7 @@ export function BuilderSidebar() {
             className={cn(
               "fixed left-0 top-0 bottom-0 z-[1001]",
               "w-[280px] flex flex-col",
-              "bg-gradient-to-b from-primary-950 via-primary-900 to-primary-950",
-              "backdrop-blur-xl border-r border-white/10",
+              "bg-zinc-950 backdrop-blur-xl border-r border-white/[0.06]",
               "transform transition-transform duration-300 ease-out",
               mobileMenuOpen ? "translate-x-0" : "-translate-x-full",
               "lg:hidden"
@@ -698,12 +696,12 @@ export function BuilderSidebar() {
             {/* Mobile Header */}
             <div className="flex items-center justify-between px-4 py-4 border-b border-white/10">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-gold-500 to-gold-400 flex items-center justify-center">
-                  <Building className="w-5 h-5 text-primary-950" />
+                <div className="w-10 h-10 rounded-xl bg-amber-500/15 border border-amber-500/25 flex items-center justify-center">
+                  <Building className="w-5 h-5 text-amber-400" />
                 </div>
                 <div className="flex flex-col leading-tight">
-                  <span className="font-bold text-white text-sm">THARAGA</span>
-                  <span className="text-gold-400 text-[10px] font-medium">Builder Portal</span>
+                  <span className="font-bold text-zinc-100 text-sm">THARAGA</span>
+                  <span className="text-amber-400 text-[10px] font-medium">Builder Portal</span>
                 </div>
               </div>
               <button
@@ -724,7 +722,7 @@ export function BuilderSidebar() {
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Search..."
-                  className="w-full pl-10 pr-3 py-2 bg-white/5 backdrop-blur-sm border border-white/10 rounded-lg text-white placeholder:text-gray-400 text-sm focus:outline-none focus:border-gold-500/50"
+                  className="w-full pl-10 pr-3 py-2 bg-white/[0.04] backdrop-blur-sm border border-white/[0.08] rounded-lg text-zinc-200 placeholder:text-zinc-600 text-sm focus:outline-none focus:border-amber-500/50"
                 />
               </div>
             </div>
@@ -734,7 +732,7 @@ export function BuilderSidebar() {
               {filteredGroups.map((group, groupIndex) => (
                 <div key={groupIndex} className={cn("space-y-1", group.label && "mb-4")}>
                   {group.label && (
-                    <div className="px-3 py-1.5 text-[10px] font-semibold text-gray-500 uppercase tracking-wider">
+                    <div className="px-3 py-1.5 text-[10px] font-semibold text-zinc-600 uppercase tracking-wider">
                       {group.label}
                     </div>
                   )}
@@ -784,11 +782,11 @@ export function BuilderSidebar() {
                           className={cn(
                             "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-all",
                             isActive
-                              ? "bg-gold-500/20 text-white border-l-3 border-gold-500"
-                              : "text-gray-400 hover:text-white hover:bg-white/5"
+                              ? "bg-amber-500/10 text-zinc-100 border-l-2 border-amber-500/70"
+                              : "text-zinc-500 hover:text-zinc-200 hover:bg-white/[0.04]"
                           )}
                         >
-                          <item.icon className={cn("w-5 h-5 shrink-0", isActive && "text-gold-400")} />
+                          <item.icon className={cn("w-5 h-5 shrink-0", isActive && "text-amber-400")} />
                           <span className="font-medium flex-1">{item.label}</span>
                           {item.badge !== null && item.badge !== undefined && (
                             <span className="px-2 py-0.5 bg-emerald-500 text-white text-[10px] font-bold rounded-full">
@@ -842,8 +840,8 @@ export function BuilderSidebar() {
                                     className={cn(
                                       "block px-3 py-1.5 text-xs rounded-lg transition-colors duration-150",
                                       isSubActive
-                                        ? "text-gold-300 font-medium bg-white/5"
-                                        : "text-gray-400 hover:text-white hover:bg-white/5"
+                                        ? "text-amber-300 font-medium bg-white/[0.04]"
+                                        : "text-zinc-500 hover:text-zinc-200 hover:bg-white/[0.04]"
                                     )}
                                   >
                                     {sub.label}
@@ -865,14 +863,14 @@ export function BuilderSidebar() {
               {isTrial && (
                 <Link
                   href="/pricing"
-                  className="block p-3 rounded-xl bg-gold-500/15 glow-border"
+                  className="block p-3 rounded-xl bg-amber-500/10 border border-amber-500/20"
                   onClick={() => setMobileMenuOpen(false)}
                 >
                   <div className="flex items-center gap-2 mb-1">
-                    <Clock className="w-3.5 h-3.5 text-gold-300" />
-                    <span className="text-[11px] font-semibold text-gold-100">Trial Active</span>
+                    <Clock className="w-3.5 h-3.5 text-amber-400" />
+                    <span className="text-[11px] font-semibold text-amber-300">Trial Active</span>
                   </div>
-                  <div className="text-[10px] text-gray-300">
+                  <div className="text-[10px] text-zinc-400">
                     {trialStatus.isExpired
                       ? 'Expired - Upgrade'
                       : trialStatus.formattedDaysLeft}
@@ -880,7 +878,7 @@ export function BuilderSidebar() {
                 </Link>
               )}
               <div className="flex items-center gap-3 px-3 py-2">
-                <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-primary-600 to-primary-500 text-white flex items-center justify-center text-sm font-semibold">
+                <div className="w-9 h-9 rounded-full bg-amber-500/15 border border-amber-500/25 text-amber-400 flex items-center justify-center text-sm font-semibold">
                   {(trialStatus.subscription?.builder_name || 'B').charAt(0).toUpperCase()}
                 </div>
                 <div className="flex-1 min-w-0">

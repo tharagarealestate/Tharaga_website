@@ -1,116 +1,116 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { getSupabase } from '@/lib/supabase'
-import { Loader2 } from 'lucide-react'
 
 /**
  * Auth callback page — handles BOTH OAuth flows:
  *
- * 1. Implicit grant (Supabase default): tokens arrive in URL hash fragment
- *    e.g. /auth/callback#access_token=...&refresh_token=...
- *    → Supabase JS `detectSessionInUrl` picks this up automatically
- *
- * 2. PKCE flow: code arrives as query parameter
+ * 1. PKCE flow: code arrives as query parameter
  *    e.g. /auth/callback?code=...
- *    → We call exchangeCodeForSession() explicitly
+ *    → We call exchangeCodeForSession() once (guarded against React Strict Mode double-run)
+ *    → Then read session from localStorage via getSession() — instant, no network
  *
- * After session is established, redirect to `next` param or /builder by default.
- * Builder-focused: signing in almost always means going to the dashboard.
+ * 2. Implicit grant: tokens in URL hash fragment
+ *    → Supabase JS `detectSessionInUrl` picks this up automatically
+ *    → onAuthStateChange SIGNED_IN fires → we redirect
  */
 export default function AuthCallbackPage() {
   const [status, setStatus] = useState('Signing you in...')
+  // Prevent React Strict Mode from running the effect twice (which consumes the code)
+  const executedRef = useRef(false)
 
   useEffect(() => {
-    let cancelled = false
+    if (executedRef.current) return
+    executedRef.current = true
 
-    // Helper: getUser with timeout so it NEVER hangs forever
-    async function getUserWithTimeout(timeoutMs = 4000) {
-      const supabase = getSupabase()
-      return Promise.race([
-        supabase.auth.getUser(),
-        new Promise<{ data: { user: null }; error: Error }>((resolve) =>
-          setTimeout(
-            () => resolve({ data: { user: null }, error: new Error('timeout') }),
-            timeoutMs
-          )
-        ),
-      ])
-    }
+    const supabase = getSupabase()
+    const params = new URLSearchParams(window.location.search)
+    const next = params.get('next') || '/builder'
+    const code = params.get('code')
+
+    // Subscribe to auth state change as a reliable redirect trigger.
+    // This fires for BOTH PKCE (after exchangeCodeForSession) and implicit flow.
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') && session?.user) {
+        subscription.unsubscribe()
+        setStatus('Welcome back! Loading dashboard...')
+        // Small pause so the status message is visible
+        setTimeout(() => { window.location.href = next }, 400)
+      }
+    })
 
     async function handleAuth() {
       try {
-        const supabase = getSupabase()
-
-        // Read destination — where to send the user after auth
-        const params = new URLSearchParams(window.location.search)
-        const next = params.get('next') || '/builder'
-
-        // ── Handle PKCE flow (code in query params) ──
-        const code = params.get('code')
         if (code) {
+          // ── PKCE: exchange the one-time code for a session ──
           setStatus('Exchanging auth code...')
           const { error } = await supabase.auth.exchangeCodeForSession(code)
+
           if (error) {
             console.error('[Auth Callback] Code exchange error:', error.message)
+            // onAuthStateChange won't fire if exchange failed — handle manually
+            subscription.unsubscribe()
             setStatus('Authentication failed. Redirecting...')
             setTimeout(() => { window.location.href = '/' }, 1500)
             return
           }
-        }
 
-        // ── For implicit flow, detectSessionInUrl handles hash fragments ──
-        // Give Supabase client time to process hash tokens
-        await new Promise(resolve => setTimeout(resolve, 500))
+          // After exchange, session is written to localStorage.
+          // getSession() reads localStorage — instant, no network needed.
+          setStatus('Loading your profile...')
+          const { data: { session } } = await supabase.auth.getSession()
 
-        if (cancelled) return
-
-        // ── Get the authenticated user — with guaranteed timeout ──
-        setStatus('Loading your profile...')
-        const { data: { user }, error: userError } = await getUserWithTimeout(4000)
-
-        if (userError || !user) {
-          if (cancelled) return
-          // Session might not be ready yet — wait and retry once
-          await new Promise(resolve => setTimeout(resolve, 1000))
-          if (cancelled) return
-
-          const { data: { user: retryUser } } = await getUserWithTimeout(3000)
-
-          if (!retryUser) {
-            console.error('[Auth Callback] No user after retry')
-            setStatus('Could not verify session. Redirecting...')
-            setTimeout(() => { window.location.href = '/' }, 1500)
+          if (session?.user) {
+            // Session confirmed — onAuthStateChange may have already fired,
+            // but if not, redirect here directly.
+            subscription.unsubscribe()
+            setStatus('Welcome back! Loading dashboard...')
+            setTimeout(() => { window.location.href = next }, 400)
             return
           }
-        }
 
-        if (cancelled) return
+          // Session not yet in localStorage (rare edge case) —
+          // onAuthStateChange listener above will handle the redirect when it fires.
+          setStatus('Finalizing login...')
 
-        // ── Success — redirect to builder dashboard (or `next` param) ──
-        setStatus('Welcome back! Loading dashboard...')
-        // Small pause so the success message is visible
-        await new Promise(resolve => setTimeout(resolve, 400))
-        if (!cancelled) {
-          window.location.href = next
+        } else {
+          // ── Implicit flow: no code, just wait for onAuthStateChange ──
+          // detectSessionInUrl: true in supabase.ts handles the hash tokens.
+          // onAuthStateChange will fire with SIGNED_IN when ready.
+          setStatus('Completing sign in...')
+
+          // Safety fallback: if no auth event in 5s, check session directly
+          await new Promise(resolve => setTimeout(resolve, 5000))
+          const { data: { session } } = await supabase.auth.getSession()
+          if (session?.user) {
+            subscription.unsubscribe()
+            window.location.href = next
+          } else {
+            subscription.unsubscribe()
+            setStatus('Could not verify session. Redirecting...')
+            setTimeout(() => { window.location.href = '/' }, 1500)
+          }
         }
       } catch (err) {
         console.error('[Auth Callback] Exception:', err)
-        if (!cancelled) {
-          setStatus('Something went wrong. Redirecting...')
-          setTimeout(() => { window.location.href = '/' }, 1500)
-        }
+        subscription.unsubscribe()
+        setStatus('Something went wrong. Redirecting...')
+        setTimeout(() => { window.location.href = '/' }, 1500)
       }
     }
 
     handleAuth()
-    return () => { cancelled = true }
+
+    return () => {
+      // Cleanup: if component unmounts (e.g. nav away), unsubscribe
+      subscription.unsubscribe()
+    }
   }, [])
 
   return (
     <div className="min-h-screen bg-zinc-950 flex items-center justify-center">
       <div className="text-center space-y-4">
-        {/* Amber spinner matching AI-world design */}
         <div className="relative w-12 h-12 mx-auto">
           <div className="absolute inset-0 rounded-full border-2 border-amber-500/20" />
           <div className="absolute inset-0 rounded-full border-t-2 border-amber-500 animate-spin" />

@@ -315,7 +315,7 @@ export function BuilderTopNav() {
     <>
       {/* Desktop Top Navigation */}
       <header className="fixed top-0 left-0 right-0 z-50 hidden lg:block">
-        <div className="bg-[rgba(10,22,40,0.85)] backdrop-blur-[24px] border-b border-white/[0.06]">
+        <div className="bg-zinc-950/90 backdrop-blur-xl border-b border-white/[0.06]">
           <div className="max-w-[1920px] mx-auto px-6 h-[72px] flex items-center justify-between gap-6">
             {/* Left: Logo + Page Title */}
             <div className="flex items-center gap-4">
@@ -323,12 +323,12 @@ export function BuilderTopNav() {
                 onClick={() => handleSectionChange('overview')}
                 className="flex items-center gap-2 group"
               >
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#D4AF37] to-[#F4D03F] flex items-center justify-center shadow-lg shadow-gold-500/30">
-                  <span className="text-xl font-bold text-[#0a1628]">T</span>
+                <div className="w-10 h-10 rounded-xl bg-amber-500/15 border border-amber-500/25 flex items-center justify-center">
+                  <span className="text-xl font-bold text-amber-400">T</span>
                 </div>
                 <div className="flex flex-col leading-tight">
-                  <span className="font-bold text-white text-sm">THARAGA</span>
-                  <span className="text-[#D4AF37] text-[10px] font-medium">Builder Portal</span>
+                  <span className="font-bold text-zinc-100 text-sm">THARAGA</span>
+                  <span className="text-amber-400 text-[10px] font-medium">Builder Portal</span>
                 </div>
               </button>
               
@@ -349,7 +349,7 @@ export function BuilderTopNav() {
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Search workflows or properties (⌘K)"
-                  className="w-full pl-11 pr-4 py-2.5 bg-white/[0.03] backdrop-blur-[12px] border border-white/[0.1] rounded-xl text-white placeholder:text-gray-400 text-sm focus:outline-none focus:border-[#D4AF37]/50 focus:ring-2 focus:ring-[#D4AF37]/20 transition-all"
+                  className="w-full pl-11 pr-4 py-2.5 bg-white/[0.04] backdrop-blur-xl border border-white/[0.08] rounded-xl text-zinc-200 placeholder:text-zinc-600 text-sm focus:outline-none focus:border-amber-500/50 focus:ring-2 focus:ring-amber-500/20 transition-all"
                 />
               </div>
             </div>
@@ -369,18 +369,18 @@ export function BuilderTopNav() {
                       className={cn(
                         "relative flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 cursor-pointer group",
                         active
-                          ? "text-white bg-gradient-to-r from-[rgba(212,175,55,0.15)] to-[rgba(212,175,55,0.05)] border-l-3 glow-border shadow-[inset_0_0_20px_rgba(212,175,55,0.1)]"
-                          : "text-gray-400 hover:text-white hover:bg-white/[0.04]"
+                          ? "text-zinc-100 bg-amber-500/10 border border-amber-500/25"
+                          : "text-zinc-500 hover:text-zinc-200 hover:bg-white/[0.04]"
                       )}
                       title={`${item.label} (Press ${navItems.indexOf(item) + 1})`}
                     >
-                      <Icon className="w-4 h-4" />
+                      <Icon className={cn("w-4 h-4", active ? "text-amber-400" : "")} />
                       <span>{item.label}</span>
-                      <span className="ml-auto text-[10px] text-gray-500 group-hover:text-gray-400 transition-colors">
+                      <span className="ml-auto text-[10px] text-zinc-700 group-hover:text-zinc-500 transition-colors">
                         {navItems.indexOf(item) + 1}
                       </span>
                       {item.badge !== null && item.badge !== undefined && (
-                        <span className="ml-1 px-2 py-0.5 bg-[#D4AF37]/20 text-[#D4AF37] text-[10px] font-bold rounded-full">
+                        <span className="ml-1 px-2 py-0.5 bg-amber-500/15 text-amber-400 text-[10px] font-bold rounded-full border border-amber-500/25">
                           {typeof item.badge === 'number' ? (item.badge > 99 ? '99+' : item.badge) : item.badge}
                         </span>
                       )}
@@ -418,7 +418,7 @@ export function BuilderTopNav() {
                       ? "bg-red-500/20 text-red-300 border border-red-500/30"
                       : (subscription.days_remaining ?? 0) <= 3
                       ? "bg-amber-500/20 text-amber-300 border border-amber-500/30 animate-pulse"
-                      : "bg-[#D4AF37]/20 text-[#D4AF37] glow-border"
+                      : "bg-amber-500/10 text-amber-400 border border-amber-500/25"
                   )}
                 >
                   Trial • {(subscription.days_remaining ?? 0) === 0 ? 'Expired' : `${subscription.days_remaining} days left`}
@@ -433,7 +433,7 @@ export function BuilderTopNav() {
                     {subscription?.builder_name || 'My Account'}
                   </span>
                 </div>
-                <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-primary-900 to-primary-600 text-white flex items-center justify-center text-sm font-semibold shadow-lg">
+                <div className="w-9 h-9 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-400 flex items-center justify-center text-sm font-semibold">
                   {(subscription?.builder_name || 'B').charAt(0).toUpperCase()}
                 </div>
               </div>
@@ -444,7 +444,7 @@ export function BuilderTopNav() {
 
       {/* Mobile Navigation */}
       <header className="fixed top-0 left-0 right-0 z-50 lg:hidden">
-        <div className="bg-[rgba(10,22,40,0.85)] backdrop-blur-[24px] border-b border-white/[0.06]">
+        <div className="bg-zinc-950/90 backdrop-blur-xl border-b border-white/[0.06]">
           <div className="px-4 h-[60px] flex items-center justify-between">
             {/* Left: Logo & Title (20% width equivalent) */}
             <div className="flex items-center gap-3 flex-1 min-w-0">
@@ -452,8 +452,8 @@ export function BuilderTopNav() {
                 onClick={() => handleSectionChange('overview')}
                 className="flex items-center gap-2 group"
               >
-                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#D4AF37] to-[#F4D03F] flex items-center justify-center shadow-md">
-                  <span className="text-base font-bold text-[#0a1628]">T</span>
+                <div className="w-8 h-8 rounded-lg bg-amber-500/15 border border-amber-500/25 flex items-center justify-center">
+                  <span className="text-base font-bold text-amber-400">T</span>
                 </div>
               </button>
               <h1 className="text-base font-semibold text-white truncate">{getPageTitle()}</h1>
@@ -535,7 +535,7 @@ export function BuilderTopNav() {
                   duration: 0.35,
                   ease: 'easeOut'
                 }}
-                className="fixed top-0 right-0 bottom-0 w-full bg-gradient-to-b from-[#0a1628] via-slate-900 to-[#0a1628] z-50 overflow-y-auto"
+                className="fixed top-0 right-0 bottom-0 w-full bg-zinc-950 z-50 overflow-y-auto"
                 role="dialog"
                 aria-modal="true"
                 aria-label="Mobile navigation menu"
@@ -562,7 +562,7 @@ export function BuilderTopNav() {
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                         placeholder="Search workflows or properties..."
-                        className="w-full pl-10 pr-4 py-2.5 bg-white/[0.03] backdrop-blur-[12px] border border-white/[0.1] rounded-xl text-white placeholder:text-gray-400 text-sm focus:outline-none focus:border-[#D4AF37]/50 focus:ring-2 focus:ring-[#D4AF37]/20 transition-all"
+                        className="w-full pl-10 pr-4 py-2.5 bg-white/[0.04] backdrop-blur-xl border border-white/[0.08] rounded-xl text-zinc-200 placeholder:text-zinc-600 text-sm focus:outline-none focus:border-amber-500/50 focus:ring-2 focus:ring-amber-500/20 transition-all"
                       />
                     </div>
                   </div>
@@ -585,15 +585,15 @@ export function BuilderTopNav() {
                         className={cn(
                           "w-full flex items-center gap-3 px-4 py-3.5 rounded-xl text-base font-medium transition-all duration-200 text-left active:scale-[0.98] group hover:scale-[1.02] focus:outline-none focus:ring-2 focus:ring-blue-500",
                           active
-                            ? "text-white bg-gradient-to-r from-[rgba(212,175,55,0.15)] to-[rgba(212,175,55,0.05)] border-l-3 glow-border shadow-[inset_0_0_20px_rgba(212,175,55,0.1)]"
-                            : "text-gray-300 hover:text-white hover:bg-white/5"
+                            ? "text-zinc-100 bg-amber-500/10 border-l-2 border-amber-500/70"
+                            : "text-zinc-400 hover:text-zinc-100 hover:bg-white/[0.04]"
                         )}
                         title={`${item.label} (Press ${index + 1})`}
                       >
-                        <Icon className={cn("w-5 h-5 shrink-0", active ? "text-[#D4AF37]" : "text-gray-400")} />
+                        <Icon className={cn("w-5 h-5 shrink-0", active ? "text-amber-400" : "text-zinc-500")} />
                         <span className="flex-1">{item.label}</span>
                         {item.badge !== null && item.badge !== undefined && (
-                          <span className="ml-auto px-2 py-0.5 bg-[#D4AF37]/20 text-[#D4AF37] text-xs font-bold rounded-full shrink-0">
+                          <span className="ml-auto px-2 py-0.5 bg-amber-500/15 text-amber-400 text-xs font-bold rounded-full border border-amber-500/25 shrink-0">
                             {typeof item.badge === 'number' ? (item.badge > 99 ? '99+' : item.badge) : item.badge}
                           </span>
                         )}
@@ -607,11 +607,11 @@ export function BuilderTopNav() {
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: navItems.length * 0.05 + 0.1, duration: 0.3 }}
-                      className="mt-6 p-4 bg-[#D4AF37]/10 backdrop-blur-[12px] glow-border rounded-xl"
+                      className="mt-6 p-4 bg-amber-500/10 backdrop-blur-xl border border-amber-500/20 rounded-xl"
                     >
                       <div className="flex items-center gap-2 mb-2">
-                        <Clock className="w-4 h-4 text-[#D4AF37]" />
-                        <span className="text-xs font-semibold text-[#D4AF37]">Trial Active</span>
+                        <Clock className="w-4 h-4 text-amber-400" />
+                        <span className="text-xs font-semibold text-amber-300">Trial Active</span>
                       </div>
                       <div className="text-xs text-gray-300 mb-2">
                         {(subscription.days_remaining ?? 0) === 0
@@ -623,7 +623,7 @@ export function BuilderTopNav() {
                           window.location.href = '/pricing'
                           setMobileMenuOpen(false)
                         }}
-                        className="w-full px-3 py-2 bg-gradient-to-r from-[#D4AF37] to-[#F4D03F] text-[#0a1628] text-xs font-bold rounded-lg hover:shadow-lg transition-all active:scale-95"
+                        className="w-full px-3 py-2 bg-amber-500 hover:bg-amber-400 text-black text-xs font-bold rounded-lg transition-all active:scale-95"
                       >
                         Upgrade to Pro
                       </button>
@@ -643,7 +643,7 @@ export function BuilderTopNav() {
                       <span>Builder: {subscription?.builder_name || 'Account'}</span>
                       <button
                         onClick={() => window.dispatchEvent(new CustomEvent('open-ai-assistant'))}
-                        className="flex items-center gap-1 text-[#D4AF37] hover:text-[#F4D03F] transition-colors"
+                        className="flex items-center gap-1 text-amber-400 hover:text-amber-300 transition-colors"
                       >
                         <HelpCircle className="w-3 h-3" />
                         <span>Help</span>

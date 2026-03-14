@@ -239,7 +239,7 @@ export function OverviewSection({ onNavigate }: OverviewProps) {
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.05, duration: 0.2 }}
-              className="bg-zinc-900/60 border border-zinc-800/60 rounded-xl p-5 hover:border-zinc-700/60 transition-colors"
+              className="bg-white/[0.03] backdrop-blur-xl border border-white/[0.07] rounded-xl p-5 hover:bg-white/[0.05] hover:border-white/[0.12] transition-all duration-200"
             >
               <div className="flex items-center justify-between mb-3">
                 <span className="text-xs font-medium text-zinc-500 uppercase tracking-wider">{metric.label}</span>
@@ -255,19 +255,19 @@ export function OverviewSection({ onNavigate }: OverviewProps) {
 
       {/* Extra stats row */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <div className="bg-zinc-900/40 border border-zinc-800/40 rounded-lg px-4 py-3">
+        <div className="bg-white/[0.02] border border-white/[0.06] rounded-lg px-4 py-3">
           <span className="text-[11px] text-zinc-500 uppercase">Total Views</span>
           <p className="text-lg font-bold text-zinc-100 tabular-nums">{totalViews.toLocaleString()}</p>
         </div>
-        <div className="bg-zinc-900/40 border border-zinc-800/40 rounded-lg px-4 py-3">
+        <div className="bg-white/[0.02] border border-white/[0.06] rounded-lg px-4 py-3">
           <span className="text-[11px] text-zinc-500 uppercase">Warm Leads</span>
           <p className="text-lg font-bold text-zinc-100 tabular-nums">{warmLeads}</p>
         </div>
-        <div className="bg-zinc-900/40 border border-zinc-800/40 rounded-lg px-4 py-3">
+        <div className="bg-white/[0.02] border border-white/[0.06] rounded-lg px-4 py-3">
           <span className="text-[11px] text-zinc-500 uppercase">Pending Follow-ups</span>
           <p className="text-lg font-bold text-zinc-100 tabular-nums">{pendingInteractions}</p>
         </div>
-        <div className="bg-zinc-900/40 border border-zinc-800/40 rounded-lg px-4 py-3">
+        <div className="bg-white/[0.02] border border-white/[0.06] rounded-lg px-4 py-3">
           <span className="text-[11px] text-zinc-500 uppercase">Pipeline Value</span>
           <p className="text-lg font-bold text-zinc-100 tabular-nums">
             {formatINR((pipelineData?.data || []).reduce((sum, p) => sum + (p.deal_value || 0), 0))}
@@ -281,7 +281,7 @@ export function OverviewSection({ onNavigate }: OverviewProps) {
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.15 }}
-          className="bg-zinc-900/60 border border-amber-500/20 rounded-xl p-6"
+          className="bg-white/[0.03] backdrop-blur-xl border border-amber-500/20 rounded-xl p-6"
         >
           <div className="flex items-center gap-2 mb-4">
             <UserCheck className="w-4 h-4 text-amber-400" />
@@ -290,8 +290,8 @@ export function OverviewSection({ onNavigate }: OverviewProps) {
           </div>
           <div className="space-y-3">
             {builderBreakdown.map((builder, i) => (
-              <div key={builder.builder_id} className="flex items-center gap-3 p-3 bg-zinc-800/30 rounded-lg">
-                <div className="w-8 h-8 rounded-full bg-zinc-700 flex items-center justify-center text-xs font-bold text-zinc-300">
+              <div key={builder.builder_id} className="flex items-center gap-3 p-3 bg-white/[0.03] border border-white/[0.06] rounded-lg">
+                <div className="w-8 h-8 rounded-full bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-xs font-bold text-amber-400">
                   {String.fromCharCode(65 + i)}
                 </div>
                 <div className="flex-1 min-w-0">
@@ -315,7 +315,7 @@ export function OverviewSection({ onNavigate }: OverviewProps) {
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
-          className="lg:col-span-2 bg-zinc-900/60 border border-zinc-800/60 rounded-xl p-6"
+          className="lg:col-span-2 bg-white/[0.03] backdrop-blur-xl border border-white/[0.07] rounded-xl p-6"
         >
           <div className="flex items-center justify-between mb-5">
             <div>
@@ -339,7 +339,7 @@ export function OverviewSection({ onNavigate }: OverviewProps) {
               {stageCounts.map((stage) => (
                 <div key={stage.key} className="flex items-center gap-3">
                   <span className="text-xs text-zinc-400 w-24 truncate">{stage.label}</span>
-                  <div className="flex-1 h-7 bg-zinc-800/50 rounded-md overflow-hidden relative">
+                  <div className="flex-1 h-7 bg-white/[0.04] rounded-md overflow-hidden relative">
                     <motion.div
                       initial={{ width: 0 }}
                       animate={{ width: totalInPipeline > 0 ? `${(stage.count / totalInPipeline) * 100}%` : '0%' }}
@@ -361,7 +361,7 @@ export function OverviewSection({ onNavigate }: OverviewProps) {
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.25 }}
-          className="bg-zinc-900/60 border border-zinc-800/60 rounded-xl p-6"
+          className="bg-white/[0.03] backdrop-blur-xl border border-white/[0.07] rounded-xl p-6"
         >
           <div className="flex items-center justify-between mb-5">
             <h2 className="text-base font-semibold text-zinc-100">Recent Activity</h2>
@@ -376,7 +376,7 @@ export function OverviewSection({ onNavigate }: OverviewProps) {
                 const leadName = item.lead?.user?.full_name || item.lead?.user?.email || 'Unknown Lead'
                 return (
                   <div key={item.id} className="flex items-start gap-3">
-                    <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5 bg-zinc-800">
+                    <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5 bg-white/[0.06] border border-white/[0.08]">
                       <Users className="w-3.5 h-3.5 text-zinc-400" />
                     </div>
                     <div className="flex-1 min-w-0">

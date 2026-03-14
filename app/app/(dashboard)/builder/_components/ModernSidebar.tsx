@@ -233,7 +233,7 @@ export function ModernSidebar() {
           'relative w-full flex items-center gap-2.5 rounded-md px-2.5 py-[7px] text-[13px] transition-all duration-100 group text-left',
           active
             ? 'bg-amber-500/10 text-zinc-100 border-l-2 border-l-amber-400 ml-[-1px]'
-            : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/60 border-l-2 border-l-transparent'
+            : 'text-zinc-500 hover:text-zinc-200 hover:bg-white/[0.04] border-l-2 border-l-transparent'
         )}
       >
         <Icon className={cn(
@@ -263,7 +263,7 @@ export function ModernSidebar() {
   const sidebarContent = (
     <>
       {/* Header */}
-      <div className="flex-shrink-0 px-3 pt-3 pb-2 border-b border-zinc-800/70">
+      <div className="flex-shrink-0 px-3 pt-3 pb-2 border-b border-white/[0.06]">
         <Link
           href="/"
           className="inline-flex items-center gap-1.5 text-[11px] font-medium text-zinc-500 hover:text-zinc-300 transition-colors mb-3 group"
@@ -293,11 +293,11 @@ export function ModernSidebar() {
             onBlur={() => setIsSearchFocused(false)}
             placeholder="Search..."
             className={cn(
-              'w-full pl-8 pr-8 py-1.5 bg-zinc-900/80 border rounded-md text-zinc-300 placeholder:text-zinc-600 text-xs',
+              'w-full pl-8 pr-8 py-1.5 bg-white/[0.04] border rounded-md text-zinc-300 placeholder:text-zinc-600 text-xs',
               'focus:outline-none transition-all duration-150',
               isSearchFocused
-                ? 'border-amber-500/40 bg-zinc-900'
-                : 'border-zinc-800 hover:border-zinc-700'
+                ? 'border-amber-500/40 bg-white/[0.06]'
+                : 'border-white/[0.08] hover:border-white/[0.12]'
             )}
           />
           {!isSearchFocused && !searchQuery && (
@@ -323,7 +323,7 @@ export function ModernSidebar() {
       </nav>
 
       {/* Bottom section */}
-      <div className="flex-shrink-0 border-t border-zinc-800/70 px-2 py-2 space-y-0.5">
+      <div className="flex-shrink-0 border-t border-white/[0.06] px-2 py-2 space-y-0.5">
         {/* Trial banner */}
         {isTrial && (
           <Link
@@ -378,7 +378,7 @@ export function ModernSidebar() {
         className={cn(
           'fixed left-0 top-0 bottom-0 z-[1000]',
           'flex flex-col w-[256px]',
-          'bg-zinc-950 border-r border-zinc-800/80',
+          'bg-zinc-950 border-r border-white/[0.06]',
           'hidden lg:flex'
         )}
         aria-label="Dashboard navigation"
@@ -438,7 +438,7 @@ export function ModernSidebar() {
                 </div>
               ))}
             </nav>
-            <div className="flex-shrink-0 border-t border-zinc-800/70 px-2 py-2 space-y-0.5">
+            <div className="flex-shrink-0 border-t border-white/[0.06] px-2 py-2 space-y-0.5">
               {bottomItems.map(renderNavItem)}
             </div>
           </aside>

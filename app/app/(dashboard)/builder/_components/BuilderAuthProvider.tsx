@@ -251,11 +251,21 @@ export function BuilderAuthProvider({ children }: { children: ReactNode }) {
     )
   }
 
-  // Logged in but no builder profile — show completion gate
+  // Logged in but no builder profile — redirect to onboarding
+  // Never show a gate here; it looks like a login loop to the user
   if (status === 'no-profile') {
+    if (typeof window !== 'undefined') window.location.replace('/onboard')
     return (
       <BuilderAuthContext.Provider value={contextValue}>
-        <BuilderAuthGate variant="no-profile" />
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-zinc-950">
+          <div className="flex flex-col items-center gap-4">
+            <div className="relative w-12 h-12">
+              <div className="absolute inset-0 rounded-full border-2 border-amber-500/20" />
+              <div className="absolute inset-0 rounded-full border-t-2 border-amber-500 animate-spin" />
+            </div>
+            <p className="text-zinc-500 text-sm animate-pulse">Setting up your profile…</p>
+          </div>
+        </div>
       </BuilderAuthContext.Provider>
     )
   }

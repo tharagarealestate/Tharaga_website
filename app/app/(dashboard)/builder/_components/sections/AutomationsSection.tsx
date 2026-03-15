@@ -1,182 +1,174 @@
-"use client"
+'use client'
 
-import { useState, useEffect, useRef } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
-import {
-  Workflow, Zap, Users, Target, Eye, Phone,
-  Mail, CheckCircle2, Clock,
-  Play, Pause, Settings, Plus,
-  TrendingUp, Activity, Sparkles, Bot,
-  ChevronRight, Shield,
-} from 'lucide-react'
-import { cn } from '@/lib/utils'
-import { useBuilderDataContext, useRealtimeData, timeAgo } from '../hooks/useBuilderData'
+/**
+ * AI Engine Section — WhatsApp Priya state machine + Distribution tiers + Live convos
+ * Signature: Priya state machine flowchart with animated lead-flow
+ */
 
-interface AutomationsProps {
-  onNavigate?: (section: string) => void
-}
+import { useState, useEffect } from 'react'
+import { motion } from 'framer-motion'
+import { Bot, MessageSquare, Calendar, Users, ChevronRight, Zap, Clock, CheckCircle2, ArrowRight } from 'lucide-react'
+import { ClassBadge, SlaTimer, GlassCard, MOCK_LEADS, PRIYA_STAGES, type PriyaStage, type Classification } from './AgenticShared'
 
-// Pipeline item from real API
-interface PipelineItem {
-  id: string
-  lead_id: string
-  builder_id: string
-  stage: string
-  stage_order: number
-  deal_value: number
-  last_activity_at: string
-  last_activity_type: string
-  lead?: {
-    id: string
-    category: string
-    score: number
-    user?: { full_name: string; email: string }
-  }
-}
+// ─── Priya state machine config ───────────────────────────────────────────────
 
-const PIPELINE_STAGES = [
-  { id: 'new', label: 'Lead Capture', icon: Users, color: 'text-blue-400' },
-  { id: 'contacted', label: 'Contacted', icon: Phone, color: 'text-cyan-400' },
-  { id: 'qualified', label: 'Qualified', icon: CheckCircle2, color: 'text-purple-400' },
-  { id: 'site_visit_scheduled', label: 'Visit Scheduled', icon: Eye, color: 'text-orange-400' },
-  { id: 'site_visit_completed', label: 'Visit Done', icon: Eye, color: 'text-yellow-400' },
-  { id: 'negotiation', label: 'Negotiation', icon: Target, color: 'text-violet-400' },
-  { id: 'closed_won', label: 'Closed Won', icon: TrendingUp, color: 'text-emerald-400' },
+const STAGE_CONFIG: { stage: PriyaStage; icon: string; label: string; color: string; ring: string; count: number; dropRate: number; avgMin: number }[] = [
+  { stage: 'GREETING',           icon: '👋', label: 'Greeting',    color: 'bg-zinc-700/60 border-zinc-600/40',           ring: 'border-zinc-500',        count: 3,  dropRate: 5,  avgMin: 2  },
+  { stage: 'QUALIFICATION',      icon: '🎯', label: 'Qualify',     color: 'bg-blue-500/10 border-blue-500/20',          ring: 'border-blue-400',        count: 4,  dropRate: 12, avgMin: 8  },
+  { stage: 'BUDGET_CHECK',       icon: '💰', label: 'Budget',      color: 'bg-yellow-500/10 border-yellow-500/20',      ring: 'border-yellow-400',      count: 2,  dropRate: 18, avgMin: 12 },
+  { stage: 'TIMELINE_CHECK',     icon: '📅', label: 'Timeline',    color: 'bg-amber-500/10 border-amber-500/20',        ring: 'border-amber-400',       count: 3,  dropRate: 8,  avgMin: 10 },
+  { stage: 'OBJECTION_HANDLING', icon: '🔄', label: 'Objections',  color: 'bg-orange-500/10 border-orange-500/20',      ring: 'border-orange-400',      count: 1,  dropRate: 22, avgMin: 20 },
+  { stage: 'BOOKING',            icon: '✅', label: 'Booking',     color: 'bg-emerald-500/10 border-emerald-500/20',    ring: 'border-emerald-400',     count: 2,  dropRate: 2,  avgMin: 6  },
 ]
 
-export function AutomationsSection({ onNavigate }: AutomationsProps) {
-  const { isAdmin } = useBuilderDataContext()
-  const [activeNodes, setActiveNodes] = useState<Set<string>>(new Set())
-  const timerRef = useRef<NodeJS.Timeout | null>(null)
+// ─── Distribution tiers ───────────────────────────────────────────────────────
 
-  // Real pipeline data
-  const { data: pipelineResponse } = useRealtimeData<{
-    success: boolean
-    data: PipelineItem[]
-    total: number
-  }>('/api/leads/pipeline', { refreshInterval: 15000 })
+const DIST_TIERS = [
+  {
+    type: 'LION',
+    emoji: '🦁',
+    label: 'Hot — Top Exec',
+    slaLabel: '15-min SLA',
+    color: 'border-amber-500/30 bg-amber-500/5',
+    headerColor: 'text-amber-400',
+    ring: 'ring-amber-500/20',
+    leads: MOCK_LEADS.filter(l => l.classification === 'LION').slice(0, 3),
+  },
+  {
+    type: 'MONKEY',
+    emoji: '🐒',
+    label: 'Warm — Round Robin',
+    slaLabel: '2-hr SLA',
+    color: 'border-yellow-500/25 bg-yellow-500/3',
+    headerColor: 'text-yellow-400',
+    ring: 'ring-yellow-500/15',
+    leads: MOCK_LEADS.filter(l => l.classification === 'MONKEY').slice(0, 3),
+  },
+  {
+    type: 'DOG',
+    emoji: '🐕',
+    label: 'Cold — Partners',
+    slaLabel: '8-hr SLA',
+    color: 'border-zinc-600/40 bg-zinc-800/20',
+    headerColor: 'text-zinc-400',
+    ring: '',
+    leads: MOCK_LEADS.filter(l => l.classification === 'DOG'),
+  },
+]
 
-  const pipelineItems = pipelineResponse?.data || []
+// ─── Live conversations ───────────────────────────────────────────────────────
 
-  // Compute real counts per stage
-  const stageCounts = PIPELINE_STAGES.map(stage => ({
-    ...stage,
-    count: pipelineItems.filter(p => p.stage === stage.id).length,
-  }))
+const LIVE_CONVOS = [
+  {
+    lead: 'Rajesh Kumar', cls: 'LION' as Classification, stage: 'BOOKING',
+    messages: [
+      { from: 'lead', text: 'Yes I can come for site visit this Saturday.', time: '2m' },
+      { from: 'priya', text: 'Great! I have confirmed your slot for Saturday 11 AM. Our team will WhatsApp you the address and QR code. 🏠', time: '1m' },
+    ],
+  },
+  {
+    lead: 'Meena Krishnan', cls: 'MONKEY' as Classification, stage: 'BUDGET_CHECK',
+    messages: [
+      { from: 'lead', text: 'My budget is around 50 lakhs.', time: '8m' },
+      { from: 'priya', text: 'Perfect! We have great options in that range. Are you looking for immediate possession or ready to wait 2 years?', time: '7m' },
+    ],
+  },
+]
 
-  // Recent activity from pipeline (most recent changes)
-  const recentActivity = pipelineItems
-    .filter(item => item.last_activity_at)
-    .sort((a, b) => new Date(b.last_activity_at).getTime() - new Date(a.last_activity_at).getTime())
-    .slice(0, 8)
-    .map(item => ({
-      id: item.id,
-      message: `${item.lead?.user?.full_name || item.lead?.user?.email || 'Lead'} → ${
-        PIPELINE_STAGES.find(s => s.id === item.stage)?.label || item.stage
-      }${item.last_activity_type ? ` (${item.last_activity_type})` : ''}`,
-      type: item.stage.includes('visit') ? 'visit' : item.stage === 'contacted' ? 'call' : item.stage === 'new' ? 'lead' : 'automation',
-      time: item.last_activity_at ? timeAgo(item.last_activity_at) : '',
-    }))
+// ─── Component ────────────────────────────────────────────────────────────────
 
-  // Animate pipeline flow nodes periodically
+export function AutomationsSection() {
+  const [activeStage, setActiveStage] = useState<number>(0)
+
   useEffect(() => {
-    timerRef.current = setInterval(() => {
-      const idx = Math.floor(Math.random() * PIPELINE_STAGES.length)
-      const nodeId = PIPELINE_STAGES[idx].id
-      setActiveNodes(prev => {
-        const next = new Set(prev)
-        next.add(nodeId)
-        setTimeout(() => {
-          setActiveNodes(p => { const n = new Set(p); n.delete(nodeId); return n })
-        }, 1500)
-        return next
-      })
-    }, 2500)
-    return () => { if (timerRef.current) clearInterval(timerRef.current) }
+    const t = setInterval(() => setActiveStage(s => (s + 1) % STAGE_CONFIG.length), 2000)
+    return () => clearInterval(t)
   }, [])
 
-  const totalLeadsInPipeline = pipelineItems.length
-  const closedWon = pipelineItems.filter(p => p.stage === 'closed_won').length
-  const autoConversionRate = totalLeadsInPipeline > 0 ? ((closedWon / totalLeadsInPipeline) * 100).toFixed(1) : '0'
-
-  const eventIcons: Record<string, React.ComponentType<{ className?: string }>> = {
-    lead: Users, email: Mail, call: Phone, visit: Eye, automation: Bot,
-  }
-  const eventColors: Record<string, [string, string]> = {
-    lead: ['text-blue-400', 'bg-blue-500/10'],
-    email: ['text-amber-400', 'bg-amber-500/10'],
-    call: ['text-purple-400', 'bg-purple-500/10'],
-    visit: ['text-cyan-400', 'bg-cyan-500/10'],
-    automation: ['text-emerald-400', 'bg-emerald-500/10'],
-  }
+  const leadsAtStage = (stage: PriyaStage) => MOCK_LEADS.filter(l => l.priyaStage === stage).length
+  const totalActive = MOCK_LEADS.filter(l => l.priyaStage !== 'BOOKING').length
+  const bookings = MOCK_LEADS.filter(l => l.priyaStage === 'BOOKING').length
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-2">
-            <h1 className="text-2xl font-bold text-zinc-100">AI Automations</h1>
-            {isAdmin && (
-              <span className="flex items-center gap-1 px-2 py-0.5 bg-amber-500/10 border border-amber-500/20 rounded text-[10px] text-amber-400 font-medium">
-                <Shield className="w-3 h-3" /> All Builders
-              </span>
-            )}
-          </div>
-          <p className="text-sm text-zinc-500 mt-1">Real-time pipeline automation & lead flow</p>
+      {/* ── Header ─────────────────────────────────────────────────────────── */}
+      <div className="flex items-center gap-3">
+        <div className="w-9 h-9 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center">
+          <Bot className="w-4 h-4 text-amber-400" />
         </div>
-        <div className="flex items-center gap-2">
-          <div className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-500/10 border border-emerald-500/20 rounded-lg">
-            <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-            <span className="text-xs font-medium text-emerald-400">Live</span>
-          </div>
+        <div>
+          <h1 className="text-xl font-bold text-zinc-100">AI Engine</h1>
+          <p className="text-xs text-zinc-500">WhatsApp Priya · Lead Distribution · SLA Enforcement</p>
+        </div>
+        <div className="ml-auto flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20">
+          <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+          <span className="text-[11px] font-semibold text-emerald-400">AI Active</span>
         </div>
       </div>
 
-      {/* Pipeline Flow */}
-      <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
-        className="bg-zinc-900/60 border border-zinc-800/60 rounded-xl p-6">
-        <div className="flex items-center justify-between mb-5">
-          <div>
-            <h2 className="text-base font-semibold text-zinc-100">Lead Pipeline Flow</h2>
-            <p className="text-xs text-zinc-500 mt-0.5">{totalLeadsInPipeline} leads across {stageCounts.filter(s => s.count > 0).length} active stages</p>
+      {/* ── Stats row ──────────────────────────────────────────────────────── */}
+      <div className="grid grid-cols-3 gap-4">
+        {[
+          { label: 'Active Convos',   value: String(totalActive), icon: <MessageSquare className="w-4 h-4" />, color: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20' },
+          { label: 'Booked Today',    value: String(bookings),    icon: <Calendar className="w-4 h-4" />,       color: 'text-amber-400 bg-amber-500/10 border-amber-500/20'       },
+          { label: 'Lions Qualified', value: String(MOCK_LEADS.filter(l => l.classification === 'LION').length), icon: <Zap className="w-4 h-4" />, color: 'text-amber-400 bg-amber-500/10 border-amber-500/20' },
+        ].map(s => (
+          <GlassCard key={s.label} className="p-5">
+            <div className={`w-9 h-9 rounded-xl border flex items-center justify-center mb-3 ${s.color}`}>{s.icon}</div>
+            <div className="text-2xl font-bold text-zinc-100 mb-1">{s.value}</div>
+            <div className="text-xs text-zinc-500 uppercase tracking-wider font-medium">{s.label}</div>
+          </GlassCard>
+        ))}
+      </div>
+
+      {/* ── Priya State Machine ─────────────────────────────────────────────── */}
+      <GlassCard className="p-6">
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-2">
+            <MessageSquare className="w-4 h-4 text-emerald-400" />
+            <h2 className="text-sm font-bold text-zinc-200">WhatsApp Priya — 6-Stage Qualification</h2>
           </div>
-          <div className="flex items-center gap-2 text-xs text-zinc-500">
-            <Activity className="w-3.5 h-3.5 text-emerald-400" />
-            <span>Real-time Supabase</span>
-          </div>
+          <span className="text-[11px] text-zinc-500">Avg 58 min to booking</span>
         </div>
 
-        <div className="flex items-center gap-1 overflow-x-auto pb-2 -mx-2 px-2">
-          {stageCounts.map((node, i) => {
-            const Icon = node.icon
-            const isActive = activeNodes.has(node.id)
+        {/* Stage nodes — desktop horizontal, mobile vertical */}
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-0">
+          {STAGE_CONFIG.map((cfg, i) => {
+            const count = leadsAtStage(cfg.stage)
+            const isActive = activeStage === i
+            const isPast = activeStage > i
             return (
-              <div key={node.id} className="flex items-center">
+              <div key={cfg.stage} className="flex sm:flex-col items-center gap-2 sm:gap-0 flex-1 min-w-0">
+                {/* Node */}
                 <motion.div
-                  animate={isActive ? {
-                    scale: [1, 1.05, 1],
-                    boxShadow: ['0 0 0 0 rgba(251,191,36,0)', '0 0 0 8px rgba(251,191,36,0.15)', '0 0 0 0 rgba(251,191,36,0)'],
-                  } : {}}
-                  transition={{ duration: 1.5 }}
-                  className={cn(
-                    'flex-shrink-0 w-28 bg-zinc-800/50 border rounded-xl p-3 transition-all duration-300',
-                    isActive ? 'border-amber-500/40 bg-amber-500/5' : 'border-zinc-700/40'
-                  )}
+                  animate={isActive ? { scale: [1, 1.08, 1] } : { scale: 1 }}
+                  transition={{ duration: 1.2, repeat: isActive ? Infinity : 0 }}
+                  className={`relative w-16 h-16 sm:w-14 sm:h-14 rounded-2xl border-2 flex flex-col items-center justify-center flex-shrink-0 cursor-pointer transition-all duration-300 ${isActive ? `${cfg.color} ${cfg.ring} shadow-lg` : isPast ? 'bg-emerald-500/10 border-emerald-500/30' : 'bg-white/[0.03] border-white/[0.08]'}`}
                 >
-                  <div className="flex items-center gap-2 mb-2">
-                    <div className={cn('w-6 h-6 rounded-lg flex items-center justify-center', isActive ? 'bg-amber-500/15' : 'bg-zinc-700/50')}>
-                      <Icon className={cn('w-3.5 h-3.5', isActive ? 'text-amber-400' : node.color)} />
+                  {isActive && (
+                    <div className="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-amber-400 border-2 border-zinc-950 flex items-center justify-center">
+                      <div className="w-1.5 h-1.5 rounded-full bg-zinc-950" />
                     </div>
-                    {isActive && <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} className="w-2 h-2 rounded-full bg-amber-400 animate-ping" />}
-                  </div>
-                  <p className="text-[11px] font-medium text-zinc-300 truncate">{node.label}</p>
-                  <span className="text-lg font-bold text-zinc-100 tabular-nums">{node.count}</span>
+                  )}
+                  <span className="text-lg leading-none">{isPast && !isActive ? '✓' : cfg.icon}</span>
+                  {count > 0 && (
+                    <span className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-amber-500 text-zinc-950 leading-none">
+                      {count}
+                    </span>
+                  )}
                 </motion.div>
-                {i < stageCounts.length - 1 && (
-                  <div className="flex-shrink-0 w-6 flex items-center justify-center">
-                    <motion.div animate={{ opacity: [0.3, 1, 0.3] }} transition={{ duration: 1.5, repeat: Infinity, delay: i * 0.2 }}>
-                      <ChevronRight className="w-4 h-4 text-zinc-600" />
-                    </motion.div>
+
+                {/* Label + stats */}
+                <div className="sm:text-center sm:mt-2 sm:px-1">
+                  <p className="text-[11px] font-semibold text-zinc-300 sm:text-center">{cfg.label}</p>
+                  <p className="text-[10px] text-zinc-600">~{cfg.avgMin}m avg</p>
+                  {cfg.dropRate > 0 && <p className="text-[10px] text-red-500/70">{cfg.dropRate}% drop</p>}
+                </div>
+
+                {/* Arrow connector */}
+                {i < STAGE_CONFIG.length - 1 && (
+                  <div className="hidden sm:flex flex-col items-center justify-center w-4 flex-shrink-0">
+                    <ArrowRight className="w-3 h-3 text-zinc-600" />
                   </div>
                 )}
               </div>
@@ -184,52 +176,101 @@ export function AutomationsSection({ onNavigate }: AutomationsProps) {
           })}
         </div>
 
-        <div className="grid grid-cols-3 gap-4 mt-5 pt-5 border-t border-zinc-800/50">
-          <div>
-            <p className="text-[11px] text-zinc-500 mb-1">Total in Pipeline</p>
-            <p className="text-lg font-bold text-zinc-100">{totalLeadsInPipeline} <span className="text-xs text-zinc-500">leads</span></p>
-          </div>
-          <div>
-            <p className="text-[11px] text-zinc-500 mb-1">Closed Won</p>
-            <p className="text-lg font-bold text-emerald-400">{closedWon}</p>
-          </div>
-          <div>
-            <p className="text-[11px] text-zinc-500 mb-1">Conversion Rate</p>
-            <p className="text-lg font-bold text-zinc-100">{autoConversionRate}%</p>
-          </div>
+        {/* Stage progress bar */}
+        <div className="mt-6 flex h-2 rounded-full overflow-hidden gap-0.5">
+          {STAGE_CONFIG.map((cfg, i) => (
+            <motion.div
+              key={cfg.stage}
+              initial={{ scaleX: 0 }}
+              animate={{ scaleX: 1 }}
+              transition={{ delay: 0.4 + i * 0.08, duration: 0.4 }}
+              className={`flex-1 rounded-full ${i <= activeStage ? 'bg-amber-500' : 'bg-white/[0.06]'} origin-left`}
+            />
+          ))}
         </div>
-      </motion.div>
+        <p className="text-[11px] text-zinc-500 mt-2 text-center">Stage {activeStage + 1} of 6 — {STAGE_CONFIG[activeStage].label}</p>
+      </GlassCard>
 
-      {/* Live Feed */}
-      <div className="bg-zinc-900/40 border border-zinc-800/60 rounded-xl p-5">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-base font-semibold text-zinc-100">Recent Pipeline Activity</h2>
-          <div className="flex items-center gap-1.5">
-            <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-            <span className="text-[11px] text-emerald-400">Live</span>
+      {/* ── Distribution Engine + Live Convos ──────────────────────────────── */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+
+        {/* Distribution tiers */}
+        <GlassCard className="p-5">
+          <div className="flex items-center gap-2 mb-5">
+            <Users className="w-4 h-4 text-amber-400" />
+            <h2 className="text-sm font-bold text-zinc-200">Distribution Engine</h2>
+            <span className="ml-auto text-[11px] text-zinc-500">Auto-assign by score</span>
           </div>
-        </div>
-        <div className="space-y-2.5 max-h-[400px] overflow-y-auto">
-          {recentActivity.length === 0 ? (
-            <p className="text-sm text-zinc-600 text-center py-6">No recent activity</p>
-          ) : (
-            recentActivity.map((event) => {
-              const Icon = eventIcons[event.type] || Activity
-              const [textColor, bgColor] = eventColors[event.type] || ['text-zinc-400', 'bg-zinc-800']
-              return (
-                <div key={event.id} className="flex items-start gap-2.5">
-                  <div className={cn('w-6 h-6 rounded-md flex items-center justify-center flex-shrink-0 mt-0.5', bgColor)}>
-                    <Icon className={cn('w-3 h-3', textColor)} />
+          <div className="space-y-4">
+            {DIST_TIERS.map(tier => (
+              <div key={tier.type} className={`rounded-xl border p-4 ${tier.color}`}>
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-2">
+                    <span className="text-base">{tier.emoji}</span>
+                    <span className={`text-xs font-bold ${tier.headerColor}`}>{tier.label}</span>
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs text-zinc-300 leading-snug">{event.message}</p>
-                    <span className="text-[10px] text-zinc-600">{event.time}</span>
+                  <div className="flex items-center gap-1.5">
+                    <Clock className="w-3 h-3 text-zinc-600" />
+                    <span className="text-[11px] text-zinc-500">{tier.slaLabel}</span>
                   </div>
                 </div>
-              )
-            })
-          )}
-        </div>
+                <div className="space-y-1.5">
+                  {tier.leads.map(lead => (
+                    <div key={lead.id} className="flex items-center gap-2 text-[11px]">
+                      <div className="w-5 h-5 rounded-full bg-white/[0.06] flex items-center justify-center flex-shrink-0">
+                        <span className="text-[9px] font-bold text-zinc-300">{lead.name[0]}</span>
+                      </div>
+                      <span className="text-zinc-300 flex-1 truncate">{lead.name}</span>
+                      <span className="text-zinc-500">{lead.assignedTo}</span>
+                      <SlaTimer deadline={lead.slaDeadline} classification={lead.classification} />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        </GlassCard>
+
+        {/* Live conversations */}
+        <GlassCard className="p-5">
+          <div className="flex items-center gap-2 mb-5">
+            <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+            <h2 className="text-sm font-bold text-zinc-200">Live Conversations</h2>
+            <span className="ml-auto text-[11px] text-zinc-500">Priya AI</span>
+          </div>
+          <div className="space-y-4">
+            {LIVE_CONVOS.map((convo, ci) => (
+              <div key={ci} className="rounded-xl bg-white/[0.02] border border-white/[0.06] overflow-hidden">
+                {/* Convo header */}
+                <div className="flex items-center gap-2 px-3 py-2.5 border-b border-white/[0.06]">
+                  <div className="w-7 h-7 rounded-full bg-emerald-500/15 border border-emerald-500/20 flex items-center justify-center flex-shrink-0">
+                    <span className="text-[11px] font-bold text-emerald-400">{convo.lead[0]}</span>
+                  </div>
+                  <span className="text-xs font-semibold text-zinc-200">{convo.lead}</span>
+                  <ClassBadge classification={convo.cls} showEmoji={false} />
+                  <span className="ml-auto text-[10px] text-zinc-500 bg-zinc-800/60 px-2 py-0.5 rounded-full">
+                    {convo.stage.replace(/_/g, ' ')}
+                  </span>
+                </div>
+                {/* Messages */}
+                <div className="px-3 py-3 space-y-2">
+                  {convo.messages.map((msg, mi) => (
+                    <div key={mi} className={`flex gap-2 ${msg.from === 'priya' ? 'justify-end' : 'justify-start'}`}>
+                      <div className={`max-w-[80%] px-3 py-1.5 rounded-xl text-[11px] leading-relaxed ${msg.from === 'priya' ? 'bg-emerald-500/15 border border-emerald-500/20 text-zinc-200' : 'bg-white/[0.05] border border-white/[0.08] text-zinc-300'}`}>
+                        {msg.from === 'priya' && <span className="block text-[9px] font-bold text-emerald-400 mb-0.5 uppercase tracking-wide">Priya AI</span>}
+                        {msg.text}
+                        <span className="block text-[9px] text-zinc-600 mt-0.5 text-right">{msg.time} ago</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+          <button className="mt-4 w-full flex items-center justify-center gap-1.5 text-xs text-amber-400 hover:text-amber-300 py-2.5 rounded-xl bg-amber-500/5 border border-amber-500/15 hover:bg-amber-500/10 transition-all">
+            View all conversations <ChevronRight className="w-3.5 h-3.5" />
+          </button>
+        </GlassCard>
       </div>
     </div>
   )

@@ -3,6 +3,8 @@
 import { createContext, useContext, useState, useEffect, useRef, ReactNode } from 'react'
 import { getSupabase } from '@/lib/supabase'
 import { BuilderAuthGate } from './BuilderAuthGate'
+import { BuilderSetupGate } from './BuilderSetupGate'
+import { openAuthModal } from '@/components/auth/AuthModal'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -21,9 +23,9 @@ interface BuilderAuthContextType {
 type AuthStatus =
   | 'loading'          // initial — checking session
   | 'authenticated'    // builder profile found, all good
-  | 'unauthenticated'  // no session / session invalid
-  | 'no-profile'       // logged in but no builder profile yet
-  | 'buyer'            // logged in but is a buyer (not a builder) — access denied
+  | 'unauthenticated'  // no session → auto-open login modal
+  | 'no-profile'       // logged in but no builder profile → show setup form
+  | 'buyer'            // logged in but is a buyer — access denied
 
 const BuilderAuthContext = createContext<BuilderAuthContextType | null>(null)
 
@@ -35,15 +37,33 @@ export function useBuilderAuth(): BuilderAuthContextType {
   return context
 }
 
+// ─── Unauthenticated view — dark backdrop + auto-open AuthModal ───────────────
+
+function UnauthenticatedView() {
+  useEffect(() => {
+    // Slight delay so the AuthModal component is definitely mounted in root layout
+    const t = setTimeout(() => openAuthModal(), 150)
+    return () => clearTimeout(t)
+  }, [])
+
+  return (
+    <div className="fixed inset-0 bg-zinc-950 z-40">
+      {/* Subtle amber glow */}
+      <div className="pointer-events-none absolute -top-40 -left-40 w-[600px] h-[600px] rounded-full bg-amber-500/8 blur-[140px]" />
+      <div className="pointer-events-none absolute -bottom-40 -right-40 w-[600px] h-[600px] rounded-full bg-amber-600/6 blur-[140px]" />
+    </div>
+  )
+}
+
 // ─── Provider ─────────────────────────────────────────────────────────────────
 
 export function BuilderAuthProvider({ children }: { children: ReactNode }) {
   const [status, setStatus] = useState<AuthStatus>('loading')
   const [builderId, setBuilderId] = useState<string | null>(null)
   const [userId, setUserId] = useState<string | null>(null)
+  const [userEmail, setUserEmail] = useState<string>('')
   const [builderProfile, setBuilderProfile] = useState<BuilderAuthContextType['builderProfile']>(null)
   const mountedRef = useRef(true)
-  // Track whether we have done the initial full auth check so we don't run it twice
   const resolvedRef = useRef(false)
 
   // ── Core auth resolution ─────────────────────────────────────────────────
@@ -51,27 +71,23 @@ export function BuilderAuthProvider({ children }: { children: ReactNode }) {
     const supabase = getSupabase()
 
     try {
-      // STEP 1 — Fast path: read session from localStorage (no network call)
-      // This resolves the loading state immediately so there's never a flash.
-      let userId: string | null = null
-      let userEmail: string = ''
+      let resolvedUserId: string | null = null
+      let resolvedEmail: string = ''
 
       if (!skipSessionCheck) {
         const { data: sessionData } = await supabase.auth.getSession()
         const session = sessionData?.session
 
         if (!session?.user) {
-          // Definitely not logged in — no session in localStorage at all
           if (!mountedRef.current) return
           setStatus('unauthenticated')
           resolvedRef.current = true
           return
         }
 
-        userId = session.user.id
-        userEmail = session.user.email || ''
+        resolvedUserId = session.user.id
+        resolvedEmail = session.user.email || ''
       } else {
-        // Called from onAuthStateChange — session is fresh, get user directly
         const { data: { user }, error } = await supabase.auth.getUser()
         if (error || !user) {
           if (!mountedRef.current) return
@@ -79,16 +95,16 @@ export function BuilderAuthProvider({ children }: { children: ReactNode }) {
           resolvedRef.current = true
           return
         }
-        userId = user.id
-        userEmail = user.email || ''
+        resolvedUserId = user.id
+        resolvedEmail = user.email || ''
       }
 
       if (!mountedRef.current) return
 
-      // STEP 2 — Check admin by email
-      const isAdminByEmail = userEmail === 'tharagarealestate@gmail.com'
+      // Admin email bypass
+      const isAdminByEmail = resolvedEmail === 'tharagarealestate@gmail.com'
 
-      // STEP 3 — Fetch roles and builder profile in parallel (with 5s guard)
+      // Fetch roles + builder profile in parallel (5s guard)
       const timeout = <T,>(p: Promise<T>): Promise<T> =>
         Promise.race([
           p,
@@ -96,12 +112,12 @@ export function BuilderAuthProvider({ children }: { children: ReactNode }) {
         ])
 
       const [rolesResult, profileResult] = await Promise.allSettled([
-        timeout(supabase.from('user_roles').select('role').eq('user_id', userId)),
+        timeout(supabase.from('user_roles').select('role').eq('user_id', resolvedUserId)),
         timeout(
           supabase
             .from('builder_profiles')
             .select('id, company_name, user_id')
-            .eq('user_id', userId)
+            .eq('user_id', resolvedUserId)
             .maybeSingle()
         ),
       ])
@@ -117,25 +133,26 @@ export function BuilderAuthProvider({ children }: { children: ReactNode }) {
       const isAdminByRole = roles.includes('admin')
       const isAdmin = isAdminByEmail || isAdminByRole
 
-      // STEP 4 — Determine final status
+      // Store email for setup gate
+      setUserEmail(resolvedEmail)
+      setUserId(resolvedUserId)
+
       if (isAdmin) {
-        const adminBuilderId = profile?.id ?? userId
+        const adminBuilderId = profile?.id ?? resolvedUserId
         setBuilderId(adminBuilderId)
-        setUserId(userId)
         setBuilderProfile({
           id: adminBuilderId,
           company_name: profile?.company_name || 'Admin',
-          email: userEmail,
+          email: resolvedEmail,
         })
         setStatus('authenticated')
         resolvedRef.current = true
         return
       }
 
-      // If user has explicit 'buyer' role → deny access (builders only)
+      // Buyer role → deny access
       const isBuyer = roles.includes('buyer') && !roles.includes('builder')
       if (isBuyer) {
-        setUserId(userId)
         setBuilderId(null)
         setBuilderProfile(null)
         setStatus('buyer')
@@ -143,11 +160,8 @@ export function BuilderAuthProvider({ children }: { children: ReactNode }) {
         return
       }
 
+      // No builder profile → show setup form (not auto-redirect)
       if (!profile || !profile.company_name?.trim()) {
-        // Logged in but no builder profile and no buyer role either.
-        // Could be a new user who registered but hasn't set up builder profile yet.
-        // Show "builders only" gate — do NOT redirect to /onboard automatically.
-        setUserId(userId)
         setBuilderId(null)
         setBuilderProfile(null)
         setStatus('no-profile')
@@ -157,14 +171,12 @@ export function BuilderAuthProvider({ children }: { children: ReactNode }) {
 
       // Full builder access
       setBuilderId(profile.id)
-      setUserId(userId)
-      setBuilderProfile({ id: profile.id, company_name: profile.company_name, email: userEmail })
+      setBuilderProfile({ id: profile.id, company_name: profile.company_name, email: resolvedEmail })
       setStatus('authenticated')
       resolvedRef.current = true
     } catch (err) {
       console.error('[BuilderAuthProvider] resolveAuth error:', err)
       if (!mountedRef.current) return
-      // On unexpected error — show gate rather than infinite loading or redirect
       if (!resolvedRef.current) {
         setStatus('unauthenticated')
         resolvedRef.current = true
@@ -177,19 +189,16 @@ export function BuilderAuthProvider({ children }: { children: ReactNode }) {
     mountedRef.current = true
     resolvedRef.current = false
 
-    // Start auth resolution immediately
     resolveAuth(false)
 
-    // Safety valve: if nothing resolved in 8s, force unauthenticated so user
-    // isn't stuck on an infinite spinner
+    // Safety valve — 8s timeout to prevent infinite spinner
     const safetyTimer = setTimeout(() => {
       if (!mountedRef.current || resolvedRef.current) return
-      console.warn('[BuilderAuthProvider] Safety timeout — forcing gate display')
+      console.warn('[BuilderAuthProvider] Safety timeout — forcing gate')
       setStatus('unauthenticated')
       resolvedRef.current = true
     }, 8000)
 
-    // Listen for Supabase auth events
     const supabase = getSupabase()
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (!mountedRef.current) return
@@ -197,6 +206,7 @@ export function BuilderAuthProvider({ children }: { children: ReactNode }) {
       if (event === 'SIGNED_OUT') {
         setBuilderId(null)
         setUserId(null)
+        setUserEmail('')
         setBuilderProfile(null)
         setStatus('unauthenticated')
         resolvedRef.current = true
@@ -204,18 +214,15 @@ export function BuilderAuthProvider({ children }: { children: ReactNode }) {
       }
 
       if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') && session?.user) {
-        // Re-resolve with fresh session — skip session check since we have the session
         resolvedRef.current = false
         resolveAuth(true)
       }
 
-      // INITIAL_SESSION: only act if we're still in loading state
       if (event === 'INITIAL_SESSION') {
         if (!session?.user && !resolvedRef.current) {
           setStatus('unauthenticated')
           resolvedRef.current = true
         }
-        // If session exists, resolveAuth() from above is already running — no-op
       }
     })
 
@@ -236,15 +243,12 @@ export function BuilderAuthProvider({ children }: { children: ReactNode }) {
     builderProfile,
   }
 
-  // ── Render ────────────────────────────────────────────────────────────────
-
-  // Still resolving — minimal skeleton so there's no flash
+  // ── Loading spinner ───────────────────────────────────────────────────────
   if (status === 'loading') {
     return (
       <BuilderAuthContext.Provider value={contextValue}>
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-zinc-950">
           <div className="flex flex-col items-center gap-4">
-            {/* Pulsing amber ring */}
             <div className="relative w-12 h-12">
               <div className="absolute inset-0 rounded-full border-2 border-amber-500/20" />
               <div className="absolute inset-0 rounded-full border-t-2 border-amber-500 animate-spin" />
@@ -256,16 +260,16 @@ export function BuilderAuthProvider({ children }: { children: ReactNode }) {
     )
   }
 
-  // Not logged in — show beautiful auth gate (no redirect)
+  // ── Not logged in → dark bg + auto-open AuthModal ────────────────────────
   if (status === 'unauthenticated') {
     return (
       <BuilderAuthContext.Provider value={contextValue}>
-        <BuilderAuthGate variant="unauthenticated" />
+        <UnauthenticatedView />
       </BuilderAuthContext.Provider>
     )
   }
 
-  // Logged in as a buyer — access denied (builders only)
+  // ── Buyer — access denied ────────────────────────────────────────────────
   if (status === 'buyer') {
     return (
       <BuilderAuthContext.Provider value={contextValue}>
@@ -274,16 +278,25 @@ export function BuilderAuthProvider({ children }: { children: ReactNode }) {
     )
   }
 
-  // Logged in but no builder profile — show "apply as builder" gate
+  // ── Logged in but no builder profile → inline setup form ─────────────────
   if (status === 'no-profile') {
     return (
       <BuilderAuthContext.Provider value={contextValue}>
-        <BuilderAuthGate variant="no-profile" />
+        <BuilderSetupGate
+          userId={userId!}
+          userEmail={userEmail}
+          onSuccess={() => {
+            // Re-resolve auth after profile creation
+            resolvedRef.current = false
+            setStatus('loading')
+            resolveAuth(false)
+          }}
+        />
       </BuilderAuthContext.Provider>
     )
   }
 
-  // Fully authenticated builder — render dashboard
+  // ── Fully authenticated builder → render dashboard ────────────────────────
   return (
     <BuilderAuthContext.Provider value={contextValue}>
       {children}

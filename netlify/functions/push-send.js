@@ -10,7 +10,7 @@ exports.handler = async (event) => {
   if (event.httpMethod !== 'POST') return resp({ error: 'Method not allowed' }, 405)
   try{
     const { title = 'Tharaga', body = 'New matches available', test = false } = JSON.parse(event.body || '{}')
-    const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE)
+    const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY)
     const { data } = await supabase.from('push_subscriptions').select('endpoint, keys').limit(test?10:1000)
     const results = await Promise.all((data||[]).map(s => sendWebPush(s, { title, body })))
     return resp({ ok:true, sent: results.length })

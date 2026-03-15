@@ -7,42 +7,68 @@ function json(body, code = 200) {
 exports.handler = async () => {
   try {
     const url = process.env.SUPABASE_URL
-    const key = process.env.SUPABASE_SERVICE_ROLE
+    const key = process.env.SUPABASE_SERVICE_ROLE_KEY
     if (!url || !key) {
-      console.warn('[properties-list] Missing env SUPABASE_URL or SUPABASE_SERVICE_ROLE')
+      console.warn('[properties-list] Missing env SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY')
       return json({ error: 'Supabase env missing', items: [] }, 200)
     }
     const supabase = createClient(url, key)
+    // Fetch properties with listing_status active, available, pending, or null (covers all upload flows)
+    // Chennai-only platform: only surface Chennai properties on the public listing
+    const ALLOWED_CITIES = ['Chennai']
     let { data, error } = await supabase
       .from('properties')
-      .select('id,title,description,city,locality,property_type,bedrooms,bathrooms,price_inr,sqft,images,listed_at,furnished,facing,category,project,builder,is_verified,listing_status,tour_url,rera_id')
-      .eq('is_verified', true)
-      .or('listing_status.eq.active,listing_status.is.null')
+      .select('id,title,description,city,locality,property_type,bedrooms,bathrooms,price_inr,sqft,images,listed_at,furnished,facing,category,project,builder,is_verified,listing_status,tour_url,rera_id,builder_id')
+      .in('city', ALLOWED_CITIES)
+      .or('listing_status.eq.active,listing_status.eq.available,listing_status.is.null')
       .order('listed_at', { ascending: false })
       .limit(200)
     if (error) {
       console.error('[properties-list] Primary query failed:', error?.message || error)
+      // Fallback: fetch all Chennai non-sold properties
       const fb = await supabase
         .from('properties')
-        .select('id,title,description,city,locality,property_type,bedrooms,bathrooms,price_inr,sqft,images,listed_at,furnished,facing,category,project,builder,is_verified,listing_status,tour_url,rera_id')
+        .select('id,title,description,city,locality,property_type,bedrooms,bathrooms,price_inr,sqft,images,listed_at,furnished,facing,category,project,builder,is_verified,listing_status,tour_url,rera_id,builder_id')
+        .in('city', ALLOWED_CITIES)
+        .neq('listing_status', 'sold')
+        .neq('listing_status', 'inactive')
         .order('listed_at', { ascending: false })
         .limit(200)
       data = fb.data || []
     }
 
-    const out = (data || []).map(p => ({
+    // Sort by verified first, then by listed_at (newest first)
+    const sortedData = (data || []).sort((a, b) => {
+      // First sort by verified status (verified first)
+      if (a.is_verified !== b.is_verified) {
+        return b.is_verified ? 1 : -1
+      }
+      // Then sort by listed_at (newest first)
+      const dateA = a.listed_at ? new Date(a.listed_at).getTime() : 0
+      const dateB = b.listed_at ? new Date(b.listed_at).getTime() : 0
+      return dateB - dateA
+    })
+
+    const out = sortedData.map(p => ({
       id: p.id,
       title: p.title,
       project: p.project || '',
       builder: p.builder || '',
-      listingStatus: p.is_verified ? 'Verified' : (p.listing_status || ''),
+      listing_status: p.listing_status || '',
+      isVerified: Boolean(p.is_verified),
+      is_verified: Boolean(p.is_verified),
       category: p.category || '',
       type: p.property_type || '',
+      property_type: p.property_type || '',
+      // Use consistent field names (bedrooms + sqft) for frontend compatibility
+      bedrooms: p.bedrooms || null,
       bhk: p.bedrooms || null,
       bathrooms: p.bathrooms || null,
       furnished: p.furnished || '',
+      sqft: p.sqft || null,
       carpetAreaSqft: p.sqft || null,
       priceINR: Number(p.price_inr || 0),
+      price_inr: Number(p.price_inr || 0),
       priceDisplay: p.price_inr ? `₹${Math.round(Number(p.price_inr)).toLocaleString('en-IN')}` : 'Price on request',
       pricePerSqftINR: (p.price_inr && p.sqft) ? Math.round(Number(p.price_inr) / Math.max(1, Number(p.sqft))) : null,
       facing: p.facing || '',
@@ -58,6 +84,7 @@ exports.handler = async () => {
       tourUrl: p.tour_url || '',
       docsLink: '',
       owner: { name: 'Owner', phone: '', whatsapp: '' },
+      listed_at: p.listed_at || null,
       postedAt: p.listed_at || null,
       summary: p.description || ''
     }))

@@ -31,7 +31,15 @@ import { getSupabase } from '@/lib/supabase'
 let _open:  (() => void) | null = null
 let _close: (() => void) | null = null
 
-export function openAuthModal()  { _open?.()  }
+// Capture where the modal was opened from so succeed() can redirect back there
+let _sourcePathname = '/'
+
+export function openAuthModal() {
+  if (typeof window !== 'undefined') {
+    _sourcePathname = window.location.pathname
+  }
+  _open?.()
+}
 export function closeAuthModal() { _close?.() }
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -170,14 +178,24 @@ export function AuthModal() {
     })
   }, [cardShake])
 
-  // Hard navigate after success — eliminates every auth race condition
+  // After success — redirect to builder if that's the source, otherwise stay on current page
   const succeed = useCallback((email = '') => {
     if (email) {
       try { localStorage.setItem('__tharaga_last_email', email) } catch {}
     }
     setStage('success')
-    setSuccessMsg('Signed in! Loading your dashboard…')
-    setTimeout(() => { window.location.href = '/builder' }, 1000)
+
+    const isBuilderFlow = _sourcePathname.startsWith('/builder')
+
+    if (isBuilderFlow) {
+      // Hard navigate to builder — eliminates BuilderAuthProvider race conditions
+      setSuccessMsg('Signed in! Loading your dashboard…')
+      setTimeout(() => { window.location.href = '/builder' }, 900)
+    } else {
+      // Stay on current page — header updates via onAuthStateChange automatically
+      setSuccessMsg('Signed in! Welcome back.')
+      setTimeout(() => { _close?.() }, 1200)
+    }
   }, [])
 
   // ── Google OAuth ──────────────────────────────────────────────────────────
@@ -186,10 +204,12 @@ export function AuthModal() {
     setErrorMsg('')
     try {
       const supabase = getSupabase()
+      // Use the page that opened the modal as the post-auth redirect target
+      const nextPath = _sourcePathname.startsWith('/builder') ? '/builder' : _sourcePathname || '/'
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/auth/callback?next=/builder`,
+          redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(nextPath)}`,
           queryParams: { access_type: 'offline', prompt: 'consent' },
         },
       })
@@ -233,7 +253,7 @@ export function AuthModal() {
         password: suPw,
         options: {
           data: { full_name: suName.trim() },
-          emailRedirectTo: `${window.location.origin}/auth/callback?next=/builder`,
+          emailRedirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(_sourcePathname.startsWith('/builder') ? '/builder' : _sourcePathname || '/')}`,
         },
       })
       if (error) { await fail(error.message); return }

@@ -26,7 +26,8 @@ export default function AuthCallbackPage() {
 
     const supabase = getSupabase()
     const params = new URLSearchParams(window.location.search)
-    const next = params.get('next') || '/builder'
+    const rawNext = params.get('next') || '/'
+    const next = rawNext.startsWith('/') ? rawNext : '/'   // safety: only allow relative paths
     const code = params.get('code')
 
     // Subscribe to auth state change as a reliable redirect trigger.
@@ -34,7 +35,7 @@ export default function AuthCallbackPage() {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') && session?.user) {
         subscription.unsubscribe()
-        setStatus('Welcome back! Loading dashboard...')
+        setStatus('Welcome back! Redirecting...')
         // Small pause so the status message is visible
         setTimeout(() => { window.location.href = next }, 400)
       }
@@ -65,7 +66,7 @@ export default function AuthCallbackPage() {
             // Session confirmed — onAuthStateChange may have already fired,
             // but if not, redirect here directly.
             subscription.unsubscribe()
-            setStatus('Welcome back! Loading dashboard...')
+            setStatus('Welcome back! Redirecting...')
             setTimeout(() => { window.location.href = next }, 400)
             return
           }

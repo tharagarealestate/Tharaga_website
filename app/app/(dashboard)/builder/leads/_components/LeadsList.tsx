@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import type { ReactNode } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, Filter, Download, Mail, Phone, TrendingUp, Clock, Star, AlertCircle, Users } from 'lucide-react';
+import { Search, Filter, Download, Mail, Phone, MessageCircle, TrendingUp, Clock, Star, AlertCircle, Users } from 'lucide-react';
 
 import { getSupabase } from '@/lib/supabase';
 import { useBehaviorTracking } from '@/hooks/useBehaviorTracking';
@@ -1106,6 +1106,7 @@ export function LeadsList({ onSelectLead, initialFilters, showInlineFilters = tr
                     </div>
 
                     <div className="flex gap-2 pt-3 border-t border-blue-500/20">
+                      {/* Call button */}
                       <button
                         onClick={(event) => {
                           event.stopPropagation();
@@ -1117,11 +1118,33 @@ export function LeadsList({ onSelectLead, initialFilters, showInlineFilters = tr
                             }).catch(() => undefined);
                           }
                         }}
+                        title={lead.phone ? `Call ${lead.phone}` : 'No phone number'}
                         className="flex-1 px-3 py-2 bg-green-500/10 hover:bg-green-500/20 border border-green-500/30 rounded-lg text-green-100 text-sm font-medium transition-all flex items-center justify-center gap-1 disabled:opacity-40 disabled:cursor-not-allowed"
                         disabled={!lead.phone}
                       >
                         <Phone className="w-4 h-4" />
                       </button>
+                      {/* WhatsApp button */}
+                      <button
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          if (lead.phone) {
+                            const num = lead.phone.replace(/\D/g, '')
+                            const wa = num.startsWith('91') ? num : `91${num}`
+                            window.open(`https://wa.me/${wa}`, '_blank', 'noopener,noreferrer')
+                            trackBehavior({
+                              behavior_type: 'whatsapp_clicked',
+                              metadata: { lead_id: lead.id },
+                            }).catch(() => undefined)
+                          }
+                        }}
+                        title={lead.phone ? `WhatsApp ${lead.phone}` : 'No phone number'}
+                        className="flex-1 px-3 py-2 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 rounded-lg text-emerald-100 text-sm font-medium transition-all flex items-center justify-center gap-1 disabled:opacity-40 disabled:cursor-not-allowed"
+                        disabled={!lead.phone}
+                      >
+                        <MessageCircle className="w-4 h-4" />
+                      </button>
+                      {/* Email button */}
                       <button
                         onClick={(event) => {
                           event.stopPropagation();
@@ -1131,6 +1154,7 @@ export function LeadsList({ onSelectLead, initialFilters, showInlineFilters = tr
                             metadata: { lead_id: lead.id },
                           }).catch(() => undefined);
                         }}
+                        title={`Email ${lead.email}`}
                         className="flex-1 px-3 py-2 bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/30 rounded-lg text-blue-100 text-sm font-medium transition-all flex items-center justify-center gap-1"
                       >
                         <Mail className="w-4 h-4" />

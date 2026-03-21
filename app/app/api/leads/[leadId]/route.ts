@@ -112,30 +112,43 @@ export async function GET(
       );
     }
     
-    // Get user role
-    const { data: profile } = await supabase
-      .from('profiles')
+    // Admin email bypass — always grants access
+    const isAdminByEmail = user.email === 'tharagarealestate@gmail.com'
+
+    // Get user role from user_roles table (not profiles)
+    const { data: roleRows } = await supabase
+      .from('user_roles')
       .select('role')
-      .eq('id', user.id)
-      .maybeSingle();
-    
-    const userRole = profile?.role || '';
-    
-    // Verify user is a builder
-    if (userRole !== 'builder' && userRole !== 'admin') {
-      return NextResponse.json(
-        { error: 'Forbidden - Builders only' },
-        { status: 403 }
-      );
+      .eq('user_id', user.id)
+
+    const roles = roleRows?.map((r: any) => r.role) ?? []
+    const isAdminByRole = roles.includes('admin')
+    const isAdmin = isAdminByEmail || isAdminByRole
+    const isBuilder = isAdmin || roles.includes('builder')
+
+    // Allow admin + builder; also check builder_profiles as fallback
+    if (!isBuilder) {
+      const { data: builderProfile } = await supabase
+        .from('builder_profiles')
+        .select('id')
+        .eq('user_id', user.id)
+        .maybeSingle()
+      if (!builderProfile) {
+        return NextResponse.json(
+          { error: 'Forbidden - Builders only' },
+          { status: 403 }
+        )
+      }
     }
-    
+
     const { leadId } = params;
-    
+
     // =============================================
     // FETCH LEAD DATA
     // =============================================
-    
-    const { data: lead, error: leadError } = await supabase
+
+    // Admin sees all leads; builders only see their own
+    let leadQuery = supabase
       .from('leads')
       .select(`
         id,
@@ -143,8 +156,10 @@ export async function GET(
         name,
         email,
         phone,
+        phone_normalized,
         message,
         score,
+        smartscore,
         builder_id,
         property_id,
         properties:property_id (
@@ -155,8 +170,12 @@ export async function GET(
         )
       `)
       .eq('id', leadId)
-      .eq('builder_id', user.id)
-      .single();
+
+    if (!isAdmin) {
+      leadQuery = leadQuery.eq('builder_id', user.id)
+    }
+
+    const { data: lead, error: leadError } = await leadQuery.single();
     
     if (leadError || !lead) {
       return NextResponse.json(
@@ -456,11 +475,11 @@ export async function GET(
       id: leadId,
       email: lead.email || '',
       full_name: lead.name || 'Unknown',
-      phone: lead.phone || null,
+      phone: lead.phone || lead.phone_normalized || null,
       created_at: lead.created_at,
       last_login: userData?.last_sign_in_at || null,
-      
-      score: baseScore,
+
+      score: lead.smartscore > 0 ? lead.smartscore / 10 : baseScore,
       category,
       score_breakdown: scoreBreakdown,
       score_history: [], // Can be populated if score_history table exists

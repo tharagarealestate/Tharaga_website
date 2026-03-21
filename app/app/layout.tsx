@@ -5,6 +5,7 @@ import { NextIntlClientProvider } from 'next-intl'
 import { ToastProvider } from '@/components/ui/toast'
 import { NotificationProvider } from '@/contexts/NotificationContext'
 import { AuthModal } from '@/components/auth/AuthModal'
+import { FloatingAIChat } from '@/components/ai/FloatingAIChat'
 
 export const runtime = 'nodejs'
 
@@ -54,6 +55,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <ToastProvider>
               {children}
               <AuthModal />
+              <FloatingAIChat />
             </ToastProvider>
           </NotificationProvider>
         </NextIntlClientProvider>

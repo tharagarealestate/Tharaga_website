@@ -36,7 +36,7 @@ const FEED_ITEMS = [
   { label: 'New lead scored', value: '78/100', change: '🦁 Lion', type: 'lead' },
   { label: 'OMR corridor demand', value: 'HIGH', change: '↑ 34%', type: 'demand' },
   { label: 'Adyar avg sqft rate', value: '₹8,400', change: '+1.2%', type: 'price' },
-  { label: 'Lead qualified via AI', value: 'Priya', change: '6/6 fields', type: 'ai' },
+  { label: 'Lead qualified via AI', value: 'Tharaga AI', change: '6/6 fields', type: 'ai' },
   { label: 'Porur 2BHK', value: '₹55L', change: 'RERA ✓', type: 'price' },
   { label: 'WhatsApp response', value: '4min', change: 'avg today', type: 'metric' },
   { label: 'Velachery appreciation', value: '11.2%', change: 'YoY', type: 'demand' },
@@ -657,7 +657,7 @@ export default function HomePage() {
               {[
                 { icon: Search, label: 'Lead Capture', desc: 'Web + Meta + WhatsApp', color: 'from-amber-500/20 to-amber-600/10', border: 'border-amber-500/30', num: '01' },
                 { icon: Brain, label: 'SmartScore AI', desc: 'Scored 0–100 in 2 seconds', color: 'from-blue-500/20 to-blue-600/10', border: 'border-blue-500/30', num: '02' },
-                { icon: MessageSquare, label: 'WhatsApp Priya', desc: 'AI qualifies in 6 questions', color: 'from-emerald-500/20 to-emerald-600/10', border: 'border-emerald-500/30', num: '03' },
+                { icon: MessageSquare, label: 'Tharaga AI', desc: 'AI qualifies in 6 questions', color: 'from-emerald-500/20 to-emerald-600/10', border: 'border-emerald-500/30', num: '03' },
                 { icon: Target, label: 'Auto Distribute', desc: 'Lion → Monkey → Dog tiers', color: 'from-purple-500/20 to-purple-600/10', border: 'border-purple-500/30', num: '04' },
                 { icon: TrendingUp, label: 'Close & Track', desc: 'CAPI + CRM + analytics', color: 'from-amber-500/20 to-amber-600/10', border: 'border-amber-500/30', num: '05' },
               ].map((step, i) => (
@@ -940,7 +940,7 @@ export default function HomePage() {
               <div className="space-y-4 mb-8">
                 {[
                   { icon: Brain, title: 'SmartScore AI', desc: 'Scores every lead 0–100 based on budget, timeline, intent, and behavioral signals' },
-                  { icon: MessageSquare, title: 'WhatsApp Priya', desc: 'AI assistant qualifies leads in 6 questions — 24/7, zero manual effort' },
+                  { icon: MessageSquare, title: 'Tharaga AI', desc: 'AI assistant qualifies leads in 6 questions — 24/7, zero manual effort' },
                   { icon: Target, title: 'Auto Distribution', desc: 'Lion → Senior exec (15-min SLA) · Monkey → Round robin · Dog → Channel partners' },
                   { icon: BarChart3, title: 'Full Attribution', desc: 'Meta CAPI + Google Ads + UTM tracking — see exactly where every lead came from' },
                 ].map((feature, i) => (

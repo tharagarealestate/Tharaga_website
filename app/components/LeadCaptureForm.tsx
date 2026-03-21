@@ -178,7 +178,7 @@ export default function LeadCaptureForm({
         <div>
           <h3 className="text-xl font-semibold text-zinc-100 mb-2">You're all set!</h3>
           <p className="text-zinc-400 text-sm leading-relaxed">
-            Our AI assistant Priya will reach you on WhatsApp within minutes with personalised property options.
+            Tharaga AI will reach you on WhatsApp within minutes with personalised property options.
           </p>
         </div>
         {onClose && (
@@ -278,7 +278,7 @@ export default function LeadCaptureForm({
                   className="w-full bg-white/[0.04] border border-white/[0.08] rounded-xl pl-16 pr-4 py-3 text-sm text-zinc-100 placeholder-zinc-600 focus:outline-none focus:border-amber-500/50 focus:bg-white/[0.06] transition-all"
                 />
               </div>
-              <p className="text-xs text-zinc-600 mt-1">Our AI assistant Priya will reach you on WhatsApp</p>
+              <p className="text-xs text-zinc-600 mt-1">Tharaga AI will reach you on WhatsApp</p>
             </div>
 
             {/* Message (optional) */}

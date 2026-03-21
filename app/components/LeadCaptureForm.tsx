@@ -131,9 +131,8 @@ export default function LeadCaptureForm({
       if (form.timeline) payload.timeline_months = parseInt(form.timeline)
       if (form.purpose) payload.purpose = form.purpose
 
-      // Call FastAPI backend via Next.js proxy or directly
-      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || ''
-      const resp = await fetch(`${backendUrl}/api/leads/ingest`, {
+      // Call Next.js API route — no external backend needed
+      const resp = await fetch(`/api/leads/ingest`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),

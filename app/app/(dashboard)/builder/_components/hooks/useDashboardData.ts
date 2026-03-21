@@ -184,15 +184,9 @@ interface UseDashboardDataResult {
   refetch: () => void
 }
 
-const LEADS_COLUMNS = [
-  'id', 'name', 'phone', 'phone_normalized', 'email',
-  'smartscore', 'score', 'ai_stage', 'qualification_data',
-  'status', 'assigned_to', 'sla_deadline',
-  'budget', 'purpose', 'source',
-  'utm_source', 'utm_medium', 'utm_campaign',
-  'score_breakdown', 'preferred_location', 'property_type_interest',
-  'property_id', 'builder_id', 'created_at',
-].join(',')
+// Select all columns — avoids brittle column-list errors when migrations lag.
+// mapRaw() handles any missing columns gracefully via ?? fallbacks.
+const LEADS_COLUMNS = '*'
 
 export function useDashboardData(
   builderId: string | null,

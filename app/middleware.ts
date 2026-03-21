@@ -197,92 +197,12 @@ export async function middleware(req: NextRequest) {
         return response
       }
 
-      // Check role-based access for protected routes
-      for (const [requiredRole, routes] of Object.entries(ROLE_ROUTES)) {
-        const isRoleRoute = routes.some(route => 
-          pathname === route || pathname.startsWith(`${route}/`)
-        )
-
-        if (isRoleRoute) {
-            // Fetch user roles from user_roles table (primary source of truth)
-            // Add timeout and error handling to prevent blocking
-            try {
-              const { data: userRoles, error: rolesError } = await supabase
-                .from('user_roles')
-                .select('role, is_primary')
-                .eq('user_id', user.id)
-
-              // If role check fails, allow through (let client-side handle it)
-              // This prevents blocking users due to DB issues or RLS policies
-              if (rolesError) {
-                console.warn('Middleware: Error fetching roles, allowing through:', rolesError)
-                // Allow through - client-side will handle role check
-                response.headers.set('X-User-Id', user.id)
-                response.headers.set('X-User-Role', '')
-                response.headers.set('X-User-Roles', '')
-                break
-              }
-
-            const roles = userRoles?.map(r => r.role) || []
-            const primaryRoleData = userRoles?.find(r => r.is_primary)
-            const primaryRole = primaryRoleData?.role || roles[0] || null
-
-            // ADVANCED SECURITY: Admin access is restricted to tharagarealestate@gmail.com ONLY
-            const userEmail = user.email || ''
-            const isAdminOwner = userEmail === 'tharagarealestate@gmail.com'
-            
-            // For admin routes, verify admin email access
-            if (requiredRole === 'admin') {
-              if (!isAdminOwner) {
-                // User is not admin owner - deny access
-                const homeUrl = new URL('/', req.url)
-                homeUrl.searchParams.set('error', 'unauthorized')
-                homeUrl.searchParams.set('message', 'Admin Panel is only accessible to authorized administrators')
-                return NextResponse.redirect(homeUrl, { status: 403 })
-              }
-              // Admin owner has access - continue
-            } else {
-              // Check if user has required role in user_roles table
-              if (!roles.includes(requiredRole) && !isAdminOwner) {
-                // User doesn't have the required role and is not admin owner - redirect to home with error
-                const homeUrl = new URL('/', req.url)
-                homeUrl.searchParams.set('error', 'unauthorized')
-                homeUrl.searchParams.set('message', `You need ${requiredRole} role to access this page`)
-                return NextResponse.redirect(homeUrl, { status: 403 })
-              }
-            }
-          } catch (roleCheckError) {
-            console.warn('Middleware: Role check exception, allowing through:', roleCheckError)
-            // On exception, allow through - client-side will handle
-            response.headers.set('X-User-Id', user.id)
-            response.headers.set('X-User-Role', '')
-            response.headers.set('X-User-Roles', '')
-            break
-          }
-
-          // Builder-specific checks
-          if (requiredRole === 'builder') {
-            const { data: builderProfile } = await supabase
-              .from('builder_profiles')
-              .select('verification_status')
-              .eq('user_id', user.id)
-              .single()
-
-            // Allow access even if pending verification (for onboarding)
-            // Only block if explicitly rejected
-            if (builderProfile?.verification_status === 'rejected') {
-              return NextResponse.redirect(new URL('/builder/verification-required', req.url))
-            }
-          }
-
-          // Add user context to headers
-          response.headers.set('X-User-Id', user.id)
-          response.headers.set('X-User-Role', primaryRole || '')
-          response.headers.set('X-User-Roles', roles.join(','))
-
-          break
-        }
-      }
+      // Pass authenticated user id in header — client-side BuilderAuthProvider
+      // handles role checking and profile fetching. We do NOT query user_roles or
+      // builder_profiles here because that adds 2 extra DB round-trips to EVERY
+      // request. The middleware's job is only to confirm the session is valid.
+      response.headers.set('X-User-Id', user.id)
+      response.headers.set('X-User-Email', user.email || '')
     } catch (error) {
       console.error('Middleware error:', error)
       // On error, allow through (fail open for now)

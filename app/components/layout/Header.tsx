@@ -50,7 +50,7 @@ export function Header() {
   useEffect(() => {
     let mounted = true
 
-    async function loadUser(authUser: any) {
+    function loadUser(authUser: any) {
       if (!authUser) {
         if (mounted) {
           setUser(null)
@@ -63,38 +63,25 @@ export function Header() {
       if (mounted) {
         setUser(authUser)
         setUserEmail(authUser.email || '')
+        // Use user_metadata directly — no DB query needed for display name
         setDisplayName(
           authUser.user_metadata?.full_name ||
           authUser.user_metadata?.name ||
           authUser.email?.split('@')[0] || 'User'
         )
       }
-
-      // Fetch profile for better display name
-      try {
-        const supabase = getSupabase()
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('full_name')
-          .eq('id', authUser.id)
-          .single()
-        if (mounted && profile?.full_name) {
-          setDisplayName(profile.full_name)
-        }
-      } catch {}
-
-      // Dashboard always routes to /builder — single dashboard for all roles
     }
 
-    async function init() {
-      try {
-        const supabase = getSupabase()
-        const { data: { user: authUser } } = await supabase.auth.getUser()
-        loadUser(authUser)
-      } catch {}
-    }
-
-    init()
+      // Read session synchronously from localStorage for instant header render.
+    // onAuthStateChange below fires immediately on mount and will update if stale.
+    try {
+      const raw = localStorage.getItem(`sb-wedevtjjmdvngyshqdro-auth-token`)
+      if (raw) {
+        const parsed = JSON.parse(raw)
+        const notExpired = !parsed?.expires_at || parsed.expires_at * 1000 > Date.now()
+        if (notExpired && parsed?.user) loadUser(parsed.user)
+      }
+    } catch {}
 
     // Listen for auth state changes (sign in, sign out, token refresh)
     try {

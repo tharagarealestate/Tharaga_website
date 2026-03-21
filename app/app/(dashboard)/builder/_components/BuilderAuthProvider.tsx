@@ -6,6 +6,29 @@ import { BuilderAuthGate } from './BuilderAuthGate'
 import { BuilderSetupGate } from './BuilderSetupGate'
 import { openAuthModal } from '@/components/auth/AuthModal'
 
+// ─── Instant sync auth detection ─────────────────────────────────────────────
+// Reads Supabase's localStorage token SYNCHRONOUSLY before first render.
+// If no valid token exists → start as 'unauthenticated' → AuthModal opens
+// instantly with zero spinner. If token exists → start as 'loading' and let
+// resolveAuth() confirm with the server in the background.
+const SUPABASE_PROJECT_REF = 'wedevtjjmdvngyshqdro'
+
+function getInitialStatus(): AuthStatus {
+  if (typeof window === 'undefined') return 'loading'
+  try {
+    const raw = localStorage.getItem(`sb-${SUPABASE_PROJECT_REF}-auth-token`)
+    if (!raw) return 'unauthenticated' // no stored session → modal opens immediately
+    const parsed = JSON.parse(raw)
+    // Expired token means unauthenticated — show modal without waiting for network
+    if (parsed?.expires_at && parsed.expires_at * 1000 < Date.now()) {
+      return 'unauthenticated'
+    }
+    return 'loading' // valid-looking token → verify with server in background
+  } catch {
+    return 'loading'
+  }
+}
+
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 interface BuilderAuthContextType {
@@ -58,7 +81,8 @@ function UnauthenticatedView() {
 // ─── Provider ─────────────────────────────────────────────────────────────────
 
 export function BuilderAuthProvider({ children }: { children: ReactNode }) {
-  const [status, setStatus] = useState<AuthStatus>('loading')
+  // getInitialStatus() runs synchronously — no spinner for unauthenticated users
+  const [status, setStatus] = useState<AuthStatus>(getInitialStatus)
   const [builderId, setBuilderId] = useState<string | null>(null)
   const [userId, setUserId] = useState<string | null>(null)
   const [userEmail, setUserEmail] = useState<string>('')
@@ -110,11 +134,12 @@ export function BuilderAuthProvider({ children }: { children: ReactNode }) {
       // Admin email bypass
       const isAdminByEmail = resolvedEmail === 'tharagarealestate@gmail.com'
 
-      // Fetch roles + builder profile in parallel (5s guard)
+      // Single parallel fetch for roles + profile — both fire simultaneously.
+      // 6s guard (up from 5s) accounts for cold DB connections on free Supabase tier.
       const timeout = <T,>(p: Promise<T>): Promise<T> =>
         Promise.race([
           p,
-          new Promise<T>((_, rej) => setTimeout(() => rej(new Error('timeout')), 5000)),
+          new Promise<T>((_, rej) => setTimeout(() => rej(new Error('timeout')), 6000)),
         ])
 
       const [rolesResult, profileResult] = await Promise.allSettled([
@@ -197,9 +222,15 @@ export function BuilderAuthProvider({ children }: { children: ReactNode }) {
   // ── Mount effect ─────────────────────────────────────────────────────────
   useEffect(() => {
     mountedRef.current = true
-    resolvedRef.current = false
 
-    resolveAuth(false)
+    // If localStorage already told us the user is unauthenticated, mark resolved
+    // immediately so the safety timer and resolveAuth don't unnecessarily run.
+    if (status === 'unauthenticated') {
+      resolvedRef.current = true
+    } else {
+      resolvedRef.current = false
+      resolveAuth(false)
+    }
 
     // Safety valve — 10s timeout to prevent infinite spinner on initial load only
     const safetyTimer = setTimeout(() => {
@@ -231,10 +262,12 @@ export function BuilderAuthProvider({ children }: { children: ReactNode }) {
       }
 
       if (event === 'TOKEN_REFRESHED' && session?.user) {
-        // Token refresh: session is still valid — update userId silently without
-        // risking a false 'unauthenticated' on transient DB query errors
-        resolvedRef.current = false
-        resolveAuth(true, true) // wasAuthenticated=true → no logout on error
+        // Token refresh just means JWT was renewed — the profile/roles haven't changed.
+        // Don't re-query the DB, just update the userId if it somehow changed.
+        // This eliminates the 500-800ms jank that happened every 60 minutes.
+        if (!mountedRef.current) return
+        setUserId(session.user.id)
+        // No status change, no DB queries — session stays authenticated.
       }
 
       if (event === 'INITIAL_SESSION') {

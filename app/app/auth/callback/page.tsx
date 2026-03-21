@@ -30,14 +30,12 @@ export default function AuthCallbackPage() {
     const next = rawNext.startsWith('/') ? rawNext : '/'   // safety: only allow relative paths
     const code = params.get('code')
 
-    // Subscribe to auth state change as a reliable redirect trigger.
-    // This fires for BOTH PKCE (after exchangeCodeForSession) and implicit flow.
+    // Subscribe to auth state change — fires for PKCE (after exchangeCodeForSession)
+    // and implicit flow. Redirect immediately on SIGNED_IN — no artificial delay.
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') && session?.user) {
         subscription.unsubscribe()
-        setStatus('Welcome back! Redirecting...')
-        // Small pause so the status message is visible
-        setTimeout(() => { window.location.href = next }, 400)
+        window.location.href = next  // immediate — no setTimeout delay
       }
     })
 
@@ -66,8 +64,7 @@ export default function AuthCallbackPage() {
             // Session confirmed — onAuthStateChange may have already fired,
             // but if not, redirect here directly.
             subscription.unsubscribe()
-            setStatus('Welcome back! Redirecting...')
-            setTimeout(() => { window.location.href = next }, 400)
+            window.location.href = next  // immediate
             return
           }
 
@@ -76,21 +73,21 @@ export default function AuthCallbackPage() {
           setStatus('Finalizing login...')
 
         } else {
-          // ── Implicit flow: no code, just wait for onAuthStateChange ──
-          // detectSessionInUrl: true in supabase.ts handles the hash tokens.
-          // onAuthStateChange will fire with SIGNED_IN when ready.
+          // ── Implicit flow: no code, onAuthStateChange fires automatically ──
+          // detectSessionInUrl: true in supabase.ts parses the hash tokens.
+          // The subscription above handles the redirect — no sleep needed.
           setStatus('Completing sign in...')
 
-          // Safety fallback: if no auth event in 5s, check session directly
-          await new Promise(resolve => setTimeout(resolve, 5000))
+          // Safety fallback after 3s (not 5s) — check session directly
+          await new Promise(resolve => setTimeout(resolve, 3000))
+          if (!executedRef.current) return // already redirected via subscription
           const { data: { session } } = await supabase.auth.getSession()
           if (session?.user) {
             subscription.unsubscribe()
             window.location.href = next
           } else {
             subscription.unsubscribe()
-            setStatus('Could not verify session. Redirecting...')
-            setTimeout(() => { window.location.href = '/' }, 1500)
+            window.location.href = '/'
           }
         }
       } catch (err) {

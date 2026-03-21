@@ -67,7 +67,10 @@ export function BuilderAuthProvider({ children }: { children: ReactNode }) {
   const resolvedRef = useRef(false)
 
   // ── Core auth resolution ─────────────────────────────────────────────────
-  const resolveAuth = async (skipSessionCheck = false) => {
+  // wasAuthenticated: when true, don't downgrade to 'unauthenticated' on
+  // transient errors (e.g. TOKEN_REFRESHED with a slow network). Only kick
+  // the user out if the session is genuinely gone.
+  const resolveAuth = async (skipSessionCheck = false, wasAuthenticated = false) => {
     const supabase = getSupabase()
 
     try {
@@ -91,8 +94,11 @@ export function BuilderAuthProvider({ children }: { children: ReactNode }) {
         const { data: { user }, error } = await supabase.auth.getUser()
         if (error || !user) {
           if (!mountedRef.current) return
-          setStatus('unauthenticated')
-          resolvedRef.current = true
+          // Only kick out if user was not already authenticated (avoids logout on token refresh network blip)
+          if (!wasAuthenticated) {
+            setStatus('unauthenticated')
+            resolvedRef.current = true
+          }
           return
         }
         resolvedUserId = user.id
@@ -138,10 +144,10 @@ export function BuilderAuthProvider({ children }: { children: ReactNode }) {
       setUserId(resolvedUserId)
 
       if (isAdmin) {
-        const adminBuilderId = profile?.id ?? resolvedUserId
-        setBuilderId(adminBuilderId)
+        // Admin uses auth.uid() as builderId so leads.builder_id filter works correctly
+        setBuilderId(resolvedUserId)
         setBuilderProfile({
-          id: adminBuilderId,
+          id: resolvedUserId,
           company_name: profile?.company_name || 'Admin',
           email: resolvedEmail,
         })
@@ -169,8 +175,9 @@ export function BuilderAuthProvider({ children }: { children: ReactNode }) {
         return
       }
 
-      // Full builder access
-      setBuilderId(profile.id)
+      // Full builder access — use auth.uid() (resolvedUserId) as builderId so that
+      // leads.builder_id = eq(builderId) matches correctly (leads reference auth.users.id)
+      setBuilderId(resolvedUserId)
       setBuilderProfile({ id: profile.id, company_name: profile.company_name, email: resolvedEmail })
       setStatus('authenticated')
       resolvedRef.current = true
@@ -178,8 +185,11 @@ export function BuilderAuthProvider({ children }: { children: ReactNode }) {
       console.error('[BuilderAuthProvider] resolveAuth error:', err)
       if (!mountedRef.current) return
       if (!resolvedRef.current) {
-        setStatus('unauthenticated')
-        resolvedRef.current = true
+        // Don't kick out an already-authenticated user on a transient error
+        if (!wasAuthenticated) {
+          setStatus('unauthenticated')
+          resolvedRef.current = true
+        }
       }
     }
   }
@@ -191,13 +201,14 @@ export function BuilderAuthProvider({ children }: { children: ReactNode }) {
 
     resolveAuth(false)
 
-    // Safety valve — 8s timeout to prevent infinite spinner
+    // Safety valve — 10s timeout to prevent infinite spinner on initial load only
     const safetyTimer = setTimeout(() => {
       if (!mountedRef.current || resolvedRef.current) return
-      console.warn('[BuilderAuthProvider] Safety timeout — forcing gate')
+      // Only force unauthenticated if this is truly the initial check (not a token refresh)
+      console.warn('[BuilderAuthProvider] Safety timeout — forcing unauthenticated')
       setStatus('unauthenticated')
       resolvedRef.current = true
-    }, 8000)
+    }, 10000)
 
     const supabase = getSupabase()
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
@@ -213,9 +224,17 @@ export function BuilderAuthProvider({ children }: { children: ReactNode }) {
         return
       }
 
-      if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') && session?.user) {
+      if (event === 'SIGNED_IN' && session?.user) {
+        // Fresh sign-in: full re-resolve (may change roles/profile)
         resolvedRef.current = false
-        resolveAuth(true)
+        resolveAuth(true, false)
+      }
+
+      if (event === 'TOKEN_REFRESHED' && session?.user) {
+        // Token refresh: session is still valid — update userId silently without
+        // risking a false 'unauthenticated' on transient DB query errors
+        resolvedRef.current = false
+        resolveAuth(true, true) // wasAuthenticated=true → no logout on error
       }
 
       if (event === 'INITIAL_SESSION') {

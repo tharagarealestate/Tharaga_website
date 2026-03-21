@@ -206,4 +206,4 @@ DO $$ BEGIN
   END IF;
 END $$;
 
-RAISE NOTICE 'Migration 080 complete — all leads columns ensured';
+DO $$ BEGIN RAISE NOTICE 'Migration 080 complete — all leads columns ensured'; END $$;

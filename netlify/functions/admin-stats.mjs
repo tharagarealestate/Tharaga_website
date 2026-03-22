@@ -43,7 +43,7 @@ export async function handler(event, context) {
     const token = authHeader.replace('Bearer ', '');
 
     // Create Supabase client with user token
-    const supabase = createClient(supabaseUrl, process.env.SUPABASE_ANON_KEY, {
+    const supabase = createClient(supabaseUrl, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY, {
       global: { headers: { Authorization: `Bearer ${token}` } },
     });
 

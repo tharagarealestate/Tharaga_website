@@ -31,9 +31,22 @@ export default function AuthCallbackPage() {
     const code = params.get('code')
 
     // Subscribe to auth state change — fires for PKCE (after exchangeCodeForSession)
-    // and implicit flow. Redirect immediately on SIGNED_IN — no artificial delay.
+    // and implicit flow.
+    //
+    // IMPORTANT: Handle INITIAL_SESSION in addition to SIGNED_IN.
+    // For implicit grant flow, detectSessionInUrl:true processes the hash tokens
+    // asynchronously during Supabase client initialization. By the time our useEffect
+    // registers this listener, SIGNED_IN has already fired internally. Supabase then
+    // emits INITIAL_SESSION ("here is the current state when you subscribed") — which
+    // carries the session. Without handling INITIAL_SESSION, we fall into the 3-second
+    // safety timeout, causing a visible delay and letting users navigate away before
+    // the session is confirmed → login loop.
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') && session?.user) {
+      if (session?.user && (
+        event === 'SIGNED_IN' ||
+        event === 'TOKEN_REFRESHED' ||
+        event === 'INITIAL_SESSION'
+      )) {
         subscription.unsubscribe()
         window.location.href = next  // immediate — no setTimeout delay
       }
@@ -73,20 +86,42 @@ export default function AuthCallbackPage() {
           setStatus('Finalizing login...')
 
         } else {
-          // ── Implicit flow: no code, onAuthStateChange fires automatically ──
-          // detectSessionInUrl: true in supabase.ts parses the hash tokens.
-          // The subscription above handles the redirect — no sleep needed.
+          // ── Implicit grant flow: tokens arrive in the URL hash ──
+          // detectSessionInUrl:true processes the hash asynchronously on client init,
+          // but timing isn't guaranteed. For maximum speed and reliability we also
+          // manually extract access_token + refresh_token from the hash and call
+          // setSession() directly. setSession() is instant (localStorage write) and
+          // fires SIGNED_IN → our subscription above handles the redirect immediately.
           setStatus('Completing sign in...')
 
-          // Safety fallback after 3s (not 5s) — check session directly
-          await new Promise(resolve => setTimeout(resolve, 3000))
-          if (!executedRef.current) return // already redirected via subscription
-          const { data: { session } } = await supabase.auth.getSession()
-          if (session?.user) {
-            subscription.unsubscribe()
+          const hash = window.location.hash.slice(1)   // strip leading '#'
+          const hp   = new URLSearchParams(hash)
+          const at   = hp.get('access_token')
+          const rt   = hp.get('refresh_token')
+
+          if (at && rt) {
+            // Manually set the session — fires SIGNED_IN → subscription redirects.
+            // This is the fast path: no waiting, no race condition.
+            const { error: setErr } = await supabase.auth.setSession({
+              access_token:  at,
+              refresh_token: rt,
+            })
+            if (!setErr) {
+              // setSession succeeded → SIGNED_IN fired → subscription already
+              // redirected (or is about to). Return to let that happen.
+              return
+            }
+            // setSession failed (expired/invalid token) — fall through to safety
+          }
+
+          // No hash tokens (or setSession failed) — rely on subscription above
+          // (INITIAL_SESSION will arrive) + safety fallback after 4s.
+          await new Promise(resolve => setTimeout(resolve, 4000))
+          subscription.unsubscribe()
+          const { data: { session: fbSession } } = await supabase.auth.getSession()
+          if (fbSession?.user) {
             window.location.href = next
           } else {
-            subscription.unsubscribe()
             window.location.href = '/'
           }
         }

@@ -6,29 +6,26 @@ import { BuilderAuthGate } from './BuilderAuthGate'
 import { BuilderSetupGate } from './BuilderSetupGate'
 import { openAuthModal, closeAuthModal } from '@/components/auth/AuthModal'
 
-// ─── Instant sync auth detection ─────────────────────────────────────────────
-// Reads Supabase's localStorage token SYNCHRONOUSLY before first render.
-// If no valid token exists → start as 'unauthenticated' → AuthModal opens
-// instantly with zero spinner. If token exists → start as 'loading' and let
-// resolveAuth() confirm with the server in the background.
+// ─── Initial status ───────────────────────────────────────────────────────────
+// ALWAYS start as 'loading' — never assume 'unauthenticated' before INITIAL_SESSION.
+//
+// Previous approach: if localStorage had no token → immediately return 'unauthenticated'
+// → UnauthenticatedView rendered → modal opened after 350ms.
+//
+// THE BUG: After a Google OAuth redirect via /auth/callback, the page reloads with a
+// valid session BUT: (a) if the user navigated to /builder before the callback page
+// finished its setSession(), or (b) if detectSessionInUrl hadn't written to localStorage
+// yet, the check found an empty localStorage and opened the login modal → LOOP.
+//
+// THE FIX: Always start 'loading'. INITIAL_SESSION fires within ~50-150ms and
+// determines the real state. The only cost is a brief spinner (~100ms) for users
+// who are genuinely not logged in — imperceptible in practice.
 const SUPABASE_PROJECT_REF = 'wedevtjjmdvngyshqdro'
 
 function getInitialStatus(): AuthStatus {
-  if (typeof window === 'undefined') return 'loading'
-  try {
-    const raw = localStorage.getItem(`sb-${SUPABASE_PROJECT_REF}-auth-token`)
-    if (!raw) return 'unauthenticated' // no stored session → modal opens immediately
-    const parsed = JSON.parse(raw)
-    // Expired token: don't assume unauthenticated — Supabase may have already
-    // refreshed the session via HTTP-only cookies. Use 'loading' to trigger a
-    // server-side getSession() check instead of opening the modal immediately.
-    if (parsed?.expires_at && parsed.expires_at * 1000 < Date.now()) {
-      return 'loading'
-    }
-    return 'loading' // valid-looking token → verify with server in background
-  } catch {
-    return 'loading'
-  }
+  // Always 'loading' — let INITIAL_SESSION be the single source of truth.
+  // This eliminates every post-OAuth race condition with localStorage timing.
+  return 'loading'
 }
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -66,9 +63,11 @@ export function useBuilderAuth(): BuilderAuthContextType {
 
 function UnauthenticatedView() {
   useEffect(() => {
-    // Delay gives INITIAL_SESSION time to arrive (~50-150ms) and upgrade the
-    // status — if it does, UnauthenticatedView unmounts and this timer is cleared.
-    const t = setTimeout(() => openAuthModal(), 350)
+    // Delay gives INITIAL_SESSION time to arrive (~50-150ms) and upgrade status.
+    // If a valid session arrives, UnauthenticatedView unmounts and this timer is
+    // cleared before it fires. 600ms > 99th-percentile INITIAL_SESSION latency
+    // so this only fires for users who are genuinely not logged in.
+    const t = setTimeout(() => openAuthModal(), 600)
     return () => clearTimeout(t)
   }, [])
 
@@ -254,13 +253,15 @@ export function BuilderAuthProvider({ children }: { children: ReactNode }) {
     // onAuthStateChange registration, which happens in the same synchronous tick.
     resolvedRef.current = false
 
-    // Safety valve — 10s timeout to prevent infinite spinner on initial load only
+    // Safety valve — 6s timeout to prevent infinite spinner if INITIAL_SESSION
+    // somehow never arrives (e.g. blocked network). Reduced from 10s since we no
+    // longer have a pre-check: INITIAL_SESSION reliably fires within 150ms normally.
     const safetyTimer = setTimeout(() => {
       if (!mountedRef.current || resolvedRef.current) return
       console.warn('[BuilderAuthProvider] Safety timeout — forcing unauthenticated')
       setStatus('unauthenticated')
       resolvedRef.current = true
-    }, 10000)
+    }, 6000)
 
     const supabase = getSupabase()
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
@@ -277,9 +278,11 @@ export function BuilderAuthProvider({ children }: { children: ReactNode }) {
       }
 
       if (event === 'SIGNED_IN' && session?.user) {
-        // Fresh sign-in (from modal): full re-resolve — roles/profile may have changed
+        // Fresh sign-in confirmed by Supabase — re-resolve roles/profile.
+        // Use wasAuthenticated=true: SIGNED_IN means the session is 100% valid right now,
+        // so a transient getUser() network failure must NOT flash the login modal.
         resolvedRef.current = false
-        resolveAuth(true, false)
+        resolveAuth(true, true)
         return
       }
 

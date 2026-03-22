@@ -86,7 +86,6 @@ jobs:
           echo "CLOUD_RUN_URL=$URL" >> $GITHUB_ENV
 
       - name: Update Netlify env vars
-        if: ${{ secrets.NETLIFY_AUTH_TOKEN != '' && secrets.NETLIFY_SITE_ID != '' }}
         run: |
           curl -s -X PATCH \
             "https://api.netlify.com/api/v1/sites/${{ secrets.NETLIFY_SITE_ID }}/env/NEXT_PUBLIC_BACKEND_URL" \

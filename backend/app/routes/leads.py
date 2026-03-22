@@ -32,7 +32,7 @@ SUPABASE_SERVICE_ROLE_KEY = os.getenv("SUPABASE_SERVICE_ROLE_KEY", "")
 META_ACCESS_TOKEN = os.getenv("META_ACCESS_TOKEN", "")
 META_PIXEL_ID = os.getenv("META_PIXEL_ID", "")
 META_TEST_EVENT_CODE = os.getenv("META_TEST_EVENT_CODE", "")  # for testing
-N8N_WEBHOOK_NEW_LEAD = os.getenv("N8N_WEBHOOK_NEW_LEAD", "")
+# N8N_WEBHOOK_NEW_LEAD = os.getenv("N8N_WEBHOOK_NEW_LEAD", "")  # DISCONNECTED: Ultra Automation handles this
 SMARTSCORE_URL = os.getenv("SMARTSCORE_SERVICE_URL", "http://localhost:8001")
 
 SUPABASE_HEADERS = {
@@ -161,14 +161,18 @@ async def _fire_meta_capi_lead(lead: dict[str, Any]) -> None:
         logger.error("CAPI fire error: %s", exc)
 
 
+# ── N8N new-lead trigger — DISCONNECTED (Ultra Automation is active instead) ──
+# async def _trigger_n8n_new_lead(lead: dict[str, Any]) -> None:
+#     if not N8N_WEBHOOK_NEW_LEAD:
+#         return
+#     try:
+#         async with httpx.AsyncClient(timeout=10) as client:
+#             await client.post(N8N_WEBHOOK_NEW_LEAD, json={"lead": lead})
+#     except Exception as exc:
+#         logger.warning("N8N trigger failed: %s", exc)
 async def _trigger_n8n_new_lead(lead: dict[str, Any]) -> None:
-    if not N8N_WEBHOOK_NEW_LEAD:
-        return
-    try:
-        async with httpx.AsyncClient(timeout=10) as client:
-            await client.post(N8N_WEBHOOK_NEW_LEAD, json={"lead": lead})
-    except Exception as exc:
-        logger.warning("N8N trigger failed: %s", exc)
+    """Stub — N8N disconnected. Ultra Automation pipeline handles lead events."""
+    return  # noqa: intentional no-op
 
 
 async def _trigger_smartscore(lead_id: str) -> None:

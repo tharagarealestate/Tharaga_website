@@ -22,7 +22,7 @@ router = APIRouter(prefix="/api/distribution", tags=["distribution"])
 
 SUPABASE_URL = os.getenv("SUPABASE_URL", "")
 SUPABASE_SERVICE_ROLE_KEY = os.getenv("SUPABASE_SERVICE_ROLE_KEY", "")
-N8N_WEBHOOK_SLA_BREACH = os.getenv("N8N_WEBHOOK_SLA_BREACH", "")
+# N8N_WEBHOOK_SLA_BREACH = os.getenv("N8N_WEBHOOK_SLA_BREACH", "")  # DISCONNECTED: Ultra Automation handles this
 
 SUPABASE_HEADERS = {
     "apikey": SUPABASE_SERVICE_ROLE_KEY,
@@ -215,16 +215,16 @@ async def _check_sla_breach(lead_id: str, classification: str, assignee_phone: s
     # Log breach event
     await _log_lead_event(lead_id, "sla_breach", {"sla_minutes": sla_minutes, "classification": classification})
 
-    # Send N8N SLA breach workflow
-    if N8N_WEBHOOK_SLA_BREACH:
-        try:
-            async with httpx.AsyncClient(timeout=10) as client:
-                await client.post(
-                    N8N_WEBHOOK_SLA_BREACH,
-                    json={"lead_id": lead_id, "classification": classification, "sla_minutes": sla_minutes},
-                )
-        except Exception:
-            pass
+    # ── N8N SLA breach trigger — DISCONNECTED (Ultra Automation is active instead) ──
+    # if N8N_WEBHOOK_SLA_BREACH:
+    #     try:
+    #         async with httpx.AsyncClient(timeout=10) as client:
+    #             await client.post(
+    #                 N8N_WEBHOOK_SLA_BREACH,
+    #                 json={"lead_id": lead_id, "classification": classification, "sla_minutes": sla_minutes},
+    #             )
+    #     except Exception:
+    #         pass
 
     # Re-assign: rotate to next available person
     await distribute_lead_internal(lead_id, force_reassign=True)

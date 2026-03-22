@@ -36,7 +36,7 @@ TWILIO_ACCOUNT_SID = os.getenv("TWILIO_ACCOUNT_SID", "")
 TWILIO_AUTH_TOKEN = os.getenv("TWILIO_AUTH_TOKEN", "")
 TWILIO_WHATSAPP_NUMBER = os.getenv("TWILIO_WHATSAPP_NUMBER", "whatsapp:+14155238886")
 ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY", "")
-N8N_WEBHOOK_QUALIFIED = os.getenv("N8N_WEBHOOK_QUALIFIED_LEAD", "")
+# N8N_WEBHOOK_QUALIFIED = os.getenv("N8N_WEBHOOK_QUALIFIED_LEAD", "")  # DISCONNECTED: Ultra Automation handles this
 
 SUPABASE_HEADERS = {
     "apikey": SUPABASE_SERVICE_ROLE_KEY,
@@ -270,12 +270,12 @@ async def _complete_qualification(conv: dict, phone: str) -> None:
             "is_active": False,
         })
 
-        # Trigger N8N qualified lead workflow
-        if N8N_WEBHOOK_QUALIFIED:
-            try:
-                await client.post(N8N_WEBHOOK_QUALIFIED, json={"lead_id": lead_id, "phone": phone, "data": data})
-            except Exception:
-                pass
+        # ── N8N qualified-lead trigger — DISCONNECTED (Ultra Automation is active instead) ──
+        # if N8N_WEBHOOK_QUALIFIED:
+        #     try:
+        #         await client.post(N8N_WEBHOOK_QUALIFIED, json={"lead_id": lead_id, "phone": phone, "data": data})
+        #     except Exception:
+        #         pass
 
 
 # ── TwiML Webhook (Twilio sends POST here) ────────────────────────────────────

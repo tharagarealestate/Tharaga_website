@@ -28,7 +28,7 @@ SUPABASE_URL = os.getenv("SUPABASE_URL", "")
 SUPABASE_SERVICE_ROLE_KEY = os.getenv("SUPABASE_SERVICE_ROLE_KEY", "")
 RAZORPAY_KEY_ID = os.getenv("RAZORPAY_KEY_ID", "")
 RAZORPAY_KEY_SECRET = os.getenv("RAZORPAY_KEY_SECRET", "")
-N8N_WEBHOOK_POST_VISIT = os.getenv("N8N_WEBHOOK_POST_VISIT", "")
+# N8N_WEBHOOK_POST_VISIT = os.getenv("N8N_WEBHOOK_POST_VISIT", "")  # DISCONNECTED: Ultra Automation handles this
 SITE_BASE_URL = os.getenv("SITE_URL", "https://tharaga.co.in")
 
 SUPABASE_HEADERS = {
@@ -221,20 +221,20 @@ async def check_in(qr_code: str) -> dict:
             except Exception as exc:
                 logger.warning("CAPI offline fire failed: %s", exc)
 
-        # Trigger N8N post-visit workflow
-        if N8N_WEBHOOK_POST_VISIT and not booking.get("n8n_triggered"):
-            try:
-                await client.post(
-                    N8N_WEBHOOK_POST_VISIT,
-                    json={"booking_id": booking_id, "lead_id": lead_id, "checked_in_at": now},
-                )
-                await client.patch(
-                    _supabase(f"site_visit_bookings?id=eq.{booking_id}"),
-                    headers=SUPABASE_HEADERS,
-                    json={"n8n_triggered": True},
-                )
-            except Exception as exc:
-                logger.warning("N8N post-visit trigger failed: %s", exc)
+        # ── N8N post-visit trigger — DISCONNECTED (Ultra Automation is active instead) ──
+        # if N8N_WEBHOOK_POST_VISIT and not booking.get("n8n_triggered"):
+        #     try:
+        #         await client.post(
+        #             N8N_WEBHOOK_POST_VISIT,
+        #             json={"booking_id": booking_id, "lead_id": lead_id, "checked_in_at": now},
+        #         )
+        #         await client.patch(
+        #             _supabase(f"site_visit_bookings?id=eq.{booking_id}"),
+        #             headers=SUPABASE_HEADERS,
+        #             json={"n8n_triggered": True},
+        #         )
+        #     except Exception as exc:
+        #         logger.warning("N8N post-visit trigger failed: %s", exc)
 
     return {
         "status": "checked_in",

@@ -121,29 +121,39 @@ export function BuilderAuthProvider({ children }: { children: ReactNode }) {
         if (error || !user) {
           if (!mountedRef.current) return
           // getUser() failed (network hiccup / Supabase edge cold start).
-          // Before kicking the user to the login screen, check if the LOCAL session
-          // (stored in localStorage) is still valid. If it is, the JWT hasn't expired
-          // and it's safe to retry — don't flash the auth modal.
+          // Before kicking the user out, check if the LOCAL session is still valid.
+          // If it is, we use the LOCAL session user data to COMPLETE auth resolution
+          // (admin check + roles + profile). This eliminates the 6-second safety timer
+          // kicking in and opening the modal when the network blips during login.
           try {
             const { data: localData } = await supabase.auth.getSession()
             const localExpiresAt = localData?.session?.expires_at
-            const localUser = localData?.session?.user
+            const localUser    = localData?.session?.user
             const localIsValid = !!(localUser && localExpiresAt && localExpiresAt * 1000 > Date.now())
-            if (localIsValid) {
-              // Local session is still good — keep current status, don't open modal.
-              // The SDK will auto-refresh the token; next navigation will re-resolve.
+            if (localIsValid && localUser) {
+              // Use local session user data — JWT is still valid, server just had a blip.
+              // Continue resolveAuth with this data instead of bailing out.
+              resolvedUserId = localUser.id
+              resolvedEmail  = localUser.email || ''
+              // Fall through to roles + profile fetch below ↓
+            } else {
+              if (!wasAuthenticated) {
+                setStatus('unauthenticated')
+                resolvedRef.current = true
+              }
               return
             }
-          } catch { /* ignore secondary error */ }
-          // Only kick out if user was not already authenticated (avoids logout on token refresh network blip)
-          if (!wasAuthenticated) {
-            setStatus('unauthenticated')
-            resolvedRef.current = true
+          } catch {
+            if (!wasAuthenticated) {
+              setStatus('unauthenticated')
+              resolvedRef.current = true
+            }
+            return
           }
-          return
+        } else {
+          resolvedUserId = user.id
+          resolvedEmail = user.email || ''
         }
-        resolvedUserId = user.id
-        resolvedEmail = user.email || ''
       }
 
       if (!mountedRef.current) return

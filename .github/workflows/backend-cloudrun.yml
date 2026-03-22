@@ -1,4 +1,4 @@
-name: Backend — Deploy to Cloud Run (asia-south1)
+name: Backend - Deploy to Cloud Run (asia-south1)
 
 on:
   push:
@@ -6,12 +6,12 @@ on:
     paths:
       - 'backend/**'
       - '.github/workflows/backend-cloudrun.yml'
-  workflow_dispatch:   # allow manual trigger from Actions tab
+  workflow_dispatch:
 
 env:
   REGION: asia-south1
   SERVICE: tharaga-backend
-  REPO: tharaga                       # Artifact Registry repo name
+  REPO: tharaga
   IMAGE_NAME: tharaga-backend
 
 jobs:
@@ -20,30 +20,25 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      id-token: write                 # needed for Workload Identity (optional path)
+      id-token: write
 
     steps:
-      # ── 1. Checkout ──────────────────────────────────────────────────────────
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # ── 2. Authenticate to GCP ───────────────────────────────────────────────
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v2
         with:
           credentials_json: ${{ secrets.GCP_SA_KEY }}
 
-      # ── 3. Set up Cloud SDK ───────────────────────────────────────────────────
       - name: Set up Cloud SDK
         uses: google-github-actions/setup-gcloud@v2
         with:
           project_id: ${{ secrets.GCP_PROJECT_ID }}
 
-      # ── 4. Configure Docker for Artifact Registry ────────────────────────────
       - name: Configure Docker auth
         run: gcloud auth configure-docker ${{ env.REGION }}-docker.pkg.dev --quiet
 
-      # ── 5. Ensure Artifact Registry repo exists ──────────────────────────────
       - name: Create Artifact Registry repo (idempotent)
         run: |
           gcloud artifacts repositories describe ${{ env.REPO }} \
@@ -55,7 +50,6 @@ jobs:
             --project=${{ secrets.GCP_PROJECT_ID }} \
             --description="Tharaga backend images"
 
-      # ── 6. Build & push Docker image ─────────────────────────────────────────
       - name: Build and push image
         run: |
           IMAGE="${{ env.REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ env.REPO }}/${{ env.IMAGE_NAME }}:${{ github.sha }}"
@@ -66,7 +60,6 @@ jobs:
           docker push "$IMAGE"
           echo "IMAGE=$IMAGE" >> $GITHUB_ENV
 
-      # ── 7. Deploy to Cloud Run ────────────────────────────────────────────────
       - name: Deploy to Cloud Run
         run: |
           gcloud run deploy ${{ env.SERVICE }} \
@@ -81,41 +74,28 @@ jobs:
             --timeout 60 \
             --concurrency 80 \
             --project ${{ secrets.GCP_PROJECT_ID }} \
-            --set-env-vars "\
-SUPABASE_URL=https://wedevtjjmdvngyshqdro.supabase.co,\
-SUPABASE_SERVICE_ROLE_KEY=${{ secrets.SUPABASE_SERVICE_ROLE_KEY }},\
-META_PIXEL_ID=1431070318716490,\
-META_ACCESS_TOKEN=${{ secrets.META_ACCESS_TOKEN }},\
-ALLOWED_ORIGINS=https://tharaga.co.in,https://auth.tharaga.co.in,\
-LOG_LEVEL=INFO,\
-ENVIRONMENT=production"
+            --set-env-vars "SUPABASE_URL=https://wedevtjjmdvngyshqdro.supabase.co,SUPABASE_SERVICE_ROLE_KEY=${{ secrets.SUPABASE_SERVICE_ROLE_KEY }},META_PIXEL_ID=1431070318716490,META_ACCESS_TOKEN=${{ secrets.META_ACCESS_TOKEN }},ALLOWED_ORIGINS=https://tharaga.co.in,LOG_LEVEL=INFO,ENVIRONMENT=production"
 
-      # ── 8. Print the service URL ──────────────────────────────────────────────
       - name: Get service URL
         run: |
           URL=$(gcloud run services describe ${{ env.SERVICE }} \
             --region ${{ env.REGION }} \
             --project ${{ secrets.GCP_PROJECT_ID }} \
             --format 'value(status.url)')
-          echo "✅ Cloud Run URL: $URL"
+          echo "Cloud Run URL: $URL"
           echo "CLOUD_RUN_URL=$URL" >> $GITHUB_ENV
 
-      # ── 9. Update Netlify env vars automatically ──────────────────────────────
       - name: Update Netlify env vars
         if: ${{ secrets.NETLIFY_AUTH_TOKEN != '' && secrets.NETLIFY_SITE_ID != '' }}
         run: |
-          # Update NEXT_PUBLIC_BACKEND_URL
           curl -s -X PATCH \
             "https://api.netlify.com/api/v1/sites/${{ secrets.NETLIFY_SITE_ID }}/env/NEXT_PUBLIC_BACKEND_URL" \
             -H "Authorization: Bearer ${{ secrets.NETLIFY_AUTH_TOKEN }}" \
             -H "Content-Type: application/json" \
             -d "{\"value\": \"$CLOUD_RUN_URL\"}" || true
-
-          # Update NEXT_PUBLIC_API_URL
           curl -s -X PATCH \
             "https://api.netlify.com/api/v1/sites/${{ secrets.NETLIFY_SITE_ID }}/env/NEXT_PUBLIC_API_URL" \
             -H "Authorization: Bearer ${{ secrets.NETLIFY_AUTH_TOKEN }}" \
             -H "Content-Type: application/json" \
             -d "{\"value\": \"$CLOUD_RUN_URL\"}" || true
-
-          echo "✅ Netlify env vars updated to: $CLOUD_RUN_URL"
+          echo "Netlify env vars updated to: $CLOUD_RUN_URL"

@@ -121,6 +121,21 @@ export function BuilderAuthProvider({ children }: { children: ReactNode }) {
         const { data: { user }, error } = await supabase.auth.getUser()
         if (error || !user) {
           if (!mountedRef.current) return
+          // getUser() failed (network hiccup / Supabase edge cold start).
+          // Before kicking the user to the login screen, check if the LOCAL session
+          // (stored in localStorage) is still valid. If it is, the JWT hasn't expired
+          // and it's safe to retry — don't flash the auth modal.
+          try {
+            const { data: localData } = await supabase.auth.getSession()
+            const localExpiresAt = localData?.session?.expires_at
+            const localUser = localData?.session?.user
+            const localIsValid = !!(localUser && localExpiresAt && localExpiresAt * 1000 > Date.now())
+            if (localIsValid) {
+              // Local session is still good — keep current status, don't open modal.
+              // The SDK will auto-refresh the token; next navigation will re-resolve.
+              return
+            }
+          } catch { /* ignore secondary error */ }
           // Only kick out if user was not already authenticated (avoids logout on token refresh network blip)
           if (!wasAuthenticated) {
             setStatus('unauthenticated')
@@ -280,8 +295,9 @@ export function BuilderAuthProvider({ children }: { children: ReactNode }) {
           // Active server session confirmed. If localStorage was empty, we started
           // as 'unauthenticated' — switch back to 'loading' before resolving.
           if (status === 'unauthenticated') setStatus('loading')
-          // Single resolveAuth call — no race condition possible from here.
-          resolveAuth(true, false)
+          // Pass wasAuthenticated=true: Supabase confirmed the session is real,
+          // so a transient getUser() failure must NOT flash the login modal.
+          resolveAuth(true, true)
         } else if (!session?.user && !resolvedRef.current) {
           // No session anywhere — truly unauthenticated → open modal.
           setStatus('unauthenticated')

@@ -2,13 +2,13 @@
 
 /**
  * Marketing — Channel performance, UTM source quality from real leads.
+ * Social Media tab: AI auto-generates + posts to Instagram/Facebook via backend.
  * CAPI and behavioral tabs show ComingSoonEmpty (no integration data yet).
- * Overview derives channel stats from leads.source + utm_source fields.
  */
 
 import { useState, useMemo } from 'react'
 import { motion } from 'framer-motion'
-import { Megaphone, TrendingUp, Target, Globe, Users } from 'lucide-react'
+import { Megaphone, TrendingUp, Target, Globe, Users, Share2, Loader2, CheckCircle2, Sparkles, ImageIcon } from 'lucide-react'
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts'
 import {
   GlassCard, DashboardSkeleton, EmptyState, ErrorDisplay, ComingSoonEmpty,
@@ -42,7 +42,52 @@ export function MarketingSection() {
   const isAdmin = builderProfile?.email === 'tharagarealestate@gmail.com'
   const { leads, stats, loading, error, refetch } = useDashboardData(builderId, isAdmin)
 
-  const [activeTab, setActiveTab] = useState<'overview' | 'capi' | 'behavioral'>('overview')
+  const [activeTab, setActiveTab] = useState<'overview' | 'social' | 'capi' | 'behavioral'>('overview')
+
+  // ── Social media state ────────────────────────────────────────────────────
+  const [smPropertyId, setSmPropertyId]   = useState('')
+  const [smCaption, setSmCaption]         = useState('')
+  const [smPlatforms, setSmPlatforms]     = useState<string[]>(['instagram', 'facebook'])
+  const [smLoading, setSmLoading]         = useState(false)
+  const [smError, setSmError]             = useState('')
+  const [smResult, setSmResult]           = useState<any>(null)
+  const [genLoading, setGenLoading]       = useState(false)
+
+  const generateCaption = async () => {
+    if (!smPropertyId) return
+    setGenLoading(true); setSmError('')
+    try {
+      const res = await fetch(`/api/social-media/analytics/${smPropertyId}`)
+      const data = await res.json()
+      // Use AI to generate a caption from property data
+      setSmCaption(data.suggested_caption || data.caption ||
+        `🏠 Discover your dream home! ${data.title || 'Premium property'} in ${data.city || 'Chennai'}.\n📍 Prime location | 🌟 Modern amenities\n\nContact us today! 📞\n\n#TharagaRealestate #Chennai #RealEstate #DreamHome`)
+    } catch {
+      setSmCaption('🏠 Discover your dream home in Chennai! Premium property with modern amenities.\nContact us today!\n\n#TharagaRealestate #Chennai #RealEstate')
+    } finally { setGenLoading(false) }
+  }
+
+  const handleSocialPost = async () => {
+    if (!smCaption.trim()) { setSmError('Add a caption first'); return }
+    setSmLoading(true); setSmError(''); setSmResult(null)
+    try {
+      const res = await fetch('/api/social-media/post', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          property_id: smPropertyId || null,
+          caption: smCaption,
+          platforms: smPlatforms,
+          post_type: 'property',
+        }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Post failed')
+      setSmResult(data)
+    } catch (e: any) {
+      setSmError(e.message || 'Social media post failed. Check your account connections.')
+    } finally { setSmLoading(false) }
+  }
 
   // ── Derive channel stats from real leads ──────────────────────────────────
 
@@ -115,11 +160,16 @@ export function MarketingSection() {
       </div>
 
       {/* ── Tabs ───────────────────────────────────────────────────────────── */}
-      <div className="flex gap-1 p-1 rounded-xl bg-white/[0.03] border border-white/[0.06] w-fit">
-        {(['overview', 'capi', 'behavioral'] as const).map(t => (
-          <button key={t} onClick={() => setActiveTab(t)}
-            className={`px-4 py-2 rounded-lg text-[11px] font-semibold uppercase tracking-wider transition-all duration-200 ${activeTab === t ? 'bg-amber-500/15 border border-amber-500/25 text-amber-400' : 'text-zinc-500 hover:text-zinc-300'}`}>
-            {t}
+      <div className="flex gap-1 p-1 rounded-xl bg-white/[0.03] border border-white/[0.06] w-fit flex-wrap">
+        {([
+          { id: 'overview',  label: 'Overview'     },
+          { id: 'social',    label: '📱 Social AI'  },
+          { id: 'capi',      label: 'Meta CAPI'    },
+          { id: 'behavioral',label: 'Behavioral'   },
+        ] as const).map(t => (
+          <button key={t.id} onClick={() => setActiveTab(t.id)}
+            className={`px-4 py-2 rounded-lg text-[11px] font-semibold uppercase tracking-wider transition-all duration-200 ${activeTab === t.id ? 'bg-amber-500/15 border border-amber-500/25 text-amber-400' : 'text-zinc-500 hover:text-zinc-300'}`}>
+            {t.label}
           </button>
         ))}
       </div>
@@ -220,6 +270,100 @@ export function MarketingSection() {
             )}
           </GlassCard>
         </>
+      )}
+
+      {/* ── Social Media tab ──────────────────────────────────────────────── */}
+      {activeTab === 'social' && (
+        <div className="space-y-5">
+          <GlassCard className="p-6">
+            <div className="flex items-center gap-3 mb-5">
+              <div className="w-8 h-8 rounded-lg bg-pink-500/15 border border-pink-500/20 flex items-center justify-center">
+                <Share2 className="w-4 h-4 text-pink-400" />
+              </div>
+              <div>
+                <h2 className="text-sm font-bold text-zinc-100">AI Social Media Auto-Post</h2>
+                <p className="text-[11px] text-zinc-500">Generate AI captions and post to Instagram & Facebook automatically</p>
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              {/* Property ID + AI generate */}
+              <div className="flex gap-3">
+                <div className="flex-1 space-y-1">
+                  <label className="text-[10px] font-bold uppercase tracking-wider text-zinc-500">Property ID (optional)</label>
+                  <input value={smPropertyId} onChange={e => setSmPropertyId(e.target.value)}
+                    placeholder="e.g. abc123 — leave blank for generic post"
+                    className="w-full px-3 py-2.5 bg-zinc-900/80 border border-zinc-800 rounded-xl text-sm text-zinc-300 placeholder:text-zinc-600 focus:outline-none focus:border-amber-500/40 transition-colors" />
+                </div>
+                <div className="flex items-end">
+                  <button onClick={generateCaption} disabled={genLoading}
+                    className="flex items-center gap-1.5 px-4 py-2.5 bg-purple-600/80 hover:bg-purple-600 disabled:opacity-40 border border-purple-500/30 rounded-xl text-sm font-medium text-white transition-colors">
+                    {genLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5" />}
+                    AI Caption
+                  </button>
+                </div>
+              </div>
+
+              {/* Caption */}
+              <div className="space-y-1">
+                <label className="text-[10px] font-bold uppercase tracking-wider text-zinc-500">Caption</label>
+                <textarea value={smCaption} onChange={e => setSmCaption(e.target.value)} rows={5}
+                  placeholder="Write or AI-generate a caption for your property post..."
+                  className="w-full px-3 py-2.5 bg-zinc-900/80 border border-zinc-800 rounded-xl text-sm text-zinc-300 placeholder:text-zinc-600 focus:outline-none focus:border-amber-500/40 transition-colors resize-none" />
+                <p className="text-[10px] text-zinc-600">{smCaption.length} / 2200 characters</p>
+              </div>
+
+              {/* Platforms */}
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-bold uppercase tracking-wider text-zinc-500">Post to</label>
+                <div className="flex gap-2">
+                  {[
+                    { id: 'instagram', label: 'Instagram',  color: 'bg-pink-500/10 border-pink-500/20 text-pink-400' },
+                    { id: 'facebook',  label: 'Facebook',   color: 'bg-blue-500/10 border-blue-500/20 text-blue-400'  },
+                  ].map(p => (
+                    <button key={p.id}
+                      onClick={() => setSmPlatforms(prev => prev.includes(p.id) ? prev.filter(x => x !== p.id) : [...prev, p.id])}
+                      className={`flex items-center gap-1.5 px-3 py-2 rounded-xl border text-[11px] font-semibold transition-all ${
+                        smPlatforms.includes(p.id) ? p.color : 'bg-zinc-900/40 border-zinc-800 text-zinc-500'}`}>
+                      {smPlatforms.includes(p.id) && <CheckCircle2 className="w-3 h-3" />}
+                      {p.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {smError && <p className="text-xs text-red-400 bg-red-500/8 border border-red-500/15 rounded-xl px-3 py-2">{smError}</p>}
+
+              {smResult && (
+                <div className="flex items-start gap-2 bg-emerald-500/8 border border-emerald-500/20 rounded-xl px-4 py-3">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+                  <div>
+                    <p className="text-sm font-medium text-emerald-400">Posted successfully!</p>
+                    <p className="text-[11px] text-zinc-400 mt-0.5">
+                      {smResult.instagram_post_id && `Instagram: ${smResult.instagram_post_id}`}
+                      {smResult.facebook_post_id && ` · Facebook: ${smResult.facebook_post_id}`}
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              <button onClick={handleSocialPost} disabled={smLoading || smPlatforms.length === 0 || !smCaption.trim()}
+                className="w-full flex items-center justify-center gap-2 py-3 bg-gradient-to-r from-pink-600 to-purple-600 hover:from-pink-500 hover:to-purple-500 disabled:opacity-40 disabled:cursor-not-allowed rounded-xl text-sm font-bold text-white transition-all">
+                {smLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Share2 className="w-4 h-4" />}
+                {smLoading ? 'Posting…' : `Post to ${smPlatforms.join(' & ')}`}
+              </button>
+            </div>
+          </GlassCard>
+
+          {/* Analytics coming soon */}
+          <GlassCard className="p-5">
+            <div className="flex items-center gap-2 mb-3">
+              <ImageIcon className="w-4 h-4 text-zinc-400" />
+              <h3 className="text-sm font-semibold text-zinc-300">Post Performance</h3>
+            </div>
+            <ComingSoonEmpty title="Post analytics coming soon" description="Reach, impressions, and engagement stats will appear here once posts are published." />
+          </GlassCard>
+        </div>
       )}
 
       {/* ── CAPI tab ──────────────────────────────────────────────────────── */}

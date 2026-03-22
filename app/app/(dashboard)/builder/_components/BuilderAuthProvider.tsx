@@ -228,20 +228,20 @@ export function BuilderAuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     mountedRef.current = true
 
-    // Always start unresolved. If localStorage had no token (status='unauthenticated')
-    // we still wait for the INITIAL_SESSION event to confirm no server session exists
-    // before opening the modal — prevents false-positive modal on token refresh/page nav.
+    // ── Single source of truth: INITIAL_SESSION ───────────────────────────
+    // IMPORTANT: Do NOT call resolveAuth() here directly. The previous approach
+    // called resolveAuth(false) from the mount effect AND let INITIAL_SESSION
+    // also call resolveAuth(true) — creating two concurrent async calls that
+    // raced against each other. If the mount-effect call got a null session
+    // (before SDK fully initialised), it set status='unauthenticated' and opened
+    // the auth modal BEFORE the correct INITIAL_SESSION resolve could complete.
+    // Fix: INITIAL_SESSION is the ONLY trigger. It fires within ~50ms of
+    // onAuthStateChange registration, which happens in the same synchronous tick.
     resolvedRef.current = false
-    if (status !== 'unauthenticated') {
-      resolveAuth(false)
-    }
-    // For 'unauthenticated' (empty localStorage): rely on INITIAL_SESSION below.
-    // resolveAuth() is called there if Supabase finds an active server session.
 
     // Safety valve — 10s timeout to prevent infinite spinner on initial load only
     const safetyTimer = setTimeout(() => {
       if (!mountedRef.current || resolvedRef.current) return
-      // Only force unauthenticated if this is truly the initial check (not a token refresh)
       console.warn('[BuilderAuthProvider] Safety timeout — forcing unauthenticated')
       setStatus('unauthenticated')
       resolvedRef.current = true
@@ -262,29 +262,28 @@ export function BuilderAuthProvider({ children }: { children: ReactNode }) {
       }
 
       if (event === 'SIGNED_IN' && session?.user) {
-        // Fresh sign-in: full re-resolve (may change roles/profile)
+        // Fresh sign-in (from modal): full re-resolve — roles/profile may have changed
         resolvedRef.current = false
         resolveAuth(true, false)
+        return
       }
 
       if (event === 'TOKEN_REFRESHED' && session?.user) {
-        // Token refresh just means JWT was renewed — the profile/roles haven't changed.
-        // Don't re-query the DB, just update the userId if it somehow changed.
-        // This eliminates the 500-800ms jank that happened every 60 minutes.
-        if (!mountedRef.current) return
+        // JWT renewed — profile/roles unchanged. Just sync userId. No DB queries.
+        // Eliminates the 500–800ms jank that previously happened every 60 minutes.
         setUserId(session.user.id)
-        // No status change, no DB queries — session stays authenticated.
+        return
       }
 
       if (event === 'INITIAL_SESSION') {
         if (session?.user && !resolvedRef.current) {
-          // Server has an active session — even if localStorage was empty/expired.
-          // Upgrade to loading and do a full resolve (roles + builder profile).
-          setStatus('loading')
-          resolvedRef.current = false
+          // Active server session confirmed. If localStorage was empty, we started
+          // as 'unauthenticated' — switch back to 'loading' before resolving.
+          if (status === 'unauthenticated') setStatus('loading')
+          // Single resolveAuth call — no race condition possible from here.
           resolveAuth(true, false)
         } else if (!session?.user && !resolvedRef.current) {
-          // Confirmed: no server session either → truly unauthenticated → open modal.
+          // No session anywhere — truly unauthenticated → open modal.
           setStatus('unauthenticated')
           resolvedRef.current = true
         }

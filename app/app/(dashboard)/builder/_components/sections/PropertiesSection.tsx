@@ -1,15 +1,279 @@
 "use client"
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   Building2, MapPin, Eye, TrendingUp, Plus,
   LayoutGrid, List, Search, Users,
   Star, Shield, ArrowLeft, RefreshCw, ExternalLink,
+  Sparkles, Globe, TrendingUp, FileText, AlertTriangle,
+  CheckCircle2, XCircle, Loader2, Upload, Share2, X, Download,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useBuilderDataContext, useRealtimeData, formatINR } from '../hooks/useBuilderData'
 import { AdvancedPropertyUploadForm } from '@/components/property/AdvancedPropertyUploadForm'
+
+// ─── Virtual Staging Modal ────────────────────────────────────────────────────
+function VirtualStagingModal({ propertyId, propertyTitle, onClose }: {
+  propertyId: string; propertyTitle: string; onClose: () => void
+}) {
+  const [file, setFile]         = useState<File | null>(null)
+  const [preview, setPreview]   = useState<string | null>(null)
+  const [staged, setStaged]     = useState<string | null>(null)
+  const [loading, setLoading]   = useState(false)
+  const [error, setError]       = useState('')
+  const inputRef                = useRef<HTMLInputElement>(null)
+
+  const handleFile = (f: File) => {
+    setFile(f); setStaged(null); setError('')
+    const reader = new FileReader()
+    reader.onload = (e) => setPreview(e.target?.result as string)
+    reader.readAsDataURL(f)
+  }
+
+  const handleStage = async () => {
+    if (!file) return
+    setLoading(true); setError('')
+    try {
+      const form = new FormData()
+      form.append('image', file)
+      form.append('property_id', propertyId)
+      form.append('room_type', 'living_room')
+      form.append('style', 'modern')
+      const res = await fetch('/api/ai/virtual-staging', { method: 'POST', body: form })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Staging failed')
+      setStaged(data.staged_image_url || data.url || '')
+    } catch (e: any) {
+      setError(e.message || 'Virtual staging failed. Try again.')
+    } finally { setLoading(false) }
+  }
+
+  return (
+    <div className="fixed inset-0 z-[400] flex items-center justify-center p-4" style={{ background: 'rgba(9,9,11,0.88)', backdropFilter: 'blur(14px)' }} onClick={(e) => { if (e.target === e.currentTarget) onClose() }}>
+      <motion.div initial={{ opacity: 0, scale: 0.95, y: 16 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: 16 }}
+        className="w-full max-w-2xl bg-zinc-900/95 border border-white/[0.08] rounded-2xl overflow-hidden shadow-2xl">
+        <div className="flex items-center justify-between p-5 border-b border-zinc-800/60">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-lg bg-purple-500/15 border border-purple-500/20 flex items-center justify-center">
+              <Sparkles className="w-4 h-4 text-purple-400" />
+            </div>
+            <div>
+              <p className="text-sm font-bold text-zinc-100">AI Virtual Staging</p>
+              <p className="text-[11px] text-zinc-500 truncate max-w-[280px]">{propertyTitle}</p>
+            </div>
+          </div>
+          <button onClick={onClose} className="w-7 h-7 rounded-lg flex items-center justify-center text-zinc-500 hover:text-zinc-200 hover:bg-zinc-800 transition-all"><X className="w-3.5 h-3.5" /></button>
+        </div>
+
+        <div className="p-5 space-y-4">
+          {/* Upload zone */}
+          <div onClick={() => inputRef.current?.click()}
+            className="border-2 border-dashed border-zinc-700 hover:border-purple-500/40 rounded-xl p-6 text-center cursor-pointer transition-colors group">
+            <input ref={inputRef} type="file" accept="image/*" className="hidden" onChange={e => e.target.files?.[0] && handleFile(e.target.files[0])} />
+            <Upload className="w-8 h-8 text-zinc-600 group-hover:text-purple-400 mx-auto mb-2 transition-colors" />
+            <p className="text-sm text-zinc-400">{file ? file.name : 'Upload empty room photo'}</p>
+            <p className="text-[11px] text-zinc-600 mt-1">JPG, PNG up to 10MB</p>
+          </div>
+
+          {/* Before / After */}
+          {(preview || staged) && (
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <p className="text-[11px] text-zinc-500 font-medium uppercase tracking-wider">Before</p>
+                {preview && <img src={preview} alt="Before" className="w-full h-40 object-cover rounded-xl border border-zinc-800" />}
+              </div>
+              <div className="space-y-1">
+                <p className="text-[11px] text-zinc-500 font-medium uppercase tracking-wider">After (AI Staged)</p>
+                {staged ? (
+                  <img src={staged} alt="AI Staged" className="w-full h-40 object-cover rounded-xl border border-purple-500/30" />
+                ) : (
+                  <div className="w-full h-40 rounded-xl border border-zinc-800 bg-zinc-800/40 flex items-center justify-center">
+                    <p className="text-xs text-zinc-600">Will appear here</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {error && <p className="text-xs text-red-400 bg-red-500/8 border border-red-500/15 rounded-lg px-3 py-2">{error}</p>}
+
+          <div className="flex justify-end gap-3">
+            {staged && (
+              <a href={staged} download className="flex items-center gap-1.5 px-4 py-2 bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 rounded-xl text-sm font-medium text-zinc-300 transition-colors">
+                <Download className="w-3.5 h-3.5" /> Download
+              </a>
+            )}
+            <button onClick={handleStage} disabled={!file || loading}
+              className="flex items-center gap-1.5 px-4 py-2 bg-purple-600 hover:bg-purple-500 disabled:opacity-40 disabled:cursor-not-allowed rounded-xl text-sm font-semibold text-white transition-colors">
+              {loading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5" />}
+              {loading ? 'Staging…' : 'Stage with AI'}
+            </button>
+          </div>
+        </div>
+      </motion.div>
+    </div>
+  )
+}
+
+// ─── Portal Sync Modal ────────────────────────────────────────────────────────
+const PORTALS = [
+  { id: '99acres',      label: '99acres',      color: 'text-orange-400', bg: 'bg-orange-500/10 border-orange-500/20' },
+  { id: 'magicbricks',  label: 'MagicBricks',  color: 'text-red-400',    bg: 'bg-red-500/10 border-red-500/20'       },
+  { id: 'housing',      label: 'Housing.com',  color: 'text-blue-400',   bg: 'bg-blue-500/10 border-blue-500/20'     },
+]
+
+function PortalSyncModal({ propertyId, propertyTitle, onClose }: {
+  propertyId: string; propertyTitle: string; onClose: () => void
+}) {
+  const [syncState, setSyncState] = useState<Record<string, 'idle' | 'syncing' | 'done' | 'error'>>({
+    '99acres': 'idle', 'magicbricks': 'idle', 'housing': 'idle',
+  })
+  const [lastSync, setLastSync]   = useState<Record<string, string>>({})
+
+  const syncPortal = async (portalId: string) => {
+    setSyncState(s => ({ ...s, [portalId]: 'syncing' }))
+    try {
+      const res = await fetch('/api/portals/sync', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ property_id: propertyId, portals: [portalId] }),
+      })
+      if (!res.ok) throw new Error('Sync failed')
+      setSyncState(s => ({ ...s, [portalId]: 'done' }))
+      setLastSync(s => ({ ...s, [portalId]: new Date().toLocaleTimeString() }))
+    } catch {
+      setSyncState(s => ({ ...s, [portalId]: 'error' }))
+    }
+  }
+
+  const syncAll = () => PORTALS.forEach(p => { if (syncState[p.id] !== 'syncing') syncPortal(p.id) })
+
+  return (
+    <div className="fixed inset-0 z-[400] flex items-center justify-center p-4" style={{ background: 'rgba(9,9,11,0.88)', backdropFilter: 'blur(14px)' }} onClick={(e) => { if (e.target === e.currentTarget) onClose() }}>
+      <motion.div initial={{ opacity: 0, scale: 0.95, y: 16 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: 16 }}
+        className="w-full max-w-md bg-zinc-900/95 border border-white/[0.08] rounded-2xl overflow-hidden shadow-2xl">
+        <div className="flex items-center justify-between p-5 border-b border-zinc-800/60">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-lg bg-blue-500/15 border border-blue-500/20 flex items-center justify-center">
+              <Globe className="w-4 h-4 text-blue-400" />
+            </div>
+            <div>
+              <p className="text-sm font-bold text-zinc-100">Portal Sync</p>
+              <p className="text-[11px] text-zinc-500 truncate max-w-[220px]">{propertyTitle}</p>
+            </div>
+          </div>
+          <button onClick={onClose} className="w-7 h-7 rounded-lg flex items-center justify-center text-zinc-500 hover:text-zinc-200 hover:bg-zinc-800 transition-all"><X className="w-3.5 h-3.5" /></button>
+        </div>
+
+        <div className="p-5 space-y-3">
+          {PORTALS.map(portal => {
+            const state = syncState[portal.id]
+            return (
+              <div key={portal.id} className={cn('flex items-center justify-between p-4 rounded-xl border', portal.bg)}>
+                <div>
+                  <p className={cn('text-sm font-semibold', portal.color)}>{portal.label}</p>
+                  {lastSync[portal.id] && <p className="text-[11px] text-zinc-500 mt-0.5">Synced at {lastSync[portal.id]}</p>}
+                </div>
+                <div className="flex items-center gap-2">
+                  {state === 'done'    && <CheckCircle2 className="w-4 h-4 text-emerald-400" />}
+                  {state === 'error'   && <XCircle className="w-4 h-4 text-red-400" />}
+                  {state === 'syncing' && <Loader2 className="w-4 h-4 text-amber-400 animate-spin" />}
+                  <button onClick={() => syncPortal(portal.id)} disabled={state === 'syncing'}
+                    className="px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 disabled:opacity-40 border border-zinc-700 rounded-lg text-[11px] font-medium text-zinc-300 transition-colors">
+                    {state === 'done' ? 'Re-sync' : 'Sync'}
+                  </button>
+                </div>
+              </div>
+            )
+          })}
+
+          <button onClick={syncAll} disabled={Object.values(syncState).some(s => s === 'syncing')}
+            className="w-full flex items-center justify-center gap-2 py-3 bg-blue-600 hover:bg-blue-500 disabled:opacity-40 rounded-xl text-sm font-semibold text-white transition-colors mt-2">
+            <Share2 className="w-4 h-4" /> Sync to All Portals
+          </button>
+          <p className="text-center text-[11px] text-zinc-600">Syncs listing to 99acres, MagicBricks & Housing.com simultaneously</p>
+        </div>
+      </motion.div>
+    </div>
+  )
+}
+
+// ─── Price Optimizer Modal ────────────────────────────────────────────────────
+function PriceOptimizerModal({ propertyId, propertyTitle, currentPrice, onClose }: {
+  propertyId: string; propertyTitle: string; currentPrice: number | null; onClose: () => void
+}) {
+  const [data, setData]       = useState<any>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError]     = useState('')
+
+  useEffect(() => {
+    fetch(`/api/ai/optimize/${propertyId}`)
+      .then(r => r.json())
+      .then(d => { setData(d); setLoading(false) })
+      .catch(() => { setError('Could not load price analysis.'); setLoading(false) })
+  }, [propertyId])
+
+  const suggested  = data?.suggested_price || data?.recommended_price || null
+  const confidence = data?.confidence || data?.score || null
+  const reasoning  = data?.reasoning || data?.analysis || ''
+
+  return (
+    <div className="fixed inset-0 z-[400] flex items-center justify-center p-4" style={{ background: 'rgba(9,9,11,0.88)', backdropFilter: 'blur(14px)' }} onClick={(e) => { if (e.target === e.currentTarget) onClose() }}>
+      <motion.div initial={{ opacity: 0, scale: 0.95, y: 16 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: 16 }}
+        className="w-full max-w-md bg-zinc-900/95 border border-white/[0.08] rounded-2xl overflow-hidden shadow-2xl">
+        <div className="flex items-center justify-between p-5 border-b border-zinc-800/60">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-lg bg-emerald-500/15 border border-emerald-500/20 flex items-center justify-center">
+              <TrendingUp className="w-4 h-4 text-emerald-400" />
+            </div>
+            <div>
+              <p className="text-sm font-bold text-zinc-100">AI Price Optimizer</p>
+              <p className="text-[11px] text-zinc-500 truncate max-w-[220px]">{propertyTitle}</p>
+            </div>
+          </div>
+          <button onClick={onClose} className="w-7 h-7 rounded-lg flex items-center justify-center text-zinc-500 hover:text-zinc-200 hover:bg-zinc-800 transition-all"><X className="w-3.5 h-3.5" /></button>
+        </div>
+
+        <div className="p-5">
+          {loading ? (
+            <div className="flex items-center justify-center py-8 gap-2 text-zinc-500">
+              <Loader2 className="w-4 h-4 animate-spin" /> <span className="text-sm">Analysing market data…</span>
+            </div>
+          ) : error ? (
+            <p className="text-sm text-red-400 text-center py-6">{error}</p>
+          ) : (
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-3">
+                <div className="bg-zinc-800/50 rounded-xl p-4 border border-zinc-700/40">
+                  <p className="text-[10px] text-zinc-500 uppercase tracking-wider mb-1">Current Price</p>
+                  <p className="text-lg font-bold text-zinc-300">{currentPrice ? formatINR(currentPrice) : 'N/A'}</p>
+                </div>
+                <div className="bg-emerald-500/8 rounded-xl p-4 border border-emerald-500/20">
+                  <p className="text-[10px] text-emerald-500/80 uppercase tracking-wider mb-1">AI Suggested</p>
+                  <p className="text-lg font-bold text-emerald-400">{suggested ? formatINR(suggested) : '—'}</p>
+                </div>
+              </div>
+              {confidence !== null && (
+                <div className="flex items-center gap-2">
+                  <div className="flex-1 h-1.5 bg-zinc-800 rounded-full overflow-hidden">
+                    <div className="h-full bg-emerald-500 rounded-full" style={{ width: `${Math.min(confidence, 100)}%` }} />
+                  </div>
+                  <span className="text-[11px] text-zinc-400 shrink-0">{Math.round(confidence)}% confidence</span>
+                </div>
+              )}
+              {reasoning && (
+                <div className="bg-zinc-800/40 rounded-xl p-4 border border-zinc-700/30">
+                  <p className="text-[11px] text-zinc-400 leading-relaxed">{reasoning.slice(0, 300)}{reasoning.length > 300 ? '…' : ''}</p>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      </motion.div>
+    </div>
+  )
+}
 
 interface PropertiesProps {
   onNavigate?: (section: string) => void
@@ -38,6 +302,37 @@ export function PropertiesSection({ onNavigate }: PropertiesProps) {
   const [searchQuery, setSearchQuery] = useState('')
   const [showAddForm, setShowAddForm] = useState(false)
   const [refreshKey, setRefreshKey] = useState(0)
+
+  // ── AI Feature modals ──────────────────────────────────────────────────────
+  const [activeModal, setActiveModal] = useState<{ type: 'staging' | 'portals' | 'price'; id: string; title: string; price?: number | null } | null>(null)
+  const [auditLoading, setAuditLoading] = useState<string | null>(null)
+  const [riskData, setRiskData]         = useState<Record<string, any>>({})
+  const [riskLoading, setRiskLoading]   = useState<string | null>(null)
+
+  const handleAuditPdf = useCallback(async (id: string, title: string) => {
+    setAuditLoading(id)
+    try {
+      const res = await fetch(`/api/properties/${id}/audit-pdf`)
+      if (!res.ok) throw new Error('Failed')
+      const blob = await res.blob()
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url; a.download = `${title.replace(/\s+/g, '-')}-audit.pdf`
+      a.click(); URL.revokeObjectURL(url)
+    } catch { alert('Audit PDF generation failed. Please try again.') }
+    finally { setAuditLoading(null) }
+  }, [])
+
+  const handleRiskFlags = useCallback(async (id: string) => {
+    if (riskData[id]) return // already loaded
+    setRiskLoading(id)
+    try {
+      const res = await fetch(`/api/properties/${id}/compute-risk-flags`)
+      const data = await res.json()
+      setRiskData(prev => ({ ...prev, [id]: data }))
+    } catch { setRiskData(prev => ({ ...prev, [id]: { error: true } })) }
+    finally { setRiskLoading(null) }
+  }, [riskData])
 
   // Real properties from Supabase
   const { data: propertiesResponse, isLoading } = useRealtimeData<{
@@ -96,6 +391,19 @@ export function PropertiesSection({ onNavigate }: PropertiesProps) {
 
   return (
     <>
+      {/* ─── AI Feature Modals ───────────────────────────────────────────── */}
+      <AnimatePresence>
+        {activeModal?.type === 'staging' && (
+          <VirtualStagingModal key="staging" propertyId={activeModal.id} propertyTitle={activeModal.title} onClose={() => setActiveModal(null)} />
+        )}
+        {activeModal?.type === 'portals' && (
+          <PortalSyncModal key="portals" propertyId={activeModal.id} propertyTitle={activeModal.title} onClose={() => setActiveModal(null)} />
+        )}
+        {activeModal?.type === 'price' && (
+          <PriceOptimizerModal key="price" propertyId={activeModal.id} propertyTitle={activeModal.title} currentPrice={activeModal.price ?? null} onClose={() => setActiveModal(null)} />
+        )}
+      </AnimatePresence>
+
       {/* ─── In-Dashboard Add Property Overlay ───────────────────────────── */}
       <AnimatePresence>
         {showAddForm && (
@@ -296,6 +604,51 @@ export function PropertiesSection({ onNavigate }: PropertiesProps) {
                       {property.sqft && (
                         <p className="text-[11px] text-zinc-600 mt-1">{property.sqft.toLocaleString()} sq.ft</p>
                       )}
+
+                      {/* ── AI Action Bar ── */}
+                      <div className="mt-3 pt-3 border-t border-zinc-800/60 flex items-center gap-1.5" onClick={e => e.preventDefault()}>
+                        <button onClick={() => setActiveModal({ type: 'staging', id: property.id, title: property.title })}
+                          title="AI Virtual Staging"
+                          className="flex-1 flex items-center justify-center gap-1 py-1.5 rounded-lg bg-purple-500/10 hover:bg-purple-500/20 border border-purple-500/20 text-purple-400 text-[10px] font-medium transition-colors">
+                          <Sparkles className="w-3 h-3" /> Stage
+                        </button>
+                        <button onClick={() => setActiveModal({ type: 'portals', id: property.id, title: property.title })}
+                          title="Sync to Portals"
+                          className="flex-1 flex items-center justify-center gap-1 py-1.5 rounded-lg bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/20 text-blue-400 text-[10px] font-medium transition-colors">
+                          <Globe className="w-3 h-3" /> Sync
+                        </button>
+                        <button onClick={() => setActiveModal({ type: 'price', id: property.id, title: property.title, price: property.priceINR })}
+                          title="AI Price Optimizer"
+                          className="flex-1 flex items-center justify-center gap-1 py-1.5 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 text-emerald-400 text-[10px] font-medium transition-colors">
+                          <TrendingUp className="w-3 h-3" /> Price
+                        </button>
+                        <button onClick={() => handleAuditPdf(property.id, property.title)}
+                          disabled={auditLoading === property.id}
+                          title="Download Audit PDF"
+                          className="flex-1 flex items-center justify-center gap-1 py-1.5 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/20 text-amber-400 text-[10px] font-medium transition-colors disabled:opacity-50">
+                          {auditLoading === property.id ? <Loader2 className="w-3 h-3 animate-spin" /> : <FileText className="w-3 h-3" />} PDF
+                        </button>
+                        <button
+                          onClick={() => handleRiskFlags(property.id)}
+                          disabled={riskLoading === property.id}
+                          title="Compute Risk Flags"
+                          className={cn('flex-1 flex items-center justify-center gap-1 py-1.5 rounded-lg border text-[10px] font-medium transition-colors disabled:opacity-50',
+                            riskData[property.id]?.flags?.length > 0
+                              ? 'bg-red-500/15 border-red-500/30 text-red-400'
+                              : riskData[property.id] && !riskData[property.id]?.error
+                                ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400'
+                                : 'bg-zinc-800/60 border-zinc-700/40 text-zinc-500 hover:text-zinc-300'
+                          )}>
+                          {riskLoading === property.id
+                            ? <Loader2 className="w-3 h-3 animate-spin" />
+                            : <AlertTriangle className="w-3 h-3" />
+                          }
+                          {riskData[property.id]?.flags?.length > 0
+                            ? `${riskData[property.id].flags.length} Risk`
+                            : riskData[property.id] && !riskData[property.id]?.error ? 'Safe' : 'Risk'
+                          }
+                        </button>
+                      </div>
                     </div>
                   </motion.a>
                 )

@@ -6,7 +6,7 @@ import {
   Building2, MapPin, Eye, TrendingUp, Plus,
   LayoutGrid, List, Search, Users,
   Star, Shield, ArrowLeft, RefreshCw, ExternalLink,
-  Sparkles, Globe, TrendingUp, FileText, AlertTriangle,
+  Sparkles, Globe, FileText, AlertTriangle,
   CheckCircle2, XCircle, Loader2, Upload, Share2, X, Download,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'

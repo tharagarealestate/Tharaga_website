@@ -4,7 +4,7 @@ import { createContext, useContext, useState, useEffect, useRef, ReactNode } fro
 import { getSupabase } from '@/lib/supabase'
 import { BuilderAuthGate } from './BuilderAuthGate'
 import { BuilderSetupGate } from './BuilderSetupGate'
-import { openAuthModal } from '@/components/auth/AuthModal'
+import { openAuthModal, closeAuthModal } from '@/components/auth/AuthModal'
 
 // ─── Instant sync auth detection ─────────────────────────────────────────────
 // Reads Supabase's localStorage token SYNCHRONOUSLY before first render.
@@ -19,9 +19,11 @@ function getInitialStatus(): AuthStatus {
     const raw = localStorage.getItem(`sb-${SUPABASE_PROJECT_REF}-auth-token`)
     if (!raw) return 'unauthenticated' // no stored session → modal opens immediately
     const parsed = JSON.parse(raw)
-    // Expired token means unauthenticated — show modal without waiting for network
+    // Expired token: don't assume unauthenticated — Supabase may have already
+    // refreshed the session via HTTP-only cookies. Use 'loading' to trigger a
+    // server-side getSession() check instead of opening the modal immediately.
     if (parsed?.expires_at && parsed.expires_at * 1000 < Date.now()) {
-      return 'unauthenticated'
+      return 'loading'
     }
     return 'loading' // valid-looking token → verify with server in background
   } catch {
@@ -64,8 +66,9 @@ export function useBuilderAuth(): BuilderAuthContextType {
 
 function UnauthenticatedView() {
   useEffect(() => {
-    // Slight delay so the AuthModal component is definitely mounted in root layout
-    const t = setTimeout(() => openAuthModal(), 150)
+    // Delay gives INITIAL_SESSION time to arrive (~50-150ms) and upgrade the
+    // status — if it does, UnauthenticatedView unmounts and this timer is cleared.
+    const t = setTimeout(() => openAuthModal(), 350)
     return () => clearTimeout(t)
   }, [])
 
@@ -176,6 +179,7 @@ export function BuilderAuthProvider({ children }: { children: ReactNode }) {
           company_name: profile?.company_name || 'Admin',
           email: resolvedEmail,
         })
+        closeAuthModal() // close if it opened prematurely before this resolved
         setStatus('authenticated')
         resolvedRef.current = true
         return
@@ -204,6 +208,7 @@ export function BuilderAuthProvider({ children }: { children: ReactNode }) {
       // leads.builder_id = eq(builderId) matches correctly (leads reference auth.users.id)
       setBuilderId(resolvedUserId)
       setBuilderProfile({ id: profile.id, company_name: profile.company_name, email: resolvedEmail })
+      closeAuthModal() // close if it opened prematurely before this resolved
       setStatus('authenticated')
       resolvedRef.current = true
     } catch (err) {
@@ -223,14 +228,15 @@ export function BuilderAuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     mountedRef.current = true
 
-    // If localStorage already told us the user is unauthenticated, mark resolved
-    // immediately so the safety timer and resolveAuth don't unnecessarily run.
-    if (status === 'unauthenticated') {
-      resolvedRef.current = true
-    } else {
-      resolvedRef.current = false
+    // Always start unresolved. If localStorage had no token (status='unauthenticated')
+    // we still wait for the INITIAL_SESSION event to confirm no server session exists
+    // before opening the modal — prevents false-positive modal on token refresh/page nav.
+    resolvedRef.current = false
+    if (status !== 'unauthenticated') {
       resolveAuth(false)
     }
+    // For 'unauthenticated' (empty localStorage): rely on INITIAL_SESSION below.
+    // resolveAuth() is called there if Supabase finds an active server session.
 
     // Safety valve — 10s timeout to prevent infinite spinner on initial load only
     const safetyTimer = setTimeout(() => {
@@ -271,7 +277,14 @@ export function BuilderAuthProvider({ children }: { children: ReactNode }) {
       }
 
       if (event === 'INITIAL_SESSION') {
-        if (!session?.user && !resolvedRef.current) {
+        if (session?.user && !resolvedRef.current) {
+          // Server has an active session — even if localStorage was empty/expired.
+          // Upgrade to loading and do a full resolve (roles + builder profile).
+          setStatus('loading')
+          resolvedRef.current = false
+          resolveAuth(true, false)
+        } else if (!session?.user && !resolvedRef.current) {
+          // Confirmed: no server session either → truly unauthenticated → open modal.
           setStatus('unauthenticated')
           resolvedRef.current = true
         }

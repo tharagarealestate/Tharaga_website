@@ -208,8 +208,17 @@ export default function HomePage() {
 
   const handleSignOut = useCallback(async () => {
     setUserMenuOpen(false)
-    try { const supabase = getSupabase(); await supabase.auth.signOut(); setUser(null); setDisplayName(''); setUserEmail(''); router.push('/') } catch {}
-  }, [router])
+    // Reset UI immediately — never wait for the signOut() network call
+    setUser(null)
+    setDisplayName('')
+    setUserEmail('')
+    try {
+      const supabase = getSupabase()
+      await supabase.auth.signOut()
+    } catch { /* ignore — UI already cleared */ }
+    // Hard reload guarantees fully clean client state (no stale React state)
+    window.location.href = '/'
+  }, [])
 
   const initials = displayName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) || 'U'
 

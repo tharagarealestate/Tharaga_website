@@ -106,15 +106,17 @@ export function Header() {
   const handleSignOut = useCallback(async () => {
     setUserMenuOpen(false)
     setMobileOpen(false)
+    // Reset UI immediately — never wait for the signOut() network call
+    setUser(null)
+    setDisplayName('')
+    setUserEmail('')
     try {
       const supabase = getSupabase()
       await supabase.auth.signOut()
-      setUser(null)
-      setDisplayName('')
-      setUserEmail('')
-      router.push('/')
-    } catch {}
-  }, [router])
+    } catch { /* ignore — UI already cleared */ }
+    // Hard reload guarantees fully clean client state
+    window.location.href = '/'
+  }, [])
 
   // User initials for avatar
   const initials = displayName

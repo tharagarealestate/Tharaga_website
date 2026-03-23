@@ -31,12 +31,14 @@ import { getSupabase } from '@/lib/supabase'
 let _open:  (() => void) | null = null
 let _close: (() => void) | null = null
 
-// Capture where the modal was opened from so succeed() can redirect back there
+// Capture where the modal was opened from so succeed() / handleGoogle() can
+// redirect back there. Callers can pass an explicit `next` path (e.g. '/builder')
+// to override the current pathname.
 let _sourcePathname = '/'
 
-export function openAuthModal() {
+export function openAuthModal(next?: string) {
   if (typeof window !== 'undefined') {
-    _sourcePathname = window.location.pathname
+    _sourcePathname = next ?? window.location.pathname
   }
   _open?.()
 }

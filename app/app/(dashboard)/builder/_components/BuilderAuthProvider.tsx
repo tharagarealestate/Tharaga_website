@@ -91,6 +91,8 @@ export function BuilderAuthProvider({ children }: { children: ReactNode }) {
   const [builderProfile, setBuilderProfile] = useState<BuilderAuthContextType['builderProfile']>(null)
   const mountedRef = useRef(true)
   const resolvedRef = useRef(false)
+  // statusRef mirrors `status` for use inside closures where the state value is stale.
+  const statusRef = useRef<AuthStatus>('loading')
 
   // ── Core auth resolution ─────────────────────────────────────────────────
   // wasAuthenticated: when true, don't downgrade to 'unauthenticated' on
@@ -109,6 +111,7 @@ export function BuilderAuthProvider({ children }: { children: ReactNode }) {
 
         if (!session?.user) {
           if (!mountedRef.current) return
+          statusRef.current = 'unauthenticated'
           setStatus('unauthenticated')
           resolvedRef.current = true
           return
@@ -138,14 +141,22 @@ export function BuilderAuthProvider({ children }: { children: ReactNode }) {
               // Fall through to roles + profile fetch below ↓
             } else {
               if (!wasAuthenticated) {
+                statusRef.current = 'unauthenticated'
                 setStatus('unauthenticated')
+                resolvedRef.current = true
+              } else {
+                // Authenticated user but session truly gone — mark resolved so safety
+                // timer doesn't open the modal; keep the current status as-is.
                 resolvedRef.current = true
               }
               return
             }
           } catch {
             if (!wasAuthenticated) {
+              statusRef.current = 'unauthenticated'
               setStatus('unauthenticated')
+              resolvedRef.current = true
+            } else {
               resolvedRef.current = true
             }
             return
@@ -204,6 +215,7 @@ export function BuilderAuthProvider({ children }: { children: ReactNode }) {
           email: resolvedEmail,
         })
         closeAuthModal() // close if it opened prematurely before this resolved
+        statusRef.current = 'authenticated'
         setStatus('authenticated')
         resolvedRef.current = true
         return
@@ -214,6 +226,7 @@ export function BuilderAuthProvider({ children }: { children: ReactNode }) {
       if (isBuyer) {
         setBuilderId(null)
         setBuilderProfile(null)
+        statusRef.current = 'buyer'
         setStatus('buyer')
         resolvedRef.current = true
         return
@@ -223,6 +236,7 @@ export function BuilderAuthProvider({ children }: { children: ReactNode }) {
       if (!profile || !profile.company_name?.trim()) {
         setBuilderId(null)
         setBuilderProfile(null)
+        statusRef.current = 'no-profile'
         setStatus('no-profile')
         resolvedRef.current = true
         return
@@ -233,15 +247,20 @@ export function BuilderAuthProvider({ children }: { children: ReactNode }) {
       setBuilderId(resolvedUserId)
       setBuilderProfile({ id: profile.id, company_name: profile.company_name, email: resolvedEmail })
       closeAuthModal() // close if it opened prematurely before this resolved
+      statusRef.current = 'authenticated'
       setStatus('authenticated')
       resolvedRef.current = true
     } catch (err) {
       console.error('[BuilderAuthProvider] resolveAuth error:', err)
       if (!mountedRef.current) return
       if (!resolvedRef.current) {
-        // Don't kick out an already-authenticated user on a transient error
         if (!wasAuthenticated) {
+          statusRef.current = 'unauthenticated'
           setStatus('unauthenticated')
+          resolvedRef.current = true
+        } else {
+          // Authenticated user hit an unexpected error — mark resolved so the
+          // 6-second safety timer doesn't fire and open the login modal.
           resolvedRef.current = true
         }
       }
@@ -282,12 +301,19 @@ export function BuilderAuthProvider({ children }: { children: ReactNode }) {
         setUserId(null)
         setUserEmail('')
         setBuilderProfile(null)
+        statusRef.current = 'unauthenticated'
         setStatus('unauthenticated')
         resolvedRef.current = true
         return
       }
 
       if (event === 'SIGNED_IN' && session?.user) {
+        // If already fully authenticated, a redundant SIGNED_IN (e.g. Supabase
+        // re-processing the just-stored session on page load after OAuth redirect)
+        // must NOT reset resolvedRef — doing so creates a race with the 6-second
+        // safety timer that causes the login modal to reappear → login loop.
+        if (statusRef.current === 'authenticated') return
+
         // Fresh sign-in confirmed by Supabase — re-resolve roles/profile.
         // Use wasAuthenticated=true: SIGNED_IN means the session is 100% valid right now,
         // so a transient getUser() network failure must NOT flash the login modal.
@@ -305,14 +331,18 @@ export function BuilderAuthProvider({ children }: { children: ReactNode }) {
 
       if (event === 'INITIAL_SESSION') {
         if (session?.user && !resolvedRef.current) {
-          // Active server session confirmed. If localStorage was empty, we started
-          // as 'unauthenticated' — switch back to 'loading' before resolving.
-          if (status === 'unauthenticated') setStatus('loading')
+          // Active server session confirmed. If we started as 'unauthenticated'
+          // (shouldn't happen with getInitialStatus returning 'loading'), reset.
+          if (statusRef.current === 'unauthenticated') {
+            statusRef.current = 'loading'
+            setStatus('loading')
+          }
           // Pass wasAuthenticated=true: Supabase confirmed the session is real,
           // so a transient getUser() failure must NOT flash the login modal.
           resolveAuth(true, true)
         } else if (!session?.user && !resolvedRef.current) {
           // No session anywhere — truly unauthenticated → open modal.
+          statusRef.current = 'unauthenticated'
           setStatus('unauthenticated')
           resolvedRef.current = true
         }

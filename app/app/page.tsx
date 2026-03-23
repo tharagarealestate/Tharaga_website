@@ -281,7 +281,10 @@ export default function HomePage() {
                 <Link href="/property-listing" className="hover:text-zinc-100 transition-colors">Properties</Link>
                 <Link href="/tools" className="hover:text-zinc-100 transition-colors">Tools</Link>
                 <Link href="/pricing" className="hover:text-zinc-100 transition-colors">Pricing</Link>
-                <Link href="/builder" className="hover:text-zinc-100 transition-colors">Builder</Link>
+                {user
+                  ? <Link href="/builder" className="hover:text-zinc-100 transition-colors">Builder</Link>
+                  : <button onClick={() => openAuthModal('/builder')} className="hover:text-zinc-100 transition-colors">Builder</button>
+                }
               </div>
               <div className="flex items-center gap-3">
                 {user ? (
@@ -463,10 +466,17 @@ export default function HomePage() {
               Browse properties
             </Link>
             <span className="text-zinc-700">·</span>
-            <Link href="/builder" className="flex items-center gap-1.5 text-zinc-400 hover:text-amber-400 transition-colors group">
-              <Zap className="w-3.5 h-3.5 group-hover:text-amber-400" />
-              Start as Builder
-            </Link>
+            {user ? (
+              <Link href="/builder" className="flex items-center gap-1.5 text-zinc-400 hover:text-amber-400 transition-colors group">
+                <Zap className="w-3.5 h-3.5 group-hover:text-amber-400" />
+                Start as Builder
+              </Link>
+            ) : (
+              <button onClick={() => openAuthModal('/builder')} className="flex items-center gap-1.5 text-zinc-400 hover:text-amber-400 transition-colors group">
+                <Zap className="w-3.5 h-3.5 group-hover:text-amber-400" />
+                Start as Builder
+              </button>
+            )}
             <span className="text-zinc-700">·</span>
             <Link href="/tools" className="flex items-center gap-1.5 text-zinc-400 hover:text-amber-400 transition-colors group">
               <Calculator className="w-3.5 h-3.5 group-hover:text-amber-400" />
@@ -973,12 +983,21 @@ export default function HomePage() {
               </div>
 
               <div className="flex flex-wrap gap-3">
-                <Link
-                  href="/builder"
-                  className="flex items-center gap-2 px-6 py-3 bg-amber-500 hover:bg-amber-400 text-black font-semibold text-sm rounded-xl transition-all"
-                >
-                  <Zap className="w-4 h-4" /> Start Free Trial
-                </Link>
+                {user ? (
+                  <Link
+                    href="/builder"
+                    className="flex items-center gap-2 px-6 py-3 bg-amber-500 hover:bg-amber-400 text-black font-semibold text-sm rounded-xl transition-all"
+                  >
+                    <Zap className="w-4 h-4" /> Start Free Trial
+                  </Link>
+                ) : (
+                  <button
+                    onClick={() => openAuthModal('/builder')}
+                    className="flex items-center gap-2 px-6 py-3 bg-amber-500 hover:bg-amber-400 text-black font-semibold text-sm rounded-xl transition-all"
+                  >
+                    <Zap className="w-4 h-4" /> Start Free Trial
+                  </button>
+                )}
                 <Link
                   href="/pricing"
                   className="flex items-center gap-2 px-6 py-3 border border-white/[0.08] hover:border-white/[0.15] text-zinc-300 text-sm rounded-xl transition-all"
@@ -1088,14 +1107,25 @@ export default function HomePage() {
             </p>
 
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-12">
-              <Link
-                href="/builder"
-                className="flex items-center gap-2 px-8 py-4 bg-amber-500 hover:bg-amber-400 text-black font-bold text-base rounded-xl transition-all shadow-lg shadow-amber-500/20"
-              >
-                <Zap className="w-5 h-5" />
-                Start 14-Day Free Trial
-                <ArrowRight className="w-5 h-5" />
-              </Link>
+              {user ? (
+                <Link
+                  href="/builder"
+                  className="flex items-center gap-2 px-8 py-4 bg-amber-500 hover:bg-amber-400 text-black font-bold text-base rounded-xl transition-all shadow-lg shadow-amber-500/20"
+                >
+                  <Zap className="w-5 h-5" />
+                  Start 14-Day Free Trial
+                  <ArrowRight className="w-5 h-5" />
+                </Link>
+              ) : (
+                <button
+                  onClick={() => openAuthModal('/builder')}
+                  className="flex items-center gap-2 px-8 py-4 bg-amber-500 hover:bg-amber-400 text-black font-bold text-base rounded-xl transition-all shadow-lg shadow-amber-500/20"
+                >
+                  <Zap className="w-5 h-5" />
+                  Start 14-Day Free Trial
+                  <ArrowRight className="w-5 h-5" />
+                </button>
+              )}
               <Link
                 href="/property-listing"
                 className="flex items-center gap-2 px-8 py-4 border border-white/[0.12] hover:border-white/[0.25] text-zinc-300 font-medium text-base rounded-xl transition-all backdrop-blur-sm"

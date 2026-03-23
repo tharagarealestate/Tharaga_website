@@ -8,6 +8,8 @@ import {
   TrendingUp, Users, MessageSquare, Brain, BarChart3, Star,
   CheckCircle2, Timer, Infinity,
 } from 'lucide-react'
+import { openAuthModal } from '@/components/ui/AuthButton'
+import { getSupabase } from '@/lib/supabase'
 
 // ── Neural Background ─────────────────────────────────────────────────────────
 function NeuralBg() {
@@ -117,6 +119,25 @@ function Globe2(props: React.SVGProps<SVGSVGElement> & { className?: string }) {
 export default function PricingPage() {
   const [billing, setBilling] = useState<'monthly' | 'yearly'>('yearly')
   const [loading, setLoading] = useState(false)
+  const [isLoggedIn, setIsLoggedIn] = useState(false)
+
+  useEffect(() => {
+    // Fast localStorage check for instant button state (same as Header.tsx)
+    try {
+      const raw = localStorage.getItem('sb-wedevtjjmdvngyshqdro-auth-token')
+      if (raw) {
+        const parsed = JSON.parse(raw)
+        const notExpired = !parsed?.expires_at || parsed.expires_at * 1000 > Date.now()
+        if (notExpired && parsed?.user) setIsLoggedIn(true)
+      }
+    } catch {}
+    // Authoritative check via onAuthStateChange
+    const supabase = getSupabase()
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, session) => {
+      setIsLoggedIn(!!session?.user)
+    })
+    return () => subscription.unsubscribe()
+  }, [])
   const countdownTarget = new Date(Date.now() + 48 * 60 * 60 * 1000)
 
   const price     = billing === 'monthly' ? 4999 : 4166
@@ -253,8 +274,12 @@ export default function PricingPage() {
             {/* CTA */}
             <button
               onClick={() => {
-                setLoading(true)
-                window.location.href = '/builder'
+                if (isLoggedIn) {
+                  setLoading(true)
+                  window.location.href = '/builder'
+                } else {
+                  openAuthModal('/builder')
+                }
               }}
               disabled={loading}
               className={[

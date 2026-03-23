@@ -169,15 +169,28 @@ export function BuilderAuthProvider({ children }: { children: ReactNode }) {
 
       if (!mountedRef.current) return
 
-      // Admin email bypass
+      // ── Admin email fast-path ─────────────────────────────────────────────
+      // Bypass ALL DB queries for the admin account. Identity confirmed by JWT
+      // (getUser() validated the token server-side above). Instant auth.
       const isAdminByEmail = resolvedEmail === 'tharagarealestate@gmail.com'
+      if (isAdminByEmail) {
+        setUserEmail(resolvedEmail)
+        setUserId(resolvedUserId)
+        setBuilderId(resolvedUserId)
+        setBuilderProfile({ id: resolvedUserId, company_name: 'Tharaga Admin', email: resolvedEmail })
+        closeAuthModal()
+        statusRef.current = 'authenticated'
+        setStatus('authenticated')
+        resolvedRef.current = true
+        return
+      }
 
       // Single parallel fetch for roles + profile — both fire simultaneously.
-      // 6s guard (up from 5s) accounts for cold DB connections on free Supabase tier.
+      // 5s guard: shorter than the 8s safety timer so the timer never beats the queries.
       const timeout = <T,>(p: Promise<T>): Promise<T> =>
         Promise.race([
           p,
-          new Promise<T>((_, rej) => setTimeout(() => rej(new Error('timeout')), 6000)),
+          new Promise<T>((_, rej) => setTimeout(() => rej(new Error('timeout')), 5000)),
         ])
 
       const [rolesResult, profileResult] = await Promise.allSettled([
@@ -200,7 +213,7 @@ export function BuilderAuthProvider({ children }: { children: ReactNode }) {
         profileResult.status === 'fulfilled' ? profileResult.value.data : null
 
       const isAdminByRole = roles.includes('admin')
-      const isAdmin = isAdminByEmail || isAdminByRole
+      const isAdmin = isAdminByRole  // email-admin already returned above
 
       // Store email for setup gate
       setUserEmail(resolvedEmail)
@@ -282,15 +295,16 @@ export function BuilderAuthProvider({ children }: { children: ReactNode }) {
     // onAuthStateChange registration, which happens in the same synchronous tick.
     resolvedRef.current = false
 
-    // Safety valve — 6s timeout to prevent infinite spinner if INITIAL_SESSION
-    // somehow never arrives (e.g. blocked network). Reduced from 10s since we no
-    // longer have a pre-check: INITIAL_SESSION reliably fires within 150ms normally.
+    // Safety valve — 8s timeout (> 5s DB query timeout) to prevent infinite spinner
+    // if INITIAL_SESSION somehow never arrives (e.g. blocked network).
+    // Must be > inner DB timeout (5s) so the timer never beats the DB queries.
     const safetyTimer = setTimeout(() => {
       if (!mountedRef.current || resolvedRef.current) return
       console.warn('[BuilderAuthProvider] Safety timeout — forcing unauthenticated')
+      statusRef.current = 'unauthenticated'
       setStatus('unauthenticated')
       resolvedRef.current = true
-    }, 6000)
+    }, 8000)
 
     const supabase = getSupabase()
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {

@@ -180,25 +180,38 @@ export default function HomePage() {
 
   useEffect(() => {
     let mounted = true
-    async function loadUser(authUser: any) {
-      if (!authUser) { if (mounted) { setUser(null); setDisplayName(''); setUserEmail('') } return }
-      if (mounted) {
-        setUser(authUser)
-        setUserEmail(authUser.email || '')
-        setDisplayName(authUser.user_metadata?.full_name || authUser.user_metadata?.name || authUser.email?.split('@')[0] || 'User')
-      }
-      try {
-        const supabase = getSupabase()
-        const { data: profile } = await supabase.from('profiles').select('full_name').eq('id', authUser.id).single()
-        if (mounted && profile?.full_name) setDisplayName(profile.full_name)
-      } catch {}
+
+    function applyUser(authUser: any) {
+      if (!mounted) return
+      if (!authUser) { setUser(null); setDisplayName(''); setUserEmail(''); return }
+      setUser(authUser)
+      setUserEmail(authUser.email || '')
+      setDisplayName(
+        authUser.user_metadata?.full_name ||
+        authUser.user_metadata?.name ||
+        authUser.email?.split('@')[0] || 'User'
+      )
     }
+
+    // ── Instant read from localStorage — zero network, zero flicker ──────────
+    // After any OAuth redirect the session is already in localStorage.
+    // This fires synchronously so the header shows the correct state on paint.
+    try {
+      const raw = localStorage.getItem('sb-wedevtjjmdvngyshqdro-auth-token')
+      if (raw) {
+        const parsed = JSON.parse(raw)
+        const notExpired = !parsed?.expires_at || parsed.expires_at * 1000 > Date.now()
+        if (notExpired && parsed?.user) applyUser(parsed.user)
+      }
+    } catch {}
+
     async function init() {
       try {
         const supabase = getSupabase()
-        const { data: { user: authUser } } = await supabase.auth.getUser()
-        loadUser(authUser)
-        const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, session) => loadUser(session?.user || null))
+        // onAuthStateChange fires INITIAL_SESSION immediately — authoritative source.
+        const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, session) => {
+          applyUser(session?.user || null)
+        })
         return () => { mounted = false; subscription.unsubscribe() }
       } catch { return () => { mounted = false } }
     }

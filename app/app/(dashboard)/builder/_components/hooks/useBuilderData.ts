@@ -48,6 +48,42 @@ export function useBuilderDataContext(): BuilderDataContext {
  * - If fetch fails: isLoading = false, error set, data = fallback
  * - Fetch timeout: 10 seconds max per request
  */
+// ── localStorage stale-while-revalidate cache ─────────────────────────────────
+// Key: derived from the URL with cache-busting params stripped (_r=..., _t=...).
+// TTL: 10 minutes. On re-login the user sees the previous data INSTANTLY while
+// fresh data loads in the background — eliminates Netlify cold-start wait.
+
+const CACHE_TTL_MS = 10 * 60 * 1000 // 10 minutes
+
+function cacheKey(url: string): string {
+  // Strip cache-busting query params so the same endpoint always hits the same key
+  try {
+    const u = new URL(url, 'https://x')
+    u.searchParams.delete('_r')
+    u.searchParams.delete('_t')
+    u.searchParams.delete('_ts')
+    return `__tharaga_swr_${u.pathname}${u.search}`
+  } catch {
+    return `__tharaga_swr_${url}`
+  }
+}
+
+function readCache<T>(key: string): T | null {
+  try {
+    const raw = localStorage.getItem(key)
+    if (!raw) return null
+    const { data, ts } = JSON.parse(raw)
+    if (Date.now() - ts > CACHE_TTL_MS) return null
+    return data as T
+  } catch { return null }
+}
+
+function writeCache(key: string, data: unknown): void {
+  try {
+    localStorage.setItem(key, JSON.stringify({ data, ts: Date.now() }))
+  } catch {} // ignore QuotaExceededError silently
+}
+
 export function useRealtimeData<T>(
   url: string | null,
   options?: {
@@ -59,9 +95,17 @@ export function useRealtimeData<T>(
   }
 ) {
   const { isAuthenticated, isLoading: authLoading } = useBuilderAuth()
-  const [data, setData] = useState<T | null>(null)
+  const [data, setData] = useState<T | null>(() => {
+    // Seed from cache synchronously on mount — INSTANT content on re-login
+    if (typeof window === 'undefined' || !url) return null
+    return readCache<T>(cacheKey(url))
+  })
   const [error, setError] = useState<string | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
+  // If we already have cached data, start with isLoading=false so no spinner flicker
+  const [isLoading, setIsLoading] = useState(() => {
+    if (typeof window === 'undefined' || !url) return true
+    return readCache<T>(cacheKey(url)) === null
+  })
   const mountedRef = useRef(true)
   const fetchCountRef = useRef(0)
   const hasResolvedRef = useRef(false)
@@ -72,39 +116,21 @@ export function useRealtimeData<T>(
   const bodyStr = options?.body ? JSON.stringify(options.body) : undefined
 
   const fetchData = useCallback(async () => {
-    // If auth isn't ready or conditions not met, resolve loading immediately
-    if (!url || !enabled) {
-      setIsLoading(false)
-      return
-    }
-
-    // If auth is still loading, wait — but don't block forever
-    if (authLoading) {
-      return // useEffect will re-trigger when authLoading changes
-    }
-
-    // If not authenticated after auth resolved, resolve with no data
-    if (!isAuthenticated) {
-      setIsLoading(false)
-      return
-    }
+    if (!url || !enabled) { setIsLoading(false); return }
+    if (authLoading) return  // re-triggers when authLoading changes
+    if (!isAuthenticated) { setIsLoading(false); return }
 
     const fetchId = ++fetchCountRef.current
 
     try {
-      // Get the current session access token so server-side routes can auth via Bearer header.
-      // Supabase sessions are stored in localStorage (not cookies), so we must send the token
-      // explicitly — createRouteHandlerClient({ cookies }) on the server won't find it.
+      // Read access token from localStorage — instant, no network
       let accessToken: string | null = null
       try {
         const supabase = getSupabase()
         const { data: { session } } = await supabase.auth.getSession()
         accessToken = session?.access_token || null
-      } catch {
-        // Non-fatal — requests without token will get 401 and be handled by hook
-      }
+      } catch {}
 
-      // AbortController for timeout
       const controller = new AbortController()
       const timeoutId = setTimeout(() => controller.abort(), 10000)
 
@@ -118,35 +144,27 @@ export function useRealtimeData<T>(
         },
         signal: controller.signal,
       }
-
-      if (method === 'POST' && bodyStr) {
-        fetchOptions.body = bodyStr
-      }
+      if (method === 'POST' && bodyStr) fetchOptions.body = bodyStr
 
       const res = await fetch(url, fetchOptions)
       clearTimeout(timeoutId)
 
       if (!mountedRef.current || fetchId !== fetchCountRef.current) return
-
-      if (!res.ok) {
-        throw new Error(`HTTP ${res.status}`)
-      }
+      if (!res.ok) throw new Error(`HTTP ${res.status}`)
 
       const json = await res.json()
+
+      // Write to cache then update state
+      if (url) writeCache(cacheKey(url), json)
       setData(json)
       setError(null)
       hasResolvedRef.current = true
     } catch (err: any) {
       if (!mountedRef.current || fetchId !== fetchCountRef.current) return
-
-      // Don't spam console for AbortError (timeout)
       if (err.name !== 'AbortError') {
         console.warn(`[useRealtimeData] ${url}: ${err.message}`)
       }
-
       setError(err.message)
-
-      // On first load failure, use fallback if available
       if (!hasResolvedRef.current && options?.fallback !== undefined) {
         setData(options.fallback as T)
       }
@@ -157,14 +175,10 @@ export function useRealtimeData<T>(
     }
   }, [url, isAuthenticated, authLoading, enabled, method, bodyStr])
 
-  // Re-run fetch when dependencies change
   useEffect(() => {
     mountedRef.current = true
-
-    // Only show loading spinner on initial load, not on refreshes
-    if (!hasResolvedRef.current) {
-      setIsLoading(true)
-    }
+    // Only show loading spinner on initial load if there is no cached data
+    if (!hasResolvedRef.current && data === null) setIsLoading(true)
 
     fetchData()
 
@@ -172,31 +186,14 @@ export function useRealtimeData<T>(
     if (refreshInterval > 0 && isAuthenticated && !authLoading) {
       interval = setInterval(fetchData, refreshInterval)
     }
-
     return () => {
       mountedRef.current = false
       if (interval) clearInterval(interval)
     }
   }, [fetchData, refreshInterval, isAuthenticated, authLoading])
 
-  // Safety: if auth is still loading after 5 seconds, force-resolve loading
-  useEffect(() => {
-    if (!authLoading) return
+  const refetch = useCallback(() => { fetchData() }, [fetchData])
 
-    const safetyTimer = setTimeout(() => {
-      if (mountedRef.current) {
-        setIsLoading(false)
-      }
-    }, 5000)
-
-    return () => clearTimeout(safetyTimer)
-  }, [authLoading])
-
-  const refetch = useCallback(() => {
-    fetchData()
-  }, [fetchData])
-
-  // Don't couple loading to authLoading — handle independently
   return { data, error, isLoading, refetch }
 }
 

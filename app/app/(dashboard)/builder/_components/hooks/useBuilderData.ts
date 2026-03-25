@@ -117,7 +117,7 @@ export function useRealtimeData<T>(
 
   const fetchData = useCallback(async () => {
     if (!url || !enabled) { setIsLoading(false); return }
-    if (authLoading) return  // re-triggers when authLoading changes
+    if (authLoading) return          // auth still initialising — will re-trigger when resolved
     if (!isAuthenticated) { setIsLoading(false); return }
 
     const fetchId = ++fetchCountRef.current
@@ -169,7 +169,10 @@ export function useRealtimeData<T>(
         setData(options.fallback as T)
       }
     } finally {
-      if (mountedRef.current && fetchId === fetchCountRef.current) {
+      // Drop stale fetches, but DON'T gate on mountedRef — React 18 safely ignores
+      // setState on unmounted components (no-op). Without this, a cleanup→remount
+      // cycle between fetch-start and fetch-finish leaves isLoading stuck at true.
+      if (fetchId === fetchCountRef.current) {
         setIsLoading(false)
       }
     }
@@ -191,6 +194,17 @@ export function useRealtimeData<T>(
       if (interval) clearInterval(interval)
     }
   }, [fetchData, refreshInterval, isAuthenticated, authLoading])
+
+  // ── Safety net: isLoading ALWAYS resolves ─────────────────────────────────
+  // Belt-and-suspenders guarantee: no matter what happens (auth hangs, fetch
+  // never fires, React effect timing edge-case), loading never spins forever.
+  // 12 s = 10 s fetch abort-timeout + 2 s buffer.
+  useEffect(() => {
+    if (!isLoading) return          // already resolved — nothing to do
+    const t = setTimeout(() => setIsLoading(false), 12000)
+    return () => clearTimeout(t)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])                            // mount-once; fetchData/finally is the happy path
 
   const refetch = useCallback(() => { fetchData() }, [fetchData])
 

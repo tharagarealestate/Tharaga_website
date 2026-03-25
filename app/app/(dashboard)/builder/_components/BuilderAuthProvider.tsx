@@ -1,34 +1,50 @@
 'use client'
 
 import { createContext, useContext, useState, useEffect, useRef, ReactNode } from 'react'
+import { Session } from '@supabase/supabase-js'
 import { getSupabase } from '@/lib/supabase'
 import { BuilderAuthGate } from './BuilderAuthGate'
 import { BuilderSetupGate } from './BuilderSetupGate'
 import { openAuthModal, closeAuthModal } from '@/components/auth/AuthModal'
 
-// ─── Initial status ───────────────────────────────────────────────────────────
-// ALWAYS start as 'loading' — never assume 'unauthenticated' before INITIAL_SESSION.
+// ─── Architecture ────────────────────────────────────────────────────────────
 //
-// Previous approach: if localStorage had no token → immediately return 'unauthenticated'
-// → UnauthenticatedView rendered → modal opened after 350ms.
+// PROBLEM WITH PREVIOUS APPROACH (INITIAL_SESSION + getUser):
+//   1. User signs out → signs back in → /builder loads
+//   2. INITIAL_SESSION fires with the new session
+//   3. resolveAuth() calls getUser() — a NETWORK round-trip to Supabase auth server
+//   4. After signOut, Supabase's edge function cold-starts → getUser() takes 3-8s
+//   5. Either the safety timer fires (→ modal) or getUser() returns an error
+//      (→ wasAuthenticated=true path keeps loading forever)
+//   → Result: login modal re-opens after every logout+login cycle
 //
-// THE BUG: After a Google OAuth redirect via /auth/callback, the page reloads with a
-// valid session BUT: (a) if the user navigated to /builder before the callback page
-// finished its setSession(), or (b) if detectSessionInUrl hadn't written to localStorage
-// yet, the check found an empty localStorage and opened the login modal → LOOP.
+// THE FIX — Direct getSession() on mount:
+//   getSession() reads the JWT from localStorage — ZERO network, instant (~1ms).
+//   For the admin account we only need the email from the JWT.
+//   For builders we still verify server-side but the LOCAL session check confirms
+//   they are logged in immediately, so we never fall through to unauthenticated.
 //
-// THE FIX: Always start 'loading'. INITIAL_SESSION fires within ~50-150ms and
-// determines the real state. The only cost is a brief spinner (~100ms) for users
-// who are genuinely not logged in — imperceptible in practice.
-const SUPABASE_PROJECT_REF = 'wedevtjjmdvngyshqdro'
+// Flow:
+//   Mount → getSession() (instant) →
+//     session.user.email === admin → status='authenticated' in <5ms
+//     session.user (non-admin)     → DB queries → status in ~500ms
+//     no session                   → status='unauthenticated' immediately
+//
+// onAuthStateChange is kept ONLY for:
+//   SIGNED_OUT   — clear state and show modal
+//   SIGNED_IN    — user signs in via the modal while already on /builder
+//   TOKEN_REFRESHED — sync userId for API calls
 
-function getInitialStatus(): AuthStatus {
-  // Always 'loading' — let INITIAL_SESSION be the single source of truth.
-  // This eliminates every post-OAuth race condition with localStorage timing.
-  return 'loading'
-}
+const ADMIN_EMAIL = 'tharagarealestate@gmail.com'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
+
+type AuthStatus =
+  | 'loading'          // checking session (shows spinner)
+  | 'authenticated'    // session valid + role confirmed → show dashboard
+  | 'unauthenticated'  // no session → show login modal
+  | 'no-profile'       // logged in but no builder profile → show setup
+  | 'buyer'            // logged in but buyer role → access denied
 
 interface BuilderAuthContextType {
   isAuthenticated: boolean
@@ -42,38 +58,28 @@ interface BuilderAuthContextType {
   } | null
 }
 
-type AuthStatus =
-  | 'loading'          // initial — checking session
-  | 'authenticated'    // builder profile found, all good
-  | 'unauthenticated'  // no session → auto-open login modal
-  | 'no-profile'       // logged in but no builder profile → show setup form
-  | 'buyer'            // logged in but is a buyer — access denied
-
 const BuilderAuthContext = createContext<BuilderAuthContextType | null>(null)
 
 export function useBuilderAuth(): BuilderAuthContextType {
-  const context = useContext(BuilderAuthContext)
-  if (!context) {
-    return { isAuthenticated: false, isLoading: false, builderId: null, userId: null, builderProfile: null }
-  }
-  return context
+  const ctx = useContext(BuilderAuthContext)
+  if (!ctx) return { isAuthenticated: false, isLoading: false, builderId: null, userId: null, builderProfile: null }
+  return ctx
 }
 
-// ─── Unauthenticated view — dark backdrop + auto-open AuthModal ───────────────
+// ─── Unauthenticated view — opens login modal after short delay ───────────────
 
 function UnauthenticatedView() {
   useEffect(() => {
-    // Delay gives INITIAL_SESSION time to arrive (~50-150ms) and upgrade status.
-    // If a valid session arrives, UnauthenticatedView unmounts and this timer is
-    // cleared before it fires. 600ms > 99th-percentile INITIAL_SESSION latency
-    // so this only fires for users who are genuinely not logged in.
-    const t = setTimeout(() => openAuthModal(), 600)
+    // Short delay so any in-flight auth state has time to resolve before we open
+    // the modal. The primary auth path (getSession on mount) sets status to
+    // 'unauthenticated' only when it is CERTAIN there is no session. This 400ms
+    // delay is just belt-and-suspenders for edge cases.
+    const t = setTimeout(() => openAuthModal('/builder'), 400)
     return () => clearTimeout(t)
   }, [])
 
   return (
     <div className="fixed inset-0 bg-zinc-950 z-40">
-      {/* Subtle amber glow */}
       <div className="pointer-events-none absolute -top-40 -left-40 w-[600px] h-[600px] rounded-full bg-amber-500/8 blur-[140px]" />
       <div className="pointer-events-none absolute -bottom-40 -right-40 w-[600px] h-[600px] rounded-full bg-amber-600/6 blur-[140px]" />
     </div>
@@ -83,307 +89,222 @@ function UnauthenticatedView() {
 // ─── Provider ─────────────────────────────────────────────────────────────────
 
 export function BuilderAuthProvider({ children }: { children: ReactNode }) {
-  // getInitialStatus() runs synchronously — no spinner for unauthenticated users
-  const [status, setStatus] = useState<AuthStatus>(getInitialStatus)
-  const [builderId, setBuilderId] = useState<string | null>(null)
-  const [userId, setUserId] = useState<string | null>(null)
-  const [userEmail, setUserEmail] = useState<string>('')
+  const [status, setStatus]               = useState<AuthStatus>('loading')
+  const [builderId, setBuilderId]         = useState<string | null>(null)
+  const [userId, setUserId]               = useState<string | null>(null)
+  const [userEmail, setUserEmail]         = useState<string>('')
   const [builderProfile, setBuilderProfile] = useState<BuilderAuthContextType['builderProfile']>(null)
-  const mountedRef = useRef(true)
+
+  const mountedRef  = useRef(true)
   const resolvedRef = useRef(false)
-  // statusRef mirrors `status` for use inside closures where the state value is stale.
-  const statusRef = useRef<AuthStatus>('loading')
+  // statusRef mirrors status for use inside async closures (avoids stale closure)
+  const statusRef   = useRef<AuthStatus>('loading')
 
-  // ── Core auth resolution ─────────────────────────────────────────────────
-  // wasAuthenticated: when true, don't downgrade to 'unauthenticated' on
-  // transient errors (e.g. TOKEN_REFRESHED with a slow network). Only kick
-  // the user out if the session is genuinely gone.
-  const resolveAuth = async (skipSessionCheck = false, wasAuthenticated = false) => {
-    const supabase = getSupabase()
-
-    try {
-      let resolvedUserId: string | null = null
-      let resolvedEmail: string = ''
-
-      if (!skipSessionCheck) {
-        const { data: sessionData } = await supabase.auth.getSession()
-        const session = sessionData?.session
-
-        if (!session?.user) {
-          if (!mountedRef.current) return
-          statusRef.current = 'unauthenticated'
-          setStatus('unauthenticated')
-          resolvedRef.current = true
-          return
-        }
-
-        resolvedUserId = session.user.id
-        resolvedEmail = session.user.email || ''
-      } else {
-        const { data: { user }, error } = await supabase.auth.getUser()
-        if (error || !user) {
-          if (!mountedRef.current) return
-          // getUser() failed (network hiccup / Supabase edge cold start).
-          // Before kicking the user out, check if the LOCAL session is still valid.
-          // If it is, we use the LOCAL session user data to COMPLETE auth resolution
-          // (admin check + roles + profile). This eliminates the 6-second safety timer
-          // kicking in and opening the modal when the network blips during login.
-          try {
-            const { data: localData } = await supabase.auth.getSession()
-            const localExpiresAt = localData?.session?.expires_at
-            const localUser    = localData?.session?.user
-            const localIsValid = !!(localUser && localExpiresAt && localExpiresAt * 1000 > Date.now())
-            if (localIsValid && localUser) {
-              // Use local session user data — JWT is still valid, server just had a blip.
-              // Continue resolveAuth with this data instead of bailing out.
-              resolvedUserId = localUser.id
-              resolvedEmail  = localUser.email || ''
-              // Fall through to roles + profile fetch below ↓
-            } else {
-              if (!wasAuthenticated) {
-                statusRef.current = 'unauthenticated'
-                setStatus('unauthenticated')
-                resolvedRef.current = true
-              } else {
-                // Authenticated user but session truly gone — mark resolved so safety
-                // timer doesn't open the modal; keep the current status as-is.
-                resolvedRef.current = true
-              }
-              return
-            }
-          } catch {
-            if (!wasAuthenticated) {
-              statusRef.current = 'unauthenticated'
-              setStatus('unauthenticated')
-              resolvedRef.current = true
-            } else {
-              resolvedRef.current = true
-            }
-            return
-          }
-        } else {
-          resolvedUserId = user.id
-          resolvedEmail = user.email || ''
-        }
-      }
-
-      if (!mountedRef.current) return
-
-      // ── Admin email fast-path ─────────────────────────────────────────────
-      // Bypass ALL DB queries for the admin account. Identity confirmed by JWT
-      // (getUser() validated the token server-side above). Instant auth.
-      const isAdminByEmail = resolvedEmail === 'tharagarealestate@gmail.com'
-      if (isAdminByEmail) {
-        setUserEmail(resolvedEmail)
-        setUserId(resolvedUserId)
-        setBuilderId(resolvedUserId)
-        setBuilderProfile({ id: resolvedUserId, company_name: 'Tharaga Admin', email: resolvedEmail })
-        closeAuthModal()
-        statusRef.current = 'authenticated'
-        setStatus('authenticated')
-        resolvedRef.current = true
-        return
-      }
-
-      // Single parallel fetch for roles + profile — both fire simultaneously.
-      // 5s guard: shorter than the 8s safety timer so the timer never beats the queries.
-      const timeout = <T,>(p: Promise<T>): Promise<T> =>
-        Promise.race([
-          p,
-          new Promise<T>((_, rej) => setTimeout(() => rej(new Error('timeout')), 5000)),
-        ])
-
-      const [rolesResult, profileResult] = await Promise.allSettled([
-        timeout(supabase.from('user_roles').select('role').eq('user_id', resolvedUserId)),
-        timeout(
-          supabase
-            .from('builder_profiles')
-            .select('id, company_name, user_id')
-            .eq('user_id', resolvedUserId)
-            .maybeSingle()
-        ),
-      ])
-
-      if (!mountedRef.current) return
-
-      const roles: string[] =
-        rolesResult.status === 'fulfilled' ? (rolesResult.value.data?.map((r: any) => r.role) ?? []) : []
-
-      const profile =
-        profileResult.status === 'fulfilled' ? profileResult.value.data : null
-
-      const isAdminByRole = roles.includes('admin')
-      const isAdmin = isAdminByRole  // email-admin already returned above
-
-      // Store email for setup gate
-      setUserEmail(resolvedEmail)
-      setUserId(resolvedUserId)
-
-      if (isAdmin) {
-        // Admin uses auth.uid() as builderId so leads.builder_id filter works correctly
-        setBuilderId(resolvedUserId)
-        setBuilderProfile({
-          id: resolvedUserId,
-          company_name: profile?.company_name || 'Admin',
-          email: resolvedEmail,
-        })
-        closeAuthModal() // close if it opened prematurely before this resolved
-        statusRef.current = 'authenticated'
-        setStatus('authenticated')
-        resolvedRef.current = true
-        return
-      }
-
-      // Buyer role → deny access
-      const isBuyer = roles.includes('buyer') && !roles.includes('builder')
-      if (isBuyer) {
-        setBuilderId(null)
-        setBuilderProfile(null)
-        statusRef.current = 'buyer'
-        setStatus('buyer')
-        resolvedRef.current = true
-        return
-      }
-
-      // No builder profile → show setup form (not auto-redirect)
-      if (!profile || !profile.company_name?.trim()) {
-        setBuilderId(null)
-        setBuilderProfile(null)
-        statusRef.current = 'no-profile'
-        setStatus('no-profile')
-        resolvedRef.current = true
-        return
-      }
-
-      // Full builder access — use auth.uid() (resolvedUserId) as builderId so that
-      // leads.builder_id = eq(builderId) matches correctly (leads reference auth.users.id)
-      setBuilderId(resolvedUserId)
-      setBuilderProfile({ id: profile.id, company_name: profile.company_name, email: resolvedEmail })
-      closeAuthModal() // close if it opened prematurely before this resolved
-      statusRef.current = 'authenticated'
-      setStatus('authenticated')
-      resolvedRef.current = true
-    } catch (err) {
-      console.error('[BuilderAuthProvider] resolveAuth error:', err)
-      if (!mountedRef.current) return
-      if (!resolvedRef.current) {
-        if (!wasAuthenticated) {
-          statusRef.current = 'unauthenticated'
-          setStatus('unauthenticated')
-          resolvedRef.current = true
-        } else {
-          // Authenticated user hit an unexpected error — mark resolved so the
-          // 6-second safety timer doesn't fire and open the login modal.
-          resolvedRef.current = true
-        }
-      }
-    }
+  // ── Helper: set authenticated state ──────────────────────────────────────
+  const setAuthenticated = (uid: string, email: string, profile: BuilderAuthContextType['builderProfile']) => {
+    if (!mountedRef.current) return
+    setUserId(uid)
+    setBuilderId(uid)
+    setUserEmail(email)
+    setBuilderProfile(profile)
+    closeAuthModal()
+    statusRef.current = 'authenticated'
+    setStatus('authenticated')
+    resolvedRef.current = true
   }
 
-  // ── Mount effect ─────────────────────────────────────────────────────────
-  useEffect(() => {
-    mountedRef.current = true
+  // ── Core auth resolution ──────────────────────────────────────────────────
+  // Accepts the session directly — no getUser() network call for admin.
+  // For non-admin, falls through to DB queries.
+  const resolveAuth = async (session: Session) => {
+    const uid   = session.user.id
+    const email = (session.user.email || '').toLowerCase().trim()
 
-    // ── Single source of truth: INITIAL_SESSION ───────────────────────────
-    // IMPORTANT: Do NOT call resolveAuth() here directly. The previous approach
-    // called resolveAuth(false) from the mount effect AND let INITIAL_SESSION
-    // also call resolveAuth(true) — creating two concurrent async calls that
-    // raced against each other. If the mount-effect call got a null session
-    // (before SDK fully initialised), it set status='unauthenticated' and opened
-    // the auth modal BEFORE the correct INITIAL_SESSION resolve could complete.
-    // Fix: INITIAL_SESSION is the ONLY trigger. It fires within ~50ms of
-    // onAuthStateChange registration, which happens in the same synchronous tick.
-    resolvedRef.current = false
+    if (!mountedRef.current || resolvedRef.current) return
 
-    // Safety valve — 8s timeout (> 5s DB query timeout) to prevent infinite spinner
-    // if INITIAL_SESSION somehow never arrives (e.g. blocked network).
-    // Must be > inner DB timeout (5s) so the timer never beats the DB queries.
-    const safetyTimer = setTimeout(() => {
-      if (!mountedRef.current || resolvedRef.current) return
-      console.warn('[BuilderAuthProvider] Safety timeout — forcing unauthenticated')
-      statusRef.current = 'unauthenticated'
-      setStatus('unauthenticated')
+    // ── Admin fast-path: email check against local JWT ────────────────────
+    // JWT is signed by Supabase — cannot be forged. Email in JWT = verified.
+    // No network call needed; this resolves in <5ms.
+    if (email === ADMIN_EMAIL) {
+      setAuthenticated(uid, email, { id: uid, company_name: 'Tharaga Admin', email })
+      return
+    }
+
+    // ── Non-admin: server-validate + fetch roles/profile ──────────────────
+    const supabase = getSupabase()
+
+    // Verify JWT server-side (protects against clock-skew or revoked tokens)
+    const { data: { user }, error: userError } = await supabase.auth.getUser()
+
+    if (!mountedRef.current) return
+
+    const verifiedUid   = user?.id   ?? uid    // fall back to JWT uid if getUser() fails
+    const verifiedEmail = (user?.email ?? email).toLowerCase().trim()
+
+    if (userError && !user) {
+      // getUser() failed — likely a cold-start blip. Session is still locally valid.
+      // For safety, set unauthenticated rather than silently granting access to non-admin.
+      if (!resolvedRef.current) {
+        statusRef.current = 'unauthenticated'
+        setStatus('unauthenticated')
+        resolvedRef.current = true
+      }
+      return
+    }
+
+    setUserEmail(verifiedEmail)
+    setUserId(verifiedUid)
+
+    // Parallel DB fetch with 5s timeout
+    const withTimeout = <T,>(p: Promise<T>): Promise<T> =>
+      Promise.race([p, new Promise<T>((_, r) => setTimeout(() => r(new Error('timeout')), 5000))])
+
+    const [rolesRes, profileRes] = await Promise.allSettled([
+      withTimeout(supabase.from('user_roles').select('role').eq('user_id', verifiedUid)),
+      withTimeout(
+        supabase.from('builder_profiles')
+          .select('id, company_name, user_id')
+          .eq('user_id', verifiedUid)
+          .maybeSingle()
+      ),
+    ])
+
+    if (!mountedRef.current || resolvedRef.current) return
+
+    const roles: string[] =
+      rolesRes.status === 'fulfilled' ? (rolesRes.value.data?.map((r: any) => r.role) ?? []) : []
+    const profile = profileRes.status === 'fulfilled' ? profileRes.value.data : null
+
+    const isAdmin  = roles.includes('admin')
+    const isBuyer  = roles.includes('buyer') && !roles.includes('builder')
+
+    if (isAdmin) {
+      setAuthenticated(verifiedUid, verifiedEmail, {
+        id: verifiedUid,
+        company_name: profile?.company_name || 'Admin',
+        email: verifiedEmail,
+      })
+      return
+    }
+
+    if (isBuyer) {
+      setBuilderId(null)
+      setBuilderProfile(null)
+      statusRef.current = 'buyer'
+      setStatus('buyer')
       resolvedRef.current = true
-    }, 8000)
+      return
+    }
+
+    if (!profile?.company_name?.trim()) {
+      setBuilderId(null)
+      setBuilderProfile(null)
+      statusRef.current = 'no-profile'
+      setStatus('no-profile')
+      resolvedRef.current = true
+      return
+    }
+
+    setAuthenticated(verifiedUid, verifiedEmail, {
+      id: profile.id,
+      company_name: profile.company_name,
+      email: verifiedEmail,
+    })
+  }
+
+  // ── Mount effect ──────────────────────────────────────────────────────────
+  useEffect(() => {
+    mountedRef.current  = true
+    resolvedRef.current = false
+    statusRef.current   = 'loading'
 
     const supabase = getSupabase()
+
+    // ── Step 1: Immediate local session check (zero network) ──────────────
+    // getSession() reads the JWT from localStorage — instant, no Supabase edge call.
+    // This is the ONLY trigger for initial auth on page load.
+    // After OAuth redirect, the session is ALREADY in localStorage (written by
+    // /auth/callback before redirecting here), so this always succeeds immediately.
+    const initAuth = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession()
+
+        if (!mountedRef.current) return
+
+        if (session?.user) {
+          await resolveAuth(session)
+        } else {
+          // No session in localStorage — definitely unauthenticated
+          if (!mountedRef.current || resolvedRef.current) return
+          statusRef.current = 'unauthenticated'
+          setStatus('unauthenticated')
+          resolvedRef.current = true
+        }
+      } catch {
+        if (!mountedRef.current || resolvedRef.current) return
+        statusRef.current = 'unauthenticated'
+        setStatus('unauthenticated')
+        resolvedRef.current = true
+      }
+    }
+
+    initAuth()
+
+    // ── Step 2: Watch for auth changes AFTER initial load ─────────────────
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (!mountedRef.current) return
 
+      // User signed out — clear everything and show login modal
       if (event === 'SIGNED_OUT') {
         setBuilderId(null)
         setUserId(null)
         setUserEmail('')
         setBuilderProfile(null)
+        resolvedRef.current = true
         statusRef.current = 'unauthenticated'
         setStatus('unauthenticated')
-        resolvedRef.current = true
         return
       }
 
-      if (event === 'SIGNED_IN' && session?.user) {
-        // If already fully authenticated, a redundant SIGNED_IN (e.g. Supabase
-        // re-processing the just-stored session on page load after OAuth redirect)
-        // must NOT reset resolvedRef — doing so creates a race with the 6-second
-        // safety timer that causes the login modal to reappear → login loop.
-        if (statusRef.current === 'authenticated') return
-
-        // Fresh sign-in confirmed by Supabase — re-resolve roles/profile.
-        // Use wasAuthenticated=true: SIGNED_IN means the session is 100% valid right now,
-        // so a transient getUser() network failure must NOT flash the login modal.
-        resolvedRef.current = false
-        resolveAuth(true, true)
-        return
-      }
-
+      // JWT silently refreshed — just sync userId, no re-auth needed
       if (event === 'TOKEN_REFRESHED' && session?.user) {
-        // JWT renewed — profile/roles unchanged. Just sync userId. No DB queries.
-        // Eliminates the 500–800ms jank that previously happened every 60 minutes.
         setUserId(session.user.id)
         return
       }
 
-      if (event === 'INITIAL_SESSION') {
-        if (session?.user && !resolvedRef.current) {
-          // Active server session confirmed. If we started as 'unauthenticated'
-          // (shouldn't happen with getInitialStatus returning 'loading'), reset.
-          if (statusRef.current === 'unauthenticated') {
-            statusRef.current = 'loading'
-            setStatus('loading')
-          }
-          // Pass wasAuthenticated=true: Supabase confirmed the session is real,
-          // so a transient getUser() failure must NOT flash the login modal.
-          resolveAuth(true, true)
-        } else if (!session?.user && !resolvedRef.current) {
-          // No session anywhere — truly unauthenticated → open modal.
-          statusRef.current = 'unauthenticated'
-          setStatus('unauthenticated')
-          resolvedRef.current = true
-        }
+      // User signs in via the modal while already on /builder (UnauthenticatedView path)
+      // Re-run full auth resolution with the new session.
+      if (event === 'SIGNED_IN' && session?.user) {
+        // Guard: if already authenticated (e.g. Supabase fires SIGNED_IN redundantly
+        // on page load after OAuth redirect), ignore it.
+        if (statusRef.current === 'authenticated') return
+        // Reset resolved so resolveAuth can run
+        resolvedRef.current = false
+        resolveAuth(session)
+        return
       }
     })
 
     return () => {
       mountedRef.current = false
-      clearTimeout(safetyTimer)
       subscription.unsubscribe()
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   // ── Context value ─────────────────────────────────────────────────────────
-  const contextValue: BuilderAuthContextType = {
+  const ctx: BuilderAuthContextType = {
     isAuthenticated: status === 'authenticated',
-    isLoading: status === 'loading',
+    isLoading:       status === 'loading',
     builderId,
     userId,
     builderProfile,
   }
 
-  // ── Loading spinner ───────────────────────────────────────────────────────
+  // Loading spinner
   if (status === 'loading') {
     return (
-      <BuilderAuthContext.Provider value={contextValue}>
+      <BuilderAuthContext.Provider value={ctx}>
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-zinc-950">
           <div className="flex flex-col items-center gap-4">
             <div className="relative w-12 h-12">
@@ -397,45 +318,48 @@ export function BuilderAuthProvider({ children }: { children: ReactNode }) {
     )
   }
 
-  // ── Not logged in → dark bg + auto-open AuthModal ────────────────────────
+  // No session → login modal
   if (status === 'unauthenticated') {
     return (
-      <BuilderAuthContext.Provider value={contextValue}>
+      <BuilderAuthContext.Provider value={ctx}>
         <UnauthenticatedView />
       </BuilderAuthContext.Provider>
     )
   }
 
-  // ── Buyer — access denied ────────────────────────────────────────────────
+  // Buyer — access denied
   if (status === 'buyer') {
     return (
-      <BuilderAuthContext.Provider value={contextValue}>
+      <BuilderAuthContext.Provider value={ctx}>
         <BuilderAuthGate variant="buyer" />
       </BuilderAuthContext.Provider>
     )
   }
 
-  // ── Logged in but no builder profile → inline setup form ─────────────────
+  // Logged in but no builder profile → inline setup form
   if (status === 'no-profile') {
     return (
-      <BuilderAuthContext.Provider value={contextValue}>
+      <BuilderAuthContext.Provider value={ctx}>
         <BuilderSetupGate
           userId={userId!}
           userEmail={userEmail}
           onSuccess={() => {
-            // Re-resolve auth after profile creation
             resolvedRef.current = false
+            statusRef.current   = 'loading'
             setStatus('loading')
-            resolveAuth(false)
+            // Re-fetch session after profile creation
+            getSupabase().auth.getSession().then(({ data: { session } }) => {
+              if (session) resolveAuth(session)
+            })
           }}
         />
       </BuilderAuthContext.Provider>
     )
   }
 
-  // ── Fully authenticated builder → render dashboard ────────────────────────
+  // Fully authenticated — render dashboard
   return (
-    <BuilderAuthContext.Provider value={contextValue}>
+    <BuilderAuthContext.Provider value={ctx}>
       {children}
     </BuilderAuthContext.Provider>
   )

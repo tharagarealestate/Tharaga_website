@@ -130,27 +130,14 @@ export function BuilderAuthProvider({ children }: { children: ReactNode }) {
       return
     }
 
-    // ── Non-admin: server-validate + fetch roles/profile ──────────────────
+    // ── Non-admin: use session JWT directly, let DB queries verify auth ──────
+    // getUser() is a network round-trip to Supabase auth (~500-2000ms) we can skip.
+    // The JWT from getSession() is signed by Supabase — email/uid are authentic.
+    // DB queries below run with the user's JWT; Supabase RLS rejects expired/invalid
+    // tokens, so failed DB queries serve as the implicit auth gate.
     const supabase = getSupabase()
-
-    // Verify JWT server-side (protects against clock-skew or revoked tokens)
-    const { data: { user }, error: userError } = await supabase.auth.getUser()
-
-    if (!mountedRef.current) return
-
-    const verifiedUid   = user?.id   ?? uid    // fall back to JWT uid if getUser() fails
-    const verifiedEmail = (user?.email ?? email).toLowerCase().trim()
-
-    if (userError && !user) {
-      // getUser() failed — likely a cold-start blip. Session is still locally valid.
-      // For safety, set unauthenticated rather than silently granting access to non-admin.
-      if (!resolvedRef.current) {
-        statusRef.current = 'unauthenticated'
-        setStatus('unauthenticated')
-        resolvedRef.current = true
-      }
-      return
-    }
+    const verifiedUid   = uid
+    const verifiedEmail = email
 
     setUserEmail(verifiedEmail)
     setUserId(verifiedUid)
@@ -170,6 +157,16 @@ export function BuilderAuthProvider({ children }: { children: ReactNode }) {
     ])
 
     if (!mountedRef.current || resolvedRef.current) return
+
+    // If BOTH queries failed the JWT was likely rejected by RLS → unauthenticated
+    const rolesFailed   = rolesRes.status === 'rejected'   || !!rolesRes.value?.error
+    const profileFailed = profileRes.status === 'rejected' || !!profileRes.value?.error
+    if (rolesFailed && profileFailed) {
+      statusRef.current = 'unauthenticated'
+      setStatus('unauthenticated')
+      resolvedRef.current = true
+      return
+    }
 
     const roles: string[] =
       rolesRes.status === 'fulfilled' ? (rolesRes.value.data?.map((r: any) => r.role) ?? []) : []

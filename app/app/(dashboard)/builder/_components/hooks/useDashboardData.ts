@@ -174,6 +174,30 @@ function deriveStats(leads: DashboardLead[]): DashboardStats {
   }
 }
 
+// ─── localStorage SWR cache ───────────────────────────────────────────────────
+// Leads data is cached per-builder so re-login is instant (stale-while-revalidate).
+// TTL: 10 minutes. Realtime subscription keeps data fresh during the session.
+
+const LEADS_CACHE_TTL = 10 * 60 * 1000
+
+function leadsCacheKey(builderId: string, isAdmin: boolean): string {
+  return `__tharaga_leads_${isAdmin ? 'admin' : builderId}`
+}
+
+function readLeadsCache(key: string): DashboardLead[] | null {
+  try {
+    const raw = localStorage.getItem(key)
+    if (!raw) return null
+    const { data, ts } = JSON.parse(raw)
+    if (Date.now() - ts > LEADS_CACHE_TTL) return null
+    return data as DashboardLead[]
+  } catch { return null }
+}
+
+function writeLeadsCache(key: string, data: DashboardLead[]): void {
+  try { localStorage.setItem(key, JSON.stringify({ data, ts: Date.now() })) } catch {}
+}
+
 // ─── Main hook ────────────────────────────────────────────────────────────────
 
 interface UseDashboardDataResult {
@@ -192,13 +216,26 @@ export function useDashboardData(
   builderId: string | null,
   isAdmin = false,
 ): UseDashboardDataResult {
-  const [leads, setLeads]   = useState<DashboardLead[]>([])
-  const [loading, setLoading] = useState(true)
+  // Seed from localStorage synchronously — instant display on re-login
+  const [leads, setLeads] = useState<DashboardLead[]>(() => {
+    if (typeof window === 'undefined' || !builderId) return []
+    return readLeadsCache(leadsCacheKey(builderId, isAdmin)) ?? []
+  })
+  // Only show loading spinner if there's no cached data to display
+  const [loading, setLoading] = useState(() => {
+    if (typeof window === 'undefined' || !builderId) return true
+    return readLeadsCache(leadsCacheKey(builderId, isAdmin)) === null
+  })
   const [error, setError]   = useState<string | null>(null)
 
   const fetchLeads = useCallback(async () => {
     if (!builderId) { setLoading(false); return }
-    setLoading(true)
+
+    const key    = leadsCacheKey(builderId, isAdmin)
+    const cached = typeof window !== 'undefined' ? readLeadsCache(key) : null
+    // If we have cached data show it instantly; only show spinner on cold load
+    if (!cached) setLoading(true)
+
     setError(null)
     try {
       const supabase = getSupabase()
@@ -212,7 +249,9 @@ export function useDashboardData(
 
       const { data, error: err } = await q
       if (err) throw err
-      setLeads((data ?? []).map(mapRaw))
+      const mapped = (data ?? []).map(mapRaw)
+      writeLeadsCache(key, mapped)
+      setLeads(mapped)
     } catch (e: any) {
       setError(e?.message ?? 'Failed to load leads')
     } finally {

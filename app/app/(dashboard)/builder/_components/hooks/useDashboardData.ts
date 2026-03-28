@@ -233,10 +233,16 @@ export function useDashboardData(
 
     const key    = leadsCacheKey(builderId, isAdmin)
     const cached = typeof window !== 'undefined' ? readLeadsCache(key) : null
-    // If we have cached data show it instantly; only show spinner on cold load
+    // Show spinner only on cold load (no cache); cached data stays visible
     if (!cached) setLoading(true)
 
     setError(null)
+
+    // 10-second abort — prevents the Supabase query from hanging indefinitely
+    // when a connection is established but the server never responds.
+    const controller = new AbortController()
+    const timeoutId  = setTimeout(() => controller.abort(), 10000)
+
     try {
       const supabase = getSupabase()
       let q = supabase
@@ -247,13 +253,21 @@ export function useDashboardData(
 
       if (!isAdmin) q = q.eq('builder_id', builderId)
 
-      const { data, error: err } = await q
+      // abortSignal wires the AbortController into the underlying fetch call
+      const { data, error: err } = await (q as any).abortSignal(controller.signal)
+      clearTimeout(timeoutId)
       if (err) throw err
       const mapped = (data ?? []).map(mapRaw)
       writeLeadsCache(key, mapped)
       setLeads(mapped)
     } catch (e: any) {
-      setError(e?.message ?? 'Failed to load leads')
+      clearTimeout(timeoutId)
+      if (e?.name !== 'AbortError') {
+        setError(e?.message ?? 'Failed to load leads')
+      } else {
+        // Timed out — only set error if there's no cached data to show
+        if (!cached) setError('Dashboard data took too long to load. Please refresh.')
+      }
     } finally {
       setLoading(false)
     }
@@ -266,6 +280,8 @@ export function useDashboardData(
     const supabase = getSupabase()
     const channelName = `dashboard-${builderId}-${Date.now()}`
     const filterStr   = isAdmin ? undefined : `builder_id=eq.${builderId}`
+
+    let pollInterval: ReturnType<typeof setInterval> | null = null
 
     const channel = supabase
       .channel(channelName)
@@ -292,15 +308,28 @@ export function useDashboardData(
       )
       .subscribe((status) => {
         if (status === 'CHANNEL_ERROR') {
-          console.warn('[useDashboardData] Realtime channel error — falling back to polling')
-          // Poll every 30s as fallback
-          const interval = setInterval(fetchLeads, 30000)
-          return () => clearInterval(interval)
+          console.warn('[useDashboardData] Realtime channel error — polling every 30s')
+          // Properly tracked so it can be cleaned up on unmount
+          if (!pollInterval) pollInterval = setInterval(fetchLeads, 30000)
         }
       })
 
-    return () => { supabase.removeChannel(channel) }
+    return () => {
+      supabase.removeChannel(channel)
+      if (pollInterval) clearInterval(pollInterval)
+    }
   }, [fetchLeads, builderId, isAdmin])
+
+  // ── Safety net: loading ALWAYS resolves ───────────────────────────────────
+  // If the Supabase query somehow outlasts the 10s AbortController (e.g., the
+  // controller fires but the Promise doesn't reject before our finally), this
+  // timer guarantees the skeleton never spins beyond 12 seconds.
+  useEffect(() => {
+    if (!loading) return
+    const t = setTimeout(() => setLoading(false), 12000)
+    return () => clearTimeout(t)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])  // mount-once; fetchLeads.finally is the happy path
 
   return { leads, stats: deriveStats(leads), loading, error, refetch: fetchLeads }
 }

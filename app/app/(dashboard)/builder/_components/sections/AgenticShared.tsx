@@ -24,9 +24,9 @@ export const TIER_CONFIG: Record<Tier, {
   label: string; emoji: string
   badge: string; border: string; dot: string; glow: boolean
 }> = {
-  HOT:  { label: 'Hot',  emoji: '🔥', badge: 'bg-red-500/15    border-red-500/30    text-red-400',    border: 'border-red-500/40',  dot: 'bg-red-400',    glow: true  },
-  WARM: { label: 'Warm', emoji: '⚡', badge: 'bg-amber-500/15  border-amber-500/30  text-amber-400',  border: 'border-amber-500/35',dot: 'bg-amber-400',  glow: false },
-  COOL: { label: 'Cool', emoji: '🧊', badge: 'bg-zinc-700/50   border-zinc-600/30   text-zinc-400',   border: 'border-zinc-700/50', dot: 'bg-zinc-500',   glow: false },
+  HOT:  { label: 'Lion',   emoji: '🦁', badge: 'bg-red-500/15    border-red-500/30    text-red-400',    border: 'border-red-500/40',  dot: 'bg-red-400',    glow: true  },
+  WARM: { label: 'Monkey', emoji: '🐒', badge: 'bg-amber-500/15  border-amber-500/30  text-amber-400',  border: 'border-amber-500/35',dot: 'bg-amber-400',  glow: false },
+  COOL: { label: 'Dog',    emoji: '🐕', badge: 'bg-zinc-700/50   border-zinc-600/30   text-zinc-400',   border: 'border-zinc-700/50', dot: 'bg-zinc-500',   glow: false },
 }
 
 // ─── SmartScore Ring ──────────────────────────────────────────────────────────

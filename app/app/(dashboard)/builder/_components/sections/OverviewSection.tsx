@@ -117,7 +117,7 @@ export function OverviewSection() {
       <motion.div variants={stagger} initial="hidden" animate="show" className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {[
           { label: 'Total Leads',    value: String(stats.total),           sub: `${todayLeads.length} today`,     icon: <Users className="w-4 h-4" />,      accent: false },
-          { label: '🔥 Hot Leads',   value: String(stats.hot),             sub: breached.length > 0 ? `${breached.length} breached` : 'All on track', icon: <Activity className="w-4 h-4" />, accent: true  },
+          { label: '🦁 Lion Leads',   value: String(stats.hot),             sub: breached.length > 0 ? `${breached.length} breached` : 'All on track', icon: <Activity className="w-4 h-4" />, accent: true  },
           { label: 'Avg SmartScore', value: String(stats.avgScore),        sub: 'Live average',                   icon: <TrendingUp className="w-4 h-4" />, accent: false },
           { label: 'In Booking',     value: String(stats.inBooking),       sub: 'Tharaga AI active',               icon: <MessageSquare className="w-4 h-4" />, accent: false },
         ].map(m => (
@@ -179,7 +179,7 @@ export function OverviewSection() {
             {[...breached, ...urgent].length === 0 ? (
               <div className="flex flex-col items-center justify-center py-8 gap-2">
                 <div className="w-8 h-8 rounded-full bg-emerald-500/10 flex items-center justify-center"><Activity className="w-4 h-4 text-emerald-400" /></div>
-                <p className="text-xs text-zinc-500">All hot leads on track</p>
+                <p className="text-xs text-zinc-500">All Lion leads on track</p>
               </div>
             ) : (
               <div className="space-y-2">
@@ -265,7 +265,7 @@ export function OverviewSection() {
               </div>
               <div className="flex justify-between text-xs">
                 <div><div className="font-bold text-zinc-100">{todayLeads.length}</div><div className="text-zinc-600">New</div></div>
-                <div><div className="font-bold text-red-400">{todayLeads.filter(l => l.tier === 'HOT').length}</div><div className="text-zinc-600">Hot</div></div>
+                <div><div className="font-bold text-red-400">{todayLeads.filter(l => l.tier === 'HOT').length}</div><div className="text-zinc-600">Lion</div></div>
                 <div><div className="font-bold text-emerald-400">{stats.inBooking}</div><div className="text-zinc-600">Booking</div></div>
               </div>
             </div>

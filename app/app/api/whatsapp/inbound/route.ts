@@ -25,6 +25,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import Anthropic from '@anthropic-ai/sdk'
 import twilio from 'twilio'
+import { sendMetaConversionEvent } from '@/lib/meta-capi'
 
 export const runtime  = 'nodejs'
 export const dynamic  = 'force-dynamic'
@@ -232,7 +233,7 @@ export async function POST(request: NextRequest) {
     const phoneNorm = phone.replace(/\D/g, '')
     const { data: lead } = await supabase
       .from('leads')
-      .select('id, name, ai_stage, qualification_data, smartscore, builder_id')
+      .select('id, name, ai_stage, qualification_data, smartscore, builder_id, capi_synced')
       .or(`phone.eq.${phone},phone_normalized.eq.${phoneNorm}`)
       .order('created_at', { ascending: false })
       .limit(1)
@@ -296,6 +297,18 @@ export async function POST(request: NextRequest) {
     // ── Compute updated SmartScore ──────────────────────────────────────────
     const { score, breakdown } = computeSmartScore(updatedQD)
 
+    // ── Sync to Meta CAPI if HOT lead reaching Lion tier (USP 4) ────────────
+    let capiSynced = lead.capi_synced ?? false
+    if (!capiSynced && score >= 75) {
+      const isSynced = await sendMetaConversionEvent({
+        eventName: 'Lion_Lead_Qualified',
+        phone: phoneNorm,
+        firstName: lead.name || 'Unknown',
+        sourceUrl: 'whatsapp_automation'
+      })
+      if (isSynced) capiSynced = true
+    }
+
     // ── Update lead in Supabase (triggers Realtime to dashboard) ────────────
     await supabase.from('leads').update({
       ai_stage:           updatedQD.stage,
@@ -306,11 +319,12 @@ export async function POST(request: NextRequest) {
       purpose:            updatedQD.purpose   ?? null,
       preferred_location: updatedQD.location  ?? null,
       status:             updatedQD.stage === 'BOOKING' ? 'qualified' : lead.status,
-      // Set SLA deadline for HOT leads (score ≥ 70)
-      sla_deadline: score >= 70
-        ? new Date(Date.now() + 15 * 60 * 1000).toISOString()   // 15 min
+      capi_synced:        capiSynced,
+      // Set SLA deadline for HOT leads (score ≥ 75)
+      sla_deadline: score >= 75
+        ? new Date(Date.now() + 15 * 60 * 1000).toISOString()   // 15 min Lion
         : score >= 40
-        ? new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString()  // 2 hr
+        ? new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString()  // 2 hr Monkey
         : null,
     }).eq('id', lead.id)
 

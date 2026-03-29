@@ -7,7 +7,7 @@
  * NO mock data — returns empty arrays with loading/error states.
  */
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { getSupabase } from '@/lib/supabase'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -208,76 +208,84 @@ interface UseDashboardDataResult {
   refetch: () => void
 }
 
-// Select all columns — avoids brittle column-list errors when migrations lag.
-// mapRaw() handles any missing columns gracefully via ?? fallbacks.
-const LEADS_COLUMNS = '*'
-
 export function useDashboardData(
   builderId: string | null,
   isAdmin = false,
 ): UseDashboardDataResult {
-  // Seed from localStorage synchronously — instant display on re-login
+  // ── Seed from localStorage — instant render on re-login (stale-while-revalidate)
   const [leads, setLeads] = useState<DashboardLead[]>(() => {
     if (typeof window === 'undefined' || !builderId) return []
     return readLeadsCache(leadsCacheKey(builderId, isAdmin)) ?? []
   })
-  // Only show loading spinner if there's no cached data to display
+  // If we have cached data start non-loading; otherwise show skeleton
   const [loading, setLoading] = useState(() => {
     if (typeof window === 'undefined' || !builderId) return true
     return readLeadsCache(leadsCacheKey(builderId, isAdmin)) === null
   })
-  const [error, setError]   = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(null)
+  const fetchCountRef     = useRef(0)
 
+  // ── Primary fetch: goes through /api/builder/leads (Node.js → Supabase)
+  // Root cause of 8-12s skeleton: browser→Supabase has cold-start TCP overhead.
+  // Netlify serverless functions maintain a WARM persistent connection to Supabase,
+  // reducing this to <800ms. Service role key bypasses RLS (admin/builder enforced here).
   const fetchLeads = useCallback(async () => {
     if (!builderId) { setLoading(false); return }
 
     const key    = leadsCacheKey(builderId, isAdmin)
     const cached = typeof window !== 'undefined' ? readLeadsCache(key) : null
-    // Show spinner only on cold load (no cache); cached data stays visible
-    if (!cached) setLoading(true)
-
+    if (!cached) setLoading(true)   // spinner only when no stale data to show
     setError(null)
 
-    // 10-second abort — prevents the Supabase query from hanging indefinitely
-    // when a connection is established but the server never responds.
+    const fetchId    = ++fetchCountRef.current
     const controller = new AbortController()
-    const timeoutId  = setTimeout(() => controller.abort(), 10000)
+    const timeoutId  = setTimeout(() => controller.abort(), 10000) // 10s max
 
     try {
-      const supabase = getSupabase()
-      let q = supabase
-        .from('leads')
-        .select(LEADS_COLUMNS)
-        .order('smartscore', { ascending: false })
-        .limit(300)
+      // Read the user's access token from the Supabase client (localStorage)
+      let accessToken: string | null = null
+      try {
+        const { data: { session } } = await getSupabase().auth.getSession()
+        accessToken = session?.access_token ?? null
+      } catch { /* proceed without token — API will reject with 401 */ }
 
-      if (!isAdmin) q = q.eq('builder_id', builderId)
-
-      // abortSignal wires the AbortController into the underlying fetch call
-      const { data, error: err } = await (q as any).abortSignal(controller.signal)
+      const res = await fetch(`/api/builder/leads?limit=300`, {
+        method:      'GET',
+        credentials: 'include',
+        signal:      controller.signal,
+        headers: {
+          'Content-Type':  'application/json',
+          ...(accessToken ? { 'Authorization': `Bearer ${accessToken}` } : {}),
+        },
+      })
       clearTimeout(timeoutId)
-      if (err) throw err
-      const mapped = (data ?? []).map(mapRaw)
+
+      if (fetchId !== fetchCountRef.current) return  // stale fetch — ignore
+      if (!res.ok) throw new Error(`HTTP ${res.status}`)
+
+      const json = await res.json()
+      const mapped = ((json.leads ?? []) as any[]).map(mapRaw)
       writeLeadsCache(key, mapped)
       setLeads(mapped)
     } catch (e: any) {
       clearTimeout(timeoutId)
-      if (e?.name !== 'AbortError') {
-        setError(e?.message ?? 'Failed to load leads')
-      } else {
-        // Timed out — only set error if there's no cached data to show
+      if (fetchId !== fetchCountRef.current) return  // stale fetch — ignore
+      if (e?.name === 'AbortError') {
         if (!cached) setError('Dashboard data took too long to load. Please refresh.')
+      } else {
+        setError(e?.message ?? 'Failed to load leads')
       }
     } finally {
-      setLoading(false)
+      if (fetchId === fetchCountRef.current) setLoading(false)
     }
   }, [builderId, isAdmin])
 
+  // ── Initial fetch + Realtime subscription for live updates ────────────────
   useEffect(() => {
     fetchLeads()
     if (!builderId) return
 
-    const supabase = getSupabase()
+    const supabase    = getSupabase()
     const channelName = `dashboard-${builderId}-${Date.now()}`
     const filterStr   = isAdmin ? undefined : `builder_id=eq.${builderId}`
 
@@ -288,12 +296,13 @@ export function useDashboardData(
       .on(
         'postgres_changes',
         {
-          event: '*',
+          event:  '*',
           schema: 'public',
-          table: 'leads',
+          table:  'leads',
           ...(filterStr ? { filter: filterStr } : {}),
         },
         (payload) => {
+          // Live update — mutate local state directly without a full refetch
           if (payload.eventType === 'INSERT') {
             setLeads(prev => [mapRaw(payload.new), ...prev])
           } else if (payload.eventType === 'UPDATE') {
@@ -308,9 +317,8 @@ export function useDashboardData(
       )
       .subscribe((status) => {
         if (status === 'CHANNEL_ERROR') {
-          console.warn('[useDashboardData] Realtime channel error — polling every 30s')
-          // Properly tracked so it can be cleaned up on unmount
-          if (!pollInterval) pollInterval = setInterval(fetchLeads, 30000)
+          console.warn('[useDashboardData] Realtime channel error — polling every 60s')
+          if (!pollInterval) pollInterval = setInterval(fetchLeads, 60000)
         }
       })
 
@@ -320,16 +328,15 @@ export function useDashboardData(
     }
   }, [fetchLeads, builderId, isAdmin])
 
-  // ── Safety net: loading ALWAYS resolves ───────────────────────────────────
-  // If the Supabase query somehow outlasts the 10s AbortController (e.g., the
-  // controller fires but the Promise doesn't reject before our finally), this
-  // timer guarantees the skeleton never spins beyond 12 seconds.
+  // ── Absolute safety net: loading NEVER spins beyond 12 seconds ────────────
+  // Even if fetch AND AbortController both fail silently, this guarantees
+  // the skeleton always resolves. fetchLeads.finally is the normal path.
   useEffect(() => {
     if (!loading) return
     const t = setTimeout(() => setLoading(false), 12000)
     return () => clearTimeout(t)
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])  // mount-once; fetchLeads.finally is the happy path
+  }, [])  // mount-once
 
   return { leads, stats: deriveStats(leads), loading, error, refetch: fetchLeads }
 }

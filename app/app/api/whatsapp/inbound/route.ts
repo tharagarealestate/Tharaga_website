@@ -2,7 +2,7 @@
  * THARAGA AI — WhatsApp Inbound Message Handler
  * POST /api/whatsapp/inbound
  *
- * Twilio calls this when a lead sends a WhatsApp message.
+ * AiSensy calls this webhook when a lead sends a WhatsApp message.
  * Implements the 6-stage qualification engine:
  *   GREETING → QUALIFICATION → BUDGET_CHECK → TIMELINE_CHECK → OBJECTION_HANDLING → BOOKING
  *
@@ -13,18 +13,16 @@
  *   4. Updates lead record with new qualification data
  *   5. Advances to next stage if info collected
  *   6. Recomputes smartscore
- *   7. Sends AI-generated reply via Twilio
+ *   7. Sends AI-generated reply via AiSensy
  *   8. Supabase Realtime broadcasts update to builder dashboard
  *
  * Required env vars:
- *   TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_WHATSAPP_NUMBER
- *   ANTHROPIC_API_KEY
+ *   AISENSY_API_KEY, AISENSY_API_URL
  */
 
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import Anthropic from '@anthropic-ai/sdk'
-import twilio from 'twilio'
 import { sendMetaConversionEvent } from '@/lib/meta-capi'
 
 export const runtime  = 'nodejs'
@@ -188,40 +186,16 @@ Do not include markdown or explanation — only JSON.`
   return { reply, extracted: cleanExtracted as Partial<QualificationData>, advance }
 }
 
-// ─── Twilio response helper ───────────────────────────────────────────────────
-
-function twilioXmlReply(body: string): Response {
-  return new Response(
-    `<?xml version="1.0" encoding="UTF-8"?><Response><Message>${body.replace(/&/g,'&amp;').replace(/</g,'&lt;')}</Message></Response>`,
-    { headers: { 'Content-Type': 'text/xml' } }
-  )
-}
-
 // ─── Main handler ─────────────────────────────────────────────────────────────
 
 export async function POST(request: NextRequest) {
   try {
-    const rawBody = await request.text()
-    const params  = new URLSearchParams(rawBody)
+    const payload = await request.json()
+    const phone = (payload.senderNumber || payload.destination || payload.from || '').trim()
+    const body = (payload.text?.body || payload.message?.text || payload.text || '').trim()
 
-    // ── Verify Twilio signature ─────────────────────────────────────────────
-    const authToken = process.env.TWILIO_AUTH_TOKEN
-    if (authToken) {
-      const signature = request.headers.get('x-twilio-signature') ?? ''
-      const url       = `${process.env.NEXT_PUBLIC_SITE_URL ?? 'https://tharaga.co.in'}/api/whatsapp/inbound`
-      const valid     = twilio.validateRequest(authToken, signature, url, Object.fromEntries(params))
-      if (!valid) {
-        console.warn('[Tharaga AI] Invalid Twilio signature')
-        return new Response('Unauthorized', { status: 401 })
-      }
-    }
-
-    const fromRaw = params.get('From') ?? ''       // whatsapp:+91XXXXXXXXXX
-    const body    = (params.get('Body') ?? '').trim()
-
-    const phone = fromRaw.replace('whatsapp:', '').trim()
     if (!phone || !body) {
-      return twilioXmlReply('Sorry, I did not receive your message. Please try again.')
+      return NextResponse.json({ error: 'Missing message body or phone' })
     }
 
     const supabase = createClient(
@@ -262,7 +236,8 @@ export async function POST(request: NextRequest) {
           qualification_data: { stage: 'GREETING', ...greeting.extracted },
         }).eq('id', newLead.id)
       }
-      return twilioXmlReply(greeting.reply)
+      
+      return await sendWebhookReply(phone, greeting.reply)
     }
 
     // ── Determine current stage ─────────────────────────────────────────────
@@ -340,9 +315,30 @@ export async function POST(request: NextRequest) {
 
     console.log(`[Tharaga AI] lead=${lead.id} ${currentStage}→${updatedQD.stage} score=${score}`)
 
-    return twilioXmlReply(reply)
+    return await sendWebhookReply(phone, reply)
   } catch (err: any) {
     console.error('[Tharaga AI] Unhandled error:', err)
-    return twilioXmlReply('Hi! We are experiencing a brief technical issue. Our team will contact you shortly.')
+    return NextResponse.json({ success: false, error: 'Internal issue' })
   }
+}
+
+// Helper to send AiSensy outbound reply natively
+async function sendWebhookReply(phone: string, replyText: string) {
+  if (process.env.AISENSY_API_KEY && process.env.AISENSY_API_URL) {
+    try {
+      const cleanPhone = phone.replace('+', '').replace(/^9191/, '91');
+      await fetch(`${process.env.AISENSY_API_URL}/messages/sendText`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          apiKey: process.env.AISENSY_API_KEY,
+          to: cleanPhone,
+          text: replyText
+        })
+      });
+    } catch (e) {
+      console.error('[AiSensy Outbound] Error:', e)
+    }
+  }
+  return NextResponse.json({ success: true })
 }

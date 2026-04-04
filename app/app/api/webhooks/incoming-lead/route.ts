@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
-import twilio from 'twilio'
 
 export async function POST(req: NextRequest) {
   try {
@@ -47,17 +46,21 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: 500 })
     }
 
-    // 3. Trigger 8-second SLA initial WhatsApp Greeting (USP 1)
-    if (process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN && process.env.TWILIO_WHATSAPP_NUMBER) {
-      const twilioClient = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN)
-      
+    // 3. Trigger 8-second SLA initial WhatsApp Greeting via AiSensy (USP 1)
+    if (process.env.AISENSY_API_KEY && process.env.AISENSY_API_URL) {
       const greeting = `Hi ${name.split(' ')[0]}, thanks for your interest via ${source}! I'm Tharaga AI. To help you find the right property, which type interests you most — 2BHK, 3BHK, or a Villa? 🏡`
       
       try {
-        await twilioClient.messages.create({
-          body: greeting,
-          from: `whatsapp:${process.env.TWILIO_WHATSAPP_NUMBER}`,
-          to: `whatsapp:${normalizedPhone.startsWith('+') ? normalizedPhone : '+91' + normalizedPhone}`
+        const aisensyPhone = normalizedPhone.startsWith('+') ? normalizedPhone.replace('+', '') : ('91' + normalizedPhone).replace(/^9191/, '91')
+        
+        await fetch(`${process.env.AISENSY_API_URL}/messages/sendText`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            apiKey: process.env.AISENSY_API_KEY,
+            to: aisensyPhone,
+            text: greeting
+          })
         })
 
         // Log the outgoing bot message
@@ -70,8 +73,8 @@ export async function POST(req: NextRequest) {
           conversation_id: normalizedPhone,
           property_id: property_id || null,
         })
-      } catch (twError) {
-        console.error('[Incoming Lead] Twilio Error:', twError)
+      } catch (aiSensyError) {
+        console.error('[Incoming Lead] AiSensy Error:', aiSensyError)
         // Non-fatal, lead is still captured
       }
     }

@@ -59,7 +59,10 @@
       "Bash(dir:*)",
       "Bash(psql:*)",
       "mcp__supabase__list_tables",
-      "Bash(node -e \":*)"
+      "Bash(node -e \":*)",
+      "mcp__supabase__apply_migration",
+      "mcp__supabase__execute_sql",
+      "Bash(supabase db:*)"
     ],
     "deny": [],
     "ask": []

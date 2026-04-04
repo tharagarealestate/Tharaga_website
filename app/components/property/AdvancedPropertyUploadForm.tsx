@@ -163,6 +163,7 @@ interface PropertyUploadFormData {
     security_features?: string[];
     green_features?: string[];
     vastu_compliant?: boolean;
+    builder_website_url?: string;
   };
   
   // Admin fields
@@ -257,7 +258,9 @@ export function AdvancedPropertyUploadForm({
     oc_certificate: '',
     cc_certificate: '',
     approved_plan_url: '',
-    property_metadata: {},
+    property_metadata: {
+      builder_website_url: ''
+    },
     uploaded_for_builder_id: builderId,
     upload_source: builderId ? 'admin_on_behalf' : 'builder_direct',
   });
@@ -1902,6 +1905,28 @@ export function AdvancedPropertyUploadForm({
                     <label htmlFor="vastu_compliant" className="text-sm font-medium text-slate-300">
                       Vastu Compliant
                     </label>
+                  </div>
+
+                  <div className="pt-4 border-t border-slate-700/50">
+                    <label className="block text-sm font-medium mb-2 text-slate-300">
+                      Builder Website / Landing Page URL
+                    </label>
+                    <p className="text-xs text-slate-500 mb-3">Provide your website link so our team can configure the webhook automation to fetch your incoming leads directly to the Tharaga AI engine.</p>
+                    <input
+                      type="url"
+                      value={formData.property_metadata?.builder_website_url || ''}
+                      onChange={(e) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          property_metadata: {
+                            ...prev.property_metadata,
+                            builder_website_url: e.target.value
+                          },
+                        }))
+                      }
+                      className="w-full px-4 py-2.5 bg-slate-700/50 border border-slate-600/50 rounded-lg text-white placeholder-slate-400 focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500/50 transition-all"
+                      placeholder="e.g. https://builder-site.com/project"
+                    />
                   </div>
                 </div>
               </div>

@@ -6,7 +6,11 @@ from typing import List, Dict, Any, Optional
 from datetime import datetime
 import os
 import logging
+import anthropic
 from supabase import create_client
+
+ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY")
+CLAUDE_MODEL = "claude-3-5-sonnet-20241022"
 
 logger = logging.getLogger(__name__)
 
@@ -194,33 +198,68 @@ class SmartDistributionEngine:
         match_factors: Dict
     ) -> Dict[str, str]:
         """
-        Generate AI-powered personalized message
-        Uses local Ollama for cost-free generation (can be enhanced later)
+        Generate AI-powered personalized message using Claude API
         """
-        
+
         # Build context from match factors
         top_factors = sorted(
             match_factors.items(),
             key=lambda x: x[1] if isinstance(x[1], (int, float)) else 0,
             reverse=True
         )[:3]
-        
+
         factor_highlights = ", ".join([
             f"{factor.replace('_', ' ').title()}: {score:.0f}%"
             for factor, score in top_factors
             if isinstance(score, (int, float))
         ])
-        
-        # Simple template-based generation (can be enhanced with Ollama)
-        subject = f"🏠 Perfect Match Alert: {listing.get('title', 'New Property')} - {match_score:.0f}% Match!"
-        
+
         price = listing.get('price') or listing.get('price_inr') or 0
         price_str = f"₹{price:,.0f}" if price > 0 else "Price on request"
-        
         bedrooms = listing.get('bedrooms') or 0
         area = listing.get('sqft') or listing.get('area') or 'N/A'
         location = listing.get('location') or listing.get('locality') or listing.get('city') or 'Location'
-        
+
+        if ANTHROPIC_API_KEY:
+            try:
+                prompt = f"""Write a personalized property match email for an Indian real estate platform called Tharaga.
+
+Buyer context: matched at {match_score:.0f}% compatibility. Top match reasons: {factor_highlights}
+
+Property details:
+- Title: {listing.get('title', 'New Property')}
+- Type: {bedrooms}BHK
+- Location: {location}
+- Price: {price_str}
+- Area: {area} sq.ft
+- Description: {listing.get('description', '')[:300]}
+- Link: https://tharaga.co.in/properties/{listing.get('id')}
+
+Write a warm, concise email (subject line + body). Format exactly as:
+SUBJECT: <subject line>
+BODY: <email body>
+
+Use Indian English. Be personal and highlight why this property matches the buyer."""
+
+                client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
+                response = client.messages.create(
+                    model=CLAUDE_MODEL,
+                    max_tokens=500,
+                    messages=[{"role": "user", "content": prompt}]
+                )
+                text = response.content[0].text
+                subject_line = ""
+                body_text = text
+                if "SUBJECT:" in text and "BODY:" in text:
+                    parts = text.split("BODY:", 1)
+                    subject_line = parts[0].replace("SUBJECT:", "").strip()
+                    body_text = parts[1].strip()
+                return {"subject": subject_line, "body": body_text}
+            except Exception as e:
+                logger.warning(f"Claude API call failed, using template: {str(e)}")
+
+        # Fallback template
+        subject = f"🏠 Perfect Match Alert: {listing.get('title', 'New Property')} - {match_score:.0f}% Match!"
         body = f"""Hi there!
 
 We found a property that matches your preferences with a {match_score:.0f}% compatibility score!
@@ -236,12 +275,9 @@ We found a property that matches your preferences with a {match_score:.0f}% comp
 
 View full details and schedule a visit: https://tharaga.co.in/properties/{listing.get('id')}
 
-This is an exclusive match based on your search history and preferences.
-
 Best regards,
 Tharaga Team
 """
-        
         return {"subject": subject, "body": body}
     
     async def _send_email(self, email: str, content: Dict, listing: Dict):

@@ -7,7 +7,7 @@ import re
 import asyncio
 from typing import Dict, Any, List, Optional
 from datetime import datetime, timedelta
-import httpx
+import anthropic
 from supabase import create_client, Client
 import logging
 from collections import defaultdict
@@ -33,9 +33,9 @@ def get_supabase_client() -> Client:
         _supabase_client = create_client(SUPABASE_URL, SUPABASE_SERVICE_KEY)
     return _supabase_client
 
-# AI Models
-OLLAMA_URL = os.getenv("OLLAMA_URL", "http://localhost:11434")
-OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "llama3.1:8b")
+# AI Configuration
+ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY")
+CLAUDE_MODEL = "claude-3-5-sonnet-20241022"
 
 # Optimization thresholds
 THRESHOLDS = {
@@ -577,7 +577,7 @@ Generate:"""
                 "estimated_view_increase_pct": 150,
                 "estimated_lead_increase_pct": 200,
                 "expected_timeframe_days": 14,
-                "ai_model_used": OLLAMA_MODEL,
+                "ai_model_used": CLAUDE_MODEL,
                 "confidence_score": 85,
                 "status": "pending"
             })
@@ -743,29 +743,24 @@ Generate:"""
         max_tokens: int = 300,
         temperature: float = 0.7
     ) -> str:
-        """Call LLM for content generation"""
-        
+        """Call Claude API for content generation"""
+
+        if not ANTHROPIC_API_KEY:
+            logger.warning("ANTHROPIC_API_KEY not set")
+            return "AI service unavailable"
+
         try:
-            async with httpx.AsyncClient(timeout=60.0) as client:
-                response = await client.post(
-                    f"{OLLAMA_URL}/api/generate",
-                    json={
-                        "model": OLLAMA_MODEL,
-                        "prompt": prompt,
-                        "stream": False,
-                        "options": {
-                            "temperature": temperature,
-                            "num_predict": max_tokens
-                        }
-                    }
-                )
-                
-                if response.status_code == 200:
-                    result = response.json()
-                    return result.get("response", "AI service unavailable")
+            client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
+            response = client.messages.create(
+                model=CLAUDE_MODEL,
+                max_tokens=max_tokens,
+                temperature=temperature,
+                messages=[{"role": "user", "content": prompt}]
+            )
+            return response.content[0].text
         except Exception as e:
-            logger.warning(f"LLM call failed: {str(e)}")
-        
+            logger.warning(f"Claude API call failed: {str(e)}")
+
         return "AI service unavailable"
     
     def _calculate_total_impact(self, suggestions: List[Dict]) -> Dict[str, Any]:

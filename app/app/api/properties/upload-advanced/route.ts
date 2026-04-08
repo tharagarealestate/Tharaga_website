@@ -10,6 +10,7 @@ import { Permissions } from '@/lib/security/permissions';
 import { AuditActions, AuditResourceTypes } from '@/lib/security/audit';
 import { z } from 'zod';
 import { createClient } from '@supabase/supabase-js';
+import { Resend } from 'resend';
 
 export const runtime = 'nodejs';
 export const maxDuration = 120; // 2 minutes for advanced upload
@@ -426,6 +427,36 @@ export const POST = secureApiRoute(
       }).catch(e => console.error('[Property Upload] auto-trigger failed (non-critical):', e)),
     ]).catch(() => {})
     
+    // Auto-dispatch builder webhook configuration instructions via Email
+    if (propertyData.property_metadata?.builder_website_url && process.env.RESEND_API_KEY && user.email) {
+      try {
+        const resend = new Resend(process.env.RESEND_API_KEY);
+        const webhookUrl = `${process.env.NEXT_PUBLIC_SITE_URL || 'https://tharaga.co.in'}/api/webhooks/incoming-lead?builder_id=${targetBuilderId}&property_id=${property.id}`;
+        
+        await resend.emails.send({
+          from: 'Tharaga Automations <hello@tharaga.co.in>',
+          to: user.email,
+          subject: `Automate your Leads for: ${property.title}`,
+          html: `
+            <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+              <h2 style="color: #333;">Configure your WordPress Webhook</h2>
+              <p>You recently uploaded <strong>${property.title}</strong> and provided your website: <a href="${propertyData.property_metadata.builder_website_url}">${propertyData.property_metadata.builder_website_url}</a>.</p>
+              <p>To fully automate your lead generation directly into Tharaga's AI Engine, please copy the Webhook URL below and paste it into your WordPress form's settings (like WPForms, Contact Form 7, or Elementor Pro):</p>
+              
+              <div style="background:#f4f5f7; padding:16px; border-radius:8px; word-break:break-all; font-family:monospace; margin: 24px 0; border: 1px solid #e2e8f0; color: #0f172a;">
+                 ${webhookUrl}
+              </div>
+              
+              <p style="color: #475569; font-size: 14px;">Once set up, all incoming leads from your website will instantly trigger our 8-second WhatsApp qualification system without any manual intervention.</p>
+            </div>
+          `
+        });
+        console.log(`[Webhook Email] Successfully dispatched to ${user.email} for property ${property.id}`);
+      } catch (err) {
+        console.error('[Resend Email Error] Failed to send webhook config:', err);
+      }
+    }
+
     return NextResponse.json({
       success: true,
       message: isAdmin 

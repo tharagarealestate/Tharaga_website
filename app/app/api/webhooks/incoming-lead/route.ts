@@ -87,13 +87,20 @@ export async function POST(req: NextRequest) {
       try {
         const aisensyPhone = normalizedPhone.startsWith('+') ? normalizedPhone.replace('+', '') : ('91' + normalizedPhone).replace(/^9191/, '91')
         
-        await fetch(`${process.env.AISENSY_API_URL}/messages/sendText`, {
+        // We MUST use the campaigns API for the first text because of WhatsApp's 24-hour Meta rules.
+        // It's impossible to send raw text if the user hasn't explicitly messaged us in the last 24h.
+        const campaignName = process.env.AISENSY_GREETING_CAMPAIGN || 'property_greeting'
+        
+        await fetch(`${process.env.AISENSY_API_URL}/campaigns/send`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             apiKey: process.env.AISENSY_API_KEY,
-            to: aisensyPhone,
-            text: greeting
+            campaignName: campaignName,
+            destination: aisensyPhone,
+            userName: name.split(' ')[0] || 'Sir/Madam',
+            templateParams: [name.split(' ')[0] || 'Sir/Madam', source],
+            source: 'new-lead-webhook'
           })
         })
 

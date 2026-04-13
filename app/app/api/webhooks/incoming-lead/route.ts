@@ -33,19 +33,20 @@ export async function POST(req: NextRequest) {
 
     // 1.5. Check for message deduplication
     if (messageId) {
+      const safeMessageId = String(messageId)
       const { data: existingLead } = await supabase
         .from('leads')
         .select('id')
-        .eq('external_message_id', messageId)
+        .eq('external_message_id', safeMessageId)
         .maybeSingle()
 
       if (existingLead) {
-        console.log(`[Incoming Lead] Skipping duplicate messageId: ${messageId}`)
+        console.log(`[Incoming Lead] Skipping duplicate messageId: ${safeMessageId}`)
         return NextResponse.json({ success: true, lead_id: existingLead.id, status: 'duplicate_skipped' })
       }
     }
 
-    const normalizedPhone = phone ? phone.replace(/[^\d+]/g, '') : null
+    const normalizedPhone = phone ? String(phone).replace(/[^\d+]/g, '') : null
 
     // 2. Insert into leads table
     const { data: lead, error } = await supabase
@@ -58,7 +59,7 @@ export async function POST(req: NextRequest) {
         source,
         property_id,
         builder_id,
-        external_message_id: messageId || null,
+        external_message_id: messageId ? String(messageId) : null,
         property_inquiry: property || null,
         email_metadata: {
           subject,

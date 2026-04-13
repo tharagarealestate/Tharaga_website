@@ -191,8 +191,8 @@ Do not include markdown or explanation — only JSON.`
 export async function POST(request: NextRequest) {
   try {
     const payload = await request.json()
-    const phone = (payload.senderNumber || payload.destination || payload.from || '').trim()
-    const body = (payload.text?.body || payload.message?.text || payload.text || '').trim()
+    const phone = String(payload.senderNumber || payload.destination || payload.from || '').trim()
+    const body = String(payload.text?.body || payload.message?.text || payload.text || '').trim()
 
     if (!phone || !body) {
       return NextResponse.json({ error: 'Missing message body or phone' })
@@ -207,7 +207,7 @@ export async function POST(request: NextRequest) {
     const phoneNorm = phone.replace(/\D/g, '')
     const { data: lead } = await supabase
       .from('leads')
-      .select('id, name, ai_stage, qualification_data, smartscore, builder_id, capi_synced')
+      .select('id, name, ai_stage, qualification_data, smartscore, builder_id, capi_synced, budget, status')
       .or(`phone.eq.${phone},phone_normalized.eq.${phoneNorm}`)
       .order('created_at', { ascending: false })
       .limit(1)

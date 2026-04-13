@@ -31,17 +31,23 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Phone number or Email is required' }, { status: 400 })
     }
 
-    // 1.5. Check for message deduplication
-    if (messageId) {
-      const safeMessageId = String(messageId)
-      const { data: existingLead } = await supabase
-        .from('leads')
-        .select('id')
-        .eq('external_message_id', safeMessageId)
-        .maybeSingle()
+    // 1.5. Clean phone and create BigInt version for DB compatibility
+    const phoneString = phone ? String(phone).replace(/\D/g, '') : null;
+    const numericPhone = phoneString ? BigInt(phoneString).toString() : null; // Safe Postgres representation
+    
+    // Check for message deduplication instantly using phone_number (bigint) OR external_message_id
+    if (messageId || numericPhone) {
+      let query = supabase.from('leads').select('id')
+      if (messageId) {
+        query = query.eq('external_message_id', String(messageId))
+      } else if (numericPhone) {
+        query = query.eq('phone_number', numericPhone) // Matches backend bigint column format
+      }
+      
+      const { data: existingLead } = await query.maybeSingle()
 
       if (existingLead) {
-        console.log(`[Incoming Lead] Skipping duplicate messageId: ${safeMessageId}`)
+        console.log(`[Incoming Lead] Skipping duplicate check matched lead_id: ${existingLead.id}`)
         return NextResponse.json({ success: true, lead_id: existingLead.id, status: 'duplicate_skipped' })
       }
     }
@@ -54,6 +60,7 @@ export async function POST(req: NextRequest) {
       .insert({
         name: name || 'Unknown',
         email,
+        phone_number: numericPhone ? Number(numericPhone) : null, // Mapped accurately for DB
         phone: normalizedPhone,
         phone_normalized: normalizedPhone,
         source,

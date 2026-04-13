@@ -6,6 +6,7 @@
 [build.environment]
   NODE_VERSION = "20"
   NPM_FLAGS = "--legacy-peer-deps"
+  NODE_OPTIONS = "--max_old_space_size=4096"
   # RERA Verification System - Set these in Netlify Dashboard for production
   # USE_SYNTHETIC_RERA=false
   # RERA_PARTNER_API_URL=https://wedevtjjmdvngyshqdro.supabase.co/functions/v1/rera-partner

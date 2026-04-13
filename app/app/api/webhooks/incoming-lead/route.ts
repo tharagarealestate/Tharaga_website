@@ -1,10 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { getAdminClient } from '@/lib/supabase/admin'
 
 export async function POST(req: NextRequest) {
   try {
     const payload = await req.json()
-    const supabase = await createClient()
+    // This is a server-side webhook (called by Apps Script, Meta, etc.) — no user session.
+    // Service role client bypasses RLS so inserts/selects work regardless of auth state.
+    const supabase = getAdminClient()
 
     // 1. Standardize incoming payload from various sources (Meta, 99Acres, Web, Apps Script)
     const {

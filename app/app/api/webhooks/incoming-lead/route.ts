@@ -6,21 +6,44 @@ export async function POST(req: NextRequest) {
     const payload = await req.json()
     const supabase = await createClient()
 
-    // 1. Standardize incoming payload from various sources (Meta, 99Acres, Web)
+    // 1. Standardize incoming payload from various sources (Meta, 99Acres, Web, Apps Script)
     const {
       name,
       email,
       phone,
       source = 'Website Form',
       property_id,
-      builder_id
+      builder_id,
+      
+      // Email parsing specifics (Google Apps Script properties)
+      property,
+      subject,
+      sender,
+      messageId,
+      threadId,
+      receivedAt,
+      rawText
     } = payload
 
-    if (!phone) {
-      return NextResponse.json({ error: 'Phone number is required' }, { status: 400 })
+    if (!phone && !email) {
+      return NextResponse.json({ error: 'Phone number or Email is required' }, { status: 400 })
     }
 
-    const normalizedPhone = phone.replace(/[^\d+]/g, '')
+    // 1.5. Check for message deduplication
+    if (messageId) {
+      const { data: existingLead } = await supabase
+        .from('leads')
+        .select('id')
+        .eq('external_message_id', messageId)
+        .maybeSingle()
+
+      if (existingLead) {
+        console.log(`[Incoming Lead] Skipping duplicate messageId: ${messageId}`)
+        return NextResponse.json({ success: true, lead_id: existingLead.id, status: 'duplicate_skipped' })
+      }
+    }
+
+    const normalizedPhone = phone ? phone.replace(/[^\d+]/g, '') : null
 
     // 2. Insert into leads table
     const { data: lead, error } = await supabase
@@ -33,6 +56,15 @@ export async function POST(req: NextRequest) {
         source,
         property_id,
         builder_id,
+        external_message_id: messageId || null,
+        property_inquiry: property || null,
+        email_metadata: {
+          subject,
+          sender,
+          threadId,
+          receivedAt,
+          rawText: rawText ? rawText.substring(0, 500) : null // cap length to prevent bloat
+        },
         status: 'new',
         smartscore: 10, // Initial base score
         ai_stage: 'GREETING',
@@ -47,7 +79,7 @@ export async function POST(req: NextRequest) {
     }
 
     // 3. Trigger 8-second SLA initial WhatsApp Greeting via AiSensy (USP 1)
-    if (process.env.AISENSY_API_KEY && process.env.AISENSY_API_URL) {
+    if (process.env.AISENSY_API_KEY && process.env.AISENSY_API_URL && normalizedPhone) {
       const greeting = `Hi ${name.split(' ')[0]}, thanks for your interest via ${source}! I'm Tharaga AI. To help you find the right property, which type interests you most — 2BHK, 3BHK, or a Villa? 🏡`
       
       try {

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback, Suspense } from 'react'
+import { useState, useEffect, useCallback, Suspense, useRef } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import dynamic from 'next/dynamic'
 import { useBuilderAuth } from './_components/BuilderAuthProvider'
@@ -69,6 +69,14 @@ function BuilderDashboardInner() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const { isAuthenticated } = useBuilderAuth()
+  const [chunkTimeout, setChunkTimeout] = useState(false)
+
+  // Hard 10s timeout — if the dynamic chunk never resolves (CDN stall, import
+  // error, missing export), show the error UI instead of spinning forever.
+  useEffect(() => {
+    const t = setTimeout(() => setChunkTimeout(true), 10000)
+    return () => clearTimeout(t)
+  }, [])
 
   // Derive activeSection from URL search params
   const sectionFromUrl = searchParams.get('section') || 'overview'
@@ -101,9 +109,11 @@ function BuilderDashboardInner() {
     [router]
   )
 
-  // Safety: if somehow mounted while unauthenticated (shouldn't happen — layout gate
-  // prevents it) just render nothing rather than redirecting.
+  // Safety: if somehow mounted while unauthenticated — render nothing.
   if (!isAuthenticated) return null
+
+  // If the dashboard chunk never loaded after 10 seconds, show error UI
+  if (chunkTimeout) return <DashboardLoadError />
 
   return (
     <UnifiedSinglePageDashboard

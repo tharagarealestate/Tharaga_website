@@ -10,6 +10,7 @@ import {
 } from 'lucide-react'
 import { openAuthModal } from '@/components/ui/AuthButton'
 import { getSupabase } from '@/lib/supabase'
+import { Header } from '@/components/layout/Header'
 
 // ── Neural Background ─────────────────────────────────────────────────────────
 function NeuralBg() {
@@ -146,6 +147,7 @@ export default function PricingPage() {
 
   return (
     <div className="relative min-h-screen bg-zinc-950 text-zinc-100">
+      <Header />
       <NeuralBg />
 
       <div className="max-w-4xl mx-auto px-4 sm:px-6 pt-24 pb-20">

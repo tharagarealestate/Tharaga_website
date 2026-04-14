@@ -265,13 +265,16 @@ export function BuilderAuthProvider({ children }: { children: ReactNode }) {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (!mountedRef.current) return
 
-      // User signed out — clear everything and show login modal
+      // User signed out — clear everything and show login modal.
+      // resolvedRef MUST be false so the next SIGNED_IN event (account switch)
+      // allows resolveAuth() to run — previously true here caused infinite spinner
+      // when switching Google accounts.
       if (event === 'SIGNED_OUT') {
         setBuilderId(null)
         setUserId(null)
         setUserEmail('')
         setBuilderProfile(null)
-        resolvedRef.current = true
+        resolvedRef.current = false   // ← critical: allow next SIGNED_IN to re-auth
         statusRef.current = 'unauthenticated'
         setStatus('unauthenticated')
         return

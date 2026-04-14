@@ -13,7 +13,8 @@ export default function BuilderDashboardLayout({ children }: { children: ReactNo
 
           {/* Main content — offset by sidebar width on desktop */}
           <main className="lg:ml-[256px] min-h-screen transition-[margin] duration-200">
-            <div className="w-full px-4 sm:px-6 lg:px-8 xl:px-10 py-6 sm:py-8">
+            {/* pt-16 on mobile offsets the fixed hamburger button at top-left */}
+            <div className="w-full px-4 sm:px-6 lg:px-8 xl:px-10 pt-16 pb-6 lg:pt-6 sm:pb-8">
               {children}
             </div>
           </main>

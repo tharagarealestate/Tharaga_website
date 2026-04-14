@@ -6,10 +6,11 @@ function json(body, code = 200) {
 
 exports.handler = async () => {
   try {
-    const url = process.env.SUPABASE_URL
-    const key = process.env.SUPABASE_SERVICE_ROLE_KEY
+    // Support both naming conventions used across Netlify + Next.js env configs
+    const url = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL
+    const key = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_ROLE
     if (!url || !key) {
-      console.warn('[properties-list] Missing env SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY')
+      console.warn('[properties-list] Missing Supabase env vars — checked SUPABASE_URL, NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, SUPABASE_SERVICE_ROLE')
       return json({ error: 'Supabase env missing', items: [] }, 200)
     }
     const supabase = createClient(url, key)

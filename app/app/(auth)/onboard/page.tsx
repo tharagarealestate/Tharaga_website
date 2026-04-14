@@ -10,7 +10,7 @@
 import { useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Building2, Shield, Home, Users, Sparkles, ArrowRight, ArrowLeft, Check, Loader2 } from 'lucide-react';
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+import { getSupabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 
@@ -61,7 +61,7 @@ export default function OnboardPage() {
   });
 
   const router = useRouter();
-  const supabase = createClientComponentClient();
+  const supabase = getSupabase();
 
   const updateField = useCallback((field: keyof FormData, value: string | boolean) => {
     setFormData((prev) => ({ ...prev, [field]: value }));

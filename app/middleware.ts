@@ -23,7 +23,7 @@ const PUBLIC_ROUTES = [
   '/auth/callback',
   '/login',
   '/signup',
-  '/properties',
+  '/property-listing',
   '/pricing',
   '/about',
   '/contact',

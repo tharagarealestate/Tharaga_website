@@ -70,18 +70,21 @@ export function useBuilderAuth(): BuilderAuthContextType {
 
 function UnauthenticatedView() {
   useEffect(() => {
-    // Short delay so any in-flight auth state has time to resolve before we open
-    // the modal. The primary auth path (getSession on mount) sets status to
-    // 'unauthenticated' only when it is CERTAIN there is no session. This 400ms
-    // delay is just belt-and-suspenders for edge cases.
     const t = setTimeout(() => openAuthModal('/builder'), 400)
     return () => clearTimeout(t)
   }, [])
 
   return (
-    <div className="fixed inset-0 bg-zinc-950 z-40">
+    <div className="fixed inset-0 bg-zinc-950 z-40 flex items-end justify-center pb-10">
       <div className="pointer-events-none absolute -top-40 -left-40 w-[600px] h-[600px] rounded-full bg-amber-500/8 blur-[140px]" />
       <div className="pointer-events-none absolute -bottom-40 -right-40 w-[600px] h-[600px] rounded-full bg-amber-600/6 blur-[140px]" />
+      {/* Escape hatch — visible if user closes the auth modal */}
+      <a
+        href="/"
+        className="relative z-10 text-sm text-zinc-500 hover:text-zinc-300 underline underline-offset-4 transition-colors"
+      >
+        ← Back to Home
+      </a>
     </div>
   )
 }
@@ -222,6 +225,17 @@ export function BuilderAuthProvider({ children }: { children: ReactNode }) {
     // This is the ONLY trigger for initial auth on page load.
     // After OAuth redirect, the session is ALREADY in localStorage (written by
     // /auth/callback before redirecting here), so this always succeeds immediately.
+    // Hard 8s safety timer — if auth hasn't resolved by then, show login modal
+    // rather than spinning forever. Covers edge cases where getSession() stalls
+    // or resolveAuth DB queries never return.
+    const safetyTimer = setTimeout(() => {
+      if (!mountedRef.current || resolvedRef.current) return
+      console.warn('[BuilderAuth] Safety timeout fired — forcing unauthenticated')
+      statusRef.current = 'unauthenticated'
+      setStatus('unauthenticated')
+      resolvedRef.current = true
+    }, 8000)
+
     const initAuth = async () => {
       try {
         const { data: { session } } = await supabase.auth.getSession()
@@ -284,6 +298,7 @@ export function BuilderAuthProvider({ children }: { children: ReactNode }) {
 
     return () => {
       mountedRef.current = false
+      clearTimeout(safetyTimer)
       subscription.unsubscribe()
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps

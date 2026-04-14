@@ -310,4 +310,37 @@
   status = 200
   force = true
 
+# ── Builder dashboard sub-route redirects ──────────────────────────────────────
+# Dashboard is a single-page app using ?section= params, not sub-routes.
+# Redirect direct URL navigation / bookmarks to correct section param.
+[[redirects]]
+  from = "/builder/properties"
+  to = "/builder?section=properties"
+  status = 302
+
+[[redirects]]
+  from = "/builder/leads"
+  to = "/builder?section=leads"
+  status = 302
+
+[[redirects]]
+  from = "/builder/analytics"
+  to = "/builder?section=analytics"
+  status = 302
+
+[[redirects]]
+  from = "/builder/billing"
+  to = "/builder?section=billing"
+  status = 302
+
+[[redirects]]
+  from = "/builder/settings"
+  to = "/builder?section=settings"
+  status = 302
+
+[[redirects]]
+  from = "/builder/team"
+  to = "/builder?section=team"
+  status = 302
+
 

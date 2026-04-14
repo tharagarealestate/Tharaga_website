@@ -22,11 +22,33 @@ import { useBuilderAuth } from './_components/BuilderAuthProvider'
 // Dynamic import — defers the heavy dashboard bundle until after auth resolves.
 // This is the primary fix for the "initial load lag": auth check is fast (< 1s),
 // then the dashboard JS chunk streams in in the background.
+function DashboardLoadError() {
+  return (
+    <div className="flex items-center justify-center min-h-[60vh]">
+      <div className="flex flex-col items-center gap-4 text-center px-6">
+        <div className="w-10 h-10 rounded-full bg-red-500/10 border border-red-500/20 flex items-center justify-center">
+          <span className="text-red-400 text-lg font-bold">!</span>
+        </div>
+        <p className="text-zinc-400 text-sm">Dashboard failed to load.</p>
+        <button
+          onClick={() => window.location.reload()}
+          className="px-4 py-2 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-400 text-sm hover:bg-amber-500/20 transition-colors"
+        >
+          Refresh page
+        </button>
+      </div>
+    </div>
+  )
+}
+
 const UnifiedSinglePageDashboard = dynamic(
   () =>
-    import('./_components/UnifiedSinglePageDashboard').then(
-      (m) => ({ default: m.UnifiedSinglePageDashboard })
-    ),
+    import('./_components/UnifiedSinglePageDashboard')
+      .then((m) => ({ default: m.UnifiedSinglePageDashboard }))
+      .catch((err) => {
+        console.error('[Dashboard] Failed to load dashboard chunk:', err)
+        return { default: DashboardLoadError }
+      }),
   {
     ssr: false,
     loading: () => (

@@ -138,7 +138,8 @@ export default function PricingPage() {
     })
     return () => subscription.unsubscribe()
   }, [])
-  const countdownTarget = new Date(Date.now() + 48 * 60 * 60 * 1000)
+  // Fixed deadline — do NOT use Date.now() + offset (resets every page load)
+  const countdownTarget = new Date('2026-05-15T23:59:59+05:30')
 
   const price     = billing === 'monthly' ? 4999 : 4166
   const subLabel  = billing === 'yearly'  ? '/mo · billed ₹49,999/yr' : '/month'

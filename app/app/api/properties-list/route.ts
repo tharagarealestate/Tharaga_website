@@ -59,7 +59,9 @@ export async function GET(req: NextRequest) {
         `,
         { count: 'exact' }
       )
-      .eq('listing_status', 'active')
+      // Accept both listing_status='active' and status='active' — two columns exist
+      // from different upload flows; treat either as publicly visible
+      .or('listing_status.eq.active,status.eq.active')
 
     // Text search
     if (q) {

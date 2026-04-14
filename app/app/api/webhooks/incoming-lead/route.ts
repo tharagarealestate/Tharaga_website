@@ -31,9 +31,9 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Phone number or Email is required' }, { status: 400 })
     }
 
-    // 1.5. Clean phone and create BigInt version for DB compatibility
+    // 1.5. Clean phone to ensure compatibility with text schema
     const phoneString = phone ? String(phone).replace(/\D/g, '') : null;
-    const numericPhone = phoneString ? BigInt(phoneString).toString() : null; // Safe Postgres representation
+    const numericPhone = phoneString; // Keep strictly as string for Postgres text columns
     
     // Check for message deduplication instantly using phone_number (bigint) OR external_message_id
     if (messageId || numericPhone) {
@@ -60,7 +60,7 @@ export async function POST(req: NextRequest) {
       .insert({
         name: name || 'Unknown',
         email,
-        phone_number: numericPhone ? Number(numericPhone) : null, // Mapped accurately for DB
+        phone_number: phoneString, // Insert strictly as text
         phone: normalizedPhone,
         phone_normalized: normalizedPhone,
         source,

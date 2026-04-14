@@ -4,7 +4,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { getAdminClient } from '@/lib/supabase/admin'
 import { anthropicClient } from '@/lib/ai/anthropic'
 
 export async function POST(req: NextRequest) {
@@ -21,7 +21,8 @@ export async function POST(req: NextRequest) {
     // Extract phone number (remove whatsapp: prefix)
     const phone = from.replace('whatsapp:', '').replace('+91', '')
 
-    const supabase = await createClient()
+    // Incoming Twilio webhook — no user session. Service role required.
+    const supabase = getAdminClient()
 
     // Get conversation context
     const { data: conversation } = await supabase

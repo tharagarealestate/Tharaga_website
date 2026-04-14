@@ -28,14 +28,16 @@ export async function GET(req: NextRequest) {
       } catch {}
     }
 
-    const { data: sub } = await svc.from('builder_subscriptions').select('tier, status, trial_started_at, trial_expires_at').eq('builder_id', user.id).maybeSingle()
+    // Column is trial_ends_at (NOT trial_expires_at — that column doesn't exist)
+    const { data: sub } = await svc.from('builder_subscriptions').select('tier, status, trial_started_at, trial_ends_at').eq('builder_id', user.id).maybeSingle()
 
     let days_remaining = 14
     let is_trial_expired = false
-    if (sub?.trial_expires_at) {
-      const exp = new Date(sub.trial_expires_at).getTime()
+    const trial_expiry = sub?.trial_ends_at
+    if (trial_expiry) {
+      const exp = new Date(trial_expiry).getTime()
       days_remaining = Math.max(0, Math.ceil((exp - Date.now()) / 86400000))
-      is_trial_expired = days_remaining === 0 && (sub?.tier === 'trial' || !sub?.tier)
+      is_trial_expired = days_remaining === 0 && (!sub?.tier || sub.tier === 'trial')
     }
 
     let trial_leads_used = 0

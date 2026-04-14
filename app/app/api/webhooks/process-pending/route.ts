@@ -11,13 +11,14 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { getAdminClient } from '@/lib/supabase/admin'
 
 export const maxDuration = 300 // 5 minutes
 
 export async function POST(req: NextRequest) {
   try {
-    const supabase = await createClient()
+    // Internal cron/background process — no user session. Service role required.
+    const supabase = getAdminClient()
     
     // Verify authentication (internal API key or cron secret)
     const authHeader = req.headers.get('Authorization')

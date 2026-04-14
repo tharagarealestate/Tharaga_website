@@ -33,15 +33,16 @@ export async function POST(req: NextRequest) {
 
     // 1.5. Clean phone to ensure compatibility with text schema
     const phoneString = phone ? String(phone).replace(/\D/g, '') : null;
-    const numericPhone = phoneString; // Keep strictly as string for Postgres text columns
+    const phoneText = phoneString; // Keep strictly as string for Postgres text columns
     
-    // Check for message deduplication instantly using phone_number (bigint) OR external_message_id
-    if (messageId || numericPhone) {
+    // Check for message deduplication instantly using phone_number (text) OR external_message_id
+    if (messageId || phoneText) {
       let query = supabase.from('leads').select('id')
       if (messageId) {
         query = query.eq('external_message_id', String(messageId))
-      } else if (numericPhone) {
-        query = query.eq('phone_number', numericPhone) // Matches backend bigint column format
+      } else if (phoneText) {
+        // Explicitly cast to text in Supabase query to prevent PostgREST from inferring BigInt
+        query = query.eq('phone_number::text', phoneText) 
       }
       
       const { data: existingLead } = await query.maybeSingle()
@@ -60,7 +61,7 @@ export async function POST(req: NextRequest) {
       .insert({
         name: name || 'Unknown',
         email,
-        phone_number: phoneString, // Insert strictly as text
+        phone_number: phoneText, // Insert strictly as text
         phone: normalizedPhone,
         phone_normalized: normalizedPhone,
         source,

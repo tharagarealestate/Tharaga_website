@@ -325,7 +325,7 @@ export function AuthModal() {
             {/* Amber glow border */}
             <div className="absolute -inset-px rounded-2xl bg-gradient-to-br from-amber-500/22 via-amber-400/6 to-transparent pointer-events-none" />
 
-            <div className="relative rounded-2xl bg-zinc-900/92 backdrop-blur-2xl border border-white/[0.065] overflow-hidden shadow-2xl shadow-black/60">
+            <div className="relative rounded-2xl bg-zinc-900/92 backdrop-blur-2xl border border-white/[0.065] overflow-y-auto max-h-[90svh] shadow-2xl shadow-black/60">
               {/* Top amber accent line */}
               <div className="h-[2px] w-full bg-gradient-to-r from-amber-500 via-amber-400 to-amber-600" />
 

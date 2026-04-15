@@ -69,10 +69,10 @@ export default function TrialDashboardPage() {
       try {
         const { data } = await supabase
           .from('builder_subscriptions')
-          .select('trial_expires_at')
+          .select('trial_ends_at')
           .eq('builder_id', builderId)
           .maybeSingle()
-        if (!cancelled) setTrialEndsAt(data?.trial_expires_at ? new Date(data.trial_expires_at) : null)
+        if (!cancelled) setTrialEndsAt(data?.trial_ends_at ? new Date(data.trial_ends_at) : null)
       } catch {}
 
       // Checklist

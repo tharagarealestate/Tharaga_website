@@ -3,18 +3,31 @@
 /**
  * AI Engine — Tharaga AI 6-stage WhatsApp qualification engine.
  * Real data: stage counts + tier distribution from useDashboardData.
- * No WhatsApp conversation data available yet → ComingSoonEmpty.
+ * Live Conversations: fetched from /api/builder/whatsapp-conversations.
  */
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { motion } from 'framer-motion'
-import { Bot, MessageSquare, Calendar, Users, Zap, Clock, ArrowRight } from 'lucide-react'
+import { Bot, MessageSquare, Calendar, Users, Zap, Clock, ArrowRight, RefreshCw } from 'lucide-react'
 import {
   TierBadge, SlaTimer, GlassCard, DashboardSkeleton, EmptyState, ErrorDisplay, ComingSoonEmpty,
   AI_STAGES, AI_STAGE_LABELS, TIER_CONFIG, useDashboardData,
   type AIStage,
 } from './AgenticShared'
 import { useBuilderAuth } from '../BuilderAuthProvider'
+
+// ─── Conversation types ───────────────────────────────────────────────────────
+interface WaConversation {
+  phone: string
+  displayName: string
+  lastMessage: string
+  lastMessageAt: string
+  isLastBot: boolean
+  messageCount: number
+  unread: number
+  propertyId: string | null
+  stage: string
+}
 
 // ─── Stage config (static — timing benchmarks only) ───────────────────────────
 
@@ -50,11 +63,34 @@ export function AutomationsSection() {
   const { leads, stats, loading, error, refetch } = useDashboardData(builderId, isAdmin)
 
   const [activeStage, setActiveStage] = useState(0)
+  const [conversations, setConversations] = useState<WaConversation[]>([])
+  const [convoLoading, setConvoLoading] = useState(false)
+  const [convoLoaded, setConvoLoaded] = useState(false)
 
   useEffect(() => {
     const t = setInterval(() => setActiveStage(s => (s + 1) % AI_STAGES.length), 2000)
     return () => clearInterval(t)
   }, [])
+
+  const loadConversations = useCallback(async () => {
+    if (!builderId) return
+    setConvoLoading(true)
+    try {
+      const res = await fetch('/api/builder/whatsapp-conversations', {
+        headers: { 'Authorization': `Bearer ${(window as any).__supabase_token || ''}` },
+      })
+      if (res.ok) {
+        const data = await res.json()
+        setConversations(data.conversations || [])
+      }
+    } catch {}
+    setConvoLoading(false)
+    setConvoLoaded(true)
+  }, [builderId])
+
+  useEffect(() => {
+    if (!convoLoaded) loadConversations()
+  }, [convoLoaded, loadConversations])
 
   if (loading) return <DashboardSkeleton rows={5} />
   if (error)   return <ErrorDisplay message={error} onRetry={refetch} />
@@ -63,7 +99,14 @@ export function AutomationsSection() {
     <EmptyState
       title="Tharaga AI not active yet"
       description="Once leads start flowing in through WhatsApp or Meta Ads, the AI qualification engine will appear here."
-      primaryAction={{ label: 'Connect WhatsApp', onClick: () => {} }}
+      primaryAction={{
+        label: 'Connect WhatsApp',
+        onClick: () => {
+          window.dispatchEvent(new CustomEvent('dashboard-section-change', {
+            detail: { section: 'marketing' },
+          }))
+        },
+      }}
     />
   )
 
@@ -222,19 +265,95 @@ export function AutomationsSection() {
           </div>
         </GlassCard>
 
-        {/* Live conversations — no API data yet */}
+        {/* Live conversations — real data from whatsapp_messages */}
         <GlassCard className="p-5">
-          <div className="flex items-center gap-2 mb-3">
-            <div className="w-2 h-2 rounded-full bg-zinc-500" />
+          <div className="flex items-center gap-2 mb-4">
+            <div className={`w-2 h-2 rounded-full ${conversations.length > 0 ? 'bg-emerald-400 animate-pulse' : 'bg-zinc-600'}`} />
             <h2 className="text-sm font-bold text-zinc-200">Live Conversations</h2>
-            <span className="ml-auto text-[11px] text-zinc-500">Tharaga AI</span>
+            <span className="text-[11px] text-zinc-500">Tharaga AI · WhatsApp</span>
+            <button
+              onClick={loadConversations}
+              disabled={convoLoading}
+              className="ml-auto p-1.5 rounded-lg text-zinc-600 hover:text-zinc-400 hover:bg-white/[0.04] transition-all disabled:opacity-40"
+              title="Refresh"
+            >
+              <RefreshCw className={`w-3 h-3 ${convoLoading ? 'animate-spin' : ''}`} />
+            </button>
           </div>
-          <ComingSoonEmpty
-            title="WhatsApp integration pending"
-            description="Live conversation feed will appear here once Tharaga AI WhatsApp is connected to your account."
-          />
+
+          {convoLoading && !convoLoaded ? (
+            <div className="flex items-center justify-center py-8">
+              <div className="relative w-8 h-8">
+                <div className="absolute inset-0 rounded-full border-2 border-amber-500/20" />
+                <div className="absolute inset-0 rounded-full border-t-2 border-amber-500 animate-spin" />
+              </div>
+            </div>
+          ) : conversations.length === 0 ? (
+            <ComingSoonEmpty
+              title="No WhatsApp conversations yet"
+              description="Conversations appear here automatically once buyers message your Tharaga AI WhatsApp number."
+            />
+          ) : (
+            <div className="space-y-2 max-h-[340px] overflow-y-auto">
+              {conversations.slice(0, 8).map(convo => (
+                <motion.div
+                  key={convo.phone}
+                  initial={{ opacity: 0, x: -8 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  className="flex items-start gap-3 p-3 rounded-xl bg-white/[0.02] border border-white/[0.05] hover:bg-white/[0.04] transition-colors cursor-pointer"
+                >
+                  {/* Avatar */}
+                  <div className="w-8 h-8 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <MessageSquare className="w-3.5 h-3.5 text-emerald-400" />
+                  </div>
+
+                  {/* Content */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-0.5">
+                      <span className="text-[11px] font-semibold text-zinc-200 truncate">{convo.displayName}</span>
+                      {convo.unread > 0 && (
+                        <span className="ml-auto flex-shrink-0 min-w-[18px] h-[18px] rounded-full bg-emerald-500 text-white text-[9px] font-bold flex items-center justify-center px-1">
+                          {convo.unread}
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-[10px] text-zinc-500 truncate">
+                      {convo.isLastBot ? '🤖 ' : '👤 '}{convo.lastMessage}
+                    </p>
+                    <div className="flex items-center gap-2 mt-1">
+                      <span className="text-[9px] text-zinc-600">{formatRelative(convo.lastMessageAt)}</span>
+                      <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-zinc-800 text-zinc-500 border border-zinc-700/40">
+                        {convo.stage.replace('_', ' ')}
+                      </span>
+                      <span className="text-[9px] text-zinc-600">{convo.messageCount} msgs</span>
+                    </div>
+                  </div>
+                </motion.div>
+              ))}
+
+              {conversations.length > 8 && (
+                <p className="text-center text-[10px] text-zinc-600 pt-1">
+                  +{conversations.length - 8} more conversations
+                </p>
+              )}
+            </div>
+          )}
         </GlassCard>
       </div>
     </div>
   )
+}
+
+// ─── Helper ───────────────────────────────────────────────────────────────────
+function formatRelative(iso: string): string {
+  try {
+    const diff = Date.now() - new Date(iso).getTime()
+    const m = Math.floor(diff / 60_000)
+    if (m < 1)   return 'Just now'
+    if (m < 60)  return `${m}m ago`
+    const h = Math.floor(m / 60)
+    if (h < 24)  return `${h}h ago`
+    const d = Math.floor(h / 24)
+    return `${d}d ago`
+  } catch { return '' }
 }

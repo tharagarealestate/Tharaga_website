@@ -14,7 +14,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { getBuilderUser, getServiceSupabase } from '../builder/_lib/auth'
+import { getBuilderUser, getServiceSupabase } from '../../builder/_lib/auth'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'

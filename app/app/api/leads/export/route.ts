@@ -5,8 +5,7 @@
 // =============================================
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import { createClient } from '@supabase/supabase-js';
-import { cookies } from 'next/headers';
+import { createClient as createBrowserClient } from '@supabase/supabase-js';
 import ExcelJS from 'exceljs';
 
 // ExcelJS requires Node.js runtime, not edge
@@ -150,8 +149,8 @@ async function convertToExcel(leads: any[], fields: ExportField[]): Promise<Buff
 // =============================================
 export async function GET(request: NextRequest) {
   try {
-    const supabase = await createClient();
-    
+    let supabase = await createClient();
+
     // Try to get user from cookies first
     let { data: { user }, error: authError } = await supabase.auth.getUser();
     
@@ -166,7 +165,7 @@ export async function GET(request: NextRequest) {
           const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY;
           
           if (supabaseUrl && supabaseAnonKey) {
-            const tempClient = createClient(supabaseUrl, supabaseAnonKey, {
+            const tempClient = createBrowserClient(supabaseUrl, supabaseAnonKey, {
               global: {
                 headers: {
                   Authorization: `Bearer ${token}`,

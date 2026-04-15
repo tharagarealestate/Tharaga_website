@@ -20,6 +20,17 @@ import {
   useDashboardData,
 } from './AgenticShared'
 import { useBuilderAuth } from '../BuilderAuthProvider'
+import { getSupabase } from '@/lib/supabase'
+
+// ─── Shared helper: get the current session access token ─────────────────────
+async function getAccessToken(): Promise<string | null> {
+  try {
+    const { data: { session } } = await getSupabase().auth.getSession()
+    return session?.access_token ?? null
+  } catch {
+    return null
+  }
+}
 
 // ─── Channel metadata ─────────────────────────────────────────────────────────
 const CHANNEL_META: Record<string, { icon: string; color: string; bg: string; bar: string }> = {
@@ -110,9 +121,9 @@ export function MarketingSection() {
     if (!builderId || behavior.loaded) return
     setBehaviorLoading(true)
     try {
-      // Fetch from behavior_events via builder API
+      const accessToken = await getAccessToken()
       const res = await fetch('/api/builder/behavior-events', {
-        headers: { 'Authorization': `Bearer ${(window as any).__supabase_token || ''}` },
+        headers: accessToken ? { 'Authorization': `Bearer ${accessToken}` } : {},
       })
       if (res.ok) {
         const data = await res.json()
@@ -182,8 +193,9 @@ export function MarketingSection() {
         : null
 
       if (url) {
+        const accessToken = await getAccessToken()
         const res = await fetch(url, {
-          headers: { 'Authorization': `Bearer ${(window as any).__supabase_token || ''}` },
+          headers: accessToken ? { 'Authorization': `Bearer ${accessToken}` } : {},
         })
         const data = await res.json()
         setSmCaption(
@@ -208,9 +220,13 @@ export function MarketingSection() {
     if (!smCaption.trim()) { setSmError('Add a caption first'); return }
     setSmLoading(true); setSmError(''); setSmResult(null)
     try {
+      const accessToken = await getAccessToken()
       const res = await fetch('/api/social-media/post', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(accessToken ? { 'Authorization': `Bearer ${accessToken}` } : {}),
+        },
         body: JSON.stringify({
           property_id: smPropertyId || null,
           caption: smCaption,

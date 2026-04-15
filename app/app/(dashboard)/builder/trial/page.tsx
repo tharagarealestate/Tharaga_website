@@ -22,7 +22,12 @@ export default function TrialDashboardPage() {
   const [showFiftyOffModal, setShowFiftyOffModal] = useState(false)
   const [showPropertyCapBanner, setShowPropertyCapBanner] = useState(false)
   const [expiryBanner, setExpiryBanner] = useState<string | null>(null)
-  const confettiLoadedRef = useRef(false)
+  const confettiLoadedRef   = useRef(false)
+  // Dedup guards — prevent inserting upgrade_prompts on every re-render
+  const shown50OffRef       = useRef(false)
+  const shown3PropsRef      = useRef(false)
+  const shownExpiryRef      = useRef(false)
+  const shown3DaysRef       = useRef(false)
 
   // Derived
   const leadsUsed = Math.min(leads.length, 10)
@@ -121,11 +126,11 @@ export default function TrialDashboardPage() {
     return () => { cancelled = true }
   }, [builderId, supabase])
 
-  // Triggers: modal/banner by usage
+  // Triggers: modal/banner by usage — each effect fires at most once per mount
   useEffect(() => {
-    if (!builderId) return
-    // After 5th lead: show 50% off modal (once)
+    if (!builderId || shown50OffRef.current) return
     if (leads.length >= 5) {
+      shown50OffRef.current = true
       setShowFiftyOffModal(true)
       ;(async () => {
         try {
@@ -136,9 +141,9 @@ export default function TrialDashboardPage() {
   }, [builderId, leads.length, supabase])
 
   useEffect(() => {
-    if (!builderId) return
-    // After 3rd property: banner prompt (once)
+    if (!builderId || shown3PropsRef.current) return
     if (properties.length >= 3) {
+      shown3PropsRef.current = true
       setShowPropertyCapBanner(true)
       ;(async () => {
         try {
@@ -148,25 +153,29 @@ export default function TrialDashboardPage() {
     }
   }, [builderId, properties.length, supabase])
 
-  // Expiry banners
+  // Expiry banners — track each type only once
   useEffect(() => {
     if (daysLeft === null) return
     if (daysLeft === 0) {
       setExpiryBanner('Your trial has ended. Upgrade to continue.')
-      // Track expiry day prompt
-      ;(async () => {
-        try {
-          if (builderId) await supabase.from('upgrade_prompts').insert({ builder_id: builderId, prompt_type: 'on_expiry_day', shown_at: new Date().toISOString() })
-        } catch {}
-      })()
+      if (builderId && !shownExpiryRef.current) {
+        shownExpiryRef.current = true
+        ;(async () => {
+          try {
+            await supabase.from('upgrade_prompts').insert({ builder_id: builderId, prompt_type: 'on_expiry_day', shown_at: new Date().toISOString() })
+          } catch {}
+        })()
+      }
     } else if (daysLeft <= 3) {
       setExpiryBanner(`Only ${daysLeft} day${daysLeft === 1 ? '' : 's'} left in your trial. Upgrade now!`)
-      // Track 3-days-before-expiry prompt
-      ;(async () => {
-        try {
-          if (builderId) await supabase.from('upgrade_prompts').insert({ builder_id: builderId, prompt_type: 'three_days_before_expiry', shown_at: new Date().toISOString() })
-        } catch {}
-      })()
+      if (builderId && !shown3DaysRef.current) {
+        shown3DaysRef.current = true
+        ;(async () => {
+          try {
+            await supabase.from('upgrade_prompts').insert({ builder_id: builderId, prompt_type: 'three_days_before_expiry', shown_at: new Date().toISOString() })
+          } catch {}
+        })()
+      }
     } else {
       setExpiryBanner(null)
     }
@@ -206,23 +215,21 @@ export default function TrialDashboardPage() {
     } catch {}
   }, [checklist, launchConfetti, supabase])
 
-  const handleAddProperty = useCallback(async () => {
-    if (!builderId) return
-    if (properties.length >= propertiesLimit) return
+  const handleAddProperty = useCallback(() => {
+    if (!builderId || properties.length >= propertiesLimit) return
+    // Redirect to the full property form instead of inserting a placeholder
+    window.dispatchEvent(
+      new CustomEvent('dashboard-section-change', { detail: { section: 'properties' } })
+    )
     try {
-      const title = `Property ${properties.length + 1}`
-      const { data, error } = await supabase.from('properties').insert({ builder_id: builderId, title, city: '—', locality: '—' }).select('id,title,city,locality,created_at').single()
-      if (!error && data) {
-        setProperties(prev => [data as Property, ...prev])
-        if (properties.length + 1 === 3) {
-          // Track banner prompt
-          try {
-            await supabase.from('upgrade_prompts').insert({ builder_id: builderId, prompt_type: 'after_3_properties', shown_at: new Date().toISOString() })
-          } catch {}
-        }
-      }
-    } catch {}
-  }, [builderId, properties.length, supabase])
+      window.dispatchEvent(new CustomEvent('toast', {
+        detail: {
+          title: 'Add Property',
+          description: 'Use the Properties section to add your listing with full details.',
+        },
+      }))
+    } catch { /* ignore — toast is optional */ }
+  }, [builderId, properties.length, propertiesLimit])
 
   const handleScheduleVisit = useCallback(async () => {
     // Simulate site visit scheduled action
@@ -416,7 +423,7 @@ export default function TrialDashboardPage() {
               { name: 'Automated Follow-ups', desc: 'Smart cadences across channels', image: '/screenshots/followups.png' },
               { name: 'Team Collaboration', desc: 'Assign, mention, and track', image: '/screenshots/team.png' },
             ].map((f, idx) => (
-              <FeatureTeaserCard key={idx} {...f} />
+              <FeatureTeaserCard key={idx} {...f} index={idx} />
             ))}
           </div>
         </div>
@@ -444,8 +451,50 @@ export default function TrialDashboardPage() {
   )
 }
 
-function FeatureTeaserCard({ name, desc, image }: { name: string; desc: string; image: string }) {
+// Gradient backgrounds per feature index (no external image required)
+const TEASER_GRADIENTS = [
+  'from-indigo-900/60 to-violet-900/60',
+  'from-amber-900/60 to-orange-900/60',
+  'from-emerald-900/60 to-teal-900/60',
+  'from-blue-900/60 to-cyan-900/60',
+]
+
+function FeatureTeaserCard({ name, desc, image, index }: { name: string; desc: string; image: string; index: number }) {
   const [open, setOpen] = useState(false)
+  const [imgFailed, setImgFailed] = useState(false)
+  const gradient = TEASER_GRADIENTS[index % TEASER_GRADIENTS.length]
+
+  const PreviewThumb = () =>
+    imgFailed ? (
+      <div className={`w-full h-28 rounded bg-gradient-to-br ${gradient} flex items-center justify-center`}>
+        <Lock className="w-7 h-7 text-white/30" />
+      </div>
+    ) : (
+      <Image
+        src={image} alt={name} width={560} height={112}
+        className="w-full h-28 object-cover"
+        onError={() => setImgFailed(true)}
+        unoptimized
+      />
+    )
+
+  const PreviewFull = () =>
+    imgFailed ? (
+      <div className={`w-full rounded aspect-video bg-gradient-to-br ${gradient} flex items-center justify-center`}>
+        <div className="text-center">
+          <Lock className="w-12 h-12 text-white/20 mx-auto mb-2" />
+          <p className="text-white/40 text-sm">Upgrade to see {name}</p>
+        </div>
+      </div>
+    ) : (
+      <Image
+        src={image} alt={name} width={1200} height={630}
+        className="w-full rounded"
+        onError={() => setImgFailed(true)}
+        unoptimized
+      />
+    )
+
   return (
     <div className="glass-card rounded-xl p-4">
       <div className="flex items-start justify-between gap-3">
@@ -457,7 +506,7 @@ function FeatureTeaserCard({ name, desc, image }: { name: string; desc: string; 
       </div>
       <div className="mt-3">
         <button onClick={() => setOpen(true)} className="w-full rounded border overflow-hidden">
-          <Image src={image} alt={name} width={560} height={112} className="w-full h-28 object-cover" placeholder="blur" blurDataURL="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==" />
+          <PreviewThumb />
         </button>
       </div>
       <div className="mt-3">
@@ -472,7 +521,7 @@ function FeatureTeaserCard({ name, desc, image }: { name: string; desc: string; 
                 <div className="font-semibold">{name}</div>
                 <button onClick={() => setOpen(false)} className="p-2 rounded hover:bg-gray-100"><X className="w-4 h-4" /></button>
               </div>
-              <Image src={image} alt={name} width={1200} height={630} className="w-full rounded" placeholder="blur" blurDataURL="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==" />
+              <PreviewFull />
             </motion.div>
           </motion.div>
         )}

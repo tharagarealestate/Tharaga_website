@@ -15,6 +15,7 @@ import {
   type AIStage,
 } from './AgenticShared'
 import { useBuilderAuth } from '../BuilderAuthProvider'
+import { getSupabase } from '@/lib/supabase'
 
 // ─── Conversation types ───────────────────────────────────────────────────────
 interface WaConversation {
@@ -75,9 +76,14 @@ export function AutomationsSection() {
   const loadConversations = useCallback(async () => {
     if (!builderId) return
     setConvoLoading(true)
+    let accessToken: string | null = null
+    try {
+      const { data: { session } } = await getSupabase().auth.getSession()
+      accessToken = session?.access_token ?? null
+    } catch { /* proceed without token */ }
     try {
       const res = await fetch('/api/builder/whatsapp-conversations', {
-        headers: { 'Authorization': `Bearer ${(window as any).__supabase_token || ''}` },
+        headers: accessToken ? { 'Authorization': `Bearer ${accessToken}` } : {},
       })
       if (res.ok) {
         const data = await res.json()

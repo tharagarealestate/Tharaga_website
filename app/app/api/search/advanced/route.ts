@@ -1,10 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
-import { cookies } from 'next/headers';
-
+import { createClient } from '@/lib/supabase/server';
 export async function POST(request: NextRequest) {
   try {
-    const supabase = createRouteHandlerClient({ cookies });
+    const supabase = await createClient();
     const { filters, sort_by = 'relevance', page = 1, limit = 20 } = await request.json();
 
     if (!filters || typeof filters !== 'object') {

@@ -4,9 +4,8 @@
 // GET /api/ai/virtual-staging?job_id=xxx - Get job status
 // GET /api/ai/virtual-staging?property_id=xxx - Get all jobs for property
 // =============================================
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
-import { cookies } from 'next/headers';
 import { NextRequest, NextResponse } from 'next/server';
+import { createClient } from '@/lib/supabase/server';
 import { z } from 'zod';
 
 export const runtime = 'nodejs';
@@ -23,11 +22,11 @@ const stagingRequestSchema = z.object({
 // POST endpoint - Start staging job
 export async function POST(request: NextRequest) {
   try {
-    const supabase = createRouteHandlerClient({ cookies });
+    const supabase = await createClient();
     
     // Auth check
-    const { data: { session }, error: authError } = await supabase.auth.getSession();
-    if (authError || !session) {
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    if (authError || !user) {
       return NextResponse.json(
         { success: false, error: 'Unauthorized' },
         { status: 401 }
@@ -56,12 +55,12 @@ export async function POST(request: NextRequest) {
     const { data: userRoles } = await supabase
       .from('user_roles')
       .select('role')
-      .eq('user_id', session.user.id)
+      .eq('user_id', user.id)
       .eq('role', 'builder');
     
     const isBuilder = userRoles && userRoles.length > 0;
     
-    if (!isBuilder && property.builder_id !== session.user.id) {
+    if (!isBuilder && property.builder_id !== user.id) {
       return NextResponse.json(
         { success: false, error: 'Property not found or access denied' },
         { status: 403 }
@@ -77,7 +76,7 @@ export async function POST(request: NextRequest) {
         staging_style: validatedData.staging_style,
         room_type: validatedData.room_type,
         status: 'pending',
-        created_by: session.user.id
+        created_by: user.id
       })
       .select()
       .single();
@@ -169,14 +168,14 @@ export async function POST(request: NextRequest) {
 // GET endpoint - Fetch job status
 export async function GET(request: NextRequest) {
   try {
-    const supabase = createRouteHandlerClient({ cookies });
+    const supabase = await createClient();
     const { searchParams } = new URL(request.url);
     const job_id = searchParams.get('job_id');
     const property_id = searchParams.get('property_id');
     
     // Auth check
-    const { data: { session }, error: authError } = await supabase.auth.getSession();
-    if (authError || !session) {
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    if (authError || !user) {
       return NextResponse.json(
         { success: false, error: 'Unauthorized' },
         { status: 401 }

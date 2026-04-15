@@ -4,7 +4,7 @@
 // POST /api/leads/export (with custom filters)
 // =============================================
 import { NextRequest, NextResponse } from 'next/server';
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
+import { createClient } from '@/lib/supabase/server';
 import { createClient } from '@supabase/supabase-js';
 import { cookies } from 'next/headers';
 import ExcelJS from 'exceljs';
@@ -150,7 +150,7 @@ async function convertToExcel(leads: any[], fields: ExportField[]): Promise<Buff
 // =============================================
 export async function GET(request: NextRequest) {
   try {
-    let supabase = createRouteHandlerClient({ cookies });
+    const supabase = await createClient();
     
     // Try to get user from cookies first
     let { data: { user }, error: authError } = await supabase.auth.getUser();
@@ -616,7 +616,7 @@ export async function GET(request: NextRequest) {
 // =============================================
 export async function POST(request: NextRequest) {
   try {
-    const supabase = createRouteHandlerClient({ cookies });
+    const supabase = await createClient();
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     
     if (authError || !user) {

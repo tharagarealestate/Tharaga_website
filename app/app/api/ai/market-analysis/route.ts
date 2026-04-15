@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
-import { cookies } from 'next/headers';
+import { createClient } from '@/lib/supabase/server';
 import OpenAI from 'openai';
 
 // Lazy initialization to avoid build-time errors when API key is not set
@@ -14,7 +13,7 @@ function getOpenAIClient() {
 
 export async function GET(request: NextRequest) {
   try {
-    const supabase = createRouteHandlerClient({ cookies });
+    const supabase = await createClient();
     const searchParams = request.nextUrl.searchParams;
     const area = searchParams.get('area');
 

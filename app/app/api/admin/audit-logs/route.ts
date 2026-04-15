@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
-import { cookies } from 'next/headers';
+import { createClient } from '@/lib/supabase/server';
 import { secureApiRoute } from '@/lib/security/api-security';
 import { Permissions } from '@/lib/security/permissions';
 import { AuditActions, AuditResourceTypes } from '@/lib/security/audit';
@@ -25,7 +24,7 @@ const auditLogQuerySchema = z.object({
  */
 export const GET = secureApiRoute(
   async (request: NextRequest, user) => {
-    const supabase = createRouteHandlerClient({ cookies });
+    const supabase = await createClient();
     
     // User is already authenticated and has admin role via secureApiRoute
     const url = new URL(request.url);

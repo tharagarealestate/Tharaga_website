@@ -1,6 +1,5 @@
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
-import { cookies } from 'next/headers';
 import { NextRequest, NextResponse } from 'next/server';
+import { createClient } from '@/lib/supabase/server';
 import { secureApiRoute } from '@/lib/security/api-security';
 import { Permissions } from '@/lib/security/permissions';
 import { AuditActions, AuditResourceTypes } from '@/lib/security/audit';
@@ -20,7 +19,7 @@ const switchRoleSchema = z.object({
  */
 export const POST = secureApiRoute(
   async (request: NextRequest, user) => {
-    const supabase = createRouteHandlerClient({ cookies });
+    const supabase = await createClient();
     
     // Input is already validated by secureApiRoute
     const body = await request.json();

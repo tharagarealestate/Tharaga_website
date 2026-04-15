@@ -1,7 +1,6 @@
 // File: /app/app/api/portals/sync/route.ts
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
-import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
+import { createClient } from '@/lib/supabase/server';
 import { z } from 'zod';
 
 export const runtime = 'nodejs';
@@ -15,10 +14,10 @@ const syncSchema = z.object({
 
 export async function POST(request: Request) {
   try {
-    const supabase = createRouteHandlerClient({ cookies });
+    const supabase = await createClient();
     
-    const { data: { session }, error: authError } = await supabase.auth.getSession();
-    if (authError || !session) {
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    if (authError || !user) {
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
     }
     
@@ -32,7 +31,7 @@ export async function POST(request: Request) {
       .eq('id', validatedData.property_id)
       .single();
     
-    if (!property || property.builder_id !== session.user.id) {
+    if (!property || property.builder_id !== user.id) {
       return NextResponse.json(
         { success: false, error: 'Property not found or access denied' },
         { status: 403 }

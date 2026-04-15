@@ -1,10 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { cookies } from 'next/headers'
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
-
+import { createClient } from '@/lib/supabase/server';
 // Returns entitlements for the current user, derived from Supabase session/profile
 export async function GET(_req: NextRequest) {
-  const supabase = createRouteHandlerClient({ cookies })
+  const supabase = await createClient();
 
   const {
     data: { user },

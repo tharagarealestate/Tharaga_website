@@ -1,10 +1,9 @@
 // =============================================
 // FEATURE 8: IMPLEMENT SUGGESTION API ROUTE
 // =============================================
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
-import { cookies } from 'next/headers';
 import { NextRequest, NextResponse } from 'next/server';
 
+import { createClient } from '@/lib/supabase/server';
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
@@ -13,10 +12,10 @@ export async function POST(
   { params }: { params: { propertyId: string } }
 ) {
   try {
-    const supabase = createRouteHandlerClient({ cookies });
+    const supabase = await createClient();
     
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
     }
     
@@ -38,7 +37,7 @@ export async function POST(
       .eq('id', propertyId)
       .maybeSingle();
     
-    if (!property || property.builder_id !== session.user.id) {
+    if (!property || property.builder_id !== user.id) {
       return NextResponse.json(
         { success: false, error: 'Property not found or access denied' },
         { status: 403 }

@@ -2,18 +2,18 @@
  * Shared auth utility for all builder API routes.
  *
  * PROBLEM: The frontend stores Supabase sessions in localStorage (via getSupabase()).
- * Server-side `createRouteHandlerClient({ cookies })` reads HTTP cookies — a different
- * storage mechanism — so it always returns null, causing 401s for all builder APIs.
+ * Server-side cookie-based auth reads HTTP cookies — a different storage mechanism —
+ * so it always returns null, causing 401s for all builder APIs.
  *
  * SOLUTION: Frontend sends `Authorization: Bearer <token>` header with every request.
  * This utility validates the Bearer token using the service role client (no cookie needed).
- * Falls back to cookie-based auth for any legacy callers.
+ * Falls back to @supabase/ssr cookie-based auth for any SSR/legacy callers.
  */
 
 import { NextRequest } from 'next/server'
 import { createClient, SupabaseClient } from '@supabase/supabase-js'
+import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
 
 export const ADMIN_EMAIL = 'tharagarealestate@gmail.com'
 
@@ -64,8 +64,25 @@ export async function getBuilderUser(req: NextRequest): Promise<AuthedUser | nul
   }
 
   // ── 2. Cookie-based auth (fallback for SSR / legacy callers) ─────────────────
+  // Uses @supabase/ssr (replaces deprecated createRouteHandlerClient)
   try {
-    const cookieClient = createRouteHandlerClient({ cookies })
+    const cookieStore = cookies()
+    const cookieClient = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        cookies: {
+          getAll() { return cookieStore.getAll() },
+          setAll(cookiesToSet) {
+            try {
+              cookiesToSet.forEach(({ name, value, options }) =>
+                cookieStore.set(name, value, options)
+              )
+            } catch { /* Server Component — ignore */ }
+          },
+        },
+      }
+    )
     const { data: { user }, error } = await cookieClient.auth.getUser()
     if (!error && user) {
       return {

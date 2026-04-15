@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
-import { cookies } from 'next/headers';
+import { createClient } from '@/lib/supabase/server';
 import { secureApiRoute } from '@/lib/security/api-security';
 import { Permissions } from '@/lib/security/permissions';
 import { AuditActions, AuditResourceTypes } from '@/lib/security/audit';
@@ -17,7 +16,7 @@ const acknowledgeAlertSchema = z.object({
  */
 export const GET = secureApiRoute(
   async (request: NextRequest, user) => {
-    const supabase = createRouteHandlerClient({ cookies });
+    const supabase = await createClient();
     
     const url = new URL(request.url);
     const acknowledged = url.searchParams.get('acknowledged');
@@ -68,7 +67,7 @@ export const GET = secureApiRoute(
  */
 export const PATCH = secureApiRoute(
   async (request: NextRequest, user) => {
-    const supabase = createRouteHandlerClient({ cookies });
+    const supabase = await createClient();
     
     const body = await request.json();
     const { alert_id, acknowledged } = acknowledgeAlertSchema.parse(body);

@@ -3,10 +3,9 @@
 // GET /api/leads/[leadId]/smartscore - Get SmartScore 2.0 data
 // POST /api/leads/[leadId]/smartscore/calculate - Recalculate SmartScore
 // =============================================
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
-import { cookies } from 'next/headers';
 import { NextRequest, NextResponse } from 'next/server';
 
+import { createClient } from '@/lib/supabase/server';
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
@@ -16,11 +15,11 @@ export async function GET(
   { params }: { params: { leadId: string } }
 ) {
   try {
-    const supabase = createRouteHandlerClient({ cookies });
+    const supabase = await createClient();
     
     // Verify authentication
-    const { data: { session }, error: authError } = await supabase.auth.getSession();
-    if (authError || !session) {
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    if (authError || !user) {
       return NextResponse.json(
         { success: false, error: 'Unauthorized' },
         { status: 401 }
@@ -53,7 +52,7 @@ export async function GET(
     }
     
     // Verify builder owns this lead
-    if (lead.builder_id !== session.user.id) {
+    if (lead.builder_id !== user.id) {
       return NextResponse.json(
         { success: false, error: 'Access denied' },
         { status: 403 }
@@ -122,11 +121,11 @@ export async function POST(
   { params }: { params: { leadId: string } }
 ) {
   try {
-    const supabase = createRouteHandlerClient({ cookies });
+    const supabase = await createClient();
     
     // Verify authentication
-    const { data: { session }, error: authError } = await supabase.auth.getSession();
-    if (authError || !session) {
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    if (authError || !user) {
       return NextResponse.json(
         { success: false, error: 'Unauthorized' },
         { status: 401 }
@@ -148,7 +147,7 @@ export async function POST(
       .eq('id', leadId)
       .single();
     
-    if (!lead || lead.builder_id !== session.user.id) {
+    if (!lead || lead.builder_id !== user.id) {
       return NextResponse.json(
         { success: false, error: 'Lead not found or access denied' },
         { status: 403 }

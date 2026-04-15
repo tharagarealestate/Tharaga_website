@@ -1,10 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
-import { cookies } from 'next/headers';
-
+import { createClient } from '@/lib/supabase/server';
 export async function POST(request: NextRequest) {
   try {
-    const supabase = createRouteHandlerClient({ cookies });
+    const supabase = await createClient();
     const { lat, lng, radius } = await request.json();
 
     if (!lat || !lng || !radius) {

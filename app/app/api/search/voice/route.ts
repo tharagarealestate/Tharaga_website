@@ -1,7 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
-import { cookies } from 'next/headers';
-
+import { createClient } from '@/lib/supabase/server';
 // Tamil to English translation mapping
 const TAMIL_TRANSLATIONS: Record<string, string> = {
   'venum': 'want',
@@ -132,7 +130,7 @@ function parseEnglishQuery(transcript: string): {
 
 export async function POST(request: NextRequest) {
   try {
-    const supabase = createRouteHandlerClient({ cookies });
+    const supabase = await createClient();
     const { transcript, language } = await request.json();
 
     if (!transcript || !language) {

@@ -1,6 +1,5 @@
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
-import { cookies } from 'next/headers';
 import { NextRequest, NextResponse } from 'next/server';
+import { createClient } from '@/lib/supabase/server';
 import { secureApiRoute } from '@/lib/security/api-security';
 import { Permissions } from '@/lib/security/permissions';
 import { AuditActions, AuditResourceTypes } from '@/lib/security/audit';
@@ -13,7 +12,7 @@ import { AuditActions, AuditResourceTypes } from '@/lib/security/audit';
  */
 export const GET = secureApiRoute(
   async (request: NextRequest, user) => {
-    const supabase = createRouteHandlerClient({ cookies });
+    const supabase = await createClient();
 
     // Fetch user roles from user_roles table with is_primary flag
     const { data: userRoles, error: rolesError } = await supabase

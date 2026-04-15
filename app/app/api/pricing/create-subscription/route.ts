@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
-import { cookies } from 'next/headers';
+import { createClient } from '@/lib/supabase/server';
 import Razorpay from 'razorpay';
 import { secureApiRoute } from '@/lib/security/api-security';
 import { AuditActions, AuditResourceTypes } from '@/lib/security/audit';
@@ -22,7 +21,7 @@ const createSubscriptionSchema = z.object({
 
 export const POST = secureApiRoute(
   async (request: NextRequest, user) => {
-    const supabase = createRouteHandlerClient({ cookies });
+    const supabase = await createClient();
     
     // User is already authenticated via secureApiRoute
     const body = await request.json();

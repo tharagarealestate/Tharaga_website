@@ -4,8 +4,7 @@
 // =============================================
 
 import { NextRequest, NextResponse } from 'next/server';
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
-import { cookies } from 'next/headers';
+import { createClient } from '@/lib/supabase/server';
 import { secureApiRoute } from '@/lib/security/api-security';
 import { Permissions } from '@/lib/security/permissions';
 
@@ -14,7 +13,7 @@ export const dynamic = 'force-dynamic';
 
 export const GET = secureApiRoute(
   async (request: NextRequest, user, context) => {
-    const supabase = createRouteHandlerClient({ cookies });
+    const supabase = await createClient();
     const { params } = context as { params: { id: string } };
     const leadId = params.id;
 

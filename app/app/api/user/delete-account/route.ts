@@ -1,6 +1,5 @@
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
-import { cookies } from 'next/headers';
 import { NextRequest, NextResponse } from 'next/server';
+import { createClient } from '@/lib/supabase/server';
 import { secureApiRoute } from '@/lib/security/api-security';
 import { AuditActions, AuditResourceTypes } from '@/lib/security/audit';
 import { z } from 'zod';
@@ -18,7 +17,7 @@ const deleteAccountSchema = z.object({
  */
 export const DELETE = secureApiRoute(
   async (request: NextRequest, user) => {
-    const supabase = createRouteHandlerClient({ cookies });
+    const supabase = await createClient();
     
     // User is already authenticated via secureApiRoute
     const body = await request.json().catch(() => ({}));

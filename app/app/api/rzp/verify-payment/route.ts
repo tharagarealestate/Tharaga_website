@@ -90,7 +90,7 @@ export async function POST(req: NextRequest) {
           razorpay_subscription_id,
           tier: 'pro',
           status: 'active',
-          trial_expires_at: now.toISOString(),    // End trial immediately
+          trial_ends_at: now.toISOString(),       // End trial immediately on paid activation
           current_period_start: now.toISOString(),
           current_period_end: periodEnd.toISOString(),
           activated_at: now.toISOString(),

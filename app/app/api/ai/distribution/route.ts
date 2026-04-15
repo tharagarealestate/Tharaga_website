@@ -3,9 +3,8 @@
 // POST /api/ai/distribution - Trigger distribution
 // GET /api/ai/distribution?listing_id=xxx - View analytics
 // =============================================
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
-import { cookies } from 'next/headers';
 import { NextRequest, NextResponse } from 'next/server';
+import { createClient } from '@/lib/supabase/server';
 import { z } from 'zod';
 
 export const runtime = 'nodejs';
@@ -19,12 +18,12 @@ const distributionSchema = z.object({
 // POST endpoint - Trigger distribution
 export async function POST(request: NextRequest) {
   try {
-    const supabase = createRouteHandlerClient({ cookies });
+    const supabase = await createClient();
     
     // Verify authentication
-    const { data: { session }, error: authError } = await supabase.auth.getSession();
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
     
-    if (authError || !session) {
+    if (authError || !user) {
       return NextResponse.json(
         { success: false, error: 'Unauthorized' },
         { status: 401 }
@@ -35,7 +34,7 @@ export async function POST(request: NextRequest) {
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
       .select('role, id')
-      .eq('id', session.user.id)
+      .eq('id', user.id)
       .single();
     
     if (profileError || !profile) {
@@ -49,7 +48,7 @@ export async function POST(request: NextRequest) {
     const { data: userRoles } = await supabase
       .from('user_roles')
       .select('role')
-      .eq('user_id', session.user.id)
+      .eq('user_id', user.id)
       .eq('role', 'builder');
     
     const isBuilder = profile.role === 'builder' || (userRoles && userRoles.length > 0);
@@ -80,7 +79,7 @@ export async function POST(request: NextRequest) {
     }
     
     // Check ownership - builder_id can be null, so allow if listing exists and user is builder
-    if (listing.builder_id && listing.builder_id !== session.user.id) {
+    if (listing.builder_id && listing.builder_id !== user.id) {
       return NextResponse.json(
         { success: false, error: 'You can only distribute your own listings' },
         { status: 403 }
@@ -207,7 +206,7 @@ export async function POST(request: NextRequest) {
 // GET endpoint - View distribution analytics
 export async function GET(request: NextRequest) {
   try {
-    const supabase = createRouteHandlerClient({ cookies });
+    const supabase = await createClient();
     const { searchParams } = new URL(request.url);
     const listing_id = searchParams.get('listing_id');
     
@@ -219,9 +218,9 @@ export async function GET(request: NextRequest) {
     }
     
     // Verify authentication
-    const { data: { session }, error: authError } = await supabase.auth.getSession();
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
     
-    if (authError || !session) {
+    if (authError || !user) {
       return NextResponse.json(
         { success: false, error: 'Unauthorized' },
         { status: 401 }

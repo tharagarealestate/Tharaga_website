@@ -4,8 +4,7 @@
 // GET /api/smartscore/calculate?lead_ids=xxx,yyy
 // =============================================
 import { NextRequest, NextResponse } from 'next/server';
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
-import { cookies } from 'next/headers';
+import { createClient } from '@/lib/supabase/server';
 import { z } from 'zod';
 
 export const runtime = 'nodejs';
@@ -249,8 +248,7 @@ export async function POST(request: NextRequest) {
     const { lead_ids, force_recalculate = false, notify_builders = true } = validatedData;
     
     // Initialize Supabase client
-    const cookieStore = await cookies();
-    const supabase = createRouteHandlerClient({ cookies: () => cookieStore });
+    const supabase = await createClient();
     
     // Verify authentication
     const { data: { user }, error: authError } = await supabase.auth.getUser();
@@ -529,8 +527,7 @@ export async function GET(request: NextRequest) {
       );
     }
     
-    const cookieStore = await cookies();
-    const supabase = createRouteHandlerClient({ cookies: () => cookieStore });
+    const supabase = await createClient();
     
     // Verify authentication
     const { data: { user }, error: authError } = await supabase.auth.getUser();

@@ -8,7 +8,7 @@ import {
   TrendingUp, Users, MessageSquare, Brain, BarChart3, Star,
   CheckCircle2, Timer, Infinity,
 } from 'lucide-react'
-import { openAuthModal } from '@/components/ui/AuthButton'
+import { openAuthModal, openAuthModalSignup } from '@/components/ui/AuthButton'
 import { getSupabase } from '@/lib/supabase'
 import { Header } from '@/components/layout/Header'
 
@@ -281,7 +281,7 @@ export default function PricingPage() {
                   setLoading(true)
                   window.location.href = '/builder'
                 } else {
-                  openAuthModal('/builder')
+                  openAuthModalSignup('/builder')
                 }
               }}
               disabled={loading}

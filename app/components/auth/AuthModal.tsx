@@ -28,8 +28,9 @@ import {
 import { getSupabase } from '@/lib/supabase'
 
 // ─── Global open / close API ─────────────────────────────────────────────────
-let _open:  (() => void) | null = null
-let _close: (() => void) | null = null
+let _open:         (() => void) | null = null
+let _close:        (() => void) | null = null
+let _switchTab:    ((tab: 'signin' | 'signup') => void) | null = null
 
 // Capture where the modal was opened from so succeed() / handleGoogle() can
 // redirect back there. Callers can pass an explicit `next` path (e.g. '/builder')
@@ -42,6 +43,17 @@ export function openAuthModal(next?: string) {
   }
   _open?.()
 }
+
+/** Open the modal pre-positioned on the Sign-up tab. */
+export function openAuthModalSignup(next?: string) {
+  if (typeof window !== 'undefined') {
+    _sourcePathname = next ?? window.location.pathname
+  }
+  _open?.()
+  // Switch after a tick so the modal is mounted and _switchTab is registered
+  setTimeout(() => _switchTab?.('signup'), 30)
+}
+
 export function closeAuthModal() { _close?.() }
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -134,8 +146,9 @@ export function AuthModal() {
 
   // ── Register globals ──────────────────────────────────────────────────────
   useEffect(() => {
-    _open  = () => { setOpen(true); setStage('idle'); setErrorMsg('') }
-    _close = () => setOpen(false)
+    _open       = () => { setOpen(true); setStage('idle'); setErrorMsg('') }
+    _close      = () => setOpen(false)
+    _switchTab  = (t) => { setTab(t); setTabDir(t === 'signup' ? 1 : -1) }
     setMounted(true)
     ;(window as any).__thgOpenAuthModal = () => { setOpen(true); setStage('idle') }
     ;(window as any).openAuthModal      = () => { setOpen(true); setStage('idle') }
@@ -144,7 +157,7 @@ export function AuthModal() {
       if (last) setSiEmail(last)
     } catch {}
     return () => {
-      _open = null; _close = null
+      _open = null; _close = null; _switchTab = null
       delete (window as any).__thgOpenAuthModal
       delete (window as any).openAuthModal
     }

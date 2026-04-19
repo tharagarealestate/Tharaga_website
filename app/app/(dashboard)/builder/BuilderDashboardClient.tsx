@@ -22,20 +22,31 @@ import { useBuilderAuth } from './_components/BuilderAuthProvider'
 // Dynamic import — defers the heavy dashboard bundle until after auth resolves.
 // This is the primary fix for the "initial load lag": auth check is fast (< 1s),
 // then the dashboard JS chunk streams in in the background.
-function DashboardLoadError() {
+function DashboardLoadError({ onRetry }: { onRetry?: () => void }) {
   return (
     <div className="flex items-center justify-center min-h-[60vh]">
-      <div className="flex flex-col items-center gap-4 text-center px-6">
-        <div className="w-10 h-10 rounded-full bg-red-500/10 border border-red-500/20 flex items-center justify-center">
-          <span className="text-red-400 text-lg font-bold">!</span>
+      <div className="flex flex-col items-center gap-4 text-center px-6 max-w-sm">
+        <div className="w-12 h-12 rounded-full bg-red-500/10 border border-red-500/20 flex items-center justify-center">
+          <span className="text-red-400 text-xl font-bold">!</span>
         </div>
-        <p className="text-zinc-400 text-sm">Dashboard failed to load.</p>
-        <button
-          onClick={() => window.location.reload()}
-          className="px-4 py-2 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-400 text-sm hover:bg-amber-500/20 transition-colors"
-        >
-          Refresh page
-        </button>
+        <div>
+          <p className="text-zinc-200 text-sm font-semibold mb-1">Dashboard took too long to load</p>
+          <p className="text-zinc-500 text-xs">This usually happens on slow connections or first visits. Your data is safe.</p>
+        </div>
+        <div className="flex gap-3">
+          <button
+            onClick={onRetry ?? (() => window.location.reload())}
+            className="px-4 py-2 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-400 text-sm hover:bg-amber-500/20 transition-colors"
+          >
+            Try again
+          </button>
+          <button
+            onClick={() => window.location.reload()}
+            className="px-4 py-2 rounded-lg bg-zinc-800 border border-zinc-700 text-zinc-400 text-sm hover:bg-zinc-700 transition-colors"
+          >
+            Hard refresh
+          </button>
+        </div>
       </div>
     </div>
   )
@@ -70,13 +81,17 @@ function BuilderDashboardInner() {
   const searchParams = useSearchParams()
   const { isAuthenticated } = useBuilderAuth()
   const [chunkTimeout, setChunkTimeout] = useState(false)
+  const [retryCount,   setRetryCount]   = useState(0)
 
-  // Hard 10s timeout — if the dynamic chunk never resolves (CDN stall, import
-  // error, missing export), show the error UI instead of spinning forever.
+  // Safety timeout — 45s gives Netlify cold starts time to stream the chunk.
+  // The dynamic import .catch() already handles import errors; this only fires
+  // when the import silently hangs (very slow CDN / offline scenario).
+  // Cleared and reset on retry so each attempt gets a fresh 45s window.
   useEffect(() => {
-    const t = setTimeout(() => setChunkTimeout(true), 10000)
+    setChunkTimeout(false)
+    const t = setTimeout(() => setChunkTimeout(true), 45000)
     return () => clearTimeout(t)
-  }, [])
+  }, [retryCount])
 
   // Derive activeSection from URL search params
   const sectionFromUrl = searchParams.get('section') || 'overview'
@@ -112,8 +127,8 @@ function BuilderDashboardInner() {
   // Safety: if somehow mounted while unauthenticated — render nothing.
   if (!isAuthenticated) return null
 
-  // If the dashboard chunk never loaded after 10 seconds, show error UI
-  if (chunkTimeout) return <DashboardLoadError />
+  // If the dashboard chunk never loaded after 45 seconds, show error UI with retry
+  if (chunkTimeout) return <DashboardLoadError onRetry={() => setRetryCount(c => c + 1)} />
 
   return (
     <UnifiedSinglePageDashboard

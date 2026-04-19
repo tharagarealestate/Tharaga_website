@@ -26,7 +26,7 @@ import {
   MessageSquare, Calculator, Star, Users, Search, Eye,
   LogIn, LogOut, LayoutDashboard, ChevronDown,
 } from 'lucide-react'
-import { openAuthModal } from '@/components/ui/AuthButton'
+import { openAuthModal, openAuthModalSignup } from '@/components/ui/AuthButton'
 import { getSupabase } from '@/lib/supabase'
 import LeadCaptureForm from '@/components/LeadCaptureForm'
 
@@ -1005,7 +1005,7 @@ export default function HomePage() {
                   </Link>
                 ) : (
                   <button
-                    onClick={() => openAuthModal('/builder')}
+                    onClick={() => openAuthModalSignup('/builder')}
                     className="flex items-center gap-2 px-6 py-3 bg-amber-500 hover:bg-amber-400 text-black font-semibold text-sm rounded-xl transition-all"
                   >
                     <Zap className="w-4 h-4" /> Start Free Trial
@@ -1131,7 +1131,7 @@ export default function HomePage() {
                 </Link>
               ) : (
                 <button
-                  onClick={() => openAuthModal('/builder')}
+                  onClick={() => openAuthModalSignup('/builder')}
                   className="flex items-center gap-2 px-8 py-4 bg-amber-500 hover:bg-amber-400 text-black font-bold text-base rounded-xl transition-all shadow-lg shadow-amber-500/20"
                 >
                   <Zap className="w-5 h-5" />

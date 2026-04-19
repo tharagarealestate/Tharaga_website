@@ -1,10 +1,11 @@
 "use client"
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { motion } from 'framer-motion'
 import {
   User, Bell, Plug, Globe,
   Save, MessageSquare, BarChart3,
+  Database, CheckCircle2, AlertTriangle, Loader2, Copy, Check, ShieldAlert,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useBuilderDataContext } from '../hooks/useBuilderData'
@@ -14,7 +15,7 @@ interface SettingsSectionProps {
   onNavigate?: (section: string) => void
 }
 
-type SettingsTab = 'profile' | 'notifications' | 'integrations'
+type SettingsTab = 'profile' | 'notifications' | 'integrations' | 'database'
 
 export function SettingsSection({ onNavigate }: SettingsSectionProps) {
   const { builderId, userId, companyName, email, isAdmin } = useBuilderDataContext()
@@ -90,9 +91,10 @@ export function SettingsSection({ onNavigate }: SettingsSectionProps) {
   }
 
   const tabs: { id: SettingsTab; label: string; icon: React.ComponentType<{ className?: string }> }[] = [
-    { id: 'profile', label: 'Profile', icon: User },
-    { id: 'notifications', label: 'Notifications', icon: Bell },
-    { id: 'integrations', label: 'Integrations', icon: Plug },
+    { id: 'profile',       label: 'Profile',       icon: User     },
+    { id: 'notifications', label: 'Notifications', icon: Bell     },
+    { id: 'integrations',  label: 'Integrations',  icon: Plug     },
+    ...(isAdmin ? [{ id: 'database' as SettingsTab, label: 'DB Status', icon: Database }] : []),
   ]
 
   return (
@@ -191,6 +193,12 @@ export function SettingsSection({ onNavigate }: SettingsSectionProps) {
             </motion.div>
           )}
 
+          {activeTab === 'database' && isAdmin && (
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+              <DbStatusPanel />
+            </motion.div>
+          )}
+
           {activeTab === 'integrations' && (
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-3">
               <h2 className="text-base font-semibold text-zinc-100 mb-4">Connected Services</h2>
@@ -228,6 +236,138 @@ export function SettingsSection({ onNavigate }: SettingsSectionProps) {
 
         </div>
       </div>
+    </div>
+  )
+}
+
+// ─── Admin: DB Status Panel ───────────────────────────────────────────────────
+
+interface DbResult {
+  table: string
+  existed: boolean
+  created: boolean
+  error: string | null
+  sql: string
+}
+interface DbResponse {
+  success: boolean
+  results: DbResult[]
+  action_required?: boolean
+  instructions?: string
+  sql_to_run?: string
+  supabase_url?: string
+}
+
+function DbStatusPanel() {
+  const [status,  setStatus]  = useState<DbResponse | null>(null)
+  const [loading, setLoading] = useState(false)
+  const [copied,  setCopied]  = useState(false)
+
+  const runCheck = useCallback(async () => {
+    setLoading(true)
+    try {
+      const { data: { session } } = await getSupabase().auth.getSession()
+      const token = session?.access_token ?? ''
+      const res = await fetch('/api/admin/setup-db', {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      })
+      const data: DbResponse = await res.json()
+      setStatus(data)
+    } catch (e: any) {
+      setStatus({ success: false, results: [], action_required: true, instructions: e?.message })
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
+  const copySQL = () => {
+    if (!status?.sql_to_run) return
+    navigator.clipboard.writeText(status.sql_to_run).catch(() => {})
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2500)
+  }
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-base font-semibold text-zinc-100">Database Status</h2>
+          <p className="text-xs text-zinc-500 mt-0.5">Check and provision required tables</p>
+        </div>
+        <button
+          onClick={runCheck}
+          disabled={loading}
+          className="flex items-center gap-2 px-4 py-2 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-400 text-sm hover:bg-amber-500/20 transition-colors disabled:opacity-50"
+        >
+          {loading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Database className="w-3.5 h-3.5" />}
+          {loading ? 'Checking…' : 'Run check'}
+        </button>
+      </div>
+
+      {!status && !loading && (
+        <div className="bg-zinc-900/40 border border-zinc-800/60 rounded-xl p-6 text-center text-zinc-500 text-sm">
+          Click "Run check" to verify database tables
+        </div>
+      )}
+
+      {status && (
+        <div className="space-y-3">
+          {status.results.map(r => (
+            <div key={r.table}
+              className={cn(
+                'flex items-start gap-3 p-4 rounded-xl border',
+                r.existed || r.created
+                  ? 'bg-emerald-500/5 border-emerald-500/20'
+                  : 'bg-red-500/5 border-red-500/20',
+              )}
+            >
+              {r.existed || r.created
+                ? <CheckCircle2 className="w-4 h-4 text-emerald-400 flex-shrink-0 mt-0.5" />
+                : <AlertTriangle className="w-4 h-4 text-red-400 flex-shrink-0 mt-0.5" />}
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-mono font-medium text-zinc-200">{r.table}</p>
+                <p className="text-xs text-zinc-500 mt-0.5">
+                  {r.existed  && 'Table exists ✓'}
+                  {!r.existed && r.created && 'Created successfully ✓'}
+                  {!r.existed && !r.created && `Missing — manual SQL required${r.error ? ` (${r.error})` : ''}`}
+                </p>
+              </div>
+            </div>
+          ))}
+
+          {status.action_required && status.sql_to_run && (
+            <div className="bg-zinc-900/60 border border-amber-500/20 rounded-xl p-5 space-y-3">
+              <div className="flex items-center gap-2">
+                <ShieldAlert className="w-4 h-4 text-amber-400" />
+                <p className="text-sm font-semibold text-amber-300">Manual action required</p>
+              </div>
+              <p className="text-xs text-zinc-400">{status.instructions}</p>
+              <pre className="text-[11px] font-mono text-zinc-300 bg-black/40 rounded-lg p-4 overflow-x-auto whitespace-pre-wrap leading-relaxed">
+                {status.sql_to_run}
+              </pre>
+              <div className="flex gap-3">
+                <button
+                  onClick={copySQL}
+                  className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-zinc-800 border border-zinc-700 text-zinc-300 text-xs hover:bg-zinc-700 transition-colors"
+                >
+                  {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                  {copied ? 'Copied!' : 'Copy SQL'}
+                </button>
+                {status.supabase_url && (
+                  <a
+                    href={status.supabase_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs hover:bg-emerald-500/20 transition-colors"
+                  >
+                    Open SQL Editor ↗
+                  </a>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   )
 }

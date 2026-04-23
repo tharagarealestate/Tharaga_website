@@ -8,9 +8,13 @@
  *   AnimatePresence panel per tab:
  *     Desktop: 300px info sidebar (sticky) | right: raw calculator (no wrapper card)
  *     Mobile:  compact hero row → calculator stacked below
+ *
+ * Performance: tool components are dynamically imported so the initial
+ * page bundle stays small. Each tool chunk loads only when its tab is active.
  */
 
 import { Suspense } from 'react'
+import dynamic from 'next/dynamic'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import Link from 'next/link'
@@ -21,13 +25,29 @@ import {
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
-// ── AI Tool Components ────────────────────────────────────────────────────────
-import { ROITool }        from '@/components/tools/ROITool'
-import { EMITool }        from '@/components/tools/EMITool'
-import { BudgetTool }     from '@/components/tools/BudgetTool'
-import { LoanTool }       from '@/components/tools/LoanTool'
-import { LocalityTool }   from '@/components/tools/LocalityTool'
-import { ValuationTool }  from '@/components/tools/ValuationTool'
+// ── Tool Loading Skeleton (shared fallback for all dynamic tool imports) ───────
+function ToolSkeleton() {
+  return (
+    <div className="py-8 space-y-4 animate-pulse">
+      {[1, 2, 3, 4].map(i => (
+        <div key={i} className="space-y-1.5">
+          <div className="w-28 h-3 rounded bg-white/[0.05]" />
+          <div className="w-full h-11 rounded-xl bg-white/[0.04] border border-white/[0.06]" style={{ animationDelay: `${i * 60}ms` }} />
+        </div>
+      ))}
+      <div className="w-full h-12 rounded-xl bg-amber-500/10 mt-2" />
+    </div>
+  )
+}
+
+// ── AI Tool Components — dynamically imported to keep initial bundle small ────
+// Each tool (~300 lines + AIAnalysisPanel) loads only when its tab is activated.
+const ROITool      = dynamic(() => import('@/components/tools/ROITool').then(m => ({ default: m.ROITool })),      { loading: () => <ToolSkeleton />, ssr: false })
+const EMITool      = dynamic(() => import('@/components/tools/EMITool').then(m => ({ default: m.EMITool })),      { loading: () => <ToolSkeleton />, ssr: false })
+const BudgetTool   = dynamic(() => import('@/components/tools/BudgetTool').then(m => ({ default: m.BudgetTool })),   { loading: () => <ToolSkeleton />, ssr: false })
+const LoanTool     = dynamic(() => import('@/components/tools/LoanTool').then(m => ({ default: m.LoanTool })),     { loading: () => <ToolSkeleton />, ssr: false })
+const LocalityTool = dynamic(() => import('@/components/tools/LocalityTool').then(m => ({ default: m.LocalityTool })), { loading: () => <ToolSkeleton />, ssr: false })
+const ValuationTool= dynamic(() => import('@/components/tools/ValuationTool').then(m => ({ default: m.ValuationTool })),{ loading: () => <ToolSkeleton />, ssr: false })
 
 // ── Accent tokens ─────────────────────────────────────────────────────────────
 type AccentKey = 'amber' | 'emerald' | 'blue' | 'purple'

@@ -21,13 +21,13 @@ import {
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
-// ── Calculators ───────────────────────────────────────────────────────────────
-import { ROICalculator }             from '@/components/lead-capture/ROICalculator'
-import { EMICalculator }             from '@/components/lead-capture/EMICalculator'
-import { BudgetPlanner }             from '@/components/lead-capture/BudgetPlanner'
-import { LoanEligibilityCalculator } from '@/components/lead-capture/LoanEligibilityCalculator'
-import { NeighborhoodFinder }        from '@/components/lead-capture/NeighborhoodFinder'
-import { PropertyValuation }         from '@/components/lead-capture/PropertyValuation'
+// ── AI Tool Components ────────────────────────────────────────────────────────
+import { ROITool }        from '@/components/tools/ROITool'
+import { EMITool }        from '@/components/tools/EMITool'
+import { BudgetTool }     from '@/components/tools/BudgetTool'
+import { LoanTool }       from '@/components/tools/LoanTool'
+import { LocalityTool }   from '@/components/tools/LocalityTool'
+import { ValuationTool }  from '@/components/tools/ValuationTool'
 
 // ── Accent tokens ─────────────────────────────────────────────────────────────
 type AccentKey = 'amber' | 'emerald' | 'blue' | 'purple'
@@ -109,7 +109,7 @@ const TOOLS: ToolConfig[] = [
     ],
     trust: ['RERA Compliant', 'Real-time data', 'No sign-up required'],
     accent: 'amber',
-    Component: ROICalculator,
+    Component: ROITool,
   },
   {
     id: 'emi',
@@ -126,7 +126,7 @@ const TOOLS: ToolConfig[] = [
     ],
     trust: ['Live bank rates', 'Amortization table', 'Instant results'],
     accent: 'amber',
-    Component: EMICalculator,
+    Component: EMITool,
   },
   {
     id: 'budget',
@@ -143,7 +143,7 @@ const TOOLS: ToolConfig[] = [
     ],
     trust: ['TN registration rates', 'Budget matching', 'Instant estimate'],
     accent: 'emerald',
-    Component: BudgetPlanner,
+    Component: BudgetTool,
   },
   {
     id: 'loan',
@@ -160,7 +160,7 @@ const TOOLS: ToolConfig[] = [
     ],
     trust: ['PMAY subsidy check', '8 banks', 'Pre-approval score'],
     accent: 'blue',
-    Component: LoanEligibilityCalculator,
+    Component: LoanTool,
   },
   {
     id: 'neighborhood',
@@ -177,7 +177,7 @@ const TOOLS: ToolConfig[] = [
     ],
     trust: ['School proximity', 'Commute scoring', '180+ localities'],
     accent: 'purple',
-    Component: NeighborhoodFinder,
+    Component: LocalityTool,
   },
   {
     id: 'valuation',
@@ -194,7 +194,7 @@ const TOOLS: ToolConfig[] = [
     ],
     trust: ['RERA verified data', '94% accuracy', 'Instant estimate'],
     accent: 'amber',
-    Component: PropertyValuation,
+    Component: ValuationTool,
   },
 ]
 

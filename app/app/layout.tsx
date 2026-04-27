@@ -6,6 +6,7 @@ import { ToastProvider } from '@/components/ui/toast'
 import { NotificationProvider } from '@/contexts/NotificationContext'
 import { AuthModal } from '@/components/auth/AuthModal'
 import { FloatingAIChat } from '@/components/ai/FloatingAIChat'
+import { Suspense } from 'react'
 
 export const runtime = 'nodejs'
 
@@ -53,7 +54,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <NextIntlClientProvider locale="en" messages={{}}>
           <NotificationProvider>
             <ToastProvider>
-              {children}
+              <Suspense fallback={null}>
+                {children}
+              </Suspense>
               <AuthModal />
               <FloatingAIChat />
             </ToastProvider>

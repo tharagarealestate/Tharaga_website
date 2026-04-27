@@ -41,8 +41,8 @@ export async function POST(req: NextRequest) {
       if (messageId) {
         query = query.eq('external_message_id', String(messageId))
       } else if (phoneText) {
-        // Explicitly cast to text in Supabase query to prevent PostgREST from inferring BigInt
-        query = query.eq('phone_number::text', phoneText) 
+        // Simply use the column name. Since phoneText is a string, PostgREST handles it as text.
+        query = query.eq('phone_number', phoneText) 
       }
       
       const { data: existingLead } = await query.maybeSingle()

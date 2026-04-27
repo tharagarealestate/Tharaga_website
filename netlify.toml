@@ -343,4 +343,7 @@
   to = "/builder?section=team"
   status = 302
 
+[functions."*"]
+  timeout = 60
+
 

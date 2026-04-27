@@ -184,6 +184,27 @@ export default function HomePage() {
   const [hoveredProperty, setHoveredProperty] = useState<number | null>(null)
   const [userMenuOpen, setUserMenuOpen] = useState(false)
 
+  // ── Live stats from API ──
+  const [dashboardMetrics, setDashboardMetrics] = useState({
+    activeLeads: '0',
+    pipelineValue: '₹0',
+    lionLeads: '0',
+    conversionRate: '0%'
+  });
+  const [liveLocalities, setLiveLocalities] = useState<any[]>(LOCALITIES)
+  const [livePropertyCount, setLivePropertyCount] = useState<number>(32)
+
+  useEffect(() => {
+    fetch('/api/dashboard-metrics')
+      .then(res => res.json())
+      .then(data => {
+        if (data?.metrics) setDashboardMetrics(data.metrics)
+        if (data?.localities) setLiveLocalities(data.localities)
+        if (data?.propertyCount) setLivePropertyCount(data.propertyCount)
+      })
+      .catch(console.error)
+  }, [])
+
   // ── Auth state ──
   const [user, setUser] = useState<any>(null)
   const [displayName, setDisplayName] = useState('')
@@ -774,9 +795,9 @@ export default function HomePage() {
 
               {/* Locality list */}
               <div className="space-y-3">
-                {LOCALITIES.map(loc => (
+                {liveLocalities.map(loc => (
                   <motion.button
-                    key={loc.id}
+                    key={loc.name || loc.id}
                     whileHover={{ x: 4 }}
                     onClick={() => setActiveLocality(activeLocality === loc.id ? null : loc.id)}
                     className={`w-full text-left flex items-center justify-between px-4 py-3 rounded-xl border transition-all ${
@@ -821,12 +842,12 @@ export default function HomePage() {
                 style={{ backgroundImage: 'linear-gradient(rgba(245,158,11,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(245,158,11,0.5) 1px, transparent 1px)', backgroundSize: '40px 40px' }}
               />
               {/* Neural connection lines */}
-              <NeuralLines nodes={LOCALITIES} />
+              <NeuralLines nodes={liveLocalities} />
 
               {/* Locality nodes */}
-              {LOCALITIES.map((loc, i) => (
+              {liveLocalities.map((loc, i) => (
                 <motion.button
-                  key={loc.id}
+                  key={loc.name || loc.id}
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
                   transition={{ delay: i * 0.1, type: 'spring' }}
@@ -859,7 +880,7 @@ export default function HomePage() {
                     className="absolute bottom-4 left-4 right-4 bg-zinc-900/95 backdrop-blur-xl border border-amber-400/20 rounded-xl p-4"
                   >
                     {(() => {
-                      const loc = LOCALITIES.find(l => l.id === activeLocality)
+                      const loc = liveLocalities.find(l => l.id === activeLocality)
                       if (!loc) return null
                       return (
                         <div className="flex items-center justify-between">
@@ -922,10 +943,10 @@ export default function HomePage() {
                 {/* Metrics grid */}
                 <div className="p-5 grid grid-cols-2 gap-3">
                   {[
-                    { label: 'Active Leads', value: '47', delta: '+8 today', color: 'text-amber-400' },
-                    { label: 'Pipeline Value', value: '₹14.2Cr', delta: '+12%', color: 'text-emerald-400' },
-                    { label: 'Lion Leads', value: '12', delta: 'SLA: 15min', color: 'text-amber-400' },
-                    { label: 'Conversion Rate', value: '24%', delta: '+4.2% MoM', color: 'text-blue-400' },
+                    { label: 'Active Leads', value: dashboardMetrics.activeLeads, delta: 'Today', color: 'text-amber-400' },
+                    { label: 'Pipeline Value', value: dashboardMetrics.pipelineValue, delta: 'Total Value', color: 'text-emerald-400' },
+                    { label: 'Lion Leads', value: dashboardMetrics.lionLeads, delta: 'SLA: 15min', color: 'text-amber-400' },
+                    { label: 'Conversion Rate', value: dashboardMetrics.conversionRate, delta: 'Average', color: 'text-blue-400' },
                   ].map((m, i) => (
                     <motion.div
                       key={m.label}

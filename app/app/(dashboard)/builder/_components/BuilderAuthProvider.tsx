@@ -5,7 +5,9 @@ import { Session } from '@supabase/supabase-js'
 import { getSupabase } from '@/lib/supabase'
 import { BuilderAuthGate } from './BuilderAuthGate'
 import { BuilderSetupGate } from './BuilderSetupGate'
-import { openAuthModal, closeAuthModal } from '@/components/auth/AuthModal'
+import { openAuthModal, openAuthModalSignup, closeAuthModal } from '@/components/auth/AuthModal'
+import { Brain, MessageSquare, Target, CheckCircle2, Building2, Zap, BarChart3, Lock, Shield } from 'lucide-react'
+import { motion } from 'framer-motion'
 
 // ─── Architecture ────────────────────────────────────────────────────────────
 //
@@ -69,22 +71,112 @@ export function useBuilderAuth(): BuilderAuthContextType {
 // ─── Unauthenticated view — opens login modal after short delay ───────────────
 
 function UnauthenticatedView() {
-  useEffect(() => {
-    const t = setTimeout(() => openAuthModal('/builder'), 400)
-    return () => clearTimeout(t)
-  }, [])
-
   return (
-    <div className="fixed inset-0 bg-zinc-950 z-40 flex items-end justify-center pb-10">
-      <div className="pointer-events-none absolute -top-40 -left-40 w-[600px] h-[600px] rounded-full bg-amber-500/8 blur-[140px]" />
-      <div className="pointer-events-none absolute -bottom-40 -right-40 w-[600px] h-[600px] rounded-full bg-amber-600/6 blur-[140px]" />
-      {/* Escape hatch — visible if user closes the auth modal */}
-      <a
-        href="/"
-        className="relative z-10 text-sm text-zinc-500 hover:text-zinc-300 underline underline-offset-4 transition-colors"
-      >
-        ← Back to Home
-      </a>
+    <div className="relative min-h-screen bg-zinc-950 text-zinc-100 overflow-y-auto overflow-x-hidden w-full">
+      {/* Background Neural Effects */}
+      <div className="absolute inset-0 z-0 pointer-events-none">
+        <div className="absolute inset-0 bg-[linear-gradient(rgba(245,158,11,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(245,158,11,0.03)_1px,transparent_1px)] bg-[size:40px_40px]" />
+        <div className="absolute top-1/4 left-1/4 w-[500px] h-[500px] bg-amber-500/10 rounded-full blur-[140px]" />
+        <div className="absolute bottom-1/4 right-1/4 w-[500px] h-[500px] bg-amber-600/5 rounded-full blur-[140px]" />
+      </div>
+
+      {/* Top Bar */}
+      <div className="relative z-20 flex items-center justify-between px-6 py-4 max-w-7xl mx-auto w-full">
+        <a href="/" className="flex items-center gap-2 text-zinc-300 hover:text-zinc-100 transition-colors">
+          <Building2 className="w-5 h-5 text-amber-500" />
+          <span className="font-bold tracking-tight">Tharaga</span>
+        </a>
+        <button onClick={() => openAuthModal('/builder')} className="text-sm font-semibold text-zinc-300 hover:text-zinc-100 transition-colors px-4 py-2 border border-white/10 rounded-lg bg-white/5 hover:bg-white/10">
+          Sign In
+        </button>
+      </div>
+
+      {/* Hero Section */}
+      <div className="relative z-10 flex flex-col items-center justify-center pt-24 pb-20 px-4 text-center max-w-5xl mx-auto w-full">
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/20 mb-8">
+             <Zap className="w-3.5 h-3.5 text-amber-400" />
+             <span className="text-xs font-semibold text-amber-400 uppercase tracking-widest">Tharaga Builder OS</span>
+          </div>
+          <h1 className="text-5xl md:text-7xl font-bold tracking-tight mb-6 leading-tight">
+            <span className="text-zinc-100">Sell Real Estate on</span><br/>
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-amber-600">
+              Autopilot with AI
+            </span>
+          </h1>
+          <p className="text-lg text-zinc-400 max-w-2xl mx-auto mb-10 leading-relaxed">
+            The only OS designed for modern developers. SmartScore AI qualifies leads automatically, tracks behavior in real-time, and forces 15-minute SLAs on your sales team.
+          </p>
+
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-20">
+            <button onClick={() => openAuthModalSignup('/builder')} className="w-full sm:w-auto px-8 py-4 bg-amber-500 hover:bg-amber-400 text-black font-bold rounded-xl transition-all shadow-xl shadow-amber-500/20 text-base">
+              Start 14-Day Free Trial
+            </button>
+            <button onClick={() => openAuthModal('/builder')} className="w-full sm:w-auto px-8 py-4 bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 rounded-xl font-semibold transition-all text-base text-zinc-300">
+              View Pricing
+            </button>
+          </div>
+        </motion.div>
+
+        {/* Feature Grid */}
+        <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.2 }} className="grid md:grid-cols-3 gap-6 w-full text-left">
+          {[
+            { icon: Brain, title: 'SmartScore AI', desc: 'Every incoming lead is scored 0-100 based on intent, budget, and behavior signals. Never call a dead lead again.' },
+            { icon: MessageSquare, title: 'WhatsApp Qualification', desc: 'Tharaga AI chats with raw leads natively on WhatsApp, extracting BHk size, timeline, and exact budget automatically.' },
+            { icon: Target, title: 'Intelligent Routing', desc: 'Lion Tier (90+) leads bypass the queue and ring your top closer. Dog tier goes to channel partners. Pure automation.' },
+          ].map(f => (
+            <div key={f.title} className="p-6 rounded-2xl bg-zinc-900/50 border border-zinc-800/80 backdrop-blur-sm">
+              <div className="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center mb-4">
+                <f.icon className="w-5 h-5 text-amber-400" />
+              </div>
+              <h3 className="text-lg font-bold text-zinc-100 mb-2">{f.title}</h3>
+              <p className="text-sm text-zinc-400 leading-relaxed">{f.desc}</p>
+            </div>
+          ))}
+        </motion.div>
+      </div>
+
+      {/* Pricing / Trust Section */}
+      <div className="relative z-10 border-t border-zinc-800/50 bg-zinc-950 pb-20">
+        <div className="max-w-7xl mx-auto px-6 py-16">
+          <div className="text-center mb-12">
+            <div className="text-sm font-semibold text-amber-400 uppercase tracking-widest mb-3">Enterprise Grade</div>
+            <h2 className="text-3xl font-bold text-zinc-100">Simple, transparent pricing</h2>
+          </div>
+          
+          <div className="max-w-lg mx-auto bg-zinc-900 border border-amber-500/30 rounded-3xl p-8 relative shadow-2xl shadow-amber-500/5">
+            <div className="absolute top-0 right-8 -translate-y-1/2 px-3 py-1 bg-amber-500 text-black text-[10px] font-bold uppercase tracking-wider rounded-full">
+              Most Popular
+            </div>
+            <div className="mb-6">
+              <h3 className="text-2xl font-bold text-zinc-100 mb-2">Pro Builder Plan</h3>
+              <div className="flex items-end gap-2">
+                <span className="text-5xl font-black text-amber-400">₹4,999</span>
+                <span className="text-zinc-500 mb-1">/month</span>
+              </div>
+            </div>
+            
+            <div className="space-y-4 mb-8">
+              {[
+                'Unlimited CRM Users & Leads',
+                'SmartScore AI Auto-Tiering',
+                'WhatsApp Intelligent Chatbot',
+                'Automated Meta CAPI Sync',
+                'Custom RERA Verified Page',
+              ].map(f => (
+                <div key={f} className="flex items-center gap-3">
+                  <CheckCircle2 className="w-5 h-5 text-amber-400 shrink-0" />
+                  <span className="text-zinc-300 text-sm">{f}</span>
+                </div>
+              ))}
+            </div>
+
+            <button onClick={() => openAuthModalSignup('/builder')} className="w-full py-4 bg-amber-500 hover:bg-amber-400 text-black font-bold text-sm rounded-xl transition-colors">
+              Get Started Free
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
   )
 }

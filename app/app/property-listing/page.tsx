@@ -948,7 +948,7 @@ function PropertyListingContent() {
             transition={{ duration: 0.5, delay: 0.3 }}
             className="text-base text-zinc-500 mb-8 max-w-lg mx-auto"
           >
-            <AnimatedCount value={allProperties.length} /> verified properties across India,
+            <AnimatedCount value={allProperties.filter(p => norm(p).isVerified).length} /> verified properties across {new Set(allProperties.map(p => norm(p).city).filter(Boolean)).size || 1} cities,
             matched to you by AI in real-time
           </motion.p>
 

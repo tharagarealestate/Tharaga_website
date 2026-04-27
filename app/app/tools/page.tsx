@@ -13,7 +13,7 @@
  * page bundle stays small. Each tool chunk loads only when its tab is active.
  */
 
-import { Suspense } from 'react'
+import { Suspense, useState, useEffect } from 'react'
 import dynamic from 'next/dynamic'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -253,6 +253,17 @@ function ToolsHub() {
   const searchParams = useSearchParams()
   const router       = useRouter()
 
+  const [livePropertyCount, setLivePropertyCount] = useState<number | string>('2,400+')
+
+  useEffect(() => {
+    fetch('/api/dashboard-metrics')
+      .then(res => res.json())
+      .then(data => {
+        if (data?.propertyCount) setLivePropertyCount(data.propertyCount)
+      })
+      .catch(console.error)
+  }, [])
+
   const activeId    = searchParams.get('t') ?? 'roi'
   const activeTool  = TOOLS.find(t => t.id === activeId) ?? TOOLS[0]
   const col         = ACCENT[activeTool.accent]
@@ -393,7 +404,9 @@ function ToolsHub() {
                 {activeTool.stats.map(s => (
                   <div key={s.label} className="flex items-center justify-between">
                     <span className="text-xs text-zinc-500">{s.label}</span>
-                    <span className={cn('text-sm font-bold tabular-nums', col.stat)}>{s.value}</span>
+                    <span className={cn('text-sm font-bold tabular-nums', col.stat)}>
+                      {(s.label === 'Properties Analyzed' || s.label === 'Properties Listed') ? livePropertyCount : s.value}
+                    </span>
                   </div>
                 ))}
               </div>

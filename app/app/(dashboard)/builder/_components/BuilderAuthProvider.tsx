@@ -253,12 +253,19 @@ export function BuilderAuthProvider({ children }: { children: ReactNode }) {
 
     if (!mountedRef.current || resolvedRef.current) return
 
-    // If BOTH queries failed the JWT was likely rejected by RLS → unauthenticated
+    // If BOTH queries failed, default to 'no-profile' rather than 'unauthenticated'.
+    // resolveAuth is only ever called with a valid session (session?.user exists),
+    // so the JWT is confirmed valid at this point. Both queries failing indicates
+    // a timeout, Netlify cold-start lag, or transient RLS error — NOT a bad JWT.
+    // Setting 'unauthenticated' here would bounce brand-new users (no profile/roles
+    // yet) to the login modal instead of showing the profile setup screen.
     const rolesFailed   = rolesRes.status === 'rejected'   || !!rolesRes.value?.error
     const profileFailed = profileRes.status === 'rejected' || !!profileRes.value?.error
     if (rolesFailed && profileFailed) {
-      statusRef.current = 'unauthenticated'
-      setStatus('unauthenticated')
+      setBuilderId(null)
+      setBuilderProfile(null)
+      statusRef.current = 'no-profile'
+      setStatus('no-profile')
       resolvedRef.current = true
       return
     }
@@ -317,16 +324,17 @@ export function BuilderAuthProvider({ children }: { children: ReactNode }) {
     // This is the ONLY trigger for initial auth on page load.
     // After OAuth redirect, the session is ALREADY in localStorage (written by
     // /auth/callback before redirecting here), so this always succeeds immediately.
-    // Hard 8s safety timer — if auth hasn't resolved by then, show login modal
+    // Hard 12s safety timer — if auth hasn't resolved by then, show login modal
     // rather than spinning forever. Covers edge cases where getSession() stalls
-    // or resolveAuth DB queries never return.
+    // or resolveAuth DB queries never return. 12s (up from 8s) to accommodate
+    // Netlify cold starts where Supabase queries can take 5-7 seconds.
     const safetyTimer = setTimeout(() => {
       if (!mountedRef.current || resolvedRef.current) return
       console.warn('[BuilderAuth] Safety timeout fired — forcing unauthenticated')
       statusRef.current = 'unauthenticated'
       setStatus('unauthenticated')
       resolvedRef.current = true
-    }, 8000)
+    }, 12000)
 
     const initAuth = async () => {
       try {

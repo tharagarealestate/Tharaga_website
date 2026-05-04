@@ -234,6 +234,57 @@ Keep emailSubject under 70 chars. socialPost under 280 chars with emojis. whatsa
   return base
 }
 
+// ─── Anthropic Claude enhancement ────────────────────────────────────────────
+async function enhanceWithAnthropic(p: PropertyRow, base: ContentSet): Promise<ContentSet> {
+  const key = process.env.ANTHROPIC_API_KEY
+  if (!key) return base
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': key,
+        'anthropic-version': '2023-06-01',
+      },
+      body: JSON.stringify({
+        model: 'claude-haiku-4-5',
+        max_tokens: 800,
+        messages: [{
+          role: 'user',
+          content: `You are a top Indian real estate copywriter. Improve this property marketing copy. Return JSON only.
+
+Property: ${JSON.stringify({
+            title: p.title, city: p.city, locality: p.locality,
+            price: p.price_inr, bedrooms: p.bedrooms, sqft: p.sqft,
+            type: p.property_type, desc: p.description?.slice(0, 200),
+          })}
+
+Return: { "emailSubject": "under 70 chars", "socialPost": "under 280 chars with emojis, hashtags", "whatsappMsg": "WhatsApp format with *bold*, bullet points, CTA", "highlights": ["5 bullet points"] }`,
+        }],
+      }),
+      signal: AbortSignal.timeout(10000),
+    })
+    if (res.ok) {
+      const d = await res.json()
+      const text = d.content?.[0]?.text || ''
+      const match = text.match(/\{[\s\S]*\}/)
+      if (match) {
+        const ai = JSON.parse(match[0])
+        return {
+          ...base,
+          emailSubject: ai.emailSubject || base.emailSubject,
+          socialPost:   ai.socialPost   || base.socialPost,
+          whatsappMsg:  ai.whatsappMsg  || base.whatsappMsg,
+          highlights:   Array.isArray(ai.highlights) ? ai.highlights : base.highlights,
+        }
+      }
+    }
+  } catch (e) {
+    console.warn('[Launch] Anthropic enhancement skipped:', (e as Error).message)
+  }
+  return base
+}
+
 // ─── Send builder notification email ──────────────────────────────────────────
 
 async function sendBuilderEmail(
@@ -404,6 +455,10 @@ export async function POST(request: NextRequest) {
     let content = generateRuleBasedContent(property as PropertyRow)
     _step = 6
     content = await enhanceWithAI(property as PropertyRow, content)
+    // Anthropic enhancement (if OpenAI skipped or for richer copy)
+    if (!process.env.OPENAI_API_KEY && process.env.ANTHROPIC_API_KEY) {
+      content = await enhanceWithAnthropic(property as PropertyRow, content)
+    }
 
     // ── 4. Build WhatsApp share link ────────────────────────────────────────
     const waText     = encodeURIComponent(content.whatsappMsg)
@@ -452,6 +507,45 @@ export async function POST(request: NextRequest) {
     if (builderEmail) {
       sendBuilderEmail(builderEmail, builderName, property as PropertyRow, content, waShareUrl)
         .catch(e => console.error('[Launch] Builder email error:', e))
+    }
+
+    // ── 6c. Post to Facebook/Meta (fire-and-forget) ──────────────────────────
+    // Uses META_PAGE_ACCESS_TOKEN — silently skips if key is missing
+    if (process.env.META_PAGE_ACCESS_TOKEN) {
+      const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://tharaga.co.in'
+      const firstImage = (property as any).images?.[0] || null
+      fetch(`${baseUrl}/api/automation/marketing/meta-post`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          property_id: propertyId,
+          message: content.socialPost,
+          image_url: typeof firstImage === 'string' ? firstImage : firstImage?.url || null,
+        }),
+        signal: AbortSignal.timeout(20000),
+      }).then(async (r) => {
+        const d = await r.json().catch(() => ({}))
+        console.log('[Launch] Meta post result:', d.success ? `post_id=${d.post_id}` : `skipped: ${d.error}`)
+      }).catch(e => console.warn('[Launch] Meta post fire-and-forget error:', e.message))
+    }
+
+    // ── 6d. WhatsApp broadcast to matching leads (fire-and-forget) ───────────
+    // Uses TWILIO_* keys — silently skips if not configured
+    if (process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN) {
+      const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://tharaga.co.in'
+      fetch(`${baseUrl}/api/automation/marketing/whatsapp-leads`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          property_id: propertyId,
+          message_template: content.whatsappMsg,
+          max_leads: 25,
+        }),
+        signal: AbortSignal.timeout(60000), // 25 leads × ~800ms + overhead
+      }).then(async (r) => {
+        const d = await r.json().catch(() => ({}))
+        console.log(`[Launch] WhatsApp: sent=${d.sent}, failed=${d.failed}, matched=${d.total_leads_matched}`)
+      }).catch(e => console.warn('[Launch] WhatsApp fire-and-forget error:', e.message))
     }
 
     // ── 6b. Auto-populate property_marketing_strategies ─────────────────────
@@ -580,10 +674,20 @@ export async function POST(request: NextRequest) {
         automation_type: 'launch',
         status:          'success',
         details: {
-          triggered_via:   'launch-endpoint',
-          ai_enhanced:     !!process.env.OPENAI_API_KEY,
+          triggered_via:        'launch-endpoint',
+          test_mode:            false,
+          strategy_id:          campaignId,
+          ai_enhanced:          !!(process.env.OPENAI_API_KEY || process.env.ANTHROPIC_API_KEY),
+          ai_provider:          process.env.OPENAI_API_KEY ? 'openai' : process.env.ANTHROPIC_API_KEY ? 'anthropic' : 'rule-based',
           builder_email_queued: !!builderEmail,
-          duration_ms:     Date.now() - startTime,
+          meta_post_triggered:  !!process.env.META_PAGE_ACCESS_TOKEN,
+          whatsapp_triggered:   !!(process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN),
+          channels_active: [
+            process.env.META_PAGE_ACCESS_TOKEN ? 'facebook' : null,
+            process.env.TWILIO_ACCOUNT_SID ? 'whatsapp' : null,
+            process.env.RESEND_API_KEY ? 'email' : null,
+          ].filter(Boolean),
+          duration_ms:          Date.now() - startTime,
         },
       })
     } catch (e) {

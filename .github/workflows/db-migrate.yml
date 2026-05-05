@@ -1,0 +1,37 @@
+name: Database Migration Runner
+
+on:
+  workflow_dispatch:
+    inputs:
+      migration_file:
+        description: 'Migration file to run (e.g., 085_production_readiness_comprehensive_fix.sql). Leave blank to run ALL pending.'
+        required: false
+        default: '085_production_readiness_comprehensive_fix.sql'
+  push:
+    branches: [main]
+    paths:
+      - 'supabase/migrations/**.sql'
+
+jobs:
+  migrate:
+    name: Apply Supabase Migrations
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Supabase JS
+        run: npm install @supabase/supabase-js --no-save
+
+      - name: Run migration
+        env:
+          SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          MIGRATION_FILE: ${{ github.event.inputs.migration_file || '085_production_readiness_comprehensive_fix.sql' }}
+        run: node .github/scripts/run-migration-ci.mjs

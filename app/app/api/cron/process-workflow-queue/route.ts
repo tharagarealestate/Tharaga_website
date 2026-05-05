@@ -5,12 +5,8 @@
  * run delayed marketing workflows (image processing, landing pages, WhatsApp
  * broadcast, etc.) that the intelligence engine queued.
  *
- * Schedule: run every 2 minutes via Netlify/Vercel scheduler.
- *
- * Netlify.toml example:
- *   [[crons]]
- *   schedule = "*/2 * * * *"
- *   path     = "/api/cron/process-workflow-queue"
+ * Schedule: every 2 minutes via Netlify scheduled function.
+ * netlify.toml: [functions."process-workflow-queue"] schedule = "@every 2m"
  *
  * Algorithm:
  *  1. Claim up to BATCH_SIZE pending jobs whose scheduled_at <= NOW()

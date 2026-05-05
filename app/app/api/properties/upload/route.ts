@@ -129,12 +129,25 @@ export const POST = secureApiRoute(
       // Non-critical - processing can happen via cron
     }
 
-    // 4. Trigger AI marketing automation (fire and forget)
+    // 4. Trigger marketing automation (fire and forget, dual-path)
+    //    Path A: launch — immediate rule-based campaign (no AI keys needed)
+    //    Path B: auto-trigger → intelligence-engine — full AI marketing pipeline
     const _mktBody    = JSON.stringify({ property_id: property.id })
-    const _mktHeaders = { 'Content-Type': 'application/json' }
-    fetch(new URL('/api/automation/marketing/launch', request.url).toString(), {
+    const _mktHeaders = {
+      'Content-Type':  'application/json',
+      'Authorization': `Bearer ${process.env.INTERNAL_API_KEY || ''}`,
+    }
+    const _baseUrl = process.env.NEXT_PUBLIC_APP_URL
+      ? `${process.env.NEXT_PUBLIC_APP_URL}`
+      : request.url.replace(/\/api\/.*$/, '')
+
+    fetch(`${_baseUrl}/api/automation/marketing/launch`, {
       method: 'POST', headers: _mktHeaders, body: _mktBody,
     }).catch(e => console.error('[Property Upload] launch trigger failed (non-critical):', e))
+
+    fetch(`${_baseUrl}/api/automation/marketing/auto-trigger`, {
+      method: 'POST', headers: _mktHeaders, body: _mktBody,
+    }).catch(e => console.error('[Property Upload] auto-trigger failed (non-critical):', e))
 
     // 5. Return immediate response to user
     return NextResponse.json({

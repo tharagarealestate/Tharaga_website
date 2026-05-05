@@ -1,18 +1,34 @@
 /**
  * WORKFLOW 9: WHATSAPP BROADCASTING & CHATBOT
- * Trigger: Webhook from Content Generation Workflow
+ * Trigger: Queued by Intelligence Engine after content generation
  * Purpose: Send WhatsApp broadcasts to warm leads and deploy AI chatbot for property inquiries
+ *
+ * Architecture note: uses getAdminClient() because this is called server-to-server
+ * with no user session. Phone number normalisation prevents double-prepending +91.
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
-import { anthropicClient } from '@/lib/ai/anthropic'
+import { getAdminClient } from '@/lib/supabase/admin'
 
-export const maxDuration = 600 // 10 minutes for broadcasting
+export const maxDuration = 300
 
+// ── Phone Normalisation ────────────────────────────────────────────────────────
+// Accepts: "9876543210", "09876543210", "919876543210", "+919876543210"
+// Returns: "+919876543210"
+function normaliseIndianPhone(raw: string): string | null {
+  const digits = raw.replace(/\D/g, '')
+  if (digits.length === 10)                              return `+91${digits}`
+  if (digits.length === 11 && digits.startsWith('0'))   return `+91${digits.slice(1)}`
+  if (digits.length === 12 && digits.startsWith('91'))  return `+${digits}`
+  if (digits.length === 13 && digits.startsWith('091')) return `+91${digits.slice(3)}`
+  return null // can't safely normalise — skip
+}
+
+// ── Main Handler ──────────────────────────────────────────────────────────────
 export async function POST(req: NextRequest) {
+  const db = getAdminClient()
+
   try {
-    const supabase = await createClient()
     const body = await req.json()
     const { property_id } = body
 
@@ -21,108 +37,107 @@ export async function POST(req: NextRequest) {
     }
 
     // Step 1: Fetch Property Data
-    const { data: property, error: propertyError } = await supabase
+    const { data: property, error: propErr } = await db
       .from('properties')
       .select('*')
       .eq('id', property_id)
       .single()
 
-    if (propertyError || !property) {
+    if (propErr || !property) {
       return NextResponse.json({ error: 'Property not found' }, { status: 404 })
     }
 
-    // Step 2: Segment Leads for WhatsApp Broadcast
-    const segments = await segmentLeads(property, supabase)
+    // Step 2: Segment Leads
+    const segments      = await segmentLeads(property, db)
+    const templates     = buildMessageTemplates(property)
+    const broadcastResult = await sendBroadcasts(property, segments, templates)
 
-    // Step 3: Generate Personalized WhatsApp Messages
-    const messageTemplates = generateMessageTemplates(property)
+    // Step 3: Deploy AI chatbot webhook (idempotent)
+    const chatbotDeployed = await deployChatbot()
 
-    // Step 4: Send WhatsApp Broadcasts
-    const broadcastResults = await sendWhatsAppBroadcasts(property, segments, messageTemplates, supabase)
-
-    // Step 5: Deploy AI WhatsApp Chatbot
-    const chatbotDeployed = await deployWhatsAppChatbot(property)
-
-    // Step 6: Store Campaign Data
-    const { data: campaignData } = await supabase
+    // Step 4: Persist campaign record
+    const { data: campaign } = await db
       .from('whatsapp_campaigns')
       .insert({
         property_id,
-        builder_id: property.builder_id,
-        campaign_name: `${property.title} - Launch Broadcast`,
-        campaign_type: 'broadcast',
-        total_recipients: segments.total_leads,
-        messages_sent: broadcastResults.messages_sent,
+        builder_id:          property.builder_id,
+        campaign_name:       `${property.title} — Launch Broadcast`,
+        campaign_type:       'broadcast',
+        total_recipients:    segments.total_leads,
+        messages_sent:       broadcastResult.sent_count,
         segment_distribution: {
-          hot_leads: segments.hot_leads.length,
+          hot_leads:  segments.hot_leads.length,
           warm_leads: segments.warm_leads.length,
         },
-        message_template: JSON.stringify(messageTemplates),
-        status: 'completed',
-        launched_at: new Date().toISOString(),
-        completed_at: new Date().toISOString(),
+        message_template: JSON.stringify(templates),
+        status:           'completed',
+        launched_at:      new Date().toISOString(),
+        completed_at:     new Date().toISOString(),
       })
       .select()
       .single()
 
-    // Store individual messages
-    if (campaignData && broadcastResults.sent_messages.length > 0) {
-      const messageInserts = broadcastResults.sent_messages.map((msg: any) => ({
-        campaign_id: campaignData.id,
-        property_id,
-        lead_id: msg.lead_id,
-        phone: msg.phone,
-        name: msg.name,
-        message_content: msg.message_content,
-        message_type: 'text',
-        message_sid: msg.message_sid,
-        status: msg.status,
-        segment: msg.segment,
-        sent_at: new Date().toISOString(),
-      }))
-
-      await supabase.from('whatsapp_messages').insert(messageInserts)
+    // Step 5: Persist individual message rows
+    if (campaign && broadcastResult.messages.length > 0) {
+      await db.from('whatsapp_messages').insert(
+        broadcastResult.messages.map((m: any) => ({
+          campaign_id:     campaign.id,
+          property_id,
+          lead_id:         m.lead_id,
+          phone:           m.phone,
+          name:            m.name,
+          message_content: m.content,
+          message_type:    'text',
+          message_sid:     m.sid ?? null,
+          status:          m.status,
+          segment:         m.segment,
+          sent_at:         new Date().toISOString(),
+        }))
+      )
     }
 
-    // Step 7: Update Property Status
-    await supabase
+    // Step 6: Update property flags
+    await db
       .from('properties')
       .update({
-        whatsapp_broadcast_sent: true,
-        whatsapp_chatbot_active: chatbotDeployed,
-        whatsapp_campaign_launched_at: new Date().toISOString(),
+        whatsapp_broadcast_sent:         true,
+        whatsapp_chatbot_active:         chatbotDeployed,
+        whatsapp_campaign_launched_at:   new Date().toISOString(),
       })
       .eq('id', property_id)
 
     return NextResponse.json({
-      success: true,
+      success:              true,
       property_id,
-      campaign_id: campaignData?.id,
-      total_leads: segments.total_leads,
-      messages_sent: broadcastResults.messages_sent,
-      hot_leads_contacted: segments.hot_leads.length,
+      campaign_id:          campaign?.id,
+      total_leads:          segments.total_leads,
+      messages_sent:        broadcastResult.sent_count,
+      hot_leads_contacted:  segments.hot_leads.length,
       warm_leads_contacted: segments.warm_leads.length,
-      chatbot_deployed: chatbotDeployed,
-      status: 'whatsapp_broadcast_complete',
+      chatbot_deployed:     chatbotDeployed,
     })
   } catch (error) {
     console.error('[WhatsApp Broadcast] Error:', error)
     return NextResponse.json(
-      { error: 'Internal server error', details: error instanceof Error ? error.message : 'Unknown error' },
+      { error: 'Internal server error', details: error instanceof Error ? error.message : 'Unknown' },
       { status: 500 }
     )
   }
 }
 
-// Helper Functions
-
-async function segmentLeads(property: any, supabase: any) {
-  // Fetch qualified leads for this location/type
-  const { data: targetLeads } = await supabase
+// ── Lead Segmentation ─────────────────────────────────────────────────────────
+async function segmentLeads(property: any, db: ReturnType<typeof getAdminClient>) {
+  const { data: leads = [] } = await db
     .from('leads')
     .select('id, name, phone, preferences, ai_lead_score, last_interaction_at, whatsapp_opt_in, status')
     .or(
-      `preferences->>preferred_locations.ilike.%${property.location}%,preferences->>preferred_bhk.eq.${property.bhk_type}`
+      [
+        `preferences->>preferred_locations.ilike.%${property.city || ''}%`,
+        property.location ? `preferences->>preferred_locations.ilike.%${property.location}%` : null,
+        property.bhk_type ? `preferences->>preferred_bhk.eq.${property.bhk_type}` : null,
+      ]
+        .filter(Boolean)
+        .join(',')
     )
     .eq('whatsapp_opt_in', true)
     .in('status', ['qualified', 'engaged'])
@@ -130,306 +145,155 @@ async function segmentLeads(property: any, supabase: any) {
     .order('ai_lead_score', { ascending: false })
     .limit(500)
 
-  const leads = targetLeads || []
+  const allLeads   = (leads as any[]).filter((l) => !!normaliseIndianPhone(l.phone || ''))
+  const hot_leads  = allLeads.filter((l) => l.ai_lead_score >= 80)
+  const warm_leads = allLeads.filter((l) => l.ai_lead_score >= 60 && l.ai_lead_score < 80)
 
-  // Segment leads
-  const segments = {
-    hot_leads: leads.filter((l: any) => l.ai_lead_score >= 80),
-    warm_leads: leads.filter((l: any) => l.ai_lead_score >= 60 && l.ai_lead_score < 80),
-    re_engagement: leads.filter((l: any) => {
-      if (!l.last_interaction_at) return false
-      const daysSinceInteraction = (Date.now() - new Date(l.last_interaction_at).getTime()) / (1000 * 60 * 60 * 24)
-      return daysSinceInteraction > 14
-    }),
-  }
-
-  return {
-    ...segments,
-    total_leads: leads.length,
-  }
+  return { hot_leads, warm_leads, total_leads: allLeads.length }
 }
 
-function generateMessageTemplates(property: any) {
-  // Hot leads - Exclusive first look
-  const hotLeadMessage = `🏡 *EXCLUSIVE FIRST LOOK*
+// ── Message Templates ─────────────────────────────────────────────────────────
+function buildMessageTemplates(property: any) {
+  const price  = property.price || property.price_inr || 0
+  const priceL = price > 0 ? `₹${(price / 100000).toFixed(2)}L` : 'Price on request'
+  const loc    = property.location || property.locality || property.city || 'Chennai'
+  const area   = property.carpet_area || property.sqft
+  const link   = property.landing_page_url || `https://tharaga.co.in/properties/${property.id}`
+
+  const hot = `🏡 *EXCLUSIVE FIRST LOOK*
 
 Hi {{name}},
 
-${property.title} just launched on Tharaga!
+${property.title || 'A new property'} just launched on Tharaga — matched for you!
 
-✨ Perfect match for your search:
-📍 ${property.location}
-🏠 ${property.bhk_type}
-💰 ₹${((property.price || property.price_inr) / 100000).toFixed(2)}L
-📏 ${property.carpet_area} sq.ft
+📍 ${loc}  🏠 ${property.bhk_type || ''}${area ? `  📏 ${area} sq.ft` : ''}
+💰 ${priceL}
 
-*LIMITED TIME OFFER:*
-Book site visit in next 48 hours and get:
-- Priority unit selection
-- Special pricing discussion
-- Free home loan consultation
+*Book your site visit in 48 hours and get:*
+• Priority unit selection
+• Special early-bird pricing
+• Free home loan consultation
 
-*Book Now:* ${property.landing_page_url || `https://tharaga.co.in/property/${property.id}`}
+👉 ${link}
 
-- Team Tharaga
+— Team Tharaga
 _Reply STOP to opt-out_`
 
-  // Warm leads - New launch announcement
-  const warmLeadMessage = `Hi {{name}},
+  const warm = `Hi {{name}},
 
-Great news! A new ${property.bhk_type} just launched in ${property.location} 🎉
+New ${property.bhk_type || 'home'} just launched in ${loc} 🎉
 
-${property.title}
-₹${((property.price || property.price_inr) / 100000).toFixed(2)}L | ${property.carpet_area} sq.ft
+*${property.title || 'New Property'}* | ${priceL}${area ? ` | ${area} sq.ft` : ''}
 
-✅ RERA Approved
-✅ Zero Commission
-✅ Direct from Builder
+✅ RERA Approved  ✅ Zero Commission  ✅ Direct from Builder
 
-*View Details:* ${property.landing_page_url || `https://tharaga.co.in/property/${property.id}`}
+View Details: ${link}
 
-Want to schedule a site visit? Just reply YES!`
+Reply *YES* to schedule a site visit!`
+
+  return { hot, warm }
+}
+
+// ── Send Broadcasts ────────────────────────────────────────────────────────────
+async function sendBroadcasts(
+  _property: any,
+  segments: { hot_leads: any[]; warm_leads: any[]; total_leads: number },
+  templates: { hot: string; warm: string }
+) {
+  const messages: any[] = []
+
+  const twilioSid    = process.env.TWILIO_ACCOUNT_SID
+  const twilioToken  = process.env.TWILIO_AUTH_TOKEN
+  const twilioFrom   = process.env.TWILIO_WHATSAPP_NUMBER
+  const twilioActive = !!(twilioSid && twilioToken && twilioFrom)
+
+  if (!twilioActive) {
+    console.log('[WhatsApp Broadcast] Twilio not configured — saving as drafts')
+    const makeDraft = (lead: any, segment: 'hot_leads' | 'warm_leads') => ({
+      lead_id: lead.id,
+      phone:   normaliseIndianPhone(lead.phone || '') ?? lead.phone,
+      name:    lead.name,
+      content: (segment === 'hot_leads' ? templates.hot : templates.warm)
+               .replace('{{name}}', lead.name || 'there'),
+      sid:     null,
+      status:  'pending',
+      segment,
+    })
+    segments.hot_leads.forEach((l) => messages.push(makeDraft(l, 'hot_leads')))
+    segments.warm_leads.forEach((l) => messages.push(makeDraft(l, 'warm_leads')))
+    return { sent_count: 0, messages }
+  }
+
+  const twilioUrl = `https://api.twilio.com/2010-04-01/Accounts/${twilioSid}/Messages.json`
+  const authHeader = `Basic ${Buffer.from(`${twilioSid}:${twilioToken}`).toString('base64')}`
+
+  const sendOne = async (lead: any, segment: 'hot_leads' | 'warm_leads') => {
+    const toPhone = normaliseIndianPhone(lead.phone || '')
+    if (!toPhone) return // skip unparseable numbers
+
+    const content = (segment === 'hot_leads' ? templates.hot : templates.warm)
+      .replace('{{name}}', lead.name || 'there')
+
+    try {
+      const res  = await fetch(twilioUrl, {
+        method:  'POST',
+        headers: { Authorization: authHeader, 'Content-Type': 'application/x-www-form-urlencoded' },
+        body:    new URLSearchParams({
+          From: `whatsapp:${twilioFrom}`,
+          To:   `whatsapp:${toPhone}`,
+          Body: content,
+        }),
+      })
+      const data = await res.json()
+      messages.push({
+        lead_id: lead.id, phone: toPhone, name: lead.name, content,
+        sid:     data.sid ?? null,
+        status:  data.status === 'queued' || data.status === 'sent' ? 'sent' : 'failed',
+        segment,
+      })
+    } catch (err) {
+      console.error(`[WhatsApp Broadcast] Send failed to ${toPhone}:`, err)
+      messages.push({ lead_id: lead.id, phone: toPhone, name: lead.name, content, sid: null, status: 'failed', segment })
+    }
+
+    // 1 message/second to respect Twilio rate limits
+    await new Promise((r) => setTimeout(r, 1000))
+  }
+
+  for (const lead of segments.hot_leads)  await sendOne(lead, 'hot_leads')
+  for (const lead of segments.warm_leads) await sendOne(lead, 'warm_leads')
 
   return {
-    hot_leads: hotLeadMessage,
-    warm_leads: warmLeadMessage,
+    sent_count: messages.filter((m) => m.status === 'sent').length,
+    messages,
   }
 }
 
-async function sendWhatsAppBroadcasts(property: any, segments: any, messageTemplates: any, supabase: any) {
-  const sentMessages: any[] = []
+// ── Deploy Chatbot Webhook ────────────────────────────────────────────────────
+async function deployChatbot(): Promise<boolean> {
+  const sid      = process.env.TWILIO_ACCOUNT_SID
+  const token    = process.env.TWILIO_AUTH_TOKEN
+  const phoneSid = process.env.TWILIO_PHONE_NUMBER_SID
 
-  // Check if Twilio is configured
-  if (!process.env.TWILIO_ACCOUNT_SID || !process.env.TWILIO_AUTH_TOKEN || !process.env.TWILIO_WHATSAPP_NUMBER) {
-    console.log('[WhatsApp Broadcast] Twilio not configured. Messages saved as drafts.')
-    // Create draft messages for later sending
-    segments.hot_leads.forEach((lead: any) => {
-      sentMessages.push({
-        lead_id: lead.id,
-        phone: lead.phone,
-        name: lead.name,
-        message_content: messageTemplates.hot_leads.replace('{{name}}', lead.name || 'there'),
-        message_sid: null,
-        status: 'pending',
-        segment: 'hot_leads',
-      })
-    })
+  if (!sid || !token || !phoneSid) return true // no-op — can be set up manually
 
-    segments.warm_leads.forEach((lead: any) => {
-      sentMessages.push({
-        lead_id: lead.id,
-        phone: lead.phone,
-        name: lead.name,
-        message_content: messageTemplates.warm_leads.replace('{{name}}', lead.name || 'there'),
-        message_sid: null,
-        status: 'pending',
-        segment: 'warm_leads',
-      })
-    })
-
-    return {
-      messages_sent: sentMessages.length,
-      sent_messages: sentMessages,
-    }
-  }
-
-  // Send to hot leads first
-  for (const lead of segments.hot_leads) {
-    const personalizedMessage = messageTemplates.hot_leads.replace('{{name}}', lead.name || 'there')
-
-    try {
-      const response = await fetch(
-        `https://api.twilio.com/2010-04-01/Accounts/${process.env.TWILIO_ACCOUNT_SID}/Messages.json`,
-        {
-          method: 'POST',
-          headers: {
-            Authorization: `Basic ${Buffer.from(`${process.env.TWILIO_ACCOUNT_SID}:${process.env.TWILIO_AUTH_TOKEN}`).toString('base64')}`,
-            'Content-Type': 'application/x-www-form-urlencoded',
-          },
-          body: new URLSearchParams({
-            From: `whatsapp:${process.env.TWILIO_WHATSAPP_NUMBER}`,
-            To: `whatsapp:+91${lead.phone.replace(/[^0-9]/g, '')}`,
-            Body: personalizedMessage,
-          }),
-        }
-      )
-
-      const result = await response.json()
-
-      sentMessages.push({
-        lead_id: lead.id,
-        phone: lead.phone,
-        name: lead.name,
-        message_content: personalizedMessage,
-        message_sid: result.sid,
-        status: result.status === 'queued' || result.status === 'sent' ? 'sent' : 'failed',
-        segment: 'hot_leads',
-      })
-
-      // Rate limiting: 1 message per second
-      await new Promise((resolve) => setTimeout(resolve, 1000))
-    } catch (error) {
-      console.error(`[WhatsApp Broadcast] Error sending to ${lead.phone}:`, error)
-      sentMessages.push({
-        lead_id: lead.id,
-        phone: lead.phone,
-        name: lead.name,
-        message_content: personalizedMessage,
-        message_sid: null,
-        status: 'failed',
-        segment: 'hot_leads',
-      })
-    }
-  }
-
-  // Send to warm leads
-  for (const lead of segments.warm_leads) {
-    const personalizedMessage = messageTemplates.warm_leads.replace('{{name}}', lead.name || 'there')
-
-    try {
-      const response = await fetch(
-        `https://api.twilio.com/2010-04-01/Accounts/${process.env.TWILIO_ACCOUNT_SID}/Messages.json`,
-        {
-          method: 'POST',
-          headers: {
-            Authorization: `Basic ${Buffer.from(`${process.env.TWILIO_ACCOUNT_SID}:${process.env.TWILIO_AUTH_TOKEN}`).toString('base64')}`,
-            'Content-Type': 'application/x-www-form-urlencoded',
-          },
-          body: new URLSearchParams({
-            From: `whatsapp:${process.env.TWILIO_WHATSAPP_NUMBER}`,
-            To: `whatsapp:+91${lead.phone.replace(/[^0-9]/g, '')}`,
-            Body: personalizedMessage,
-          }),
-        }
-      )
-
-      const result = await response.json()
-
-      sentMessages.push({
-        lead_id: lead.id,
-        phone: lead.phone,
-        name: lead.name,
-        message_content: personalizedMessage,
-        message_sid: result.sid,
-        status: result.status === 'queued' || result.status === 'sent' ? 'sent' : 'failed',
-        segment: 'warm_leads',
-      })
-
-      await new Promise((resolve) => setTimeout(resolve, 1000))
-    } catch (error) {
-      console.error(`[WhatsApp Broadcast] Error sending to ${lead.phone}:`, error)
-      sentMessages.push({
-        lead_id: lead.id,
-        phone: lead.phone,
-        name: lead.name,
-        message_content: personalizedMessage,
-        message_sid: null,
-        status: 'failed',
-        segment: 'warm_leads',
-      })
-    }
-  }
-
-  return {
-    messages_sent: sentMessages.filter((m) => m.status === 'sent').length,
-    sent_messages: sentMessages,
-  }
-}
-
-async function deployWhatsAppChatbot(property: any) {
-  // Set up webhook handler for incoming WhatsApp messages
   const webhookUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'https://tharaga.co.in'}/api/webhooks/whatsapp-incoming`
 
-  // Configure Twilio webhook if configured
-  if (process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_PHONE_NUMBER_SID) {
-    try {
-      await fetch(
-        `https://api.twilio.com/2010-04-01/Accounts/${process.env.TWILIO_ACCOUNT_SID}/IncomingPhoneNumbers/${process.env.TWILIO_PHONE_NUMBER_SID}.json`,
-        {
-          method: 'POST',
-          headers: {
-            Authorization: `Basic ${Buffer.from(`${process.env.TWILIO_ACCOUNT_SID}:${process.env.TWILIO_AUTH_TOKEN}`).toString('base64')}`,
-            'Content-Type': 'application/x-www-form-urlencoded',
-          },
-          body: new URLSearchParams({
-            SmsUrl: webhookUrl,
-            SmsMethod: 'POST',
-          }),
-        }
-      )
-
-      return true
-    } catch (error) {
-      console.error('[WhatsApp Broadcast] Error configuring chatbot webhook:', error)
-      return false
-    }
+  try {
+    await fetch(
+      `https://api.twilio.com/2010-04-01/Accounts/${sid}/IncomingPhoneNumbers/${phoneSid}.json`,
+      {
+        method:  'POST',
+        headers: {
+          Authorization:  `Basic ${Buffer.from(`${sid}:${token}`).toString('base64')}`,
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: new URLSearchParams({ SmsUrl: webhookUrl, SmsMethod: 'POST' }),
+      }
+    )
+    return true
+  } catch (err) {
+    console.error('[WhatsApp Broadcast] Chatbot webhook config failed:', err)
+    return false
   }
-
-  // Return true even if not configured (webhook can be set up manually)
-  return true
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

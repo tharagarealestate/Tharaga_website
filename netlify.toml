@@ -34,6 +34,11 @@
 [functions.process-email-queue]
   schedule = "*/30 * * * *"
 
+# Drains workflow_execution_queue — fires delayed marketing workflows enqueued by the
+# intelligence engine (landing pages, WhatsApp broadcast, paid ads, SEO content, etc.)
+[functions."process-workflow-queue"]
+  schedule = "*/2 * * * *"
+
 
 
 ## Legacy path aliases — migrate from /app/* to new flat routes

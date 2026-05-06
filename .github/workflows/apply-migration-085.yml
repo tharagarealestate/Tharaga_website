@@ -1,0 +1,70 @@
+name: Apply Migration 085
+
+# Runs ONLY migration 085 — fast (1 file, ~30 statements).
+# Triggered when this file or the runner script changes.
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/apply-migration-085.yml'
+      - '.github/scripts/run-migration-ci.mjs'
+  workflow_dispatch:
+
+jobs:
+  apply-085:
+    name: Apply Migration 085
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Diagnose secrets
+        env:
+          SUPABASE_URL:         ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          HAS_ACCESS_TOKEN:     ${{ secrets.SUPABASE_ACCESS_TOKEN != '' }}
+          HAS_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY != '' }}
+        run: |
+          echo "SUPABASE_URL     : ${SUPABASE_URL:+set (hidden)}"
+          echo "ACCESS_TOKEN set : $HAS_ACCESS_TOKEN"
+          echo "SERVICE_KEY set  : $HAS_SERVICE_ROLE_KEY"
+          echo "Runner IP        : $(curl -sf https://api.ipify.org || echo unknown)"
+
+      - name: Run migration 085
+        env:
+          SUPABASE_URL:              ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          SUPABASE_ACCESS_TOKEN:     ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          MIGRATION_FILE:            085_production_readiness_comprehensive_fix.sql
+        run: node .github/scripts/run-migration-ci.mjs
+
+      - name: Commit status to main (safe strategy)
+        if: always()
+        run: |
+          # Save the status file that the runner wrote (or the original if runner crashed)
+          cp supabase/migration-status.json /tmp/ci-status.json
+
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          # Hard-checkout the LATEST main — this is the safe strategy:
+          # instead of git-reset-soft (which leaves a stale index with all
+          # checkout files staged), we fully sync to origin/main first, then
+          # overlay just our status file.
+          git fetch origin main
+          git checkout -f origin/main
+
+          # Restore the status result on top of the clean main
+          cp /tmp/ci-status.json supabase/migration-status.json
+
+          git add supabase/migration-status.json
+          if git diff --cached --quiet; then
+            echo "Status unchanged — nothing to commit."
+          else
+            git commit -m "ci: migration-085 status $(date -u +%Y-%m-%dT%H:%M:%SZ) [skip ci]"
+            git push origin HEAD:main
+          fi

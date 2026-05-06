@@ -1,5 +1,5 @@
 -- =============================================================================
--- MIGRATION 085: PRODUCTION READINESS COMPREHENSIVE FIX
+-- MIGRATION 085: PRODUCTION READINESS COMPREHENSIVE FIX  [ci-trigger: 2026-05-06 api]
 -- Fixes all critical blockers preventing production launch:
 --   1. Creates property_marketing_automation_logs (referenced but never created)
 --   2. Creates workflow_execution_queue (serverless-safe async job runner)

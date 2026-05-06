@@ -4,50 +4,56 @@
  *
  * Strategy (tried in order):
  *   1. Supabase Management API  — POST /v1/projects/{ref}/database/query
- *      Requires: SUPABASE_ACCESS_TOKEN (PAT)
- *   2. exec_sql RPC             — POST /rest/v1/rpc/exec_sql
- *      Requires: SUPABASE_SERVICE_ROLE_KEY + exec_sql function in DB
+ *      Requires: SUPABASE_ACCESS_TOKEN (PAT from supabase.com/dashboard/account/tokens)
+ *      Works from any IP; not subject to project-level Network Restrictions.
  *
- * Each request has a 10-second timeout so hung calls don’t block the runner.
+ *   2. exec_sql RPC             — POST /rest/v1/rpc/exec_sql
+ *      Requires: SUPABASE_SERVICE_ROLE_KEY + the exec_sql function to exist in the DB.
+ *      Falls back to this when no PAT is available.
+ *
+ * After each run, results are written to supabase/migration-status.json so that
+ * the CI job can commit it back to the branch and the developer can git-pull to
+ * verify success without leaving their terminal.
+ *
+ * Usage (local):
+ *   SUPABASE_URL=https://xxx.supabase.co \
+ *   SUPABASE_ACCESS_TOKEN=sbp_xxx \
+ *   node .github/scripts/run-migration-ci.mjs
  */
 
 import { readFileSync, readdirSync, writeFileSync, existsSync } from 'fs'
 import { join, dirname } from 'path'
 import { fileURLToPath } from 'url'
 
-const __dir          = dirname(fileURLToPath(import.meta.url))
-const ROOT           = join(__dir, '..', '..')
+const __dir         = dirname(fileURLToPath(import.meta.url))
+const ROOT          = join(__dir, '..', '..')
 const MIGRATIONS_DIR = join(ROOT, 'supabase', 'migrations')
-const STATUS_FILE    = join(ROOT, 'supabase', 'migration-status.json')
+const STATUS_FILE   = join(ROOT, 'supabase', 'migration-status.json')
 
-const SUPABASE_URL          = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL
-const SUPABASE_ACCESS_TOKEN = process.env.SUPABASE_ACCESS_TOKEN
+// ── Env ────────────────────────────────────────────────────────────────────────
+const SUPABASE_URL         = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL
+const SUPABASE_ACCESS_TOKEN = process.env.SUPABASE_ACCESS_TOKEN  // PAT — preferred
 const SUPABASE_SERVICE_KEY  = process.env.SUPABASE_SERVICE_ROLE_KEY
-const MIGRATION_FILE        = process.env.MIGRATION_FILE
+const MIGRATION_FILE        = process.env.MIGRATION_FILE  // optional single-file override
 
 if (!SUPABASE_URL) {
   console.error('❌  SUPABASE_URL (or NEXT_PUBLIC_SUPABASE_URL) must be set.')
   process.exit(1)
 }
 if (!SUPABASE_ACCESS_TOKEN && !SUPABASE_SERVICE_KEY) {
-  console.error('❌  Either SUPABASE_ACCESS_TOKEN or SUPABASE_SERVICE_ROLE_KEY must be set.')
+  console.error('❌  Either SUPABASE_ACCESS_TOKEN (preferred) or SUPABASE_SERVICE_ROLE_KEY must be set.')
   process.exit(1)
 }
 
+// Extract project ref from URL: https://abcxyz.supabase.co → abcxyz
 const PROJECT_REF = SUPABASE_URL.replace(/^https?:\/\//, '').split('.')[0]
 
-// ── Fetch with timeout ────────────────────────────────────────────────────────────────────
-function fetchWithTimeout(url, options, timeoutMs = 10_000) {
-  const ctrl = new AbortController()
-  const id   = setTimeout(() => ctrl.abort(), timeoutMs)
-  return fetch(url, { ...options, signal: ctrl.signal })
-    .finally(() => clearTimeout(id))
-}
-
-// ── Strategy 1: Management API ─────────────────────────────────────────────────────────
+// ── Strategy 1: Management API ─────────────────────────────────────────────────
+// Uses api.supabase.com — NOT subject to project-level Network Restrictions.
+// Requires a Personal Access Token (PAT).
 async function runSQLViaManagementAPI(sql) {
   const url = `https://api.supabase.com/v1/projects/${PROJECT_REF}/database/query`
-  const res = await fetchWithTimeout(url, {
+  const res = await fetch(url, {
     method:  'POST',
     headers: {
       'Content-Type':  'application/json',
@@ -55,17 +61,20 @@ async function runSQLViaManagementAPI(sql) {
     },
     body: JSON.stringify({ query: sql }),
   })
+
   const body = await res.json().catch(() => ({}))
+
   if (!res.ok) {
     throw new Error(`Management API HTTP ${res.status}: ${JSON.stringify(body).slice(0, 300)}`)
   }
   return body
 }
 
-// ── Strategy 2: exec_sql RPC ───────────────────────────────────────────────────────────────────
+// ── Strategy 2: exec_sql RPC ───────────────────────────────────────────────────
+// Requires the exec_sql function to exist in the project AND service role key.
 async function runSQLViaRPC(sql) {
   const url = `${SUPABASE_URL}/rest/v1/rpc/exec_sql`
-  const res = await fetchWithTimeout(url, {
+  const res = await fetch(url, {
     method:  'POST',
     headers: {
       'Content-Type':  'application/json',
@@ -82,7 +91,7 @@ async function runSQLViaRPC(sql) {
   return {}
 }
 
-// ── Statement splitter (┤$$ dollar-quoting) ──────────────────────────────────────────────────
+// ── Statement splitter (handles $$ dollar-quoting) ────────────────────────────
 function splitStatements(sql) {
   const stmts = []
   let   buf   = ''
@@ -93,6 +102,7 @@ function splitStatements(sql) {
     if (!buf.trim() && (trimmed.startsWith('--') || trimmed === '')) continue
 
     buf += line + '\n'
+
     const dollarMatches = buf.match(/\$[A-Za-z0-9_]*\$/g) || []
     inDollar = dollarMatches.length % 2 !== 0
 
@@ -106,7 +116,7 @@ function splitStatements(sql) {
   return stmts
 }
 
-// ── Run one migration file ────────────────────────────────────────────────────────────────────
+// ── Run one migration file ────────────────────────────────────────────────────
 async function runFile(filePath, strategy) {
   const sql   = readFileSync(filePath, 'utf8')
   const stmts = splitStatements(sql)
@@ -129,7 +139,7 @@ async function runFile(filePath, strategy) {
       const msg = err.message || ''
       const safe = msg.includes('already exists') ||
                    msg.includes('IF NOT EXISTS') ||
-                   msg.includes('does not exist')
+                   msg.includes('does not exist')  // DROP IF EXISTS on missing object
       if (safe) {
         console.log(`   ⚡ SKIP (${msg.slice(0, 80)}): ${preview}…`)
         skipped++
@@ -143,22 +153,25 @@ async function runFile(filePath, strategy) {
   return { ok, skipped, failed, errors }
 }
 
-// ── Detect strategy ──────────────────────────────────────────────────────────────────────────
+// ── Detect available strategy ─────────────────────────────────────────────────
 async function detectStrategy() {
   if (SUPABASE_ACCESS_TOKEN) {
+    // Quick connectivity probe — a cheap query
     try {
       await runSQLViaManagementAPI('SELECT 1')
       return 'management-api'
     } catch (err) {
       console.warn(`   ⚠  Management API probe failed: ${err.message.slice(0, 120)}`)
-      console.warn('   Falling back to exec_sql RPC…')
+      console.warn('   Falling back to exec_sql RPC strategy...')
     }
   }
-  if (SUPABASE_SERVICE_KEY) return 'exec_sql-rpc'
-  throw new Error('No working strategy. Set SUPABASE_ACCESS_TOKEN or SUPABASE_SERVICE_ROLE_KEY.')
+  if (SUPABASE_SERVICE_KEY) {
+    return 'exec_sql-rpc'
+  }
+  throw new Error('No working strategy found. Provide SUPABASE_ACCESS_TOKEN or SUPABASE_SERVICE_ROLE_KEY.')
 }
 
-// ── Main ─────────────────────────────────────────────────────────────────────────────────────
+// ── Main ──────────────────────────────────────────────────────────────────────
 async function main() {
   console.log(`\n🔍 Detecting connection strategy for project: ${PROJECT_REF}\n`)
   const strategy = await detectStrategy()
@@ -189,14 +202,15 @@ async function main() {
     totalFail += r.failed
   }
 
+  // ── Write status file back to repo ────────────────────────────────────────
   const status = {
-    ran_at:     new Date().toISOString(),
-    project:    PROJECT_REF,
+    ran_at:    new Date().toISOString(),
+    project:   PROJECT_REF,
     strategy,
-    files:      results.length,
-    total_ok:   totalOk,
+    files:     results.length,
+    total_ok:  totalOk,
     total_fail: totalFail,
-    success:    totalFail === 0,
+    success:   totalFail === 0,
     results,
   }
   writeFileSync(STATUS_FILE, JSON.stringify(status, null, 2) + '\n')
@@ -211,6 +225,7 @@ async function main() {
 
 main().catch(err => {
   console.error('❌  Migration runner crashed:', err.message)
+  // Always write status so the commit-back step has something to commit
   try {
     const prev = existsSync(STATUS_FILE)
       ? JSON.parse(readFileSync(STATUS_FILE, 'utf8'))
@@ -218,10 +233,10 @@ main().catch(err => {
     if (!prev.ran_at) {
       writeFileSync(STATUS_FILE, JSON.stringify({
         ...prev,
-        ran_at:  new Date().toISOString(),
-        success: false,
-        error:   err.message,
-        results: prev.results ?? [],
+        ran_at:    new Date().toISOString(),
+        success:   false,
+        error:     err.message,
+        results:   prev.results ?? [],
       }, null, 2) + '\n')
     }
   } catch (_) { /* best-effort */ }

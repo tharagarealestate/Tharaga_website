@@ -1,5 +1,5 @@
 -- =============================================================================
--- MIGRATION 085: PRODUCTION READINESS COMPREHENSIVE FIX  [run: 2026-05-06-v5]
+-- MIGRATION 085: PRODUCTION READINESS COMPREHENSIVE FIX  [run: 2026-05-06-v4]
 -- =============================================================================
 
 CREATE TABLE IF NOT EXISTS public.property_marketing_automation_logs (

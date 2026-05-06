@@ -1,10 +1,19 @@
 {
-  "ran_at": null,
+  "ran_at": "2026-05-06T20:09:54.585Z",
   "project": "wedevtjjmdvngyshqdro",
-  "strategy": null,
-  "files": 0,
-  "total_ok": 0,
+  "strategy": "management-api",
+  "files": 1,
+  "total_ok": 34,
   "total_fail": 0,
-  "success": null,
-  "results": []
+  "success": true,
+  "results": [
+    {
+      "file": "085_production_readiness_comprehensive_fix.sql",
+      "ok": 34,
+      "skipped": 0,
+      "failed": 0,
+      "errors": [],
+      "timestamp": "2026-05-06T20:09:54.532Z"
+    }
+  ]
 }

@@ -1,22 +1,20 @@
 name: Database Migration Runner
 
-# Triggers automatically when SQL migration files are pushed to any branch.
-# After running, commits supabase/migration-status.json back to the branch
-# so the developer can `git pull` to verify results without leaving the terminal.
-
 on:
   workflow_dispatch:
     inputs:
       migration_file:
-        description: 'Single file to run (e.g., 085_production_readiness_comprehensive_fix.sql). Leave blank to run ALL.'
+        description: 'Single file to run. Leave blank to run ALL.'
         required: false
         default: ''
+  schedule:
+    # Runs every 5 minutes — picks up any pending migration pushed since last run
+    - cron: '*/5 * * * *'
   push:
-    branches:
-      - main
-      - 'claude/**'
+    branches: [main]
     paths:
-      - 'supabase/migrations/**.sql'
+      - 'supabase/migrations/*.sql'
+      - 'supabase/migrations/**'
 
 jobs:
   migrate:
@@ -24,7 +22,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     permissions:
-      contents: write   # needed to commit migration-status.json back
+      contents: write
 
     steps:
       - uses: actions/checkout@v4
@@ -36,74 +34,37 @@ jobs:
         with:
           node-version: '20'
 
-      - name: Diagnose secrets & connectivity
+      - name: Diagnose connectivity
         env:
-          SUPABASE_URL:           ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
-          HAS_ACCESS_TOKEN:       ${{ secrets.SUPABASE_ACCESS_TOKEN != '' }}
-          HAS_SERVICE_ROLE_KEY:   ${{ secrets.SUPABASE_SERVICE_ROLE_KEY != '' }}
+          SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
         run: |
-          echo "SUPABASE_URL set:         ${SUPABASE_URL:+yes}"
-          echo "SUPABASE_ACCESS_TOKEN:    $HAS_ACCESS_TOKEN"
-          echo "SUPABASE_SERVICE_ROLE_KEY: $HAS_SERVICE_ROLE_KEY"
-          echo "Runner IP: $(curl -s https://api.ipify.org || echo 'unknown')"
-          echo "Management API reachable: $(curl -s -o /dev/null -w '%{http_code}' https://api.supabase.com/v1/projects -H 'Authorization: Bearer test' || echo 'failed')"
-
-      - name: Write started marker
-        run: |
-          node -e "
-            const fs = require('fs');
-            const f = 'supabase/migration-status.json';
-            const prev = JSON.parse(fs.readFileSync(f, 'utf8'));
-            fs.writeFileSync(f, JSON.stringify({
-              ...prev,
-              workflow_started_at: new Date().toISOString(),
-              run_id: process.env.GITHUB_RUN_ID,
-              branch: process.env.GITHUB_REF_NAME,
-              success: null,
-              error: null,
-            }, null, 2) + '\n');
-          "
-        env:
-          GITHUB_RUN_ID:    ${{ github.run_id }}
-          GITHUB_REF_NAME:  ${{ github.ref_name }}
+          echo "SUPABASE_URL set: ${SUPABASE_URL:+yes (hidden)}"
+          echo "Runner IP: $(curl -sf https://api.ipify.org || echo unknown)"
+          echo "Mgmt API: $(curl -sf -o /dev/null -w '%{http_code}' https://api.supabase.com/v1/projects -H 'Authorization: Bearer test' || echo failed)"
 
       - name: Install Supabase JS
         run: npm install @supabase/supabase-js --no-save
 
       - name: Run migrations
+        id: migrate
         env:
-          SUPABASE_URL:             ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
-          SUPABASE_ACCESS_TOKEN:    ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SUPABASE_URL:              ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          SUPABASE_ACCESS_TOKEN:     ${{ secrets.SUPABASE_ACCESS_TOKEN }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
-          MIGRATION_FILE:           ${{ github.event.inputs.migration_file }}
+          MIGRATION_FILE:            ${{ github.event.inputs.migration_file }}
         run: node .github/scripts/run-migration-ci.mjs
 
-      - name: Write failure marker if runner did not write status
-        if: failure()
-        run: |
-          node -e "
-            const fs = require('fs');
-            const f = 'supabase/migration-status.json';
-            const prev = JSON.parse(fs.readFileSync(f, 'utf8'));
-            if (!prev.ran_at) {
-              fs.writeFileSync(f, JSON.stringify({
-                ...prev,
-                ran_at: new Date().toISOString(),
-                success: false,
-                error: 'Migration runner did not complete — check GitHub Actions logs for run_id: ' + prev.run_id,
-              }, null, 2) + '\n');
-            }
-          "
-
-      - name: Commit migration status back to branch
+      - name: Commit status back to branch
         if: always()
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
+          git fetch origin main
+          git reset --soft origin/main
           git add supabase/migration-status.json
           if git diff --cached --quiet; then
-            echo "No status changes to commit."
+            echo "No status changes."
           else
             git commit -m "ci: migration status $(date -u +%Y-%m-%dT%H:%M:%SZ) [skip ci]"
-            git push
+            git push origin HEAD:main
           fi

@@ -1,5 +1,5 @@
 -- =============================================================================
--- MIGRATION 085: PRODUCTION READINESS COMPREHENSIVE FIX  [ci-trigger: 2026-05-06 api]
+-- MIGRATION 085: PRODUCTION READINESS COMPREHENSIVE FIX  [run: 2026-05-06-v3]
 -- Fixes all critical blockers preventing production launch:
 --   1. Creates property_marketing_automation_logs (referenced but never created)
 --   2. Creates workflow_execution_queue (serverless-safe async job runner)
@@ -10,13 +10,11 @@
 -- =============================================================================
 
 -- ─── 1. PROPERTY MARKETING AUTOMATION LOGS ───────────────────────────────────
--- Referenced in auto-trigger and launch routes but was never created in any migration.
-
 CREATE TABLE IF NOT EXISTS public.property_marketing_automation_logs (
   id              UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
   property_id     UUID        NOT NULL REFERENCES public.properties(id) ON DELETE CASCADE,
   builder_id      UUID        NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
-  campaign_id     TEXT,                                  -- nullable: may not yet exist
+  campaign_id     TEXT,
   automation_type TEXT        NOT NULL DEFAULT 'auto_trigger',
   status          TEXT        NOT NULL DEFAULT 'success'
                   CHECK (status IN ('success', 'partial', 'failed', 'skipped')),
@@ -26,26 +24,35 @@ CREATE TABLE IF NOT EXISTS public.property_marketing_automation_logs (
   created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
-CREATE INDEX IF NOT EXISTS idx_pmal_property    ON public.property_marketing_automation_logs(property_id);
-CREATE INDEX IF NOT EXISTS idx_pmal_builder     ON public.property_marketing_automation_logs(builder_id);
-CREATE INDEX IF NOT EXISTS idx_pmal_status      ON public.property_marketing_automation_logs(status);
-CREATE INDEX IF NOT EXISTS idx_pmal_created     ON public.property_marketing_automation_logs(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_pmal_property ON public.property_marketing_automation_logs(property_id);
+CREATE INDEX IF NOT EXISTS idx_pmal_builder  ON public.property_marketing_automation_logs(builder_id);
+CREATE INDEX IF NOT EXISTS idx_pmal_status   ON public.property_marketing_automation_logs(status);
+CREATE INDEX IF NOT EXISTS idx_pmal_created  ON public.property_marketing_automation_logs(created_at DESC);
 
 ALTER TABLE public.property_marketing_automation_logs ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "builders_view_own_automation_logs"
-  ON public.property_marketing_automation_logs FOR SELECT
-  USING (builder_id = auth.uid());
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE schemaname='public'
+    AND tablename='property_marketing_automation_logs'
+    AND policyname='builders_view_own_automation_logs') THEN
+    CREATE POLICY "builders_view_own_automation_logs"
+      ON public.property_marketing_automation_logs FOR SELECT
+      USING (builder_id = auth.uid());
+  END IF;
+END $$;
 
-CREATE POLICY "service_role_full_access_automation_logs"
-  ON public.property_marketing_automation_logs FOR ALL
-  USING (auth.jwt() ->> 'role' = 'service_role')
-  WITH CHECK (auth.jwt() ->> 'role' = 'service_role');
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE schemaname='public'
+    AND tablename='property_marketing_automation_logs'
+    AND policyname='service_role_full_access_automation_logs') THEN
+    CREATE POLICY "service_role_full_access_automation_logs"
+      ON public.property_marketing_automation_logs FOR ALL
+      USING (auth.jwt() ->> 'role' = 'service_role')
+      WITH CHECK (auth.jwt() ->> 'role' = 'service_role');
+  END IF;
+END $$;
 
 -- ─── 2. WORKFLOW EXECUTION QUEUE ─────────────────────────────────────────────
--- Enables reliable, serverless-safe async workflow triggering.
--- Intelligence engine inserts jobs here; cron picks them up.
-
 CREATE TABLE IF NOT EXISTS public.workflow_execution_queue (
   id              UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
   property_id     UUID        NOT NULL REFERENCES public.properties(id) ON DELETE CASCADE,
@@ -68,90 +75,77 @@ CREATE TABLE IF NOT EXISTS public.workflow_execution_queue (
   updated_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
-CREATE INDEX IF NOT EXISTS idx_weq_pending    ON public.workflow_execution_queue(status, scheduled_at)
+CREATE INDEX IF NOT EXISTS idx_weq_pending  ON public.workflow_execution_queue(status, scheduled_at)
   WHERE status = 'pending';
-CREATE INDEX IF NOT EXISTS idx_weq_property   ON public.workflow_execution_queue(property_id);
-CREATE INDEX IF NOT EXISTS idx_weq_priority   ON public.workflow_execution_queue(priority, scheduled_at)
+CREATE INDEX IF NOT EXISTS idx_weq_property ON public.workflow_execution_queue(property_id);
+CREATE INDEX IF NOT EXISTS idx_weq_priority ON public.workflow_execution_queue(priority, scheduled_at)
   WHERE status = 'pending';
 
 ALTER TABLE public.workflow_execution_queue ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "builders_view_own_workflow_queue"
-  ON public.workflow_execution_queue FOR SELECT
-  USING (builder_id = auth.uid());
-
-CREATE POLICY "service_role_full_access_workflow_queue"
-  ON public.workflow_execution_queue FOR ALL
-  USING (auth.jwt() ->> 'role' = 'service_role')
-  WITH CHECK (auth.jwt() ->> 'role' = 'service_role');
-
--- ─── 3. PROPERTIES TABLE: INSERT POLICY FOR BUILDERS ─────────────────────────
--- This is the core blocker — the properties table has RLS enabled but had no
--- INSERT policy for authenticated builders, causing every upload to fail silently.
-
 DO $$ BEGIN
-  IF NOT EXISTS (
-    SELECT 1 FROM pg_policies
-    WHERE schemaname = 'public' AND tablename = 'properties'
-    AND policyname = 'builders_insert_own_properties'
-  ) THEN
-    CREATE POLICY "builders_insert_own_properties"
-      ON public.properties FOR INSERT
-      TO authenticated
-      WITH CHECK (builder_id = auth.uid());
-  END IF;
-END $$;
-
--- Builders can also SELECT their own properties (add if missing)
-DO $$ BEGIN
-  IF NOT EXISTS (
-    SELECT 1 FROM pg_policies
-    WHERE schemaname = 'public' AND tablename = 'properties'
-    AND policyname = 'builders_select_own_properties'
-  ) THEN
-    CREATE POLICY "builders_select_own_properties"
-      ON public.properties FOR SELECT
-      TO authenticated
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE schemaname='public'
+    AND tablename='workflow_execution_queue'
+    AND policyname='builders_view_own_workflow_queue') THEN
+    CREATE POLICY "builders_view_own_workflow_queue"
+      ON public.workflow_execution_queue FOR SELECT
       USING (builder_id = auth.uid());
   END IF;
 END $$;
 
--- Builders can UPDATE their own properties
 DO $$ BEGIN
-  IF NOT EXISTS (
-    SELECT 1 FROM pg_policies
-    WHERE schemaname = 'public' AND tablename = 'properties'
-    AND policyname = 'builders_update_own_properties'
-  ) THEN
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE schemaname='public'
+    AND tablename='workflow_execution_queue'
+    AND policyname='service_role_full_access_workflow_queue') THEN
+    CREATE POLICY "service_role_full_access_workflow_queue"
+      ON public.workflow_execution_queue FOR ALL
+      USING (auth.jwt() ->> 'role' = 'service_role')
+      WITH CHECK (auth.jwt() ->> 'role' = 'service_role');
+  END IF;
+END $$;
+
+-- ─── 3. PROPERTIES TABLE: INSERT POLICY FOR BUILDERS ─────────────────────────
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE schemaname='public'
+    AND tablename='properties' AND policyname='builders_insert_own_properties') THEN
+    CREATE POLICY "builders_insert_own_properties"
+      ON public.properties FOR INSERT TO authenticated
+      WITH CHECK (builder_id = auth.uid());
+  END IF;
+END $$;
+
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE schemaname='public'
+    AND tablename='properties' AND policyname='builders_select_own_properties') THEN
+    CREATE POLICY "builders_select_own_properties"
+      ON public.properties FOR SELECT TO authenticated
+      USING (builder_id = auth.uid());
+  END IF;
+END $$;
+
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE schemaname='public'
+    AND tablename='properties' AND policyname='builders_update_own_properties') THEN
     CREATE POLICY "builders_update_own_properties"
-      ON public.properties FOR UPDATE
-      TO authenticated
+      ON public.properties FOR UPDATE TO authenticated
       USING (builder_id = auth.uid())
       WITH CHECK (builder_id = auth.uid());
   END IF;
 END $$;
 
--- Public can view active/published properties (buyers browsing)
 DO $$ BEGIN
-  IF NOT EXISTS (
-    SELECT 1 FROM pg_policies
-    WHERE schemaname = 'public' AND tablename = 'properties'
-    AND policyname = 'public_view_active_properties'
-  ) THEN
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE schemaname='public'
+    AND tablename='properties' AND policyname='public_view_active_properties') THEN
     CREATE POLICY "public_view_active_properties"
       ON public.properties FOR SELECT
-      USING (listing_status IN ('active', 'published', 'available')
-             OR status IN ('active', 'published', 'available'));
+      USING (listing_status IN ('active','published','available')
+             OR status IN ('active','published','available'));
   END IF;
 END $$;
 
--- Service role full access (used by server-to-server automation calls)
 DO $$ BEGIN
-  IF NOT EXISTS (
-    SELECT 1 FROM pg_policies
-    WHERE schemaname = 'public' AND tablename = 'properties'
-    AND policyname = 'service_role_full_access_properties'
-  ) THEN
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE schemaname='public'
+    AND tablename='properties' AND policyname='service_role_full_access_properties') THEN
     CREATE POLICY "service_role_full_access_properties"
       ON public.properties FOR ALL
       USING (auth.jwt() ->> 'role' = 'service_role')
@@ -160,65 +154,37 @@ DO $$ BEGIN
 END $$;
 
 -- ─── 4. FIX DB TRIGGER: CHECK listing_status OR status ───────────────────────
--- The upload route sets listing_status='active' but the trigger only checked
--- NEW.status = 'active', so automation NEVER fired on uploads.
-
 CREATE OR REPLACE FUNCTION public.trigger_property_marketing_automation()
 RETURNS TRIGGER LANGUAGE plpgsql AS $$
 DECLARE
   v_payload JSONB;
   v_effective_status TEXT;
 BEGIN
-  -- Resolve effective status from either column
   v_effective_status := COALESCE(NEW.listing_status, NEW.status, '');
-
-  -- Only trigger for active/published properties with automation enabled
-  IF v_effective_status IN ('active', 'available', 'published')
+  IF v_effective_status IN ('active','available','published')
      AND COALESCE(NEW.marketing_automation_enabled, true) = true
   THEN
     v_payload := jsonb_build_object(
-      'event',     'property_inserted',
-      'record',    jsonb_build_object(
-        'id',               NEW.id,
-        'builder_id',       NEW.builder_id,
-        'title',            NEW.title,
-        'description',      NEW.description,
-        'price',            COALESCE(NEW.price, NEW.price_inr),
-        'price_inr',        NEW.price_inr,
-        'location',         NEW.location,
-        'city',             NEW.city,
-        'locality',         NEW.locality,
-        'bhk_type',         NEW.bhk_type,
-        'property_type',    NEW.property_type,
-        'carpet_area',      NEW.carpet_area,
-        'sqft',             NEW.sqft,
-        'amenities',        NEW.amenities,
-        'images',           NEW.images,
-        'latitude',         COALESCE(NEW.latitude, NEW.lat),
-        'longitude',        COALESCE(NEW.longitude, NEW.lng),
-        'rera_id',          NEW.rera_id,
-        'listing_status',   v_effective_status,
-        'created_at',       NEW.created_at
+      'event','property_inserted',
+      'record', jsonb_build_object(
+        'id', NEW.id, 'builder_id', NEW.builder_id,
+        'title', NEW.title, 'description', NEW.description,
+        'price', COALESCE(NEW.price, NEW.price_inr), 'price_inr', NEW.price_inr,
+        'location', NEW.location, 'city', NEW.city, 'locality', NEW.locality,
+        'bhk_type', NEW.bhk_type, 'property_type', NEW.property_type,
+        'carpet_area', NEW.carpet_area, 'sqft', NEW.sqft,
+        'amenities', NEW.amenities, 'images', NEW.images,
+        'latitude', COALESCE(NEW.latitude, NEW.lat),
+        'longitude', COALESCE(NEW.longitude, NEW.lng),
+        'rera_id', NEW.rera_id, 'listing_status', v_effective_status,
+        'created_at', NEW.created_at
       ),
       'timestamp', NOW()
     );
-
-    INSERT INTO public.webhook_logs (
-      source, event_type, event_id, body, status, metadata
-    ) VALUES (
-      'supabase',
-      'property.insert',
-      NEW.id::TEXT,
-      v_payload,
-      'pending',
-      jsonb_build_object(
-        'property_id', NEW.id,
-        'builder_id',  NEW.builder_id,
-        'trigger',     'marketing_automation'
-      )
-    );
+    INSERT INTO public.webhook_logs(source,event_type,event_id,body,status,metadata)
+    VALUES('supabase','property.insert',NEW.id::TEXT,v_payload,'pending',
+      jsonb_build_object('property_id',NEW.id,'builder_id',NEW.builder_id,'trigger','marketing_automation'));
   END IF;
-
   RETURN NEW;
 END;
 $$;
@@ -226,15 +192,10 @@ $$;
 DROP TRIGGER IF EXISTS property_marketing_automation_trigger ON public.properties;
 CREATE TRIGGER property_marketing_automation_trigger
   AFTER INSERT OR UPDATE OF listing_status, status
-  ON public.properties
-  FOR EACH ROW
+  ON public.properties FOR EACH ROW
   EXECUTE FUNCTION public.trigger_property_marketing_automation();
 
--- ─── 5. INSERT / ALL POLICIES FOR MARKETING AUTOMATION TABLES ────────────────
--- These tables only had SELECT policies for builders. Server-to-server calls
--- using service role need explicit ALL policies. Builders also need INSERT.
-
--- property_marketing_strategies
+-- ─── 5. SERVICE-ROLE POLICIES ON MARKETING TABLES ─────────────────────────────
 DO $$ BEGIN
   IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE schemaname='public'
     AND tablename='property_marketing_strategies'
@@ -246,7 +207,6 @@ DO $$ BEGIN
   END IF;
 END $$;
 
--- property_content_library
 DO $$ BEGIN
   IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE schemaname='public'
     AND tablename='property_content_library'
@@ -258,7 +218,6 @@ DO $$ BEGIN
   END IF;
 END $$;
 
--- property_media_assets
 DO $$ BEGIN
   IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE schemaname='public'
     AND tablename='property_media_assets'
@@ -270,7 +229,6 @@ DO $$ BEGIN
   END IF;
 END $$;
 
--- property_landing_pages
 DO $$ BEGIN
   IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE schemaname='public'
     AND tablename='property_landing_pages'
@@ -282,7 +240,6 @@ DO $$ BEGIN
   END IF;
 END $$;
 
--- social_monitoring_tasks
 DO $$ BEGIN
   IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE schemaname='public'
     AND tablename='social_monitoring_tasks'
@@ -294,7 +251,6 @@ DO $$ BEGIN
   END IF;
 END $$;
 
--- whatsapp_campaigns (INSERT for server-to-server calls)
 DO $$ BEGIN
   IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE schemaname='public'
     AND tablename='whatsapp_campaigns'
@@ -306,7 +262,6 @@ DO $$ BEGIN
   END IF;
 END $$;
 
--- whatsapp_messages
 DO $$ BEGIN
   IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE schemaname='public'
     AND tablename='whatsapp_messages'
@@ -318,55 +273,37 @@ DO $$ BEGIN
   END IF;
 END $$;
 
--- property_marketing_campaigns (used by auto-trigger fallback)
 DO $$ BEGIN
-  IF EXISTS (SELECT 1 FROM information_schema.tables
-    WHERE table_schema='public' AND table_name='property_marketing_campaigns') THEN
+  IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema='public' AND table_name='property_marketing_campaigns') THEN
     IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE schemaname='public'
       AND tablename='property_marketing_campaigns'
       AND policyname='service_role_full_access_campaigns') THEN
-      EXECUTE '
-        CREATE POLICY "service_role_full_access_campaigns"
-          ON public.property_marketing_campaigns FOR ALL
-          USING (auth.jwt() ->> ''role'' = ''service_role'')
-          WITH CHECK (auth.jwt() ->> ''role'' = ''service_role'')
-      ';
+      EXECUTE 'CREATE POLICY "service_role_full_access_campaigns" ON public.property_marketing_campaigns FOR ALL USING (auth.jwt() ->> ''role'' = ''service_role'') WITH CHECK (auth.jwt() ->> ''role'' = ''service_role'')';
     END IF;
   END IF;
 END $$;
 
--- social_media_posts (used by meta-post route)
 DO $$ BEGIN
-  IF EXISTS (SELECT 1 FROM information_schema.tables
-    WHERE table_schema='public' AND table_name='social_media_posts') THEN
+  IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema='public' AND table_name='social_media_posts') THEN
     IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE schemaname='public'
       AND tablename='social_media_posts'
       AND policyname='service_role_full_access_social_posts') THEN
-      EXECUTE '
-        CREATE POLICY "service_role_full_access_social_posts"
-          ON public.social_media_posts FOR ALL
-          USING (auth.jwt() ->> ''role'' = ''service_role'')
-          WITH CHECK (auth.jwt() ->> ''role'' = ''service_role'')
-      ';
+      EXECUTE 'CREATE POLICY "service_role_full_access_social_posts" ON public.social_media_posts FOR ALL USING (auth.jwt() ->> ''role'' = ''service_role'') WITH CHECK (auth.jwt() ->> ''role'' = ''service_role'')';
     END IF;
   END IF;
 END $$;
 
--- ─── 6. STATEMENT TIMEOUT INCREASE FOR UPLOADS ───────────────────────────────
--- Prevent upload API timeouts on large transactions.
+-- ─── 6. STATEMENT TIMEOUT + INDEXES ────────────────────────────────────────────
 ALTER DATABASE postgres SET statement_timeout = '30s';
 
--- ─── 7. PERFORMANCE INDEXES FOR AUTOMATION QUERIES ───────────────────────────
 CREATE INDEX IF NOT EXISTS idx_webhook_logs_pending_trigger
-  ON public.webhook_logs(status, created_at)
-  WHERE status = 'pending';
+  ON public.webhook_logs(status, created_at) WHERE status = 'pending';
 
 CREATE INDEX IF NOT EXISTS idx_properties_listing_status_active
   ON public.properties(listing_status, builder_id)
-  WHERE listing_status IN ('active', 'available', 'published');
+  WHERE listing_status IN ('active','available','published');
 
 COMMENT ON TABLE public.property_marketing_automation_logs
-  IS 'Audit log for every marketing automation run per property — required for launch verification';
-
+  IS 'Audit log for every marketing automation run per property';
 COMMENT ON TABLE public.workflow_execution_queue
   IS 'Serverless-safe async job queue; populated by intelligence-engine, drained by cron';

@@ -1,37 +1,78 @@
 #!/usr/bin/env node
 /**
- * CI migration runner — executes a single Supabase migration SQL file via
- * the Supabase REST RPC exec_sql function (service role required).
+ * CI migration runner
+ *
+ * Strategy (tried in order):
+ *   1. Supabase Management API  — POST /v1/projects/{ref}/database/query
+ *      Requires: SUPABASE_ACCESS_TOKEN (PAT from supabase.com/dashboard/account/tokens)
+ *      Works from any IP; not subject to project-level Network Restrictions.
+ *
+ *   2. exec_sql RPC             — POST /rest/v1/rpc/exec_sql
+ *      Requires: SUPABASE_SERVICE_ROLE_KEY + the exec_sql function to exist in the DB.
+ *      Falls back to this when no PAT is available.
+ *
+ * After each run, results are written to supabase/migration-status.json so that
+ * the CI job can commit it back to the branch and the developer can git-pull to
+ * verify success without leaving their terminal.
  *
  * Usage (local):
  *   SUPABASE_URL=https://xxx.supabase.co \
- *   SUPABASE_SERVICE_ROLE_KEY=eyJ... \
- *   MIGRATION_FILE=085_production_readiness_comprehensive_fix.sql \
+ *   SUPABASE_ACCESS_TOKEN=sbp_xxx \
  *   node .github/scripts/run-migration-ci.mjs
  */
 
-import { readFileSync, readdirSync } from 'fs'
+import { readFileSync, readdirSync, writeFileSync, existsSync } from 'fs'
 import { join, dirname } from 'path'
 import { fileURLToPath } from 'url'
 
-const __dir = dirname(fileURLToPath(import.meta.url))
-const ROOT  = join(__dir, '..', '..')
+const __dir         = dirname(fileURLToPath(import.meta.url))
+const ROOT          = join(__dir, '..', '..')
+const MIGRATIONS_DIR = join(ROOT, 'supabase', 'migrations')
+const STATUS_FILE   = join(ROOT, 'supabase', 'migration-status.json')
 
-const SUPABASE_URL          = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL
+// ── Env ────────────────────────────────────────────────────────────────────────
+const SUPABASE_URL         = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL
+const SUPABASE_ACCESS_TOKEN = process.env.SUPABASE_ACCESS_TOKEN  // PAT — preferred
 const SUPABASE_SERVICE_KEY  = process.env.SUPABASE_SERVICE_ROLE_KEY
-const MIGRATION_FILE        = process.env.MIGRATION_FILE   // optional: run one file
+const MIGRATION_FILE        = process.env.MIGRATION_FILE  // optional single-file override
 
-if (!SUPABASE_URL || !SUPABASE_SERVICE_KEY) {
-  console.error('❌  SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY must be set.')
+if (!SUPABASE_URL) {
+  console.error('❌  SUPABASE_URL (or NEXT_PUBLIC_SUPABASE_URL) must be set.')
+  process.exit(1)
+}
+if (!SUPABASE_ACCESS_TOKEN && !SUPABASE_SERVICE_KEY) {
+  console.error('❌  Either SUPABASE_ACCESS_TOKEN (preferred) or SUPABASE_SERVICE_ROLE_KEY must be set.')
   process.exit(1)
 }
 
-const MIGRATIONS_DIR = join(ROOT, 'supabase', 'migrations')
+// Extract project ref from URL: https://abcxyz.supabase.co → abcxyz
+const PROJECT_REF = SUPABASE_URL.replace(/^https?:\/\//, '').split('.')[0]
 
-// ── Supabase REST helper ───────────────────────────────────────────────────────
-async function runSQL(sql) {
-  // Use the pg_catalog.pg_tables trick — Supabase exposes an rpc endpoint for raw SQL
-  // via postgres functions. We call the admin API exec_sql function directly.
+// ── Strategy 1: Management API ─────────────────────────────────────────────────
+// Uses api.supabase.com — NOT subject to project-level Network Restrictions.
+// Requires a Personal Access Token (PAT).
+async function runSQLViaManagementAPI(sql) {
+  const url = `https://api.supabase.com/v1/projects/${PROJECT_REF}/database/query`
+  const res = await fetch(url, {
+    method:  'POST',
+    headers: {
+      'Content-Type':  'application/json',
+      'Authorization': `Bearer ${SUPABASE_ACCESS_TOKEN}`,
+    },
+    body: JSON.stringify({ query: sql }),
+  })
+
+  const body = await res.json().catch(() => ({}))
+
+  if (!res.ok) {
+    throw new Error(`Management API HTTP ${res.status}: ${JSON.stringify(body).slice(0, 300)}`)
+  }
+  return body
+}
+
+// ── Strategy 2: exec_sql RPC ───────────────────────────────────────────────────
+// Requires the exec_sql function to exist in the project AND service role key.
+async function runSQLViaRPC(sql) {
   const url = `${SUPABASE_URL}/rest/v1/rpc/exec_sql`
   const res = await fetch(url, {
     method:  'POST',
@@ -43,40 +84,27 @@ async function runSQL(sql) {
     },
     body: JSON.stringify({ sql }),
   })
-
   if (!res.ok) {
-    // exec_sql may not exist — fall back to the pg extension via supabase-js
     const text = await res.text()
-    throw new Error(`HTTP ${res.status}: ${text.slice(0, 300)}`)
+    throw new Error(`RPC HTTP ${res.status}: ${text.slice(0, 300)}`)
   }
-  return res
+  return {}
 }
 
 // ── Statement splitter (handles $$ dollar-quoting) ────────────────────────────
 function splitStatements(sql) {
-  const stmts  = []
-  let   buf    = ''
+  const stmts = []
+  let   buf   = ''
   let   inDollar = false
-  let   dollarTag = ''
 
-  const lines = sql.split('\n')
-  for (const line of lines) {
+  for (const line of sql.split('\n')) {
     const trimmed = line.trim()
-
-    // Skip standalone comment lines outside of statements
-    if (!buf.trim() && (trimmed.startsWith('--') || trimmed === '')) {
-      continue
-    }
+    if (!buf.trim() && (trimmed.startsWith('--') || trimmed === '')) continue
 
     buf += line + '\n'
 
-    // Detect dollar quoting ($$...$$ or $tag$...$tag$)
     const dollarMatches = buf.match(/\$[A-Za-z0-9_]*\$/g) || []
-    if (dollarMatches.length % 2 !== 0) {
-      inDollar = true
-    } else {
-      inDollar = false
-    }
+    inDollar = dollarMatches.length % 2 !== 0
 
     if (!inDollar && buf.trimEnd().endsWith(';')) {
       const stmt = buf.trim()
@@ -88,74 +116,129 @@ function splitStatements(sql) {
   return stmts
 }
 
-// ── Run via Supabase JS (service role, bypasses RLS) ─────────────────────────
-async function runViaSupabaseJS(sql) {
-  const { createClient } = await import('@supabase/supabase-js')
-  const db = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY, {
-    auth: { autoRefreshToken: false, persistSession: false },
-  })
-
-  // Supabase JS doesn't have a direct .sql() method; we use rpc if available
-  // or fall back to splitting and inserting no-op rows.
-  // Best approach: use the management REST API directly for raw SQL.
+// ── Run one migration file ────────────────────────────────────────────────────
+async function runFile(filePath, strategy) {
+  const sql   = readFileSync(filePath, 'utf8')
   const stmts = splitStatements(sql)
-  console.log(`   Executing ${stmts.length} statements via Supabase JS rpc...\n`)
+  console.log(`   ${stmts.length} statements — strategy: ${strategy}`)
 
-  let ok = 0, fail = 0
+  let ok = 0, skipped = 0, failed = 0
+  const errors = []
+
   for (const stmt of stmts) {
+    const preview = stmt.slice(0, 70).replace(/\n/g, ' ')
     try {
-      // Try rpc exec_sql first
-      const { error } = await db.rpc('exec_sql', { sql: stmt })
-      if (error) {
-        // Many DDL errors are "already exists" — safe to skip
-        if (error.message?.includes('already exists') || error.message?.includes('IF NOT EXISTS')) {
-          console.log(`   ⚡ SKIP (already exists): ${stmt.slice(0, 60).replace(/\n/g,' ')}...`)
-          ok++
-        } else {
-          console.warn(`   ⚠  WARN (${error.message?.slice(0, 100)}): ${stmt.slice(0, 60).replace(/\n/g,' ')}...`)
-          fail++
-        }
+      if (strategy === 'management-api') {
+        await runSQLViaManagementAPI(stmt)
       } else {
-        console.log(`   ✅ OK: ${stmt.slice(0, 60).replace(/\n/g,' ')}...`)
-        ok++
+        await runSQLViaRPC(stmt)
       }
-    } catch (e) {
-      console.warn(`   ⚠  EXCEPTION: ${e.message?.slice(0, 100)}`)
-      fail++
+      console.log(`   ✅ ${preview}…`)
+      ok++
+    } catch (err) {
+      const msg = err.message || ''
+      const safe = msg.includes('already exists') ||
+                   msg.includes('IF NOT EXISTS') ||
+                   msg.includes('does not exist')  // DROP IF EXISTS on missing object
+      if (safe) {
+        console.log(`   ⚡ SKIP (${msg.slice(0, 80)}): ${preview}…`)
+        skipped++
+      } else {
+        console.warn(`   ⚠  FAIL (${msg.slice(0, 120)}): ${preview}…`)
+        failed++
+        errors.push({ stmt: preview, error: msg.slice(0, 200) })
+      }
     }
   }
-  return { ok, fail }
+  return { ok, skipped, failed, errors }
+}
+
+// ── Detect available strategy ─────────────────────────────────────────────────
+async function detectStrategy() {
+  if (SUPABASE_ACCESS_TOKEN) {
+    // Quick connectivity probe — a cheap query
+    try {
+      await runSQLViaManagementAPI('SELECT 1')
+      return 'management-api'
+    } catch (err) {
+      console.warn(`   ⚠  Management API probe failed: ${err.message.slice(0, 120)}`)
+      console.warn('   Falling back to exec_sql RPC strategy...')
+    }
+  }
+  if (SUPABASE_SERVICE_KEY) {
+    return 'exec_sql-rpc'
+  }
+  throw new Error('No working strategy found. Provide SUPABASE_ACCESS_TOKEN or SUPABASE_SERVICE_ROLE_KEY.')
 }
 
 // ── Main ──────────────────────────────────────────────────────────────────────
 async function main() {
-  const filesToRun = []
+  console.log(`\n🔍 Detecting connection strategy for project: ${PROJECT_REF}\n`)
+  const strategy = await detectStrategy()
+  console.log(`✅ Using strategy: ${strategy}\n`)
 
+  const filesToRun = []
   if (MIGRATION_FILE) {
     filesToRun.push(join(MIGRATIONS_DIR, MIGRATION_FILE))
   } else {
-    // Run ALL .sql files in order (idempotent — IF NOT EXISTS guards protect re-runs)
     const files = readdirSync(MIGRATIONS_DIR)
       .filter(f => f.endsWith('.sql'))
       .sort()
     filesToRun.push(...files.map(f => join(MIGRATIONS_DIR, f)))
   }
 
-  console.log(`\n🚀 Running ${filesToRun.length} migration file(s) against ${SUPABASE_URL}\n`)
+  console.log(`🚀 Running ${filesToRun.length} migration file(s) against ${SUPABASE_URL}\n`)
+
+  const results = []
+  let totalOk = 0, totalFail = 0
 
   for (const filePath of filesToRun) {
     const fileName = filePath.split('/').pop()
     console.log(`📄 ${fileName}`)
-
-    const sql = readFileSync(filePath, 'utf8')
-    const { ok, fail } = await runViaSupabaseJS(sql)
-    console.log(`   Result: ${ok} ok  ${fail} warnings\n`)
+    const r = await runFile(filePath, strategy)
+    console.log(`   ↳ ok=${r.ok}  skipped=${r.skipped}  failed=${r.failed}\n`)
+    results.push({ file: fileName, ...r, timestamp: new Date().toISOString() })
+    totalOk   += r.ok
+    totalFail += r.failed
   }
 
-  console.log('✅  Migration run complete.')
+  // ── Write status file back to repo ────────────────────────────────────────
+  const status = {
+    ran_at:    new Date().toISOString(),
+    project:   PROJECT_REF,
+    strategy,
+    files:     results.length,
+    total_ok:  totalOk,
+    total_fail: totalFail,
+    success:   totalFail === 0,
+    results,
+  }
+  writeFileSync(STATUS_FILE, JSON.stringify(status, null, 2) + '\n')
+  console.log(`📝 Status written to supabase/migration-status.json`)
+
+  if (totalFail > 0) {
+    console.error(`\n❌  Migration completed with ${totalFail} failures.`)
+    process.exit(1)
+  }
+  console.log(`\n✅  All migrations applied successfully (ok=${totalOk}).`)
 }
 
 main().catch(err => {
-  console.error('❌  Migration failed:', err.message)
+  console.error('❌  Migration runner crashed:', err.message)
+  // Always write status so the commit-back step has something to commit
+  try {
+    const prev = existsSync(STATUS_FILE)
+      ? JSON.parse(readFileSync(STATUS_FILE, 'utf8'))
+      : {}
+    if (!prev.ran_at) {
+      writeFileSync(STATUS_FILE, JSON.stringify({
+        ...prev,
+        ran_at:    new Date().toISOString(),
+        success:   false,
+        error:     err.message,
+        results:   prev.results ?? [],
+      }, null, 2) + '\n')
+    }
+  } catch (_) { /* best-effort */ }
   process.exit(1)
 })

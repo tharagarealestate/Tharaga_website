@@ -1,0 +1,94 @@
+name: Apply Migration 085 Only
+
+# Focused workflow: runs ONLY migration 085 (not all 88 files).
+# Triggers immediately when this file is pushed, so this commit fires it.
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/apply-migration-085.yml'
+      - '.github/scripts/run-migration-ci.mjs'
+  workflow_dispatch:
+
+jobs:
+  apply-085:
+    name: Apply Migration 085
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Write started marker
+        run: |
+          node -e "
+            const fs = require('fs');
+            const f = 'supabase/migration-status.json';
+            const prev = JSON.parse(fs.readFileSync(f, 'utf8'));
+            fs.writeFileSync(f, JSON.stringify({
+              ...prev,
+              workflow_started_at: new Date().toISOString(),
+              workflow: 'apply-migration-085',
+              run_id: process.env.GITHUB_RUN_ID,
+              success: null, error: null,
+            }, null, 2) + '\n');
+          "
+        env:
+          GITHUB_RUN_ID: ${{ github.run_id }}
+
+      - name: Diagnose secrets
+        env:
+          SUPABASE_URL:         ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          HAS_ACCESS_TOKEN:     ${{ secrets.SUPABASE_ACCESS_TOKEN != '' }}
+          HAS_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY != '' }}
+        run: |
+          echo "SUPABASE_URL     : ${SUPABASE_URL:+set (hidden)}"
+          echo "ACCESS_TOKEN set : $HAS_ACCESS_TOKEN"
+          echo "SERVICE_KEY set  : $HAS_SERVICE_ROLE_KEY"
+          echo "Runner IP        : $(curl -sf https://api.ipify.org || echo unknown)"
+
+      - name: Run migration 085
+        env:
+          SUPABASE_URL:              ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          SUPABASE_ACCESS_TOKEN:     ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          MIGRATION_FILE:            085_production_readiness_comprehensive_fix.sql
+        run: node .github/scripts/run-migration-ci.mjs
+
+      - name: Write failure marker
+        if: failure()
+        run: |
+          node -e "
+            const fs = require('fs');
+            const f = 'supabase/migration-status.json';
+            try {
+              const prev = JSON.parse(fs.readFileSync(f, 'utf8'));
+              if (!prev.ran_at) {
+                fs.writeFileSync(f, JSON.stringify({
+                  ...prev,
+                  ran_at: new Date().toISOString(),
+                  success: false,
+                  error: 'Runner failed — check Actions log for run_id ' + (prev.run_id || ''),
+                }, null, 2) + '\n');
+              }
+            } catch(e) { console.error('Could not write failure marker:', e.message); }
+          "
+
+      - name: Commit status to main
+        if: always()
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git fetch origin main
+          git reset --soft origin/main
+          git add supabase/migration-status.json
+          if git diff --cached --quiet; then
+            echo "No status changes to commit."
+          else
+            git commit -m "ci: migration-085 status $(date -u +%Y-%m-%dT%H:%M:%SZ) [skip ci]"
+            git push origin HEAD:main
+          fi

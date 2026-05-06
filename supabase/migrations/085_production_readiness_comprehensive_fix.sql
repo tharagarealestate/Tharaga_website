@@ -1,15 +1,7 @@
 -- =============================================================================
--- MIGRATION 085: PRODUCTION READINESS COMPREHENSIVE FIX  [run: 2026-05-06-v3]
--- Fixes all critical blockers preventing production launch:
---   1. Creates property_marketing_automation_logs (referenced but never created)
---   2. Creates workflow_execution_queue (serverless-safe async job runner)
---   3. Adds INSERT RLS policy on properties table for authenticated builders
---   4. Fixes DB trigger to check listing_status OR status (upload sets listing_status)
---   5. Adds INSERT/ALL policies on all marketing automation tables
---   6. Patches service-role bypass for server-to-server automation calls
+-- MIGRATION 085: PRODUCTION READINESS COMPREHENSIVE FIX  [run: 2026-05-06-v4]
 -- =============================================================================
 
--- ─── 1. PROPERTY MARKETING AUTOMATION LOGS ───────────────────────────────────
 CREATE TABLE IF NOT EXISTS public.property_marketing_automation_logs (
   id              UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
   property_id     UUID        NOT NULL REFERENCES public.properties(id) ON DELETE CASCADE,
@@ -36,8 +28,7 @@ DO $$ BEGIN
     AND tablename='property_marketing_automation_logs'
     AND policyname='builders_view_own_automation_logs') THEN
     CREATE POLICY "builders_view_own_automation_logs"
-      ON public.property_marketing_automation_logs FOR SELECT
-      USING (builder_id = auth.uid());
+      ON public.property_marketing_automation_logs FOR SELECT USING (builder_id = auth.uid());
   END IF;
 END $$;
 
@@ -52,7 +43,6 @@ DO $$ BEGIN
   END IF;
 END $$;
 
--- ─── 2. WORKFLOW EXECUTION QUEUE ─────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS public.workflow_execution_queue (
   id              UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
   property_id     UUID        NOT NULL REFERENCES public.properties(id) ON DELETE CASCADE,
@@ -75,28 +65,23 @@ CREATE TABLE IF NOT EXISTS public.workflow_execution_queue (
   updated_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
-CREATE INDEX IF NOT EXISTS idx_weq_pending  ON public.workflow_execution_queue(status, scheduled_at)
-  WHERE status = 'pending';
+CREATE INDEX IF NOT EXISTS idx_weq_pending  ON public.workflow_execution_queue(status, scheduled_at) WHERE status = 'pending';
 CREATE INDEX IF NOT EXISTS idx_weq_property ON public.workflow_execution_queue(property_id);
-CREATE INDEX IF NOT EXISTS idx_weq_priority ON public.workflow_execution_queue(priority, scheduled_at)
-  WHERE status = 'pending';
+CREATE INDEX IF NOT EXISTS idx_weq_priority ON public.workflow_execution_queue(priority, scheduled_at) WHERE status = 'pending';
 
 ALTER TABLE public.workflow_execution_queue ENABLE ROW LEVEL SECURITY;
 
 DO $$ BEGIN
   IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE schemaname='public'
-    AND tablename='workflow_execution_queue'
-    AND policyname='builders_view_own_workflow_queue') THEN
+    AND tablename='workflow_execution_queue' AND policyname='builders_view_own_workflow_queue') THEN
     CREATE POLICY "builders_view_own_workflow_queue"
-      ON public.workflow_execution_queue FOR SELECT
-      USING (builder_id = auth.uid());
+      ON public.workflow_execution_queue FOR SELECT USING (builder_id = auth.uid());
   END IF;
 END $$;
 
 DO $$ BEGIN
   IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE schemaname='public'
-    AND tablename='workflow_execution_queue'
-    AND policyname='service_role_full_access_workflow_queue') THEN
+    AND tablename='workflow_execution_queue' AND policyname='service_role_full_access_workflow_queue') THEN
     CREATE POLICY "service_role_full_access_workflow_queue"
       ON public.workflow_execution_queue FOR ALL
       USING (auth.jwt() ->> 'role' = 'service_role')
@@ -104,13 +89,11 @@ DO $$ BEGIN
   END IF;
 END $$;
 
--- ─── 3. PROPERTIES TABLE: INSERT POLICY FOR BUILDERS ─────────────────────────
 DO $$ BEGIN
   IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE schemaname='public'
     AND tablename='properties' AND policyname='builders_insert_own_properties') THEN
     CREATE POLICY "builders_insert_own_properties"
-      ON public.properties FOR INSERT TO authenticated
-      WITH CHECK (builder_id = auth.uid());
+      ON public.properties FOR INSERT TO authenticated WITH CHECK (builder_id = auth.uid());
   END IF;
 END $$;
 
@@ -118,8 +101,7 @@ DO $$ BEGIN
   IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE schemaname='public'
     AND tablename='properties' AND policyname='builders_select_own_properties') THEN
     CREATE POLICY "builders_select_own_properties"
-      ON public.properties FOR SELECT TO authenticated
-      USING (builder_id = auth.uid());
+      ON public.properties FOR SELECT TO authenticated USING (builder_id = auth.uid());
   END IF;
 END $$;
 
@@ -128,8 +110,7 @@ DO $$ BEGIN
     AND tablename='properties' AND policyname='builders_update_own_properties') THEN
     CREATE POLICY "builders_update_own_properties"
       ON public.properties FOR UPDATE TO authenticated
-      USING (builder_id = auth.uid())
-      WITH CHECK (builder_id = auth.uid());
+      USING (builder_id = auth.uid()) WITH CHECK (builder_id = auth.uid());
   END IF;
 END $$;
 
@@ -138,8 +119,7 @@ DO $$ BEGIN
     AND tablename='properties' AND policyname='public_view_active_properties') THEN
     CREATE POLICY "public_view_active_properties"
       ON public.properties FOR SELECT
-      USING (listing_status IN ('active','published','available')
-             OR status IN ('active','published','available'));
+      USING (listing_status IN ('active','published','available') OR status IN ('active','published','available'));
   END IF;
 END $$;
 
@@ -153,34 +133,21 @@ DO $$ BEGIN
   END IF;
 END $$;
 
--- ─── 4. FIX DB TRIGGER: CHECK listing_status OR status ───────────────────────
 CREATE OR REPLACE FUNCTION public.trigger_property_marketing_automation()
 RETURNS TRIGGER LANGUAGE plpgsql AS $$
-DECLARE
-  v_payload JSONB;
-  v_effective_status TEXT;
+DECLARE v_payload JSONB; v_effective_status TEXT;
 BEGIN
   v_effective_status := COALESCE(NEW.listing_status, NEW.status, '');
   IF v_effective_status IN ('active','available','published')
-     AND COALESCE(NEW.marketing_automation_enabled, true) = true
-  THEN
-    v_payload := jsonb_build_object(
-      'event','property_inserted',
-      'record', jsonb_build_object(
-        'id', NEW.id, 'builder_id', NEW.builder_id,
-        'title', NEW.title, 'description', NEW.description,
-        'price', COALESCE(NEW.price, NEW.price_inr), 'price_inr', NEW.price_inr,
-        'location', NEW.location, 'city', NEW.city, 'locality', NEW.locality,
-        'bhk_type', NEW.bhk_type, 'property_type', NEW.property_type,
-        'carpet_area', NEW.carpet_area, 'sqft', NEW.sqft,
-        'amenities', NEW.amenities, 'images', NEW.images,
-        'latitude', COALESCE(NEW.latitude, NEW.lat),
-        'longitude', COALESCE(NEW.longitude, NEW.lng),
-        'rera_id', NEW.rera_id, 'listing_status', v_effective_status,
-        'created_at', NEW.created_at
-      ),
-      'timestamp', NOW()
-    );
+     AND COALESCE(NEW.marketing_automation_enabled, true) = true THEN
+    v_payload := jsonb_build_object('event','property_inserted','record',
+      jsonb_build_object('id',NEW.id,'builder_id',NEW.builder_id,'title',NEW.title,
+        'price',COALESCE(NEW.price,NEW.price_inr),'price_inr',NEW.price_inr,
+        'location',NEW.location,'city',NEW.city,'locality',NEW.locality,
+        'bhk_type',NEW.bhk_type,'property_type',NEW.property_type,
+        'carpet_area',NEW.carpet_area,'sqft',NEW.sqft,'amenities',NEW.amenities,
+        'images',NEW.images,'listing_status',v_effective_status,'created_at',NEW.created_at),
+      'timestamp',NOW());
     INSERT INTO public.webhook_logs(source,event_type,event_id,body,status,metadata)
     VALUES('supabase','property.insert',NEW.id::TEXT,v_payload,'pending',
       jsonb_build_object('property_id',NEW.id,'builder_id',NEW.builder_id,'trigger','marketing_automation'));
@@ -195,7 +162,6 @@ CREATE TRIGGER property_marketing_automation_trigger
   ON public.properties FOR EACH ROW
   EXECUTE FUNCTION public.trigger_property_marketing_automation();
 
--- ─── 5. SERVICE-ROLE POLICIES ON MARKETING TABLES ─────────────────────────────
 DO $$ BEGIN
   IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE schemaname='public'
     AND tablename='property_marketing_strategies'
@@ -242,17 +208,6 @@ END $$;
 
 DO $$ BEGIN
   IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE schemaname='public'
-    AND tablename='social_monitoring_tasks'
-    AND policyname='service_role_insert_social_monitoring') THEN
-    CREATE POLICY "service_role_insert_social_monitoring"
-      ON public.social_monitoring_tasks FOR ALL
-      USING (auth.jwt() ->> 'role' = 'service_role')
-      WITH CHECK (auth.jwt() ->> 'role' = 'service_role');
-  END IF;
-END $$;
-
-DO $$ BEGIN
-  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE schemaname='public'
     AND tablename='whatsapp_campaigns'
     AND policyname='service_role_insert_whatsapp_campaigns') THEN
     CREATE POLICY "service_role_insert_whatsapp_campaigns"
@@ -273,27 +228,6 @@ DO $$ BEGIN
   END IF;
 END $$;
 
-DO $$ BEGIN
-  IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema='public' AND table_name='property_marketing_campaigns') THEN
-    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE schemaname='public'
-      AND tablename='property_marketing_campaigns'
-      AND policyname='service_role_full_access_campaigns') THEN
-      EXECUTE 'CREATE POLICY "service_role_full_access_campaigns" ON public.property_marketing_campaigns FOR ALL USING (auth.jwt() ->> ''role'' = ''service_role'') WITH CHECK (auth.jwt() ->> ''role'' = ''service_role'')';
-    END IF;
-  END IF;
-END $$;
-
-DO $$ BEGIN
-  IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema='public' AND table_name='social_media_posts') THEN
-    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE schemaname='public'
-      AND tablename='social_media_posts'
-      AND policyname='service_role_full_access_social_posts') THEN
-      EXECUTE 'CREATE POLICY "service_role_full_access_social_posts" ON public.social_media_posts FOR ALL USING (auth.jwt() ->> ''role'' = ''service_role'') WITH CHECK (auth.jwt() ->> ''role'' = ''service_role'')';
-    END IF;
-  END IF;
-END $$;
-
--- ─── 6. STATEMENT TIMEOUT + INDEXES ────────────────────────────────────────────
 ALTER DATABASE postgres SET statement_timeout = '30s';
 
 CREATE INDEX IF NOT EXISTS idx_webhook_logs_pending_trigger
@@ -303,7 +237,5 @@ CREATE INDEX IF NOT EXISTS idx_properties_listing_status_active
   ON public.properties(listing_status, builder_id)
   WHERE listing_status IN ('active','available','published');
 
-COMMENT ON TABLE public.property_marketing_automation_logs
-  IS 'Audit log for every marketing automation run per property';
-COMMENT ON TABLE public.workflow_execution_queue
-  IS 'Serverless-safe async job queue; populated by intelligence-engine, drained by cron';
+COMMENT ON TABLE public.property_marketing_automation_logs IS 'Audit log for every marketing automation run per property';
+COMMENT ON TABLE public.workflow_execution_queue IS 'Serverless-safe async job queue; populated by intelligence-engine, drained by cron';

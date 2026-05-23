@@ -1,0 +1,9 @@
+# Supabase connection
+supabase-py==2.7.4
+
+# Additional dependencies for new features
+python-jose[cryptography]==3.3.0
+passlib[bcrypt]==1.7.4
+python-multipart==0.0.9
+aiohttp==3.10.5
+twilio==9.2.3

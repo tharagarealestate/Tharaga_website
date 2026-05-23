@@ -280,7 +280,8 @@ export class ZohoClient {
         crm_account_name: orgInfo.company_name,
         is_active: true,
         is_connected: true,
-        connected_at: new Date().toISOString(),
+        connected_at: expiresAt.toISOString(), // when the connection was established
+        updated_at: new Date().toISOString(),
       }, {
         onConflict: 'builder_id,integration_type,provider',
       });

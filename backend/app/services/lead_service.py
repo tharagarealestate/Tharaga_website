@@ -1,5 +1,6 @@
 """
-Lead Service - Comprehensive lead management
+Lead Service - Works with existing Tharaga production schema
+Adapts to existing leads table (bigint id, phone_number column, etc.)
 """
 import logging
 from typing import List, Dict, Optional, Tuple
@@ -10,72 +11,129 @@ from ..models.lead import (
     LeadScoreResponse, LeadActivityCreate
 )
 from .scoring_service import ScoringService
-from ..config import settings
 
 logger = logging.getLogger(__name__)
 
+
 class LeadService:
-    """Service for lead management operations"""
+    """Service for lead management - adapted to existing schema"""
+    
+    @staticmethod
+    def _to_db_format(lead_data: dict) -> dict:
+        """Convert our model format to existing DB schema"""
+        db_data = {}
+        
+        # Map fields to existing schema
+        if 'name' in lead_data:
+            db_data['name'] = lead_data['name']
+        if 'email' in lead_data:
+            db_data['email'] = lead_data['email']
+        if 'phone' in lead_data:
+            db_data['phone_number'] = lead_data['phone']  # existing column
+            db_data['phone'] = lead_data['phone']  # backup column also exists
+        if 'source' in lead_data:
+            db_data['source'] = lead_data['source']
+        if 'budget_max' in lead_data:
+            db_data['budget'] = lead_data['budget_max']
+        if 'preferred_localities' in lead_data:
+            db_data['preferred_location'] = ','.join(lead_data['preferred_localities']) if lead_data['preferred_localities'] else None
+        if 'property_type' in lead_data:
+            db_data['property_type_interest'] = lead_data['property_type']
+        if 'timeline' in lead_data:
+            db_data['purchase_timeline'] = lead_data['timeline']
+        if 'utm_source' in lead_data:
+            db_data['utm_source'] = lead_data['utm_source']
+        if 'utm_medium' in lead_data:
+            db_data['utm_medium'] = lead_data['utm_medium']
+        if 'utm_campaign' in lead_data:
+            db_data['utm_campaign'] = lead_data['utm_campaign']
+        if 'utm_content' in lead_data:
+            db_data['utm_content'] = lead_data['utm_content']
+        if 'fbp' in lead_data:
+            db_data['fbp'] = lead_data['fbp']
+        if 'fbc' in lead_data:
+            db_data['fbc'] = lead_data['fbc']
+        
+        # Status mapping
+        db_data['status'] = 'new'
+        
+        # Remove None values
+        return {k: v for k, v in db_data.items() if v is not None}
+    
+    @staticmethod
+    def _from_db_format(db_row: dict) -> dict:
+        """Convert DB row to our model format"""
+        return {
+            'id': str(db_row.get('id')),
+            'name': db_row.get('name') or 'Unknown',
+            'email': db_row.get('email'),
+            'phone': db_row.get('phone_number') or db_row.get('phone') or '',
+            'source': db_row.get('source') or 'web',
+            'score': int(db_row.get('smart_score') or db_row.get('score') or 0),
+            'tier': db_row.get('smart_tier') or 'monkey',
+            'status': db_row.get('status') or 'new',
+            'is_qualified': bool(db_row.get('whatsapp_qualified', False)),
+            'created_at': db_row.get('created_at') or datetime.utcnow().isoformat()
+        }
     
     @staticmethod
     async def create_lead(lead_data: LeadCreate) -> Tuple[LeadResponse, LeadScoreResponse]:
-        """
-        Create a new lead with automatic scoring
-        Returns: (lead, score_data)
-        """
+        """Create new lead with SmartScore AI"""
         supabase = get_supabase()
         
-        # Calculate SmartScore
         lead_dict = lead_data.model_dump()
+        
+        # Calculate SmartScore
         score, tier, factors = ScoringService.calculate_lead_score(lead_dict)
         
-        # Prepare lead data
-        insert_data = {
-            **lead_dict,
-            'score': score,
-            'tier': tier.value,
-            'status': LeadStatus.new.value,
-            'is_qualified': False,
-            'last_activity_at': datetime.utcnow().isoformat()
+        # Prepare DB data (existing schema)
+        db_data = LeadService._to_db_format(lead_dict)
+        
+        # Add SmartScore data (new columns - try, fallback if not exists)
+        smart_score_data = {
+            'smart_score': score,
+            'smart_tier': tier.value,
+            'smart_score_factors': factors,
+            'smart_score_at': datetime.utcnow().isoformat()
         }
         
-        # Remove None values
-        insert_data = {k: v for k, v in insert_data.items() if v is not None}
-        
         try:
-            # Insert lead
-            result = supabase.table('leads').insert(insert_data).execute()
+            # Try with smart_score columns
+            result = supabase.table('leads').insert({**db_data, **smart_score_data}).execute()
+        except Exception as e:
+            err_str = str(e).lower()
+            if 'smart_score' in err_str or 'smart_tier' in err_str:
+                logger.warning("smart_score columns not yet added - inserting without them. Please run SUPABASE_SETUP.sql")
+                # Fallback: existing 'score' has 0-10 constraint, so normalize
+                # Just skip setting score to avoid constraint issues
+                try:
+                    result = supabase.table('leads').insert(db_data).execute()
+                except Exception as e2:
+                    logger.error(f"Final lead insert failed: {e2}")
+                    raise
+            else:
+                raise
             
             if not result.data:
                 raise Exception("Failed to create lead")
             
             lead_id = result.data[0]['id']
             
-            # Insert score history
-            score_data = {
-                'lead_id': lead_id,
-                'score': score,
-                'tier': tier.value,
-                'factors': factors,
-                'model_version': 'v1'
-            }
-            supabase.table('lead_scores').insert(score_data).execute()
-            
-            # Create activity
-            activity = {
-                'lead_id': lead_id,
-                'activity_type': 'lead_created',
-                'description': f'Lead captured from {lead_data.source.value}',
-                'metadata': {'initial_score': score, 'tier': tier.value}
-            }
-            supabase.table('lead_activities').insert(activity).execute()
+            # Log activity
+            try:
+                supabase.table('lead_activities').insert({
+                    'lead_id': lead_id,
+                    'activity_type': 'lead_created',
+                    'description': f'Lead created with SmartScore {score} ({tier.value})'
+                }).execute()
+            except Exception as e:
+                logger.warning(f"Failed to log activity: {e}")
             
             logger.info(f"Lead created: {lead_id} with score {score} ({tier.value})")
             
-            # Prepare response
-            lead_response = LeadResponse(**result.data[0])
+            lead_response = LeadResponse(**LeadService._from_db_format(result.data[0]))
             score_response = LeadScoreResponse(
-                lead_id=lead_id,
+                lead_id=str(lead_id),
                 score=score,
                 tier=tier,
                 factors=factors,
@@ -94,12 +152,14 @@ class LeadService:
         supabase = get_supabase()
         
         try:
-            result = supabase.table('leads').select('*').eq('id', lead_id).execute()
+            # leads.id is bigint, but we accept string
+            lookup_id = int(lead_id) if lead_id.isdigit() else lead_id
+            result = supabase.table('leads').select('*').eq('id', lookup_id).execute()
             
             if not result.data:
                 return None
             
-            return LeadResponse(**result.data[0])
+            return LeadResponse(**LeadService._from_db_format(result.data[0]))
         except Exception as e:
             logger.error(f"Error fetching lead: {str(e)}")
             return None
@@ -110,97 +170,91 @@ class LeadService:
         supabase = get_supabase()
         
         try:
-            # Update lead
-            update_data = {
+            lookup_id = int(lead_id) if lead_id.isdigit() else lead_id
+            
+            supabase.table('leads').update({
                 'status': status.value,
                 'updated_at': datetime.utcnow().isoformat()
-            }
-            supabase.table('leads').update(update_data).eq('id', lead_id).execute()
+            }).eq('id', lookup_id).execute()
             
-            # Create activity
-            activity = {
-                'lead_id': lead_id,
-                'activity_type': 'status_changed',
-                'description': f'Status changed to {status.value}',
-                'metadata': {'new_status': status.value, 'notes': notes}
-            }
-            supabase.table('lead_activities').insert(activity).execute()
+            # Log activity
+            try:
+                supabase.table('lead_activities').insert({
+                    'lead_id': lookup_id,
+                    'activity_type': 'status_changed',
+                    'description': f'Status changed to {status.value}' + (f' - {notes}' if notes else '')
+                }).execute()
+            except Exception:
+                pass
             
-            logger.info(f"Lead {lead_id} status updated to {status.value}")
             return True
-            
         except Exception as e:
-            logger.error(f"Error updating lead status: {str(e)}")
+            logger.error(f"Error updating status: {e}")
             return False
     
     @staticmethod
     async def qualify_lead(lead_id: str, qualification_data: dict) -> bool:
-        """Mark lead as qualified with qualification data"""
+        """Mark lead as qualified"""
         supabase = get_supabase()
         
         try:
-            # Update lead
-            update_data = {
-                'is_qualified': True,
-                'qualification_data': qualification_data,
-                'qualification_completed_at': datetime.utcnow().isoformat(),
-                'status': LeadStatus.qualified.value
-            }
-            supabase.table('leads').update(update_data).eq('id', lead_id).execute()
+            lookup_id = int(lead_id) if lead_id.isdigit() else lead_id
             
-            # Re-score with qualification data
-            lead_result = supabase.table('leads').select('*').eq('id', lead_id).execute()
+            # Update with existing schema fields
+            supabase.table('leads').update({
+                'whatsapp_qualified': True,
+                'qualification_data': qualification_data,
+                'status': 'qualified'
+            }).eq('id', lookup_id).execute()
+            
+            # Re-score
+            lead_result = supabase.table('leads').select('*').eq('id', lookup_id).execute()
             if lead_result.data:
-                lead_dict = lead_result.data[0]
+                lead_dict = {
+                    'budget_max': lead_result.data[0].get('budget'),
+                    'timeline': lead_result.data[0].get('purchase_timeline'),
+                    'source': lead_result.data[0].get('source'),
+                    'is_qualified': True,
+                    'qualification_data': qualification_data
+                }
                 score, tier, factors = ScoringService.calculate_lead_score(lead_dict)
                 
-                # Update score
                 supabase.table('leads').update({
-                    'score': score,
-                    'tier': tier.value
-                }).eq('id', lead_id).execute()
-                
-                # Insert new score
-                score_data = {
-                    'lead_id': lead_id,
-                    'score': score,
-                    'tier': tier.value,
-                    'factors': factors,
-                    'model_version': 'v1'
-                }
-                supabase.table('lead_scores').insert(score_data).execute()
+                    'smart_score': score,
+                    'smart_tier': tier.value,
+                    'smart_score_factors': factors,
+                    'smart_score_at': datetime.utcnow().isoformat()
+                }).eq('id', lookup_id).execute()
             
-            # Create activity
-            activity = {
-                'lead_id': lead_id,
-                'activity_type': 'lead_qualified',
-                'description': 'Lead qualified via AI',
-                'metadata': qualification_data
-            }
-            supabase.table('lead_activities').insert(activity).execute()
+            try:
+                supabase.table('lead_activities').insert({
+                    'lead_id': lookup_id,
+                    'activity_type': 'lead_qualified',
+                    'description': 'Lead qualified via AI'
+                }).execute()
+            except Exception:
+                pass
             
-            logger.info(f"Lead {lead_id} qualified")
             return True
-            
         except Exception as e:
-            logger.error(f"Error qualifying lead: {str(e)}")
+            logger.error(f"Error qualifying lead: {e}")
             return False
     
     @staticmethod
     async def get_lead_activities(lead_id: str) -> List[Dict]:
-        """Get all activities for a lead"""
+        """Get lead activity timeline"""
         supabase = get_supabase()
         
         try:
+            lookup_id = int(lead_id) if lead_id.isdigit() else lead_id
             result = supabase.table('lead_activities')\
                 .select('*')\
-                .eq('lead_id', lead_id)\
+                .eq('lead_id', lookup_id)\
                 .order('created_at', desc=True)\
                 .execute()
-            
             return result.data or []
         except Exception as e:
-            logger.error(f"Error fetching activities: {str(e)}")
+            logger.error(f"Error fetching activities: {e}")
             return []
     
     @staticmethod
@@ -209,30 +263,34 @@ class LeadService:
         supabase = get_supabase()
         
         try:
-            activity_data = activity.model_dump()
-            supabase.table('lead_activities').insert(activity_data).execute()
-            logger.info(f"Activity added to lead {activity.lead_id}")
+            lookup_id = int(activity.lead_id) if activity.lead_id.isdigit() else activity.lead_id
+            
+            supabase.table('lead_activities').insert({
+                'lead_id': lookup_id,
+                'activity_type': activity.activity_type,
+                'description': activity.description
+            }).execute()
             return True
         except Exception as e:
-            logger.error(f"Error adding activity: {str(e)}")
+            logger.error(f"Error adding activity: {e}")
             return False
     
     @staticmethod
     async def get_leads_by_tier(tier: LeadTier, limit: int = 50) -> List[LeadResponse]:
-        """Get leads by tier"""
+        """Get leads by SmartScore tier"""
         supabase = get_supabase()
         
         try:
             result = supabase.table('leads')\
                 .select('*')\
-                .eq('tier', tier.value)\
+                .eq('smart_tier', tier.value)\
                 .order('created_at', desc=True)\
                 .limit(limit)\
                 .execute()
             
-            return [LeadResponse(**item) for item in result.data] if result.data else []
+            return [LeadResponse(**LeadService._from_db_format(item)) for item in (result.data or [])]
         except Exception as e:
-            logger.error(f"Error fetching leads by tier: {str(e)}")
+            logger.error(f"Error fetching by tier: {e}")
             return []
     
     @staticmethod
@@ -253,7 +311,7 @@ class LeadService:
             if status:
                 query = query.eq('status', status.value)
             if tier:
-                query = query.eq('tier', tier.value)
+                query = query.eq('smart_tier', tier.value)
             if source:
                 query = query.eq('source', source)
             if assigned_to:
@@ -263,7 +321,7 @@ class LeadService:
                 .range(offset, offset + limit - 1)\
                 .execute()
             
-            return [LeadResponse(**item) for item in result.data] if result.data else []
+            return [LeadResponse(**LeadService._from_db_format(item)) for item in (result.data or [])]
         except Exception as e:
-            logger.error(f"Error searching leads: {str(e)}")
+            logger.error(f"Error searching leads: {e}")
             return []

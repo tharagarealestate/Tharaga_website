@@ -41,22 +41,22 @@ class PropertyCreate(BaseModel):
 class PropertyResponse(BaseModel):
     id: str
     title: str
-    description: Optional[str]
+    description: Optional[str] = None
     city: str
-    locality: Optional[str]
+    locality: Optional[str] = None
     property_type: str
-    bedrooms: Optional[int]
-    bathrooms: Optional[int]
+    bedrooms: Optional[int] = None
+    bathrooms: Optional[int] = None
     price_inr: float
-    sqft: Optional[float]
-    lat: Optional[float]
-    lng: Optional[float]
-    ai_score: Optional[int]
-    is_rera_verified: bool
-    images: Optional[List[str]]
-    amenities: Optional[List[str]]
-    status: str
-    created_at: datetime
+    sqft: Optional[float] = None
+    lat: Optional[float] = None
+    lng: Optional[float] = None
+    ai_score: Optional[int] = None
+    is_rera_verified: bool = False
+    images: Optional[List[str]] = None
+    amenities: Optional[List[str]] = None
+    status: str = "available"
+    created_at: Optional[str] = None
     
     class Config:
         from_attributes = True

@@ -58,14 +58,14 @@ class LeadCreate(BaseModel):
 class LeadResponse(BaseModel):
     id: str
     name: str
-    email: Optional[str]
+    email: Optional[str] = None
     phone: str
-    source: LeadSource
-    score: Optional[int]
-    tier: Optional[LeadTier]
-    status: LeadStatus
-    is_qualified: bool
-    created_at: datetime
+    source: str = "web"
+    score: Optional[int] = 0
+    tier: Optional[str] = "monkey"
+    status: str = "new"
+    is_qualified: bool = False
+    created_at: Optional[str] = None
     
     class Config:
         from_attributes = True

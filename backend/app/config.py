@@ -62,8 +62,11 @@ class Settings(BaseSettings):
     PROPERTY_SCORE_RERA_WEIGHT: float = 0.15
     PROPERTY_SCORE_BUILDER_WEIGHT: float = 0.10
     
+    LOG_LEVEL: str = "INFO"
+    
     class Config:
         env_file = ".env"
         case_sensitive = True
+        extra = "ignore"
 
 settings = Settings()

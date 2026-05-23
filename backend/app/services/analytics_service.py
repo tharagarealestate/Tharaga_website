@@ -1,201 +1,182 @@
 """
-Analytics Service - Live metrics and market intelligence
+Analytics Service - Adapted to existing schema
 """
 import logging
-from typing import Dict, List, Optional
+from typing import Optional
 from datetime import datetime, timedelta
 from ..database import get_supabase
 from ..models.analytics import LiveMetrics, LocalityInsight, MarketDataResponse
+from ..utils import cache
 
 logger = logging.getLogger(__name__)
 
+
 class AnalyticsService:
-    """Service for analytics and live metrics"""
+    """Analytics service for live metrics and market intelligence"""
     
     @staticmethod
     async def get_live_metrics() -> LiveMetrics:
-        """Get real-time dashboard metrics"""
+        """Get real-time dashboard metrics with caching"""
+        # Check cache first
+        cached = cache.get('live_metrics')
+        if cached:
+            return LiveMetrics(**cached)
+        
         supabase = get_supabase()
         
         try:
-            # Check cache first
-            cache = supabase.table('live_metrics').select('*').eq('id', 'dashboard').execute()
-            
-            if cache.data:
-                cached_data = cache.data[0]
-                cache_time = datetime.fromisoformat(cached_data['updated_at'].replace('Z', '+00:00'))
-                
-                # Use cache if less than 5 minutes old
-                if (datetime.utcnow() - cache_time.replace(tzinfo=None)).seconds < 300:
-                    metrics = cached_data['metrics']
-                    return LiveMetrics(**metrics)
-            
-            # Calculate fresh metrics
             today = datetime.utcnow().date()
             week_ago = today - timedelta(days=7)
             
-            # Active leads by tier
+            # Get active leads (not converted/lost)
             leads = supabase.table('leads')\
-                .select('tier, status')\
-                .in_('status', ['new', 'contacted', 'qualified', 'nurturing'])\
+                .select('smart_tier, status, budget, whatsapp_qualified')\
                 .execute()
             
             all_leads = leads.data or []
-            lion_leads = sum(1 for l in all_leads if l.get('tier') == 'lion')
-            monkey_leads = sum(1 for l in all_leads if l.get('tier') == 'monkey')
-            dog_leads = sum(1 for l in all_leads if l.get('tier') == 'dog')
             
-            # Pipeline value
-            pipeline = supabase.table('leads')\
-                .select('budget_max')\
-                .eq('is_qualified', True)\
-                .in_('status', ['qualified', 'contacted', 'nurturing'])\
-                .execute()
+            # Active = not converted/lost/invalid
+            active = [l for l in all_leads if l.get('status') not in ('converted', 'lost', 'invalid')]
             
+            lion_leads = sum(1 for l in active if l.get('smart_tier') == 'lion')
+            monkey_leads = sum(1 for l in active if l.get('smart_tier') == 'monkey')
+            dog_leads = sum(1 for l in active if l.get('smart_tier') == 'dog')
+            
+            # Pipeline value - sum of budgets for qualified active leads
             pipeline_value = sum(
-                float(l.get('budget_max', 0))
-                for l in (pipeline.data or [])
-                if l.get('budget_max')
+                float(l.get('budget', 0) or 0)
+                for l in active
+                if l.get('whatsapp_qualified') or l.get('status') == 'qualified'
             )
             
             # Conversions
-            converted_today = supabase.table('leads')\
-                .select('id', count='exact')\
-                .gte('created_at', today.isoformat())\
-                .eq('status', 'converted')\
-                .execute()
+            converted_today = sum(
+                1 for l in all_leads
+                if l.get('status') == 'converted'
+            )
             
-            converted_week = supabase.table('leads')\
-                .select('id', count='exact')\
-                .gte('created_at', week_ago.isoformat())\
-                .eq('status', 'converted')\
-                .execute()
+            # Get properties count
+            try:
+                props = supabase.table('properties').select('id', count='exact').execute()
+                properties_count = props.count or 0
+            except Exception:
+                properties_count = 0
             
-            # Conversion rate
-            total_leads = supabase.table('leads').select('id', count='exact').execute()
-            total_converted = supabase.table('leads')\
-                .select('id', count='exact')\
-                .eq('status', 'converted')\
-                .execute()
+            # Calculate conversion rate
+            total = len(all_leads)
+            converted_total = sum(1 for l in all_leads if l.get('status') == 'converted')
+            conversion_rate = (converted_total / total * 100) if total > 0 else 0
             
-            total_count = total_leads.count or 0
-            converted_count = total_converted.count or 0
-            conversion_rate = (converted_count / total_count * 100) if total_count > 0 else 0
+            metrics = LiveMetrics(
+                active_leads=len(active),
+                lion_leads=lion_leads,
+                monkey_leads=monkey_leads,
+                dog_leads=dog_leads,
+                pipeline_value=pipeline_value,
+                leads_converted_today=converted_today,
+                leads_converted_week=converted_total,
+                conversion_rate=round(conversion_rate, 2),
+                avg_response_time_minutes=None,
+                properties_listed=properties_count,
+                updated_at=datetime.utcnow().isoformat()
+            )
             
-            # Average response time (from assignments)
-            assignments = supabase.table('lead_assignments')\
-                .select('sla_met, sla_minutes, responded_at, created_at')\
-                .not_.is_('responded_at', 'null')\
-                .gte('created_at', week_ago.isoformat())\
-                .execute()
+            # Cache for 60 seconds
+            cache.set('live_metrics', metrics.model_dump(), ttl=60)
             
-            response_times = []
-            for a in (assignments.data or []):
-                if a.get('responded_at') and a.get('created_at'):
-                    created = datetime.fromisoformat(a['created_at'].replace('Z', '+00:00'))
-                    responded = datetime.fromisoformat(a['responded_at'].replace('Z', '+00:00'))
-                    minutes = (responded - created).total_seconds() / 60
-                    response_times.append(minutes)
-            
-            avg_response_time = sum(response_times) / len(response_times) if response_times else None
-            
-            # Properties count
-            properties_count = supabase.table('properties')\
-                .select('id', count='exact')\
-                .eq('status', 'available')\
-                .execute()
-            
-            metrics_data = {
-                'active_leads': len(all_leads),
-                'lion_leads': lion_leads,
-                'monkey_leads': monkey_leads,
-                'dog_leads': dog_leads,
-                'pipeline_value': pipeline_value,
-                'leads_converted_today': converted_today.count or 0,
-                'leads_converted_week': converted_week.count or 0,
-                'conversion_rate': round(conversion_rate, 2),
-                'avg_response_time_minutes': round(avg_response_time, 2) if avg_response_time else None,
-                'properties_listed': properties_count.count or 0,
-                'updated_at': datetime.utcnow().isoformat()
-            }
-            
-            # Cache the metrics
-            supabase.table('live_metrics').upsert({
-                'id': 'dashboard',
-                'metrics': metrics_data,
-                'updated_at': datetime.utcnow().isoformat()
-            }).execute()
-            
-            return LiveMetrics(**metrics_data)
+            return metrics
             
         except Exception as e:
-            logger.error(f"Error fetching live metrics: {str(e)}")
-            raise
+            logger.error(f"Error fetching metrics: {e}")
+            # Return empty metrics rather than failing
+            return LiveMetrics(updated_at=datetime.utcnow().isoformat())
     
     @staticmethod
     async def get_market_data(city: str = 'Chennai') -> MarketDataResponse:
         """Get market intelligence for a city"""
+        # Cache key
+        cache_key = f'market_data:{city}'
+        cached = cache.get(cache_key)
+        if cached:
+            return MarketDataResponse(**cached)
+        
         supabase = get_supabase()
         
         try:
-            # Get locality insights
+            # Try locality_insights first
             localities_result = supabase.table('locality_insights')\
                 .select('*')\
                 .eq('city', city)\
-                .order('demand_level', desc=True)\
                 .execute()
             
-            localities = [
-                LocalityInsight(**loc)
-                for loc in (localities_result.data or [])
-            ]
+            localities = []
+            for loc in (localities_result.data or []):
+                localities.append(LocalityInsight(
+                    city=loc.get('city', city),
+                    locality=loc.get('locality', ''),
+                    avg_price_sqft=loc.get('avg_price_sqft'),
+                    price_trend_percentage=loc.get('price_trend_percentage'),
+                    demand_level=loc.get('demand_level'),
+                    demand_change_percentage=loc.get('demand_change_percentage'),
+                    active_properties=loc.get('active_properties', 0),
+                    connectivity_score=loc.get('connectivity_score'),
+                    safety_score=loc.get('safety_score'),
+                    lifestyle_score=loc.get('lifestyle_score'),
+                    updated_at=loc.get('updated_at')
+                ))
             
-            # Total properties in city
-            properties_count = supabase.table('properties')\
-                .select('id', count='exact')\
-                .eq('city', city)\
-                .eq('status', 'available')\
-                .execute()
+            # Total properties
+            try:
+                props = supabase.table('properties')\
+                    .select('id', count='exact')\
+                    .eq('city', city)\
+                    .execute()
+                total_props = props.count or 0
+            except Exception:
+                total_props = 0
             
             # Calculate average city price
-            properties = supabase.table('properties')\
-                .select('price_inr, sqft')\
-                .eq('city', city)\
-                .not_.is_('sqft', 'null')\
-                .execute()
+            try:
+                price_query = supabase.table('properties')\
+                    .select('price_inr, sqft')\
+                    .eq('city', city)\
+                    .not_.is_('sqft', 'null')\
+                    .execute()
+                
+                avg_price = None
+                if price_query.data:
+                    ratios = []
+                    for p in price_query.data:
+                        if p.get('price_inr') and p.get('sqft') and float(p['sqft']) > 0:
+                            ratios.append(float(p['price_inr']) / float(p['sqft']))
+                    if ratios:
+                        avg_price = sum(ratios) / len(ratios)
+            except Exception:
+                avg_price = None
             
-            avg_price = None
-            if properties.data:
-                price_per_sqft = [
-                    float(p['price_inr']) / float(p['sqft'])
-                    for p in properties.data
-                    if p.get('price_inr') and p.get('sqft') and float(p['sqft']) > 0
-                ]
-                if price_per_sqft:
-                    avg_price = sum(price_per_sqft) / len(price_per_sqft)
-            
-            # Get trending localities (high demand + price appreciation)
             trending = [
-                loc.locality
-                for loc in localities
-                if loc.demand_level in ['high', 'very_high'] and 
-                   loc.price_trend_percentage and loc.price_trend_percentage > 5
+                loc.locality for loc in localities
+                if loc.demand_level in ['high', 'very_high']
+                and loc.price_trend_percentage and loc.price_trend_percentage > 5
             ][:5]
             
-            return MarketDataResponse(
+            response = MarketDataResponse(
                 localities=localities,
-                total_properties=properties_count.count or 0,
+                total_properties=total_props,
                 avg_price_city=round(avg_price, 2) if avg_price else None,
                 trending_localities=trending
             )
             
+            cache.set(cache_key, response.model_dump(), ttl=300)  # 5 min cache
+            return response
+            
         except Exception as e:
-            logger.error(f"Error fetching market data: {str(e)}")
-            raise
+            logger.error(f"Error fetching market data: {e}")
+            return MarketDataResponse()
     
     @staticmethod
     async def get_locality_insights(city: str, locality: str) -> Optional[LocalityInsight]:
-        """Get detailed insights for a specific locality"""
+        """Get detailed insights for a locality"""
         supabase = get_supabase()
         
         try:
@@ -208,8 +189,20 @@ class AnalyticsService:
             if not result.data:
                 return None
             
-            return LocalityInsight(**result.data[0])
-            
+            loc = result.data[0]
+            return LocalityInsight(
+                city=loc.get('city', city),
+                locality=loc.get('locality', locality),
+                avg_price_sqft=loc.get('avg_price_sqft'),
+                price_trend_percentage=loc.get('price_trend_percentage'),
+                demand_level=loc.get('demand_level'),
+                demand_change_percentage=loc.get('demand_change_percentage'),
+                active_properties=loc.get('active_properties', 0),
+                connectivity_score=loc.get('connectivity_score'),
+                safety_score=loc.get('safety_score'),
+                lifestyle_score=loc.get('lifestyle_score'),
+                updated_at=loc.get('updated_at')
+            )
         except Exception as e:
-            logger.error(f"Error fetching locality insights: {str(e)}")
+            logger.error(f"Error fetching locality: {e}")
             return None

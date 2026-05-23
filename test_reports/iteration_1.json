@@ -1,0 +1,73 @@
+{
+  "summary": "Comprehensive backend testing of Tharaga API. 30 tests covering health, leads (create with SmartScore AI, get, score breakdown, activities, search, tier filter), properties (search/get/score/RERA), 5 calculators (ROI, EMI, budget, loan-eligibility, valuation), analytics (live-metrics, market-data), integrations (Meta CAPI, WhatsApp, Zoho), rate-limit middleware, and request-ID middleware. 29 passed, 1 xfailed (known RERA graceful-degradation bug).",
+  "backend_issues": {
+    "critical": [
+      {
+        "endpoint": "POST /api/v1/properties/verify-rera",
+        "issue": "Graceful degradation BROKEN. When the optional `rera_verification` table is missing (which is the current state per agent context), the outer try/except in PropertyService.verify_rera (property_service.py line ~246) swallows the PGRST205 'table not found' error and returns False, completely bypassing the documented mock fallback `is_valid = len(rera_id) > 5`. Result: every RERA verification call returns is_valid=false even for clearly long/valid IDs. Note: existing Supabase has a similarly-named table `rera_verifications` (plural) per the PGRST hint — consider using that table name OR scope the try/except to ONLY the cache lookup so the mock fallback still runs.",
+        "priority": "HIGH"
+      },
+      {
+        "endpoint": "POST /api/v1/integrations/meta-capi/event",
+        "issue": "Meta CAPI token configured in backend/.env is INVALID/EXPIRED. Calling the endpoint returns HTTP 200 but body `{success: false, result: {error: {message: 'Error validating access token: The session is invalid because the user logged out.', type: 'OAuthException', code: 190, error_subcode: 467}}}`. The endpoint does not crash (good), but the integration is non-functional. Token needs to be refreshed.",
+        "priority": "HIGH"
+      }
+    ],
+    "minor": [
+      {
+        "endpoint": "Rate limit middleware",
+        "issue": "Documented limits ('10 leads/min, 30 tools/min' per PRD) do NOT match implementation. middleware.py PATH_LIMITS sets `/api/v1/leads: (20,60)` and `/api/v1/tools: (60,60)`. Additionally the rate-limit bucket key is `client_id:full_path`, so each calculator endpoint (emi, roi, budget, etc.) has its OWN 60/min bucket instead of a shared 30/min bucket across `/api/v1/tools/*`. Test sent 35 EMI requests in <1s, all returned 200. Suggest: bucket by path prefix (e.g. '/api/v1/tools') and tighten to 30/min."
+      },
+      {
+        "endpoint": "GET /api/v1/analytics/live-metrics",
+        "issue": "`properties_listed` returns 0 even though properties table has 32 real Chennai properties. Likely due to filtering by a missing column (e.g., `status` or `is_active`) without graceful degradation. lion/monkey/dog counts being 0 is expected (smart_tier column missing per agent context)."
+      },
+      {
+        "endpoint": "POST /api/v1/leads/",
+        "issue": "Returns HTTP 500 (not 409) when phone number collides with `idx_leads_phone_normalized` unique constraint. Error message leaks raw Supabase JSON: `\"detail\":\"{'code': '23505', ...}\"`. Should be caught and returned as 409 Conflict with a clean message like 'Lead with this phone already exists'."
+      }
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_tharaga_api.py",
+    "/app/test_reports/pytest/pytest_results.xml"
+  ],
+  "action_items": [
+    "Fix verify_rera: scope inner try/except so mock fallback (len>5) runs when rera_verification table is missing, OR rename table reference to existing `rera_verifications` (plural).",
+    "Refresh Meta CAPI access token in backend/.env (current one returns OAuthException code 190 — user logged out / token revoked).",
+    "Align rate limit middleware with PRD: 10 leads/min, 30 tools/min. Also fix bucketing so the same 30/min bucket is shared across all `/api/v1/tools/*` endpoints instead of per-path.",
+    "Handle Postgres unique-constraint violation (code 23505) in lead creation: return HTTP 409 with a friendly message instead of leaking raw Supabase error in a 500.",
+    "live-metrics: ensure `properties_listed` counts existing properties (table has 32 rows) even when optional columns/tables are absent."
+  ],
+  "critical_code_review_comments": [
+    "property_service.py verify_rera: outer try/except is too wide, hiding table-missing errors and bypassing the mock fallback. Use a nested try around `supabase.table('rera_verification').select(...)` only.",
+    "leads.py create_lead: generic `except Exception as e: raise HTTPException(500, str(e))` exposes raw DB error JSON to clients. Map known DB errors (23505 unique violation, 23502 not-null, etc.) to proper HTTP codes.",
+    "middleware.py RateLimitMiddleware: PATH_LIMITS keys are matched by `startswith` but rate_key includes the full path, so tools/* sub-paths get independent buckets. Either include only the matched prefix in the key, or set per-sub-path limits explicitly.",
+    "main.py: legacy /api/recommendations block is partially indented inside `if _LEGACY_AVAILABLE:` (lines 187-227). Scipy missing is acceptable, but consider moving legacy code to a separate module.",
+    "integrations endpoints (meta-capi/event, whatsapp/send) accept critical args (event_name, phone, message) as query params. Should accept JSON body via Pydantic models for safety and validation."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_tharaga_api.py"
+  ],
+  "success_rate": {
+    "backend": "97% (29/30 — 1 xfailed for known RERA bug)",
+    "frontend": "N/A (backend-only testing)"
+  },
+  "test_credentials": "N/A — Supabase service key already in backend/.env",
+  "seed_data_creation": "Each test_create_lead run inserts one TEST_User_<random> lead with a randomized 10-digit phone into the live Supabase `leads` table. 7 existing leads were untouched.",
+  "retest_needed": true,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "Backend running at http://localhost:8001 (frontend dir does not exist — this is a backend-only project). REACT_APP_BACKEND_URL is not in any frontend/.env (no frontend). Pytest file: /app/backend/tests/test_tharaga_api.py — 30 tests, runs in ~12s. Lead creation uses a randomized phone to bypass the unique constraint; do NOT hardcode phones. RERA endpoint currently returns is_valid=false for everything (xfailed). Meta CAPI token is invalid — expect success=false in the response body but HTTP 200. WhatsApp + Zoho intentionally not configured (graceful no-op responses). The optional Supabase migration in /app/SUPABASE_SETUP.sql has NOT been run, so smart_score/smart_tier columns + locality_insights/meta_events/rera_verification/live_metrics tables are missing — most endpoints degrade gracefully except `verify-rera` (see critical issues).",
+  "rca_of_the_issue": {
+    "rera_verify_returns_false_always": {
+      "reproduction": "curl -X POST 'http://localhost:8001/api/v1/properties/verify-rera?rera_id=TN-RERA-123456'  → returns {\"is_valid\": false}",
+      "root_cause": "PropertyService.verify_rera wraps both the cache-lookup AND the mock-fallback in a single try/except. The cache lookup throws PGRST205 (table not found), which the outer except catches, logs as ERROR, and returns False. The fallback `is_valid = len(rera_id) > 5` on line 231 is never reached.",
+      "mitigation": "Move the supabase.select call into its own try/except so the mock fallback always executes. Example: wrap only `result = supabase.table('rera_verification').select(...).execute()` in try/except, set `cached = None` on failure, then check `if cached and cached.data:` before falling through to the mock."
+    }
+  }
+}

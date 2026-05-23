@@ -48,12 +48,16 @@ class LoggingMiddleware(BaseHTTPMiddleware):
 class RateLimitMiddleware(BaseHTTPMiddleware):
     """Rate limiting middleware with path-specific limits"""
     
+    # Rate limits: (max_requests, window_seconds)
+    # Tighter limits on writes; lenient on reads
     PATH_LIMITS = {
-        '/api/v1/leads': (10, 60),  # 10 leads per minute per IP
-        '/api/v1/tools': (30, 60),  # 30 calculator calls per minute (shared)
+        '/api/v1/leads': (10, 60),     # 10 lead creations per minute
+        '/api/v1/tools': (30, 60),     # 30 calculator calls per minute (shared)
         '/api/v1/integrations/whatsapp/send': (20, 60),
     }
     DEFAULT_LIMIT = (200, 60)
+    # GET requests get higher limits (read-heavy operations)
+    GET_LIMIT_MULTIPLIER = 5  # 5x more reads than writes allowed
     EXCLUDED_PATHS = {'/health', '/', '/api/docs', '/api/redoc', '/api/openapi.json'}
     
     async def dispatch(self, request: Request, call_next):
@@ -69,11 +73,15 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         for path_prefix, limits in self.PATH_LIMITS.items():
             if request.url.path.startswith(path_prefix):
                 max_requests, window = limits
-                bucket_prefix = path_prefix  # Share bucket across sub-paths
+                bucket_prefix = path_prefix
                 break
         
-        # Use shared bucket key (so all /api/v1/tools/* share one bucket)
-        rate_key = f"{client_id}:{bucket_prefix}"
+        # GET requests get higher limits
+        if request.method == 'GET':
+            max_requests = max_requests * self.GET_LIMIT_MULTIPLIER
+        
+        # Separate buckets for GET vs writes
+        rate_key = f"{client_id}:{bucket_prefix}:{'GET' if request.method == 'GET' else 'WRITE'}"
         if not rate_limiter.is_allowed(rate_key, max_requests, window):
             reset_time = rate_limiter.get_reset_time(rate_key, window)
             retry_after = int(reset_time - time.time()) if reset_time else 60

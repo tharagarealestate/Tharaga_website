@@ -77,3 +77,8 @@ trace.zip
 # Netlify local artifacts
 # ==========================================
 .netlify/
+*.env
+credentials.json
+*.pem
+*.key
+.credentials

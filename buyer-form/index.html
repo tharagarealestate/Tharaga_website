@@ -10,6 +10,9 @@
   <!-- Ensure auth-gate is available so fallbacks can open the login modal if header is missing -->
   <script src="https://auth.tharaga.co.in/login_signup_glassdrop/auth-gate.js" defer></script>
   
+  <!-- Tharaga API Client - For SmartScore AI lead creation -->
+  <script src="/js/tharaga-api.js" defer></script>
+  
   <!-- Inline auth removed; using durable-auth-head.html -->
   <!-- <script>
 // Durable top-right authentication header and modal (Supabase-based)
@@ -1368,6 +1371,36 @@ async function getRecaptcha() {
     } catch (err) {
       console.error(err);
       alert('Matching failed: ' + (err?.message || err));
+    }
+
+    // 3b) NEW: Also call Tharaga AI Lead API for SmartScore + auto-distribution
+    try {
+      if (window.tharagaAPI && window.tharagaAPI.leads) {
+        const { min: bMin, max: bMax } = parseBudgetRange(payload.budget || '');
+        const leadResult = await window.tharagaAPI.leads.create({
+          name: payload.name,
+          email: payload.email,
+          phone: payload.phone,
+          source: 'web',
+          budget_min: bMin || undefined,
+          budget_max: bMax || undefined,
+          property_type: payload.property_type || undefined,
+          preferred_localities: payload.location ? [payload.location.split(',')[0].trim()] : undefined,
+          timeline: payload.timeline || undefined,
+          utm_source: payload.utm_source || undefined,
+          utm_medium: payload.utm_medium || undefined,
+          utm_campaign: payload.utm_campaign || undefined,
+          referrer: payload.referrer || undefined
+        });
+        console.log('✅ Tharaga AI Lead created:', leadResult);
+        // Store lead ID for later reference
+        if (leadResult?.id) {
+          sessionStorage.setItem('tharaga_lead_id', leadResult.id);
+        }
+      }
+    } catch (apiErr) {
+      console.warn('Tharaga AI API call failed (non-blocking):', apiErr);
+      // Non-blocking - continue with the flow
     }
 
     // 4) Derive RPC filters

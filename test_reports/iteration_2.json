@@ -1,0 +1,73 @@
+{
+  "summary": "Re-tested Tharaga FastAPI backend after fixes for iteration_1.json findings. All 5 reported issues are now resolved. Updated /app/backend/tests/test_tharaga_api.py — added 4 new tests (duplicate-phone 409, Meta/WhatsApp Pydantic validation, leads rate-limit tighter, tools shared-bucket) and removed the xfail from RERA. 34/34 tests pass.",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {
+        "endpoint": "POST /api/v1/integrations/meta-capi/event",
+        "issue": "Endpoint now correctly accepts JSON body (Pydantic model) and does not crash, but the configured META_ACCESS_TOKEN in backend/.env is still expired (OAuthException code 190 / error_subcode 467 'user logged out'). Returns HTTP 200 with body {success: false, result: {...}}. This is EXPECTED per main-agent note, but the token needs to be refreshed before Meta CAPI works end-to-end in production."
+      },
+      {
+        "endpoint": "GET /api/v1/analytics/live-metrics",
+        "issue": "properties_listed=32 ✓ and active_leads=15 ✓ now return real counts. However lion_leads/monkey_leads/dog_leads still all 0 because the existing leads.tier column is null/empty for all rows (smart_tier column does not exist). Not a code bug — the live DB lacks tier values. The fallback path itself works correctly."
+      },
+      {
+        "endpoint": "Rate limit middleware",
+        "issue": "Rate limits are tight (10 leads/min, 30 tools/min). The /api/v1/leads bucket counts ALL methods (GETs + POSTs) under one shared 10/min cap; a normal user navigating a leads page can hit the limit quickly (8 GETs + 2 POSTs = 10). Consider higher limits for GETs or separate buckets per method."
+      }
+    ]
+  },
+  "frontend_issues": {"ui_bugs": [], "integration_issues": [], "design_issues": []},
+  "test_report_links": [
+    "/app/backend/tests/test_tharaga_api.py",
+    "/app/test_reports/pytest/pytest_results.xml"
+  ],
+  "action_items": [
+    "Refresh META_ACCESS_TOKEN in /app/backend/.env (current token returns OAuthException 190 — token revoked).",
+    "Populate leads.tier column (or run SUPABASE_SETUP.sql to add smart_tier) so live-metrics lion/monkey/dog counters reflect real distribution.",
+    "Consider relaxing GET requests under /api/v1/leads/* or splitting buckets by method — current shared 10/min on the prefix is restrictive for read-heavy frontends."
+  ],
+  "critical_code_review_comments": [
+    "verify_rera fix (property_service.py L223-252): nested try/except is correctly scoped to cache lookup only — mock fallback len>5 now runs. Verified: TN-RERA-123456 → is_valid=true, AB → is_valid=false.",
+    "leads.py create_lead: error mapping covers 23505/23502/23514 — duplicate phone now returns clean 409 with 'A lead with this phone number already exists' (no raw DB JSON leaked). Generic Exception still returns 500 with safe message 'Failed to create lead. Please try again.' — good.",
+    "middleware.py RateLimitMiddleware: bucket_prefix correctly uses the matched PATH_LIMITS key (/api/v1/tools, /api/v1/leads) so sub-paths share the bucket. Verified: 30 mixed EMI/ROI/budget calls trigger 429 (hit at request 25 with prior 5 from TestTools).",
+    "integrations.py: All three endpoints (meta-capi/event, whatsapp/send, zoho-crm/sync-lead) now use Pydantic request models. Validation works (422 on missing required fields).",
+    "analytics_service.py get_live_metrics: graceful smart_tier→tier fallback works; properties_listed uses count='exact' + limit(1) for efficient counting. Returns 32 properties as expected.",
+    "Minor: rate-limit buckets are per-prefix per-IP and apply uniformly to GET+POST. Consider giving GET endpoints a larger budget or excluding them, as they're not abuse vectors.",
+    "Minor: leads.py create_lead lets HTTPException propagate via generic Exception handler in some paths — verify that internal HTTPException raises (e.g., 422 from Pydantic) are not converted to 500 by the catch-all. Currently OK because Pydantic validation happens before the route body."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_tharaga_api.py"
+  ],
+  "success_rate": {
+    "backend": "100% (34/34 passing)",
+    "frontend": "N/A (backend-only testing)"
+  },
+  "test_credentials": "N/A — Supabase service key already in backend/.env",
+  "seed_data_creation": "Each pytest run creates 1 lead via test_create_lead (TEST_User_<rand> with random 10-digit phone) and up to ~10 more via test_rate_limit_leads_tighter (TEST_RL_<i>_<rand>, most blocked by 429). Cumulative test leads grow over runs — periodic cleanup of TEST_ prefixed leads recommended.",
+  "retest_needed": false,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "Backend at http://localhost:8001. Pytest file: /app/backend/tests/test_tharaga_api.py — 34 tests, ~15s. IMPORTANT: Rate limits are tight (10 leads/min, 30 tools/min shared). Between back-to-back pytest runs, wait at least 65 seconds OR the rate-limit tests will fail because the in-memory RateLimiter retains the previous window. The TestLeads class uses exactly 9 calls under /api/v1/leads, leaving 1 spare in the 10/min bucket — adding new lead tests will likely push it over. The Meta CAPI token is still expired (success=false but no crash, expected). WhatsApp/Zoho intentionally not configured (success=false gracefully). RERA mock fallback (len>5) now works.",
+  "rca_of_the_issue": {
+    "iteration_1_critical_1_rera_returns_false": {
+      "status": "FIXED",
+      "fix": "property_service.py verify_rera now wraps only the supabase cache lookup in its own try/except, so when rera_verification table is missing the fallback `is_valid = len(rera_id) > 5` runs. Verified: TN-RERA-123456 → true, AB → false."
+    },
+    "iteration_1_critical_2_meta_capi_token_expired": {
+      "status": "EXPECTED (per agent note)",
+      "fix": "Endpoint rewritten to accept JSON body via MetaEventRequest model. Token itself remains expired (action item for ops). Endpoint returns 200 with success=false body — no crash."
+    },
+    "iteration_1_minor_1_rate_limit_misconfig": {
+      "status": "FIXED",
+      "fix": "middleware.py PATH_LIMITS now 10/60 leads and 30/60 tools. bucket_prefix uses the matched key (not full path), so /api/v1/tools/* share one 30/min bucket. Verified via test_rate_limit_tools_shared_across_subpaths — 429 within 25 mixed-endpoint calls."
+    },
+    "iteration_1_minor_2_properties_listed_zero": {
+      "status": "FIXED",
+      "fix": "analytics_service.py uses .select('id', count='exact').limit(1) without filters that depend on missing columns. live-metrics now returns properties_listed=32."
+    },
+    "iteration_1_minor_3_lead_dup_500": {
+      "status": "FIXED",
+      "fix": "leads.py create_lead maps '23505' / 'duplicate' / 'unique' to HTTP 409 with clean message. Verified: posting same phone twice → 409 'A lead with this phone number already exists' (no DB JSON leaked)."
+    }
+  }
+}

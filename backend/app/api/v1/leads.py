@@ -51,7 +51,16 @@ async def create_lead(
         return lead_response
         
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        err_str = str(e)
+        # Map known errors to proper HTTP codes
+        if '23505' in err_str or 'duplicate' in err_str.lower() or 'unique' in err_str.lower():
+            raise HTTPException(status_code=409, detail="A lead with this phone number already exists")
+        if '23502' in err_str or 'not-null' in err_str.lower():
+            raise HTTPException(status_code=400, detail="Required field is missing")
+        if '23514' in err_str or 'check constraint' in err_str.lower():
+            raise HTTPException(status_code=400, detail="Invalid field value")
+        # Generic 500
+        raise HTTPException(status_code=500, detail="Failed to create lead. Please try again.")
 
 @router.get("/{lead_id}", response_model=LeadResponse)
 async def get_lead(lead_id: str):

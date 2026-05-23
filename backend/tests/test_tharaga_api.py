@@ -84,7 +84,28 @@ class TestLeads:
         # Tier should be one of lion/monkey/dog
         assert data["tier"] in ("lion", "monkey", "dog")
         state.lead_id = data["id"]
+        state.created_phone = payload["phone"]
         print(f"Created lead {state.lead_id} with score={data['score']} tier={data['tier']}")
+
+    def test_create_lead_duplicate_phone_returns_409(self, api):
+        # After fix: duplicate phone should return 409, not 500
+        # Reuse phone from previous test (state.created_phone) to force unique violation
+        phone = getattr(state, "created_phone", None)
+        if not phone:
+            pytest.skip("No created phone from previous test")
+        unique = uuid.uuid4().hex[:8]
+        payload = {
+            "name": f"TEST_Dup_{unique}",
+            "email": f"dup_{unique}@example.com",
+            "phone": phone,
+            "source": "web",
+        }
+        r = api.post(f"{BASE_URL}/api/v1/leads/", json=payload)
+        assert r.status_code == 409, f"Expected 409 for duplicate phone, got {r.status_code}: {r.text}"
+        body = r.json()
+        detail = str(body.get("detail", "")).lower()
+        assert "23505" not in detail, f"Raw DB error leaked: {body}"
+        assert "phone" in detail or "exist" in detail or "duplicate" in detail, f"Unexpected detail: {body}"
 
     def test_get_lead(self, api):
         if not state.lead_id:
@@ -122,10 +143,10 @@ class TestLeads:
         assert isinstance(data, list)
 
     def test_leads_by_tier(self, api):
-        for tier in ["lion", "monkey", "dog"]:
-            r = api.get(f"{BASE_URL}/api/v1/leads/tier/{tier}?limit=5")
-            assert r.status_code == 200, f"tier={tier}: {r.text}"
-            assert isinstance(r.json(), list)
+        # Use one tier to keep within rate-limit (10/min for /api/v1/leads bucket)
+        r = api.get(f"{BASE_URL}/api/v1/leads/tier/lion?limit=5")
+        assert r.status_code == 200, r.text
+        assert isinstance(r.json(), list)
 
     def test_get_lead_not_found(self, api):
         r = api.get(f"{BASE_URL}/api/v1/leads/999999999")
@@ -187,16 +208,12 @@ class TestProperties:
         assert r.status_code in (404, 400, 500)
 
     def test_verify_rera_valid(self, api):
-        # NOTE: Currently fails because rera_verification table does not exist
-        # and outer try-except in PropertyService.verify_rera swallows the error,
-        # bypassing the mock fallback (len > 5). See backend_issues in report.
+        # After fix: nested try/except - mock fallback (len>5) should run when table missing.
         r = api.post(f"{BASE_URL}/api/v1/properties/verify-rera?rera_id=TN-RERA-123456")
         assert r.status_code == 200, r.text
         d = r.json()
         assert d["rera_id"] == "TN-RERA-123456"
-        # Document current (buggy) behaviour without failing the suite:
-        if d["is_valid"] is not True:
-            pytest.xfail("RERA mock fallback bypassed when rera_verification table missing")
+        assert d["is_valid"] is True, f"Expected is_valid=True for long RERA id, got {d}"
 
     def test_verify_rera_invalid(self, api):
         r = api.post(f"{BASE_URL}/api/v1/properties/verify-rera?rera_id=AB")
@@ -293,9 +310,14 @@ class TestAnalytics:
         r = api.get(f"{BASE_URL}/api/v1/analytics/live-metrics")
         assert r.status_code == 200, r.text
         d = r.json()
-        # Expect tier breakdown keys (lion/monkey/dog)
-        as_str = str(d).lower()
-        assert "lion" in as_str or "tier" in as_str or "total" in as_str
+        # After fix: properties_listed should use real count from DB (~32 expected)
+        assert "properties_listed" in d
+        assert isinstance(d["properties_listed"], int)
+        assert d["properties_listed"] > 0, f"properties_listed expected > 0, got {d['properties_listed']}"
+        # active_leads should also be populated (real count via tier fallback)
+        assert "active_leads" in d
+        assert isinstance(d["active_leads"], int)
+        print(f"live-metrics: properties_listed={d['properties_listed']} active_leads={d['active_leads']} lion={d.get('lion_leads')} monkey={d.get('monkey_leads')} dog={d.get('dog_leads')}")
 
     def test_market_data(self, api):
         r = api.get(f"{BASE_URL}/api/v1/analytics/market-data?city=Chennai")
@@ -307,41 +329,96 @@ class TestAnalytics:
 # ============ INTEGRATIONS ============
 class TestIntegrations:
     def test_meta_capi_event(self, api):
-        # Endpoint takes query params, not JSON body
-        params = {"event_name": "TestEvent", "lead_id": "test_lead_1"}
-        body = {"user_data": {"email": "test@example.com"}, "custom_data": {"value": 1}}
-        r = api.post(f"{BASE_URL}/api/v1/integrations/meta-capi/event", params=params, json=body)
+        # After fix: endpoint accepts JSON body via MetaEventRequest model
+        body = {
+            "event_name": "TestEvent",
+            "lead_id": "test_lead_1",
+            "user_data": {"email": "test@example.com"},
+            "custom_data": {"value": 1},
+        }
+        r = api.post(f"{BASE_URL}/api/v1/integrations/meta-capi/event", json=body)
         assert r.status_code == 200, r.text
         d = r.json()
-        # success or graceful failure - either is acceptable
+        # Token may be expired but endpoint should not crash
         assert isinstance(d, dict)
         print(f"Meta CAPI response: {d}")
 
+    def test_meta_capi_event_validation(self, api):
+        # Missing event_name should be 422
+        r = api.post(f"{BASE_URL}/api/v1/integrations/meta-capi/event", json={"lead_id": "x"})
+        assert r.status_code == 422, r.text
+
     def test_whatsapp_send_not_configured(self, api):
-        params = {"phone": "9876543210", "message": "hi"}
-        r = api.post(f"{BASE_URL}/api/v1/integrations/whatsapp/send", params=params)
+        # After fix: JSON body via WhatsAppSendRequest model
+        body = {"phone": "9876543210", "message": "hello from test", "lead_id": None}
+        r = api.post(f"{BASE_URL}/api/v1/integrations/whatsapp/send", json=body)
         assert r.status_code == 200, r.text  # graceful
         d = r.json()
         assert isinstance(d, dict)
+        # WhatsApp not configured - expect success=False
+        assert d.get("success") is False
+
+    def test_whatsapp_send_validation(self, api):
+        # Missing required field (message) should be 422
+        r = api.post(f"{BASE_URL}/api/v1/integrations/whatsapp/send", json={"phone": "9876543210"})
+        assert r.status_code == 422, r.text
 
     def test_zoho_sync_not_configured(self, api):
-        r = api.post(f"{BASE_URL}/api/v1/integrations/zoho-crm/sync-lead", json={"name": "Test"})
+        # After fix: lead_data wrapped in ZohoSyncRequest
+        body = {"lead_data": {"name": "Test", "phone": "9876543210"}}
+        r = api.post(f"{BASE_URL}/api/v1/integrations/zoho-crm/sync-lead", json=body)
         assert r.status_code == 200, r.text
-        assert isinstance(r.json(), dict)
+        d = r.json()
+        assert isinstance(d, dict)
+        # Zoho not configured - expect success=False
+        assert d.get("success") is False
 
 
 # ============ RATE LIMITING ============
 class TestRateLimit:
-    def test_rate_limit_tools(self, api):
-        """Tools endpoint should rate-limit at 30/min. Send 35 quickly."""
-        hit_429 = False
-        for i in range(35):
-            r = api.post(
-                f"{BASE_URL}/api/v1/tools/emi-calculator",
-                json={"loan_amount": 1000000, "interest_rate_yearly": 8, "tenure_months": 120},
-            )
+    def test_rate_limit_tools_shared_across_subpaths(self, api):
+        """After fix: 30/min SHARED across all /api/v1/tools/* endpoints.
+        Mix EMI + ROI + budget calls and expect a 429 before 35 succeed."""
+        hit_429_at = None
+        endpoints = [
+            ("emi-calculator", {"loan_amount": 1000000, "interest_rate_yearly": 8, "tenure_months": 120}),
+            ("roi-calculator", {
+                "purchase_price": 5000000, "rental_income_monthly": 25000,
+                "maintenance_cost_monthly": 2000, "property_tax_yearly": 15000,
+                "appreciation_rate_yearly": 6.0, "holding_period_years": 10,
+            }),
+            ("budget-planner", {
+                "monthly_income": 150000, "existing_emis": 20000,
+                "down_payment_available": 1000000, "interest_rate": 8.5, "tenure_years": 20,
+            }),
+        ]
+        for i in range(40):
+            ep, payload = endpoints[i % len(endpoints)]
+            r = api.post(f"{BASE_URL}/api/v1/tools/{ep}", json=payload)
             if r.status_code == 429:
-                hit_429 = True
+                hit_429_at = i + 1
                 break
-        # Not strictly required to hit but log
-        print(f"Tools rate limit hit_429={hit_429}")
+        print(f"Tools shared rate limit hit_429_at_request={hit_429_at}")
+        assert hit_429_at is not None and hit_429_at <= 35, (
+            f"Expected 429 within ~30 mixed tool calls (shared bucket), got hit_429_at={hit_429_at}"
+        )
+
+    def test_rate_limit_leads_tighter(self, api):
+        """After fix: leads limited to 10/min per IP. Send 12 quickly."""
+        import random
+        hit_429_at = None
+        for i in range(15):
+            phone = "9" + "".join(str(random.randint(0, 9)) for _ in range(9))
+            payload = {
+                "name": f"TEST_RL_{i}_{uuid.uuid4().hex[:6]}",
+                "phone": phone,
+                "source": "web",
+            }
+            r = api.post(f"{BASE_URL}/api/v1/leads/", json=payload)
+            if r.status_code == 429:
+                hit_429_at = i + 1
+                break
+        print(f"Leads rate limit hit_429_at_request={hit_429_at}")
+        assert hit_429_at is not None and hit_429_at <= 12, (
+            f"Expected 429 within ~10 lead creates, got hit_429_at={hit_429_at}"
+        )

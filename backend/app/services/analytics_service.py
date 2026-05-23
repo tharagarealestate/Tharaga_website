@@ -28,19 +28,33 @@ class AnalyticsService:
             today = datetime.utcnow().date()
             week_ago = today - timedelta(days=7)
             
-            # Get active leads (not converted/lost)
-            leads = supabase.table('leads')\
-                .select('smart_tier, status, budget, whatsapp_qualified')\
-                .execute()
-            
-            all_leads = leads.data or []
+            # Get active leads (graceful: try smart_tier, fall back to tier if missing)
+            try:
+                leads = supabase.table('leads')\
+                    .select('smart_tier, status, budget, whatsapp_qualified')\
+                    .execute()
+                all_leads = leads.data or []
+                tier_field = 'smart_tier'
+            except Exception as e:
+                logger.warning(f"smart_tier query failed, falling back: {e}")
+                try:
+                    leads = supabase.table('leads')\
+                        .select('tier, status, budget, whatsapp_qualified')\
+                        .execute()
+                    all_leads = leads.data or []
+                    tier_field = 'tier'
+                except Exception as e2:
+                    logger.error(f"Lead query failed: {e2}")
+                    all_leads = []
+                    tier_field = 'tier'
             
             # Active = not converted/lost/invalid
             active = [l for l in all_leads if l.get('status') not in ('converted', 'lost', 'invalid')]
             
-            lion_leads = sum(1 for l in active if l.get('smart_tier') == 'lion')
-            monkey_leads = sum(1 for l in active if l.get('smart_tier') == 'monkey')
-            dog_leads = sum(1 for l in active if l.get('smart_tier') == 'dog')
+            # Tier counts (works with both smart_tier and tier)
+            lion_leads = sum(1 for l in active if (l.get(tier_field) or '').lower() == 'lion')
+            monkey_leads = sum(1 for l in active if (l.get(tier_field) or '').lower() == 'monkey')
+            dog_leads = sum(1 for l in active if (l.get(tier_field) or '').lower() == 'dog')
             
             # Pipeline value - sum of budgets for qualified active leads
             pipeline_value = sum(
@@ -55,11 +69,12 @@ class AnalyticsService:
                 if l.get('status') == 'converted'
             )
             
-            # Get properties count
+            # Get properties count (just count all, no filter to avoid issues)
             try:
-                props = supabase.table('properties').select('id', count='exact').execute()
+                props = supabase.table('properties').select('id', count='exact').limit(1).execute()
                 properties_count = props.count or 0
-            except Exception:
+            except Exception as e:
+                logger.warning(f"Property count failed: {e}")
                 properties_count = 0
             
             # Calculate conversion rate
@@ -130,9 +145,11 @@ class AnalyticsService:
                 props = supabase.table('properties')\
                     .select('id', count='exact')\
                     .eq('city', city)\
+                    .limit(1)\
                     .execute()
                 total_props = props.count or 0
-            except Exception:
+            except Exception as e:
+                logger.warning(f"Property count failed: {e}")
                 total_props = 0
             
             # Calculate average city price

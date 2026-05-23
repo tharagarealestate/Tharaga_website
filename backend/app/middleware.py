@@ -49,8 +49,8 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
     """Rate limiting middleware with path-specific limits"""
     
     PATH_LIMITS = {
-        '/api/v1/leads': (20, 60),
-        '/api/v1/tools': (60, 60),
+        '/api/v1/leads': (10, 60),  # 10 leads per minute per IP
+        '/api/v1/tools': (30, 60),  # 30 calculator calls per minute (shared)
         '/api/v1/integrations/whatsapp/send': (20, 60),
     }
     DEFAULT_LIMIT = (200, 60)
@@ -63,13 +63,17 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         client_id = request.headers.get('X-Forwarded-For', request.client.host if request.client else 'unknown')
         client_id = client_id.split(',')[0].strip()
         
+        # Determine rate limit & shared bucket prefix
         max_requests, window = self.DEFAULT_LIMIT
+        bucket_prefix = request.url.path
         for path_prefix, limits in self.PATH_LIMITS.items():
             if request.url.path.startswith(path_prefix):
                 max_requests, window = limits
+                bucket_prefix = path_prefix  # Share bucket across sub-paths
                 break
         
-        rate_key = f"{client_id}:{request.url.path}"
+        # Use shared bucket key (so all /api/v1/tools/* share one bucket)
+        rate_key = f"{client_id}:{bucket_prefix}"
         if not rate_limiter.is_allowed(rate_key, max_requests, window):
             reset_time = rate_limiter.get_reset_time(rate_key, window)
             retry_after = int(reset_time - time.time()) if reset_time else 60

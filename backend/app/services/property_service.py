@@ -220,32 +220,36 @@ class PropertyService:
         """Verify RERA ID"""
         supabase = get_supabase()
         
+        # Try cache lookup - but don't fail if table missing
+        cached = None
         try:
-            # Check cache
             result = supabase.table('rera_verification').select('*').eq('rera_id', rera_id).execute()
-            
             if result.data:
-                return result.data[0].get('is_valid', False)
-            
-            # Mock verification (in production, call RERA API)
-            is_valid = len(rera_id) > 5
-            
-            try:
-                supabase.table('rera_verification').insert({
-                    'rera_id': rera_id,
-                    'is_valid': is_valid,
-                    'verification_status': 'verified' if is_valid else 'invalid',
-                    'verified_at': 'now()',
-                    'last_checked_at': 'now()',
-                    'verification_source': 'mock_api'
-                }).execute()
-            except Exception as e:
-                logger.warning(f"Failed to cache RERA verification: {e}")
-            
-            return is_valid
+                cached = result.data[0]
         except Exception as e:
-            logger.error(f"Error verifying RERA: {e}")
-            return False
+            logger.warning(f"RERA cache unavailable: {e}")
+        
+        # If cached, return cached value
+        if cached:
+            return cached.get('is_valid', False)
+        
+        # Mock verification (in production, call RERA API)
+        is_valid = len(rera_id) > 5
+        
+        # Try to cache result - don't fail if table missing
+        try:
+            supabase.table('rera_verification').insert({
+                'rera_id': rera_id,
+                'is_valid': is_valid,
+                'verification_status': 'verified' if is_valid else 'invalid',
+                'verified_at': 'now()',
+                'last_checked_at': 'now()',
+                'verification_source': 'mock_api'
+            }).execute()
+        except Exception as e:
+            logger.warning(f"Failed to cache RERA verification: {e}")
+        
+        return is_valid
     
     @staticmethod
     async def _get_locality_data(city: str, locality: str) -> Optional[Dict]:

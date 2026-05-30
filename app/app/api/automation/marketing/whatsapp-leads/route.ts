@@ -288,19 +288,19 @@ async function storeSendAttempt(
   }
 ) {
   try {
-    await supabase.from('whatsapp_messages').upsert(
-      {
-        lead_id: row.lead_id,
-        property_id: row.property_id,
-        phone: row.phone,
-        message: row.message,
-        status: row.status,
-        twilio_sid: row.twilio_sid,
-        sent_at: new Date().toISOString(),
-      },
-      { onConflict: 'lead_id,property_id' }
-    )
+    // whatsapp_messages schema: message_content (not message), message_sid (not twilio_sid)
+    // lead_id is bigint — omit it when inserting from UUID-based lead records
+    await supabase.from('whatsapp_messages').insert({
+      property_id: row.property_id,
+      phone: row.phone,
+      message_content: row.message,
+      message_type: 'text',
+      status: row.status,
+      message_sid: row.twilio_sid,
+      sent_at: new Date().toISOString(),
+      metadata: { source: 'whatsapp-leads', lead_id: row.lead_id },
+    })
   } catch {
-    // Table may not exist yet — skip silently
+    // Non-critical — skip silently
   }
 }

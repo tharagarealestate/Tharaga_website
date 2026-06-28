@@ -7,7 +7,7 @@ import type { RecommendationItem } from '@/types/recommendations'
 import { Tooltip } from '@/components/ui/Tooltip'
 import { isSaved, saveItem, removeItem } from '@/lib/saved'
 import { LeadModal } from '@/components/lead/LeadModal'
-import { fetchRecommendationsClient, readCookie } from '@/lib/api-client'
+import * as apiClient from '@/lib/api-client'
 
 type Props = {
   items?: RecommendationItem[]
@@ -28,14 +28,14 @@ export function RecommendationsCarousel({ items = [], isLoading = false, error =
     if (hasRetriedRef.current) return
     if (error || items.length === 0) {
       hasRetriedRef.current = true
-      let sid = readCookie('thg_sid')
+      let sid = apiClient.readCookie('thg_sid')
       if (!sid) {
         // create a client-side session id if missing
         sid = `sid_${Date.now().toString(36)}_${Math.random().toString(36).slice(2)}`
         document.cookie = `thg_sid=${encodeURIComponent(sid)}; path=/; max-age=${60 * 60 * 24 * 180}; samesite=lax`;
       }
       setRetrying(true)
-      fetchRecommendationsClient({ session_id: sid, num_results: 6 })
+      apiClient.fetchRecommendationsClient({ session_id: sid, num_results: 6 })
         .then((data) => {
           setClientItems(Array.isArray(data.items) ? data.items : [])
           setClientError(null)
@@ -81,6 +81,14 @@ function PropertyCard({ item, onLead }: { item: RecommendationItem; onLead: (pro
   const blurDataURL = 'data:image/gif;base64,R0lGODlhAQABAAAAACw=' // tiny 1x1
   const cardRef = React.useRef<HTMLDivElement>(null)
   const dragState = React.useRef<{ x0: number; dragging: boolean }>({ x0: 0, dragging: false })
+  
+  // Calculate match score from item.score
+  const matchScore = item.score ? Math.min(100, Math.max(0, Math.round(Number(item.score) * 100))) : null
+  const scoreColor = matchScore && matchScore >= 80
+    ? 'text-emerald-400'
+    : matchScore && matchScore >= 60
+    ? 'text-yellow-400'
+    : 'text-orange-400'
 
   function toggleSave(){
     if (saved) {
@@ -95,7 +103,7 @@ function PropertyCard({ item, onLead }: { item: RecommendationItem; onLead: (pro
   return (
     <div
       ref={cardRef}
-      className="min-w-[280px] max-w-[320px] rounded-xl bg-canvas shadow-card border border-border overflow-hidden will-change-transform touch-pan-y"
+      className="min-w-full md:min-w-[280px] md:max-w-[320px] rounded-xl bg-canvas shadow-card border border-border overflow-hidden will-change-transform touch-pan-y snap-start"
       onPointerDown={(e)=>{ dragState.current = { x0: e.clientX, dragging: true } }}
       onPointerMove={(e)=>{
         if (!dragState.current.dragging || !cardRef.current) return
@@ -135,6 +143,12 @@ function PropertyCard({ item, onLead }: { item: RecommendationItem; onLead: (pro
             </button>
           </Tooltip>
         </div>
+        {matchScore !== null && (
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-fgMuted">AI Match:</span>
+            <span className={`text-sm font-semibold ${scoreColor}`}>{matchScore}%</span>
+          </div>
+        )}
         <Specs specs={item.specs} />
         <div className="mt-2 flex gap-2 items-center">
           <button className="rounded-lg border border-border px-3 py-1 text-sm" onClick={() => onLead(item.property_id)}>
@@ -213,7 +227,7 @@ function ScrollableRow({ children }: { children: React.ReactNode }) {
         ref={ref}
         data-scroll-row
         tabIndex={0}
-        className="flex gap-4 overflow-x-auto pb-2 scroll-smooth focus:outline-none"
+        className="flex gap-4 overflow-x-auto pb-2 scroll-smooth focus:outline-none snap-x snap-mandatory"
       >
         {children}
       </div>
@@ -223,11 +237,11 @@ function ScrollableRow({ children }: { children: React.ReactNode }) {
 
 function CardSkeleton() {
   return (
-    <div className="min-w-[280px] max-w-[320px] rounded-xl bg-canvas shadow-card border border-border overflow-hidden animate-pulse">
-      <div className="h-40 w-full bg-accent/10" />
+    <div className="min-w-[280px] max-w-[320px] rounded-xl bg-slate-800/95 border-2 border-amber-300 overflow-hidden">
+      <div className="h-40 w-full bg-slate-700/50" />
       <div className="p-3 space-y-2">
-        <div className="h-4 w-3/4 bg-accent/10 rounded" />
-        <div className="h-3 w-2/3 bg-accent/10 rounded" />
+        <div className="h-4 w-3/4 bg-slate-700/50 rounded" />
+        <div className="h-3 w-2/3 bg-slate-700/50 rounded" />
       </div>
     </div>
   )

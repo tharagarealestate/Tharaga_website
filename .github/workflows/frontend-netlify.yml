@@ -31,6 +31,9 @@ jobs:
   e2e:
     needs: build-preview
     runs-on: ubuntu-latest
+    env:
+      # Map secret to env var — secrets context is NOT allowed in `if:` expressions
+      E2E_BASE_URL: ${{ secrets.E2E_BASE_URL }}
     steps:
       - uses: actions/checkout@v4
       - name: Setup Node
@@ -41,11 +44,11 @@ jobs:
         run: |
           npm ci || npm i
           npx playwright install --with-deps
-      - name: Run E2E
-        if: ${{ !secrets.E2E_BASE_URL }}
+      - name: Run E2E (local build)
+        if: ${{ env.E2E_BASE_URL == '' }}
         run: npm run test:e2e
       - name: Run E2E (external base URL)
-        if: ${{ secrets.E2E_BASE_URL }}
+        if: ${{ env.E2E_BASE_URL != '' }}
         env:
-          PLAYWRIGHT_BASE_URL: ${{ secrets.E2E_BASE_URL }}
+          PLAYWRIGHT_BASE_URL: ${{ env.E2E_BASE_URL }}
         run: npm run test:e2e

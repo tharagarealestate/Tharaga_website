@@ -65,11 +65,12 @@ async function main() {
   // This drastically reduces the published asset size in Netlify.
   const allowedDirs = new Set([
     'auth-email-landing',
-    'login_signup_glassdrop',
+    'login_signup_glassdrop', // Required for auth-gate.js iframe modal
     'Reset_password',
-    'property-listing',
+    'property-listing', // Static HTML version with full Supabase functionality and dark theme
     'snippets',
     'pricing',
+    // 'admin' removed - now handled by Next.js route at app/app/(dashboard)/admin/
   ]);
 
   await ensureDir(nextPublic);
@@ -100,7 +101,15 @@ async function main() {
 
   // Intentionally left empty (sharedAssets = [])
 
-  // Copy root index.html as the public homepage so Netlify can serve static `/`
+  // REMOVED: Copy root index.html - now using Next.js app/app/page.tsx instead
+  // The static index.html has been converted to a proper Next.js page with all 4 sections:
+  // 1. Hero section (premium blue gradient background)
+  // 2. Trial CTA section
+  // 3. Value Proposition section (6 cards)
+  // 4. How It Works section (iframe embed)
+  // CSS has been moved to app/app/layout.tsx
+  // DO NOT uncomment this section - it will override the Next.js homepage
+  /*
   try {
     const rootIndex = path.join(repoRoot, 'index.html');
     if (await pathExists(rootIndex)) {
@@ -110,6 +119,19 @@ async function main() {
     }
   } catch (e) {
     console.warn('[copy-static] Could not copy root index.html:', e?.message || e);
+  }
+  */
+
+  // Copy role-manager-v2.js to public directory
+  try {
+    const rootRoleManager = path.join(repoRoot, 'role-manager-v2.js');
+    if (await pathExists(rootRoleManager)) {
+      const destRoleManager = path.join(nextPublic, 'role-manager-v2.js');
+      await copyFile(rootRoleManager, destRoleManager);
+      console.log('[copy-static] Copied root role-manager-v2.js -> app/public/role-manager-v2.js');
+    }
+  } catch (e) {
+    console.warn('[copy-static] Could not copy role-manager-v2.js:', e?.message || e);
   }
 
   console.log('[copy-static] Done.');

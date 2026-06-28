@@ -1,0 +1,15 @@
+User-agent: *
+Allow: /
+Allow: /properties/
+Allow: /property-listing
+Allow: /pricing
+Disallow: /api/
+Disallow: /(dashboard)/
+Disallow: /admin/
+Disallow: /*?*sort=
+Disallow: /*?*filter=
+
+Sitemap: https://tharaga.co.in/sitemap.xml
+
+
+

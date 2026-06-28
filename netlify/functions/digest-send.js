@@ -3,7 +3,7 @@ const { createClient } = require('@supabase/supabase-js')
 exports.handler = async () => {
   try {
     const url = process.env.SUPABASE_URL
-    const key = process.env.SUPABASE_SERVICE_ROLE
+    const key = process.env.SUPABASE_SERVICE_ROLE_KEY
     if (!url || !key) return resp({ ok: false, error: 'Supabase env missing' })
     const supabase = createClient(url, key)
 

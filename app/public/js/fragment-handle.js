@@ -1,4 +1,4 @@
-// Handle Supabase auth fragments after email confirmation or OAuth redirects
+// Handle Supabase auth params after email confirmation or OAuth redirects
 ;(function(){
   'use strict';
 
@@ -20,21 +20,30 @@
     }
   } catch(_) {}
 
-  // Fast exit if no hash params present
-  if (!location.hash || location.hash.length < 2) return;
+  // Do NOT early-return based on hash alone; Supabase PKCE returns ?code in the query string
 
   // Config (keep in sync with other files)
   var SUPABASE_URL = 'https://wedevtjjmdvngyshqdro.supabase.co';
   var SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndlZGV2dGpqbWR2bmd5c2hxZHJvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU0NzYwMzgsImV4cCI6MjA3MTA1MjAzOH0.Ex2c_sx358dFdygUGMVBohyTVto6fdEQ5nydDRh9m6M';
 
   function parseHashParams(){
-    try { return new URLSearchParams(location.hash.replace(/^#/, '')); } catch(_) { return new URLSearchParams(); }
+    try { return new URLSearchParams((location.hash || '').replace(/^#/, '')); } catch(_) { return new URLSearchParams(); }
+  }
+
+  function parseSearchParams(){
+    try { return new URLSearchParams(location.search); } catch(_) { return new URLSearchParams(); }
   }
 
   function cleanUrl(appendQuery){
     try {
       var url = new URL(location.href);
+      // Remove sensitive params from both hash and query
       url.hash = '';
+      var toDrop = [
+        'code','state','access_token','refresh_token','token_type','expires_in',
+        'provider','error','error_code','error_description','redirected_from'
+      ];
+      toDrop.forEach(function(k){ try { url.searchParams.delete(k); } catch(_){} });
       if (appendQuery && typeof appendQuery === 'object') {
         Object.keys(appendQuery).forEach(function(k){ if (appendQuery[k] != null) url.searchParams.set(k, String(appendQuery[k])); });
       }
@@ -66,18 +75,18 @@
 
   (async function handle(){
     var hp = parseHashParams();
-    if ([...hp.keys()].length === 0) return; // nothing useful
+    var sp = parseSearchParams();
 
     // Error path: surface minimal info and clean URL
-    var err = hp.get('error') || hp.get('error_code') || null;
+    var err = sp.get('error') || sp.get('error_code') || hp.get('error') || hp.get('error_code') || null;
     if (err) {
       cleanUrl({ post_auth: '1', error: err });
       return;
     }
 
-    var accessToken = hp.get('access_token');
-    var refreshToken = hp.get('refresh_token');
-    var code = hp.get('code');
+    var accessToken = hp.get('access_token') || sp.get('access_token');
+    var refreshToken = hp.get('refresh_token') || sp.get('refresh_token');
+    var code = sp.get('code') || hp.get('code');
 
     if (!accessToken && !code) return; // not a Supabase auth redirect we handle
 

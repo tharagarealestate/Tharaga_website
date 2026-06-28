@@ -1,10 +1,100 @@
-name: Backend - Build & Deploy (Cloud Run) [disabled]
+name: Backend - Deploy to Cloud Run (asia-south1)
 
 on:
+  push:
+    branches: [main]
+    paths:
+      - 'backend/**'
+      - '.github/workflows/backend-cloudrun.yml'
   workflow_dispatch:
 
+env:
+  REGION: asia-south1
+  SERVICE: tharaga-backend
+  REPO: tharaga
+  IMAGE_NAME: tharaga-backend
+
 jobs:
-  noop:
+  deploy:
+    name: Build & Deploy
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+
     steps:
-      - run: echo "Switched to Cloud Build triggers for backend deployment."
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+        with:
+          project_id: ${{ secrets.GCP_PROJECT_ID }}
+
+      - name: Configure Docker auth
+        run: gcloud auth configure-docker ${{ env.REGION }}-docker.pkg.dev --quiet
+
+      - name: Create Artifact Registry repo (idempotent)
+        run: |
+          gcloud artifacts repositories describe ${{ env.REPO }} \
+            --location=${{ env.REGION }} \
+            --project=${{ secrets.GCP_PROJECT_ID }} 2>/dev/null || \
+          gcloud artifacts repositories create ${{ env.REPO }} \
+            --repository-format=docker \
+            --location=${{ env.REGION }} \
+            --project=${{ secrets.GCP_PROJECT_ID }} \
+            --description="Tharaga backend images"
+
+      - name: Build and push image
+        run: |
+          IMAGE="${{ env.REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ env.REPO }}/${{ env.IMAGE_NAME }}:${{ github.sha }}"
+          docker build \
+            --build-arg REQUIREMENTS=requirements-prod.txt \
+            -t "$IMAGE" \
+            ./backend
+          docker push "$IMAGE"
+          echo "IMAGE=$IMAGE" >> $GITHUB_ENV
+
+      - name: Deploy to Cloud Run
+        run: |
+          gcloud run deploy ${{ env.SERVICE }} \
+            --image "$IMAGE" \
+            --region ${{ env.REGION }} \
+            --platform managed \
+            --allow-unauthenticated \
+            --min-instances 0 \
+            --max-instances 10 \
+            --memory 1Gi \
+            --cpu 1 \
+            --timeout 60 \
+            --concurrency 80 \
+            --project ${{ secrets.GCP_PROJECT_ID }} \
+            --set-env-vars "SUPABASE_URL=https://wedevtjjmdvngyshqdro.supabase.co,SUPABASE_SERVICE_ROLE_KEY=${{ secrets.SUPABASE_SERVICE_ROLE_KEY }},META_PIXEL_ID=1431070318716490,META_ACCESS_TOKEN=${{ secrets.META_ACCESS_TOKEN }},ALLOWED_ORIGINS=https://tharaga.co.in,LOG_LEVEL=INFO,ENVIRONMENT=production"
+
+      - name: Get service URL
+        run: |
+          URL=$(gcloud run services describe ${{ env.SERVICE }} \
+            --region ${{ env.REGION }} \
+            --project ${{ secrets.GCP_PROJECT_ID }} \
+            --format 'value(status.url)')
+          echo "Cloud Run URL: $URL"
+          echo "CLOUD_RUN_URL=$URL" >> $GITHUB_ENV
+
+      - name: Update Netlify env vars
+        run: |
+          curl -s -X PATCH \
+            "https://api.netlify.com/api/v1/sites/${{ secrets.NETLIFY_SITE_ID }}/env/NEXT_PUBLIC_BACKEND_URL" \
+            -H "Authorization: Bearer ${{ secrets.NETLIFY_AUTH_TOKEN }}" \
+            -H "Content-Type: application/json" \
+            -d "{\"value\": \"$CLOUD_RUN_URL\"}" || true
+          curl -s -X PATCH \
+            "https://api.netlify.com/api/v1/sites/${{ secrets.NETLIFY_SITE_ID }}/env/NEXT_PUBLIC_API_URL" \
+            -H "Authorization: Bearer ${{ secrets.NETLIFY_AUTH_TOKEN }}" \
+            -H "Content-Type: application/json" \
+            -d "{\"value\": \"$CLOUD_RUN_URL\"}" || true
+          echo "Netlify env vars updated to: $CLOUD_RUN_URL"

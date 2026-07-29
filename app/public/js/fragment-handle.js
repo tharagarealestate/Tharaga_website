@@ -55,12 +55,18 @@
     try {
       var payload = { type: 'THARAGA_AUTH_SUCCESS', user: user || null, ts: Date.now() };
       // BroadcastChannel
-      try { var bc = ('BroadcastChannel' in window) ? new BroadcastChannel('tharaga-auth') : null; bc && bc.postMessage(payload); } catch(_){}
+      try { var bc = ('BroadcastChannel' in window) ? new BroadcastChannel('tharaga-auth') : null; bc && bc.postMessage(payload); } catch(_){ }
       // postMessage same-origin listeners
-      try { window.postMessage(payload, window.location.origin); } catch(_){}
+      try { window.postMessage(payload, window.location.origin); } catch(_){ }
       // storage signal
-      try { localStorage.setItem('__tharaga_magic_confirmed', JSON.stringify({ ts: Date.now() })); } catch(_){}
+      try { localStorage.setItem('__tharaga_magic_confirmed', JSON.stringify({ ts: Date.now() })); } catch(_){ }
     } catch(_) {}
+  }
+  // Re-broadcast so late listeners catch success (header attaching after load)
+  function rebroadcastAuthSuccess(user){
+    try { signalSuccess(user); } catch(_){ }
+    try { setTimeout(function(){ signalSuccess(user); }, 150); } catch(_){ }
+    try { setTimeout(function(){ signalSuccess(user); }, 800); } catch(_){ }
   }
 
   async function ensureSupabase(){
@@ -68,7 +74,7 @@
     try {
       var mod = await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm');
       var c = mod.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-      try { window.supabase = c; } catch(_){}
+      try { window.supabase = c; } catch(_){ }
       return c;
     } catch(_) { return null; }
   }
@@ -106,8 +112,8 @@
       // Clean the URL to remove tokens/fragments
       cleanUrl({ post_auth: '1' });
 
-      // Notify listeners (header, modals)
-      signalSuccess(user ? { id: user.id || null, email: user.email || null } : null);
+      // Notify listeners (header, modals) and re-broadcast for late binders
+      rebroadcastAuthSuccess(user ? { id: user.id || null, email: user.email || null } : null);
     } catch(_) {
       cleanUrl({ post_auth: '1' });
     }

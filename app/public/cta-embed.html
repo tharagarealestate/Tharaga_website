@@ -228,7 +228,7 @@
     });
 
     // Allowed parent origins for embed postMessage
-    const ALLOWED_PARENTS = ['https://tharaga.co.in', 'https://www.tharaga.co.in', 'https://auth.tharaga.co.in', location.origin];
+    const ALLOWED_PARENTS = ['https://tharaga.in', 'https://www.tharaga.in', 'https://tharaga.co.in', 'https://www.tharaga.co.in', 'https://auth.tharaga.co.in', location.origin];
     function postToParent(payload){
       try {
         const parentOrigin = (function(){ try { return new URL(document.referrer).origin; } catch(_) { return '*'; } })();

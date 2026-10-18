@@ -1,7 +1,7 @@
 import type { MetadataRoute } from 'next'
 import { getSupabase } from '@/lib/supabase'
 
-const base = 'https://tharaga.co.in'
+const base = 'https://tharaga.in'
 
 /**
  * Enhanced sitemap with dynamic routes from Supabase

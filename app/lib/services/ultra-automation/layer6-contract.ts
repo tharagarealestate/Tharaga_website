@@ -286,9 +286,9 @@ export async function sendContractForSignature(contractId: string): Promise<void
     
     const contractUrl = contract.contract_url || 
       (contract.contract_data as any)?.url || 
-      `${process.env.NEXT_PUBLIC_APP_URL || 'https://tharaga.co.in'}/contracts/${contract.id}`;
+      `${process.env.NEXT_PUBLIC_APP_URL || 'https://tharaga.in'}/contracts/${contract.id}`;
     
-    const signatureUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'https://tharaga.co.in'}/contracts/${contract.id}/sign`;
+    const signatureUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'https://tharaga.in'}/contracts/${contract.id}/sign`;
     
     const emailSubject = `Property Sale Agreement - ${contract.contract_number}`;
     const emailHtml = `

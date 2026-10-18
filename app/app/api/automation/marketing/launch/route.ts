@@ -151,14 +151,14 @@ function generateRuleBasedContent(p: PropertyRow): ContentSet {
         <!-- CTA -->
         <tr>
           <td style="padding:0 32px 32px;text-align:center;">
-            <a href="https://tharaga.co.in/properties/${p.id}" style="display:inline-block;background:linear-gradient(135deg,#f59e0b,#d97706);color:#fff;font-size:15px;font-weight:700;text-decoration:none;padding:14px 36px;border-radius:8px;">${tone.cta} →</a>
+            <a href="https://tharaga.in/properties/${p.id}" style="display:inline-block;background:linear-gradient(135deg,#f59e0b,#d97706);color:#fff;font-size:15px;font-weight:700;text-decoration:none;padding:14px 36px;border-radius:8px;">${tone.cta} →</a>
             <p style="margin:16px 0 0;font-size:12px;color:#6b7280;">Questions? Reply to this email or call us.</p>
           </td>
         </tr>
         <!-- Footer -->
         <tr>
           <td style="padding:20px 32px;border-top:1px solid rgba(255,255,255,0.06);text-align:center;">
-            <p style="margin:0;font-size:11px;color:#4b5563;">Tharaga Real Estate · Chennai, Tamil Nadu · <a href="https://tharaga.co.in" style="color:#fbbf24;text-decoration:none;">tharaga.co.in</a></p>
+            <p style="margin:0;font-size:11px;color:#4b5563;">Tharaga Real Estate · Chennai, Tamil Nadu · <a href="https://tharaga.in" style="color:#fbbf24;text-decoration:none;">tharaga.in</a></p>
           </td>
         </tr>
       </table>
@@ -167,9 +167,9 @@ function generateRuleBasedContent(p: PropertyRow): ContentSet {
 </body>
 </html>`.trim()
 
-  const socialPost = `🏠 New ${seg === 'luxury' ? 'Luxury ' : ''}Property Alert!\n\n${p.title} — ${loc}\n\n${highlights.slice(0, 3).map(h => `✨ ${h}`).join('\n')}\n\n${priceStr}\n\n${tone.cta} → https://tharaga.co.in/properties/${p.id}\n\n#RealEstate #Chennai #Property #Tharaga${p.locality ? ' #' + p.locality.replace(/\s+/g, '') : ''}`
+  const socialPost = `🏠 New ${seg === 'luxury' ? 'Luxury ' : ''}Property Alert!\n\n${p.title} — ${loc}\n\n${highlights.slice(0, 3).map(h => `✨ ${h}`).join('\n')}\n\n${priceStr}\n\n${tone.cta} → https://tharaga.in/properties/${p.id}\n\n#RealEstate #Chennai #Property #Tharaga${p.locality ? ' #' + p.locality.replace(/\s+/g, '') : ''}`
 
-  const whatsappMsg = `🏠 *${p.title}*\n📍 ${loc}\n💰 *${priceStr}*\n\n${highlights.slice(0, 3).map(h => `• ${h}`).join('\n')}\n\n${tone.hook}.\n\n👇 View full details:\nhttps://tharaga.co.in/properties/${p.id}\n\n_Powered by Tharaga AI_`
+  const whatsappMsg = `🏠 *${p.title}*\n📍 ${loc}\n💰 *${priceStr}*\n\n${highlights.slice(0, 3).map(h => `• ${h}`).join('\n')}\n\n${tone.hook}.\n\n👇 View full details:\nhttps://tharaga.in/properties/${p.id}\n\n_Powered by Tharaga AI_`
 
   return {
     emailSubject,
@@ -329,7 +329,7 @@ async function sendBuilderEmail(
               <tr><td style="padding:16px 20px;">
                 <p style="margin:0 0 8px;font-size:13px;font-weight:700;color:#fbbf24;text-transform:uppercase;letter-spacing:1px;">Campaign Active</p>
                 ${[
-                  '✅ Property listing page live on tharaga.co.in',
+                  '✅ Property listing page live on tharaga.in',
                   '✅ AI-generated marketing content created',
                   '✅ Buyer email sequence scheduled (3-email drip)',
                   '✅ WhatsApp share link ready for your networks',
@@ -344,10 +344,10 @@ async function sendBuilderEmail(
             <table cellpadding="0" cellspacing="0" style="margin-top:24px;">
               <tr>
                 <td style="padding-right:12px;">
-                  <a href="https://tharaga.co.in/properties/${property.id}" style="display:inline-block;background:linear-gradient(135deg,#f59e0b,#d97706);color:#fff;font-size:14px;font-weight:700;text-decoration:none;padding:12px 24px;border-radius:8px;">View Property →</a>
+                  <a href="https://tharaga.in/properties/${property.id}" style="display:inline-block;background:linear-gradient(135deg,#f59e0b,#d97706);color:#fff;font-size:14px;font-weight:700;text-decoration:none;padding:12px 24px;border-radius:8px;">View Property →</a>
                 </td>
                 <td>
-                  <a href="https://tharaga.co.in/builder?section=marketing" style="display:inline-block;background:rgba(255,255,255,0.08);color:#d1d5db;font-size:14px;text-decoration:none;padding:12px 24px;border-radius:8px;border:1px solid rgba(255,255,255,0.1);">View Dashboard</a>
+                  <a href="https://tharaga.in/builder?section=marketing" style="display:inline-block;background:rgba(255,255,255,0.08);color:#d1d5db;font-size:14px;text-decoration:none;padding:12px 24px;border-radius:8px;border:1px solid rgba(255,255,255,0.1);">View Dashboard</a>
                 </td>
               </tr>
             </table>
@@ -355,7 +355,7 @@ async function sendBuilderEmail(
         </tr>
         <tr>
           <td style="padding:16px 32px;border-top:1px solid rgba(255,255,255,0.06);text-align:center;">
-            <p style="margin:0;font-size:11px;color:#4b5563;">Tharaga Real Estate · <a href="https://tharaga.co.in" style="color:#fbbf24;text-decoration:none;">tharaga.co.in</a></p>
+            <p style="margin:0;font-size:11px;color:#4b5563;">Tharaga Real Estate · <a href="https://tharaga.in" style="color:#fbbf24;text-decoration:none;">tharaga.in</a></p>
           </td>
         </tr>
       </table>
@@ -512,7 +512,7 @@ export async function POST(request: NextRequest) {
     // ── 6c. Post to Facebook/Meta (fire-and-forget) ──────────────────────────
     // Uses META_PAGE_ACCESS_TOKEN — silently skips if key is missing
     if (process.env.META_PAGE_ACCESS_TOKEN) {
-      const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://tharaga.co.in'
+      const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://tharaga.in'
       const firstImage = (property as any).images?.[0] || null
       fetch(`${baseUrl}/api/automation/marketing/meta-post`, {
         method: 'POST',
@@ -532,7 +532,7 @@ export async function POST(request: NextRequest) {
     // ── 6d. WhatsApp broadcast to matching leads (fire-and-forget) ───────────
     // Uses TWILIO_* keys — silently skips if not configured
     if (process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN) {
-      const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://tharaga.co.in'
+      const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://tharaga.in'
       fetch(`${baseUrl}/api/automation/marketing/whatsapp-leads`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -652,7 +652,7 @@ export async function POST(request: NextRequest) {
           `buy ${bhk} Chennai`,
         ],
         status:           'published',
-        url:              `https://tharaga.co.in/properties/${propertyId}`,
+        url:              `https://tharaga.in/properties/${propertyId}`,
       }
 
       if (existingSeo) {

@@ -395,7 +395,7 @@ export async function POST(request: NextRequest) {
                 ? `<p><strong>Special Instructions:</strong> ${body.special_instructions}</p>`
                 : ''
             }
-            <p><a href="https://tharaga.co.in/builder/site-visits/${booking.id}">View Details</a></p>
+            <p><a href="https://tharaga.in/builder/site-visits/${booking.id}">View Details</a></p>
           `,
         });
       }

@@ -431,7 +431,7 @@ export const POST = secureApiRoute(
     if (propertyData.property_metadata?.builder_website_url && process.env.RESEND_API_KEY && user.email) {
       try {
         const resend = new Resend(process.env.RESEND_API_KEY);
-        const webhookUrl = `${process.env.NEXT_PUBLIC_SITE_URL || 'https://tharaga.co.in'}/api/webhooks/incoming-lead?builder_id=${targetBuilderId}&property_id=${property.id}`;
+        const webhookUrl = `${process.env.NEXT_PUBLIC_SITE_URL || 'https://tharaga.in'}/api/webhooks/incoming-lead?builder_id=${targetBuilderId}&property_id=${property.id}`;
         
         await resend.emails.send({
           from: 'Tharaga Automations <hello@tharaga.co.in>',

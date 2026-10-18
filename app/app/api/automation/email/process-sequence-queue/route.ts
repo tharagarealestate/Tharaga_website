@@ -37,7 +37,7 @@ async function sendViaResend(
   if (!key) return { id: null, error: 'RESEND_API_KEY not configured' }
 
   // Add tracking pixel before </body>
-  const trackBase = `https://tharaga.co.in/api/track`
+  const trackBase = `https://tharaga.in/api/track`
   const pixel = `<img src="${trackBase}/open?eid=${emailId}&lid=${leadId}" width="1" height="1" alt="" style="display:none;" />`
   const htmlWithTracking = html.includes('</body>')
     ? html.replace('</body>', `${pixel}</body>`)
@@ -63,7 +63,7 @@ async function sendViaResend(
         html: htmlTracked,
         headers: {
           'X-Entity-Ref-ID': emailId,
-          'List-Unsubscribe': `<https://tharaga.co.in/unsubscribe?lead=${leadId}>`,
+          'List-Unsubscribe': `<https://tharaga.in/unsubscribe?lead=${leadId}>`,
           'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
         },
       }),

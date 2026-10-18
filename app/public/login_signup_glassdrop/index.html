@@ -475,7 +475,7 @@
     function isAllowedFinalRedirect(href) {
       try {
         const url = new URL(href, location.origin);
-        return url.origin === location.origin || url.origin === 'https://tharaga.co.in';
+        return url.origin === location.origin || url.origin === 'https://tharaga.in' || url.origin === 'https://tharaga.co.in';
       } catch { return false; }
     }
 

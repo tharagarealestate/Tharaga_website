@@ -29,7 +29,7 @@ export async function sendBuilderSMS(
       throw new Error('Twilio not configured');
     }
 
-    const message = `Great news! Tharaga generated ${data.leadCount} quality buyers for ${data.propertyName}. Check your email for details. View dashboard: https://tharaga.co.in/dashboard/leads`;
+    const message = `Great news! Tharaga generated ${data.leadCount} quality buyers for ${data.propertyName}. Check your email for details. View dashboard: https://tharaga.in/dashboard/leads`;
 
     const result = await twilioClient.messages.create({
       body: message,

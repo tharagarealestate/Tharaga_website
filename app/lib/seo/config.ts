@@ -1,18 +1,18 @@
 export const seoConfig = {
   siteName: 'Tharaga',
-  siteUrl: 'https://tharaga.co.in',
+  siteUrl: 'https://tharaga.in',
   defaultTitle: "Tharaga - India's First Zero-Commission Real Estate Platform",
   defaultDescription:
     'Find verified builders and properties directly. No broker fees, no commission. Connect directly with builders for apartments, villas, and plots in Chennai.',
-  defaultImage: 'https://tharaga.co.in/og-image.jpg',
+  defaultImage: 'https://tharaga.in/og-default.jpg',
   twitterHandle: '@tharaga_in',
 
   // Structured data
   organization: {
     '@type': 'Organization',
     name: 'Tharaga',
-    url: 'https://tharaga.co.in',
-    logo: 'https://tharaga.co.in/logo.png',
+    url: 'https://tharaga.in',
+    logo: 'https://tharaga.in/og-default.jpg',
     sameAs: [
       'https://www.facebook.com/tharaga',
       'https://www.instagram.com/tharaga_in',
@@ -21,7 +21,7 @@ export const seoConfig = {
     ],
     contactPoint: {
       '@type': 'ContactPoint',
-      telephone: '+91-XXXXXXXXXX',
+      telephone: '+91-8870980839',
       contactType: 'customer service',
       areaServed: 'IN',
       availableLanguage: ['English', 'Tamil'],

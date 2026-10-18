@@ -78,7 +78,7 @@ function patternFallback(messages: { role: string; content: string }[]): string 
   if (lastUserMsg.includes('emi') || lastUserMsg.includes('loan') || lastUserMsg.includes('interest')) {
     return `**EMI Calculation for Home Loans:**
 
-Use our EMI calculator at [tharaga.co.in/tools?t=emi](/tools?t=emi).
+Use our EMI calculator at [tharaga.in/tools?t=emi](/tools?t=emi).
 
 For a quick estimate: On a ₹75L loan at 8.5% for 20 years, EMI ≈ ₹65,000/month. For ₹50L at 8.5% for 20 years ≈ ₹43,000/month.
 
@@ -98,13 +98,13 @@ Chennai real estate has delivered 8-12% annual appreciation in key corridors:
 
 Rental yield averages 3-4% per year in Chennai. Combined with appreciation, total returns are 11-16% annually.
 
-Use our ROI Calculator at [tharaga.co.in/tools?t=roi](/tools?t=roi) for a detailed analysis.`
+Use our ROI Calculator at [tharaga.in/tools?t=roi](/tools?t=roi) for a detailed analysis.`
   }
 
   if (lastUserMsg.includes('2bhk') || lastUserMsg.includes('3bhk') || lastUserMsg.includes('flat') || lastUserMsg.includes('apartment')) {
     return `**Finding Properties in Chennai:**
 
-Browse our verified listings at [tharaga.co.in/property-listing](/property-listing).
+Browse our verified listings at [tharaga.in/property-listing](/property-listing).
 
 **Popular options:**
 - 2BHK in Porur: ₹48L–₹75L (850–1200 sqft)
@@ -132,11 +132,11 @@ You save the full brokerage amount. On a ₹1Cr property, that's ₹1-2 lakhs sa
     return `**Connect with Tharaga:**
 
 📧 Email: tharagarealestate@gmail.com
-🌐 Website: tharaga.co.in
+🌐 Website: tharaga.in
 
 **For property inquiries:** Fill our lead form and Tharaga AI will reach you on WhatsApp within minutes to understand your requirements and match you with verified builders.
 
-**For builders:** Visit [tharaga.co.in/builder](/builder) to start your free trial.`
+**For builders:** Visit [tharaga.in/builder](/builder) to start your free trial.`
   }
 
   if (lastUserMsg.includes('builder') || lastUserMsg.includes('developer') || lastUserMsg.includes('list my') || lastUserMsg.includes('list project')) {
@@ -151,7 +151,7 @@ Tharaga's Builder Platform includes:
 
 **Tharaga Pro: ₹4,999/month**
 
-Start at [tharaga.co.in/builder](/builder) or email tharagarealestate@gmail.com.`
+Start at [tharaga.in/builder](/builder) or email tharagarealestate@gmail.com.`
   }
 
   return `**Welcome to Tharaga AI!**

@@ -363,7 +363,7 @@ async function handleCollection(req: NextRequest) {
 const axiosConfig = {
   timeout: 10000,
   headers: {
-    'User-Agent': 'Mozilla/5.0 (compatible; TharagaBot/1.0; +https://tharaga.co.in/bot)'
+    'User-Agent': 'Mozilla/5.0 (compatible; TharagaBot/1.0; +https://tharaga.in/bot)'
   }
 }
 

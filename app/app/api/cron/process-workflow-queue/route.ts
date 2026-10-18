@@ -32,7 +32,7 @@ export async function GET(req: NextRequest) {
   }
 
   const db      = getAdminClient()
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://tharaga.co.in'
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://tharaga.in'
   const intKey  = process.env.INTERNAL_API_KEY    || ''
 
   // ── Claim pending jobs ────────────────────────────────────────────────────

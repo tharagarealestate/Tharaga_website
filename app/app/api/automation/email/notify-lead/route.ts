@@ -135,13 +135,13 @@ function builderNotificationHTML(opts: {
         <tr>
           ${opts.leadPhone ? `<td style="padding-right:10px;"><a href="tel:${opts.leadPhone}" style="display:inline-block;background:linear-gradient(135deg,#f59e0b,#d97706);color:#fff;font-size:14px;font-weight:700;text-decoration:none;padding:11px 22px;border-radius:8px;">📞 Call Now</a></td>` : ''}
           ${opts.whatsappLink ? `<td style="padding-right:10px;"><a href="${opts.whatsappLink}" style="display:inline-block;background:#25d366;color:#fff;font-size:14px;font-weight:700;text-decoration:none;padding:11px 22px;border-radius:8px;">💬 WhatsApp</a></td>` : ''}
-          <td><a href="https://tharaga.co.in/builder?section=leads" style="display:inline-block;background:rgba(255,255,255,0.07);color:#d1d5db;font-size:14px;text-decoration:none;padding:11px 22px;border-radius:8px;border:1px solid rgba(255,255,255,0.1);">View Dashboard</a></td>
+          <td><a href="https://tharaga.in/builder?section=leads" style="display:inline-block;background:rgba(255,255,255,0.07);color:#d1d5db;font-size:14px;text-decoration:none;padding:11px 22px;border-radius:8px;border:1px solid rgba(255,255,255,0.1);">View Dashboard</a></td>
         </tr>
       </table>
     </td>
   </tr>
   <tr><td style="padding:14px 28px;border-top:1px solid rgba(255,255,255,0.06);text-align:center;">
-    <p style="margin:0;font-size:11px;color:#4b5563;">Tharaga Real Estate · <a href="https://tharaga.co.in" style="color:#fbbf24;text-decoration:none;">tharaga.co.in</a></p>
+    <p style="margin:0;font-size:11px;color:#4b5563;">Tharaga Real Estate · <a href="https://tharaga.in" style="color:#fbbf24;text-decoration:none;">tharaga.in</a></p>
   </td></tr>
 </table>
 </td></tr>
@@ -195,12 +195,12 @@ function buyerConfirmationHTML(opts: {
         '🔑 Move forward with your dream home',
       ].map(s => `<p style="margin:0 0 6px;font-size:13px;color:#9ca3af;">${s}</p>`).join('')}
       <p style="margin:20px 0 10px;text-align:center;">
-        <a href="https://tharaga.co.in/properties/${opts.propertyId}" style="display:inline-block;background:linear-gradient(135deg,#f59e0b,#d97706);color:#fff;font-size:14px;font-weight:700;text-decoration:none;padding:12px 28px;border-radius:8px;">View Property Details →</a>
+        <a href="https://tharaga.in/properties/${opts.propertyId}" style="display:inline-block;background:linear-gradient(135deg,#f59e0b,#d97706);color:#fff;font-size:14px;font-weight:700;text-decoration:none;padding:12px 28px;border-radius:8px;">View Property Details →</a>
       </p>
     </td>
   </tr>
   <tr><td style="padding:14px 28px;border-top:1px solid rgba(255,255,255,0.06);text-align:center;">
-    <p style="margin:0;font-size:11px;color:#4b5563;">Tharaga Real Estate · Chennai, Tamil Nadu · <a href="https://tharaga.co.in" style="color:#fbbf24;text-decoration:none;">tharaga.co.in</a></p>
+    <p style="margin:0;font-size:11px;color:#4b5563;">Tharaga Real Estate · Chennai, Tamil Nadu · <a href="https://tharaga.in" style="color:#fbbf24;text-decoration:none;">tharaga.in</a></p>
   </td></tr>
 </table>
 </td></tr>
@@ -220,7 +220,7 @@ function emailHdr(day: string, headline: string) {
 
 function emailFooter(leadId: string) {
   return `<tr><td style="padding:14px 28px;border-top:1px solid rgba(255,255,255,0.06);text-align:center;">
-    <p style="margin:0;font-size:11px;color:#4b5563;">Tharaga Real Estate · <a href="https://tharaga.co.in" style="color:#fbbf24;text-decoration:none;">tharaga.co.in</a> · <a href="https://tharaga.co.in/unsubscribe?lead=${leadId}" style="color:#6b7280;text-decoration:none;font-size:10px;">Unsubscribe</a></p>
+    <p style="margin:0;font-size:11px;color:#4b5563;">Tharaga Real Estate · <a href="https://tharaga.in" style="color:#fbbf24;text-decoration:none;">tharaga.in</a> · <a href="https://tharaga.in/unsubscribe?lead=${leadId}" style="color:#6b7280;text-decoration:none;font-size:10px;">Unsubscribe</a></p>
   </td></tr>`
 }
 
@@ -250,7 +250,7 @@ function dripDay1(opts: { name: string; title: string; pid: string; locality: st
           <p style="margin:10px 0 0;font-size:15px;font-weight:700;color:#fbbf24;">${opts.price}</p>
         </td></tr>
       </table>
-      ${ctaBtn(`https://tharaga.co.in/properties/${opts.pid}`, 'View Full Details →')}
+      ${ctaBtn(`https://tharaga.in/properties/${opts.pid}`, 'View Full Details →')}
     </td></tr>
     ${emailFooter(opts.leadId)}`)
 }
@@ -268,14 +268,14 @@ function dripDay3(opts: { name: string; title: string; pid: string; locality: st
         '🛒 Premium malls, tech parks & employment hubs nearby',
         '📊 Property values in this micro-market up 12% YoY',
       ].map(s => `<p style="margin:0 0 8px;font-size:14px;color:#d1d5db;">${s}</p>`).join('')}
-      ${ctaBtn(`https://tharaga.co.in/properties/${opts.pid}`, 'Book a Site Visit →')}
+      ${ctaBtn(`https://tharaga.in/properties/${opts.pid}`, 'Book a Site Visit →')}
     </td></tr>
     ${emailFooter(opts.leadId)}`)
 }
 
 // Day 5 — ROI calculator (personalized link)
 function dripDay5(opts: { name: string; title: string; pid: string; price: string; leadId: string }): string {
-  const roiUrl = `https://tharaga.co.in/tools?t=roi&property=${opts.pid}`
+  const roiUrl = `https://tharaga.in/tools?t=roi&property=${opts.pid}`
   return wrapEmail(`
     ${emailHdr('Day 5', 'Calculate your exact returns in 60 seconds 💹')}
     <tr><td style="padding:24px 28px;">
@@ -316,7 +316,7 @@ function dripDay7(opts: { name: string; title: string; pid: string; price: strin
         </td></tr>
       </table>
       <p style="margin:0 0 16px;font-size:14px;color:#9ca3af;text-align:center;">Limited units — prices may increase soon.</p>
-      ${ctaBtn(`https://tharaga.co.in/properties/${opts.pid}`, 'Secure Your Unit Now →')}
+      ${ctaBtn(`https://tharaga.in/properties/${opts.pid}`, 'Secure Your Unit Now →')}
     </td></tr>
     ${emailFooter(opts.leadId)}`)
 }
@@ -340,7 +340,7 @@ function dripDay14(opts: { name: string; title: string; pid: string; locality: s
         </td></tr>
       </table>
       <p style="margin:0 0 16px;font-size:14px;color:#9ca3af;text-align:center;">Don't let this one slip away. Book your site visit now — it's free and takes just 45 minutes.</p>
-      ${ctaBtn(`https://tharaga.co.in/properties/${opts.pid}`, 'Book Free Site Visit →')}
+      ${ctaBtn(`https://tharaga.in/properties/${opts.pid}`, 'Book Free Site Visit →')}
     </td></tr>
     ${emailFooter(opts.leadId)}`)
 }
@@ -364,14 +364,14 @@ function dripDay21(opts: { name: string; title: string; pid: string; price: stri
           <p style="margin:12px 0 0;font-size:15px;font-weight:700;color:#fbbf24;">Starting at ${opts.price} · Offer valid this month only</p>
         </td></tr>
       </table>
-      ${ctaBtn(`https://tharaga.co.in/properties/${opts.pid}`, 'Claim This Offer →')}
+      ${ctaBtn(`https://tharaga.in/properties/${opts.pid}`, 'Claim This Offer →')}
     </td></tr>
     ${emailFooter(opts.leadId)}`)
 }
 
 // Day 30 — Final re-engagement
 function dripDay30(opts: { name: string; title: string; pid: string; locality: string; leadId: string }): string {
-  const listingUrl = `https://tharaga.co.in/property-listing?city=Chennai&locality=${encodeURIComponent(opts.locality)}`
+  const listingUrl = `https://tharaga.in/property-listing?city=Chennai&locality=${encodeURIComponent(opts.locality)}`
   return wrapEmail(`
     ${emailHdr('Day 30', 'Still searching? We have new options in your area 🏡')}
     <tr><td style="padding:24px 28px;">
@@ -391,7 +391,7 @@ function dripDay30(opts: { name: string; title: string; pid: string; locality: s
       <table cellpadding="0" cellspacing="0" style="width:100%;margin-top:4px;">
         <tr>
           <td style="padding-right:10px;width:50%;">
-            ${ctaBtn(`https://tharaga.co.in/properties/${opts.pid}`, 'Back to This Property →').replace('margin:20px', 'margin:0')}
+            ${ctaBtn(`https://tharaga.in/properties/${opts.pid}`, 'Back to This Property →').replace('margin:20px', 'margin:0')}
           </td>
           <td style="width:50%;">
             ${ctaBtn(listingUrl, 'Browse All Listings →').replace('background:linear-gradient(135deg,#f59e0b,#d97706)', 'background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15)').replace('margin:20px', 'margin:0')}

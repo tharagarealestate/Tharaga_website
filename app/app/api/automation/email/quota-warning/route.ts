@@ -117,7 +117,7 @@ export async function POST(request: NextRequest) {
                 ${projectedOverage > 0 ? `<p style="color: #C00;"><strong>Projected Overage:</strong> ${projectedOverage.toLocaleString('en-IN')} emails</p>` : ''}
               </div>
               <p><strong>${recommendedAction}</strong></p>
-              <a href="https://tharaga.co.in/builder/billing/upgrade?current=${sub.tier}&suggested=${sub.tier === 'starter' ? 'professional' : 'enterprise'}" 
+              <a href="https://tharaga.in/builder/billing/upgrade?current=${sub.tier}&suggested=${sub.tier === 'starter' ? 'professional' : 'enterprise'}" 
                  style="display: inline-block; margin-top: 20px; padding: 12px 24px; background: #D4AF37; color: #000; text-decoration: none; border-radius: 8px;">
                 Upgrade Plan Now
               </a>
@@ -154,8 +154,8 @@ export async function POST(request: NextRequest) {
             '{{projectedOverage}}': projectedOverage.toLocaleString('en-IN'),
             '{{recommendedAction}}': recommendedAction,
             '{{suggestedPlan}}': (sub.tier === 'starter' ? 'PROFESSIONAL' : 'ENTERPRISE'),
-            '{{upgradeUrl}}': `https://tharaga.co.in/builder/billing/upgrade?current=${sub.tier}&suggested=${sub.tier === 'starter' ? 'professional' : 'enterprise'}`,
-            '{{dashboardUrl}}': 'https://tharaga.co.in/builder/dashboard'
+            '{{upgradeUrl}}': `https://tharaga.in/builder/billing/upgrade?current=${sub.tier}&suggested=${sub.tier === 'starter' ? 'professional' : 'enterprise'}`,
+            '{{dashboardUrl}}': 'https://tharaga.in/builder/dashboard'
           };
 
           Object.entries(replacements).forEach(([key, value]) => {

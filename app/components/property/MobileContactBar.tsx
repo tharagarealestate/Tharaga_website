@@ -21,7 +21,7 @@ export default function MobileContactBar({ propertyId, priceDisplay, brochureUrl
 
   const shareUrl = typeof window !== 'undefined'
     ? window.location.href
-    : `https://tharaga.co.in/properties/${propertyId}`
+    : `https://tharaga.in/properties/${propertyId}`
 
   const waUrl = `https://wa.me/?text=${encodeURIComponent(`Check out this property on Tharaga: ${shareUrl}`)}`
 

@@ -219,7 +219,7 @@ Generate a JSON response with this exact structure:
     }
 
     // ── Step 6: Fire delay=0 workflows immediately (best-effort) ─────────────
-    const baseUrl       = process.env.NEXT_PUBLIC_APP_URL || 'https://tharaga.co.in'
+    const baseUrl       = process.env.NEXT_PUBLIC_APP_URL || 'https://tharaga.in'
     const internalKey   = process.env.INTERNAL_API_KEY   || ''
     const immediateJobs = WORKFLOWS.filter((w) => w.delaySec === 0)
 

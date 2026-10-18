@@ -65,7 +65,7 @@ export async function POST(req: NextRequest) {
       })
     }
 
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://tharaga.co.in'
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://tharaga.in'
     const results = []
 
     // Process each pending webhook

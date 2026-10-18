@@ -158,7 +158,7 @@ function buildMessageTemplates(property: any) {
   const priceL = price > 0 ? `₹${(price / 100000).toFixed(2)}L` : 'Price on request'
   const loc    = property.location || property.locality || property.city || 'Chennai'
   const area   = property.carpet_area || property.sqft
-  const link   = property.landing_page_url || `https://tharaga.co.in/properties/${property.id}`
+  const link   = property.landing_page_url || `https://tharaga.in/properties/${property.id}`
 
   const hot = `🏡 *EXCLUSIVE FIRST LOOK*
 
@@ -277,7 +277,7 @@ async function deployChatbot(): Promise<boolean> {
 
   if (!sid || !token || !phoneSid) return true // no-op — can be set up manually
 
-  const webhookUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'https://tharaga.co.in'}/api/webhooks/whatsapp-incoming`
+  const webhookUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'https://tharaga.in'}/api/webhooks/whatsapp-incoming`
 
   try {
     await fetch(

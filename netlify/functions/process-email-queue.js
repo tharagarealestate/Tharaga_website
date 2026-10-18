@@ -11,7 +11,7 @@
  */
 
 exports.handler = async function (event) {
-  const baseUrl = process.env.DEPLOY_URL || process.env.URL || 'https://tharaga.co.in'
+  const baseUrl = process.env.DEPLOY_URL || process.env.URL || 'https://tharaga.in'
   const endpoint = `${baseUrl}/api/automation/email/process-sequence-queue`
   const secret = process.env.CRON_SECRET
 

@@ -54,7 +54,7 @@ You now have full access to:
 - View inquiries from potential buyers
 - Access advanced builder features
 
-Get started: https://tharaga.co.in/builder
+Get started: https://tharaga.in/builder
 
 Thank you for joining Tharaga!
 

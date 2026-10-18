@@ -75,7 +75,7 @@ ${chatContext.conversation_history.map((m: any) => `${m.role}: ${m.content}`).jo
 User's Question: "${body}"
 
 Provide a helpful, concise response (max 160 chars for WhatsApp). If they want to:
-- Book site visit → Provide link: ${property.landing_page_url || `https://tharaga.co.in/property/${property.id}`}
+- Book site visit → Provide link: ${property.landing_page_url || `https://tharaga.in/property/${property.id}`}
 - Know price details → Share price breakdown
 - Ask about amenities → List key amenities
 - EMI calculation → Offer calculator link

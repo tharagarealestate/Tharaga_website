@@ -70,7 +70,7 @@ export async function analyzeCompetitivePosition(
     const competitorName = competitorBuilder?.name || competitorBuilder?.companyName || 'Competitor';
     
     // Get property URL
-    const propertyUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'https://tharaga.co.in'}/properties/${competitor.id}`;
+    const propertyUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'https://tharaga.in'}/properties/${competitor.id}`;
     
     // Save competitor analysis
     await supabase

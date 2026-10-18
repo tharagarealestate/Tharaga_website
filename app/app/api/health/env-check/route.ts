@@ -52,7 +52,7 @@ const ENV_SPECS: VarSpec[] = [
   { key: 'RAZORPAY_WEBHOOK_SECRET',        tier: 'optional', feature: 'Payment webhooks', hint: 'Webhook secret from Razorpay dashboard' },
 
   // ── Required: App config ─────────────────────────────────────────────────
-  { key: 'NEXT_PUBLIC_APP_URL',            tier: 'required', feature: 'Internal webhooks', hint: 'e.g. https://tharaga.co.in — used for server-to-server calls' },
+  { key: 'NEXT_PUBLIC_APP_URL',            tier: 'required', feature: 'Internal webhooks', hint: 'e.g. https://tharaga.in — used for server-to-server calls' },
   { key: 'CRON_SECRET',                    tier: 'required', feature: 'Cron job security', hint: 'Random secret to secure /api/cron/* endpoints' },
   { key: 'INTERNAL_API_KEY',               tier: 'required', feature: 'Internal API auth', hint: 'Random secret for server-to-server workflow triggers' },
 

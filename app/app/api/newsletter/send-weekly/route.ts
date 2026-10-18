@@ -193,7 +193,7 @@ function generateNewsletterHTML(insights: any[]): string {
       
       <div style="text-align: center; margin-top: 40px; padding-top: 20px; border-top: 1px solid #eee; color: #999; font-size: 12px;">
         <p>You're receiving this because you subscribed to Tharaga's newsletter.</p>
-        <p><a href="https://tharaga.co.in/newsletter/unsubscribe" style="color: #f59e0b;">Unsubscribe</a></p>
+        <p><a href="https://tharaga.in/newsletter/unsubscribe" style="color: #f59e0b;">Unsubscribe</a></p>
         <p>© ${new Date().getFullYear()} Tharaga. All rights reserved.</p>
       </div>
     </body>
@@ -223,7 +223,7 @@ ${insightsText}
 
 ---
 You're receiving this because you subscribed to Tharaga's newsletter.
-Unsubscribe: https://tharaga.co.in/newsletter/unsubscribe
+Unsubscribe: https://tharaga.in/newsletter/unsubscribe
 
 © ${new Date().getFullYear()} Tharaga. All rights reserved.
   `.trim()

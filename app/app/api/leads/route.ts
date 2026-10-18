@@ -437,7 +437,7 @@ export async function POST(request: NextRequest) {
     // response, cutting off un-awaited promises. Awaiting with a 6s timeout ensures
     // the drip sequence is always scheduled. Lead is already saved so buyer always
     // gets the 201 — even if notify-lead times out they still have their enquiry.
-    const baseUrl = 'https://tharaga.co.in'
+    const baseUrl = 'https://tharaga.in'
     await Promise.race([
       Promise.all([
         // 1. Notify builder + send buyer confirmation + schedule drip

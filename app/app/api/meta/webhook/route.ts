@@ -10,7 +10,7 @@
  *
  * Meta Business Manager setup:
  *   Webhooks → New subscription → Page → leadgen field
- *   Callback URL: https://tharaga.co.in/api/meta/webhook
+ *   Callback URL: https://tharaga.in/api/meta/webhook
  *   Verify token: (value of META_WEBHOOK_VERIFY_TOKEN)
  */
 
@@ -198,7 +198,7 @@ export async function POST(request: NextRequest) {
           // Fire-and-forget: call the WhatsApp inbound handler logic
           // (we trigger it by calling the internal API — avoids duplicating Twilio logic)
           try {
-            const greetingUrl = `${process.env.NEXT_PUBLIC_SITE_URL ?? 'https://tharaga.co.in'}/api/whatsapp/send-greeting`
+            const greetingUrl = `${process.env.NEXT_PUBLIC_SITE_URL ?? 'https://tharaga.in'}/api/whatsapp/send-greeting`
             await fetch(greetingUrl, {
               method:  'POST',
               headers: { 'Content-Type': 'application/json', 'x-internal-secret': process.env.INTERNAL_API_SECRET ?? '' },

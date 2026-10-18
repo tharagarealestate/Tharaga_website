@@ -3,7 +3,7 @@
  * Runs every 30 minutes to send due drip emails from email_sequence_queue.
  *
  * Netlify cron syntax (in netlify.toml):
- *   schedule = "*/30 * * * *"
+ *   schedule = every 30 minutes (cron: 0,30 of every hour)
  *
  * This function calls the Next.js API route that processes the queue.
  * Using a separate Netlify function for scheduling keeps the Next.js route
@@ -11,7 +11,7 @@
  */
 
 exports.handler = async function (event) {
-  const baseUrl = process.env.DEPLOY_URL || process.env.URL || 'https://tharaga.co.in'
+  const baseUrl = process.env.DEPLOY_URL || process.env.URL || 'https://tharaga.in'
   const endpoint = `${baseUrl}/api/automation/email/process-sequence-queue`
   const secret = process.env.CRON_SECRET
 

@@ -80,7 +80,7 @@ async function sendSecurityAlertEmail(alert: SecurityAlert): Promise<void> {
         <p><strong>Message:</strong> ${alert.message}</p>
         ${alert.metadata ? `<pre>${JSON.stringify(alert.metadata, null, 2)}</pre>` : ''}
         <p><strong>Time:</strong> ${new Date().toISOString()}</p>
-        <p><a href="${process.env.NEXT_PUBLIC_APP_URL || 'https://tharaga.co.in'}/admin/security">View in Dashboard</a></p>
+        <p><a href="${process.env.NEXT_PUBLIC_APP_URL || 'https://tharaga.in'}/admin/security">View in Dashboard</a></p>
       `
     })
   } catch (error) {

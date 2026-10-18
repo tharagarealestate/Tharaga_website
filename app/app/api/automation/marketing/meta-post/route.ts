@@ -113,7 +113,7 @@ export async function POST(req: NextRequest) {
       postUrl = `https://www.facebook.com/${pageId}/posts/${postId}`
     } else {
       // Text/link post via /feed
-      const propertyUrl = `https://tharaga.co.in/properties/${property_id}`
+      const propertyUrl = `https://tharaga.in/properties/${property_id}`
       const feedRes = await fetch(
         `https://graph.facebook.com/v19.0/${pageId}/feed`,
         {

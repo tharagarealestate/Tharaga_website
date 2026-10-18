@@ -24,23 +24,95 @@ const inter = Inter({
   display: 'swap',
 })
 
+const SITE_URL = 'https://tharaga.in'
+
 export const metadata: Metadata = {
-  title: 'Tharaga — AI-Powered Real Estate Platform',
-  description: 'India\'s first AI-powered zero-commission real estate platform. Connect directly with verified builders and save lakhs on brokerage.',
-  metadataBase: new URL('https://tharaga.co.in'),
+  title: {
+    default: 'Tharaga — AI-Powered Real Estate Platform in Chennai',
+    template: '%s | Tharaga',
+  },
+  description: 'India\'s first AI-powered zero-commission real estate platform. Connect directly with verified builders in Chennai and save lakhs on brokerage.',
+  metadataBase: new URL(SITE_URL),
+  applicationName: 'Tharaga',
+  keywords: [
+    'Chennai real estate',
+    'flats for sale in Chennai',
+    'villas in Chennai',
+    'plots in Chennai',
+    'zero commission property',
+    'verified builders Chennai',
+    'new projects Chennai',
+    'Tharaga',
+  ],
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+      'max-video-preview': -1,
+    },
+  },
   openGraph: {
     title: 'Tharaga — AI-Powered Real Estate Platform',
     description: 'India\'s first AI-powered zero-commission real estate platform.',
-    url: 'https://tharaga.co.in',
+    url: SITE_URL,
     siteName: 'Tharaga',
     locale: 'en_IN',
     type: 'website',
+    images: [{ url: '/og-default.jpg', width: 1200, height: 630, alt: 'Tharaga Real Estate' }],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'Tharaga — AI-Powered Real Estate Platform',
     description: 'India\'s first AI-powered zero-commission real estate platform.',
+    images: ['/og-default.jpg'],
   },
+  manifest: '/manifest.webmanifest',
+  verification: {
+    google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION || undefined,
+    other: process.env.NEXT_PUBLIC_BING_SITE_VERIFICATION
+      ? { 'msvalidate.01': process.env.NEXT_PUBLIC_BING_SITE_VERIFICATION }
+      : undefined,
+  },
+}
+
+const organizationJsonLd = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'RealEstateAgent',
+      '@id': `${SITE_URL}/#organization`,
+      name: 'Tharaga Real Estate',
+      url: SITE_URL,
+      logo: `${SITE_URL}/og-default.jpg`,
+      image: `${SITE_URL}/og-default.jpg`,
+      telephone: '+91-8870980839',
+      email: 'tharagarealestate@gmail.com',
+      areaServed: { '@type': 'City', name: 'Chennai' },
+      address: {
+        '@type': 'PostalAddress',
+        addressLocality: 'Chennai',
+        addressRegion: 'Tamil Nadu',
+        addressCountry: 'IN',
+      },
+    },
+    {
+      '@type': 'WebSite',
+      '@id': `${SITE_URL}/#website`,
+      url: SITE_URL,
+      name: 'Tharaga',
+      inLanguage: 'en-IN',
+      publisher: { '@id': `${SITE_URL}/#organization` },
+      potentialAction: {
+        '@type': 'SearchAction',
+        target: `${SITE_URL}/property-listing?q={search_term_string}`,
+        'query-input': 'required name=search_term_string',
+      },
+    },
+  ],
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -49,6 +121,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <head>
         <meta name="theme-color" content="#09090b" />
         <link rel="icon" href="/favicon.ico" sizes="any" />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }}
+        />
       </head>
       <body className="font-body antialiased">
         <NextIntlClientProvider locale="en" messages={{}}>

@@ -150,12 +150,12 @@ export async function POST(request: NextRequest) {
     ` : ''}
     
     <div style="text-align: center; margin-top: 30px;">
-      <a href="https://tharaga.co.in/builder/analytics" class="cta-button">View Full Analytics Dashboard</a>
+      <a href="https://tharaga.in/builder/analytics" class="cta-button">View Full Analytics Dashboard</a>
     </div>
     
     <div style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #ddd; text-align: center; color: #666; font-size: 12px;">
       <p>Tharaga - India's First Zero-Commission Real Estate Platform</p>
-      <p>Questions? Reply to this email or visit our <a href="https://tharaga.co.in/help">Help Center</a></p>
+      <p>Questions? Reply to this email or visit our <a href="https://tharaga.in/help">Help Center</a></p>
     </div>
   </div>
 </body>

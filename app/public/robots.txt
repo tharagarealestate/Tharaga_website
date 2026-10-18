@@ -9,7 +9,7 @@ Disallow: /admin/
 Disallow: /*?*sort=
 Disallow: /*?*filter=
 
-Sitemap: https://tharaga.co.in/sitemap.xml
+Sitemap: https://tharaga.in/sitemap.xml
 
 
 

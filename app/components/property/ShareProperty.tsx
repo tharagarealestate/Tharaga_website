@@ -12,7 +12,7 @@ interface SharePropertyProps {
 
 export default function ShareProperty({ propertyId, title, url }: SharePropertyProps) {
   const [copied, setCopied] = useState(false)
-  const shareUrl = url || (typeof window !== 'undefined' ? window.location.href : `https://tharaga.co.in/properties/${propertyId}`)
+  const shareUrl = url || (typeof window !== 'undefined' ? window.location.href : `https://tharaga.in/properties/${propertyId}`)
   const shareText = `Check out this property: ${title}`
 
   const shareActions = [

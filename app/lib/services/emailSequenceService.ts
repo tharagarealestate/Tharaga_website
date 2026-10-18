@@ -252,7 +252,7 @@ Return ONLY valid JSON in this exact format:
       html: email.html || '',
       text: email.text || email.html?.replace(/<[^>]*>/g, '') || '',
       cta: email.cta || 'Learn More',
-      ctaUrl: email.ctaUrl || `https://tharaga.co.in/properties/${propertyContext.id}`
+      ctaUrl: email.ctaUrl || `https://tharaga.in/properties/${propertyContext.id}`
     }));
 
   } catch (error: any) {
@@ -415,7 +415,7 @@ export function addEmailTracking(
   leadId: string | number
 ): string {
   // Add tracking pixel
-  const trackingPixel = `<img src="https://tharaga.co.in/api/track/open?email_id=${emailId}&lead_id=${leadId}" width="1" height="1" alt="" style="display:none;" />`;
+  const trackingPixel = `<img src="https://tharaga.in/api/track/open?email_id=${emailId}&lead_id=${leadId}" width="1" height="1" alt="" style="display:none;" />`;
   
   // Insert before closing body tag
   if (html.includes('</body>')) {
@@ -428,8 +428,8 @@ export function addEmailTracking(
   html = html.replace(
     /<a\s+([^>]*href=["'])([^"']+)(["'][^>]*)>/gi,
     (match, before, url, after) => {
-      if (url.startsWith('http') && !url.includes('tharaga.co.in/api/track')) {
-        const trackedUrl = `https://tharaga.co.in/api/track/click?email_id=${emailId}&lead_id=${leadId}&url=${encodeURIComponent(url)}`;
+      if (url.startsWith('http') && !url.includes('tharaga.in/api/track')) {
+        const trackedUrl = `https://tharaga.in/api/track/click?email_id=${emailId}&lead_id=${leadId}&url=${encodeURIComponent(url)}`;
         return `<a ${before}${trackedUrl}${after}>`;
       }
       return match;
@@ -515,8 +515,8 @@ export async function sendSequenceEmail(
     recipientName: lead?.name || lead?.lead_buyer_name || 'Valued Customer',
     builderName: builder?.name || 'Builder',
     propertyName: property?.title || property?.property_name || 'Property',
-    dashboardLink: `https://tharaga.co.in/builder/leads/${seq.lead_id}`,
-    unsubscribeLink: `https://tharaga.co.in/unsubscribe?lead=${seq.lead_id}`,
+    dashboardLink: `https://tharaga.in/builder/leads/${seq.lead_id}`,
+    unsubscribeLink: `https://tharaga.in/unsubscribe?lead=${seq.lead_id}`,
     currentDate: new Date().toLocaleDateString('en-IN', { 
       weekday: 'long', 
       year: 'numeric', 
@@ -557,7 +557,7 @@ export async function sendSequenceEmail(
       ],
       headers: {
         'X-Entity-Ref-ID': sequenceId,
-        'List-Unsubscribe': `<https://tharaga.co.in/unsubscribe?lead=${seq.lead_id}>`
+        'List-Unsubscribe': `<https://tharaga.in/unsubscribe?lead=${seq.lead_id}>`
       }
     });
 

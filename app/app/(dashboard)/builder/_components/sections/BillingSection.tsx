@@ -110,7 +110,7 @@ export function BillingSection({ onNavigate }: BillingSectionProps) {
         description: billingCycle === 'yearly'
           ? 'Tharaga Pro — ₹4,166/mo billed yearly'
           : 'Tharaga Pro — ₹4,999/month',
-        image: 'https://tharaga.co.in/logo.svg',
+        image: 'https://tharaga.in/logo.svg',
         prefill: data.prefill || {},
         theme: { color: '#f59e0b' },
         modal: {

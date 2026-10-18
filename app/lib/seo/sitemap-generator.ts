@@ -27,7 +27,7 @@ export class SitemapGenerator {
 
   private getBaseUrl(): string {
     if (!this.baseUrl) {
-      this.baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://tharaga.co.in';
+      this.baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://tharaga.in';
     }
     return this.baseUrl;
   }

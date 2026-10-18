@@ -236,7 +236,7 @@ async function generateEmailContent(
     ` : ''}
     
     <div style="text-align: center; margin: 30px 0;">
-      <a href="${process.env.NEXT_PUBLIC_APP_URL || 'https://tharaga.co.in'}/properties/${property.id}" 
+      <a href="${process.env.NEXT_PUBLIC_APP_URL || 'https://tharaga.in'}/properties/${property.id}" 
          style="background: linear-gradient(135deg, #D4AF37 0%, #0F52BA 100%); color: white; padding: 15px 30px; text-decoration: none; border-radius: 5px; display: inline-block; font-weight: bold;">
         View Property Details
       </a>
@@ -272,7 +272,7 @@ ${analysis.recommendations.map(rec => `- ${rec}`).join('\n')}
 
 ${property.amenities && property.amenities.length > 0 ? `\nAmenities: ${property.amenities.join(', ')}` : ''}
 
-View Property: ${process.env.NEXT_PUBLIC_APP_URL || 'https://tharaga.co.in'}/properties/${property.id}
+View Property: ${process.env.NEXT_PUBLIC_APP_URL || 'https://tharaga.in'}/properties/${property.id}
   `.trim()
 
   return { subject, html, text }

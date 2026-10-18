@@ -72,7 +72,7 @@ function QRGeneratorPanel({ builderId }: { builderId: string | null }) {
             <input
               value={propertyUrl}
               onChange={e => setPropertyUrl(e.target.value)}
-              placeholder="https://tharaga.co.in/properties/..."
+              placeholder="https://tharaga.in/properties/..."
               className="w-full px-3 py-2.5 bg-zinc-900/80 border border-zinc-800 rounded-xl text-sm text-zinc-300 placeholder:text-zinc-600 focus:outline-none focus:border-amber-500/40 transition-colors"
             />
             <p className="text-[10px] text-zinc-600">Leave blank to use auto-generated visit tracking link</p>

@@ -252,7 +252,7 @@ Return ONLY valid JSON:
       html: aiResponse.html,
       text: aiResponse.text,
       cta: aiResponse.cta,
-      ctaUrl: aiResponse.ctaUrl || `https://tharaga.co.in/properties/${lead.propertyId}`,
+      ctaUrl: aiResponse.ctaUrl || `https://tharaga.in/properties/${lead.propertyId}`,
       variant
     };
 

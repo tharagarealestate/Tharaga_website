@@ -72,7 +72,7 @@ function buildMessage(
   const name = lead.first_name ?? lead.name ?? 'there'
   const price = formatPrice(property.price_inr)
   const location = [property.locality, property.city].filter(Boolean).join(', ') || 'Chennai'
-  const url = `https://tharaga.co.in/properties/${property.id}`
+  const url = `https://tharaga.in/properties/${property.id}`
 
   if (template) {
     return template

@@ -285,7 +285,7 @@ export async function POST(req: NextRequest) {
       fbc,
       fbp,
       budget: budget ? parseFloat(budget) : undefined,
-      source_url: req.headers.get('referer') || 'https://tharaga.co.in',
+      source_url: req.headers.get('referer') || 'https://tharaga.in',
     })
 
     // ── Return ────────────────────────────────────────────────────────────────

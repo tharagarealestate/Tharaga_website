@@ -326,7 +326,7 @@ export async function POST(req: NextRequest) {
 
     // Delegate to intelligence-engine for comprehensive automation
     // This ensures we use the full n8n workflow system
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://tharaga.co.in'
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://tharaga.in'
     const internalApiKey = process.env.INTERNAL_API_KEY
 
     try {

@@ -53,7 +53,7 @@ export async function sendMetaConversionEvent({
           event_name: eventName,
           event_time: timestamp,
           action_source: 'system_generated',
-          event_source_url: sourceUrl || process.env.NEXT_PUBLIC_APP_URL || 'https://tharaga.co.in',
+          event_source_url: sourceUrl || process.env.NEXT_PUBLIC_APP_URL || 'https://tharaga.in',
           user_data: {
             em: email ? [hashData(email)] : [],
             ph: cleanPhone ? [hashData(cleanPhone)] : [],

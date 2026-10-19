@@ -57,7 +57,7 @@ async function sendViaResend(
         Authorization: `Bearer ${key}`,
       },
       body: JSON.stringify({
-        from: process.env.RESEND_FROM_EMAIL || 'Tharaga <notifications@tharaga.co.in>',
+        from: process.env.RESEND_FROM_EMAIL || 'Tharaga <notifications@tharaga.in>',
         to: [to],
         subject,
         html: htmlTracked,

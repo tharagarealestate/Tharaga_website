@@ -165,7 +165,7 @@ export async function POST(request: NextRequest) {
         // Send email
         if (resend) {
           await resend.emails.send({
-            from: process.env.RESEND_FROM_EMAIL || 'Tharaga Analytics <analytics@tharaga.co.in>',
+            from: process.env.RESEND_FROM_EMAIL || 'Tharaga Analytics <analytics@tharaga.in>',
             to: builder.email,
             subject: `📊 Your Weekly Performance: ${openRate.toFixed(1)}% open rate, ${convertedLeads} conversions`,
             html: html,

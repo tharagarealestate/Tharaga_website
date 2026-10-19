@@ -34,6 +34,14 @@
     --border-active: #52525b;
     --border-brand: rgba(245, 158, 11, 0.3);
 
+    /* Public (buyer-facing) light palette */
+    --public-bg: #FAFAF8;
+    --public-navy: #0B1C34;
+    --public-gold: #C59A3A;
+    --public-text: #1A1F2E;
+    --public-text-secondary: #6B7280;
+    --public-border: #E8E4DD;
+
     /* Semantic */
     --success: #22c55e;
     --success-muted: rgba(34, 197, 94, 0.1);
@@ -312,4 +320,38 @@
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+}
+
+/* ── Property card hover shadow ─────────────────────────── */
+.card-hover {
+  transition: box-shadow 0.3s ease, transform 0.3s ease;
+}
+.card-hover:hover {
+  box-shadow: 0 20px 60px rgba(11, 28, 52, 0.12), 0 6px 20px rgba(11, 28, 52, 0.08);
+  transform: translateY(-4px);
+}
+
+/* ── Smooth page scroll ─────────────────────────────────── */
+@media (prefers-reduced-motion: no-preference) {
+  html { scroll-behavior: smooth; }
+}
+
+/* ── Focus ring for public pages ────────────────────────── */
+.focus-ring-gold:focus-visible {
+  outline: 2px solid #C59A3A;
+  outline-offset: 2px;
+}
+
+/* ── Line clamp utilities ───────────────────────────────── */
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.line-clamp-3 {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }

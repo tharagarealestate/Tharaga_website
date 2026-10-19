@@ -28,10 +28,10 @@ const SITE_URL = 'https://tharaga.in'
 
 export const metadata: Metadata = {
   title: {
-    default: 'Tharaga — AI-Powered Real Estate Platform in Chennai',
+    default: 'Tharaga — Premium Properties in Chennai | Zero Brokerage',
     template: '%s | Tharaga',
   },
-  description: 'India\'s first AI-powered zero-commission real estate platform. Connect directly with verified builders in Chennai and save lakhs on brokerage.',
+  description: 'Find RERA-verified flats, villas, and plots in Chennai. Buy directly from builders with zero brokerage. Tharaga is Chennai\'s most trusted real estate platform.',
   metadataBase: new URL(SITE_URL),
   applicationName: 'Tharaga',
   keywords: [
@@ -39,9 +39,12 @@ export const metadata: Metadata = {
     'flats for sale in Chennai',
     'villas in Chennai',
     'plots in Chennai',
-    'zero commission property',
-    'verified builders Chennai',
+    'zero brokerage property Chennai',
+    'RERA verified properties Chennai',
+    'buy flat Chennai directly from builder',
     'new projects Chennai',
+    'apartments in Anna Nagar',
+    'properties in OMR',
     'Tharaga',
   ],
   robots: {
@@ -56,18 +59,18 @@ export const metadata: Metadata = {
     },
   },
   openGraph: {
-    title: 'Tharaga — AI-Powered Real Estate Platform',
-    description: 'India\'s first AI-powered zero-commission real estate platform.',
+    title: 'Tharaga — Premium Properties in Chennai | Zero Brokerage',
+    description: 'Find RERA-verified flats, villas, and plots in Chennai. Buy directly from builders with zero brokerage.',
     url: SITE_URL,
     siteName: 'Tharaga',
     locale: 'en_IN',
     type: 'website',
-    images: [{ url: '/og-default.jpg', width: 1200, height: 630, alt: 'Tharaga Real Estate' }],
+    images: [{ url: '/og-default.jpg', width: 1200, height: 630, alt: 'Tharaga Real Estate Chennai' }],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Tharaga — AI-Powered Real Estate Platform',
-    description: 'India\'s first AI-powered zero-commission real estate platform.',
+    title: 'Tharaga — Premium Properties in Chennai',
+    description: 'Find RERA-verified flats, villas, and plots in Chennai. Zero brokerage, directly from builders.',
     images: ['/og-default.jpg'],
   },
   manifest: '/manifest.webmanifest',

@@ -335,7 +335,7 @@ async function contactJournalists(property: any, pressRelease: string) {
                   'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
-                  from: 'Tharaga PR <pr@tharaga.co.in>',
+                  from: 'Tharaga PR <pr@tharaga.in>',
                   to: journalist.email,
                   subject: `PRESS RELEASE: ${property.title} Launches with Zero Commission Model`,
                   html: `

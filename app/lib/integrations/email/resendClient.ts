@@ -36,7 +36,7 @@ export class ResendClient {
   constructor() {
     this.apiKey = process.env.RESEND_API_KEY || '';
     this.fromEmail =
-      process.env.RESEND_FROM_EMAIL || 'noreply@tharaga.co.in';
+      process.env.RESEND_FROM_EMAIL || 'noreply@tharaga.in';
 
     if (!this.apiKey) {
       console.warn(

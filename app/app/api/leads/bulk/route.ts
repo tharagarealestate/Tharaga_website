@@ -403,7 +403,7 @@ async function sendEmail(params: {
   const resend = new Resend(process.env.RESEND_API_KEY);
   
   const { error } = await resend.emails.send({
-    from: 'Tharaga <noreply@tharaga.co.in>',
+    from: 'Tharaga <noreply@tharaga.in>',
     to: params.to,
     subject: params.subject,
     html: params.html,

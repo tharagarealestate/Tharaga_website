@@ -50,10 +50,10 @@ exports.handler = async () => {
             method: 'POST',
             headers: { 'Authorization': `Bearer ${process.env.RESEND_API_KEY}`, 'Content-Type': 'application/json' },
             body: JSON.stringify({
-              from: 'Tharaga <notify@tharaga.co.in>',
+              from: 'Tharaga <notify@tharaga.in>',
               to: [s.email],
               subject: `New properties in your saved search (${s.count})`,
-              html: `<p>You have ${s.count} new matches in the last 24h.</p><p><a href="https://auth.tharaga.co.in/property-listing/">View listings</a></p>`
+              html: `<p>You have ${s.count} new matches in the last 24h.</p><p><a href="https://tharaga.in/property-listing/">View listings</a></p>`
             })
           })
         ))

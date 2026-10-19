@@ -367,7 +367,7 @@ export async function POST(req: NextRequest) {
     if (resend) {
       try {
         const emailResult = await resend.emails.send({
-          from: process.env.RESEND_FROM_EMAIL || 'Tharaga <leads@tharaga.co.in>',
+          from: process.env.RESEND_FROM_EMAIL || 'Tharaga <leads@tharaga.in>',
           to: form_data.email,
           subject: emailContent.subject,
           html: emailContent.html,

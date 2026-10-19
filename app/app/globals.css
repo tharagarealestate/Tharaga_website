@@ -353,6 +353,32 @@
 }
 .scrollbar-none::-webkit-scrollbar { display: none; }
 
+/* ── Aurora background animations ──────────────────────── */
+@keyframes aurora-drift-1 {
+  0%, 100% { transform: translate(0, 0) scale(1) rotate(0deg); opacity: 0.18; }
+  25%       { transform: translate(4%, -3%) scale(1.08) rotate(3deg); opacity: 0.24; }
+  50%       { transform: translate(6%, 2%) scale(1.04) rotate(-2deg); opacity: 0.20; }
+  75%       { transform: translate(-2%, 4%) scale(0.97) rotate(4deg); opacity: 0.15; }
+}
+@keyframes aurora-drift-2 {
+  0%, 100% { transform: translate(0, 0) scale(1) rotate(0deg); opacity: 0.14; }
+  33%       { transform: translate(-5%, 3%) scale(1.06) rotate(-3deg); opacity: 0.20; }
+  66%       { transform: translate(3%, -5%) scale(0.95) rotate(2deg); opacity: 0.10; }
+}
+@keyframes aurora-drift-3 {
+  0%, 100% { transform: translate(0, 0) scale(1); opacity: 0.10; }
+  40%       { transform: translate(3%, -6%) scale(1.10); opacity: 0.18; }
+  80%       { transform: translate(-4%, 3%) scale(0.94); opacity: 0.08; }
+}
+@keyframes sacred-rotate {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+.animate-aurora-1 { animation: aurora-drift-1 22s ease-in-out infinite; }
+.animate-aurora-2 { animation: aurora-drift-2 28s ease-in-out infinite; }
+.animate-aurora-3 { animation: aurora-drift-3 35s ease-in-out infinite; }
+.animate-sacred   { animation: sacred-rotate 90s linear infinite; }
+
 /* ── Line clamp utilities ───────────────────────────────── */
 .line-clamp-2 {
   display: -webkit-box;

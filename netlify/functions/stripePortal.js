@@ -20,7 +20,7 @@ exports.handler = async (event) => {
 
     const session = await stripe.billingPortal.sessions.create({
       customer: customerId,
-      return_url: return_url || process.env.PORTAL_RETURN_URL || 'https://auth.tharaga.co.in/pricing/'
+      return_url: return_url || process.env.PORTAL_RETURN_URL || 'https://tharaga.in/pricing/'
     })
     return json({ url: session.url })
   } catch (e) {

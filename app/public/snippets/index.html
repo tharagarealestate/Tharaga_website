@@ -660,7 +660,7 @@ header .thg-auth-wrap:not(#site-header-auth-container){ position:absolute; top:1
           try {
             var o = ev.origin || '';
             if (/^https:\/\//.test(o)) {
-              if (o.indexOf('tharaga.in') !== -1 || o.indexOf('tharaga.co.in') !== -1 || o.indexOf('auth.tharaga.co.in') !== -1 || o.indexOf('netlify.app') !== -1) extraOk = true;
+              if (o.indexOf('tharaga.in') !== -1 || o.indexOf('netlify.app') !== -1) extraOk = true;
               if (!extraOk && Array.isArray(window.ALLOWED_CHILD_ORIGINS) && window.ALLOWED_CHILD_ORIGINS.indexOf(o) !== -1) extraOk = true;
             }
           } catch(_) {}
@@ -706,7 +706,7 @@ header .thg-auth-wrap:not(#site-header-auth-container){ position:absolute; top:1
 })();
 </script>
 <!-- Notes:
-  - Add your site origins in Google Console → Authorized JavaScript origins (e.g., https://tharaga.co.in)
+  - Add your site origins in Google Console → Authorized JavaScript origins (e.g., https://tharaga.in)
   - Add your Site URL and Additional Redirect URLs in Supabase → Authentication → URL Configuration
   - To open the modal manually from any button: window.authGate.openLoginModal({ next: location.pathname + location.search })
 -->

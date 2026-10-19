@@ -27,7 +27,7 @@ export const DELETE = secureApiRoute(
 
     // Option 1: Anonymize data (recommended for production)
     if (anonymize) {
-      const anonymizedEmail = `deleted-${user.id}@deleted.tharaga.co.in`;
+      const anonymizedEmail = `deleted-${user.id}@deleted.tharaga.in`;
       const anonymizedName = 'Deleted User';
 
       // Anonymize profile

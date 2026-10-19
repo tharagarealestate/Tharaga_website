@@ -14,22 +14,22 @@ export const CONTACT_INFO = {
   phoneTel: '+918870980839',
   
   // Support email (for help/support pages)
-  supportEmail: 'support@tharaga.co.in',
+  supportEmail: 'support@tharaga.in',
   
   // Legal email (for terms/privacy)
-  legalEmail: 'legal@tharaga.co.in',
+  legalEmail: 'legal@tharaga.in',
   
   // Billing email (for refunds/billing)
-  billingEmail: 'billing@tharaga.co.in',
+  billingEmail: 'billing@tharaga.in',
   
   // Privacy email
-  privacyEmail: 'privacy@tharaga.co.in',
+  privacyEmail: 'privacy@tharaga.in',
   
   // Address
   address: 'Chennai, Tamil Nadu, India',
   
   // Newsletter email (for sending newsletters)
-  newsletterEmail: 'newsletter@tharaga.co.in',
+  newsletterEmail: 'newsletter@tharaga.in',
 } as const
 
 

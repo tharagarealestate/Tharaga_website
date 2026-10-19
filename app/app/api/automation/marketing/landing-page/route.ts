@@ -54,7 +54,7 @@ export async function POST(req: NextRequest) {
 
     // Generate landing page HTML (simplified version - full HTML generation would be in a separate helper)
     const urlSlug = property.title?.toLowerCase().replace(/[^a-z0-9]+/g, '-') || `property-${property_id}`
-    const landingPageUrl = `https://${urlSlug}.tharaga.co.in`
+    const landingPageUrl = `https://${urlSlug}.tharaga.in`
 
     // Store landing page data
     const { data: landingPage, error: landingPageError } = await supabase

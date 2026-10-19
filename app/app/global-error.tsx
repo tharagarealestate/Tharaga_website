@@ -41,7 +41,7 @@ export default function GlobalError({
           </h1>
           <p style={{ color: '#a1a1aa', fontSize: 14, margin: 0, maxWidth: 360 }}>
             A critical error occurred. Please refresh the page. If this persists,
-            contact <a href="mailto:support@tharaga.co.in" style={{ color: '#f59e0b' }}>support@tharaga.co.in</a>
+            contact <a href="mailto:support@tharaga.in" style={{ color: '#f59e0b' }}>support@tharaga.in</a>
           </p>
           {error?.digest && (
             <p style={{ color: '#52525b', fontSize: 11, fontFamily: 'monospace', margin: 0 }}>

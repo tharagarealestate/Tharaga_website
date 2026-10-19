@@ -158,7 +158,7 @@ export default function PricingCard({
               }
               if ((plan as any).id === 'builder_enterprise') {
                 // Enterprise - contact sales
-                window.location.href = 'mailto:sales@tharaga.co.in?subject=Enterprise Plan Inquiry'
+                window.location.href = 'mailto:sales@tharaga.in?subject=Enterprise Plan Inquiry'
                 return
               }
               

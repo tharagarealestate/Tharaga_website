@@ -173,9 +173,6 @@ export function corsHeaders(origin?: string): Record<string, string> {
   const allowedOrigins = [
     'https://tharaga.in',
     'https://www.tharaga.in',
-    'https://tharaga.co.in',
-    'https://www.tharaga.co.in',
-    'https://app.tharaga.co.in',
     'http://localhost:3000',
     'http://localhost:3001'
   ]

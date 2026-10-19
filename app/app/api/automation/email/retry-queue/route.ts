@@ -122,7 +122,7 @@ export async function POST(request: NextRequest) {
         }
 
         const sendResult = await resend.emails.send({
-          from: process.env.RESEND_FROM_EMAIL || 'Tharaga <noreply@tharaga.co.in>',
+          from: process.env.RESEND_FROM_EMAIL || 'Tharaga <noreply@tharaga.in>',
           to: emailData.recipient_email,
           subject: emailData.subject,
           html: html,

@@ -65,7 +65,7 @@ self.addEventListener('fetch', (event) => {
     'r2cdn.perplexity.ai',
     'stripe.com',
     'razorpay.com',
-    'api.tharaga.co.in'
+    'api.tharaga.in'
   ];
 
   if (externalDomains.some(domain => url.hostname.includes(domain))) {

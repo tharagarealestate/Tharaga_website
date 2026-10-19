@@ -221,7 +221,7 @@ export async function sendBuilderEmail(
       .replace(/\{\{leadCount\}\}/g, data.leadCount.toString());
 
     const result = await resend.emails.send({
-      from: process.env.RESEND_FROM_EMAIL || 'Tharaga <leads@tharaga.co.in>',
+      from: process.env.RESEND_FROM_EMAIL || 'Tharaga <leads@tharaga.in>',
       to: data.builderEmail,
       subject: subject,
       html: html,

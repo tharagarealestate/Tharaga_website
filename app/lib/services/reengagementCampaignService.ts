@@ -309,7 +309,7 @@ export async function sendReengagementCampaign(
 
     // Send email
     const sendResult = await resend.emails.send({
-      from: process.env.RESEND_FROM_EMAIL || 'Tharaga <leads@tharaga.co.in>',
+      from: process.env.RESEND_FROM_EMAIL || 'Tharaga <leads@tharaga.in>',
       to: lead.email,
       subject: email.subject,
       html: email.html,

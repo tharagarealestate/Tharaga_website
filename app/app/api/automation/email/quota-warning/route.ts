@@ -127,7 +127,7 @@ export async function POST(request: NextRequest) {
           // Send email
           if (resend) {
             await resend.emails.send({
-              from: process.env.RESEND_FROM_EMAIL || 'Tharaga Billing <billing@tharaga.co.in>',
+              from: process.env.RESEND_FROM_EMAIL || 'Tharaga Billing <billing@tharaga.in>',
               to: builder.email,
               subject: urgency === 'HIGH' ? `🚨 ${defaultSubject}` : defaultSubject,
               html: defaultHtml,
@@ -170,7 +170,7 @@ export async function POST(request: NextRequest) {
 
           if (resend) {
             await resend.emails.send({
-              from: process.env.RESEND_FROM_EMAIL || 'Tharaga Billing <billing@tharaga.co.in>',
+              from: process.env.RESEND_FROM_EMAIL || 'Tharaga Billing <billing@tharaga.in>',
               to: builder.email,
               subject: subject,
               html: html,

@@ -4,7 +4,7 @@
   "crons": [
     {
       "path": "/api/newsletter/collect-insights",
-      "schedule": "0 * * * *"
+      "schedule": "0 8 * * *"
     },
     {
       "path": "/api/newsletter/send-weekly",
@@ -12,7 +12,7 @@
     },
     {
       "path": "/api/cron/process-properties",
-      "schedule": "*/5 * * * *"
+      "schedule": "0 2 * * *"
     }
   ]
 }

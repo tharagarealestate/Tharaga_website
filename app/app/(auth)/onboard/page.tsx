@@ -61,7 +61,6 @@ export default function OnboardPage() {
   });
 
   const router = useRouter();
-  const supabase = getSupabase();
 
   const updateField = useCallback((field: keyof FormData, value: string | boolean) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -87,6 +86,7 @@ export default function OnboardPage() {
   const handleSubmit = useCallback(async () => {
     setLoading(true);
     try {
+      const supabase = getSupabase();
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
         router.push('/login');
@@ -127,7 +127,7 @@ export default function OnboardPage() {
       console.error(error);
     }
     setLoading(false);
-  }, [formData, supabase, router]);
+  }, [formData, router]);
 
   const inputClass = 'w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-amber-400/50 focus:ring-1 focus:ring-amber-400/20 transition-all';
   const labelClass = 'block text-sm font-medium text-slate-300 mb-2';

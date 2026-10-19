@@ -37,10 +37,14 @@
     /* Public (buyer-facing) light palette */
     --public-bg: #FAFAF8;
     --public-navy: #0B1C34;
+    --public-navy-hover: #132848;
     --public-gold: #C59A3A;
+    --public-gold-hover: #B8882A;
     --public-text: #1A1F2E;
     --public-text-secondary: #6B7280;
     --public-border: #E8E4DD;
+    --public-surface: #FFFFFF;
+    --public-surface-hover: #F5F3EF;
 
     /* Semantic */
     --success: #22c55e;

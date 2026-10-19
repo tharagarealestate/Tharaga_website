@@ -624,7 +624,6 @@ function ListingPageContent() {
                 </button>
               )}
             </div>
-          </div>
         </div>
 
         {/* ── Results header ──────────────────────────────────── */}

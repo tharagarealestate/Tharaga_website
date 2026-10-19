@@ -40,10 +40,27 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
+      - name: Download build artifact
+        if: ${{ env.E2E_BASE_URL == '' }}
+        uses: actions/download-artifact@v4
+        with:
+          name: next-build
+          path: app/.next
+      - name: Install app deps
+        if: ${{ env.E2E_BASE_URL == '' }}
+        working-directory: app
+        run: npm ci || npm i
+      - name: Start Next.js server
+        if: ${{ env.E2E_BASE_URL == '' }}
+        working-directory: app
+        run: npm run start &
       - name: Install Playwright
         run: |
           npm ci || npm i
           npx playwright install --with-deps
+      - name: Wait for server
+        if: ${{ env.E2E_BASE_URL == '' }}
+        run: npx wait-on http://localhost:3000 --timeout 60000
       - name: Run E2E (local build)
         if: ${{ env.E2E_BASE_URL == '' }}
         run: npm run test:e2e

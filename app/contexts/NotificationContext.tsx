@@ -157,10 +157,19 @@ function isInsideQuietHours(prefs: NotificationPreferences) {
   return current >= start || current < end
 }
 
+function getSupabaseLazy(): SupabaseClient | null {
+  if (typeof window === 'undefined') return null
+  try {
+    return getSupabase()
+  } catch {
+    return null
+  }
+}
+
 export function NotificationProvider({ children }: { children: React.ReactNode }) {
   const supabaseRef = useRef<SupabaseClient | null>(null)
-  if (!supabaseRef.current) {
-    supabaseRef.current = getSupabase()
+  if (!supabaseRef.current && typeof window !== 'undefined') {
+    supabaseRef.current = getSupabaseLazy()
   }
   const supabase = supabaseRef.current
 
@@ -207,7 +216,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
 
   const fetchNotifications = useCallback(
     async (uid: string, { initial }: { initial?: boolean } = {}) => {
-      if (!uid) return
+      if (!uid || !supabase) return
       if (initial) setLoading(true)
       try {
         const { data, error } = await supabase
@@ -228,6 +237,10 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
   )
 
   useEffect(() => {
+    if (!supabase) {
+      setLoading(false)
+      return
+    }
     let active = true
     ;(async () => {
       try {
@@ -341,7 +354,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
   )
 
   useEffect(() => {
-    if (!userId) return
+    if (!userId || !supabase) return
 
     if (subscriptionRef.current) {
       try {
@@ -405,6 +418,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
 
   const markAsRead = useCallback(
     async (notificationId: string) => {
+      if (!supabase) return
       try {
         const { error } = await supabase
           .from('notifications')
@@ -427,7 +441,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
   )
 
   const markAllAsRead = useCallback(async () => {
-    if (!userId) return
+    if (!userId || !supabase) return
     try {
       const timestamp = new Date().toISOString()
       const { error } = await supabase
@@ -452,6 +466,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
 
   const deleteNotification = useCallback(
     async (notificationId: string) => {
+      if (!supabase) return
       try {
         const { error } = await supabase
           .from('notifications')
@@ -469,7 +484,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
   )
 
   const clearAll = useCallback(async () => {
-    if (!userId) return
+    if (!userId || !supabase) return
     try {
       const { error } = await supabase
         .from('notifications')

@@ -322,19 +322,86 @@ export default function HomePage() {
       </AnimatePresence>
 
       {/* ══ HERO SECTION ════════════════════════════════════════ */}
-      <section className="relative min-h-[88vh] flex flex-col items-center justify-center overflow-hidden bg-[#0B1C34]">
-        {/* Background: layered depth */}
+      <section className="relative min-h-[88vh] flex flex-col items-center justify-center overflow-hidden bg-[#060D1F]">
+        {/* Background: deep cosmos base */}
         <div className="absolute inset-0">
-          <div className="absolute inset-0 bg-gradient-to-br from-[#0B1C34] via-[#0D2B52] to-[#0B1C34]" />
-          <div className="absolute inset-0 opacity-[0.15]"
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_180%_100%_at_50%_0%,#0B1C34_0%,#060D1F_60%,#03060F_100%)]" />
+
+          {/* Aurora layer 1 — warm gold consciousness bloom */}
+          <div
+            className="absolute animate-aurora-1"
             style={{
-              backgroundImage: 'radial-gradient(circle at 60% 40%, rgba(197,163,58,0.4) 0%, transparent 60%), radial-gradient(circle at 20% 80%, rgba(59,130,246,0.2) 0%, transparent 50%)',
+              top: '-20%', left: '10%',
+              width: '70%', height: '70%',
+              background: 'radial-gradient(ellipse at center, rgba(197,154,58,0.28) 0%, rgba(197,154,58,0.10) 40%, transparent 70%)',
+              filter: 'blur(60px)',
+              borderRadius: '50%',
             }}
           />
-          {/* Subtle pattern */}
-          <div className="absolute inset-0 opacity-[0.03]"
-            style={{ backgroundImage: 'repeating-linear-gradient(0deg, transparent, transparent 60px, rgba(255,255,255,0.5) 60px, rgba(255,255,255,0.5) 61px), repeating-linear-gradient(90deg, transparent, transparent 60px, rgba(255,255,255,0.5) 60px, rgba(255,255,255,0.5) 61px)' }}
+
+          {/* Aurora layer 2 — deep sapphire expansion */}
+          <div
+            className="absolute animate-aurora-2"
+            style={{
+              top: '20%', right: '-10%',
+              width: '60%', height: '80%',
+              background: 'radial-gradient(ellipse at center, rgba(30,80,180,0.22) 0%, rgba(59,130,246,0.08) 45%, transparent 70%)',
+              filter: 'blur(80px)',
+              borderRadius: '50%',
+            }}
           />
+
+          {/* Aurora layer 3 — teal quantum coherence */}
+          <div
+            className="absolute animate-aurora-3"
+            style={{
+              bottom: '-10%', left: '-5%',
+              width: '55%', height: '60%',
+              background: 'radial-gradient(ellipse at center, rgba(20,160,140,0.16) 0%, rgba(6,182,212,0.06) 50%, transparent 70%)',
+              filter: 'blur(70px)',
+              borderRadius: '50%',
+            }}
+          />
+
+          {/* Sacred geometry — slow rotating hexagonal lattice */}
+          <div
+            className="absolute inset-0 flex items-center justify-center animate-sacred"
+            style={{ opacity: 0.025 }}
+          >
+            <svg width="900" height="900" viewBox="0 0 900 900" fill="none" xmlns="http://www.w3.org/2000/svg">
+              {/* Hexagonal grid — 7 concentric rings */}
+              {[60,120,180,240,300,360,420].map((r, i) => (
+                <polygon key={r}
+                  points={Array.from({length:6},(_,k)=>{
+                    const a = (k*60 - 30) * Math.PI/180;
+                    return `${450+r*Math.cos(a)},${450+r*Math.sin(a)}`;
+                  }).join(' ')}
+                  stroke="rgba(197,154,58,0.9)" strokeWidth={i < 2 ? 0.8 : 0.5} fill="none"
+                />
+              ))}
+              {/* Connecting radial lines */}
+              {Array.from({length:6},(_,k)=>{
+                const a = (k*60-30)*Math.PI/180;
+                return <line key={k} x1="450" y1="450" x2={450+420*Math.cos(a)} y2={450+420*Math.sin(a)} stroke="rgba(197,154,58,0.5)" strokeWidth="0.4"/>;
+              })}
+              {/* Center circle */}
+              <circle cx="450" cy="450" r="8" stroke="rgba(197,154,58,0.8)" strokeWidth="0.6" fill="none" />
+              <circle cx="450" cy="450" r="30" stroke="rgba(197,154,58,0.4)" strokeWidth="0.5" fill="none" />
+            </svg>
+          </div>
+
+          {/* Fine dot matrix — presence and depth */}
+          <div
+            className="absolute inset-0"
+            style={{
+              backgroundImage: 'radial-gradient(circle, rgba(255,255,255,0.18) 1px, transparent 1px)',
+              backgroundSize: '32px 32px',
+              opacity: 0.045,
+            }}
+          />
+
+          {/* Vignette edge darkening */}
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_40%,rgba(3,6,15,0.7)_100%)]" />
         </div>
 
         <div className="relative z-10 w-full max-w-6xl mx-auto px-4 sm:px-6 pt-24 pb-16 text-center">
@@ -344,9 +411,18 @@ export default function HomePage() {
               <span className="text-xs font-semibold text-amber-300 tracking-wider uppercase">Chennai's Most Trusted Platform</span>
             </div>
 
-            <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-white leading-[1.06] mb-6 tracking-tight">
+            <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold text-white leading-[1.04] mb-6 tracking-[-0.03em]">
               Find Your Perfect<br />
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-300 via-amber-400 to-amber-300">
+              <span
+                className="inline-block"
+                style={{
+                  background: 'linear-gradient(110deg, #e9c46a 0%, #f4a261 25%, #f59e0b 50%, #fbbf24 75%, #e9c46a 100%)',
+                  backgroundClip: 'text',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                  filter: 'drop-shadow(0 0 28px rgba(245,158,11,0.35))',
+                }}
+              >
                 Home in Chennai
               </span>
             </h1>

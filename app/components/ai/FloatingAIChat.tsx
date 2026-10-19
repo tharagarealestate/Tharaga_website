@@ -70,7 +70,7 @@ function getSuggestions(pathname: string): string[] {
   }
   return [
     'Find properties in Chennai',
-    'How does Tharaga AI work?',
+    'How does Tharaga work?',
     'Zero commission explained',
     'I want to list my project',
   ]
@@ -205,7 +205,7 @@ function WelcomePanel({
         transition={{ delay: 0.12 }}
         className="space-y-1.5"
       >
-        <h3 className="text-base font-bold text-zinc-100">Hi, I'm Tharaga AI</h3>
+        <h3 className="text-base font-bold text-zinc-100">Hi, I'm Tharaga</h3>
         <p className="text-sm text-zinc-400 leading-relaxed max-w-[220px]">
           Your intelligent guide for Chennai real estate. Ask me anything.
         </p>
@@ -397,13 +397,13 @@ export function FloatingAIChat() {
                   <AIAvatar size="md" />
                   <div>
                     <div className="flex items-center gap-1.5">
-                      <span className="text-sm font-bold text-zinc-100">Tharaga AI</span>
+                      <span className="text-sm font-bold text-zinc-100">Tharaga</span>
                       <span className="flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-emerald-500/12 border border-emerald-500/20">
                         <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
                         <span className="text-[9px] font-bold text-emerald-400 uppercase tracking-wider">Online</span>
                       </span>
                     </div>
-                    <p className="text-[10px] text-zinc-500">AI Real Estate Assistant</p>
+                    <p className="text-[10px] text-zinc-500">Property Assistant</p>
                   </div>
                 </div>
 
@@ -475,7 +475,7 @@ export function FloatingAIChat() {
                   </motion.button>
                 </div>
                 <p className="text-[9px] text-zinc-700 text-center mt-1.5">
-                  Powered by Tharaga AI · Enter to send · Shift+Enter for newline
+                  Tharaga Property Assistant · Enter to send · Shift+Enter for newline
                 </p>
               </div>
             </div>
@@ -493,7 +493,7 @@ export function FloatingAIChat() {
           onHoverStart={() => scale.set(1.08)}
           onHoverEnd={() => scale.set(1)}
           whileTap={{ scale: 0.92 }}
-          aria-label="Open Tharaga AI chat"
+          aria-label="Open Tharaga chat"
           className="relative w-14 h-14 rounded-2xl shadow-2xl shadow-black/50 flex items-center justify-center focus:outline-none group"
           style={{
             background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 50%, #b45309 100%)',
@@ -564,7 +564,7 @@ export function FloatingAIChat() {
             >
               <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-zinc-900/95 backdrop-blur-xl border border-white/[0.07] shadow-xl whitespace-nowrap">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                <span className="text-xs font-medium text-zinc-200">Ask Tharaga AI</span>
+                <span className="text-xs font-medium text-zinc-200">Ask Tharaga</span>
                 <div className="absolute right-[-5px] top-1/2 -translate-y-1/2 w-2.5 h-2.5 bg-zinc-900 border-r border-t border-white/[0.07] rotate-45" />
               </div>
             </motion.div>

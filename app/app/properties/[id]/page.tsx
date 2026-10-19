@@ -546,11 +546,11 @@ function StickySidebar({ p, builder }: { p: any; builder: any }) {
 
         {/* Verification */}
         <div className="mt-4 pt-4 border-t border-white/[0.06] space-y-1.5">
-          <p className="text-[10px] font-semibold text-zinc-700 uppercase tracking-widest mb-2.5">AI Verification</p>
+          <p className="text-[10px] font-semibold text-zinc-700 uppercase tracking-widest mb-2.5">Verification</p>
           {p.isVerified && <VerifyRow>RERA Approved</VerifyRow>}
           {p.reraId     && <VerifyRow>RERA ID recorded</VerifyRow>}
           <VerifyRow>Price analysis complete</VerifyRow>
-          <VerifyRow>AI intelligence active</VerifyRow>
+          <VerifyRow>Market analysis complete</VerifyRow>
         </div>
 
         {/* Live dot */}
@@ -662,9 +662,9 @@ export default async function PropertyPage({ params }: { params: { id: string } 
               </div>
             </section>
 
-            {/* ── AI Intelligence ── */}
+            {/* ── Market Intelligence ── */}
             <section id="intelligence" className="py-10 border-b border-white/[0.04] scroll-mt-[104px]">
-              <SectionLabel>AI Intelligence</SectionLabel>
+              <SectionLabel>Market Intelligence</SectionLabel>
 
               {/* RERA + Risk grid */}
               <div className="grid md:grid-cols-2 gap-4 mb-5">

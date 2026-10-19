@@ -198,7 +198,7 @@ export default function AboutPage() {
             className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-300 text-xs font-semibold mb-6"
           >
             <Brain className="w-3.5 h-3.5" />
-            Tamil Nadu · Broker-Free · AI-Powered
+            Tamil Nadu · Broker-Free · RERA Verified
           </motion.div>
 
           <motion.h1

@@ -434,7 +434,7 @@ export const POST = secureApiRoute(
         const webhookUrl = `${process.env.NEXT_PUBLIC_SITE_URL || 'https://tharaga.in'}/api/webhooks/incoming-lead?builder_id=${targetBuilderId}&property_id=${property.id}`;
         
         await resend.emails.send({
-          from: 'Tharaga Automations <hello@tharaga.co.in>',
+          from: 'Tharaga Automations <hello@tharaga.in>',
           to: user.email,
           subject: `Automate your Leads for: ${property.title}`,
           html: `

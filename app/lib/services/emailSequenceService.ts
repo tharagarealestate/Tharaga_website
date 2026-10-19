@@ -544,7 +544,7 @@ export async function sendSequenceEmail(
   // Send via Resend
   try {
     const sendResult = await resend.emails.send({
-      from: process.env.RESEND_FROM_EMAIL || 'Tharaga <leads@tharaga.co.in>',
+      from: process.env.RESEND_FROM_EMAIL || 'Tharaga <leads@tharaga.in>',
       to: lead?.email || lead?.lead_buyer_email || '',
       subject: subject,
       html: html,

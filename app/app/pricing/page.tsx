@@ -77,7 +77,7 @@ function CountdownBadge({ targetDate }: { targetDate: Date }) {
 // ── Feature data ──────────────────────────────────────────────────────────────
 const features = [
   { icon: Infinity,     label: 'Unlimited property listings'            },
-  { icon: Brain,        label: 'Unlimited AI-scored leads'              },
+  { icon: Brain,        label: 'Unlimited smart-scored leads'            },
   { icon: Users,        label: 'Unlimited team members'                 },
   { icon: BarChart3,    label: 'Full CRM & pipeline management'         },
   { icon: MessageSquare,label: 'Email + WhatsApp automation'            },
@@ -186,7 +186,7 @@ export default function PricingPage() {
             className="max-w-xl mx-auto text-base text-zinc-400 leading-relaxed mb-6"
           >
             Stop paying 1–2% commission (₹1–3L per property). Get unlimited properties,
-            AI-powered leads, and full automation.
+            smart-matched leads, and full automation.
           </motion.p>
 
           <motion.div

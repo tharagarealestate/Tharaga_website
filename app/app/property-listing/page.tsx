@@ -1,24 +1,22 @@
 'use client'
 
-import {
-  Suspense, useState, useEffect, useMemo, useRef, useCallback,
-} from 'react'
+import { Suspense, useState, useEffect, useMemo, useRef, useCallback } from 'react'
+import Link from 'next/link'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { Property } from '@/types/property'
+import { motion, AnimatePresence, useInView } from 'framer-motion'
 import {
-  motion, AnimatePresence, useMotionValue, useTransform, useSpring,
-  useInView,
-} from 'framer-motion'
-import {
-  Search, MapPin, Bed, Maximize, Heart,
-  SlidersHorizontal, LayoutGrid, List, X, Shield,
-  Building2, ChevronLeft, ChevronRight,
-  Sparkles, Check, Phone, Brain, Cpu,
-  ArrowRight, Star, Zap, TrendingUp, Eye,
+  Search, MapPin, Bed, Maximize2, Heart, SlidersHorizontal,
+  LayoutGrid, List, X, Shield, Building2, ChevronLeft,
+  ChevronRight, Check, Phone, ArrowRight, Star,
+  TrendingUp, Eye, ChevronDown, Filter, Home,
+  LogIn, LogOut, LayoutDashboard,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { openAuthModal } from '@/components/ui/AuthButton'
+import { getSupabase } from '@/lib/supabase'
 
-// ─── Types ────────────────────────────────────────────────────────────────────
+// ─── Types & Constants ────────────────────────────────────────────────────────
 interface Filters {
   q: string
   city: string
@@ -30,23 +28,13 @@ interface Filters {
   sort: string
 }
 
-// ─── Constants ───────────────────────────────────────────────────────────────
-const CITIES = ['Chennai']
 const PROPERTY_TYPES = ['Apartment', 'Villa', 'Plot', 'Penthouse', 'Studio', 'Duplex', 'Commercial']
 const BHK_OPTIONS = ['1RK', '1BHK', '2BHK', '3BHK', '4BHK', '5BHK+']
 const SORT_OPTIONS = [
-  { id: 'relevance', label: 'AI Relevance' },
-  { id: 'price_low', label: 'Price ↑' },
-  { id: 'price_high', label: 'Price ↓' },
-  { id: 'newest', label: 'Newest' },
-]
-const AI_PROMPTS = [
-  '3BHK near metro in Chennai…',
-  'Beachfront villa under ₹2Cr…',
-  'Gated community in ECR…',
-  'Studio apartment for investment…',
-  'RERA-verified luxury homes…',
-  '2BHK with parking near OMR…',
+  { id: 'relevance', label: 'Best Match' },
+  { id: 'price_low', label: 'Price: Low to High' },
+  { id: 'price_high', label: 'Price: High to Low' },
+  { id: 'newest', label: 'Newest First' },
 ]
 const BUDGET_PRESETS = [
   { label: 'Under ₹30L', max: 3000000 },
@@ -56,14 +44,12 @@ const BUDGET_PRESETS = [
   { label: 'Above ₹2Cr', min: 20000000 },
 ]
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
 function formatINR(n: number) {
-  if (n >= 10000000) return `₹${(n / 10000000).toFixed(1)}Cr`
+  if (n >= 10000000) return `₹${(n / 10000000).toFixed(1)} Cr`
   if (n >= 100000) return `₹${(n / 100000).toFixed(1)}L`
   return `₹${n.toLocaleString('en-IN')}`
 }
 
-// Normalize field names from both the Netlify function format and direct DB format
 function norm(property: Property) {
   const p = property as any
   return {
@@ -71,31 +57,14 @@ function norm(property: Property) {
     title: p.title || '',
     city: p.city || '',
     locality: p.locality || '',
-    // Netlify fn: bhk, DB: bedrooms
     bedrooms: p.bedrooms ?? p.bhk ?? null,
-    // Netlify fn: carpetAreaSqft, DB: sqft
     sqft: p.sqft ?? p.carpetAreaSqft ?? null,
-    // Netlify fn: priceINR, DB: price_inr
     priceINR: p.priceINR ?? p.price_inr ?? null,
-    // Netlify fn: listingStatus = 'Verified', DB: is_verified
     isVerified: p.isVerified ?? p.is_verified ?? (p.listingStatus === 'Verified'),
-    // Netlify fn: type, DB: property_type
     type: p.type || p.property_type || '',
-    // Image: may be array or single
     image: p.image || (Array.isArray(p.images) ? p.images[0] : null) || null,
     images: Array.isArray(p.images) ? p.images : (p.image ? [p.image] : []),
   }
-}
-
-function aiScore(property: Property): number {
-  const p = norm(property)
-  let s = 60
-  if (p.isVerified) s += 15
-  if (p.images.length > 2 || p.image) s += 10
-  if (p.bedrooms) s += 5
-  if (p.sqft && Number(p.sqft) > 800) s += 5
-  if (p.priceINR && p.priceINR > 0 && p.priceINR < 8000000) s += 5
-  return Math.min(s, 99)
 }
 
 const defaultFilters: Filters = {
@@ -103,1145 +72,763 @@ const defaultFilters: Filters = {
   min_price: '', max_price: '', rera_verified: false, sort: 'relevance',
 }
 
-// ─── Neural Background ────────────────────────────────────────────────────────
-function NeuralBackground() {
-  return (
-    <div className="fixed inset-0 pointer-events-none overflow-hidden" aria-hidden>
-      {/* Base gradient */}
-      <div className="absolute inset-0 bg-gradient-to-b from-zinc-950 via-zinc-950 to-black" />
-      {/* Subtle grid */}
-      <div className="absolute inset-0"
-        style={{ backgroundImage: 'linear-gradient(rgba(251,191,36,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(251,191,36,0.03) 1px,transparent 1px)', backgroundSize: '64px 64px' }} />
-      {/* Radial glow top-center */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[900px] h-[500px] rounded-full"
-        style={{ background: 'radial-gradient(ellipse,rgba(251,191,36,0.07) 0%,transparent 70%)' }} />
-      {/* Ambient orbs */}
-      {[
-        { x: '15%', y: '20%', size: 320, delay: 0 },
-        { x: '80%', y: '15%', size: 280, delay: 1.5 },
-        { x: '60%', y: '70%', size: 350, delay: 3 },
-        { x: '10%', y: '75%', size: 260, delay: 2 },
-      ].map((orb, i) => (
-        <motion.div
-          key={i}
-          className="absolute rounded-full"
-          style={{
-            left: orb.x, top: orb.y,
-            width: orb.size, height: orb.size,
-            background: i % 2 === 0
-              ? 'radial-gradient(circle,rgba(251,191,36,0.06) 0%,transparent 70%)'
-              : 'radial-gradient(circle,rgba(139,92,246,0.05) 0%,transparent 70%)',
-            transform: 'translate(-50%,-50%)',
-          }}
-          animate={{ scale: [1, 1.15, 1], opacity: [0.6, 1, 0.6] }}
-          transition={{ duration: 7 + i * 2, repeat: Infinity, ease: 'easeInOut', delay: orb.delay }}
-        />
-      ))}
-    </div>
-  )
-}
-
-// ─── AI Score Ring ────────────────────────────────────────────────────────────
-function AIScoreRing({ score }: { score: number }) {
-  const r = 14, circ = 2 * Math.PI * r
-  const dash = (score / 100) * circ
-  return (
-    <div className="relative flex items-center justify-center w-10 h-10">
-      <svg width="40" height="40" viewBox="0 0 40 40" className="-rotate-90">
-        <circle cx="20" cy="20" r={r} fill="none" stroke="rgba(251,191,36,0.15)" strokeWidth="2.5" />
-        <motion.circle
-          cx="20" cy="20" r={r} fill="none"
-          stroke="rgb(251,191,36)" strokeWidth="2.5"
-          strokeLinecap="round"
-          strokeDasharray={circ}
-          initial={{ strokeDashoffset: circ }}
-          animate={{ strokeDashoffset: circ - dash }}
-          transition={{ duration: 1.2, ease: 'easeOut', delay: 0.3 }}
-        />
-      </svg>
-      <span className="absolute text-[9px] font-black text-amber-400">{score}</span>
-    </div>
-  )
-}
-
-// ─── 3D Tilt Card ─────────────────────────────────────────────────────────────
-function TiltCard({ children, className }: { children: React.ReactNode; className?: string }) {
-  const ref = useRef<HTMLDivElement>(null)
-  const x = useMotionValue(0)
-  const y = useMotionValue(0)
-  const rotateX = useSpring(useTransform(y, [-0.5, 0.5], [6, -6]), { stiffness: 400, damping: 40 })
-  const rotateY = useSpring(useTransform(x, [-0.5, 0.5], [-6, 6]), { stiffness: 400, damping: 40 })
-  const [glowPos, setGlowPos] = useState({ x: '50%', y: '50%' })
-
-  const handleMouse = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
-    const el = ref.current
-    if (!el) return
-    const rect = el.getBoundingClientRect()
-    const nx = (e.clientX - rect.left) / rect.width
-    const ny = (e.clientY - rect.top) / rect.height
-    x.set(nx - 0.5)
-    y.set(ny - 0.5)
-    setGlowPos({ x: `${Math.round(nx * 100)}%`, y: `${Math.round(ny * 100)}%` })
-  }, [x, y])
-
-  const handleLeave = useCallback(() => {
-    x.set(0)
-    y.set(0)
-  }, [x, y])
-
-  return (
-    <motion.div
-      ref={ref}
-      style={{ rotateX, rotateY, transformStyle: 'preserve-3d' }}
-      onMouseMove={handleMouse}
-      onMouseLeave={handleLeave}
-      className={cn('relative', className)}
-    >
-      {/* Dynamic glow follow */}
-      <div
-        className="pointer-events-none absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-        style={{
-          background: `radial-gradient(200px circle at ${glowPos.x} ${glowPos.y}, rgba(251,191,36,0.08), transparent 70%)`,
-        }}
-      />
-      {children}
-    </motion.div>
-  )
-}
-
-// ─── Property Card (Grid) ─────────────────────────────────────────────────────
-function PropertyCardGrid({ property, index }: { property: Property; index: number }) {
+// ─── Property Card ────────────────────────────────────────────────────────────
+function PropertyCard({ property, index, view }: { property: Property; index: number; view: 'grid' | 'list' }) {
   const [liked, setLiked] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
-  const inView = useInView(ref, { once: true, margin: '-80px' })
-  const score = useMemo(() => aiScore(property), [property])
+  const inView = useInView(ref, { once: true, margin: '-60px' })
   const n = norm(property)
-  const img = n.image
-  const priceINR = n.priceINR
-  const verified = n.isVerified
-  const bedrooms = n.bedrooms
-  const sqft = n.sqft
-  const locality = n.locality
-  const propType = n.type
 
-  return (
-    <motion.div
-      ref={ref}
-      initial={{ opacity: 0, y: 24, scale: 0.97 }}
-      animate={inView ? { opacity: 1, y: 0, scale: 1 } : {}}
-      transition={{ duration: 0.5, delay: Math.min(index * 0.06, 0.4), ease: [0.25, 0.46, 0.45, 0.94] }}
-    >
-      <TiltCard className="group">
-        <a href={`/properties/${n.id}`} className="block relative rounded-2xl overflow-hidden border border-zinc-800/60 bg-zinc-900/50 backdrop-blur-sm hover:border-amber-500/30 transition-colors duration-300 shadow-xl shadow-black/20 cursor-pointer">
-          {/* Image */}
-          <div className="relative h-52 overflow-hidden bg-zinc-800">
-            {img ? (
-              <img
-                src={img}
-                alt={property.title}
-                className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-out"
-                loading="lazy"
-              />
-            ) : (
-              <div className="w-full h-full flex items-center justify-center">
-                <Building2 className="w-12 h-12 text-zinc-700" />
+  if (view === 'list') {
+    return (
+      <motion.div
+        ref={ref}
+        initial={{ opacity: 0, y: 16 }}
+        animate={inView ? { opacity: 1, y: 0 } : {}}
+        transition={{ duration: 0.4, delay: Math.min(index * 0.05, 0.3) }}
+        className="bg-white rounded-2xl border border-gray-100 hover:border-amber-200 hover:shadow-lg transition-all overflow-hidden flex gap-0"
+      >
+        {/* Image */}
+        <div className="relative w-28 sm:w-64 shrink-0 bg-gray-100">
+          {n.image ? (
+            <img src={n.image} alt={n.title} className="w-full h-full object-cover" loading="lazy" />
+          ) : (
+            <div className="w-full h-full min-h-[120px] sm:min-h-[180px] flex items-center justify-center">
+              <Building2 className="w-8 h-8 sm:w-10 sm:h-10 text-gray-300" />
+            </div>
+          )}
+          <button
+            onClick={e => { e.preventDefault(); setLiked(l => !l) }}
+            className="absolute top-3 right-3 w-8 h-8 bg-white/90 rounded-full flex items-center justify-center shadow-sm hover:bg-white transition-colors"
+          >
+            <Heart className={cn('w-4 h-4 transition-colors', liked ? 'fill-rose-500 text-rose-500' : 'text-gray-400')} />
+          </button>
+          {n.isVerified && (
+            <span className="absolute top-3 left-3 flex items-center gap-1 px-2.5 py-1 bg-emerald-500 text-white text-[11px] font-bold rounded-lg">
+              <Shield className="w-3 h-3" /> RERA
+            </span>
+          )}
+        </div>
+
+        {/* Details */}
+        <div className="flex-1 p-3 sm:p-6">
+          <div className="flex items-start justify-between">
+            <div>
+              {n.type && (
+                <span className="inline-block text-xs font-semibold text-amber-600 bg-amber-50 px-2.5 py-0.5 rounded-full border border-amber-100 mb-2 capitalize">
+                  {n.type}
+                </span>
+              )}
+              <h3 className="font-bold text-[#0B1C34] text-lg mb-1 hover:text-amber-700 transition-colors">
+                <Link href={`/properties/${n.id}`}>{n.title}</Link>
+              </h3>
+              {n.locality && (
+                <p className="flex items-center gap-1.5 text-sm text-gray-500">
+                  <MapPin className="w-3.5 h-3.5 text-amber-500" />
+                  {n.locality}{n.city ? `, ${n.city}` : ''}
+                </p>
+              )}
+            </div>
+            {n.priceINR && (
+              <div className="text-right">
+                <div className="text-xl font-bold text-[#0B1C34]">{formatINR(n.priceINR)}</div>
+                {n.sqft && n.priceINR && (
+                  <div className="text-xs text-gray-400">₹{Math.round(n.priceINR / Number(n.sqft)).toLocaleString()} / sqft</div>
+                )}
               </div>
             )}
-            {/* Gradient overlay */}
-            <div className="absolute inset-0 bg-gradient-to-t from-zinc-950/90 via-zinc-950/20 to-transparent" />
-
-            {/* Badges row */}
-            <div className="absolute top-3 left-3 right-3 flex items-start justify-between">
-              <div className="flex items-center gap-1.5">
-                {verified && (
-                  <span className="flex items-center gap-1 px-2 py-0.5 bg-emerald-500/20 backdrop-blur-md border border-emerald-500/30 rounded-full text-[10px] font-semibold text-emerald-400">
-                    <Shield className="w-2.5 h-2.5" /> RERA
-                  </span>
-                )}
-                {propType && (
-                  <span className="px-2 py-0.5 bg-black/60 backdrop-blur-md border border-zinc-700/50 rounded-full text-[10px] text-zinc-300 capitalize">
-                    {propType}
-                  </span>
-                )}
-              </div>
-              <button
-                onClick={(e) => { e.preventDefault(); e.stopPropagation(); setLiked(l => !l) }}
-                className="w-7 h-7 flex items-center justify-center rounded-full bg-black/60 backdrop-blur-md border border-zinc-700/50 transition-colors hover:border-rose-500/40"
-              >
-                <Heart className={cn('w-3.5 h-3.5 transition-colors', liked ? 'fill-rose-500 text-rose-500' : 'text-zinc-400')} />
-              </button>
-            </div>
-
-            {/* Bottom info row */}
-            <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between">
-              <div className="flex items-center gap-1.5">
-                {bedrooms && (
-                  <span className="flex items-center gap-1 px-2 py-0.5 bg-black/70 backdrop-blur-md rounded-full text-[10px] text-zinc-200">
-                    <Bed className="w-2.5 h-2.5" /> {bedrooms} BHK
-                  </span>
-                )}
-                {sqft && (
-                  <span className="flex items-center gap-1 px-2 py-0.5 bg-black/70 backdrop-blur-md rounded-full text-[10px] text-zinc-200">
-                    <Maximize className="w-2.5 h-2.5" /> {Number(sqft).toLocaleString()} sqft
-                  </span>
-                )}
-              </div>
-            </div>
           </div>
-
-          {/* Content */}
-          <div className="p-4">
-            <div className="flex items-start justify-between gap-2 mb-2">
-              <div className="flex-1 min-w-0">
-                <h3 className="text-sm font-semibold text-zinc-100 leading-tight truncate group-hover:text-amber-300 transition-colors">
-                  {property.title}
-                </h3>
-                <div className="flex items-center gap-1 mt-1">
-                  <MapPin className="w-3 h-3 text-zinc-500 flex-shrink-0" />
-                  <span className="text-xs text-zinc-500 truncate">
-                    {locality ? `${locality}, ` : ''}{property.city}
-                  </span>
-                </div>
-              </div>
-              <AIScoreRing score={score} />
-            </div>
-
-            <div className="flex items-center justify-between mt-3 pt-3 border-t border-zinc-800/60">
-              <div>
-                <p className="text-[10px] text-zinc-500 mb-0.5">Price</p>
-                <p className="text-base font-bold text-amber-400">
-                  {priceINR ? formatINR(priceINR) : 'Contact'}
-                </p>
-              </div>
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={(e) => { e.preventDefault(); e.stopPropagation() }}
-                className="flex items-center gap-1 px-3 py-1.5 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/20 hover:border-amber-500/40 rounded-lg text-[11px] font-semibold text-amber-400 transition-all"
-              >
-                <Phone className="w-3 h-3" /> Contact
-              </motion.button>
-            </div>
+          <div className="flex items-center gap-5 mt-4 pt-4 border-t border-gray-50">
+            {n.bedrooms && (
+              <span className="flex items-center gap-1.5 text-sm text-gray-600">
+                <Bed className="w-4 h-4 text-amber-500" /> {n.bedrooms} BHK
+              </span>
+            )}
+            {n.sqft && (
+              <span className="flex items-center gap-1.5 text-sm text-gray-600">
+                <Maximize2 className="w-4 h-4 text-amber-500" /> {Number(n.sqft).toLocaleString()} sqft
+              </span>
+            )}
+            <Link
+              href={`/properties/${n.id}`}
+              className="ml-auto flex items-center gap-1.5 text-sm font-semibold text-amber-600 hover:text-amber-700 transition-colors"
+            >
+              View Details <ChevronRight className="w-4 h-4" />
+            </Link>
           </div>
+        </div>
+      </motion.div>
+    )
+  }
 
-          {/* Bottom amber accent line */}
-          <div className="absolute bottom-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-amber-500/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-        </a>
-      </TiltCard>
+  return (
+    <motion.div
+      ref={ref}
+      initial={{ opacity: 0, y: 20 }}
+      animate={inView ? { opacity: 1, y: 0 } : {}}
+      transition={{ duration: 0.45, delay: Math.min(index * 0.06, 0.4) }}
+      className="group bg-white rounded-2xl border border-gray-100 hover:border-amber-200 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 overflow-hidden"
+    >
+      {/* Image */}
+      <div className="relative h-52 bg-gray-100 overflow-hidden">
+        {n.image ? (
+          <img
+            src={n.image}
+            alt={n.title}
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+            loading="lazy"
+          />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center">
+            <Building2 className="w-12 h-12 text-gray-300" />
+          </div>
+        )}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
+        <div className="absolute top-3 left-3 right-3 flex items-start justify-between">
+          <div className="flex gap-2">
+            {n.isVerified && (
+              <span className="flex items-center gap-1 px-2.5 py-1 bg-emerald-500 text-white text-[11px] font-bold rounded-lg">
+                <Shield className="w-3 h-3" /> RERA
+              </span>
+            )}
+          </div>
+          <button
+            onClick={e => { e.preventDefault(); setLiked(l => !l) }}
+            className="w-8 h-8 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow-sm hover:bg-white transition-colors"
+          >
+            <Heart className={cn('w-4 h-4 transition-colors', liked ? 'fill-rose-500 text-rose-500' : 'text-gray-400')} />
+          </button>
+        </div>
+        {n.type && (
+          <div className="absolute bottom-3 left-3">
+            <span className="px-2.5 py-1 bg-black/70 backdrop-blur-sm text-white text-[11px] font-medium rounded-lg capitalize">
+              {n.type}
+            </span>
+          </div>
+        )}
+      </div>
+
+      {/* Content */}
+      <div className="p-5">
+        <h3 className="font-bold text-[#0B1C34] mb-1.5 group-hover:text-amber-700 transition-colors leading-tight">
+          <Link href={`/properties/${n.id}`}>{n.title}</Link>
+        </h3>
+        {n.locality && (
+          <p className="flex items-center gap-1.5 text-sm text-gray-500 mb-4">
+            <MapPin className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+            {n.locality}{n.city ? `, ${n.city}` : ''}
+          </p>
+        )}
+
+        <div className="flex items-center gap-4 text-xs text-gray-500 mb-4">
+          {n.bedrooms && (
+            <span className="flex items-center gap-1">
+              <Bed className="w-3.5 h-3.5 text-amber-500" /> {n.bedrooms} BHK
+            </span>
+          )}
+          {n.sqft && (
+            <span className="flex items-center gap-1">
+              <Maximize2 className="w-3.5 h-3.5 text-amber-500" /> {Number(n.sqft).toLocaleString()} sqft
+            </span>
+          )}
+        </div>
+
+        <div className="flex items-center justify-between pt-4 border-t border-gray-50">
+          {n.priceINR ? (
+            <div>
+              <div className="text-lg font-bold text-[#0B1C34]">{formatINR(n.priceINR)}</div>
+              {n.sqft && (
+                <div className="text-xs text-gray-400">₹{Math.round(n.priceINR / Number(n.sqft)).toLocaleString()}/sqft</div>
+              )}
+            </div>
+          ) : (
+            <span className="text-sm text-gray-400">Price on request</span>
+          )}
+          <Link
+            href={`/properties/${n.id}`}
+            className="flex items-center gap-1.5 px-4 py-2 bg-amber-50 hover:bg-amber-500 text-amber-700 hover:text-white text-xs font-bold rounded-xl transition-all border border-amber-100 hover:border-amber-500"
+          >
+            View <ChevronRight className="w-3.5 h-3.5" />
+          </Link>
+        </div>
+      </div>
     </motion.div>
   )
 }
 
-// ─── Property Card (List) ─────────────────────────────────────────────────────
-function PropertyCardList({ property, index }: { property: Property; index: number }) {
-  const [liked, setLiked] = useState(false)
-  const score = useMemo(() => aiScore(property), [property])
-  const n = norm(property)
-  const img = n.image
-  const priceINR = n.priceINR
-  const verified = n.isVerified
-  const bedrooms = n.bedrooms
-  const sqft = n.sqft
-  const locality = n.locality
-  const propType = n.type
-
+// ─── Empty State ──────────────────────────────────────────────────────────────
+function EmptyState({ onCTA }: { onCTA: () => void }) {
   return (
-    <motion.a
-      href={`/properties/${n.id}`}
-      initial={{ opacity: 0, x: -16 }}
-      animate={{ opacity: 1, x: 0 }}
-      transition={{ duration: 0.4, delay: Math.min(index * 0.04, 0.3) }}
-      className="group flex gap-4 p-4 rounded-2xl border border-zinc-800/60 bg-zinc-900/50 backdrop-blur-sm hover:border-amber-500/25 hover:bg-zinc-900/70 transition-all duration-300 cursor-pointer"
+    <motion.div
+      initial={{ opacity: 0, y: 16 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="col-span-full flex flex-col items-center justify-center py-20 text-center"
     >
-      {/* Image */}
-      <div className="w-32 h-24 flex-shrink-0 rounded-xl overflow-hidden bg-zinc-800 relative">
-        {img ? (
-          <img src={img} alt={property.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" />
-        ) : (
-          <div className="w-full h-full flex items-center justify-center">
-            <Building2 className="w-8 h-8 text-zinc-700" />
-          </div>
-        )}
-        {verified && (
-          <div className="absolute top-1.5 left-1.5">
-            <Shield className="w-3.5 h-3.5 text-emerald-400 drop-shadow" />
-          </div>
-        )}
+      <div className="w-20 h-20 rounded-3xl bg-amber-50 border border-amber-100 flex items-center justify-center mb-6">
+        <Building2 className="w-9 h-9 text-amber-400" />
       </div>
-
-      {/* Info */}
-      <div className="flex-1 min-w-0">
-        <div className="flex items-start justify-between gap-2">
-          <div className="min-w-0">
-            <h3 className="text-sm font-semibold text-zinc-100 truncate group-hover:text-amber-300 transition-colors">
-              {property.title}
-            </h3>
-            <div className="flex items-center gap-1 mt-0.5">
-              <MapPin className="w-3 h-3 text-zinc-500 flex-shrink-0" />
-              <span className="text-xs text-zinc-500 truncate">
-                {locality ? `${locality}, ` : ''}{property.city}
-              </span>
-            </div>
-          </div>
-          <div className="flex items-center gap-2 flex-shrink-0">
-            <AIScoreRing score={score} />
-            <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); setLiked(l => !l) }}>
-              <Heart className={cn('w-4 h-4 transition-colors', liked ? 'fill-rose-500 text-rose-500' : 'text-zinc-600 hover:text-zinc-400')} />
-            </button>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-3 mt-2">
-          {bedrooms && (
-            <span className="flex items-center gap-1 text-[11px] text-zinc-400">
-              <Bed className="w-3 h-3" /> {bedrooms} BHK
-            </span>
-          )}
-          {sqft && (
-            <span className="flex items-center gap-1 text-[11px] text-zinc-400">
-              <Maximize className="w-3 h-3" /> {Number(sqft).toLocaleString()} sqft
-            </span>
-          )}
-          {propType && (
-            <span className="text-[11px] text-zinc-500 capitalize">{propType}</span>
-          )}
-        </div>
-
-        <div className="flex items-center justify-between mt-2">
-          <span className="text-sm font-bold text-amber-400">
-            {priceINR ? formatINR(priceINR) : 'Contact'}
-          </span>
-          <span className="text-[11px] text-amber-400 hover:text-amber-300 flex items-center gap-1 transition-colors">
-            View details <ArrowRight className="w-3 h-3" />
-          </span>
-        </div>
+      <h3 className="text-xl font-bold text-[#0B1C34] mb-2">New Properties Coming Soon</h3>
+      <p className="text-gray-500 max-w-sm mb-8 leading-relaxed">
+        We're verifying and onboarding fresh properties daily. Leave your requirement and we'll notify you the moment a match is available.
+      </p>
+      <div className="flex flex-col sm:flex-row gap-3">
+        <button
+          onClick={onCTA}
+          className="flex items-center gap-2 px-7 py-3.5 bg-amber-500 hover:bg-amber-400 text-white font-bold rounded-xl transition-all shadow-lg shadow-amber-500/25"
+        >
+          <Phone className="w-4 h-4" />
+          Leave My Requirement
+        </button>
+        <Link
+          href="/"
+          className="flex items-center gap-2 px-7 py-3.5 border-2 border-gray-200 hover:border-amber-200 text-gray-700 hover:text-amber-700 font-semibold rounded-xl transition-all"
+        >
+          <Home className="w-4 h-4" />
+          Back to Home
+        </Link>
       </div>
-    </motion.a>
+    </motion.div>
   )
 }
 
 // ─── Skeleton Card ────────────────────────────────────────────────────────────
-function SkeletonCard({ mode = 'grid' }: { mode?: 'grid' | 'list' }) {
-  if (mode === 'list') {
-    return (
-      <div className="flex gap-4 p-4 rounded-2xl border border-zinc-800/40 bg-zinc-900/30 animate-pulse">
-        <div className="w-32 h-24 rounded-xl bg-zinc-800/60 flex-shrink-0" />
-        <div className="flex-1 space-y-2">
-          <div className="h-4 bg-zinc-800/60 rounded w-3/4" />
-          <div className="h-3 bg-zinc-800/40 rounded w-1/2" />
-          <div className="h-3 bg-zinc-800/40 rounded w-1/4 mt-3" />
-        </div>
-      </div>
-    )
-  }
+function SkeletonCard() {
   return (
-    <div className="rounded-2xl border border-zinc-800/40 bg-zinc-900/30 overflow-hidden animate-pulse">
-      <div className="h-52 bg-zinc-800/60" />
-      <div className="p-4 space-y-3">
-        <div className="h-4 bg-zinc-800/60 rounded w-3/4" />
-        <div className="h-3 bg-zinc-800/40 rounded w-1/2" />
-        <div className="flex justify-between items-center pt-2">
-          <div className="h-5 bg-zinc-800/60 rounded w-1/4" />
-          <div className="h-7 bg-zinc-800/40 rounded w-1/5" />
+    <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden animate-pulse">
+      <div className="h-52 bg-gray-100" />
+      <div className="p-5 space-y-3">
+        <div className="h-5 bg-gray-100 rounded-lg w-3/4" />
+        <div className="h-4 bg-gray-100 rounded-lg w-1/2" />
+        <div className="flex gap-4">
+          <div className="h-4 bg-gray-100 rounded-lg w-16" />
+          <div className="h-4 bg-gray-100 rounded-lg w-20" />
+        </div>
+        <div className="flex justify-between pt-2">
+          <div className="h-6 bg-gray-100 rounded-lg w-24" />
+          <div className="h-8 bg-amber-50 rounded-xl w-20" />
         </div>
       </div>
     </div>
   )
 }
 
-// ─── Filters Drawer ───────────────────────────────────────────────────────────
-function FiltersDrawer({
-  open, onClose, filters, setFilters, onApply, onClear,
-}: {
-  open: boolean; onClose: () => void
-  filters: Filters; setFilters: (f: Filters) => void
-  onApply: () => void; onClear: () => void
-}) {
-  const toggle = <T,>(arr: T[], val: T) =>
-    arr.includes(val) ? arr.filter(v => v !== val) : [...arr, val]
-
-  return (
-    <AnimatePresence>
-      {open && (
-        <>
-          <motion.div
-            key="backdrop"
-            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            onClick={onClose}
-            className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm"
-          />
-          <motion.div
-            key="drawer"
-            initial={{ x: '100%' }} animate={{ x: 0 }} exit={{ x: '100%' }}
-            transition={{ type: 'spring', damping: 30, stiffness: 300 }}
-            className="fixed right-0 top-0 bottom-0 z-50 w-full max-w-sm bg-zinc-950 border-l border-zinc-800/60 overflow-y-auto"
-          >
-            <div className="sticky top-0 z-10 flex items-center justify-between p-5 bg-zinc-950/95 backdrop-blur border-b border-zinc-800/50">
-              <div className="flex items-center gap-2">
-                <SlidersHorizontal className="w-4 h-4 text-amber-400" />
-                <span className="font-semibold text-zinc-100">Filters</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <button onClick={onClear} className="text-xs text-zinc-500 hover:text-zinc-300 transition-colors">Clear all</button>
-                <button onClick={onClose} className="w-7 h-7 flex items-center justify-center rounded-lg bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-zinc-400 transition-colors">
-                  <X className="w-3.5 h-3.5" />
-                </button>
-              </div>
-            </div>
-
-            <div className="p-5 space-y-7">
-              {/* City */}
-              <div>
-                <label className="text-xs font-medium text-zinc-400 uppercase tracking-wider mb-3 block">City</label>
-                <div className="flex flex-wrap gap-2">
-                  {CITIES.map(c => (
-                    <button key={c}
-                      onClick={() => setFilters({ ...filters, city: filters.city === c ? '' : c })}
-                      className={cn('px-3 py-1.5 rounded-lg text-xs font-medium border transition-all',
-                        filters.city === c
-                          ? 'bg-amber-500/15 text-amber-400 border-amber-500/30'
-                          : 'bg-zinc-900 text-zinc-400 border-zinc-800 hover:border-zinc-700'
-                      )}>
-                      {c}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Property Type */}
-              <div>
-                <label className="text-xs font-medium text-zinc-400 uppercase tracking-wider mb-3 block">Property Type</label>
-                <div className="flex flex-wrap gap-2">
-                  {PROPERTY_TYPES.map(pt => (
-                    <button key={pt}
-                      onClick={() => setFilters({ ...filters, property_type: toggle(filters.property_type, pt.toLowerCase()) })}
-                      className={cn('px-3 py-1.5 rounded-lg text-xs font-medium border transition-all',
-                        filters.property_type.includes(pt.toLowerCase())
-                          ? 'bg-amber-500/15 text-amber-400 border-amber-500/30'
-                          : 'bg-zinc-900 text-zinc-400 border-zinc-800 hover:border-zinc-700'
-                      )}>
-                      {filters.property_type.includes(pt.toLowerCase()) && <Check className="inline w-3 h-3 mr-1" />}
-                      {pt}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* BHK */}
-              <div>
-                <label className="text-xs font-medium text-zinc-400 uppercase tracking-wider mb-3 block">Configuration</label>
-                <div className="flex flex-wrap gap-2">
-                  {BHK_OPTIONS.map(b => (
-                    <button key={b}
-                      onClick={() => setFilters({ ...filters, bhk_type: toggle(filters.bhk_type, b) })}
-                      className={cn('px-3 py-1.5 rounded-lg text-xs font-medium border transition-all',
-                        filters.bhk_type.includes(b)
-                          ? 'bg-amber-500/15 text-amber-400 border-amber-500/30'
-                          : 'bg-zinc-900 text-zinc-400 border-zinc-800 hover:border-zinc-700'
-                      )}>
-                      {b}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Budget */}
-              <div>
-                <label className="text-xs font-medium text-zinc-400 uppercase tracking-wider mb-3 block">Budget</label>
-                <div className="space-y-2 mb-3">
-                  {BUDGET_PRESETS.map(bp => {
-                    const active = filters.min_price === String(bp.min || '') && filters.max_price === String(bp.max || '')
-                    return (
-                      <button key={bp.label}
-                        onClick={() => setFilters({ ...filters, min_price: String(bp.min || ''), max_price: String(bp.max || '') })}
-                        className={cn('w-full text-left px-3 py-2 rounded-lg text-xs border transition-all',
-                          active
-                            ? 'bg-amber-500/10 text-amber-400 border-amber-500/25'
-                            : 'bg-zinc-900/60 text-zinc-400 border-zinc-800 hover:border-zinc-700'
-                        )}>
-                        {bp.label}
-                      </button>
-                    )
-                  })}
-                </div>
-                <div className="grid grid-cols-2 gap-2">
-                  <input
-                    type="number"
-                    placeholder="Min ₹"
-                    value={filters.min_price}
-                    onChange={e => setFilters({ ...filters, min_price: e.target.value })}
-                    className="px-3 py-2 bg-zinc-900/80 border border-zinc-800 rounded-lg text-xs text-zinc-300 placeholder:text-zinc-600 focus:outline-none focus:border-amber-500/40"
-                  />
-                  <input
-                    type="number"
-                    placeholder="Max ₹"
-                    value={filters.max_price}
-                    onChange={e => setFilters({ ...filters, max_price: e.target.value })}
-                    className="px-3 py-2 bg-zinc-900/80 border border-zinc-800 rounded-lg text-xs text-zinc-300 placeholder:text-zinc-600 focus:outline-none focus:border-amber-500/40"
-                  />
-                </div>
-              </div>
-
-              {/* RERA */}
-              <div>
-                <button
-                  onClick={() => setFilters({ ...filters, rera_verified: !filters.rera_verified })}
-                  className={cn('flex items-center gap-3 w-full px-4 py-3 rounded-xl border transition-all',
-                    filters.rera_verified
-                      ? 'bg-emerald-500/10 border-emerald-500/25 text-emerald-400'
-                      : 'bg-zinc-900/60 border-zinc-800 text-zinc-400'
-                  )}>
-                  <div className={cn('w-5 h-5 rounded flex items-center justify-center border transition-all',
-                    filters.rera_verified ? 'bg-emerald-500 border-emerald-500' : 'border-zinc-700')}>
-                    {filters.rera_verified && <Check className="w-3 h-3 text-white" />}
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium">RERA Verified Only</p>
-                    <p className="text-xs text-zinc-500">Show only government verified listings</p>
-                  </div>
-                </button>
-              </div>
-            </div>
-
-            <div className="sticky bottom-0 p-5 bg-zinc-950/95 backdrop-blur border-t border-zinc-800/50">
-              <button
-                onClick={() => { onApply(); onClose() }}
-                className="w-full py-3 bg-amber-500 hover:bg-amber-400 text-zinc-950 font-semibold rounded-xl transition-colors text-sm flex items-center justify-center gap-2"
-              >
-                <Zap className="w-4 h-4" /> Apply Filters
-              </button>
-            </div>
-          </motion.div>
-        </>
-      )}
-    </AnimatePresence>
-  )
-}
-
-// ─── Animated Count ───────────────────────────────────────────────────────────
-function AnimatedCount({ value }: { value: number }) {
-  const [display, setDisplay] = useState(0)
-  useEffect(() => {
-    if (value === 0) { setDisplay(0); return }
-    let start = 0
-    const inc = value / 20
-    const t = setInterval(() => {
-      start = Math.min(start + inc, value)
-      setDisplay(Math.round(start))
-      if (start >= value) clearInterval(t)
-    }, 40)
-    return () => clearInterval(t)
-  }, [value])
-  return <>{display}</>
-}
-
-// ─── City Quick Filter ────────────────────────────────────────────────────────
-function CityQuickFilter({ active, onSelect }: { active: string; onSelect: (c: string) => void }) {
-  const cities = ['All', ...CITIES]
-  return (
-    <div className="flex items-center gap-2 overflow-x-auto scrollbar-none pb-1">
-      {cities.map(c => (
-        <motion.button
-          key={c}
-          whileHover={{ scale: 1.03 }}
-          whileTap={{ scale: 0.97 }}
-          onClick={() => onSelect(c === 'All' ? '' : c)}
-          className={cn(
-            'flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-medium border transition-all',
-            (c === 'All' && !active) || active === c
-              ? 'bg-amber-500/15 text-amber-400 border-amber-500/30 shadow-sm shadow-amber-500/10'
-              : 'bg-zinc-900/60 text-zinc-500 border-zinc-800/80 hover:border-zinc-700 hover:text-zinc-300'
-          )}
-        >
-          {c === 'All' ? '🌐 All Cities' : `📍 ${c}`}
-        </motion.button>
-      ))}
-    </div>
-  )
-}
-
-// ─── Active Chip ──────────────────────────────────────────────────────────────
-function ActiveChip({ label, onRemove }: { label: string; onRemove: () => void }) {
-  return (
-    <motion.button
-      initial={{ opacity: 0, scale: 0.8 }}
-      animate={{ opacity: 1, scale: 1 }}
-      exit={{ opacity: 0, scale: 0.8 }}
-      onClick={onRemove}
-      className="flex-shrink-0 flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-500/10 border border-amber-500/25 text-amber-400 text-[11px] font-medium hover:bg-amber-500/20 transition-colors"
-    >
-      {label}
-      <X className="w-3 h-3" />
-    </motion.button>
-  )
-}
-
-// ─── Empty & Error States ─────────────────────────────────────────────────────
-function EmptyState({ hasFilters, onClear }: { hasFilters: boolean; onClear: () => void }) {
-  return (
-    <div className="flex flex-col items-center justify-center py-28 text-center">
-      <motion.div
-        animate={{ scale: [1, 1.08, 1], opacity: [0.4, 0.7, 0.4] }}
-        transition={{ duration: 3, repeat: Infinity }}
-        className="w-20 h-20 rounded-2xl bg-zinc-900/60 border border-zinc-800/60 flex items-center justify-center mb-6"
-      >
-        <Building2 className="w-9 h-9 text-zinc-700" />
-      </motion.div>
-      <h3 className="text-lg font-semibold text-zinc-300 mb-2">
-        {hasFilters ? 'No matching properties' : 'No properties yet'}
-      </h3>
-      <p className="text-sm text-zinc-500 mb-6 max-w-xs">
-        {hasFilters ? 'Try adjusting your filters to see more results' : 'Properties will appear here once listed'}
-      </p>
-      {hasFilters && (
-        <button onClick={onClear} className="px-5 py-2.5 bg-amber-500/10 border border-amber-500/20 rounded-xl text-sm font-semibold text-amber-400 hover:bg-amber-500/15 transition-colors">
-          Clear all filters
-        </button>
-      )}
-    </div>
-  )
-}
-
-function ErrorState({ message, onRetry }: { message: string; onRetry: () => void }) {
-  return (
-    <div className="flex flex-col items-center justify-center py-28 text-center">
-      <div className="w-16 h-16 rounded-2xl bg-red-500/10 border border-red-500/20 flex items-center justify-center mb-5">
-        <Zap className="w-7 h-7 text-red-400" />
-      </div>
-      <h3 className="text-base font-semibold text-zinc-300 mb-2">Failed to load</h3>
-      <p className="text-sm text-zinc-500 mb-5 max-w-xs">{message}</p>
-      <button onClick={onRetry} className="px-5 py-2 bg-zinc-900 border border-zinc-800 rounded-xl text-sm text-zinc-300 hover:border-zinc-700 transition-colors">
-        Try again
-      </button>
-    </div>
-  )
-}
-
-// ─── Pagination ───────────────────────────────────────────────────────────────
-const PAGE_SIZE = 9
-
-function Pagination({ page, total, onChange }: { page: number; total: number; onChange: (p: number) => void }) {
-  const pages = Math.ceil(total / PAGE_SIZE)
-  if (pages <= 1) return null
-  return (
-    <div className="flex items-center justify-center gap-2 mt-12">
-      <button
-        disabled={page <= 1}
-        onClick={() => onChange(page - 1)}
-        className="w-9 h-9 flex items-center justify-center rounded-xl border border-zinc-800 bg-zinc-900/60 text-zinc-400 disabled:opacity-30 hover:border-zinc-700 hover:text-zinc-200 transition-all"
-      >
-        <ChevronLeft className="w-4 h-4" />
-      </button>
-      {Array.from({ length: pages }, (_, i) => i + 1).map(p => (
-        <motion.button
-          key={p}
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-          onClick={() => onChange(p)}
-          className={cn(
-            'w-9 h-9 flex items-center justify-center rounded-xl border text-xs font-semibold transition-all',
-            p === page
-              ? 'bg-amber-500 border-amber-500 text-zinc-950 shadow-lg shadow-amber-500/20'
-              : 'bg-zinc-900/60 border-zinc-800 text-zinc-400 hover:border-zinc-700 hover:text-zinc-200'
-          )}
-        >
-          {p}
-        </motion.button>
-      ))}
-      <button
-        disabled={page >= pages}
-        onClick={() => onChange(page + 1)}
-        className="w-9 h-9 flex items-center justify-center rounded-xl border border-zinc-800 bg-zinc-900/60 text-zinc-400 disabled:opacity-30 hover:border-zinc-700 hover:text-zinc-200 transition-all"
-      >
-        <ChevronRight className="w-4 h-4" />
-      </button>
-    </div>
-  )
-}
-
-// ─── Main Content ─────────────────────────────────────────────────────────────
-function PropertyListingContent() {
+// ─── Main Listing Page ────────────────────────────────────────────────────────
+function ListingPageContent() {
   const searchParams = useSearchParams()
   const router = useRouter()
 
-  const [filters, setFilters] = useState<Filters>({
+  const [filters, setFilters] = useState<Filters>(() => ({
     ...defaultFilters,
     q: searchParams.get('q') || '',
     city: searchParams.get('city') || '',
+    min_price: searchParams.get('min_price') || '',
+    max_price: searchParams.get('max_price') || '',
+    rera_verified: searchParams.get('rera_verified') === 'true',
     sort: searchParams.get('sort') || 'relevance',
-  })
-  const [searchInput, setSearchInput] = useState(filters.q)
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
-  const [showFilters, setShowFilters] = useState(false)
-  const [page, setPage] = useState(1)
+    property_type: searchParams.getAll('type').filter(Boolean),
+  }))
 
-  const [allProperties, setAllProperties] = useState<Property[]>([])
+  const [properties, setProperties] = useState<Property[]>([])
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const [total, setTotal] = useState(0)
+  const [page, setPage] = useState(1)
+  const [view, setView] = useState<'grid' | 'list'>('grid')
+  const [filtersOpen, setFiltersOpen] = useState(false)
+  const [searchInput, setSearchInput] = useState(filters.q)
+  const [showLeadModal, setShowLeadModal] = useState(false)
+  const [sortOpen, setSortOpen] = useState(false)
+  const [user, setUser] = useState<any>(null)
+  const [userMenuOpen, setUserMenuOpen] = useState(false)
+  const [displayName, setDisplayName] = useState('')
+  const [initials, setInitials] = useState('U')
 
-  // AI prompt cycling
-  const [promptIdx, setPromptIdx] = useState(0)
+  const PER_PAGE = 12
+
+  // Auth
   useEffect(() => {
-    const t = setInterval(() => setPromptIdx(i => (i + 1) % AI_PROMPTS.length), 3500)
-    return () => clearInterval(t)
+    let mounted = true
+    try {
+      const raw = localStorage.getItem('sb-wedevtjjmdvngyshqdro-auth-token')
+      if (raw) {
+        const parsed = JSON.parse(raw)
+        const notExpired = !parsed?.expires_at || parsed.expires_at * 1000 > Date.now()
+        if (notExpired && parsed?.user) {
+          const u = parsed.user
+          const name = u.user_metadata?.full_name || u.user_metadata?.name || u.email?.split('@')[0] || 'User'
+          if (mounted) { setUser(u); setDisplayName(name); setInitials(name.split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2) || 'U') }
+        }
+      }
+    } catch {}
+    return () => { mounted = false }
   }, [])
 
-  // Fetch all properties once
-  const fetchProperties = useCallback(async () => {
+  // Fetch
+  const fetchProperties = useCallback(async (f: Filters, pg: number) => {
     setLoading(true)
-    setError(null)
     try {
-      const res = await fetch('/api/properties-list', { cache: 'no-store' })
-      if (!res.ok) throw new Error(`${res.status}`)
-      const json = await res.json()
-      const items: Property[] = (json.properties || json.items || json.data || json || [])
-      setAllProperties(Array.isArray(items) ? items : [])
-    } catch (e: any) {
-      setError(e?.message || 'Failed to load')
+      const params = new URLSearchParams()
+      if (f.q) params.set('q', f.q)
+      if (f.city) params.set('city', f.city)
+      f.property_type.forEach(t => params.append('type', t))
+      f.bhk_type.forEach(b => params.append('bhk', b))
+      if (f.min_price) params.set('min_price', f.min_price)
+      if (f.max_price) params.set('max_price', f.max_price)
+      if (f.rera_verified) params.set('rera_verified', 'true')
+      params.set('sort', f.sort)
+      params.set('page', String(pg))
+      params.set('limit', String(PER_PAGE))
+
+      const res = await fetch(`/api/properties?${params}`)
+      if (!res.ok) throw new Error('fetch failed')
+      const data = await res.json()
+      setProperties(data.properties || data.data || [])
+      setTotal(data.total || data.count || 0)
+    } catch {
+      setProperties([])
+      setTotal(0)
     } finally {
       setLoading(false)
     }
   }, [])
 
-  useEffect(() => { fetchProperties() }, [fetchProperties])
+  useEffect(() => { fetchProperties(filters, page) }, [filters, page, fetchProperties])
 
-  // Client-side filter + sort
-  const filtered = useMemo(() => {
-    let list = [...allProperties]
-    if (filters.q) {
-      const q = filters.q.toLowerCase()
-      list = list.filter(p => {
-        const n = norm(p)
-        return n.title.toLowerCase().includes(q) ||
-          n.city.toLowerCase().includes(q) ||
-          n.locality.toLowerCase().includes(q)
-      })
-    }
-    if (filters.city) {
-      list = list.filter(p => norm(p).city.toLowerCase() === filters.city.toLowerCase())
-    }
-    if (filters.property_type.length) {
-      list = list.filter(p => {
-        const t = norm(p).type.toLowerCase()
-        return filters.property_type.some(pt => t.includes(pt))
-      })
-    }
-    if (filters.bhk_type.length) {
-      list = list.filter(p => filters.bhk_type.some(b => {
-        const beds = norm(p).bedrooms
-        if (!beds) return false
-        if (b.includes('+')) return beds >= parseInt(b)
-        if (b.includes('RK')) return beds <= 1
-        return beds === parseInt(b)
-      }))
-    }
-    if (filters.min_price) {
-      const mn = Number(filters.min_price)
-      list = list.filter(p => { const pr = norm(p).priceINR; return pr != null && pr >= mn })
-    }
-    if (filters.max_price) {
-      const mx = Number(filters.max_price)
-      list = list.filter(p => { const pr = norm(p).priceINR; return pr != null && pr <= mx })
-    }
-    if (filters.rera_verified) {
-      list = list.filter(p => norm(p).isVerified)
-    }
-    // Sort
-    if (filters.sort === 'price_low') {
-      list.sort((a, b) => (norm(a).priceINR ?? 0) - (norm(b).priceINR ?? 0))
-    } else if (filters.sort === 'price_high') {
-      list.sort((a, b) => (norm(b).priceINR ?? 0) - (norm(a).priceINR ?? 0))
-    } else if (filters.sort === 'newest') {
-      list.sort((a, b) => {
-        const da = new Date(((a as any).listed_at || (a as any).postedAt || 0) as string).getTime()
-        const db = new Date(((b as any).listed_at || (b as any).postedAt || 0) as string).getTime()
-        return db - da
-      })
-    } else {
-      // AI relevance: verified first, then by price mid-range, then has images
-      list.sort((a, b) => aiScore(b) - aiScore(a))
-    }
-    return list
-  }, [allProperties, filters])
-
-  const paginated = useMemo(() => {
-    const start = (page - 1) * PAGE_SIZE
-    return filtered.slice(start, start + PAGE_SIZE)
-  }, [filtered, page])
-
-  const activeFilterCount = useMemo(() => {
-    let n = 0
-    if (filters.q) n++
-    if (filters.city) n++
-    if (filters.property_type.length) n++
-    if (filters.bhk_type.length) n += filters.bhk_type.length
-    if (filters.min_price || filters.max_price) n++
-    if (filters.rera_verified) n++
-    return n
-  }, [filters])
-
-  const handleSearch = useCallback(() => {
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault()
     setFilters(f => ({ ...f, q: searchInput }))
     setPage(1)
-  }, [searchInput])
-
-  const clearFilters = useCallback(() => {
-    setFilters(defaultFilters)
-    setSearchInput('')
-    setPage(1)
-  }, [])
-
-  const handlePageChange = (p: number) => {
-    setPage(p)
-    window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
+  const toggleType = (t: string) => {
+    setFilters(f => ({
+      ...f,
+      property_type: f.property_type.includes(t) ? f.property_type.filter(x => x !== t) : [...f.property_type, t],
+    }))
+    setPage(1)
+  }
+
+  const toggleBhk = (b: string) => {
+    setFilters(f => ({
+      ...f,
+      bhk_type: f.bhk_type.includes(b) ? f.bhk_type.filter(x => x !== b) : [...f.bhk_type, b],
+    }))
+    setPage(1)
+  }
+
+  const applyBudget = (preset: typeof BUDGET_PRESETS[0]) => {
+    setFilters(f => ({ ...f, min_price: preset.min ? String(preset.min) : '', max_price: preset.max ? String(preset.max) : '' }))
+    setPage(1)
+  }
+
+  const resetFilters = () => { setFilters(defaultFilters); setSearchInput(''); setPage(1) }
+
+  const totalPages = Math.ceil(total / PER_PAGE)
+  const activeFilterCount = [
+    filters.q, filters.property_type.length > 0 ? 'x' : '',
+    filters.bhk_type.length > 0 ? 'x' : '',
+    filters.min_price, filters.max_price,
+    filters.rera_verified ? 'x' : '',
+  ].filter(Boolean).length
+
   return (
-    <div className="min-h-screen bg-zinc-950 text-zinc-100">
-      <NeuralBackground />
+    <div className="min-h-screen bg-[#FAFAF8]">
 
-      {/* ── Hero ── */}
-      <div className="relative pt-16 pb-10 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-4xl mx-auto text-center">
-          {/* Eyebrow pill */}
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-            className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/20 mb-6"
-          >
-            <motion.div
-              animate={{ rotate: 360 }}
-              transition={{ duration: 4, repeat: Infinity, ease: 'linear' }}
-            >
-              <Brain className="w-3.5 h-3.5 text-amber-400" />
-            </motion.div>
-            <span className="text-xs font-semibold text-amber-400">AI-Powered Property Intelligence</span>
-            <Sparkles className="w-3 h-3 text-amber-400/60" />
-          </motion.div>
+      {/* ── NAV ─────────────────────────────────────────────── */}
+      <nav className="sticky top-0 z-40 bg-white/95 backdrop-blur-xl border-b border-gray-100 shadow-sm">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3.5 flex items-center justify-between gap-4">
+          <Link href="/" className="flex items-center gap-2.5 shrink-0">
+            <div className="w-9 h-9 rounded-xl bg-amber-500 flex items-center justify-center shadow-sm">
+              <Building2 className="w-5 h-5 text-white" />
+            </div>
+            <span className="font-bold text-[#0B1C34] text-lg leading-none hidden sm:block">Tharaga</span>
+          </Link>
 
-          {/* Headline */}
-          <motion.h1
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.1 }}
-            className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight mb-4"
-          >
-            <span className="text-zinc-100">Find Your </span>
-            <span className="relative">
-              <span className="bg-gradient-to-r from-amber-400 via-amber-300 to-yellow-400 bg-clip-text text-transparent">
-                Perfect Home
-              </span>
-              <motion.div
-                className="absolute -bottom-1 left-0 right-0 h-px bg-gradient-to-r from-transparent via-amber-400/60 to-transparent"
-                initial={{ scaleX: 0 }}
-                animate={{ scaleX: 1 }}
-                transition={{ duration: 0.8, delay: 0.6 }}
+          {/* Search bar in nav */}
+          <form onSubmit={handleSearch} className="flex-1 max-w-xl hidden md:flex">
+            <div className="flex w-full gap-2 bg-gray-50 border border-gray-200 rounded-xl px-4 py-2 focus-within:border-amber-300 focus-within:bg-white transition-all">
+              <Search className="w-4 h-4 text-gray-400 shrink-0 mt-0.5" />
+              <input
+                value={searchInput}
+                onChange={e => setSearchInput(e.target.value)}
+                placeholder="Search locality, project, builder…"
+                className="flex-1 bg-transparent text-sm text-[#0B1C34] placeholder-gray-400 outline-none"
               />
-            </span>
-          </motion.h1>
-
-          {/* Subtext */}
-          <motion.p
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.5, delay: 0.3 }}
-            className="text-base text-zinc-500 mb-8 max-w-lg mx-auto"
-          >
-            <AnimatedCount value={allProperties.filter(p => norm(p).isVerified).length} /> verified properties across {new Set(allProperties.map(p => norm(p).city).filter(Boolean)).size || 1} cities,
-            matched to you by AI in real-time
-          </motion.p>
-
-          {/* AI Search Bar */}
-          <motion.div
-            initial={{ opacity: 0, y: 12, scale: 0.98 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            transition={{ duration: 0.5, delay: 0.2 }}
-            className="relative max-w-2xl mx-auto"
-          >
-            <div className="relative flex items-center gap-3 p-2 pl-5 rounded-2xl bg-zinc-900/80 backdrop-blur-xl border border-zinc-800/80 focus-within:border-amber-500/40 transition-colors shadow-2xl shadow-black/40">
-              <motion.div
-                animate={{ rotate: [0, 360] }}
-                transition={{ duration: 8, repeat: Infinity, ease: 'linear' }}
-              >
-                <Brain className="w-5 h-5 text-amber-400 flex-shrink-0" />
-              </motion.div>
-              <div className="flex-1 relative overflow-hidden">
-                <input
-                  value={searchInput}
-                  onChange={e => setSearchInput(e.target.value)}
-                  onKeyDown={e => e.key === 'Enter' && handleSearch()}
-                  className="w-full bg-transparent text-sm text-zinc-200 placeholder:text-transparent focus:outline-none"
-                  placeholder={AI_PROMPTS[promptIdx]}
-                />
-                {!searchInput && (
-                  <AnimatePresence mode="wait">
-                    <motion.span
-                      key={promptIdx}
-                      initial={{ opacity: 0, y: 8 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -8 }}
-                      transition={{ duration: 0.35 }}
-                      className="absolute inset-0 flex items-center text-sm text-zinc-600 pointer-events-none select-none"
-                    >
-                      {AI_PROMPTS[promptIdx]}
-                    </motion.span>
-                  </AnimatePresence>
-                )}
-              </div>
               {searchInput && (
-                <button onClick={() => { setSearchInput(''); setFilters(f => ({ ...f, q: '' })) }} className="text-zinc-600 hover:text-zinc-400 transition-colors p-1">
-                  <X className="w-4 h-4" />
+                <button type="button" onClick={() => { setSearchInput(''); setFilters(f => ({ ...f, q: '' })) }}>
+                  <X className="w-3.5 h-3.5 text-gray-400 hover:text-gray-600" />
                 </button>
               )}
-              <motion.button
-                whileHover={{ scale: 1.03 }}
-                whileTap={{ scale: 0.97 }}
-                onClick={handleSearch}
-                className="flex items-center gap-2 px-5 py-2.5 bg-amber-500 hover:bg-amber-400 text-zinc-950 font-semibold text-sm rounded-xl transition-colors shadow-lg shadow-amber-500/20"
-              >
-                <Search className="w-4 h-4" />
-                <span className="hidden sm:block">Search</span>
-              </motion.button>
             </div>
-            {/* Subtle glow under search bar */}
-            <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 w-3/4 h-8 bg-amber-500/5 blur-2xl rounded-full pointer-events-none" />
-          </motion.div>
+          </form>
 
-          {/* Quick stats row */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.5 }}
-            className="flex items-center justify-center gap-6 mt-8"
-          >
-            {[
-              { icon: TrendingUp, label: 'Live Listings', val: allProperties.length },
-              { icon: Shield, label: 'RERA Verified', val: allProperties.filter(p => norm(p).isVerified).length },
-              { icon: MapPin, label: 'Localities', val: new Set(allProperties.map(p => norm(p).locality).filter(Boolean)).size },
-            ].map(({ icon: Icon, label, val }) => (
-              <div key={label} className="flex items-center gap-2 text-xs text-zinc-500">
-                <Icon className="w-3.5 h-3.5 text-amber-400/60" />
-                <span className="font-semibold text-zinc-300">{val}</span>
-                <span>{label}</span>
+          <div className="flex items-center gap-2">
+            <div className="hidden md:flex items-center gap-1">
+              <Link href="/" className="px-3 py-2 text-sm text-gray-600 hover:text-[#0B1C34] hover:bg-gray-50 rounded-lg transition-colors">Home</Link>
+              <Link href="/tools" className="px-3 py-2 text-sm text-gray-600 hover:text-[#0B1C34] hover:bg-gray-50 rounded-lg transition-colors">Tools</Link>
+            </div>
+            {user ? (
+              <div className="relative" onMouseEnter={() => setUserMenuOpen(true)} onMouseLeave={() => setUserMenuOpen(false)}>
+                <button className="flex items-center gap-2 px-2.5 py-1.5 rounded-xl hover:bg-gray-50 transition-colors">
+                  <div className="w-8 h-8 rounded-full bg-amber-500 flex items-center justify-center text-white text-xs font-bold">
+                    {initials}
+                  </div>
+                  <ChevronDown className="w-3.5 h-3.5 text-gray-400" />
+                </button>
+                <AnimatePresence>
+                  {userMenuOpen && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -6, scale: 0.97 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: -6, scale: 0.97 }}
+                      transition={{ duration: 0.15 }}
+                      className="absolute right-0 top-full mt-2 w-44 bg-white border border-gray-100 rounded-2xl shadow-xl overflow-hidden"
+                    >
+                      <Link href="/builder" className="flex items-center gap-2.5 px-4 py-3 text-sm text-gray-600 hover:bg-gray-50 transition-colors">
+                        <LayoutDashboard className="w-4 h-4" /> Dashboard
+                      </Link>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
-            ))}
-          </motion.div>
+            ) : (
+              <button
+                onClick={() => openAuthModal()}
+                className="flex items-center gap-1.5 px-4 py-2 bg-amber-500 hover:bg-amber-400 text-white text-sm font-semibold rounded-xl transition-all"
+              >
+                <LogIn className="w-3.5 h-3.5" /> Sign In
+              </button>
+            )}
+          </div>
         </div>
-      </div>
+      </nav>
 
-      {/* ── Sticky Filter Bar ── */}
-      <div className="sticky top-0 z-30 border-b border-zinc-800/50 bg-zinc-950/90 backdrop-blur-xl px-4 sm:px-6 lg:px-8 py-3">
-        <div className="max-w-7xl mx-auto">
-          {/* Controls row */}
-          <div className="flex items-center gap-3">
-            {/* City quick filter */}
-            <div className="flex-1 min-w-0">
-              <CityQuickFilter
-                active={filters.city}
-                onSelect={c => { setFilters(f => ({ ...f, city: c })); setPage(1) }}
-              />
-            </div>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6">
 
-            {/* Sort + View + Filters */}
-            <div className="flex items-center gap-2 flex-shrink-0">
-              <select
-                value={filters.sort}
-                onChange={e => { setFilters(f => ({ ...f, sort: e.target.value })); setPage(1) }}
-                className="px-2.5 py-1.5 bg-zinc-900/80 border border-zinc-800 rounded-lg text-xs text-zinc-400 focus:outline-none focus:border-amber-500/30 cursor-pointer hidden sm:block"
-              >
-                {SORT_OPTIONS.map(s => <option key={s.id} value={s.id}>{s.label}</option>)}
-              </select>
-
-              <div className="flex items-center bg-zinc-900/80 border border-zinc-800 rounded-lg p-0.5">
-                <button onClick={() => setViewMode('grid')} className={cn('p-1.5 rounded-md transition-colors', viewMode === 'grid' ? 'bg-zinc-800 text-zinc-100' : 'text-zinc-500 hover:text-zinc-300')}>
-                  <LayoutGrid className="w-3.5 h-3.5" />
-                </button>
-                <button onClick={() => setViewMode('list')} className={cn('p-1.5 rounded-md transition-colors', viewMode === 'list' ? 'bg-zinc-800 text-zinc-100' : 'text-zinc-500 hover:text-zinc-300')}>
-                  <List className="w-3.5 h-3.5" />
-                </button>
-              </div>
-
-              <motion.button
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                onClick={() => setShowFilters(true)}
-                className={cn(
-                  'flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold border transition-all',
-                  activeFilterCount > 0
-                    ? 'bg-amber-500/15 text-amber-400 border-amber-500/25 shadow-sm shadow-amber-500/10'
-                    : 'bg-zinc-900/80 border-zinc-800 text-zinc-400 hover:border-zinc-700 hover:text-zinc-300'
-                )}
-              >
-                <SlidersHorizontal className="w-3.5 h-3.5" />
-                Filters
-                {activeFilterCount > 0 && (
-                  <motion.span
-                    key={activeFilterCount}
-                    initial={{ scale: 0.5 }}
-                    animate={{ scale: 1 }}
-                    className="w-4 h-4 flex items-center justify-center rounded-full bg-amber-500 text-zinc-950 text-[9px] font-black"
-                  >
-                    {activeFilterCount}
-                  </motion.span>
-                )}
-              </motion.button>
-            </div>
+        {/* ── Breadcrumb + Title ────────────────────────────── */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+          <div>
+            <nav className="flex items-center gap-2 text-xs text-gray-400 mb-2">
+              <Link href="/" className="hover:text-amber-600 transition-colors">Home</Link>
+              <ChevronRight className="w-3 h-3" />
+              <span className="text-gray-600 font-medium">Properties</span>
+              {filters.q && (
+                <>
+                  <ChevronRight className="w-3 h-3" />
+                  <span className="text-gray-600">"{filters.q}"</span>
+                </>
+              )}
+            </nav>
+            <h1 className="text-2xl font-bold text-[#0B1C34]">
+              {filters.q ? `Properties for "${filters.q}"` : 'Properties in Chennai'}
+            </h1>
+            <p className="text-sm text-gray-500 mt-1">
+              {loading ? 'Searching…' : `${total.toLocaleString()} verified ${total === 1 ? 'property' : 'properties'} found`}
+            </p>
           </div>
 
-          {/* Active filter chips */}
-          <AnimatePresence>
-            {activeFilterCount > 0 && (
-              <motion.div
-                initial={{ height: 0, opacity: 0 }}
-                animate={{ height: 'auto', opacity: 1 }}
-                exit={{ height: 0, opacity: 0 }}
-                className="flex items-center gap-2 pt-2 overflow-x-auto scrollbar-none"
-              >
-                {filters.q && <ActiveChip label={`"${filters.q}"`} onRemove={() => { setFilters(f => ({ ...f, q: '' })); setSearchInput('') }} />}
-                {filters.city && <ActiveChip label={filters.city} onRemove={() => setFilters(f => ({ ...f, city: '' }))} />}
-                {filters.bhk_type.map(b => <ActiveChip key={b} label={b} onRemove={() => setFilters(f => ({ ...f, bhk_type: f.bhk_type.filter(v => v !== b) }))} />)}
-                {filters.property_type.map(pt => <ActiveChip key={pt} label={pt} onRemove={() => setFilters(f => ({ ...f, property_type: f.property_type.filter(v => v !== pt) }))} />)}
-                {(filters.min_price || filters.max_price) && <ActiveChip label="Budget range" onRemove={() => setFilters(f => ({ ...f, min_price: '', max_price: '' }))} />}
-                {filters.rera_verified && <ActiveChip label="RERA Verified" onRemove={() => setFilters(f => ({ ...f, rera_verified: false }))} />}
-                <button onClick={clearFilters} className="flex-shrink-0 text-[10px] text-zinc-600 hover:text-zinc-400 transition-colors px-2">Clear all</button>
-              </motion.div>
-            )}
-          </AnimatePresence>
+          {/* Mobile search */}
+          <form onSubmit={handleSearch} className="md:hidden flex gap-2">
+            <div className="flex-1 flex items-center gap-2 bg-white border border-gray-200 rounded-xl px-3 py-2.5">
+              <Search className="w-4 h-4 text-gray-400 shrink-0" />
+              <input
+                value={searchInput}
+                onChange={e => setSearchInput(e.target.value)}
+                placeholder="Search…"
+                className="flex-1 bg-transparent text-sm outline-none text-[#0B1C34] placeholder-gray-400"
+              />
+            </div>
+            <button type="submit" className="px-4 py-2.5 min-h-[44px] bg-amber-500 text-white text-sm font-semibold rounded-xl">Go</button>
+          </form>
         </div>
+
+        {/* ── Filter Bar ─────────────────────────────────────── */}
+        <div className="bg-white rounded-2xl border border-gray-100 p-3 sm:p-4 mb-6 shadow-sm">
+          {/* Single horizontally-scrollable row on mobile; wraps on sm+ */}
+          <div className="flex items-center gap-2 overflow-x-auto scrollbar-none pb-0.5 sm:pb-0 sm:flex-wrap sm:gap-3 -mx-3 px-3 sm:mx-0 sm:px-0">
+            {/* Property type */}
+            {PROPERTY_TYPES.map(t => (
+              <button
+                key={t}
+                onClick={() => toggleType(t)}
+                className={cn(
+                  'shrink-0 px-3.5 py-2 text-xs font-semibold rounded-full border transition-all min-h-[36px]',
+                  filters.property_type.includes(t)
+                    ? 'bg-amber-500 text-white border-amber-500 shadow-sm'
+                    : 'bg-gray-50 text-gray-600 border-gray-200 hover:border-amber-300 hover:text-amber-700',
+                )}
+              >
+                {t}
+              </button>
+            ))}
+
+            <div className="shrink-0 w-px h-5 bg-gray-200" />
+
+            {/* BHK */}
+            {BHK_OPTIONS.map(b => (
+              <button
+                key={b}
+                onClick={() => toggleBhk(b)}
+                className={cn(
+                  'shrink-0 px-3 py-2 text-xs font-semibold rounded-full border transition-all min-h-[36px]',
+                  filters.bhk_type.includes(b)
+                    ? 'bg-[#0B1C34] text-white border-[#0B1C34]'
+                    : 'bg-gray-50 text-gray-600 border-gray-200 hover:border-slate-400 hover:text-slate-700',
+                )}
+              >
+                {b}
+              </button>
+            ))}
+
+            <div className="shrink-0 w-px h-5 bg-gray-200" />
+
+            {/* Budget presets */}
+            {BUDGET_PRESETS.map((p, i) => {
+              const active = filters.min_price === (p.min ? String(p.min) : '') && filters.max_price === (p.max ? String(p.max) : '')
+              return (
+                <button
+                  key={i}
+                  onClick={() => applyBudget(p)}
+                  className={cn(
+                    'shrink-0 px-3 py-2 text-xs font-semibold rounded-full border transition-all min-h-[36px]',
+                    active
+                      ? 'bg-emerald-500 text-white border-emerald-500'
+                      : 'bg-gray-50 text-gray-600 border-gray-200 hover:border-emerald-300 hover:text-emerald-700',
+                    )}
+                  >
+                    {p.label}
+                  </button>
+                )
+              })}
+            </div>
+
+            <div className="mt-2 sm:mt-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-gray-100 flex items-center gap-2 sm:ml-auto">
+              {/* RERA toggle */}
+              <button
+                onClick={() => { setFilters(f => ({ ...f, rera_verified: !f.rera_verified })); setPage(1) }}
+                className={cn(
+                  'flex items-center gap-1.5 px-3.5 py-2 min-h-[36px] text-xs font-semibold rounded-full border transition-all',
+                  filters.rera_verified
+                    ? 'bg-emerald-500 text-white border-emerald-500'
+                    : 'bg-gray-50 text-gray-600 border-gray-200 hover:border-emerald-300',
+                )}
+              >
+                <Shield className="w-3 h-3" /> RERA Only
+              </button>
+
+              {activeFilterCount > 0 && (
+                <button
+                  onClick={resetFilters}
+                  className="flex items-center gap-1.5 px-3.5 py-2 min-h-[36px] text-xs font-semibold text-red-600 bg-red-50 border border-red-100 rounded-full hover:bg-red-100 transition-colors"
+                >
+                  <X className="w-3 h-3" /> Clear ({activeFilterCount})
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* ── Results header ──────────────────────────────────── */}
+        <div className="flex items-center justify-between mb-5">
+          <p className="text-sm text-gray-500 font-medium">
+            {loading ? 'Loading…' : `${total} propert${total === 1 ? 'y' : 'ies'}`}
+          </p>
+          <div className="flex items-center gap-3">
+            {/* Sort */}
+            <div className="relative">
+              <button
+                onClick={() => setSortOpen(o => !o)}
+                className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-xl text-sm text-gray-700 hover:border-amber-300 transition-colors"
+              >
+                {SORT_OPTIONS.find(s => s.id === filters.sort)?.label}
+                <ChevronDown className="w-3.5 h-3.5 text-gray-400" />
+              </button>
+              <AnimatePresence>
+                {sortOpen && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -6, scale: 0.97 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: -6, scale: 0.97 }}
+                    transition={{ duration: 0.15 }}
+                    className="absolute right-0 top-full mt-2 w-48 bg-white border border-gray-100 rounded-2xl shadow-xl overflow-hidden z-30"
+                  >
+                    {SORT_OPTIONS.map(opt => (
+                      <button
+                        key={opt.id}
+                        onClick={() => { setFilters(f => ({ ...f, sort: opt.id })); setSortOpen(false); setPage(1) }}
+                        className={cn(
+                          'w-full flex items-center justify-between px-4 py-3 text-sm transition-colors hover:bg-gray-50',
+                          filters.sort === opt.id ? 'text-amber-600 font-semibold' : 'text-gray-700',
+                        )}
+                      >
+                        {opt.label}
+                        {filters.sort === opt.id && <Check className="w-4 h-4 text-amber-500" />}
+                      </button>
+                    ))}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+
+            {/* View toggle */}
+            <div className="flex items-center gap-1 p-1 bg-white border border-gray-200 rounded-xl">
+              <button
+                onClick={() => setView('grid')}
+                className={cn('p-1.5 rounded-lg transition-colors', view === 'grid' ? 'bg-amber-500 text-white' : 'text-gray-400 hover:text-gray-600')}
+              >
+                <LayoutGrid className="w-4 h-4" />
+              </button>
+              <button
+                onClick={() => setView('list')}
+                className={cn('p-1.5 rounded-lg transition-colors', view === 'list' ? 'bg-amber-500 text-white' : 'text-gray-400 hover:text-gray-600')}
+              >
+                <List className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* ── Results grid / list ─────────────────────────────── */}
+        {loading ? (
+          <div className={cn(
+            'grid gap-5',
+            view === 'grid' ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3' : 'grid-cols-1',
+          )}>
+            {Array.from({ length: 6 }).map((_, i) => <SkeletonCard key={i} />)}
+          </div>
+        ) : properties.length === 0 ? (
+          <EmptyState onCTA={() => setShowLeadModal(true)} />
+        ) : (
+          <div className={cn(
+            'grid gap-5',
+            view === 'grid' ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3' : 'grid-cols-1',
+          )}>
+            {properties.map((p, i) => (
+              <PropertyCard key={p.id || i} property={p} index={i} view={view} />
+            ))}
+          </div>
+        )}
+
+        {/* ── Pagination ─────────────────────────────────────── */}
+        {!loading && totalPages > 1 && (
+          <div className="flex items-center justify-center gap-2 mt-12">
+            <button
+              disabled={page <= 1}
+              onClick={() => setPage(p => p - 1)}
+              className="flex items-center gap-1.5 px-4 py-2.5 bg-white border border-gray-200 text-gray-700 text-sm font-medium rounded-xl disabled:opacity-40 disabled:cursor-not-allowed hover:border-amber-300 hover:text-amber-700 transition-all"
+            >
+              <ChevronLeft className="w-4 h-4" /> Previous
+            </button>
+            <div className="flex items-center gap-1">
+              {Array.from({ length: Math.min(totalPages, 7) }).map((_, i) => {
+                const pg = i + 1
+                return (
+                  <button
+                    key={pg}
+                    onClick={() => setPage(pg)}
+                    className={cn(
+                      'w-10 h-10 text-sm font-semibold rounded-xl transition-all',
+                      page === pg ? 'bg-amber-500 text-white shadow-sm shadow-amber-500/25' : 'bg-white border border-gray-200 text-gray-600 hover:border-amber-300 hover:text-amber-700',
+                    )}
+                  >
+                    {pg}
+                  </button>
+                )
+              })}
+            </div>
+            <button
+              disabled={page >= totalPages}
+              onClick={() => setPage(p => p + 1)}
+              className="flex items-center gap-1.5 px-4 py-2.5 bg-white border border-gray-200 text-gray-700 text-sm font-medium rounded-xl disabled:opacity-40 disabled:cursor-not-allowed hover:border-amber-300 hover:text-amber-700 transition-all"
+            >
+              Next <ChevronRight className="w-4 h-4" />
+            </button>
+          </div>
+        )}
+
+        {/* ── CTA Banner ─────────────────────────────────────── */}
+        {!loading && (
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="mt-14 bg-gradient-to-r from-[#0B1C34] to-[#0D2B52] rounded-3xl p-8 sm:p-10 flex flex-col sm:flex-row items-center justify-between gap-6"
+          >
+            <div>
+              <h3 className="text-xl sm:text-2xl font-bold text-white mb-2">Can't find what you're looking for?</h3>
+              <p className="text-white/60 max-w-md text-sm">
+                Share your exact requirements — location, budget, size — and we'll personally match you with verified properties from our builder network.
+              </p>
+            </div>
+            <button
+              onClick={() => setShowLeadModal(true)}
+              className="flex items-center gap-2 px-7 py-3.5 bg-amber-500 hover:bg-amber-400 text-white font-bold text-sm rounded-xl transition-all shadow-lg shadow-amber-500/25 whitespace-nowrap"
+            >
+              <Phone className="w-4 h-4" />
+              Leave Your Requirement
+            </button>
+          </motion.div>
+        )}
       </div>
 
-      {/* ── Main Content ── */}
-      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Result count */}
-        {!loading && !error && (
+      {/* ── Lead Modal ─────────────────────────────────────────── */}
+      <AnimatePresence>
+        {showLeadModal && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="flex items-center justify-between mb-6"
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+            onClick={e => { if (e.target === e.currentTarget) setShowLeadModal(false) }}
           >
-            <div className="flex items-center gap-2">
-              <Eye className="w-4 h-4 text-zinc-500" />
-              <span className="text-sm text-zinc-500">
-                <span className="font-semibold text-zinc-300">{filtered.length}</span> properties
-                {activeFilterCount > 0 ? ' match your filters' : ' available'}
-              </span>
-            </div>
-            {filtered.length > 0 && (
-              <span className="text-xs text-zinc-600">
-                Page {page} of {Math.ceil(filtered.length / PAGE_SIZE)}
-              </span>
-            )}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="w-full max-w-md bg-white rounded-3xl shadow-2xl p-6 max-h-[90dvh] overflow-y-auto"
+            >
+              {/* Inline lead form — imported dynamically only on homepage; inline here for simplicity */}
+              <div className="text-center mb-6">
+                <div className="w-12 h-12 bg-amber-50 border border-amber-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                  <Phone className="w-5 h-5 text-amber-500" />
+                </div>
+                <h3 className="text-xl font-bold text-[#0B1C34] mb-2">Share Your Requirement</h3>
+                <p className="text-sm text-gray-500">Our team will reach out with matching verified properties.</p>
+              </div>
+              <form
+                onSubmit={async e => {
+                  e.preventDefault()
+                  const fd = new FormData(e.target as HTMLFormElement)
+                  try {
+                    await fetch('/api/leads', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: fd.get('name'), phone: fd.get('phone'), email: fd.get('email'), requirement: fd.get('requirement'), source: 'property-listing' }) })
+                    setShowLeadModal(false)
+                  } catch {}
+                }}
+                className="space-y-4"
+              >
+                <input name="name" required placeholder="Your name" className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm text-[#0B1C34] placeholder-gray-400 outline-none focus:border-amber-400 focus:bg-white transition-all" />
+                <input name="phone" required placeholder="Phone number" type="tel" className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm text-[#0B1C34] placeholder-gray-400 outline-none focus:border-amber-400 focus:bg-white transition-all" />
+                <input name="email" placeholder="Email (optional)" type="email" className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm text-[#0B1C34] placeholder-gray-400 outline-none focus:border-amber-400 focus:bg-white transition-all" />
+                <textarea name="requirement" rows={3} placeholder="What are you looking for? (e.g. 3BHK in Anna Nagar under 1Cr)" className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm text-[#0B1C34] placeholder-gray-400 outline-none focus:border-amber-400 focus:bg-white transition-all resize-none" />
+                <button type="submit" className="w-full py-3.5 bg-amber-500 hover:bg-amber-400 text-white font-bold rounded-xl transition-all shadow-lg shadow-amber-500/25">
+                  Submit Requirement
+                </button>
+              </form>
+            </motion.div>
           </motion.div>
         )}
-
-        {/* Content area */}
-        <AnimatePresence mode="wait">
-          {loading ? (
-            <motion.div
-              key="loading"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className={viewMode === 'grid'
-                ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6'
-                : 'space-y-4'}
-            >
-              {Array.from({ length: 9 }).map((_, i) => <SkeletonCard key={i} mode={viewMode} />)}
-            </motion.div>
-          ) : error ? (
-            <motion.div key="error" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-              <ErrorState message={error} onRetry={fetchProperties} />
-            </motion.div>
-          ) : filtered.length === 0 ? (
-            <motion.div key="empty" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-              <EmptyState hasFilters={activeFilterCount > 0} onClear={clearFilters} />
-            </motion.div>
-          ) : viewMode === 'grid' ? (
-            <motion.div
-              key={`grid-${page}`}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"
-            >
-              {paginated.map((p, i) => <PropertyCardGrid key={p.id} property={p} index={i} />)}
-            </motion.div>
-          ) : (
-            <motion.div
-              key={`list-${page}`}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="space-y-3"
-            >
-              {paginated.map((p, i) => <PropertyCardList key={p.id} property={p} index={i} />)}
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {!loading && !error && filtered.length > 0 && (
-          <Pagination page={page} total={filtered.length} onChange={handlePageChange} />
-        )}
-
-        {/* Bottom CTA strip */}
-        {!loading && !error && allProperties.length > 0 && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.6 }}
-            className="mt-16 p-8 rounded-2xl border border-zinc-800/60 bg-gradient-to-br from-zinc-900/60 to-zinc-950/60 backdrop-blur-sm text-center"
-          >
-            <div className="flex items-center justify-center gap-2 mb-3">
-              <Sparkles className="w-5 h-5 text-amber-400" />
-              <span className="text-sm font-semibold text-amber-400">List Your Property on Tharaga</span>
-            </div>
-            <p className="text-sm text-zinc-500 mb-5 max-w-md mx-auto">
-              Reach verified buyers across India with AI-powered matching and real-time analytics.
-            </p>
-            <div className="flex items-center justify-center gap-3">
-              <a
-                href="/builders/signup"
-                className="flex items-center gap-2 px-6 py-2.5 bg-amber-500 hover:bg-amber-400 text-zinc-950 font-semibold text-sm rounded-xl transition-colors shadow-lg shadow-amber-500/20"
-              >
-                <Zap className="w-4 h-4" /> Start Free
-              </a>
-              <a
-                href="/"
-                className="px-5 py-2.5 border border-zinc-700 hover:border-zinc-600 text-zinc-400 hover:text-zinc-200 text-sm rounded-xl transition-colors"
-              >
-                Learn more
-              </a>
-            </div>
-          </motion.div>
-        )}
-        <div className="h-16" />
-      </div>
-
-      {/* Filters Drawer */}
-      <FiltersDrawer
-        open={showFilters}
-        onClose={() => setShowFilters(false)}
-        filters={filters}
-        setFilters={setFilters}
-        onApply={() => setPage(1)}
-        onClear={clearFilters}
-      />
+      </AnimatePresence>
     </div>
   )
 }
 
-// ─── Page Export ──────────────────────────────────────────────────────────────
 export default function PropertyListingPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen bg-zinc-950 flex items-center justify-center">
-        <motion.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}>
-          <Cpu className="w-8 h-8 text-amber-400" />
-        </motion.div>
+      <div className="min-h-screen bg-[#FAFAF8] flex items-center justify-center">
+        <div className="w-8 h-8 border-2 border-amber-500/30 border-t-amber-500 rounded-full animate-spin" />
       </div>
     }>
-      <PropertyListingContent />
+      <ListingPageContent />
     </Suspense>
   )
 }

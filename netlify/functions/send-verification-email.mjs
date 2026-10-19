@@ -70,7 +70,7 @@ Unfortunately, we were unable to verify your builder account at this time.
 
 Reason: ${rejection_reason || 'Information provided did not meet our verification requirements.'}
 
-If you believe this is a mistake or would like to resubmit with updated information, please contact us at support@tharaga.co.in.
+If you believe this is a mistake or would like to resubmit with updated information, please contact us at support@tharaga.in.
 
 Best regards,
 The Tharaga Team
@@ -91,7 +91,7 @@ The Tharaga Team
 
     await sgMail.send({
       to: email,
-      from: 'noreply@tharaga.co.in',
+      from: 'noreply@tharaga.in',
       subject: subject,
       text: message,
       html: message.replace(/\n/g, '<br>'),

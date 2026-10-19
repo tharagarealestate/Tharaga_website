@@ -250,7 +250,7 @@ export async function processViewingReminders(): Promise<JobResult> {
         // Send email
         if (resend) {
           const sendResult = await resend.emails.send({
-            from: process.env.RESEND_FROM_EMAIL || 'Tharaga <noreply@tharaga.co.in>',
+            from: process.env.RESEND_FROM_EMAIL || 'Tharaga <noreply@tharaga.in>',
             to: lead?.email || lead?.lead_buyer_email || '',
             subject: subject,
             html: html,

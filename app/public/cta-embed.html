@@ -228,11 +228,11 @@
     });
 
     // Allowed parent origins for embed postMessage
-    const ALLOWED_PARENTS = ['https://tharaga.in', 'https://www.tharaga.in', 'https://tharaga.co.in', 'https://www.tharaga.co.in', 'https://auth.tharaga.co.in', location.origin];
+    const ALLOWED_PARENTS = ['https://tharaga.in', 'https://www.tharaga.in', location.origin];
     function postToParent(payload){
       try {
         const parentOrigin = (function(){ try { return new URL(document.referrer).origin; } catch(_) { return '*'; } })();
-        if (ALLOWED_PARENTS.includes(parentOrigin) || /tharaga\.co\.in/.test(parentOrigin)) {
+        if (ALLOWED_PARENTS.includes(parentOrigin) || /tharaga\.in/.test(parentOrigin)) {
           window.parent.postMessage(payload, parentOrigin);
         } else {
           window.parent.postMessage(payload, '*');

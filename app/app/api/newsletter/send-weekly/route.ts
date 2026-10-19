@@ -103,7 +103,7 @@ async function handleSendWeekly(req: NextRequest) {
     for (const subscriber of subscribers) {
       try {
         const { error: emailError } = await resend.emails.send({
-          from: 'Tharaga <newsletter@tharaga.co.in>',
+          from: 'Tharaga <newsletter@tharaga.in>',
           to: subscriber.email,
           subject,
           html: newsletterContent,

@@ -74,7 +74,7 @@ export default function GlobalError({
         {/* Support link */}
         <p className="text-zinc-600 text-xs mt-6">
           Persistent issue?{' '}
-          <a href="mailto:support@tharaga.co.in" className="text-amber-500/70 hover:text-amber-400 transition-colors">
+          <a href="mailto:support@tharaga.in" className="text-amber-500/70 hover:text-amber-400 transition-colors">
             Contact support
           </a>
         </p>

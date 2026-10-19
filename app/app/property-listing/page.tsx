@@ -89,12 +89,12 @@ function PropertyCard({ property, index, view }: { property: Property; index: nu
         className="bg-white rounded-2xl border border-gray-100 hover:border-amber-200 hover:shadow-lg transition-all overflow-hidden flex gap-0"
       >
         {/* Image */}
-        <div className="relative w-64 shrink-0 bg-gray-100">
+        <div className="relative w-28 sm:w-64 shrink-0 bg-gray-100">
           {n.image ? (
             <img src={n.image} alt={n.title} className="w-full h-full object-cover" loading="lazy" />
           ) : (
-            <div className="w-full h-full min-h-[180px] flex items-center justify-center">
-              <Building2 className="w-10 h-10 text-gray-300" />
+            <div className="w-full h-full min-h-[120px] sm:min-h-[180px] flex items-center justify-center">
+              <Building2 className="w-8 h-8 sm:w-10 sm:h-10 text-gray-300" />
             </div>
           )}
           <button
@@ -111,7 +111,7 @@ function PropertyCard({ property, index, view }: { property: Property; index: nu
         </div>
 
         {/* Details */}
-        <div className="flex-1 p-6">
+        <div className="flex-1 p-3 sm:p-6">
           <div className="flex items-start justify-between">
             <div>
               {n.type && (
@@ -537,66 +537,62 @@ function ListingPageContent() {
                 className="flex-1 bg-transparent text-sm outline-none text-[#0B1C34] placeholder-gray-400"
               />
             </div>
-            <button type="submit" className="px-4 py-2.5 bg-amber-500 text-white text-sm font-semibold rounded-xl">Go</button>
+            <button type="submit" className="px-4 py-2.5 min-h-[44px] bg-amber-500 text-white text-sm font-semibold rounded-xl">Go</button>
           </form>
         </div>
 
         {/* ── Filter Bar ─────────────────────────────────────── */}
-        <div className="bg-white rounded-2xl border border-gray-100 p-4 mb-6 shadow-sm">
-          <div className="flex flex-wrap items-center gap-3">
+        <div className="bg-white rounded-2xl border border-gray-100 p-3 sm:p-4 mb-6 shadow-sm">
+          {/* Single horizontally-scrollable row on mobile; wraps on sm+ */}
+          <div className="flex items-center gap-2 overflow-x-auto scrollbar-none pb-0.5 sm:pb-0 sm:flex-wrap sm:gap-3 -mx-3 px-3 sm:mx-0 sm:px-0">
             {/* Property type */}
-            <div className="flex flex-wrap gap-1.5">
-              {PROPERTY_TYPES.map(t => (
-                <button
-                  key={t}
-                  onClick={() => toggleType(t)}
-                  className={cn(
-                    'px-3.5 py-1.5 text-xs font-semibold rounded-full border transition-all',
-                    filters.property_type.includes(t)
-                      ? 'bg-amber-500 text-white border-amber-500 shadow-sm'
-                      : 'bg-gray-50 text-gray-600 border-gray-200 hover:border-amber-300 hover:text-amber-700',
-                  )}
-                >
-                  {t}
-                </button>
-              ))}
-            </div>
+            {PROPERTY_TYPES.map(t => (
+              <button
+                key={t}
+                onClick={() => toggleType(t)}
+                className={cn(
+                  'shrink-0 px-3.5 py-2 text-xs font-semibold rounded-full border transition-all min-h-[36px]',
+                  filters.property_type.includes(t)
+                    ? 'bg-amber-500 text-white border-amber-500 shadow-sm'
+                    : 'bg-gray-50 text-gray-600 border-gray-200 hover:border-amber-300 hover:text-amber-700',
+                )}
+              >
+                {t}
+              </button>
+            ))}
 
-            <div className="hidden sm:block w-px h-6 bg-gray-200 mx-1" />
+            <div className="shrink-0 w-px h-5 bg-gray-200" />
 
             {/* BHK */}
-            <div className="flex flex-wrap gap-1.5">
-              {BHK_OPTIONS.map(b => (
-                <button
-                  key={b}
-                  onClick={() => toggleBhk(b)}
-                  className={cn(
-                    'px-3 py-1.5 text-xs font-semibold rounded-full border transition-all',
-                    filters.bhk_type.includes(b)
-                      ? 'bg-[#0B1C34] text-white border-[#0B1C34]'
-                      : 'bg-gray-50 text-gray-600 border-gray-200 hover:border-slate-400 hover:text-slate-700',
-                  )}
-                >
-                  {b}
-                </button>
-              ))}
-            </div>
+            {BHK_OPTIONS.map(b => (
+              <button
+                key={b}
+                onClick={() => toggleBhk(b)}
+                className={cn(
+                  'shrink-0 px-3 py-2 text-xs font-semibold rounded-full border transition-all min-h-[36px]',
+                  filters.bhk_type.includes(b)
+                    ? 'bg-[#0B1C34] text-white border-[#0B1C34]'
+                    : 'bg-gray-50 text-gray-600 border-gray-200 hover:border-slate-400 hover:text-slate-700',
+                )}
+              >
+                {b}
+              </button>
+            ))}
 
-            <div className="hidden sm:block w-px h-6 bg-gray-200 mx-1" />
+            <div className="shrink-0 w-px h-5 bg-gray-200" />
 
             {/* Budget presets */}
-            <div className="flex flex-wrap gap-1.5">
-              {BUDGET_PRESETS.map((p, i) => {
-                const active = filters.min_price === (p.min ? String(p.min) : '') && filters.max_price === (p.max ? String(p.max) : '')
-                return (
-                  <button
-                    key={i}
-                    onClick={() => applyBudget(p)}
-                    className={cn(
-                      'px-3 py-1.5 text-xs font-semibold rounded-full border transition-all',
-                      active
-                        ? 'bg-emerald-500 text-white border-emerald-500'
-                        : 'bg-gray-50 text-gray-600 border-gray-200 hover:border-emerald-300 hover:text-emerald-700',
+            {BUDGET_PRESETS.map((p, i) => {
+              const active = filters.min_price === (p.min ? String(p.min) : '') && filters.max_price === (p.max ? String(p.max) : '')
+              return (
+                <button
+                  key={i}
+                  onClick={() => applyBudget(p)}
+                  className={cn(
+                    'shrink-0 px-3 py-2 text-xs font-semibold rounded-full border transition-all min-h-[36px]',
+                    active
+                      ? 'bg-emerald-500 text-white border-emerald-500'
+                      : 'bg-gray-50 text-gray-600 border-gray-200 hover:border-emerald-300 hover:text-emerald-700',
                     )}
                   >
                     {p.label}
@@ -605,12 +601,12 @@ function ListingPageContent() {
               })}
             </div>
 
-            <div className="ml-auto flex items-center gap-2">
+            <div className="mt-2 sm:mt-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-gray-100 flex items-center gap-2 sm:ml-auto">
               {/* RERA toggle */}
               <button
                 onClick={() => { setFilters(f => ({ ...f, rera_verified: !f.rera_verified })); setPage(1) }}
                 className={cn(
-                  'flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold rounded-full border transition-all',
+                  'flex items-center gap-1.5 px-3.5 py-2 min-h-[36px] text-xs font-semibold rounded-full border transition-all',
                   filters.rera_verified
                     ? 'bg-emerald-500 text-white border-emerald-500'
                     : 'bg-gray-50 text-gray-600 border-gray-200 hover:border-emerald-300',
@@ -622,7 +618,7 @@ function ListingPageContent() {
               {activeFilterCount > 0 && (
                 <button
                   onClick={resetFilters}
-                  className="flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold text-red-600 bg-red-50 border border-red-100 rounded-full hover:bg-red-100 transition-colors"
+                  className="flex items-center gap-1.5 px-3.5 py-2 min-h-[36px] text-xs font-semibold text-red-600 bg-red-50 border border-red-100 rounded-full hover:bg-red-100 transition-colors"
                 >
                   <X className="w-3 h-3" /> Clear ({activeFilterCount})
                 </button>
@@ -730,7 +726,7 @@ function ListingPageContent() {
                     key={pg}
                     onClick={() => setPage(pg)}
                     className={cn(
-                      'w-9 h-9 text-sm font-semibold rounded-xl transition-all',
+                      'w-10 h-10 text-sm font-semibold rounded-xl transition-all',
                       page === pg ? 'bg-amber-500 text-white shadow-sm shadow-amber-500/25' : 'bg-white border border-gray-200 text-gray-600 hover:border-amber-300 hover:text-amber-700',
                     )}
                   >
@@ -788,7 +784,7 @@ function ListingPageContent() {
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="w-full max-w-md bg-white rounded-3xl shadow-2xl p-6"
+              className="w-full max-w-md bg-white rounded-3xl shadow-2xl p-6 max-h-[90dvh] overflow-y-auto"
             >
               {/* Inline lead form — imported dynamically only on homepage; inline here for simplicity */}
               <div className="text-center mb-6">

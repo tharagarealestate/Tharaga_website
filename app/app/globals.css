@@ -342,6 +342,13 @@
   outline-offset: 2px;
 }
 
+/* ── Hide scrollbar (for horizontal chip rows) ──────────── */
+.scrollbar-none {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.scrollbar-none::-webkit-scrollbar { display: none; }
+
 /* ── Line clamp utilities ───────────────────────────────── */
 .line-clamp-2 {
   display: -webkit-box;

@@ -93,7 +93,7 @@ export default function HomePage() {
   const [mobileNavOpen, setMobileNavOpen] = useState(false)
 
   const { scrollY } = useScroll()
-  const navBg = useTransform(scrollY, [0, 80], ['rgba(11,28,52,0)', 'rgba(11,28,52,0.98)'])
+  const navBg = useTransform(scrollY, [0, 80], ['rgba(13,10,6,0)', 'rgba(13,10,6,0.97)'])
 
   // Auth
   useEffect(() => {
@@ -322,86 +322,88 @@ export default function HomePage() {
       </AnimatePresence>
 
       {/* ══ HERO SECTION ════════════════════════════════════════ */}
-      <section className="relative min-h-[88vh] flex flex-col items-center justify-center overflow-hidden bg-[#060D1F]">
-        {/* Background: deep cosmos base */}
+      <section className="relative min-h-[88vh] flex flex-col items-center justify-center overflow-hidden bg-[#0D0A06]">
+        {/* Background: warm espresso luxury base */}
         <div className="absolute inset-0">
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_180%_100%_at_50%_0%,#0B1C34_0%,#060D1F_60%,#03060F_100%)]" />
+          {/* Warm espresso radial base — rich, inviting, not cold space */}
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_200%_120%_at_50%_0%,#1A1208_0%,#0D0A06_55%,#080604_100%)]" />
 
-          {/* Aurora layer 1 — warm gold consciousness bloom */}
+          {/* Warm light beam — architectural spotlight from top */}
+          <div
+            className="absolute"
+            style={{
+              top: '-30%', left: '50%', transform: 'translateX(-50%)',
+              width: '60%', height: '90%',
+              background: 'radial-gradient(ellipse 40% 60% at 50% 0%, rgba(197,154,58,0.12) 0%, rgba(197,154,58,0.04) 50%, transparent 80%)',
+              filter: 'blur(40px)',
+            }}
+          />
+
+          {/* Aurora layer 1 — deep warm gold bloom */}
           <div
             className="absolute animate-aurora-1"
             style={{
-              top: '-20%', left: '10%',
-              width: '70%', height: '70%',
-              background: 'radial-gradient(ellipse at center, rgba(197,154,58,0.28) 0%, rgba(197,154,58,0.10) 40%, transparent 70%)',
-              filter: 'blur(60px)',
+              top: '-15%', left: '5%',
+              width: '65%', height: '65%',
+              background: 'radial-gradient(ellipse at center, rgba(197,154,58,0.22) 0%, rgba(197,130,40,0.08) 45%, transparent 70%)',
+              filter: 'blur(65px)',
               borderRadius: '50%',
             }}
           />
 
-          {/* Aurora layer 2 — deep sapphire expansion */}
+          {/* Aurora layer 2 — warm copper glow (replaces cold sapphire) */}
           <div
             className="absolute animate-aurora-2"
             style={{
-              top: '20%', right: '-10%',
-              width: '60%', height: '80%',
-              background: 'radial-gradient(ellipse at center, rgba(30,80,180,0.22) 0%, rgba(59,130,246,0.08) 45%, transparent 70%)',
+              top: '25%', right: '-8%',
+              width: '55%', height: '70%',
+              background: 'radial-gradient(ellipse at center, rgba(180,90,40,0.16) 0%, rgba(160,70,25,0.06) 45%, transparent 70%)',
               filter: 'blur(80px)',
               borderRadius: '50%',
             }}
           />
 
-          {/* Aurora layer 3 — teal quantum coherence */}
+          {/* Aurora layer 3 — amber warmth (replaces cold teal) */}
           <div
             className="absolute animate-aurora-3"
             style={{
-              bottom: '-10%', left: '-5%',
-              width: '55%', height: '60%',
-              background: 'radial-gradient(ellipse at center, rgba(20,160,140,0.16) 0%, rgba(6,182,212,0.06) 50%, transparent 70%)',
-              filter: 'blur(70px)',
+              bottom: '-8%', left: '-3%',
+              width: '50%', height: '55%',
+              background: 'radial-gradient(ellipse at center, rgba(245,158,11,0.10) 0%, rgba(250,180,60,0.04) 50%, transparent 70%)',
+              filter: 'blur(75px)',
               borderRadius: '50%',
             }}
           />
 
-          {/* Sacred geometry — slow rotating hexagonal lattice */}
+          {/* Architectural grid — subtle luxury motif */}
           <div
-            className="absolute inset-0 flex items-center justify-center animate-sacred"
-            style={{ opacity: 0.025 }}
+            className="absolute inset-0 animate-sacred"
+            style={{ opacity: 0.018 }}
           >
-            <svg width="900" height="900" viewBox="0 0 900 900" fill="none" xmlns="http://www.w3.org/2000/svg">
-              {/* Hexagonal grid — 7 concentric rings */}
-              {[60,120,180,240,300,360,420].map((r, i) => (
-                <polygon key={r}
-                  points={Array.from({length:6},(_,k)=>{
-                    const a = (k*60 - 30) * Math.PI/180;
-                    return `${450+r*Math.cos(a)},${450+r*Math.sin(a)}`;
-                  }).join(' ')}
-                  stroke="rgba(197,154,58,0.9)" strokeWidth={i < 2 ? 0.8 : 0.5} fill="none"
-                />
+            <svg width="100%" height="100%" viewBox="0 0 900 900" preserveAspectRatio="xMidYMid slice" fill="none" xmlns="http://www.w3.org/2000/svg">
+              {[80,160,240,320,400].map((r, i) => (
+                <circle key={r} cx="450" cy="450" r={r} stroke="rgba(197,154,58,1)" strokeWidth={i === 0 ? 0.6 : 0.4} fill="none" />
               ))}
-              {/* Connecting radial lines */}
-              {Array.from({length:6},(_,k)=>{
-                const a = (k*60-30)*Math.PI/180;
-                return <line key={k} x1="450" y1="450" x2={450+420*Math.cos(a)} y2={450+420*Math.sin(a)} stroke="rgba(197,154,58,0.5)" strokeWidth="0.4"/>;
+              {Array.from({length:12},(_,k)=>{
+                const a = (k*30)*Math.PI/180;
+                return <line key={k} x1="450" y1="450" x2={450+430*Math.cos(a)} y2={450+430*Math.sin(a)} stroke="rgba(197,154,58,0.8)" strokeWidth="0.3"/>;
               })}
-              {/* Center circle */}
-              <circle cx="450" cy="450" r="8" stroke="rgba(197,154,58,0.8)" strokeWidth="0.6" fill="none" />
-              <circle cx="450" cy="450" r="30" stroke="rgba(197,154,58,0.4)" strokeWidth="0.5" fill="none" />
+              <circle cx="450" cy="450" r="6" fill="rgba(197,154,58,0.6)" />
             </svg>
           </div>
 
-          {/* Fine dot matrix — presence and depth */}
+          {/* Fine warm grain — presence without cold sterility */}
           <div
             className="absolute inset-0"
             style={{
-              backgroundImage: 'radial-gradient(circle, rgba(255,255,255,0.18) 1px, transparent 1px)',
-              backgroundSize: '32px 32px',
-              opacity: 0.045,
+              backgroundImage: 'radial-gradient(circle, rgba(197,154,58,0.15) 1px, transparent 1px)',
+              backgroundSize: '40px 40px',
+              opacity: 0.035,
             }}
           />
 
-          {/* Vignette edge darkening */}
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_40%,rgba(3,6,15,0.7)_100%)]" />
+          {/* Vignette — warm dark edges */}
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_35%,rgba(8,6,4,0.65)_100%)]" />
         </div>
 
         <div className="relative z-10 w-full max-w-6xl mx-auto px-4 sm:px-6 pt-24 pb-16 text-center">
@@ -411,16 +413,20 @@ export default function HomePage() {
               <span className="text-xs font-semibold text-amber-300 tracking-wider uppercase">Chennai's Most Trusted Platform</span>
             </div>
 
-            <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold text-white leading-[1.04] mb-6 tracking-[-0.03em]">
+            <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold text-white leading-[1.04] mb-6 tracking-[-0.02em]">
               Find Your Perfect<br />
               <span
                 className="inline-block"
                 style={{
-                  background: 'linear-gradient(110deg, #e9c46a 0%, #f4a261 25%, #f59e0b 50%, #fbbf24 75%, #e9c46a 100%)',
+                  fontFamily: 'var(--font-serif), Georgia, serif',
+                  fontWeight: 700,
+                  fontStyle: 'italic',
+                  background: 'linear-gradient(110deg, #e9c46a 0%, #d4a843 30%, #f59e0b 60%, #fbbf24 80%, #e9c46a 100%)',
                   backgroundClip: 'text',
                   WebkitBackgroundClip: 'text',
                   WebkitTextFillColor: 'transparent',
-                  filter: 'drop-shadow(0 0 28px rgba(245,158,11,0.35))',
+                  filter: 'drop-shadow(0 0 32px rgba(197,154,58,0.45))',
+                  letterSpacing: '-0.01em',
                 }}
               >
                 Home in Chennai

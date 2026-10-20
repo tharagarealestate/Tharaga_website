@@ -46,6 +46,17 @@
     --public-surface: #FFFFFF;
     --public-surface-hover: #F5F3EF;
 
+    /* Elite Hero — warm espresso luxury palette */
+    --elite-hero-base:    #0D0A06;
+    --elite-hero-warm:    #1A1208;
+    --elite-hero-deep:    #080604;
+    --elite-gold:         #C59A3A;
+    --elite-gold-light:   #D4AF5A;
+    --elite-gold-copper:  #B45A28;
+    --elite-text-warm:    #1A1412;
+    --elite-surface-warm: #F5F1E8;
+    --elite-border-warm:  #E8E2D6;
+
     /* Semantic */
     --success: #22c55e;
     --success-muted: rgba(34, 197, 94, 0.1);
@@ -378,6 +389,18 @@
 .animate-aurora-2 { animation: aurora-drift-2 28s ease-in-out infinite; }
 .animate-aurora-3 { animation: aurora-drift-3 35s ease-in-out infinite; }
 .animate-sacred   { animation: sacred-rotate 90s linear infinite; }
+
+/* ── Elite hero shimmer ─────────────────────────────────── */
+@keyframes gold-shimmer {
+  0%, 100% { opacity: 0.8; }
+  50%       { opacity: 1; }
+}
+@keyframes warm-breathe {
+  0%, 100% { transform: scale(1); opacity: 0.9; }
+  60%       { transform: scale(1.04); opacity: 1; }
+}
+.animate-gold-shimmer { animation: gold-shimmer 4s ease-in-out infinite; }
+.animate-warm-breathe { animation: warm-breathe 6s ease-in-out infinite; }
 
 /* ── Line clamp utilities ───────────────────────────────── */
 .line-clamp-2 {

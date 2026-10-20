@@ -27,6 +27,8 @@ jobs:
         with:
           name: next-build
           path: app/.next
+          include-hidden-files: true
+          if-no-files-found: error
 
   e2e:
     needs: build-preview

@@ -332,12 +332,13 @@ export function BuilderAuthProvider({ children }: { children: ReactNode }) {
     try {
       supabase = getSupabase()
     } catch {
-      // Supabase env vars missing (CI / test env without secrets).
-      // Render children directly so pages show their natural empty states,
-      // which is what e2e tests expect to find in the DOM.
       if (mountedRef.current) {
-        statusRef.current = 'no-config'
-        setStatus('no-config')
+        // Only render children (no-config) when running inside the CI e2e build,
+        // where NEXT_PUBLIC_E2E=true is baked in at build time. Any other missing-
+        // config deploy (e.g. a misconfigured preview) still fails closed.
+        const isE2E = process.env.NEXT_PUBLIC_E2E === 'true'
+        statusRef.current = isE2E ? 'no-config' : 'unauthenticated'
+        setStatus(isE2E ? 'no-config' : 'unauthenticated')
         resolvedRef.current = true
       }
       return () => { mountedRef.current = false }

@@ -15,6 +15,7 @@ const plusJakarta = Plus_Jakarta_Sans({
   weight: ['500', '600', '700', '800'],
   variable: '--font-display-loaded',
   display: 'swap',
+  preload: false,
 })
 
 const inter = Inter({
@@ -22,6 +23,7 @@ const inter = Inter({
   weight: ['400', '500', '600', '700'],
   variable: '--font-body-loaded',
   display: 'swap',
+  preload: false,
 })
 
 const playfair = Playfair_Display({
@@ -30,6 +32,7 @@ const playfair = Playfair_Display({
   style: ['normal', 'italic'],
   variable: '--font-serif',
   display: 'swap',
+  preload: false,
 })
 
 const SITE_URL = 'https://tharaga.in'

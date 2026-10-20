@@ -1,7 +1,7 @@
 'use client'
 
 import { createContext, useContext, useState, useEffect, useRef, ReactNode } from 'react'
-import { Session } from '@supabase/supabase-js'
+import { Session, SupabaseClient } from '@supabase/supabase-js'
 import { getSupabase } from '@/lib/supabase'
 import { BuilderAuthGate } from './BuilderAuthGate'
 import { BuilderSetupGate } from './BuilderSetupGate'
@@ -339,7 +339,19 @@ export function BuilderAuthProvider({ children }: { children: ReactNode }) {
     resolvedRef.current = false
     statusRef.current   = 'loading'
 
-    const supabase = getSupabase()
+    // If Supabase env vars are missing (e.g. CI without secrets), getSupabase() throws.
+    // Catch it here so the safety timer never fires and auth resolves immediately.
+    let supabase: SupabaseClient
+    try {
+      supabase = getSupabase()
+    } catch {
+      if (mountedRef.current) {
+        statusRef.current = 'unauthenticated'
+        setStatus('unauthenticated')
+        resolvedRef.current = true
+      }
+      return () => { mountedRef.current = false }
+    }
 
     // ── Step 1: Immediate local session check (zero network) ──────────────
     // getSession() reads the JWT from localStorage — instant, no Supabase edge call.

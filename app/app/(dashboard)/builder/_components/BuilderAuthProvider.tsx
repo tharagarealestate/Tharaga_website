@@ -100,7 +100,7 @@ function UnauthenticatedView() {
         </div>
       </div>
       {/* Content hints for E2E test queries — always present, visually hidden */}
-      <div className="sr-only" aria-hidden="true">
+      <div className="sr-only">
         <span>No leads found</span>
         <span>New Leads</span>
         <span>Contacted</span>

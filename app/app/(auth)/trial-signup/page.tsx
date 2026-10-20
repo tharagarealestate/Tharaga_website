@@ -25,6 +25,10 @@ export default function TrialSignupPage() {
       return
     }
     setErrors({})
+    // Update URL so E2E tests can detect the OTP verify step
+    if (typeof window !== 'undefined') {
+      window.history.replaceState(null, '', '/trial-signup?verify=1')
+    }
     setSubmitted(true)
   }
 

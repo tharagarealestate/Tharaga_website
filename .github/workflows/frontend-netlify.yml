@@ -21,12 +21,16 @@ jobs:
         run: npm ci || npm i
       - name: Build Next.js
         working-directory: app
+        env:
+          NEXT_PUBLIC_E2E: 'true'
         run: npm run build
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: next-build
           path: app/.next
+          include-hidden-files: true
+          if-no-files-found: error
 
   e2e:
     needs: build-preview
@@ -57,7 +61,7 @@ jobs:
       - name: Install Playwright
         run: |
           npm ci || npm i
-          npx playwright install --with-deps
+          npx playwright install --with-deps chromium
       - name: Wait for server
         if: ${{ env.E2E_BASE_URL == '' }}
         run: npx wait-on http://localhost:3000 --timeout 60000

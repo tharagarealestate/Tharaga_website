@@ -3,9 +3,9 @@
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
-  X, Sparkles, Building2, Sun, Mountain, Warehouse,
+  X, Building2, Sun, Mountain, Warehouse,
   Landmark, ArrowRight, CheckCircle2, Shield, AlertCircle,
-  FileText, MapPin, Zap, ChevronRight, Loader2, Lock, User
+  FileText, MapPin, Zap, ChevronRight, Loader2, Lock, User, Phone, Mail
 } from 'lucide-react'
 import { openAuthModal } from '@/components/ui/AuthButton'
 
@@ -20,46 +20,41 @@ const ASSET_TYPES = [
   {
     id: 'industrial_land',
     title: 'Industrial Land Bank',
-    desc: 'Heavy industrial, manufacturing, SIPCOT adjacent, automotive clusters',
+    desc: 'Heavy industrial, manufacturing, SIPCOT adjacent, automotive or EV clusters',
     icon: Building2,
-    badge: 'High Demand'
   },
   {
     id: 'solar_site',
     title: 'Solar & Renewable Site',
-    desc: 'Substation contiguous, high GHI/DNI, clear revenue patta',
+    desc: 'Substation contiguous, high irradiance, clear revenue patta',
     icon: Sun,
-    badge: 'MNC Offtakers'
   },
   {
     id: 'quarry_mineral',
     title: 'Quarry & Mineral Reserve',
-    desc: 'Limestone, aggregates, active mining lease, raw feed for cement MNCs',
+    desc: 'Limestone, aggregates, active mining lease, raw feed for cement manufacturing',
     icon: Mountain,
-    badge: 'Chettinad / Cement Feed'
   },
   {
     id: 'warehousing_logistics',
     title: 'Logistics & Warehousing',
-    desc: 'Expressway corridor, high-bay PEB feasibility, freight siding',
+    desc: 'Expressway corridor frontage, PEB warehouse feasibility, freight access',
     icon: Warehouse,
-    badge: '3PL & REITs'
   },
   {
     id: 'commercial_office',
-    title: 'Commercial IT / Complex',
-    desc: 'Pre-leased tech parks, institutional grade office buildings, high cap rates',
+    title: 'Commercial IT / Tech Park',
+    desc: 'Income-generating grade-A buildings, campus developments',
     icon: Landmark,
-    badge: 'Institutional Yield'
   }
 ]
 
 const STRATEGIC_CORRIDORS = [
   'Tuticorin – Tirunelveli (Renewable / Port Corridor)',
-  'Sriperumbudur – Oragadam (Automotive & Electronics Hub)',
+  'Sriperumbudur – Oragadam (Automotive & Manufacturing Hub)',
   'Ariyalur – Karur (Cement & Limestone Belt)',
   'Hosur – Krishnagiri (EV & Advanced Engineering)',
-  'Coimbatore – Tiruppur (Industrial & Engineering)',
+  'Coimbatore – Tiruppur (Industrial & Engineering Belt)',
   'Chennai Port – Ennore – Gummidipoondi (Logistics Spine)',
   'OMR – Guindy (Commercial & Technology Corridor)'
 ]
@@ -77,44 +72,41 @@ export function CommercialIntakeModal({ isOpen, onClose, user, onSuccess }: Comm
   const [roadAccess, setRoadAccess] = useState('')
   const [titleStatus, setTitleStatus] = useState('Single Owner Clean Patta')
   const [quarryOrSolarSpecs, setQuarryOrSolarSpecs] = useState('')
-  const [confidentiality, setConfidentiality] = useState('selective_mnc')
-  
+  const [confidentiality, setConfidentiality] = useState('confidential_placement')
+
   // Principal details
   const [sellerName, setSellerName] = useState(user?.user_metadata?.full_name || user?.user_metadata?.name || '')
   const [sellerEmail, setSellerEmail] = useState(user?.email || '')
   const [sellerPhone, setSellerPhone] = useState(user?.user_metadata?.phone || '')
 
-  // Claude AI state
-  const [isAnalyzing, setIsAnalyzing] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [claudeDossier, setClaudeDossier] = useState<any>(null)
+  const [assessmentSummary, setAssessmentSummary] = useState<any>(null)
   const [submittedSuccess, setSubmittedSuccess] = useState(false)
   const [errorMsg, setErrorMsg] = useState('')
 
   if (!isOpen) return null
 
-  // Trigger Claude API to generate the executive underwriting analysis
-  const handleAnalyzeWithClaude = async () => {
-    setIsAnalyzing(true)
+  const handleSubmitIntake = async () => {
+    setIsSubmitting(true)
     setErrorMsg('')
     try {
       const payload = {
         asset_type: assetType,
-        title: title || `${extentAcres || 'Prime'} Acres ${assetType.replace('_', ' ')} — ${corridor}`,
+        title: title || `${extentAcres || 'Prime'} Acres ${assetType.replace('_', ' ')} — ${district}`,
         extent_acres: parseFloat(extentAcres) || 0,
         location_district: district,
         strategic_corridor: corridor,
-        price_total_inr: parseFloat(priceTotal) * 10000000 || 0, // In Crores -> INR
-        price_per_acre_inr: parseFloat(pricePerAcre) * 100000 || 0, // In Lakhs -> INR
-        power_infrastructure: powerInfra,
-        road_connectivity: roadAccess,
+        price_total_inr: parseFloat(priceTotal) * 10000000 || 0, // Crores -> INR
+        price_per_acre_inr: parseFloat(pricePerAcre) * 100000 || 0,
+        power_infrastructure: powerInfra || 'Adjacent high tension line',
+        road_connectivity: roadAccess || 'Direct all-weather access road',
         title_status: titleStatus,
         quarry_mineral_specs: quarryOrSolarSpecs,
         solar_specs: quarryOrSolarSpecs,
         confidentiality_level: confidentiality,
-        seller_name: sellerName,
-        seller_email: sellerEmail || user?.email,
-        seller_phone: sellerPhone,
+        seller_name: sellerName || 'Asset Owner',
+        seller_email: sellerEmail || user?.email || '',
+        seller_phone: sellerPhone || '',
         user_id: user?.id || null
       }
 
@@ -125,425 +117,407 @@ export function CommercialIntakeModal({ isOpen, onClose, user, onSuccess }: Comm
       })
 
       const data = await res.json()
-      if (!res.ok) throw new Error(data.error || 'Failed to complete institutional analysis')
+      if (!res.ok) throw new Error(data.error || 'Failed to submit property')
 
-      setClaudeDossier(data.dossier)
+      setAssessmentSummary(data.dossier || data.analysis || {})
       setStep(4)
       if (onSuccess) onSuccess(data)
     } catch (err: any) {
       console.error(err)
-      setErrorMsg(err.message || 'Error communicating with Claude analysis engine')
+      setErrorMsg(err.message || 'Error submitting asset details. Please verify your connection.')
     } finally {
-      setIsAnalyzing(false)
+      setIsSubmitting(false)
     }
   }
 
-  const handleFinalSubmit = () => {
+  const handleFinish = () => {
     setSubmittedSuccess(true)
     setTimeout(() => {
       onClose()
       setSubmittedSuccess(false)
       setStep(1)
-      setClaudeDossier(null)
-    }, 2800)
+      setAssessmentSummary(null)
+    }, 1800)
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-black/80 backdrop-blur-md overflow-y-auto">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-black/60 backdrop-blur-sm overflow-y-auto">
       <motion.div
-        initial={{ opacity: 0, scale: 0.95, y: 15 }}
+        initial={{ opacity: 0, scale: 0.96, y: 15 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
-        exit={{ opacity: 0, scale: 0.95, y: 15 }}
-        className="relative w-full max-w-3xl bg-[#0D0D10] border border-white/[0.12] rounded-3xl shadow-2xl text-white overflow-hidden my-auto"
+        exit={{ opacity: 0, scale: 0.96, y: 15 }}
+        className="relative w-full max-w-3xl bg-white border border-[#E8E2D6] rounded-3xl shadow-2xl text-[#1A1816] overflow-hidden my-auto max-h-[92vh] flex flex-col"
       >
-        {/* Top Architectural Header */}
-        <div className="px-6 sm:px-8 py-5 border-b border-white/[0.08] flex items-center justify-between bg-[#131318]">
+        {/* Top Header */}
+        <div className="px-6 sm:px-8 py-5 border-b border-[#E8E2D6] flex items-center justify-between bg-[#FAF8F5] shrink-0">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center">
-              <Sparkles className="w-4 h-4 text-amber-400" />
+            <div className="w-9 h-9 rounded-full bg-[#F4F0E8] border border-[#DDD5C5] flex items-center justify-center text-[#9E7B4F]">
+              <FileText className="w-4 h-4" />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <span className="text-[11px] font-mono tracking-widest uppercase text-amber-400">Institutional Syndicate</span>
-                <span className="text-[11px] px-2 py-0.5 rounded-full bg-white/10 text-white/60 font-mono">Claude 3.5 Intelligence</span>
+                <span className="text-[10px] font-sans font-bold tracking-widest uppercase text-[#9E7B4F]">
+                  Property Intake
+                </span>
+                <span className="text-[10px] font-sans px-2 py-0.5 rounded-full bg-[#1A1816] text-[#FAF8F5]">
+                  Confidential Placement
+                </span>
               </div>
-              <h2 className="text-lg font-semibold tracking-tight text-white/95">Commercial Mandate Intake Assistant</h2>
+              <h2 className="text-base sm:text-lg font-serif font-bold text-[#1A1816]">
+                List Your Commercial Asset
+              </h2>
             </div>
           </div>
+
           <button
             onClick={onClose}
-            className="w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center text-white/50 hover:text-white transition-colors"
+            className="w-9 h-9 rounded-full bg-[#F4F0E8] hover:bg-[#ECE6DA] flex items-center justify-center text-[#5A564F] hover:text-[#1A1816] transition-colors"
           >
             <X className="w-4 h-4" />
           </button>
         </div>
 
-        {/* Progress Tracker Strip */}
-        <div className="grid grid-cols-4 px-6 sm:px-8 py-3 bg-[#0A0A0D] border-b border-white/[0.06] text-xs">
+        {/* Step Progress Bar */}
+        <div className="grid grid-cols-4 px-6 sm:px-8 py-3 bg-[#FAF8F5] border-b border-[#E8E2D6] text-xs shrink-0">
           {[
             { num: 1, label: 'Asset Class' },
-            { num: 2, label: 'Infrastructure' },
-            { num: 3, label: 'Commercials' },
-            { num: 4, label: 'Claude Dossier' },
+            { num: 2, label: 'Location & Infra' },
+            { num: 3, label: 'Title & Value' },
+            { num: 4, label: 'Assessment' },
           ].map(s => (
             <div
               key={s.num}
-              className={`flex items-center gap-2 cursor-pointer transition-colors ${
+              className={`flex items-center gap-2 transition-colors ${
                 step === s.num
-                  ? 'text-amber-400 font-semibold'
+                  ? 'text-[#1A1816] font-semibold'
                   : step > s.num
-                  ? 'text-emerald-400'
-                  : 'text-white/30'
+                  ? 'text-[#9E7B4F]'
+                  : 'text-[#8E887E]'
               }`}
-              onClick={() => {
-                if (step > s.num || (s.num < 4 && claudeDossier)) setStep(s.num as any)
-              }}
             >
-              <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] ${
-                step === s.num
-                  ? 'bg-amber-400 text-black font-bold'
-                  : step > s.num
-                  ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40'
-                  : 'bg-white/10 text-white/50'
-              }`}>
+              <div
+                className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold ${
+                  step === s.num
+                    ? 'bg-[#1A1816] text-[#FAF8F5]'
+                    : step > s.num
+                    ? 'bg-[#9E7B4F] text-white'
+                    : 'bg-[#E8E2D6] text-[#8E887E]'
+                }`}
+              >
                 {step > s.num ? '✓' : s.num}
-              </span>
-              <span className="hidden sm:inline">{s.label}</span>
+              </div>
+              <span className="hidden sm:inline font-sans">{s.label}</span>
             </div>
           ))}
         </div>
 
-        {/* Body content */}
-        <div className="p-6 sm:p-8 max-h-[72vh] overflow-y-auto">
-          {errorMsg && (
-            <div className="mb-6 p-4 rounded-2xl bg-rose-500/10 border border-rose-500/30 flex items-center gap-3 text-rose-300 text-sm">
-              <AlertCircle className="w-5 h-5 shrink-0 text-rose-400" />
-              <span>{errorMsg}</span>
-            </div>
-          )}
-
-          {/* STEP 1: ASSET CLASSIFICATION */}
+        {/* Scrollable Form Body */}
+        <div className="p-6 sm:p-8 space-y-6 overflow-y-auto">
+          {/* STEP 1: Asset Class */}
           {step === 1 && (
-            <motion.div initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} className="space-y-6">
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-5">
               <div>
-                <label className="block text-xs font-mono uppercase tracking-widest text-white/50 mb-3">
-                  01 // Select Commercial Asset Class
-                </label>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  {ASSET_TYPES.map(type => {
-                    const Icon = type.icon
-                    const isSelected = assetType === type.id
-                    return (
-                      <div
-                        key={type.id}
-                        onClick={() => setAssetType(type.id)}
-                        className={`p-4 rounded-2xl border transition-all cursor-pointer relative ${
-                          isSelected
-                            ? 'bg-amber-500/10 border-amber-400/80 shadow-lg shadow-amber-500/10'
-                            : 'bg-white/[0.03] border-white/[0.08] hover:border-white/20 hover:bg-white/[0.05]'
-                        }`}
-                      >
-                        <div className="flex items-start justify-between mb-2">
-                          <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${
-                            isSelected ? 'bg-amber-500 text-black' : 'bg-white/10 text-amber-400'
-                          }`}>
-                            <Icon className="w-4 h-4" />
-                          </div>
-                          <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-white/5 text-amber-300/80 border border-white/10">
-                            {type.badge}
-                          </span>
+                <h3 className="text-xl font-serif font-bold text-[#1A1816]">Select Commercial Asset Category</h3>
+                <p className="text-xs text-[#5A564F] mt-1 font-light">
+                  Choose the classification that best represents your property holding in Tamil Nadu.
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 gap-3">
+                {ASSET_TYPES.map(type => {
+                  const Icon = type.icon
+                  const active = assetType === type.id
+                  return (
+                    <div
+                      key={type.id}
+                      onClick={() => setAssetType(type.id)}
+                      className={`p-4 rounded-2xl border transition-all cursor-pointer flex items-center justify-between ${
+                        active
+                          ? 'border-[#1A1816] bg-[#F7F4EE] shadow-sm'
+                          : 'border-[#E8E2D6] bg-[#FAF8F5] hover:bg-[#F4F0E8]'
+                      }`}
+                    >
+                      <div className="flex items-center gap-4">
+                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
+                          active ? 'bg-[#1A1816] text-[#C5A059]' : 'bg-[#E8E2D6]/50 text-[#5A564F]'
+                        }`}>
+                          <Icon className="w-5 h-5" />
                         </div>
-                        <h4 className="text-sm font-semibold text-white mb-1">{type.title}</h4>
-                        <p className="text-xs text-white/50 leading-relaxed">{type.desc}</p>
+                        <div>
+                          <h4 className="text-sm font-serif font-bold text-[#1A1816]">{type.title}</h4>
+                          <p className="text-xs text-[#5A564F]">{type.desc}</p>
+                        </div>
                       </div>
-                    )
-                  })}
-                </div>
+                      <div className={`w-5 h-5 rounded-full border flex items-center justify-center ${
+                        active ? 'border-[#1A1816] bg-[#1A1816]' : 'border-[#DDD5C5]'
+                      }`}>
+                        {active && <div className="w-2 h-2 rounded-full bg-[#FAF8F5]" />}
+                      </div>
+                    </div>
+                  )
+                })}
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
-                <div>
-                  <label className="block text-xs font-mono uppercase tracking-widest text-white/50 mb-2">
-                    Strategic Corridor
-                  </label>
-                  <select
-                    value={corridor}
-                    onChange={e => {
-                      setCorridor(e.target.value)
-                      if (e.target.value.includes('Tuticorin')) setDistrict('Tuticorin')
-                      else if (e.target.value.includes('Ariyalur')) setDistrict('Ariyalur')
-                      else if (e.target.value.includes('Sriperumbudur')) setDistrict('Kanchipuram')
-                      else if (e.target.value.includes('Hosur')) setDistrict('Krishnagiri')
-                      else if (e.target.value.includes('Coimbatore')) setDistrict('Coimbatore')
-                    }}
-                    className="w-full bg-white/[0.04] border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-amber-400"
-                  >
-                    {STRATEGIC_CORRIDORS.map(c => (
-                      <option key={c} value={c} className="bg-[#121216] text-white">{c}</option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-mono uppercase tracking-widest text-white/50 mb-2">
-                    Land Extent (Acres)
-                  </label>
-                  <div className="relative">
-                    <input
-                      type="number"
-                      step="any"
-                      placeholder="e.g. 50, 120, 250"
-                      value={extentAcres}
-                      onChange={e => setExtentAcres(e.target.value)}
-                      className="w-full bg-white/[0.04] border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder-white/30 focus:outline-none focus:border-amber-400"
-                    />
-                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-mono text-white/40">Acres</span>
-                  </div>
-                </div>
+              <div>
+                <label className="block text-xs font-sans uppercase tracking-wider text-[#8E887E] font-medium mb-1.5">
+                  Working Title / Asset Identifier
+                </label>
+                <input
+                  type="text"
+                  value={title}
+                  onChange={e => setTitle(e.target.value)}
+                  placeholder="e.g., 60-Acre Contiguous Industrial Parcel adjacent to NH-48"
+                  className="w-full px-4 py-3 rounded-xl bg-[#FAF8F5] border border-[#E8E2D6] text-xs text-[#1A1816] focus:outline-none focus:border-[#9E7B4F]"
+                />
               </div>
 
-              <div className="flex justify-end pt-4 border-t border-white/[0.08]">
+              <div className="flex justify-end pt-3">
                 <button
+                  type="button"
                   onClick={() => setStep(2)}
-                  disabled={!extentAcres}
-                  className="flex items-center gap-2 px-6 py-3 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-semibold text-sm transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+                  className="px-6 py-3 rounded-full bg-[#1A1816] hover:bg-[#2D2926] text-[#FAF8F5] font-sans text-xs uppercase tracking-wider font-semibold transition-all flex items-center gap-2"
                 >
-                  Continue to Infrastructure <ArrowRight className="w-4 h-4" />
+                  <span>Continue to Location</span>
+                  <ArrowRight className="w-3.5 h-3.5 text-[#C5A059]" />
                 </button>
               </div>
             </motion.div>
           )}
 
-          {/* STEP 2: INFRASTRUCTURE & TECHNICAL SPECS */}
+          {/* STEP 2: Location & Infrastructure */}
           {step === 2 && (
-            <motion.div initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} className="space-y-5">
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-5">
               <div>
-                <label className="block text-xs font-mono uppercase tracking-widest text-white/50 mb-2">
-                  02 // Power Grid & Substation Capacity
-                </label>
-                <input
-                  type="text"
-                  placeholder="e.g. 110kV Substation within 1.5 km, dedicated HT feeder line permitted"
-                  value={powerInfra}
-                  onChange={e => setPowerInfra(e.target.value)}
-                  className="w-full bg-white/[0.04] border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder-white/30 focus:outline-none focus:border-amber-400"
-                />
+                <h3 className="text-xl font-serif font-bold text-[#1A1816]">Location & Physical Infrastructure</h3>
+                <p className="text-xs text-[#5A564F] mt-1 font-light">
+                  Specify the geographic corridor and physical utility access points.
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-sans uppercase tracking-wider text-[#8E887E] font-medium mb-1.5">
+                    Land Extent (Total Acres) *
+                  </label>
+                  <input
+                    type="number"
+                    value={extentAcres}
+                    onChange={e => setExtentAcres(e.target.value)}
+                    placeholder="e.g., 75"
+                    className="w-full px-4 py-3 rounded-xl bg-[#FAF8F5] border border-[#E8E2D6] text-xs text-[#1A1816] focus:outline-none focus:border-[#9E7B4F]"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-sans uppercase tracking-wider text-[#8E887E] font-medium mb-1.5">
+                    District in Tamil Nadu *
+                  </label>
+                  <input
+                    type="text"
+                    value={district}
+                    onChange={e => setDistrict(e.target.value)}
+                    placeholder="e.g., Kanchipuram, Tuticorin, Ariyalur"
+                    className="w-full px-4 py-3 rounded-xl bg-[#FAF8F5] border border-[#E8E2D6] text-xs text-[#1A1816] focus:outline-none focus:border-[#9E7B4F]"
+                  />
+                </div>
               </div>
 
               <div>
-                <label className="block text-xs font-mono uppercase tracking-widest text-white/50 mb-2">
-                  Logistics & Highway Frontage
-                </label>
-                <input
-                  type="text"
-                  placeholder="e.g. Direct 4-lane NH-48 / NH-44 frontage with 400m clearance for freight trucks"
-                  value={roadAccess}
-                  onChange={e => setRoadAccess(e.target.value)}
-                  className="w-full bg-white/[0.04] border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder-white/30 focus:outline-none focus:border-amber-400"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-mono uppercase tracking-widest text-white/50 mb-2">
-                  Title & Regulatory Standing
+                <label className="block text-xs font-sans uppercase tracking-wider text-[#8E887E] font-medium mb-1.5">
+                  Strategic Corridor
                 </label>
                 <select
-                  value={titleStatus}
-                  onChange={e => setTitleStatus(e.target.value)}
-                  className="w-full bg-white/[0.04] border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-amber-400"
+                  value={corridor}
+                  onChange={e => setCorridor(e.target.value)}
+                  className="w-full px-4 py-3 rounded-xl bg-[#FAF8F5] border border-[#E8E2D6] text-xs text-[#1A1816] focus:outline-none focus:border-[#9E7B4F]"
                 >
-                  <option value="Single Owner Clean Revenue Patta (Zero Encumbrance)">Single Owner Clean Revenue Patta (Zero Encumbrance)</option>
-                  <option value="Industrial Land Conversion Approved (DTCP / CMDA)">Industrial Land Conversion Approved (DTCP / CMDA)</option>
-                  <option value="Valid Mining Lease & Department of Geology Consent">Valid Mining Lease & Department of Geology Consent</option>
-                  <option value="Private Joint Ownership with Single Power of Attorney">Private Joint Ownership with Single Power of Attorney</option>
+                  {STRATEGIC_CORRIDORS.map(c => (
+                    <option key={c} value={c}>{c}</option>
+                  ))}
                 </select>
               </div>
 
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-sans uppercase tracking-wider text-[#8E887E] font-medium mb-1.5">
+                    Power & Substation Proximity
+                  </label>
+                  <input
+                    type="text"
+                    value={powerInfra}
+                    onChange={e => setPowerInfra(e.target.value)}
+                    placeholder="e.g., 110kV Substation within 1.5 km"
+                    className="w-full px-4 py-3 rounded-xl bg-[#FAF8F5] border border-[#E8E2D6] text-xs text-[#1A1816] focus:outline-none focus:border-[#9E7B4F]"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-sans uppercase tracking-wider text-[#8E887E] font-medium mb-1.5">
+                    Road Access & Frontage
+                  </label>
+                  <input
+                    type="text"
+                    value={roadAccess}
+                    onChange={e => setRoadAccess(e.target.value)}
+                    placeholder="e.g., 400m direct NH-48 road frontage"
+                    className="w-full px-4 py-3 rounded-xl bg-[#FAF8F5] border border-[#E8E2D6] text-xs text-[#1A1816] focus:outline-none focus:border-[#9E7B4F]"
+                  />
+                </div>
+              </div>
+
               <div>
-                <label className="block text-xs font-mono uppercase tracking-widest text-white/50 mb-2">
-                  {assetType === 'quarry_mineral'
-                    ? 'Quarry / Mineral Reserves (Estimated Million MT & Rock Type)'
-                    : assetType === 'solar_site'
-                    ? 'Solar Irradiance / Evacuation Tier (GHI, slope, open access)'
-                    : 'Specific Industrial Readiness Notes'}
+                <label className="block text-xs font-sans uppercase tracking-wider text-[#8E887E] font-medium mb-1.5">
+                  Technical Reserve / Solar / Quarry Notes (Optional)
                 </label>
                 <textarea
-                  rows={3}
-                  placeholder={
-                    assetType === 'quarry_mineral'
-                      ? 'e.g. High-grade limestone deposit ~25-30M MT, verified core borehole report available, 20-year valid lease for cement feed'
-                      : assetType === 'solar_site'
-                      ? 'e.g. Level terrain with 5.7 kWh/m²/day GHI, zero shadow obstructions, direct STU nodal clearance'
-                      : 'e.g. Ground water boreholes at 400 ft, SIPCOT Phase 2 proximity, industrial gas pipeline 3 km'
-                  }
+                  rows={2}
                   value={quarryOrSolarSpecs}
                   onChange={e => setQuarryOrSolarSpecs(e.target.value)}
-                  className="w-full bg-white/[0.04] border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder-white/30 focus:outline-none focus:border-amber-400"
+                  placeholder="e.g., Estimated 15M MT high-calcium limestone, or flat topography ideal for 30MW solar..."
+                  className="w-full px-4 py-2.5 rounded-xl bg-[#FAF8F5] border border-[#E8E2D6] text-xs text-[#1A1816] focus:outline-none focus:border-[#9E7B4F]"
                 />
               </div>
 
-              <div className="flex items-center justify-between pt-4 border-t border-white/[0.08]">
+              <div className="flex justify-between pt-3">
                 <button
+                  type="button"
                   onClick={() => setStep(1)}
-                  className="px-4 py-2 text-sm text-white/60 hover:text-white transition-colors"
+                  className="px-5 py-2.5 rounded-full bg-[#FAF8F5] hover:bg-[#F4F0E8] text-xs text-[#5A564F] transition-colors"
                 >
                   Back
                 </button>
                 <button
+                  type="button"
                   onClick={() => setStep(3)}
-                  className="flex items-center gap-2 px-6 py-3 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-semibold text-sm transition-all"
+                  className="px-6 py-3 rounded-full bg-[#1A1816] hover:bg-[#2D2926] text-[#FAF8F5] font-sans text-xs uppercase tracking-wider font-semibold transition-all flex items-center gap-2"
                 >
-                  Commercials & Confidentiality <ArrowRight className="w-4 h-4" />
+                  <span>Continue to Title & Value</span>
+                  <ArrowRight className="w-3.5 h-3.5 text-[#C5A059]" />
                 </button>
               </div>
             </motion.div>
           )}
 
-          {/* STEP 3: VALUATION & CONFIDENTIALITY */}
+          {/* STEP 3: Title & Value & Principal Contact */}
           {step === 3 && (
-            <motion.div initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} className="space-y-6">
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-5">
+              <div>
+                <h3 className="text-xl font-serif font-bold text-[#1A1816]">Title Verification & Commercial Terms</h3>
+                <p className="text-xs text-[#5A564F] mt-1 font-light">
+                  Provide your target valuation and contact details for private advisory placement.
+                </p>
+              </div>
+
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-mono uppercase tracking-widest text-white/50 mb-2">
-                    03 // Target Consideration (₹ Crores)
+                  <label className="block text-xs font-sans uppercase tracking-wider text-[#8E887E] font-medium mb-1.5">
+                    Target Total Outlay (in ₹ Crores) *
                   </label>
-                  <div className="relative">
-                    <input
-                      type="number"
-                      step="any"
-                      placeholder="e.g. 45"
-                      value={priceTotal}
-                      onChange={e => setPriceTotal(e.target.value)}
-                      className="w-full bg-white/[0.04] border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder-white/30 focus:outline-none focus:border-amber-400"
-                    />
-                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-mono text-white/40">₹ Crores</span>
-                  </div>
+                  <input
+                    type="number"
+                    value={priceTotal}
+                    onChange={e => setPriceTotal(e.target.value)}
+                    placeholder="e.g., 45"
+                    className="w-full px-4 py-3 rounded-xl bg-[#FAF8F5] border border-[#E8E2D6] text-xs text-[#1A1816] focus:outline-none focus:border-[#9E7B4F]"
+                  />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-mono uppercase tracking-widest text-white/50 mb-2">
-                    Price per Acre (Optional)
+                  <label className="block text-xs font-sans uppercase tracking-wider text-[#8E887E] font-medium mb-1.5">
+                    Revenue Title Status
                   </label>
-                  <div className="relative">
+                  <select
+                    value={titleStatus}
+                    onChange={e => setTitleStatus(e.target.value)}
+                    className="w-full px-4 py-3 rounded-xl bg-[#FAF8F5] border border-[#E8E2D6] text-xs text-[#1A1816] focus:outline-none focus:border-[#9E7B4F]"
+                  >
+                    <option value="Single Owner Clean Patta">Single Owner Clean Revenue Patta</option>
+                    <option value="Joint Family Clean Title">Joint Ownership Clean Title</option>
+                    <option value="Industrial Converted / DTCP Approved">Industrial Converted / DTCP Approved</option>
+                    <option value="Mining Lease / Concession Valid">Active Mining Lease / Concession Valid</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Principal Information */}
+              <div className="p-4 rounded-2xl bg-[#F7F4EE] border border-[#E8E2D6] space-y-3">
+                <span className="text-[10px] font-sans uppercase tracking-[0.2em] text-[#7A5B32] font-semibold block">
+                  Principal / Owner Contact Details
+                </span>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div>
+                    <label className="block text-[10px] uppercase text-[#8E887E] mb-1">Your Name *</label>
                     <input
-                      type="number"
-                      step="any"
-                      placeholder="e.g. 35"
-                      value={pricePerAcre}
-                      onChange={e => setPricePerAcre(e.target.value)}
-                      className="w-full bg-white/[0.04] border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder-white/30 focus:outline-none focus:border-amber-400"
+                      type="text"
+                      value={sellerName}
+                      onChange={e => setSellerName(e.target.value)}
+                      placeholder="Principal Name"
+                      className="w-full px-3 py-2 rounded-xl bg-white border border-[#E8E2D6] text-xs text-[#1A1816]"
                     />
-                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-mono text-white/40">₹ Lakhs/Acre</span>
+                  </div>
+
+                  <div>
+                    <label className="block text-[10px] uppercase text-[#8E887E] mb-1">Phone Number *</label>
+                    <input
+                      type="tel"
+                      value={sellerPhone}
+                      onChange={e => setSellerPhone(e.target.value)}
+                      placeholder="+91 98765 43210"
+                      className="w-full px-3 py-2 rounded-xl bg-white border border-[#E8E2D6] text-xs text-[#1A1816]"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[10px] uppercase text-[#8E887E] mb-1">Email Address</label>
+                    <input
+                      type="email"
+                      value={sellerEmail}
+                      onChange={e => setSellerEmail(e.target.value)}
+                      placeholder="owner@domain.com"
+                      className="w-full px-3 py-2 rounded-xl bg-white border border-[#E8E2D6] text-xs text-[#1A1816]"
+                    />
                   </div>
                 </div>
+
+                {!user && (
+                  <p className="text-[11px] text-[#7A5B32] flex items-center gap-1.5 pt-1">
+                    <Shield className="w-3.5 h-3.5" />
+                    <span>Signing in with Google lets you track live due diligence status under Property Status.</span>
+                  </p>
+                )}
               </div>
 
-              <div>
-                <label className="block text-xs font-mono uppercase tracking-widest text-white/50 mb-3">
-                  Confidentiality & Syndication Protocol
-                </label>
-                <div className="space-y-2.5">
-                  {[
-                    {
-                      id: 'selective_mnc',
-                      title: 'Selective MNC Matching (Recommended)',
-                      desc: 'Discreet matching exclusively to verified MNCs (Chettinad, Renewables, PE) without public disclosure.'
-                    },
-                    {
-                      id: 'confidential_blind',
-                      title: 'Confidential Blind Mandate',
-                      desc: 'Coordinates and exact survey numbers withheld until counterparty signs mutual NDA.'
-                    },
-                    {
-                      id: 'public_showcase',
-                      title: 'Active Institutional Showcase',
-                      desc: 'Featured in Tharaga Institutional Showcase with verified commercial badge.'
-                    }
-                  ].map(tier => (
-                    <div
-                      key={tier.id}
-                      onClick={() => setConfidentiality(tier.id)}
-                      className={`p-3.5 rounded-2xl border transition-all cursor-pointer flex items-start gap-3 ${
-                        confidentiality === tier.id
-                          ? 'bg-amber-500/10 border-amber-400 text-white'
-                          : 'bg-white/[0.02] border-white/[0.06] text-white/70 hover:bg-white/[0.04]'
-                      }`}
-                    >
-                      <div className={`w-4 h-4 rounded-full border mt-0.5 flex items-center justify-center shrink-0 ${
-                        confidentiality === tier.id ? 'border-amber-400 bg-amber-400' : 'border-white/30'
-                      }`}>
-                        {confidentiality === tier.id && <div className="w-1.5 h-1.5 rounded-full bg-black" />}
-                      </div>
-                      <div>
-                        <div className="text-sm font-semibold text-white">{tier.title}</div>
-                        <div className="text-xs text-white/50">{tier.desc}</div>
-                      </div>
-                    </div>
-                  ))}
+              {errorMsg && (
+                <div className="p-3 rounded-xl bg-red-50 border border-red-200 text-xs text-red-600 flex items-center gap-2">
+                  <AlertCircle className="w-4 h-4 shrink-0" />
+                  <span>{errorMsg}</span>
                 </div>
-              </div>
+              )}
 
-              {/* Principal / Seller Information */}
-              <div className="p-4 rounded-2xl bg-white/[0.03] border border-white/[0.08] space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-mono uppercase text-amber-400 flex items-center gap-1.5">
-                    <User className="w-3.5 h-3.5" /> Principal / Asset Representative
-                  </span>
-                  {!user && (
-                    <button
-                      onClick={() => openAuthModal()}
-                      className="text-xs text-amber-400 hover:underline"
-                    >
-                      Sign In with Google for instant tracking
-                    </button>
-                  )}
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                  <input
-                    type="text"
-                    placeholder="Principal / Entity Name"
-                    value={sellerName}
-                    onChange={e => setSellerName(e.target.value)}
-                    className="bg-black/30 border border-white/10 rounded-xl px-3 py-2 text-xs text-white placeholder-white/30"
-                  />
-                  <input
-                    type="email"
-                    placeholder="Corporate Email"
-                    value={sellerEmail}
-                    onChange={e => setSellerEmail(e.target.value)}
-                    className="bg-black/30 border border-white/10 rounded-xl px-3 py-2 text-xs text-white placeholder-white/30"
-                  />
-                  <input
-                    type="tel"
-                    placeholder="Direct Phone / WhatsApp"
-                    value={sellerPhone}
-                    onChange={e => setSellerPhone(e.target.value)}
-                    className="bg-black/30 border border-white/10 rounded-xl px-3 py-2 text-xs text-white placeholder-white/30"
-                  />
-                </div>
-              </div>
-
-              <div className="flex items-center justify-between pt-4 border-t border-white/[0.08]">
+              <div className="flex justify-between pt-3">
                 <button
+                  type="button"
                   onClick={() => setStep(2)}
-                  className="px-4 py-2 text-sm text-white/60 hover:text-white transition-colors"
+                  className="px-5 py-2.5 rounded-full bg-[#FAF8F5] hover:bg-[#F4F0E8] text-xs text-[#5A564F] transition-colors"
                 >
                   Back
                 </button>
                 <button
-                  onClick={handleAnalyzeWithClaude}
-                  disabled={isAnalyzing}
-                  className="flex items-center gap-2 px-7 py-3 rounded-xl bg-gradient-to-r from-amber-500 to-amber-400 hover:from-amber-400 hover:to-amber-300 text-black font-bold text-sm shadow-xl shadow-amber-500/20 transition-all disabled:opacity-50"
+                  type="button"
+                  onClick={handleSubmitIntake}
+                  disabled={isSubmitting || !extentAcres || !district}
+                  className="px-7 py-3.5 rounded-full bg-[#1A1816] hover:bg-[#2D2926] text-[#FAF8F5] font-sans text-xs uppercase tracking-wider font-semibold transition-all flex items-center gap-2 disabled:opacity-50 shadow-md"
                 >
-                  {isAnalyzing ? (
+                  {isSubmitting ? (
                     <>
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                      Analyzing with Claude...
+                      <Loader2 className="w-4 h-4 animate-spin text-[#C5A059]" />
+                      <span>Generating Assessment...</span>
                     </>
                   ) : (
                     <>
-                      <Sparkles className="w-4 h-4 text-black" />
-                      Generate Institutional Dossier
+                      <span>Submit Property</span>
+                      <ArrowRight className="w-3.5 h-3.5 text-[#C5A059]" />
                     </>
                   )}
                 </button>
@@ -551,86 +525,70 @@ export function CommercialIntakeModal({ isOpen, onClose, user, onSuccess }: Comm
             </motion.div>
           )}
 
-          {/* STEP 4: CLAUDE AI GENERATED DOSSIER & FINAL AUTHORIZATION */}
-          {step === 4 && claudeDossier && (
-            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
-              {submittedSuccess ? (
-                <div className="text-center py-10 space-y-4">
-                  <div className="w-16 h-16 rounded-full bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center mx-auto text-emerald-400">
-                    <CheckCircle2 className="w-8 h-8" />
+          {/* STEP 4: Success & Assessment Summary */}
+          {step === 4 && (
+            <motion.div initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} className="space-y-6 text-center py-4">
+              <div className="w-14 h-14 rounded-full bg-[#F4EFE6] border border-[#DDD5C5] flex items-center justify-center mx-auto text-[#9E7B4F]">
+                <CheckCircle2 className="w-7 h-7" />
+              </div>
+
+              <div>
+                <span className="text-[11px] font-sans uppercase tracking-[0.2em] text-[#9E7B4F] font-semibold block mb-1">
+                  Submission Received
+                </span>
+                <h3 className="text-2xl font-serif font-bold text-[#1A1816]">
+                  Preliminary Asset Assessment Ready
+                </h3>
+                <p className="text-xs sm:text-sm text-[#5A564F] max-w-lg mx-auto mt-2 leading-relaxed font-light">
+                  Your property details have been recorded under your profile. Our advisory team will review revenue records and initiate confidential underwriting.
+                </p>
+              </div>
+
+              {assessmentSummary && (
+                <div className="text-left p-5 rounded-2xl bg-[#F7F4EE] border border-[#E8E2D6] space-y-3">
+                  <div className="flex items-center justify-between border-b border-[#E8E2D6] pb-2">
+                    <span className="text-xs font-serif font-bold text-[#1A1816]">
+                      {assessmentSummary.title || title || 'Commercial Land Asset'}
+                    </span>
+                    <span className="text-[10px] font-sans font-bold px-2 py-0.5 rounded-full bg-[#1A1816] text-[#FAF8F5]">
+                      {assessmentSummary.indicative_readiness_score ? `${assessmentSummary.indicative_readiness_score}/100 Readiness` : 'In Progress'}
+                    </span>
                   </div>
-                  <h3 className="text-2xl font-bold text-white">Commercial Mandate Registered</h3>
-                  <p className="text-white/60 text-sm max-w-md mx-auto">
-                    Your asset is under confidential due diligence. Our senior desk is matching with registered MNC acquisition mandates. You can monitor live progress under your Google profile.
+
+                  <p className="text-xs text-[#5A564F] leading-relaxed">
+                    {assessmentSummary.executive_summary || 'Asset parameters conform with institutional criteria. Title and infrastructure due diligence is underway.'}
                   </p>
-                  <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 text-xs font-mono text-amber-400">
-                    Status: Confidential Underwriting In Progress
+
+                  <div className="pt-2 flex flex-wrap gap-2 text-[10px] text-[#7A5B32]">
+                    <span className="px-2.5 py-1 rounded-full bg-white border border-[#E8E2D6]">
+                      Extent: {extentAcres} Acres
+                    </span>
+                    <span className="px-2.5 py-1 rounded-full bg-white border border-[#E8E2D6]">
+                      Corridor: {district}
+                    </span>
+                    <span className="px-2.5 py-1 rounded-full bg-white border border-[#E8E2D6]">
+                      Status: Under Due Diligence
+                    </span>
                   </div>
                 </div>
-              ) : (
-                <>
-                  <div className="p-5 rounded-2xl bg-amber-500/10 border border-amber-500/30 space-y-2">
-                    <div className="flex items-center justify-between">
-                      <span className="text-[11px] font-mono uppercase tracking-widest text-amber-400 flex items-center gap-1.5">
-                        <Sparkles className="w-3.5 h-3.5" /> Institutional Synthesis
-                      </span>
-                      <span className="text-xs px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30 font-medium">
-                        {claudeDossier.estimated_valuation_band}
-                      </span>
-                    </div>
-                    <p className="text-sm text-white/90 leading-relaxed font-serif italic text-base">
-                      "{claudeDossier.executive_summary}"
-                    </p>
-                  </div>
-
-                  {/* Target Corporate Offtakers */}
-                  <div>
-                    <h4 className="text-xs font-mono uppercase tracking-widest text-white/50 mb-3">
-                      Target MNC & Offtaker Matches Identified
-                    </h4>
-                    <div className="space-y-2">
-                      {claudeDossier.target_offtakers?.map((offtaker: string, idx: number) => (
-                        <div key={idx} className="p-3 rounded-xl bg-white/[0.03] border border-white/[0.08] flex items-center gap-3 text-xs text-white/90">
-                          <div className="w-6 h-6 rounded-lg bg-amber-500/20 text-amber-400 flex items-center justify-center text-[10px] font-bold">
-                            0{idx + 1}
-                          </div>
-                          <span>{offtaker}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Due Diligence Checklist */}
-                  <div className="p-4 rounded-2xl bg-black/40 border border-white/[0.06] space-y-2">
-                    <h4 className="text-xs font-mono uppercase tracking-widest text-white/40">
-                      Technical Underwriting Protocol
-                    </h4>
-                    <ul className="space-y-1.5 text-xs text-white/70">
-                      {claudeDossier.due_diligence_checklist?.map((item: string, i: number) => (
-                        <li key={i} className="flex items-center gap-2">
-                          <CheckCircle2 className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-                          <span>{item}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-
-                  <div className="flex items-center justify-between pt-4 border-t border-white/[0.08]">
-                    <button
-                      onClick={() => setStep(3)}
-                      className="px-4 py-2 text-sm text-white/60 hover:text-white transition-colors"
-                    >
-                      Adjust Commercials
-                    </button>
-                    <button
-                      onClick={handleFinalSubmit}
-                      className="flex items-center gap-2 px-8 py-3.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-bold text-sm shadow-xl shadow-amber-500/30 transition-all"
-                    >
-                      <Lock className="w-4 h-4" /> Authorize Private Syndication
-                    </button>
-                  </div>
-                </>
               )}
+
+              <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3">
+                <button
+                  type="button"
+                  onClick={handleFinish}
+                  className="w-full sm:w-auto px-8 py-3.5 rounded-full bg-[#1A1816] hover:bg-[#2D2926] text-[#FAF8F5] font-sans text-xs uppercase tracking-wider font-semibold transition-all shadow-md"
+                >
+                  View in Property Status
+                </button>
+
+                <a
+                  href="tel:+918870980839"
+                  className="w-full sm:w-auto px-6 py-3.5 rounded-full bg-[#FAF8F5] hover:bg-[#F4F0E8] border border-[#E8E2D6] text-[#1A1816] text-xs font-semibold transition-colors flex items-center justify-center gap-2"
+                >
+                  <Phone className="w-3.5 h-3.5 text-[#9E7B4F]" /> Call Desk Directly
+                </a>
+              </div>
             </motion.div>
           )}
         </div>

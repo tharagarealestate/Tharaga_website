@@ -51,11 +51,11 @@ export async function POST(req: NextRequest) {
     const claudeModel = process.env.ANTHROPIC_MODEL || 'claude-haiku-5-5'
     
     let analysisResult = {
-      executive_summary: `${extent_acres || 'Prime'} acres designated for ${asset_type.replace('_', ' ')} in the strategic ${strategic_corridor || location_district} corridor. High-capacity infrastructure profile with direct syndication eligibility to tier-1 MNC conglomerates.`,
+      executive_summary: `${extent_acres || 'Prime'} acres designated for ${asset_type.replace('_', ' ')} in the strategic ${strategic_corridor || location_district} corridor. High-capacity infrastructure profile with direct syndication eligibility to qualified corporate buyers.`,
       target_offtakers: [
-        'Tier-1 Infrastructure & Industrial Conglomerates (e.g. Chettinad, L&T, Tata)',
+        'Tier-1 Infrastructure & Industrial Conglomerates (e.g. Cement, Energy, Manufacturing)',
         'Utility-scale Renewable Power Producers & IPPs',
-        'National Logistics REITs & Institutional Real Estate Funds'
+        'National Logistics Operators & Institutional Real Estate Funds'
       ],
       strategic_advantages: [
         `Strategic siting along the high-density ${strategic_corridor || location_district} industrial corridor`,
@@ -73,8 +73,8 @@ export async function POST(req: NextRequest) {
 
     if (anthropic) {
       try {
-        const prompt = `You are the Senior Underwriter and Investment Director at Tharaga Institutional Commercial Advisory.
-A commercial/industrial asset seller has submitted the following mandate details:
+        const prompt = `You are the Senior Underwriter and Investment Director at Tharaga Real Estate.
+A commercial/industrial asset seller has submitted the following property details:
 - Asset Type: ${asset_type}
 - Extent: ${extent_acres} Acres
 - Location: ${location_district}, Strategic Corridor: ${strategic_corridor}
@@ -84,15 +84,15 @@ A commercial/industrial asset seller has submitted the following mandate details
 - Title / Legal Standing: ${title_status}
 - Water / Natural Resources: ${water_resources}
 - Specifics (Solar / Quarry / Industrial): ${quarry_mineral_specs || solar_specs || seller_notes}
-- Confidentiality Mandate: ${confidentiality_level}
+- Confidentiality Level: ${confidentiality_level}
 
 Generate an institutional executive assessment in JSON format with these exact keys:
 {
-  "executive_summary": "A concise 2-sentence institutional summary highlighting key industrial/commercial value proposition",
-  "target_offtakers": ["Specific corporate/MNC buyer profiles with examples like Chettinad Cements for limestone quarries, NTPC/Adani/ReNew for solar, Foxconn/Hyundai suppliers for industrial land"],
+  "executive_summary": "A concise 2-sentence institutional summary highlighting key industrial/commercial value proposition (never use words like 'AI' or 'Claude' or 'MNC')",
+  "target_offtakers": ["Specific corporate and enterprise buyer profiles (e.g. cement manufacturers for limestone quarries, clean energy IPPs for solar, manufacturing assemblers for industrial land)"],
   "strategic_advantages": ["3-4 bullet points highlighting strategic positioning, logistics, power, or zoning"],
   "estimated_valuation_band": "Institutional market valuation commentary based on corridor and extent",
-  "due_diligence_checklist": ["3 essential diligence items required before presenting to MNC boardrooms"]
+  "due_diligence_checklist": ["3 essential diligence items required before presenting to corporate decision desks"]
 }
 Only output the raw JSON object, no Markdown ticks or wrapper text.`
 

@@ -1,13 +1,14 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { motion, useScroll, useTransform, AnimatePresence } from 'framer-motion'
 import {
   Building2, Shield, ArrowRight, Sun, Mountain,
   Warehouse, Landmark, CheckCircle2, ChevronRight,
-  Phone, LogIn, LogOut, Sparkles, Lock, MapPin,
-  ExternalLink, Menu, X, ChevronDown, User, Zap
+  Phone, LogIn, LogOut, Lock, MapPin,
+  ExternalLink, Menu, X, ChevronDown, User, Sparkles, Search, Compass, SlidersHorizontal
 } from 'lucide-react'
 import { openAuthModal } from '@/components/ui/AuthButton'
 import { getSupabase } from '@/lib/supabase'
@@ -16,6 +17,22 @@ import { CommercialIntakeModal } from '@/components/commercial/CommercialIntakeM
 import { InstitutionalScreener } from '@/components/commercial/InstitutionalScreener'
 import { MandateTracker } from '@/components/commercial/MandateTracker'
 import { CURATED_COMMERCIAL_MANDATES } from '@/app/api/commercial/mandates/route'
+
+const CORRIDOR_OPTIONS = [
+  { value: 'all', label: 'All Tamil Nadu Corridors' },
+  { value: 'Tuticorin', label: 'Tuticorin – Tirunelveli (Renewable / Port)' },
+  { value: 'Sriperumbudur', label: 'Sriperumbudur – Oragadam (Manufacturing)' },
+  { value: 'Ariyalur', label: 'Ariyalur – Karur (Limestone & Cement Belt)' },
+  { value: 'Hosur', label: 'Hosur – Krishnagiri (EV & Logistics)' },
+  { value: 'OMR', label: 'Chennai OMR – Guindy (Commercial IT)' },
+]
+
+const SCALE_OPTIONS = [
+  { value: 'all', label: 'Any Extent' },
+  { value: '25', label: '25+ Acres' },
+  { value: '50', label: '50+ Acres' },
+  { value: '100', label: '100+ Acres' },
+]
 
 export default function HomePage() {
   const [user, setUser] = useState<any>(null)
@@ -26,8 +43,18 @@ export default function HomePage() {
   const [isIntakeModalOpen, setIsIntakeModalOpen] = useState(false)
   const [showcaseMandates, setShowcaseMandates] = useState<any[]>(CURATED_COMMERCIAL_MANDATES)
 
+  // Innovative Search & Filter State
+  const [selectedCategory, setSelectedCategory] = useState('all')
+  const [selectedCorridor, setSelectedCorridor] = useState('all')
+  const [selectedScale, setSelectedScale] = useState('all')
+  const [searchQuery, setSearchQuery] = useState('')
+
   const { scrollY } = useScroll()
-  const navBg = useTransform(scrollY, [0, 80], ['rgba(10, 10, 13, 0)', 'rgba(10, 10, 13, 0.95)'])
+  const navBg = useTransform(
+    scrollY,
+    [0, 80],
+    ['rgba(250, 248, 245, 0.85)', 'rgba(250, 248, 245, 0.98)']
+  )
 
   // Supabase Auth Integration
   useEffect(() => {
@@ -111,53 +138,74 @@ export default function HomePage() {
     .toUpperCase()
     .slice(0, 2) || 'P'
 
+  // Scroll smoothly to projects section
+  const scrollToProjects = () => {
+    const el = document.getElementById('projects')
+    if (el) el.scrollIntoView({ behavior: 'smooth' })
+  }
+
   return (
-    <div className="min-h-screen bg-[#070709] text-white selection:bg-amber-400 selection:text-black">
+    <div className="min-h-screen bg-[#FAF8F5] text-[#1A1816] selection:bg-[#EAE2D2] selection:text-[#1A1816]">
 
       {/* ── MASTER NAVIGATION ─────────────────────────────────────────── */}
       <motion.nav
         style={{ backgroundColor: navBg }}
-        className="fixed top-0 left-0 right-0 z-50 transition-colors border-b border-white/[0.06] backdrop-blur-md"
+        className="fixed top-0 left-0 right-0 z-50 border-b border-[#E8E2D6] backdrop-blur-md transition-colors"
       >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-3 group">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center shadow-lg shadow-amber-500/20 group-hover:scale-105 transition-transform">
-              <Building2 className="w-5 h-5 text-black" />
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3.5 flex items-center justify-between">
+          {/* Brand Logo & Title */}
+          <Link href="/" className="flex items-center gap-3.5 group">
+            <div className="w-10 h-10 rounded-xl overflow-hidden border border-[#DDD5C5] shadow-sm bg-white shrink-0">
+              <img
+                src="/images/tharaga-logo.jpg"
+                alt="Tharaga Real Estate"
+                className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+              />
             </div>
             <div>
-              <span className="font-serif font-bold text-white text-xl tracking-tight block leading-tight">Tharaga</span>
-              <span className="block text-[9px] font-mono text-amber-400/90 tracking-[0.25em] uppercase font-medium">Institutional Advisory</span>
+              <span className="font-serif font-bold text-[#1A1816] text-xl tracking-tight block leading-tight">
+                Tharaga
+              </span>
+              <span className="block text-[10px] font-sans text-[#7A5B32] tracking-[0.22em] uppercase font-semibold">
+                Real Estate
+              </span>
             </div>
           </Link>
 
+          {/* Desktop Nav Links */}
           <div className="hidden lg:flex items-center gap-1">
             {[
-              { label: 'Commercial Mandates', href: '#mandates' },
-              { label: 'Feasibility Screener', href: '#screener' },
-              { label: 'Track Status', href: '#tracker' },
-              { label: 'Advisory Protocol', href: '#advisory' },
+              { label: 'Active Projects', href: '#projects' },
+              { label: 'Feasibility Study', href: '#feasibility' },
+              { label: 'Property Status', href: '#status' },
+              { label: 'Advisory Standard', href: '#advisory' },
             ].map(link => (
               <a
                 key={link.label}
                 href={link.href}
-                className="px-4 py-2 text-xs font-mono uppercase tracking-wider text-white/70 hover:text-white hover:bg-white/[0.04] rounded-lg transition-all"
+                className="px-4 py-2 text-xs font-sans tracking-wide text-[#5A564F] hover:text-[#1A1816] hover:bg-[#F4F0E8] rounded-full transition-all"
               >
                 {link.label}
               </a>
             ))}
           </div>
 
+          {/* Action CTAs */}
           <div className="flex items-center gap-3">
             {user ? (
-              <div className="relative" onMouseEnter={() => setUserMenuOpen(true)} onMouseLeave={() => setUserMenuOpen(false)}>
-                <button className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white/[0.04] border border-white/10 hover:border-amber-400/40 transition-colors">
-                  <div className="w-7 h-7 rounded-full bg-amber-500 flex items-center justify-center text-black text-xs font-bold">
+              <div
+                className="relative"
+                onMouseEnter={() => setUserMenuOpen(true)}
+                onMouseLeave={() => setUserMenuOpen(false)}
+              >
+                <button className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white border border-[#E8E2D6] hover:border-[#C5A059] transition-colors shadow-sm">
+                  <div className="w-7 h-7 rounded-full bg-[#1A1816] flex items-center justify-center text-[#FAF8F5] text-xs font-bold">
                     {initials}
                   </div>
-                  <span className="text-xs font-medium text-white max-w-[120px] truncate hidden sm:block">
+                  <span className="text-xs font-sans font-medium text-[#1A1816] max-w-[120px] truncate hidden sm:block">
                     {displayName}
                   </span>
-                  <ChevronDown className="w-3 h-3 text-white/50" />
+                  <ChevronDown className="w-3 h-3 text-[#8E887E]" />
                 </button>
                 <AnimatePresence>
                   {userMenuOpen && (
@@ -165,22 +213,22 @@ export default function HomePage() {
                       initial={{ opacity: 0, y: -6, scale: 0.97 }}
                       animate={{ opacity: 1, y: 0, scale: 1 }}
                       exit={{ opacity: 0, y: -6, scale: 0.97 }}
-                      className="absolute right-0 top-full mt-2 w-56 bg-[#111116] border border-white/10 rounded-2xl shadow-2xl p-1.5 space-y-1 z-50"
+                      className="absolute right-0 top-full mt-2 w-60 bg-white border border-[#E8E2D6] rounded-2xl shadow-xl p-2 space-y-1 z-50 text-left"
                     >
-                      <div className="px-3 py-2 border-b border-white/[0.06]">
-                        <p className="text-xs font-semibold text-white truncate">{displayName}</p>
-                        <p className="text-[10px] text-white/40 truncate">{userEmail}</p>
+                      <div className="px-3 py-2 border-b border-[#E8E2D6]">
+                        <p className="text-xs font-bold text-[#1A1816] truncate">{displayName}</p>
+                        <p className="text-[10px] text-[#8E887E] truncate">{userEmail}</p>
                       </div>
                       <a
-                        href="#tracker"
+                        href="#status"
                         onClick={() => setUserMenuOpen(false)}
-                        className="flex items-center gap-2 px-3 py-2 text-xs text-white/80 hover:text-white hover:bg-white/5 rounded-xl transition-colors"
+                        className="flex items-center gap-2 px-3 py-2 text-xs text-[#5A564F] hover:text-[#1A1816] hover:bg-[#FAF8F5] rounded-xl transition-colors font-medium"
                       >
-                        <Shield className="w-3.5 h-3.5 text-amber-400" /> My Mandates Status
+                        <Shield className="w-3.5 h-3.5 text-[#9E7B4F]" /> My Property Status
                       </a>
                       <button
                         onClick={handleSignOut}
-                        className="w-full flex items-center gap-2 px-3 py-2 text-xs text-rose-400 hover:text-rose-300 hover:bg-rose-500/10 rounded-xl transition-colors"
+                        className="w-full flex items-center gap-2 px-3 py-2 text-xs text-rose-600 hover:bg-rose-50 rounded-xl transition-colors font-medium text-left"
                       >
                         <LogOut className="w-3.5 h-3.5" /> Sign Out
                       </button>
@@ -191,24 +239,24 @@ export default function HomePage() {
             ) : (
               <button
                 onClick={() => openAuthModal()}
-                className="hidden sm:flex items-center gap-1.5 px-4 py-2 text-xs font-mono uppercase tracking-wider text-white/80 hover:text-white hover:bg-white/5 rounded-xl border border-white/10 transition-all"
+                className="hidden sm:flex items-center gap-1.5 px-4 py-2 text-xs font-sans uppercase tracking-wider text-[#1A1816] hover:bg-[#F4F0E8] rounded-full border border-[#DDD5C5] transition-all font-medium"
               >
-                <LogIn className="w-3.5 h-3.5 text-amber-400" /> Sign In
+                <LogIn className="w-3.5 h-3.5 text-[#9E7B4F]" /> Sign In
               </button>
             )}
 
             <button
               onClick={() => setIsIntakeModalOpen(true)}
-              className="flex items-center gap-2 px-4 sm:px-5 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-semibold text-xs tracking-wider uppercase transition-all shadow-lg shadow-amber-500/25 whitespace-nowrap"
+              className="flex items-center gap-2 px-5 py-2.5 rounded-full bg-[#1A1816] hover:bg-[#2D2926] text-[#FAF8F5] font-sans font-medium text-xs tracking-wider uppercase transition-all shadow-sm whitespace-nowrap"
             >
-              <Sparkles className="w-3.5 h-3.5" />
-              List Commercial Asset
+              <span>List Property</span>
+              <ArrowRight className="w-3 h-3 text-[#C5A059]" />
             </button>
 
             {/* Mobile menu trigger */}
             <button
               onClick={() => setMobileNavOpen(o => !o)}
-              className="lg:hidden p-2 rounded-xl bg-white/5 text-white/70 hover:text-white"
+              className="lg:hidden p-2 rounded-full bg-white border border-[#E8E2D6] text-[#1A1816]"
             >
               {mobileNavOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
             </button>
@@ -222,19 +270,19 @@ export default function HomePage() {
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: 'auto' }}
               exit={{ opacity: 0, height: 0 }}
-              className="lg:hidden px-4 py-4 bg-[#0E0E12] border-t border-white/10 space-y-2"
+              className="lg:hidden px-4 py-4 bg-[#FAF8F5] border-t border-[#E8E2D6] space-y-2"
             >
               {[
-                { label: 'Commercial Mandates', href: '#mandates' },
-                { label: 'Feasibility Screener', href: '#screener' },
-                { label: 'Track Status', href: '#tracker' },
-                { label: 'Advisory Protocol', href: '#advisory' },
+                { label: 'Active Projects', href: '#projects' },
+                { label: 'Feasibility Study', href: '#feasibility' },
+                { label: 'Property Status', href: '#status' },
+                { label: 'Advisory Standard', href: '#advisory' },
               ].map(link => (
                 <a
                   key={link.label}
                   href={link.href}
                   onClick={() => setMobileNavOpen(false)}
-                  className="block px-3 py-2 text-xs font-mono uppercase tracking-wider text-white/70 hover:text-white hover:bg-white/5 rounded-lg"
+                  className="block px-3 py-2 text-xs font-sans uppercase tracking-wider text-[#5A564F] hover:text-[#1A1816] hover:bg-[#F4F0E8] rounded-xl"
                 >
                   {link.label}
                 </a>
@@ -245,7 +293,7 @@ export default function HomePage() {
                     setMobileNavOpen(false)
                     openAuthModal()
                   }}
-                  className="w-full text-left px-3 py-2 text-xs font-mono uppercase tracking-wider text-amber-400 hover:bg-white/5 rounded-lg"
+                  className="w-full text-left px-3 py-2 text-xs font-sans uppercase tracking-wider text-[#9E7B4F] font-bold"
                 >
                   Sign In with Google
                 </button>
@@ -255,204 +303,202 @@ export default function HomePage() {
         </AnimatePresence>
       </motion.nav>
 
-      {/* ── ARCHITECTURAL HERO SECTION ─────────────────────────────────── */}
-      <section className="relative min-h-[92vh] flex flex-col items-center justify-center pt-28 pb-16 px-4 sm:px-6 overflow-hidden">
-        {/* Subtle Atmospheric Lighting Overlay */}
+      {/* ── ARCHITECTURAL HERO SECTION (WARM PAPER & PERFUME AESTHETIC) ──── */}
+      <section className="relative pt-36 pb-20 px-4 sm:px-6 overflow-hidden">
+        {/* Subtle Ambient Warm Lighting */}
         <div className="absolute inset-0 pointer-events-none">
-          {/* Obsidian radial base */}
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_160%_100%_at_50%_0%,#16120E_0%,#09090C_60%,#050507_100%)]" />
-
-          {/* Warm Champagne Spotlight */}
           <div
-            className="absolute top-[-25%] left-1/2 -translate-x-1/2 w-[65vw] h-[75vh]"
+            className="absolute top-0 right-1/4 w-[60vw] h-[50vh]"
             style={{
-              background: 'radial-gradient(ellipse at center, rgba(197,154,58,0.14) 0%, rgba(197,154,58,0.03) 55%, transparent 75%)',
-              filter: 'blur(55px)',
-            }}
-          />
-
-          {/* Hairline blueprint geometric grid */}
-          <div
-            className="absolute inset-0 opacity-[0.025]"
-            style={{
-              backgroundImage: 'linear-gradient(rgba(255,255,255,0.4) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.4) 1px, transparent 1px)',
-              backgroundSize: '80px 80px',
+              background: 'radial-gradient(ellipse at center, rgba(197,160,89,0.12) 0%, rgba(244,240,232,0.4) 60%, transparent 80%)',
+              filter: 'blur(70px)',
             }}
           />
         </div>
 
-        {/* Content */}
-        <div className="relative z-10 max-w-5xl mx-auto text-center space-y-8">
+        {/* Hero Editorial Header */}
+        <div className="relative z-10 max-w-5xl mx-auto text-center space-y-6">
           <motion.div
-            initial={{ opacity: 0, y: 16 }}
+            initial={{ opacity: 0, y: 14 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
-            className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/25 text-amber-300 text-xs font-mono tracking-widest uppercase"
+            className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#F4EFE6] border border-[#DDD5C5] text-[#7A5B32] text-xs font-sans tracking-[0.2em] uppercase font-semibold"
           >
-            <div className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
-            Private Institutional Brokerage & Advisory
+            <div className="w-1.5 h-1.5 rounded-full bg-[#9E7B4F]" />
+            Tharaga Real Estate · Commercial & Land Advisory
           </motion.div>
 
           <motion.h1
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 18 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, delay: 0.1 }}
-            className="text-4xl sm:text-6xl md:text-7xl font-bold tracking-tight text-white leading-[1.08]"
+            className="text-4xl sm:text-6xl md:text-7xl font-serif font-bold tracking-tight text-[#1A1816] leading-[1.08]"
           >
-            Institutional Commercial &<br />
-            <span
-              className="inline-block italic"
-              style={{
-                fontFamily: 'var(--font-serif), Georgia, serif',
-                fontWeight: 700,
-                background: 'linear-gradient(110deg, #F3E5AB 0%, #D4AF37 35%, #F59E0B 70%, #E6C280 100%)',
-                backgroundClip: 'text',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-                filter: 'drop-shadow(0 0 28px rgba(197,154,58,0.35))',
-              }}
-            >
-              Industrial Asset Syndication.
+            Commercial Land, Solar Sites &<br />
+            <span className="italic font-normal text-[#9E7B4F]">
+              Operational Quarries Across Tamil Nadu.
             </span>
           </motion.h1>
 
           <motion.p
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 18 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, delay: 0.2 }}
-            className="text-base sm:text-xl text-white/60 max-w-3xl mx-auto leading-relaxed font-light"
+            className="text-base sm:text-lg text-[#5A564F] max-w-3xl mx-auto leading-relaxed font-light"
           >
-            We connect high-extent industrial land banks, grid-connected solar power parcels, and operational limestone quarries directly with Tier-1 MNC conglomerates and institutional capital through private advisory channels.
+            We represent large-extent industrial land banks, grid-connected solar power parcels, and high-yield limestone reserves connecting directly with enterprise buyers and institutional capital. Clean patta, complete due diligence, and absolute discretion.
           </motion.p>
 
-          {/* Action CTAs */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, delay: 0.3 }}
-            className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-2"
-          >
-            <button
-              onClick={() => setIsIntakeModalOpen(true)}
-              className="w-full sm:w-auto flex items-center justify-center gap-2.5 px-8 py-4 rounded-2xl bg-amber-500 hover:bg-amber-400 text-black font-bold text-sm tracking-wide uppercase transition-all shadow-xl shadow-amber-500/25 group"
-            >
-              <Sparkles className="w-4 h-4 text-black group-hover:rotate-12 transition-transform" />
-              Mandate Commercial Asset
-              <ArrowRight className="w-4 h-4 ml-1" />
-            </button>
-
-            <a
-              href="#mandates"
-              className="w-full sm:w-auto flex items-center justify-center gap-2 px-8 py-4 rounded-2xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/10 hover:border-white/20 text-white font-medium text-sm tracking-wide transition-all"
-            >
-              View Curated Mandates
-            </a>
-
-            <a
-              href="#screener"
-              className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-4 rounded-2xl bg-white/[0.02] hover:bg-white/[0.06] border border-amber-500/20 text-amber-300 font-mono text-xs uppercase tracking-wider transition-all"
-            >
-              Run Feasibility Screener
-            </a>
-          </motion.div>
-
-          {/* Blueprint Institutional Proof Chips */}
+          {/* Proof Metric Ribbon */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ duration: 0.8, delay: 0.4 }}
-            className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-10 border-t border-white/[0.08] max-w-4xl mx-auto text-left"
+            transition={{ duration: 0.8, delay: 0.3 }}
+            className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-6 max-w-4xl mx-auto text-left"
           >
             {[
-              { code: 'MNC-OFFTAKERS', label: 'Tier-1 Conglomerates', sub: 'Chettinad, Renewables, PE' },
-              { code: 'CLEAR-PATTA', label: '100% Audited Title', sub: '30-Year Revenue Verification' },
-              { code: 'CONFIDENTIAL', label: 'Bilateral Discretion', sub: 'Mutual NDA Protocol' },
-              { code: 'CAP-DEPLOYMENT', label: '₹500Cr+ Pipeline', sub: 'Tamil Nadu Strategic Belts' },
-            ].map(chip => (
-              <div key={chip.code} className="p-3.5 rounded-2xl bg-white/[0.02] border border-white/[0.06]">
-                <div className="text-[10px] font-mono text-amber-400/80 uppercase tracking-widest">{chip.code}</div>
-                <div className="text-sm font-semibold text-white mt-1">{chip.label}</div>
-                <div className="text-[11px] text-white/40">{chip.sub}</div>
+              { label: '₹500Cr+ Pipeline', sub: 'Commercial Land & Quarries' },
+              { label: '100% Audited Title', sub: '30-Year Revenue Verification' },
+              { label: 'Confidential Placement', sub: 'Bilateral Discretion Protocol' },
+              { label: 'Direct Desk Access', sub: 'No Intermediary Broker Chains' },
+            ].map(m => (
+              <div key={m.label} className="p-3.5 rounded-2xl bg-white border border-[#E8E2D6] shadow-sm">
+                <div className="text-sm font-serif font-bold text-[#1A1816]">{m.label}</div>
+                <div className="text-[11px] text-[#8E887E] mt-0.5">{m.sub}</div>
               </div>
             ))}
+          </motion.div>
+
+          {/* ── INNOVATIVE CONCIERGE SEARCH & FILTER CONSOLE ──────────── */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.4 }}
+            className="mt-10 p-4 sm:p-6 rounded-3xl bg-white border border-[#E8E2D6] shadow-xl max-w-4xl mx-auto text-left space-y-4"
+          >
+            <div className="flex items-center justify-between pb-3 border-b border-[#E8E2D6]">
+              <div className="flex items-center gap-2">
+                <SlidersHorizontal className="w-4 h-4 text-[#9E7B4F]" />
+                <span className="text-xs font-sans uppercase tracking-[0.18em] text-[#7A5B32] font-semibold">
+                  Asset & Corridor Filter Console
+                </span>
+              </div>
+              <span className="text-xs text-[#8E887E]">
+                Showing active placement assets
+              </span>
+            </div>
+
+            {/* Row 1: Category Filter Buttons */}
+            <div className="flex flex-wrap gap-2">
+              {[
+                { id: 'all', label: 'All Assets' },
+                { id: 'solar', label: 'Solar & Renewable' },
+                { id: 'mines', label: 'Mines & Quarries' },
+                { id: 'industrial', label: 'Industrial Land' },
+                { id: 'logistics', label: 'Logistics Hubs' },
+                { id: 'commercial', label: 'Commercial IT' },
+              ].map(cat => (
+                <button
+                  key={cat.id}
+                  onClick={() => {
+                    setSelectedCategory(cat.id)
+                    scrollToProjects()
+                  }}
+                  className={`px-3.5 py-1.5 rounded-full text-xs font-sans transition-all ${
+                    selectedCategory === cat.id
+                      ? 'bg-[#1A1816] text-[#FAF8F5] font-medium shadow-sm'
+                      : 'bg-[#FAF8F5] border border-[#E8E2D6] text-[#5A564F] hover:bg-[#F4F0E8] hover:text-[#1A1816]'
+                  }`}
+                >
+                  {cat.label}
+                </button>
+              ))}
+            </div>
+
+            {/* Row 2: Search Input + Corridor Select + Scale Select + Explore CTA */}
+            <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 pt-1">
+              {/* Keyword Search */}
+              <div className="sm:col-span-5 relative">
+                <Search className="w-4 h-4 text-[#8E887E] absolute left-3.5 top-1/2 -translate-y-1/2" />
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={e => setSearchQuery(e.target.value)}
+                  placeholder="Search district, corridor, or keyword..."
+                  className="w-full pl-9 pr-4 py-2.5 rounded-full bg-[#FAF8F5] border border-[#E8E2D6] text-xs text-[#1A1816] focus:outline-none focus:border-[#9E7B4F]"
+                />
+              </div>
+
+              {/* Corridor Dropdown */}
+              <div className="sm:col-span-4">
+                <select
+                  value={selectedCorridor}
+                  onChange={e => {
+                    setSelectedCorridor(e.target.value)
+                    scrollToProjects()
+                  }}
+                  className="w-full px-4 py-2.5 rounded-full bg-[#FAF8F5] border border-[#E8E2D6] text-xs text-[#1A1816] focus:outline-none focus:border-[#9E7B4F]"
+                >
+                  {CORRIDOR_OPTIONS.map(c => (
+                    <option key={c.value} value={c.value}>{c.label}</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Scale Dropdown */}
+              <div className="sm:col-span-3">
+                <select
+                  value={selectedScale}
+                  onChange={e => {
+                    setSelectedScale(e.target.value)
+                    scrollToProjects()
+                  }}
+                  className="w-full px-4 py-2.5 rounded-full bg-[#FAF8F5] border border-[#E8E2D6] text-xs text-[#1A1816] focus:outline-none focus:border-[#9E7B4F]"
+                >
+                  {SCALE_OPTIONS.map(s => (
+                    <option key={s.value} value={s.value}>{s.label}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            {/* Filter Footer Action */}
+            <div className="flex items-center justify-between pt-2 text-xs text-[#5A564F]">
+              <span>
+                Select filters to immediately update the projects below
+              </span>
+              <button
+                onClick={scrollToProjects}
+                className="flex items-center gap-1.5 font-sans font-semibold text-[#9E7B4F] hover:text-[#7A5B32]"
+              >
+                <span>View Matching Projects</span>
+                <ArrowRight className="w-3.5 h-3.5" />
+              </button>
+            </div>
           </motion.div>
         </div>
       </section>
 
-      {/* ── SECTION 1: THE TRANSACTION PHILOSOPHY ─────────────────────── */}
-      <section id="advisory" className="py-20 bg-[#0A0A0D] border-t border-white/[0.08]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6">
-          <div className="text-center max-w-3xl mx-auto mb-16">
-            <span className="text-xs font-mono uppercase tracking-widest text-amber-400 block mb-2">
-              The Advisory Difference
-            </span>
-            <h2 className="text-3xl sm:text-4xl font-serif font-bold text-white tracking-tight">
-              Bespoke Commercial Syndication. Zero Public Noise.
-            </h2>
-            <p className="text-white/50 text-sm sm:text-base mt-3 leading-relaxed">
-              We do not operate consumer real estate classifieds. Tharaga provides discreet transaction underwriting connecting sovereign asset holders with enterprise conglomerates.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {[
-              {
-                num: '01',
-                title: 'Direct MNC Boardroom Access',
-                desc: 'Whether placing an operational limestone quarry with cement majors like Chettinad Cements or 150 acres with utility solar developers, we bypass intermediary chains to transact directly with corporate strategy desks.',
-                icon: Building2,
-              },
-              {
-                num: '02',
-                title: 'Technical Underwriting with Claude',
-                desc: 'Every asset submitted undergoes instant algorithmic and technical assessment — analyzing grid substation proximity (110kV/230kV), highway logistics latency, environmental zoning, and proven mineral reserve tenure.',
-                icon: Sparkles,
-              },
-              {
-                num: '03',
-                title: 'Total Discretion & Realtime Tracking',
-                desc: 'Principals maintain 100% control over mandate disclosure. Track title verification, due diligence packets, and active MNC buyer outreach live through your verified Google profile.',
-                icon: Shield,
-              },
-            ].map(col => {
-              const Icon = col.icon
-              return (
-                <div
-                  key={col.num}
-                  className="p-8 rounded-3xl bg-[#0F0F14] border border-white/[0.08] hover:border-amber-400/40 transition-all space-y-4 group"
-                >
-                  <div className="flex items-center justify-between">
-                    <span className="text-xl font-mono font-bold text-amber-400/40 group-hover:text-amber-400 transition-colors">
-                      {col.num}
-                    </span>
-                    <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center text-amber-400">
-                      <Icon className="w-5 h-5" />
-                    </div>
-                  </div>
-                  <h3 className="text-lg font-serif font-bold text-white">{col.title}</h3>
-                  <p className="text-xs sm:text-sm text-white/50 leading-relaxed">{col.desc}</p>
-                </div>
-              )
-            })}
-          </div>
-        </div>
-      </section>
-
-      {/* ── SECTION 2: CURATED COMMERCIAL SHOWCASE ───────────────────── */}
+      {/* ── SECTION 1: RECENT ACTIVE PROJECTS (ZERO OVERLAP & FULL DOSSIER) ── */}
       <CuratedCommercialShowcase
         mandates={showcaseMandates}
         onOpenIntake={() => setIsIntakeModalOpen(true)}
+        externalCategory={selectedCategory}
+        externalCorridor={selectedCorridor}
+        externalScale={selectedScale}
+        searchQuery={searchQuery}
+        onSelectCategory={setSelectedCategory}
       />
 
-      {/* ── SECTION 3: REIMAGINED CLAUDE FEASIBILITY SCREENER ────────── */}
-      <section id="screener" className="py-24 bg-[#070709] relative">
+      {/* ── SECTION 2: LAND & INDUSTRIAL FEASIBILITY STUDY ──────────────── */}
+      <section id="feasibility" className="py-24 bg-[#F4F0E8] border-t border-[#E8E2D6]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <InstitutionalScreener />
         </div>
       </section>
 
-      {/* ── SECTION 4: SELLER MANDATE STATUS TRACKER ─────────────────── */}
-      <section id="tracker" className="py-20 bg-[#0A0A0D] border-t border-white/[0.08]">
+      {/* ── SECTION 3: SELLER PROPERTY STATUS & REVIEW HUB ─────────────── */}
+      <section id="status" className="py-24 bg-[#FAF8F5] border-t border-[#E8E2D6]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <MandateTracker
             user={user}
@@ -461,75 +507,142 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ── SECTION 5: EXECUTIVE ADVISORY DESK & CONTACT ─────────────── */}
-      <section className="py-20 bg-[#0F0F14] border-t border-white/[0.08] relative overflow-hidden">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 text-center space-y-6">
-          <div className="w-12 h-12 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center mx-auto text-amber-400">
+      {/* ── SECTION 4: THE THARAGA ADVISORY STANDARD ──────────────────── */}
+      <section id="advisory" className="py-24 bg-white border-t border-[#E8E2D6]">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6">
+          <div className="text-center max-w-3xl mx-auto mb-16 space-y-3">
+            <span className="text-[11px] font-sans uppercase tracking-[0.2em] text-[#9E7B4F] font-semibold">
+              The Advisory Standard
+            </span>
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-serif font-bold text-[#1A1816] tracking-tight">
+              Bespoke Commercial Placement. Zero Public Noise.
+            </h2>
+            <p className="text-[#5A564F] text-sm sm:text-base leading-relaxed font-light">
+              We do not operate mass consumer real estate classifieds. Tharaga provides private commercial advisory connecting land owners directly with corporate buyers and institutional investors.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {[
+              {
+                num: '01',
+                title: 'Direct Corporate Access',
+                desc: 'Whether placing an operational limestone quarry for cement manufacturing or 150 acres with utility solar developers, we transact directly through strategic corporate decision desks.',
+                icon: Building2,
+              },
+              {
+                num: '02',
+                title: 'Technical & Grid Underwriting',
+                desc: 'Every property submitted undergoes rigorous assessment: grid substation proximity (110kV/230kV), highway freight haulage access, statutory environmental zoning, and proven mineral reserve data.',
+                icon: Compass,
+              },
+              {
+                num: '03',
+                title: 'Total Discretion & Live Tracking',
+                desc: 'Asset owners maintain full control over sensitive commercial data. Track title verification, due diligence reports, and qualified buyer interest live through your verified Google account.',
+                icon: Shield,
+              },
+            ].map(col => {
+              const Icon = col.icon
+              return (
+                <div
+                  key={col.num}
+                  className="p-8 rounded-3xl bg-[#FAF8F5] border border-[#E8E2D6] hover:border-[#C5A059] transition-all space-y-4 group"
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="text-2xl font-serif font-bold text-[#9E7B4F]/40 group-hover:text-[#9E7B4F] transition-colors">
+                      {col.num}
+                    </span>
+                    <div className="w-10 h-10 rounded-full bg-[#F4F0E8] border border-[#DDD5C5] flex items-center justify-center text-[#9E7B4F]">
+                      <Icon className="w-5 h-5" />
+                    </div>
+                  </div>
+                  <h3 className="text-xl font-serif font-bold text-[#1A1816]">{col.title}</h3>
+                  <p className="text-xs sm:text-sm text-[#5A564F] leading-relaxed font-light">{col.desc}</p>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      </section>
+
+      {/* ── SECTION 5: DIRECT MANAGING DESK ───────────────────────────── */}
+      <section className="py-20 bg-[#FAF8F5] border-t border-[#E8E2D6] relative overflow-hidden">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 text-center space-y-5">
+          <div className="w-12 h-12 rounded-full bg-[#F4EFE6] border border-[#DDD5C5] flex items-center justify-center mx-auto text-[#9E7B4F]">
             <Phone className="w-5 h-5" />
           </div>
-          <span className="text-xs font-mono uppercase tracking-widest text-amber-400">
+
+          <span className="text-[11px] font-sans uppercase tracking-[0.2em] text-[#9E7B4F] font-semibold block">
             Direct Principal Line
           </span>
-          <h2 className="text-3xl sm:text-4xl font-serif font-bold text-white tracking-tight">
-            Initiate a Confidential Commercial Discussion
+
+          <h2 className="text-3xl sm:text-4xl font-serif font-bold text-[#1A1816] tracking-tight">
+            Initiate a Confidential Discussion
           </h2>
-          <p className="text-white/60 text-sm max-w-xl mx-auto leading-relaxed">
-            For institutional acquisitions, joint developments, or private asset syndication across Tamil Nadu. Direct communication with the Managing Desk under NDA.
+
+          <p className="text-[#5A564F] text-sm max-w-xl mx-auto leading-relaxed font-light">
+            For institutional land acquisitions, commercial asset sales, or quarry concessions across Tamil Nadu. Direct communication with the Managing Desk under strict non-disclosure.
           </p>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
             <a
               href="tel:+918870980839"
-              className="flex items-center gap-2 px-6 py-3.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-semibold text-xs tracking-wider uppercase transition-all shadow-lg shadow-amber-500/20"
+              className="flex items-center justify-center gap-2 px-8 py-3.5 rounded-full bg-[#1A1816] hover:bg-[#2D2926] text-[#FAF8F5] font-sans text-xs uppercase tracking-wider font-semibold transition-all shadow-md"
             >
-              <Phone className="w-4 h-4" /> Call Desk: +91 88709 80839
+              <Phone className="w-4 h-4 text-[#C5A059]" /> Call Desk: +91 88709 80839
             </a>
+
             <a
-              href="https://wa.me/918870980839?text=Hello%20Tharaga%20Advisory,%20I%20wish%20to%20discuss%20an%20institutional%20commercial%20mandate."
+              href="https://wa.me/918870980839?text=Hello%20Tharaga%20Real%20Estate,%20I%20wish%20to%20discuss%20a%20commercial%20mandate%20or%20land%20parcel."
               target="_blank"
               rel="noreferrer"
-              className="flex items-center gap-2 px-6 py-3.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-white font-medium text-xs tracking-wider uppercase transition-colors"
+              className="flex items-center justify-center gap-2 px-8 py-3.5 rounded-full bg-white hover:bg-[#F4F0E8] border border-[#E8E2D6] text-[#1A1816] font-sans text-xs font-semibold uppercase tracking-wider transition-colors shadow-sm"
             >
-              WhatsApp Managing Desk <ExternalLink className="w-3.5 h-3.5" />
+              <span>WhatsApp Managing Desk</span>
+              <ExternalLink className="w-3.5 h-3.5 text-[#9E7B4F]" />
             </a>
           </div>
         </div>
       </section>
 
       {/* ── FOOTER ───────────────────────────────────────────────────── */}
-      <footer className="py-12 bg-[#050507] border-t border-white/[0.06] text-white/40 text-xs">
+      <footer className="py-12 bg-white border-t border-[#E8E2D6] text-[#5A564F] text-xs">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 flex flex-col md:flex-row items-center justify-between gap-6">
           <div className="flex items-center gap-3">
-            <div className="w-7 h-7 rounded-lg bg-amber-500 flex items-center justify-center text-black font-bold text-xs">
-              T
+            <div className="w-8 h-8 rounded-lg overflow-hidden border border-[#E8E2D6] bg-white">
+              <img
+                src="/images/tharaga-logo.jpg"
+                alt="Tharaga Real Estate"
+                className="w-full h-full object-cover"
+              />
             </div>
             <div>
-              <span className="font-serif font-bold text-white text-sm">Tharaga</span>
-              <span className="text-[10px] text-white/40 ml-2 font-mono">Institutional Commercial Real Estate & Advisory</span>
+              <span className="font-serif font-bold text-[#1A1816] text-sm block">Tharaga Real Estate</span>
+              <span className="text-[10px] text-[#8E887E]">Commercial Land & Industrial Asset Advisory · Tamil Nadu</span>
             </div>
           </div>
 
-          <div className="flex flex-wrap items-center gap-6 font-mono text-[11px]">
-            <a href="#mandates" className="hover:text-white transition-colors">Mandates</a>
-            <a href="#screener" className="hover:text-white transition-colors">Screener</a>
-            <a href="#tracker" className="hover:text-white transition-colors">Status Hub</a>
-            <Link href="/privacy" className="hover:text-white transition-colors">Privacy Protocol</Link>
-            <Link href="/terms" className="hover:text-white transition-colors">Terms of Syndication</Link>
+          <div className="flex flex-wrap items-center gap-6 text-[11px] font-sans">
+            <a href="#projects" className="hover:text-[#1A1816] transition-colors">Active Projects</a>
+            <a href="#feasibility" className="hover:text-[#1A1816] transition-colors">Feasibility Study</a>
+            <a href="#status" className="hover:text-[#1A1816] transition-colors">Property Status</a>
+            <Link href="/privacy" className="hover:text-[#1A1816] transition-colors">Privacy Protocol</Link>
+            <Link href="/terms" className="hover:text-[#1A1816] transition-colors">Terms of Placement</Link>
           </div>
 
-          <p className="text-[10px] font-mono">
-            © {new Date().getFullYear()} Tharaga Advisory. Chennai · Tamil Nadu · India. Confidential.
+          <p className="text-[10px] text-[#8E887E]">
+            © {new Date().getFullYear()} Tharaga Real Estate. Chennai · Tamil Nadu · India.
           </p>
         </div>
       </footer>
 
-      {/* ── CLAUDE COMMERCIAL INTAKE ASSISTANT MODAL ────────────────── */}
+      {/* ── PROPERTY INTAKE MODAL (SILENT CLAUDE API INTAKE) ──────────── */}
       <CommercialIntakeModal
         isOpen={isIntakeModalOpen}
         onClose={() => setIsIntakeModalOpen(false)}
         user={user}
-        onSuccess={(mandate) => {
-          // Refresh list or trigger notification
+        onSuccess={() => {
           fetch('/api/commercial/mandates')
             .then(r => r.json())
             .then(d => {

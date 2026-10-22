@@ -3,30 +3,41 @@
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
-  Sparkles, Sun, Building2, Mountain, Warehouse,
-  Cpu, ArrowRight, ShieldCheck, CheckCircle2,
-  AlertCircle, Loader2, FileDown, ExternalLink, Zap
+  Sun, Building2, Mountain, Warehouse, Cpu,
+  ArrowRight, ShieldCheck, CheckCircle2,
+  AlertCircle, Loader2, FileDown, ExternalLink, Zap,
+  Compass, MapPin, Gauge
 } from 'lucide-react'
 
 const SECTORS = [
-  { id: 'solar_energy', label: 'Solar & Renewable (MW)', icon: Sun, defaultScale: '50 MW', defaultBudget: 45 },
-  { id: 'cement_quarry', label: 'Limestone / Quarry', icon: Mountain, defaultScale: '40,000 MT/month feed', defaultBudget: 60 },
-  { id: 'manufacturing_plant', label: 'Heavy Industrial / EV', icon: Building2, defaultScale: '75 Acres', defaultBudget: 120 },
-  { id: 'logistics_park', label: 'Logistics & 3PL Hub', icon: Warehouse, defaultScale: '500,000 sq.ft PEB', defaultBudget: 55 },
-  { id: 'datacenter', label: 'Data Center / Tech Campus', icon: Cpu, defaultScale: '20 MW IT Load', defaultBudget: 180 },
+  { id: 'solar_energy', label: 'Solar & Renewable', icon: Sun, defaultScale: '50 MW', defaultBudget: 40, power: '230kV / 110kV Substation Bay' },
+  { id: 'cement_quarry', label: 'Limestone & Quarry', icon: Mountain, defaultScale: '40,000 MT/month', defaultBudget: 60, power: '33kV Dedicated Feeder' },
+  { id: 'manufacturing_plant', label: 'Heavy Industrial / EV', icon: Building2, defaultScale: '75 Acres', defaultBudget: 110, power: '230kV Dedicated HT Tap' },
+  { id: 'logistics_park', label: 'Logistics & 3PL Hub', icon: Warehouse, defaultScale: '500,000 sq.ft PEB', defaultBudget: 55, power: '11kV Dual Express Feeders' },
+  { id: 'commercial_office', label: 'Commercial IT Campus', icon: Cpu, defaultScale: '150,000 sq.ft Built', defaultBudget: 95, power: '33kV Dual Ring Feeds' },
 ]
+
+const CORRIDORS = [
+  { id: 'tuticorin', label: 'Tuticorin – Tirunelveli', desc: 'Renewable & Deepwater Port Belt' },
+  { id: 'sriperumbudur', label: 'Sriperumbudur – Oragadam', desc: 'Auto, EV & High-Tech Corridor' },
+  { id: 'ariyalur', label: 'Ariyalur – Karur', desc: 'Mineral, Quarry & Cement Belt' },
+  { id: 'hosur', label: 'Hosur – Krishnagiri', desc: 'Logistics & Advanced Manufacturing' },
+  { id: 'omr', label: 'Chennai OMR – Guindy', desc: 'Commercial & Institutional Hub' },
+]
+
+const SCALES = ['25 Acres', '50 Acres', '100+ Acres', '50 MW Solar', '40,000 MT/mo']
 
 export function InstitutionalScreener() {
   const [selectedSector, setSelectedSector] = useState(SECTORS[0].id)
+  const [selectedCorridor, setSelectedCorridor] = useState(CORRIDORS[0].label)
   const [scale, setScale] = useState(SECTORS[0].defaultScale)
   const [budgetCrores, setBudgetCrores] = useState(SECTORS[0].defaultBudget)
-  const [corridor, setCorridor] = useState('Tuticorin – Tirunelveli Green Belt')
-  const [powerNeed, setPowerNeed] = useState('230kV / 110kV Dedicated Bay')
-  const [corporateName, setCorporateName] = useState('Tier-1 Industrial Conglomerate')
 
   const [loading, setLoading] = useState(false)
   const [analysis, setAnalysis] = useState<any>(null)
   const [error, setError] = useState('')
+
+  const activeSectorObj = SECTORS.find(s => s.id === selectedSector) || SECTORS[0]
 
   const handleRunScreener = async () => {
     setLoading(true)
@@ -38,57 +49,62 @@ export function InstitutionalScreener() {
         body: JSON.stringify({
           mandate_category: selectedSector,
           scale_or_capacity: scale,
-          target_corridors: [corridor],
-          power_substation_need: powerNeed,
+          target_corridors: [selectedCorridor],
+          power_substation_need: activeSectorObj.power,
           budget_crores: budgetCrores,
-          corporate_entity: corporateName,
+          corporate_entity: 'Commercial Real Estate Principal',
         }),
       })
 
       const data = await res.json()
-      if (!res.ok) throw new Error(data.error || 'Failed to screen institutional mandate')
+      if (!res.ok) throw new Error(data.error || 'Failed to screen feasibility parameters')
       setAnalysis(data.analysis)
     } catch (err: any) {
-      setError(err.message || 'Error executing Claude screener')
+      setError(err.message || 'Error executing feasibility analysis')
     } finally {
       setLoading(false)
     }
   }
 
   return (
-    <div className="rounded-3xl bg-[#09090C] border border-white/[0.08] overflow-hidden text-white shadow-2xl">
-      {/* Monograph Top Bar */}
-      <div className="p-6 sm:p-8 border-b border-white/[0.08] bg-[#0E0E13] flex flex-col md:flex-row md:items-center justify-between gap-4">
+    <div className="rounded-3xl bg-white border border-[#E8E2D6] overflow-hidden text-[#1A1816] shadow-xl">
+      {/* Editorial Header */}
+      <div className="p-6 sm:p-10 border-b border-[#E8E2D6] bg-[#FAF8F5] flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div>
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 mb-2">
-            <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-            <span className="text-[10px] font-mono uppercase tracking-widest text-amber-300">
-              Institutional Intelligence Engine · Powered by Claude API
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#F4EFE6] border border-[#DDD5C5] mb-2.5">
+            <Compass className="w-3.5 h-3.5 text-[#9E7B4F]" />
+            <span className="text-[11px] font-sans uppercase tracking-[0.2em] text-[#7A5B32] font-semibold">
+              Strategic Advisory Tool
             </span>
           </div>
-          <h3 className="text-2xl sm:text-3xl font-serif font-bold text-white tracking-tight">
-            MNC Acquisition & Siting Feasibility Screener
+          <h3 className="text-2xl sm:text-3xl md:text-4xl font-serif font-bold text-[#1A1816] tracking-tight">
+            Land & Industrial Feasibility Study
           </h3>
-          <p className="text-xs sm:text-sm text-white/50 max-w-xl">
+          <p className="text-xs sm:text-sm text-[#5A564F] max-w-2xl mt-1.5 leading-relaxed font-light">
             Evaluate grid evacuation capacity, logistics latency, statutory zoning, and capital outlay for industrial land, solar parks, or quarries across Tamil Nadu.
           </p>
         </div>
 
-        <div className="flex items-center gap-2 self-start md:self-auto">
-          <span className="text-[11px] font-mono px-3 py-1.5 rounded-xl bg-white/5 border border-white/10 text-white/70">
-            Realtime TANGEDCO / TNPCB Nodal Indices
+        <div className="flex items-center gap-2 shrink-0">
+          <span className="text-[11px] font-sans px-3.5 py-1.5 rounded-full bg-white border border-[#E8E2D6] text-[#7A5B32] font-medium shadow-sm">
+            Live Substation & Zoning Index
           </span>
         </div>
       </div>
 
-      <div className="p-6 sm:p-8 grid grid-cols-1 lg:grid-cols-12 gap-8">
-        {/* Left Console Inputs */}
-        <div className="lg:col-span-5 space-y-6">
+      {/* Main Console: 4 Questions Layout (Perfume Finder Style) */}
+      <div className="p-6 sm:p-10 grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12">
+        {/* Left Side: 4 Questions Inputs */}
+        <div className="lg:col-span-6 space-y-7">
+          {/* Question 01: Asset / Industry */}
           <div>
-            <label className="block text-xs font-mono uppercase tracking-widest text-white/40 mb-3">
-              01 // Target Industrial Sector
-            </label>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <div className="flex items-center justify-between mb-2.5">
+              <label className="text-[11px] font-sans uppercase tracking-[0.18em] text-[#8E887E] font-semibold">
+                Question 01 · Asset & Industry Class
+              </label>
+              <span className="text-[10px] text-[#9E7B4F] font-medium">Select Class</span>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
               {SECTORS.map(sec => {
                 const Icon = sec.icon
                 const active = selectedSector === sec.id
@@ -101,210 +117,258 @@ export function InstitutionalScreener() {
                       setScale(sec.defaultScale)
                       setBudgetCrores(sec.defaultBudget)
                     }}
-                    className={`p-3 rounded-2xl border text-left transition-all flex items-center gap-2.5 ${
+                    className={`p-3.5 rounded-2xl border text-left transition-all flex items-center gap-3 ${
                       active
-                        ? 'bg-amber-500/15 border-amber-400 text-white shadow-md'
-                        : 'bg-white/[0.02] border-white/[0.06] text-white/60 hover:text-white hover:bg-white/[0.04]'
+                        ? 'bg-[#1A1816] border-[#1A1816] text-[#FAF8F5] shadow-sm'
+                        : 'bg-[#FAF8F5] border-[#E8E2D6] text-[#5A564F] hover:text-[#1A1816] hover:bg-[#F4F0E8]'
                     }`}
                   >
-                    <Icon className={`w-4 h-4 ${active ? 'text-amber-400' : 'text-white/40'}`} />
-                    <span className="text-xs font-medium truncate">{sec.label}</span>
+                    <Icon className={`w-4 h-4 ${active ? 'text-[#C5A059]' : 'text-[#8E887E]'}`} />
+                    <span className="text-xs font-sans font-medium">{sec.label}</span>
                   </button>
                 )
               })}
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-xs font-mono uppercase tracking-widest text-white/40 mb-2">
-                Mandate Scale
-              </label>
-              <input
-                type="text"
-                value={scale}
-                onChange={e => setScale(e.target.value)}
-                placeholder="e.g. 50 MW or 100 Acres"
-                className="w-full bg-white/[0.04] border border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-white/30 focus:outline-none focus:border-amber-400"
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs font-mono uppercase tracking-widest text-white/40 mb-2">
-                Budget (₹ Crores)
-              </label>
-              <input
-                type="number"
-                value={budgetCrores}
-                onChange={e => setBudgetCrores(Number(e.target.value))}
-                className="w-full bg-white/[0.04] border border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-amber-400"
-              />
-            </div>
-          </div>
-
+          {/* Question 02: Strategic Corridor */}
           <div>
-            <label className="block text-xs font-mono uppercase tracking-widest text-white/40 mb-2">
-              Strategic Tamil Nadu Corridor
+            <label className="block text-[11px] font-sans uppercase tracking-[0.18em] text-[#8E887E] font-semibold mb-2.5">
+              Question 02 · Strategic Tamil Nadu Corridor
             </label>
-            <select
-              value={corridor}
-              onChange={e => setCorridor(e.target.value)}
-              className="w-full bg-white/[0.04] border border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-amber-400"
-            >
-              <option value="Tuticorin – Tirunelveli Green Belt">Tuticorin – Tirunelveli (Renewable & Port Hub)</option>
-              <option value="Sriperumbudur – Oragadam Automotive Corridor">Sriperumbudur – Oragadam (Manufacturing & Auto)</option>
-              <option value="Ariyalur – Karur Cement Mineral Spine">Ariyalur – Karur (Limestone & Mineral Reserve)</option>
-              <option value="Hosur – Krishnagiri EV Belt">Hosur – Krishnagiri (EV & Advanced Engineering)</option>
-              <option value="Coimbatore – Tiruppur Engineering Corridor">Coimbatore – Tiruppur (Industrial & Heavy Tech)</option>
-            </select>
+            <div className="space-y-1.5">
+              {CORRIDORS.map(c => {
+                const active = selectedCorridor === c.label
+                return (
+                  <button
+                    key={c.id}
+                    type="button"
+                    onClick={() => setSelectedCorridor(c.label)}
+                    className={`w-full p-2.5 px-3.5 rounded-xl border text-left transition-all flex items-center justify-between ${
+                      active
+                        ? 'bg-[#F7F4EE] border-[#C5A059] text-[#1A1816] font-medium'
+                        : 'bg-[#FAF8F5] border-[#E8E2D6] text-[#5A564F] hover:text-[#1A1816] hover:bg-[#F4F0E8]'
+                    }`}
+                  >
+                    <div className="flex items-center gap-2">
+                      <MapPin className={`w-3.5 h-3.5 ${active ? 'text-[#9E7B4F]' : 'text-[#8E887E]'}`} />
+                      <span className="text-xs font-sans">{c.label}</span>
+                    </div>
+                    <span className="text-[10px] text-[#8E887E] hidden sm:inline">{c.desc}</span>
+                  </button>
+                )
+              })}
+            </div>
           </div>
 
+          {/* Question 03: Scale & Capacity */}
           <div>
-            <label className="block text-xs font-mono uppercase tracking-widest text-white/40 mb-2">
-              Power Substation / Grid Proximity
+            <label className="block text-[11px] font-sans uppercase tracking-[0.18em] text-[#8E887E] font-semibold mb-2.5">
+              Question 03 · Target Extent / Capacity
             </label>
-            <select
-              value={powerNeed}
-              onChange={e => setPowerNeed(e.target.value)}
-              className="w-full bg-white/[0.04] border border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-amber-400"
-            >
-              <option value="230kV / 110kV Dedicated Bay">230kV / 110kV Dedicated Bay (Substation &lt; 2 km)</option>
-              <option value="33kV High-Tension Industrial Line">33kV High-Tension Industrial Line</option>
-              <option value="Standard 11kV Feeder Line">Standard 11kV Feeder Line</option>
-            </select>
+            <div className="flex flex-wrap gap-2 mb-3">
+              {SCALES.map(sc => (
+                <button
+                  key={sc}
+                  type="button"
+                  onClick={() => setScale(sc)}
+                  className={`px-3 py-1.5 rounded-full text-xs font-sans transition-all ${
+                    scale === sc
+                      ? 'bg-[#1A1816] text-[#FAF8F5] font-medium'
+                      : 'bg-[#FAF8F5] border border-[#E8E2D6] text-[#5A564F] hover:bg-[#F4F0E8]'
+                  }`}
+                >
+                  {sc}
+                </button>
+              ))}
+            </div>
+            <input
+              type="text"
+              value={scale}
+              onChange={e => setScale(e.target.value)}
+              placeholder="Or specify custom requirement..."
+              className="w-full px-4 py-2.5 rounded-xl bg-[#FAF8F5] border border-[#E8E2D6] text-xs text-[#1A1816] focus:outline-none focus:border-[#9E7B4F]"
+            />
           </div>
 
+          {/* Question 04: Indicative Budget Outlay */}
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <label className="text-[11px] font-sans uppercase tracking-[0.18em] text-[#8E887E] font-semibold">
+                Question 04 · Target Capital Outlay
+              </label>
+              <span className="text-sm font-sans font-bold text-[#1A1816]">
+                ₹{budgetCrores} Crores
+              </span>
+            </div>
+            <input
+              type="range"
+              min="15"
+              max="250"
+              step="5"
+              value={budgetCrores}
+              onChange={e => setBudgetCrores(Number(e.target.value))}
+              className="w-full accent-[#1A1816] cursor-pointer"
+            />
+            <div className="flex justify-between text-[10px] text-[#8E887E] mt-1">
+              <span>₹15 Cr</span>
+              <span>₹100 Cr</span>
+              <span>₹250+ Cr</span>
+            </div>
+          </div>
+
+          {/* Submit Action */}
           <button
             onClick={handleRunScreener}
             disabled={loading}
-            className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-400 hover:from-amber-400 hover:to-amber-300 text-black font-bold text-sm shadow-xl shadow-amber-500/20 transition-all disabled:opacity-50"
+            className="w-full py-3.5 rounded-full bg-[#1A1816] hover:bg-[#2D2926] text-[#FAF8F5] font-sans text-xs uppercase tracking-wider font-semibold transition-all shadow-md flex items-center justify-center gap-2 group disabled:opacity-50"
           >
             {loading ? (
               <>
-                <Loader2 className="w-4 h-4 animate-spin" />
-                Executing Claude Feasibility Engine...
+                <Loader2 className="w-4 h-4 animate-spin text-[#C5A059]" />
+                <span>Evaluating Corridor Indices...</span>
               </>
             ) : (
               <>
-                <Zap className="w-4 h-4 text-black" />
-                Generate Feasibility Brief
+                <span>Run Feasibility Study</span>
+                <ArrowRight className="w-4 h-4 text-[#C5A059] group-hover:translate-x-1 transition-transform" />
               </>
             )}
           </button>
+
+          {error && (
+            <div className="p-3 rounded-xl bg-red-50 border border-red-200 text-xs text-red-600 flex items-center gap-2">
+              <AlertCircle className="w-4 h-4 shrink-0" />
+              <span>{error}</span>
+            </div>
+          )}
         </div>
 
-        {/* Right Output Terminal */}
-        <div className="lg:col-span-7 bg-[#050507] border border-white/[0.08] rounded-2xl p-6 relative min-h-[420px] flex flex-col justify-between">
-          {error && (
-            <div className="p-4 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-300 text-xs mb-4">
-              {error}
-            </div>
-          )}
+        {/* Right Side: Luxury Editorial Result Output (Dark Ink Card reminiscent of Image 4) */}
+        <div className="lg:col-span-6 flex flex-col">
+          <div className="rounded-3xl bg-[#171513] text-[#FAF8F5] p-6 sm:p-8 flex-1 flex flex-col justify-between border border-[#2D2926] shadow-2xl relative overflow-hidden">
+            {/* Subtle light accent */}
+            <div className="absolute top-0 right-0 w-64 h-64 bg-radial from-[#C5A059]/10 to-transparent pointer-events-none" />
 
-          {!analysis && !loading && (
-            <div className="flex-1 flex flex-col items-center justify-center text-center p-6 space-y-3">
-              <div className="w-12 h-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-amber-400">
-                <Sparkles className="w-6 h-6" />
-              </div>
-              <h4 className="text-base font-semibold text-white">Screener Idle</h4>
-              <p className="text-xs text-white/40 max-w-sm">
-                Select your parameters on the left and click "Generate Feasibility Brief" to synthesize grid, statutory, and land bank intelligence using Claude API.
-              </p>
-            </div>
-          )}
-
-          {loading && (
-            <div className="flex-1 flex flex-col items-center justify-center text-center p-6 space-y-4">
-              <Loader2 className="w-8 h-8 text-amber-400 animate-spin" />
-              <p className="text-xs font-mono text-white/60">
-                Cross-referencing TANGEDCO nodal capacity, TNPCB zoning codes & private land archives...
-              </p>
-            </div>
-          )}
-
-          {analysis && !loading && (
-            <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="space-y-5">
-              {/* Score header */}
-              <div className="flex items-center justify-between pb-4 border-b border-white/[0.08]">
+            <div>
+              {/* Card Header */}
+              <div className="flex items-center justify-between pb-4 border-b border-white/10 mb-6">
                 <div>
-                  <span className="text-[10px] font-mono uppercase text-amber-400 block">Viability Verdict</span>
-                  <h4 className="text-base font-bold text-white">{analysis.viability_rating}</h4>
+                  <span className="text-[10px] font-sans uppercase tracking-[0.2em] text-[#C5A059] font-medium block">
+                    Strategic Feasibility Assessment
+                  </span>
+                  <h4 className="text-lg font-serif font-bold text-white mt-0.5">
+                    {activeSectorObj.label} · {selectedCorridor.split('–')[0].trim()}
+                  </h4>
                 </div>
+
                 <div className="text-right">
-                  <div className="text-2xl font-mono font-bold text-emerald-400">{analysis.feasibility_score}/100</div>
-                  <span className="text-[10px] text-white/40">Institutional Index</span>
+                  <span className="text-[10px] font-sans text-white/50 uppercase tracking-wider block">Feasibility Rating</span>
+                  <span className="text-xl font-serif font-bold text-[#C5A059]">
+                    {analysis ? `${analysis.feasibility_score}/100` : '92/100'}
+                  </span>
                 </div>
               </div>
 
-              {/* Brief */}
-              <div className="p-3.5 rounded-xl bg-white/[0.03] border border-white/[0.06]">
-                <p className="text-xs text-white/80 leading-relaxed font-serif italic text-sm">
-                  "{analysis.executive_brief}"
-                </p>
-              </div>
-
-              {/* Infrastructure pillars */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
-                <div className="p-3 rounded-xl bg-black/40 border border-white/[0.06]">
-                  <span className="text-[10px] font-mono text-amber-400 block mb-1">Power / Substation</span>
-                  <p className="text-white/70 text-[11px] leading-relaxed">
-                    {analysis.infrastructure_synthesis?.grid_or_power_feasibility}
-                  </p>
-                </div>
-                <div className="p-3 rounded-xl bg-black/40 border border-white/[0.06]">
-                  <span className="text-[10px] font-mono text-amber-400 block mb-1">Logistics / Highway</span>
-                  <p className="text-white/70 text-[11px] leading-relaxed">
-                    {analysis.infrastructure_synthesis?.logistics_and_connectivity}
-                  </p>
-                </div>
-              </div>
-
-              {/* Capital & Timeline */}
-              <div className="p-3 rounded-xl bg-amber-500/5 border border-amber-500/20 flex flex-wrap items-center justify-between gap-3 text-xs">
-                <div>
-                  <span className="text-[10px] text-white/40 block">Est. Land Outlay</span>
-                  <span className="font-semibold text-white">{analysis.capital_benchmark?.indicative_land_outlay}</span>
-                </div>
-                <div>
-                  <span className="text-[10px] text-white/40 block">Timeline to Possession</span>
-                  <span className="font-semibold text-amber-300">{analysis.capital_benchmark?.timeline_to_possession}</span>
-                </div>
-              </div>
-
-              {/* Matching Pipeline */}
-              <div>
-                <span className="text-[10px] font-mono uppercase text-white/40 block mb-1.5">
-                  Matching Assets in Tharaga Pipeline
-                </span>
-                <div className="space-y-1.5">
-                  {analysis.matching_tharaga_assets?.map((asset: string, i: number) => (
-                    <div key={i} className="px-3 py-2 rounded-xl bg-white/[0.04] border border-white/[0.08] flex items-center justify-between text-xs text-white">
-                      <span className="flex items-center gap-2">
-                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
-                        {asset}
-                      </span>
-                      <a href="#mandates" className="text-[11px] text-amber-400 hover:underline">
-                        View Dossier
-                      </a>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Contact Protocol */}
-              <div className="pt-2 text-center sm:text-left flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                <span className="text-[11px] text-white/50">{analysis.next_steps}</span>
-                <a
-                  href="https://wa.me/918870980839?text=Hello%20Tharaga%20Advisory,%20I%20have%20an%20institutional%20mandate%20feasibility%20inquiry."
-                  target="_blank"
-                  rel="noreferrer"
-                  className="inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-semibold transition-colors"
+              {/* Dynamic Assessment Output */}
+              {analysis ? (
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="space-y-5"
                 >
-                  Request NDA / Data Room <ExternalLink className="w-3 h-3" />
-                </a>
-              </div>
-            </motion.div>
-          )}
+                  {/* Viability Rating */}
+                  <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 text-xs text-[#FAF8F5] border border-white/15">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-[#C5A059]" />
+                    <span className="font-medium">{analysis.viability_rating || 'High Corridor Viability'}</span>
+                  </div>
+
+                  {/* Executive Brief */}
+                  <p className="text-xs sm:text-sm text-white/80 leading-relaxed font-light">
+                    {analysis.executive_brief}
+                  </p>
+
+                  {/* Technical Synthesis Grid */}
+                  <div className="space-y-3 pt-2">
+                    <div className="p-3.5 rounded-2xl bg-white/[0.04] border border-white/[0.08]">
+                      <span className="text-[10px] font-sans uppercase tracking-wider text-[#C5A059] block mb-1">
+                        Grid & Evacuation Readiness
+                      </span>
+                      <p className="text-xs text-white/70 leading-relaxed">
+                        {analysis.infrastructure_synthesis?.grid_or_power_feasibility}
+                      </p>
+                    </div>
+
+                    <div className="p-3.5 rounded-2xl bg-white/[0.04] border border-white/[0.08]">
+                      <span className="text-[10px] font-sans uppercase tracking-wider text-[#C5A059] block mb-1">
+                        Freight & Highway Connectivity
+                      </span>
+                      <p className="text-xs text-white/70 leading-relaxed">
+                        {analysis.infrastructure_synthesis?.logistics_and_connectivity}
+                      </p>
+                    </div>
+
+                    <div className="p-3.5 rounded-2xl bg-white/[0.04] border border-white/[0.08]">
+                      <span className="text-[10px] font-sans uppercase tracking-wider text-[#C5A059] block mb-1">
+                        Statutory Clearances & Patta Verification
+                      </span>
+                      <ul className="space-y-1 text-xs text-white/70">
+                        {analysis.statutory_roadmap?.map((step: string, i: number) => (
+                          <li key={i} className="flex items-center gap-1.5">
+                            <span className="w-1 h-1 rounded-full bg-[#C5A059]" />
+                            <span>{step}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
+                </motion.div>
+              ) : (
+                /* Default Preview State */
+                <div className="space-y-5">
+                  <p className="text-xs sm:text-sm text-white/70 leading-relaxed font-light">
+                    Select your parameters on the left and run the study. We instantly assess TANGEDCO substation clearance proximity, NH freight haulage access, and revenue title records across Tamil Nadu.
+                  </p>
+
+                  <div className="space-y-2.5 pt-2">
+                    <div className="p-3 rounded-xl bg-white/[0.03] border border-white/[0.06] flex items-center justify-between text-xs">
+                      <span className="text-white/60">Substation Proximity</span>
+                      <span className="text-[#C5A059] font-medium">{activeSectorObj.power}</span>
+                    </div>
+                    <div className="p-3 rounded-xl bg-white/[0.03] border border-white/[0.06] flex items-center justify-between text-xs">
+                      <span className="text-white/60">Target Corridor</span>
+                      <span className="text-white font-medium">{selectedCorridor}</span>
+                    </div>
+                    <div className="p-3 rounded-xl bg-white/[0.03] border border-white/[0.06] flex items-center justify-between text-xs">
+                      <span className="text-white/60">Target Scale</span>
+                      <span className="text-white font-medium">{scale}</span>
+                    </div>
+                    <div className="p-3 rounded-xl bg-white/[0.03] border border-white/[0.06] flex items-center justify-between text-xs">
+                      <span className="text-white/60">Allocated Budget</span>
+                      <span className="text-white font-medium">₹{budgetCrores} Cr</span>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Direct Action Footer */}
+            <div className="pt-6 border-t border-white/10 mt-6 flex flex-col sm:flex-row items-center justify-between gap-3">
+              <span className="text-[11px] text-white/50">
+                Confidential Preliminary Screening
+              </span>
+
+              <a
+                href={`https://wa.me/918870980839?text=${encodeURIComponent(`Hello Tharaga Real Estate, I ran a feasibility study for ${activeSectorObj.label} in ${selectedCorridor} (${scale}, ₹${budgetCrores} Cr budget). I wish to discuss matching site options.`)}`}
+                target="_blank"
+                rel="noreferrer"
+                className="w-full sm:w-auto px-5 py-2.5 rounded-full bg-[#FAF8F5] hover:bg-white text-[#1A1816] text-xs font-sans font-semibold transition-all flex items-center justify-center gap-1.5"
+              >
+                <span>Discuss Feasibility With Desk</span>
+                <ExternalLink className="w-3.5 h-3.5 text-[#9E7B4F]" />
+              </a>
+            </div>
+          </div>
         </div>
       </div>
     </div>

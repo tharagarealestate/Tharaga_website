@@ -44,9 +44,11 @@ const config: Config = {
         },
       },
       fontFamily: {
-        display: ['var(--font-display)'],
-        body: ['var(--font-body)'],
-        mono: ['var(--font-mono)'],
+        display: ['"Instrument Serif"', '"Playfair Display"', 'Georgia', 'serif'],
+        serif: ['"Instrument Serif"', '"Playfair Display"', 'Georgia', 'serif'],
+        sans: ['Jost', 'Inter', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
+        body: ['Jost', 'Inter', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
+        mono: ['"JetBrains Mono"', 'monospace'],
       },
       borderRadius: {
         sm: 'var(--radius-sm)',

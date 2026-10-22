@@ -18,7 +18,7 @@ try {
 const nextConfig = {
   reactStrictMode: true,
   experimental: {
-    typedRoutes: true,
+    typedRoutes: false,
     serverActions: {
       bodySizeLimit: '2mb',
     },
@@ -37,13 +37,6 @@ const nextConfig = {
     config.resolve.extensionAlias = {
       '.js': ['.js', '.ts', '.tsx'],
       '.jsx': ['.jsx', '.tsx'],
-    }
-    
-    // Prevent tree-shaking of named exports in api-client
-    if (!isServer) {
-      config.optimization = config.optimization || {}
-      config.optimization.usedExports = true
-      config.optimization.sideEffects = true
     }
     
     return config

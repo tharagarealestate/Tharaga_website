@@ -209,6 +209,7 @@ async function callClaude(request: AIRequest): Promise<AIResponse> {
 
   if (!apiKey) throw new Error('ANTHROPIC_API_KEY not configured');
 
+  const claudeModel = process.env.ANTHROPIC_MODEL || 'claude-haiku-5-5';
   const response = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
     headers: {
@@ -217,7 +218,7 @@ async function callClaude(request: AIRequest): Promise<AIResponse> {
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      model: 'claude-sonnet-4-20250514',
+      model: claudeModel,
       max_tokens: request.maxTokens || 1024,
       ...(request.systemPrompt ? { system: request.systemPrompt } : {}),
       messages: [{ role: 'user', content: request.prompt }],
@@ -231,7 +232,7 @@ async function callClaude(request: AIRequest): Promise<AIResponse> {
   return {
     content: data.content?.[0]?.text || '',
     provider: 'claude',
-    model: 'claude-sonnet-4-20250514',
+    model: claudeModel,
     cached: false,
     latencyMs: Date.now() - startTime,
     tokensUsed: (data.usage?.input_tokens || 0) + (data.usage?.output_tokens || 0),

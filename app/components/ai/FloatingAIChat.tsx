@@ -38,59 +38,26 @@ interface Message {
 function getSuggestions(pathname: string): string[] {
   if (pathname.startsWith('/builder')) {
     return [
-      'How do I add a new property?',
-      'Why is my lead count low?',
-      'How does SmartScore work?',
-      'Set up WhatsApp automation',
-    ]
-  }
-  if (pathname.startsWith('/property') || pathname.startsWith('/properties')) {
-    return [
-      'Find 2BHK under ₹60L in Chennai',
-      'RERA-verified flats in Porur',
-      'Best areas for investment?',
-      'Calculate EMI for ₹75L loan',
-    ]
-  }
-  if (pathname.startsWith('/tools')) {
-    return [
-      'Calculate home loan EMI',
-      'ROI on ₹80L property?',
-      'Budget planner for first home',
-      'Best neighborhoods in Chennai',
-    ]
-  }
-  if (pathname.startsWith('/pricing')) {
-    return [
-      "What's included in Pro plan?",
-      'How does billing work?',
-      'Can I upgrade later?',
-      'Free trial available?',
+      'How to syndicate an industrial land bank?',
+      'Check MNC buyer requirements (Chettinad, Renewables)',
+      'Solar site substation proximity criteria',
+      'Download Mutual Non-Disclosure Agreement (NDA)',
     ]
   }
   return [
-    'Find properties in Chennai',
-    'How does Tharaga work?',
-    'Zero commission explained',
-    'I want to list my project',
+    'How do I syndicate an industrial or commercial land parcel?',
+    'Mandate a limestone quarry for cement MNCs (e.g. Chettinad)',
+    'Inquire about 150-Acre Tuticorin Solar Ready Land',
+    'How does Tharaga protect confidentiality & revenue patta?',
   ]
 }
 
 // ─── System prompt by pathname ────────────────────────────────────────────────
 
 function getSystemPrompt(pathname: string): string {
-  const base = `You are Tharaga AI, an intelligent assistant for Tharaga — India's first AI-powered zero-commission real estate platform based in Chennai. You are friendly, concise, and deeply knowledgeable about Chennai real estate, property investments, lead management, and the Tharaga platform. Always respond in 2-4 short paragraphs. Use ₹ for Indian Rupees. Never be verbose.`
-
-  if (pathname.startsWith('/builder'))
-    return `${base} The user is a builder/developer using the Tharaga Builder Dashboard. Help them with leads, properties, AI automation, revenue tracking, WhatsApp campaigns, and dashboard features.`
-  if (pathname.startsWith('/property') || pathname.startsWith('/properties'))
-    return `${base} The user is browsing properties. Help them find suitable options, understand property details, calculate budgets, and connect with builders.`
-  if (pathname.startsWith('/tools'))
-    return `${base} The user is using Tharaga's financial tools. Help them with EMI calculations, ROI analysis, loan eligibility, and neighborhood insights.`
-  if (pathname.startsWith('/pricing'))
-    return `${base} The user is evaluating Tharaga's pricing. Explain the Tharaga Pro plan (₹4,999/mo), its features, and benefits clearly.`
-
-  return `${base} Help users discover properties in Chennai, understand how Tharaga works, and get started with the platform.`
+  return `You are Tharaga Institutional Advisory Assistant. Tharaga is a premier private commercial real estate and industrial asset advisory based in Chennai, Tamil Nadu. 
+We connect sellers of commercial land banks, high-capacity solar power sites, and mineral/limestone quarries directly with Tier-1 MNC conglomerates (e.g., Chettinad Cements for quarries, utility solar developers, global logistics REITs) through private bilateral networks with 100% verified revenue patta and strict mutual NDAs.
+Always respond in 2-3 concise, authoritative, institutional paragraphs. Use ₹ for Indian Rupees. Maintain an elite, confidential advisory tone.`
 }
 
 // ─── Token counter ─────────────────────────────────────────────────────────────

@@ -305,13 +305,48 @@ export default function HomePage() {
 
       {/* ── ARCHITECTURAL HERO SECTION (WARM PAPER & PERFUME AESTHETIC) ──── */}
       <section className="relative pt-36 pb-20 px-4 sm:px-6 overflow-hidden">
-        {/* Subtle Ambient Warm Lighting */}
-        <div className="absolute inset-0 pointer-events-none">
+        {/* ── PREMIUM VERTICAL COLLAGE BACKGROUND ── */}
+        <div className="absolute inset-0 pointer-events-none overflow-hidden">
+          {/* Six terrain strips — quarry · land · commercial · industry · farmhouse · agriculture */}
+          {[
+            { src: 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=1400&q=80&fit=crop', pos: '50% 55%' },
+            { src: 'https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?w=1400&q=80&fit=crop', pos: '50% 40%' },
+            { src: 'https://images.unsplash.com/photo-1486325212027-8081e485255e?w=1400&q=80&fit=crop', pos: '50% 35%' },
+            { src: 'https://images.unsplash.com/photo-1504328345606-18bbc8c9d7d1?w=1400&q=80&fit=crop', pos: '50% 50%' },
+            { src: 'https://images.unsplash.com/photo-1500076656116-558758c991c1?w=1400&q=80&fit=crop', pos: '50% 45%' },
+            { src: 'https://images.unsplash.com/photo-1464226184884-fa280b87c399?w=1400&q=80&fit=crop', pos: '50% 60%' },
+          ].map((strip, i) => (
+            <div
+              key={i}
+              className="absolute inset-x-0"
+              style={{
+                top: `${i * 16.667}%`,
+                height: '17.2%',         /* slight overlap prevents seam gaps */
+                backgroundImage: `url(${strip.src})`,
+                backgroundSize: 'cover',
+                backgroundPosition: strip.pos,
+                filter: 'blur(1.5px) brightness(0.84) saturate(1.18)',
+                transform: 'scale(1.06)', /* push blur edge outside clip bounds */
+                transformOrigin: 'center',
+              }}
+            />
+          ))}
+
+          {/* Warm veil — keeps dark headline legible over the collage */}
           <div
-            className="absolute top-0 right-1/4 w-[60vw] h-[50vh]"
+            className="absolute inset-0"
             style={{
-              background: 'radial-gradient(ellipse at center, rgba(197,160,89,0.12) 0%, rgba(244,240,232,0.4) 60%, transparent 80%)',
-              filter: 'blur(70px)',
+              background:
+                'linear-gradient(to bottom, rgba(250,248,245,0.82) 0%, rgba(250,248,245,0.72) 45%, rgba(250,248,245,0.86) 100%)',
+            }}
+          />
+
+          {/* Luxury gold bloom at center */}
+          <div
+            className="absolute inset-0"
+            style={{
+              background:
+                'radial-gradient(ellipse 65% 55% at 50% 35%, rgba(197,160,89,0.11) 0%, transparent 68%)',
             }}
           />
         </div>

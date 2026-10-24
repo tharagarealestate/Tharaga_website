@@ -1,0 +1,24 @@
+name: CI Diagnostic
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Write ping marker
+        run: |
+          echo "CI ping at $(date -u)" > .github/ci-ping.txt
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git fetch origin main
+          git checkout -f origin/main
+          echo "CI ping at $(date -u)" > .github/ci-ping.txt
+          git add .github/ci-ping.txt
+          git diff --cached --quiet || git commit -m "ci: ping $(date -u +%Y-%m-%dT%H:%M:%SZ) [skip ci]" && git push origin HEAD:main || true

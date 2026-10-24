@@ -1,3 +1,0 @@
-# netlify.toml
-[build]
-  publish = "buyer-form"   # <— points to the folder that contains index.html

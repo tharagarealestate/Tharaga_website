@@ -1,0 +1,23 @@
+{
+  "files.eol": "\n",
+  "files.insertFinalNewline": false,
+  "files.trimTrailingWhitespace": false,
+  "[typescript]": {
+    "files.eol": "\n"
+  },
+  "[typescriptreact]": {
+    "files.eol": "\n"
+  },
+  "[javascript]": {
+    "files.eol": "\n"
+  },
+  "[python]": {
+    "files.eol": "\n"
+  },
+  "[markdown]": {
+    "files.eol": "\n"
+  },
+  "[sql]": {
+    "files.eol": "\n"
+  }
+}

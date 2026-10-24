@@ -1,0 +1,149 @@
+# Supabase Database Functions Best Practices
+
+## Overview
+When creating database functions in Supabase, follow these guidelines to ensure optimal performance, security, and maintainability.
+
+## Function Creation Guidelines
+
+### Security
+- Always specify `SECURITY DEFINER` or `SECURITY INVOKER` explicitly
+- Use `SECURITY INVOKER` by default to run with caller's privileges
+- Use `SECURITY DEFINER` only when elevated privileges are required
+- Always validate and sanitize input parameters
+- Use `RAISE EXCEPTION` for error handling
+
+### Performance
+- Mark functions as `IMMUTABLE`, `STABLE`, or `VOLATILE` appropriately:
+  - `IMMUTABLE`: Function always returns same result for same inputs (e.g., mathematical functions)
+  - `STABLE`: Function returns same result within a single query (e.g., current_timestamp)
+  - `VOLATILE`: Function can return different results (default, most conservative)
+- Use appropriate return types (`RETURNS`, `RETURNS TABLE`, `RETURNS SETOF`)
+- Leverage indexes by using sargable predicates in WHERE clauses
+
+### Structure
+```sql
+CREATE OR REPLACE FUNCTION function_name(
+  param1 type1,
+  param2 type2
+)
+RETURNS return_type
+LANGUAGE plpgsql
+SECURITY INVOKER
+STABLE -- or IMMUTABLE/VOLATILE as appropriate
+AS $$
+DECLARE
+  -- Variable declarations
+BEGIN
+  -- Function logic
+
+  -- Error handling
+  IF condition THEN
+    RAISE EXCEPTION 'Error message: %', variable;
+  END IF;
+
+  RETURN result;
+EXCEPTION
+  WHEN others THEN
+    RAISE EXCEPTION 'Function failed: %', SQLERRM;
+END;
+$$;
+```
+
+### Naming Conventions
+- Use snake_case for function names
+- Prefix with purpose: `get_`, `create_`, `update_`, `delete_`, `validate_`
+- Be descriptive but concise
+
+### Documentation
+- Add comments explaining function purpose, parameters, and return values
+```sql
+COMMENT ON FUNCTION function_name IS 'Brief description of what the function does';
+```
+
+### Testing
+- Test with various input scenarios including edge cases
+- Test with NULL values if applicable
+- Verify RLS policies work correctly with the function
+- Test performance with realistic data volumes
+
+## Common Patterns
+
+### Returning Multiple Rows
+```sql
+CREATE OR REPLACE FUNCTION get_user_posts(user_id_param UUID)
+RETURNS TABLE(
+  id UUID,
+  title TEXT,
+  created_at TIMESTAMPTZ
+)
+LANGUAGE plpgsql
+SECURITY INVOKER
+STABLE
+AS $$
+BEGIN
+  RETURN QUERY
+  SELECT p.id, p.title, p.created_at
+  FROM posts p
+  WHERE p.user_id = user_id_param
+  ORDER BY p.created_at DESC;
+END;
+$$;
+```
+
+### Transaction Management
+```sql
+CREATE OR REPLACE FUNCTION transfer_balance(
+  from_user UUID,
+  to_user UUID,
+  amount NUMERIC
+)
+RETURNS BOOLEAN
+LANGUAGE plpgsql
+SECURITY DEFINER
+VOLATILE
+AS $$
+BEGIN
+  -- Deduct from source
+  UPDATE accounts
+  SET balance = balance - amount
+  WHERE user_id = from_user AND balance >= amount;
+
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'Insufficient balance or user not found';
+  END IF;
+
+  -- Add to destination
+  UPDATE accounts
+  SET balance = balance + amount
+  WHERE user_id = to_user;
+
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'Destination user not found';
+  END IF;
+
+  RETURN TRUE;
+END;
+$$;
+```
+
+## Supabase-Specific Considerations
+
+### Auth Integration
+```sql
+-- Get current user ID
+auth.uid()
+
+-- Get current user's JWT claims
+auth.jwt() -> 'user_metadata'
+```
+
+### RLS-Aware Functions
+- Functions with `SECURITY DEFINER` bypass RLS policies
+- Test carefully to avoid security vulnerabilities
+- Consider using `SECURITY INVOKER` when possible
+
+## Avoid
+- Dynamic SQL with unsanitized user input
+- Overly complex logic (consider breaking into smaller functions)
+- Loops when set-based operations are possible
+- Functions that modify data without proper validation

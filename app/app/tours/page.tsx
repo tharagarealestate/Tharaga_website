@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from 'react'
+import Breadcrumb from '@/components/Breadcrumb'
 
 function IframeTour({ src }: { src: string }) {
   return (
@@ -30,6 +31,10 @@ export default function ToursPage(){
   const [mode, setMode] = React.useState<'normal'|'day'|'night'|'monsoon'>('normal')
   return (
     <main className="mx-auto max-w-4xl px-6 py-8">
+      <Breadcrumb items={[
+        { label: 'Home', href: '/' },
+        { label: 'AR/VR Tours' }
+      ]} />
       <h1 className="text-2xl font-bold text-plum mb-4">AR/VR property tours</h1>
       <div className="rounded-xl border border-plum/10 bg-brandWhite p-4 space-y-4">
         <div>

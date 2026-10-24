@@ -5,13 +5,7 @@ import * as React from 'react'
 type Prop = { id: string; title: string; city: string; locality?: string | null }
 
 const CITY_TO_COORD: Record<string, { lat: number; lng: number }> = {
-  Bengaluru: { lat: 12.9716, lng: 77.5946 },
-  Bangalore: { lat: 12.9716, lng: 77.5946 },
-  Mumbai: { lat: 19.0760, lng: 72.8777 },
-  Pune: { lat: 18.5204, lng: 73.8567 },
   Chennai: { lat: 13.0827, lng: 80.2707 },
-  Hyderabad: { lat: 17.3850, lng: 78.4867 },
-  Delhi: { lat: 28.6139, lng: 77.2090 },
 }
 
 export default function MapPage(){
@@ -43,7 +37,7 @@ export default function MapPage(){
   React.useEffect(()=>{
     if (!ready || !mapRef.current || !(window as any).L) return
     const L = (window as any).L
-    const map = L.map(mapRef.current).setView([12.9716, 77.5946], 6)
+    const map = L.map(mapRef.current).setView([13.0827, 80.2707], 11)
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OSM' }).addTo(map)
 
     propsData.forEach(p => {

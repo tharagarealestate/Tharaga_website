@@ -1,0 +1,81 @@
+name: Apply Migration 085
+
+# Runs ONLY migration 085 — fast (1 file).
+# Triggered when this workflow file or the runner script is updated.
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/apply-migration-085.yml'
+      - '.github/scripts/run-migration-ci.mjs'
+  workflow_dispatch:
+
+jobs:
+  apply-085:
+    name: Apply Migration 085
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Diagnose secrets
+        env:
+          SUPABASE_URL:         ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          HAS_ACCESS_TOKEN:     ${{ secrets.SUPABASE_ACCESS_TOKEN != '' }}
+          HAS_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY != '' }}
+        run: |
+          echo "SUPABASE_URL     : ${SUPABASE_URL:+set (hidden)}"
+          echo "ACCESS_TOKEN set : $HAS_ACCESS_TOKEN"
+          echo "SERVICE_KEY set  : $HAS_SERVICE_ROLE_KEY"
+          echo "Runner IP        : $(curl -sf https://api.ipify.org || echo unknown)"
+
+      - name: Run migration 085
+        env:
+          SUPABASE_URL:              ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          SUPABASE_ACCESS_TOKEN:     ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          MIGRATION_FILE:            085_production_readiness_comprehensive_fix.sql
+        run: node .github/scripts/run-migration-ci.mjs
+
+      - name: Commit status to main (with retry)
+        if: always()
+        run: |
+          # Save result NOW before touching git
+          cp supabase/migration-status.json /tmp/ci-status.json
+
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          # Retry loop: handles concurrent push races
+          for attempt in 1 2 3 4 5; do
+            git fetch origin main
+            git checkout -f origin/main
+
+            cp /tmp/ci-status.json supabase/migration-status.json
+            git add supabase/migration-status.json
+
+            if git diff --cached --quiet; then
+              echo "Status file unchanged — nothing to commit."
+              exit 0
+            fi
+
+            STAMP="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+            git commit -m "ci: migration-085 status ${STAMP} [skip ci]"
+
+            if git push origin HEAD:main; then
+              echo "Push succeeded on attempt ${attempt}."
+              exit 0
+            fi
+
+            echo "Push failed (attempt ${attempt}/5) — retrying in 3s..."
+            git reset --soft HEAD~1
+            sleep 3
+          done
+
+          echo "Failed to push status after 5 attempts."
+          exit 1

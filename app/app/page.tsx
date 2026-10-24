@@ -349,32 +349,12 @@ export default function HomePage() {
             We represent large-extent industrial land banks, grid-connected solar power parcels, and high-yield limestone reserves connecting directly with enterprise buyers and institutional capital. Clean patta, complete due diligence, and absolute discretion.
           </motion.p>
 
-          {/* Proof Metric Ribbon */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.8, delay: 0.3 }}
-            className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-6 max-w-4xl mx-auto text-left"
-          >
-            {[
-              { label: '₹500Cr+ Pipeline', sub: 'Commercial Land & Quarries' },
-              { label: '100% Audited Title', sub: '30-Year Revenue Verification' },
-              { label: 'Confidential Placement', sub: 'Bilateral Discretion Protocol' },
-              { label: 'Direct Desk Access', sub: 'No Intermediary Broker Chains' },
-            ].map(m => (
-              <div key={m.label} className="p-3.5 rounded-2xl bg-white border border-[#E8E2D6] shadow-sm">
-                <div className="text-sm font-serif font-bold text-[#1A1816]">{m.label}</div>
-                <div className="text-[11px] text-[#8E887E] mt-0.5">{m.sub}</div>
-              </div>
-            ))}
-          </motion.div>
-
           {/* ── INNOVATIVE CONCIERGE SEARCH & FILTER CONSOLE ──────────── */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.4 }}
-            className="mt-10 p-4 sm:p-6 rounded-3xl bg-white border border-[#E8E2D6] shadow-xl max-w-4xl mx-auto text-left space-y-4"
+            transition={{ duration: 0.8, delay: 0.3 }}
+            className="mt-8 p-4 sm:p-6 rounded-3xl bg-white border border-[#E8E2D6] shadow-xl max-w-4xl mx-auto text-left space-y-4"
           >
             <div className="flex items-center justify-between pb-3 border-b border-[#E8E2D6]">
               <div className="flex items-center gap-2">

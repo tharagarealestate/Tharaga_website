@@ -172,8 +172,13 @@ export function MandateTracker({ user, onOpenIntake }: MandateTrackerProps) {
                         {m.title}
                       </h4>
                       <p className="text-xs text-[#5A564F] flex items-center gap-1 mt-1">
-                        <MapPin className="w-3 h-3 text-[#9E7B4F]" /> {m.corridor || m.district} · {m.extent_acres} Acres
+                        <MapPin className="w-3 h-3 text-[#9E7B4F]" /> {m.corridor || m.district} {m.extent_acres ? `· ${String(m.extent_acres).toLowerCase().includes('acre') || String(m.extent_acres).toLowerCase().includes('sq') ? m.extent_acres : `${m.extent_acres} Acres`}` : ''}
                       </p>
+                      {m.rental_yield_display && (
+                        <p className="text-[11px] text-[#7A5B32] font-medium mt-0.5">
+                          {m.rental_yield_display}
+                        </p>
+                      )}
                     </div>
 
                     <span className="text-[10px] font-sans px-2.5 py-1 rounded-full bg-[#1A1816] text-[#FAF8F5] shrink-0 font-medium">

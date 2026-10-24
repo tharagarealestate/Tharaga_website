@@ -305,50 +305,68 @@ export default function HomePage() {
 
       {/* ── ARCHITECTURAL HERO SECTION (WARM PAPER & PERFUME AESTHETIC) ──── */}
       <section className="relative pt-36 pb-20 px-4 sm:px-6 overflow-hidden">
-        {/* ── PREMIUM 4-STRIP HORIZONTAL COLLAGE BACKGROUND ── */}
+        {/* ── PREMIUM 4-STRIP HORIZONTAL COLLAGE BACKGROUND ──
+            Layout math: 4 strips × 25% = 100%. Each strip height = 26% (1% seam overlap).
+            Starts: 0%, 25%, 50%, 75%. background-size: cover fills the full-width panoramic band.
+        ── */}
         <div className="absolute inset-0 pointer-events-none overflow-hidden">
-          {/* Four terrain strips — quarry · land · farmhouse · industries */}
+          {/* Four terrain strips — full-width landscape panoramic bands */}
           {[
-            // Quarry — limestone rock face, earthy drama
-            { src: 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=1600&q=85&fit=crop', pos: '50% 58%' },
-            // Land — golden open field, vast horizon
-            { src: 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=1600&q=85&fit=crop', pos: '50% 55%' },
-            // Farmhouse — lush green agricultural estate
-            { src: 'https://images.unsplash.com/photo-1500076656116-558758c991c1?w=1600&q=85&fit=crop', pos: '50% 40%' },
-            // Industries — industrial land complex
-            { src: 'https://images.unsplash.com/photo-1504328345606-18bbc8c9d7d1?w=1600&q=85&fit=crop', pos: '50% 48%' },
+            // 1 · Quarry — raw limestone excavation, earthy texture
+            { src: 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=1600&q=90&fit=crop', pos: '50% 58%' },
+            // 2 · Land — golden harvest field, vast horizon
+            { src: 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=1600&q=90&fit=crop', pos: '50% 52%' },
+            // 3 · Farmhouse — lush green agricultural estate
+            { src: 'https://images.unsplash.com/photo-1500076656116-558758c991c1?w=1600&q=90&fit=crop', pos: '50% 42%' },
+            // 4 · Industries — industrial land complex
+            { src: 'https://images.unsplash.com/photo-1504328345606-18bbc8c9d7d1?w=1600&q=90&fit=crop', pos: '50% 46%' },
           ].map((strip, i) => (
             <div
               key={i}
               className="absolute inset-x-0"
               style={{
                 top: `${i * 25}%`,
-                height: '26%',                              /* 1% overlap kills seams at all heights */
+                height: '26%',
                 backgroundImage: `url(${strip.src})`,
                 backgroundSize: 'cover',
                 backgroundPosition: strip.pos,
-                filter: 'blur(1.2px) brightness(0.81) saturate(1.25) contrast(1.05)',
-                transform: 'scale(1.08)',                   /* push blur fringe outside clip */
+                filter: 'blur(0.6px) brightness(0.74) saturate(1.35) contrast(1.10)',
+                transform: 'scale(1.09)',
                 transformOrigin: 'center',
               }}
             />
           ))}
 
-          {/* Warm veil — lighter in middle to reveal photo texture, heavier at edges for legibility */}
+          {/* Layer 1 — Top protective fade: covers badge + headline zone only */}
           <div
-            className="absolute inset-0"
+            className="absolute inset-x-0 top-0"
             style={{
-              background:
-                'linear-gradient(to bottom, rgba(250,248,245,0.90) 0%, rgba(250,248,245,0.62) 28%, rgba(250,248,245,0.56) 56%, rgba(250,248,245,0.86) 100%)',
+              height: '48%',
+              background: 'linear-gradient(to bottom, rgba(250,248,245,0.82) 0%, rgba(250,248,245,0.40) 55%, transparent 100%)',
             }}
           />
 
-          {/* Luxury gold bloom — warm center radiance */}
+          {/* Layer 2 — Bottom anchor fade: lifts filter-console card out of the photo */}
+          <div
+            className="absolute inset-x-0 bottom-0"
+            style={{
+              height: '36%',
+              background: 'linear-gradient(to top, rgba(250,248,245,0.78) 0%, transparent 100%)',
+            }}
+          />
+
+          {/* Layer 3 — Ultra-thin mid tint: barely-there warmth, lets photos breathe */}
+          <div
+            className="absolute inset-0"
+            style={{ background: 'rgba(250,248,245,0.12)' }}
+          />
+
+          {/* Luxury gold bloom — wide warm radiance at text centroid */}
           <div
             className="absolute inset-0"
             style={{
               background:
-                'radial-gradient(ellipse 72% 62% at 50% 34%, rgba(197,160,89,0.14) 0%, transparent 66%)',
+                'radial-gradient(ellipse 85% 68% at 50% 30%, rgba(197,160,89,0.17) 0%, transparent 60%)',
             }}
           />
         </div>
@@ -370,6 +388,7 @@ export default function HomePage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, delay: 0.1 }}
             className="text-4xl sm:text-6xl md:text-7xl font-serif font-bold tracking-tight text-[#1A1816] leading-[1.08]"
+            style={{ textShadow: '0 2px 32px rgba(250,248,245,0.96), 0 1px 8px rgba(250,248,245,0.90)' }}
           >
             Commercial Land, Solar Sites &<br />
             <span className="italic font-normal text-[#9E7B4F]">
@@ -382,6 +401,7 @@ export default function HomePage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, delay: 0.2 }}
             className="text-base sm:text-lg text-[#5A564F] max-w-3xl mx-auto leading-relaxed font-light"
+            style={{ textShadow: '0 1px 20px rgba(250,248,245,0.94), 0 1px 6px rgba(250,248,245,0.80)' }}
           >
             We represent large-extent industrial land banks, grid-connected solar power parcels, and high-yield limestone reserves connecting directly with enterprise buyers and institutional capital. Clean patta, complete due diligence, and absolute discretion.
           </motion.p>

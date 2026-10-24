@@ -145,7 +145,12 @@ export default function HomePage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#FAF8F5] text-[#1A1816] selection:bg-[#EAE2D2] selection:text-[#1A1816]">
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.45, ease: [0.25, 0.46, 0.45, 0.94] }}
+      className="min-h-screen bg-[#FAF8F5] text-[#1A1816] selection:bg-[#EAE2D2] selection:text-[#1A1816]"
+    >
 
       {/* ── MASTER NAVIGATION ─────────────────────────────────────────── */}
       <motion.nav
@@ -172,8 +177,8 @@ export default function HomePage() {
             </div>
           </Link>
 
-          {/* Desktop Nav Links */}
-          <div className="hidden lg:flex items-center gap-1">
+          {/* Desktop Nav Links — luxury underline style */}
+          <div className="hidden lg:flex items-center gap-6">
             {[
               { label: 'Active Projects', href: '#projects' },
               { label: 'Feasibility Study', href: '#feasibility' },
@@ -183,7 +188,7 @@ export default function HomePage() {
               <a
                 key={link.label}
                 href={link.href}
-                className="px-4 py-2 text-xs font-sans tracking-wide text-[#5A564F] hover:text-[#1A1816] hover:bg-[#F4F0E8] rounded-full transition-all"
+                className="nav-link-luxury text-xs font-sans tracking-[0.08em] text-[#5A564F] transition-colors duration-200"
               >
                 {link.label}
               </a>
@@ -263,40 +268,49 @@ export default function HomePage() {
           </div>
         </div>
 
-        {/* Mobile dropdown */}
+        {/* Mobile full-screen overlay nav */}
         <AnimatePresence>
           {mobileNavOpen && (
             <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
-              exit={{ opacity: 0, height: 0 }}
-              className="lg:hidden px-4 py-4 bg-[#FAF8F5] border-t border-[#E8E2D6] space-y-2"
+              initial={{ opacity: 0, x: '100%' }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: '100%' }}
+              transition={{ duration: 0.35, ease: [0.25, 0.46, 0.45, 0.94] }}
+              className="lg:hidden fixed inset-0 z-40 bg-[#FAF8F5]/98 backdrop-blur-xl flex flex-col justify-center px-8"
             >
-              {[
-                { label: 'Active Projects', href: '#projects' },
-                { label: 'Feasibility Study', href: '#feasibility' },
-                { label: 'Property Status', href: '#status' },
-                { label: 'Advisory Standard', href: '#advisory' },
-              ].map(link => (
-                <a
-                  key={link.label}
-                  href={link.href}
-                  onClick={() => setMobileNavOpen(false)}
-                  className="block px-3 py-2 text-xs font-sans uppercase tracking-wider text-[#5A564F] hover:text-[#1A1816] hover:bg-[#F4F0E8] rounded-xl"
-                >
-                  {link.label}
-                </a>
-              ))}
+              <div className="space-y-1 mb-10">
+                {[
+                  { label: 'Active Projects', href: '#projects' },
+                  { label: 'Feasibility Study', href: '#feasibility' },
+                  { label: 'Property Status', href: '#status' },
+                  { label: 'Advisory Standard', href: '#advisory' },
+                ].map((link, i) => (
+                  <motion.a
+                    key={link.label}
+                    href={link.href}
+                    onClick={() => setMobileNavOpen(false)}
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.05 + i * 0.07, duration: 0.3 }}
+                    className="mobile-nav-link block py-4 text-2xl font-serif font-bold text-[#1A1816] border-b border-[#E8E2D6]"
+                  >
+                    {link.label}
+                  </motion.a>
+                ))}
+              </div>
               {!user && (
-                <button
+                <motion.button
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.32 }}
                   onClick={() => {
                     setMobileNavOpen(false)
                     openAuthModal()
                   }}
-                  className="w-full text-left px-3 py-2 text-xs font-sans uppercase tracking-wider text-[#9E7B4F] font-bold"
+                  className="flex items-center gap-2 text-sm font-sans text-[#9E7B4F] font-semibold tracking-wide"
                 >
-                  Sign In with Google
-                </button>
+                  <LogIn className="w-4 h-4" /> Sign In with Google
+                </motion.button>
               )}
             </motion.div>
           )}
@@ -304,7 +318,7 @@ export default function HomePage() {
       </motion.nav>
 
       {/* ── ARCHITECTURAL HERO SECTION (WARM PAPER & PERFUME AESTHETIC) ──── */}
-      <section className="relative pt-36 pb-20 px-4 sm:px-6 overflow-hidden">
+      <section className="relative pt-36 pb-24 px-4 sm:px-6 overflow-hidden min-h-[92vh] flex items-center">
         {/* ── PREMIUM 4-STRIP HORIZONTAL COLLAGE BACKGROUND ──
             Layout math: 4 strips × 25% = 100%. Each strip height = 26% (1% seam overlap).
             Starts: 0%, 25%, 50%, 75%. background-size: cover fills the full-width panoramic band.
@@ -372,7 +386,7 @@ export default function HomePage() {
         </div>
 
         {/* Hero Editorial Header */}
-        <div className="relative z-10 max-w-5xl mx-auto text-center space-y-6">
+        <div className="relative z-10 max-w-5xl mx-auto text-center space-y-6 w-full">
           <motion.div
             initial={{ opacity: 0, y: 14 }}
             animate={{ opacity: 1, y: 0 }}
@@ -528,36 +542,61 @@ export default function HomePage() {
       />
 
       {/* ── SECTION 2: LAND & INDUSTRIAL FEASIBILITY STUDY ──────────────── */}
-      <section id="feasibility" className="py-24 bg-[#F4F0E8] border-t border-[#E8E2D6]">
+      <motion.section
+        id="feasibility"
+        initial={{ opacity: 0 }}
+        whileInView={{ opacity: 1 }}
+        viewport={{ once: true, margin: '-80px' }}
+        transition={{ duration: 0.5 }}
+        className="py-24 bg-[#F4F0E8] border-t border-[#E8E2D6]"
+      >
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <InstitutionalScreener />
         </div>
-      </section>
+      </motion.section>
 
       {/* ── SECTION 3: SELLER PROPERTY STATUS & REVIEW HUB ─────────────── */}
-      <section id="status" className="py-24 bg-[#FAF8F5] border-t border-[#E8E2D6]">
+      <motion.section
+        id="status"
+        initial={{ opacity: 0 }}
+        whileInView={{ opacity: 1 }}
+        viewport={{ once: true, margin: '-80px' }}
+        transition={{ duration: 0.5 }}
+        className="py-24 bg-[#FAF8F5] border-t border-[#E8E2D6]"
+      >
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <MandateTracker
             user={user}
             onOpenIntake={() => setIsIntakeModalOpen(true)}
           />
         </div>
-      </section>
+      </motion.section>
 
       {/* ── SECTION 4: THE THARAGA ADVISORY STANDARD ──────────────────── */}
       <section id="advisory" className="py-24 bg-white border-t border-[#E8E2D6]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
-          <div className="text-center max-w-3xl mx-auto mb-16 space-y-3">
-            <span className="text-[11px] font-sans uppercase tracking-[0.2em] text-[#9E7B4F] font-semibold">
-              The Advisory Standard
-            </span>
+          <motion.div
+            initial={{ opacity: 0, y: 24 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: '-60px' }}
+            transition={{ duration: 0.65, ease: [0.25, 0.46, 0.45, 0.94] }}
+            className="text-center max-w-3xl mx-auto mb-16 space-y-4"
+          >
+            <div className="flex items-center justify-center gap-3">
+              <div className="divider-gold" />
+              <span className="text-[11px] font-sans uppercase tracking-[0.22em] text-[#9E7B4F] font-semibold">
+                The Advisory Standard
+              </span>
+              <div className="divider-gold" />
+            </div>
             <h2 className="text-3xl sm:text-4xl md:text-5xl font-serif font-bold text-[#1A1816] tracking-tight">
-              Bespoke Commercial Placement. Zero Public Noise.
+              Bespoke Commercial Placement.<br className="hidden sm:block" />
+              <span className="italic font-normal text-[#9E7B4F]"> Zero Public Noise.</span>
             </h2>
-            <p className="text-[#5A564F] text-sm sm:text-base leading-relaxed font-light">
+            <p className="text-[#5A564F] text-sm sm:text-base leading-relaxed font-light max-w-2xl mx-auto">
               We do not operate mass consumer real estate classifieds. Tharaga provides private commercial advisory connecting land owners directly with corporate buyers and institutional investors.
             </p>
-          </div>
+          </motion.div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {[
@@ -579,24 +618,28 @@ export default function HomePage() {
                 desc: 'Asset owners maintain full control over sensitive commercial data. Track title verification, due diligence reports, and qualified buyer interest live through your verified Google account.',
                 icon: Shield,
               },
-            ].map(col => {
+            ].map((col, idx) => {
               const Icon = col.icon
               return (
-                <div
+                <motion.div
                   key={col.num}
-                  className="p-8 rounded-3xl bg-[#FAF8F5] border border-[#E8E2D6] hover:border-[#C5A059] transition-all space-y-4 group"
+                  initial={{ opacity: 0, y: 32 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true, margin: '-40px' }}
+                  transition={{ duration: 0.55, delay: idx * 0.12, ease: [0.25, 0.46, 0.45, 0.94] }}
+                  className="card-luxury p-8 rounded-3xl bg-[#FAF8F5] border border-[#E8E2D6] hover:border-[#C5A059] space-y-4 group cursor-default"
                 >
                   <div className="flex items-center justify-between">
-                    <span className="text-2xl font-serif font-bold text-[#9E7B4F]/40 group-hover:text-[#9E7B4F] transition-colors">
+                    <span className="text-2xl font-serif font-bold text-[#9E7B4F]/30 group-hover:text-[#9E7B4F] transition-colors duration-300">
                       {col.num}
                     </span>
-                    <div className="w-10 h-10 rounded-full bg-[#F4F0E8] border border-[#DDD5C5] flex items-center justify-center text-[#9E7B4F]">
+                    <div className="w-10 h-10 rounded-full bg-[#F4F0E8] border border-[#DDD5C5] flex items-center justify-center text-[#9E7B4F] group-hover:bg-[#EAE2D2] transition-colors duration-300">
                       <Icon className="w-5 h-5" />
                     </div>
                   </div>
                   <h3 className="text-xl font-serif font-bold text-[#1A1816]">{col.title}</h3>
                   <p className="text-xs sm:text-sm text-[#5A564F] leading-relaxed font-light">{col.desc}</p>
-                </div>
+                </motion.div>
               )
             })}
           </div>
@@ -604,15 +647,36 @@ export default function HomePage() {
       </section>
 
       {/* ── SECTION 5: DIRECT MANAGING DESK ───────────────────────────── */}
-      <section className="py-20 bg-[#FAF8F5] border-t border-[#E8E2D6] relative overflow-hidden">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 text-center space-y-5">
-          <div className="w-12 h-12 rounded-full bg-[#F4EFE6] border border-[#DDD5C5] flex items-center justify-center mx-auto text-[#9E7B4F]">
+      <section className="py-24 bg-[#FAF8F5] border-t border-[#E8E2D6] relative overflow-hidden">
+        {/* Soft background radial */}
+        <div
+          className="absolute inset-0 pointer-events-none"
+          style={{ background: 'radial-gradient(ellipse 70% 50% at 50% 100%, rgba(197,160,89,0.07) 0%, transparent 70%)' }}
+        />
+        <motion.div
+          initial={{ opacity: 0, y: 28 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: '-60px' }}
+          transition={{ duration: 0.65, ease: [0.25, 0.46, 0.45, 0.94] }}
+          className="relative z-10 max-w-4xl mx-auto px-4 sm:px-6 text-center space-y-5"
+        >
+          <motion.div
+            initial={{ scale: 0.85, opacity: 0 }}
+            whileInView={{ scale: 1, opacity: 1 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5, delay: 0.1 }}
+            className="w-14 h-14 rounded-full bg-[#F4EFE6] border border-[#DDD5C5] flex items-center justify-center mx-auto text-[#9E7B4F]"
+          >
             <Phone className="w-5 h-5" />
-          </div>
+          </motion.div>
 
-          <span className="text-[11px] font-sans uppercase tracking-[0.2em] text-[#9E7B4F] font-semibold block">
-            Direct Principal Line
-          </span>
+          <div className="flex items-center justify-center gap-3">
+            <div className="divider-gold" />
+            <span className="text-[11px] font-sans uppercase tracking-[0.22em] text-[#9E7B4F] font-semibold">
+              Direct Principal Line
+            </span>
+            <div className="divider-gold" />
+          </div>
 
           <h2 className="text-3xl sm:text-4xl font-serif font-bold text-[#1A1816] tracking-tight">
             Initiate a Confidential Discussion
@@ -622,10 +686,11 @@ export default function HomePage() {
             For institutional land acquisitions, commercial asset sales, or quarry concessions across Tamil Nadu. Direct communication with the Managing Desk under strict non-disclosure.
           </p>
 
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-6">
             <a
               href="tel:+918870980839"
-              className="flex items-center justify-center gap-2 px-8 py-3.5 rounded-full bg-[#1A1816] hover:bg-[#2D2926] text-[#FAF8F5] font-sans text-xs uppercase tracking-wider font-semibold transition-all shadow-md"
+              className="flex items-center justify-center gap-2 px-8 py-3.5 rounded-full bg-[#1A1816] hover:bg-[#2D2926] text-[#FAF8F5] font-sans text-xs uppercase tracking-wider font-semibold transition-all shadow-md hover:shadow-xl hover:-translate-y-0.5 active:translate-y-0"
+              style={{ transition: 'background-color 0.2s ease, box-shadow 0.3s ease, transform 0.2s ease' }}
             >
               <Phone className="w-4 h-4 text-[#C5A059]" /> Call Desk: +91 88709 80839
             </a>
@@ -634,24 +699,32 @@ export default function HomePage() {
               href="https://wa.me/918870980839?text=Hello%20Tharaga%20Real%20Estate,%20I%20wish%20to%20discuss%20a%20commercial%20mandate%20or%20land%20parcel."
               target="_blank"
               rel="noreferrer"
-              className="flex items-center justify-center gap-2 px-8 py-3.5 rounded-full bg-white hover:bg-[#F4F0E8] border border-[#E8E2D6] text-[#1A1816] font-sans text-xs font-semibold uppercase tracking-wider transition-colors shadow-sm"
+              className="flex items-center justify-center gap-2 px-8 py-3.5 rounded-full bg-white hover:bg-[#F4F0E8] border border-[#E8E2D6] hover:border-[#C5A059] text-[#1A1816] font-sans text-xs font-semibold uppercase tracking-wider shadow-sm hover:-translate-y-0.5 active:translate-y-0"
+              style={{ transition: 'background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.3s ease, transform 0.2s ease' }}
             >
               <span>WhatsApp Managing Desk</span>
               <ExternalLink className="w-3.5 h-3.5 text-[#9E7B4F]" />
             </a>
           </div>
-        </div>
+        </motion.div>
       </section>
 
       {/* ── FOOTER ───────────────────────────────────────────────────── */}
       <footer className="py-12 bg-white border-t border-[#E8E2D6] text-[#5A564F] text-xs">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 flex flex-col md:flex-row items-center justify-between gap-6">
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.5 }}
+          className="max-w-7xl mx-auto px-4 sm:px-6 flex flex-col md:flex-row items-center justify-between gap-6"
+        >
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 rounded-lg overflow-hidden border border-[#E8E2D6] bg-white">
               <img
                 src="/images/tharaga-logo.jpg"
                 alt="Tharaga Real Estate"
                 className="w-full h-full object-cover"
+                loading="lazy"
               />
             </div>
             <div>
@@ -661,17 +734,21 @@ export default function HomePage() {
           </div>
 
           <div className="flex flex-wrap items-center gap-6 text-[11px] font-sans">
-            <a href="#projects" className="hover:text-[#1A1816] transition-colors">Active Projects</a>
-            <a href="#feasibility" className="hover:text-[#1A1816] transition-colors">Feasibility Study</a>
-            <a href="#status" className="hover:text-[#1A1816] transition-colors">Property Status</a>
-            <Link href="/privacy" className="hover:text-[#1A1816] transition-colors">Privacy Protocol</Link>
-            <Link href="/terms" className="hover:text-[#1A1816] transition-colors">Terms of Placement</Link>
+            {[
+              { label: 'Active Projects', href: '#projects', external: false },
+              { label: 'Feasibility Study', href: '#feasibility', external: false },
+              { label: 'Property Status', href: '#status', external: false },
+            ].map(l => (
+              <a key={l.label} href={l.href} className="nav-link-luxury text-[#5A564F]">{l.label}</a>
+            ))}
+            <Link href="/privacy" className="nav-link-luxury text-[#5A564F]">Privacy Protocol</Link>
+            <Link href="/terms" className="nav-link-luxury text-[#5A564F]">Terms of Placement</Link>
           </div>
 
           <p className="text-[10px] text-[#8E887E]">
             © {new Date().getFullYear()} Tharaga Real Estate. Chennai · Tamil Nadu · India.
           </p>
-        </div>
+        </motion.div>
       </footer>
 
       {/* ── PROPERTY INTAKE MODAL (SILENT CLAUDE API INTAKE) ──────────── */}
@@ -688,6 +765,6 @@ export default function HomePage() {
             .catch(() => {})
         }}
       />
-    </div>
+    </motion.div>
   )
 }

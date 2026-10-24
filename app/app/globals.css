@@ -429,3 +429,119 @@
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
+
+/* ── Luxury nav underline slide (Auravie-style) ─────────── */
+.nav-link-luxury {
+  position: relative;
+  padding-bottom: 2px;
+}
+.nav-link-luxury::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  width: 0;
+  height: 1.5px;
+  background: #1A1816;
+  transition: width 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+.nav-link-luxury:hover::after { width: 100%; }
+.nav-link-luxury:hover { color: #1A1816; }
+
+/* ── Full-screen mobile nav ─────────────────────────────── */
+.mobile-nav-link {
+  position: relative;
+  overflow: hidden;
+}
+.mobile-nav-link::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 0;
+  height: 1px;
+  background: rgba(26, 24, 22, 0.15);
+  transition: width 0.4s ease;
+}
+.mobile-nav-link:hover::after { width: 100%; }
+
+/* ── Premium card lift (Auravie card hover) ─────────────── */
+.card-luxury {
+  transition: transform 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+              box-shadow 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+              border-color 0.25s ease;
+  will-change: transform;
+}
+.card-luxury:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 24px 64px rgba(158, 123, 79, 0.14), 0 8px 24px rgba(26, 24, 22, 0.06);
+}
+
+/* ── Section reveal (whileInView base) ──────────────────── */
+.section-reveal {
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity 0.7s ease, transform 0.7s ease;
+}
+.section-reveal.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ── Page entry animation ───────────────────────────────── */
+@keyframes page-enter {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.animate-page-enter {
+  animation: page-enter 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+}
+
+/* ── Stagger delay utilities ────────────────────────────── */
+.stagger-1 { animation-delay: 0.05s; }
+.stagger-2 { animation-delay: 0.10s; }
+.stagger-3 { animation-delay: 0.15s; }
+.stagger-4 { animation-delay: 0.20s; }
+.stagger-5 { animation-delay: 0.25s; }
+.stagger-6 { animation-delay: 0.30s; }
+
+/* ── Smooth image loading ────────────────────────────────── */
+img {
+  image-rendering: -webkit-optimize-contrast;
+}
+
+/* ── Button shimmer (primary CTA) ────────────────────────── */
+@keyframes btn-shimmer {
+  0%   { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+.btn-primary-luxury {
+  background-size: 200% auto;
+  transition: background-position 0.4s ease, box-shadow 0.3s ease;
+}
+.btn-primary-luxury:hover {
+  background-position: right center;
+  box-shadow: 0 6px 24px rgba(26, 24, 22, 0.22);
+}
+
+/* ── Gold accent text shimmer ────────────────────────────── */
+.text-brass-shimmer {
+  background: linear-gradient(90deg, #9E7B4F 0%, #C5A059 50%, #9E7B4F 100%);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: btn-shimmer 4s linear infinite;
+}
+
+/* ── Section divider line ─────────────────────────────────── */
+.divider-gold {
+  width: 40px;
+  height: 2px;
+  background: linear-gradient(to right, #9E7B4F, #C5A059);
+  border-radius: 1px;
+}
+
+/* ── Performance: reduce paint cost on animated elements ─── */
+.will-change-transform { will-change: transform; }
+.will-change-opacity   { will-change: opacity; }

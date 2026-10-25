@@ -1,0 +1,573 @@
+# PostgreSQL & Supabase SQL Style Guide
+
+## Overview
+Consistent SQL style improves readability, maintainability, and team collaboration. This guide establishes standards for writing SQL in Supabase projects.
+
+## Naming Conventions
+
+### Tables
+- Use **snake_case** for table names
+- Use **plural nouns** for table names
+- Be descriptive but concise
+
+```sql
+-- GOOD
+CREATE TABLE users (...);
+CREATE TABLE blog_posts (...);
+CREATE TABLE organization_members (...);
+
+-- BAD
+CREATE TABLE User (...);           -- PascalCase
+CREATE TABLE blogPost (...);       -- camelCase
+CREATE TABLE user (...);           -- singular
+CREATE TABLE OrganizationMember (...); -- PascalCase
+```
+
+### Columns
+- Use **snake_case** for column names
+- Avoid abbreviations unless universally understood
+- Use descriptive names
+
+```sql
+-- GOOD
+email, first_name, created_at, is_active, user_id
+
+-- BAD
+em, fName, createdAt, active, userId
+```
+
+### Primary Keys
+- Always use `id` as the primary key column name
+- Use UUID type for primary keys in Supabase
+
+```sql
+-- GOOD
+id UUID PRIMARY KEY DEFAULT gen_random_uuid()
+
+-- ACCEPTABLE (for legacy systems)
+id BIGSERIAL PRIMARY KEY
+id BIGINT PRIMARY KEY GENERATED ALWAYS AS IDENTITY
+```
+
+### Foreign Keys
+- Use `{referenced_table_singular}_id` format
+- Be explicit about the relationship
+
+```sql
+-- GOOD
+user_id UUID REFERENCES auth.users(id)
+organization_id UUID REFERENCES organizations(id)
+author_id UUID REFERENCES users(id)
+
+-- BAD
+user UUID REFERENCES auth.users(id)
+org_id UUID REFERENCES organizations(id)
+```
+
+### Junction Tables
+- Use alphabetically sorted combination of table names
+- Or use descriptive relationship name
+
+```sql
+-- GOOD
+CREATE TABLE post_tags (...);           -- alphabetical
+CREATE TABLE user_roles (...);          -- alphabetical
+CREATE TABLE project_members (...);     -- descriptive
+
+-- ACCEPTABLE
+CREATE TABLE posts_tags (...);
+
+-- BAD
+CREATE TABLE tags_posts (...);          -- not alphabetical
+CREATE TABLE PostTag (...);             -- PascalCase
+```
+
+### Indexes
+- Prefix with `idx_`
+- Include table name and column(s)
+
+```sql
+-- GOOD
+CREATE INDEX idx_users_email ON users(email);
+CREATE INDEX idx_posts_user_id_created_at ON posts(user_id, created_at);
+
+-- BAD
+CREATE INDEX user_email ON users(email);
+CREATE INDEX posts_idx ON posts(user_id);
+```
+
+### Constraints
+- Use descriptive constraint names with prefixes:
+  - `pk_` for primary keys
+  - `fk_` for foreign keys
+  - `uk_` for unique constraints
+  - `ck_` for check constraints
+
+```sql
+-- GOOD
+CONSTRAINT pk_users PRIMARY KEY (id)
+CONSTRAINT fk_posts_user_id FOREIGN KEY (user_id) REFERENCES users(id)
+CONSTRAINT uk_users_email UNIQUE (email)
+CONSTRAINT ck_posts_status CHECK (status IN ('draft', 'published', 'archived'))
+
+-- ACCEPTABLE (let PostgreSQL generate names for simple cases)
+PRIMARY KEY (id)
+FOREIGN KEY (user_id) REFERENCES users(id)
+```
+
+### Functions
+- Use **snake_case**
+- Prefix with verb: `get_`, `create_`, `update_`, `delete_`, `calculate_`, `validate_`
+
+```sql
+-- GOOD
+get_user_posts()
+create_organization()
+update_user_settings()
+calculate_total_revenue()
+validate_email_format()
+
+-- BAD
+getUserPosts()
+CreateOrganization()
+user_settings_update()
+```
+
+### Views
+- Use **snake_case**
+- Optionally suffix with `_view` for clarity
+
+```sql
+-- GOOD
+CREATE VIEW user_post_stats AS ...
+CREATE VIEW active_subscriptions_view AS ...
+
+-- BAD
+CREATE VIEW UserPostStats AS ...
+CREATE VIEW vw_user_post_stats AS ...  -- Hungarian notation
+```
+
+## Formatting
+
+### Keywords
+- Use **UPPERCASE** for SQL keywords
+- Use lowercase for identifiers
+
+```sql
+-- GOOD
+SELECT id, email
+FROM users
+WHERE created_at > NOW() - INTERVAL '7 days';
+
+-- BAD
+select id, email
+from users
+where created_at > now() - interval '7 days';
+```
+
+### Indentation
+- Use 2 spaces for indentation (not tabs)
+- Align related clauses
+
+```sql
+-- GOOD
+SELECT
+  u.id,
+  u.email,
+  u.first_name,
+  COUNT(p.id) AS post_count
+FROM users u
+LEFT JOIN posts p ON u.id = p.user_id
+WHERE u.is_active = true
+  AND u.created_at > NOW() - INTERVAL '30 days'
+GROUP BY u.id, u.email, u.first_name
+HAVING COUNT(p.id) > 0
+ORDER BY post_count DESC
+LIMIT 10;
+
+-- BAD (all on one line)
+SELECT u.id, u.email FROM users u WHERE u.is_active = true;
+```
+
+### Commas
+- Leading commas OR trailing commas (be consistent)
+- Trailing commas are more common
+
+```sql
+-- GOOD (trailing commas)
+SELECT
+  id,
+  email,
+  first_name,
+  last_name
+FROM users;
+
+-- GOOD (leading commas, if team prefers)
+SELECT
+  id
+  , email
+  , first_name
+  , last_name
+FROM users;
+
+-- BAD (inconsistent)
+SELECT
+  id,
+  email
+  , first_name,
+  last_name
+FROM users;
+```
+
+### Long Lists
+- Put each item on a new line
+- Indent consistently
+
+```sql
+-- GOOD
+INSERT INTO users (
+  id,
+  email,
+  first_name,
+  last_name,
+  created_at
+) VALUES (
+  gen_random_uuid(),
+  'user@example.com',
+  'John',
+  'Doe',
+  NOW()
+);
+
+-- BAD
+INSERT INTO users (id, email, first_name, last_name, created_at) VALUES (gen_random_uuid(), 'user@example.com', 'John', 'Doe', NOW());
+```
+
+### JOIN Clauses
+- One JOIN per line
+- Align JOIN conditions
+
+```sql
+-- GOOD
+SELECT
+  u.email,
+  p.title,
+  c.content
+FROM users u
+INNER JOIN posts p
+  ON u.id = p.user_id
+LEFT JOIN comments c
+  ON p.id = c.post_id
+  AND c.is_deleted = false
+WHERE u.is_active = true;
+
+-- BAD
+SELECT u.email, p.title, c.content FROM users u INNER JOIN posts p ON u.id = p.user_id LEFT JOIN comments c ON p.id = c.post_id WHERE u.is_active = true;
+```
+
+### WHERE Clauses
+- One condition per line for complex queries
+- Use parentheses for clarity
+
+```sql
+-- GOOD
+WHERE
+  (u.is_active = true AND u.email_verified = true)
+  AND (
+    u.subscription_status = 'active'
+    OR u.trial_end_date > NOW()
+  );
+
+-- ACCEPTABLE (simple conditions)
+WHERE u.is_active = true AND u.email_verified = true;
+```
+
+### Subqueries
+- Indent subqueries
+- Use CTEs for complex queries
+
+```sql
+-- GOOD (CTE)
+WITH active_users AS (
+  SELECT id, email
+  FROM users
+  WHERE is_active = true
+),
+user_posts AS (
+  SELECT
+    user_id,
+    COUNT(*) AS post_count
+  FROM posts
+  WHERE status = 'published'
+  GROUP BY user_id
+)
+SELECT
+  au.email,
+  COALESCE(up.post_count, 0) AS post_count
+FROM active_users au
+LEFT JOIN user_posts up ON au.id = up.user_id;
+
+-- ACCEPTABLE (subquery)
+SELECT
+  u.email,
+  (
+    SELECT COUNT(*)
+    FROM posts p
+    WHERE p.user_id = u.id
+      AND p.status = 'published'
+  ) AS post_count
+FROM users u
+WHERE u.is_active = true;
+```
+
+## Data Types
+
+### Recommended Types
+```sql
+-- Text
+email TEXT                          -- or VARCHAR with appropriate length
+description TEXT
+
+-- Numbers
+price NUMERIC(10, 2)               -- precise decimal
+quantity INTEGER
+view_count BIGINT
+
+-- Dates/Times
+created_at TIMESTAMPTZ              -- always use TIMESTAMPTZ, not TIMESTAMP
+date_of_birth DATE
+
+-- Boolean
+is_active BOOLEAN
+
+-- JSON
+metadata JSONB                      -- prefer JSONB over JSON
+
+-- UUIDs
+id UUID
+user_id UUID
+
+-- Arrays
+tags TEXT[]
+```
+
+### Type Guidelines
+- Use `TIMESTAMPTZ` instead of `TIMESTAMP` (stores timezone)
+- Use `JSONB` instead of `JSON` (better performance)
+- Use `TEXT` instead of `VARCHAR` (no performance difference in PostgreSQL)
+- Use `NUMERIC` for precise decimal values (e.g., money)
+- Use `BOOLEAN` instead of integer flags
+
+## Common Patterns
+
+### Standard Table Structure
+```sql
+CREATE TABLE table_name (
+  -- Primary key
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+
+  -- Foreign keys
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+
+  -- Data columns
+  name TEXT NOT NULL,
+  description TEXT,
+  status TEXT DEFAULT 'active' CHECK (status IN ('active', 'inactive', 'archived')),
+
+  -- Timestamps
+  created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL,
+  updated_at TIMESTAMPTZ DEFAULT NOW() NOT NULL
+);
+
+-- Indexes
+CREATE INDEX idx_table_name_user_id ON table_name(user_id);
+CREATE INDEX idx_table_name_status ON table_name(status);
+CREATE INDEX idx_table_name_created_at ON table_name(created_at DESC);
+
+-- Enable RLS
+ALTER TABLE table_name ENABLE ROW LEVEL SECURITY;
+
+-- Updated at trigger
+CREATE TRIGGER update_table_name_updated_at
+  BEFORE UPDATE ON table_name
+  FOR EACH ROW
+  EXECUTE FUNCTION update_updated_at_column();
+
+-- Comments
+COMMENT ON TABLE table_name IS 'Description of what this table stores';
+```
+
+### Enum-Like Constraints
+```sql
+-- Use CHECK constraints for enums
+status TEXT CHECK (status IN ('draft', 'published', 'archived'))
+
+-- Or create a custom enum type
+CREATE TYPE post_status AS ENUM ('draft', 'published', 'archived');
+status post_status NOT NULL DEFAULT 'draft'
+```
+
+### Timestamps
+```sql
+-- Standard timestamp columns
+created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL,
+updated_at TIMESTAMPTZ DEFAULT NOW() NOT NULL,
+
+-- Optional soft delete
+deleted_at TIMESTAMPTZ
+
+-- Trigger for auto-updating updated_at
+CREATE OR REPLACE FUNCTION update_updated_at_column()
+RETURNS TRIGGER AS $$
+BEGIN
+  NEW.updated_at = NOW();
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+```
+
+## Comments
+
+### When to Comment
+- Complex queries or logic
+- Business rules encoded in SQL
+- Non-obvious optimizations
+- Table and column purposes
+
+```sql
+-- Table comments
+COMMENT ON TABLE users IS 'Stores user account information and preferences';
+
+-- Column comments
+COMMENT ON COLUMN users.email IS 'User email address, must be unique and verified';
+
+-- Inline comments for complex logic
+-- Calculate the user's total score based on posts and comments
+SELECT
+  u.id,
+  (
+    SELECT COALESCE(SUM(p.score), 0)
+    FROM posts p
+    WHERE p.user_id = u.id
+  ) +
+  (
+    SELECT COALESCE(SUM(c.score), 0)
+    FROM comments c
+    WHERE c.user_id = u.id
+  ) AS total_score
+FROM users u;
+```
+
+## Best Practices
+
+### DO
+- Always use `TIMESTAMPTZ` for timestamps
+- Add indexes on foreign keys
+- Enable RLS on user-facing tables
+- Use transactions for multi-step operations
+- Add NOT NULL constraints where appropriate
+- Use descriptive names
+- Keep queries readable with proper formatting
+- Use CTEs for complex queries
+- Add comments for business logic
+
+### DON'T
+- Use `SELECT *` in production code
+- Store dates as strings or integers
+- Use magic numbers without explanation
+- Create tables without primary keys
+- Forget ON DELETE/ON UPDATE clauses on foreign keys
+- Use reserved keywords as identifiers
+- Mix different naming conventions
+- Write SQL on a single line
+- Forget to add indexes on commonly queried columns
+
+## Query Optimization
+
+### Use EXPLAIN
+```sql
+EXPLAIN ANALYZE
+SELECT u.email, COUNT(p.id)
+FROM users u
+LEFT JOIN posts p ON u.id = p.user_id
+GROUP BY u.email;
+```
+
+### Prefer EXISTS over IN for subqueries
+```sql
+-- GOOD
+SELECT * FROM users u
+WHERE EXISTS (
+  SELECT 1 FROM posts p
+  WHERE p.user_id = u.id
+);
+
+-- LESS EFFICIENT
+SELECT * FROM users u
+WHERE u.id IN (
+  SELECT user_id FROM posts
+);
+```
+
+### Limit Result Sets
+```sql
+-- Always use LIMIT for large result sets
+SELECT * FROM posts
+ORDER BY created_at DESC
+LIMIT 100;
+
+-- Use OFFSET with caution (slow for large offsets)
+-- Consider cursor-based pagination instead
+```
+
+## Supabase-Specific
+
+### Auth Integration
+```sql
+-- Reference auth.users correctly
+FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE
+
+-- Use auth.uid() in RLS policies
+USING (auth.uid() = user_id)
+```
+
+### Storage Integration
+```sql
+-- Link to storage objects
+storage_path TEXT,
+CONSTRAINT valid_storage_path
+  CHECK (storage_path ~ '^[a-z0-9-]+/[a-z0-9-/.]+$')
+```
+
+### Real-time Configuration
+```sql
+-- Enable real-time for a table
+ALTER PUBLICATION supabase_realtime ADD TABLE posts;
+```
+
+## Anti-Patterns to Avoid
+
+```sql
+-- DON'T: Use VARCHAR without reason
+name VARCHAR(255)  -- Just use TEXT
+
+-- DON'T: Use TIMESTAMP without timezone
+created_at TIMESTAMP  -- Use TIMESTAMPTZ
+
+-- DON'T: Store JSON as TEXT
+metadata TEXT  -- Use JSONB
+
+-- DON'T: Use integers for booleans
+is_active INTEGER  -- Use BOOLEAN
+
+-- DON'T: Forget constraints
+email TEXT  -- Should be: email TEXT NOT NULL UNIQUE
+
+-- DON'T: Use generic names
+data JSONB  -- Be specific: user_preferences JSONB
+
+-- DON'T: Chain multiple operations without transactions
+UPDATE users SET balance = balance - 100 WHERE id = 1;
+UPDATE users SET balance = balance + 100 WHERE id = 2;
+-- Use BEGIN; ... COMMIT; instead
+```

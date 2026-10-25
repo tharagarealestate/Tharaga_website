@@ -5,7 +5,7 @@ exports.handler = async (event) => {
   try{
     const { endpoint, keys, user } = JSON.parse(event.body || '{}')
     if (!endpoint || !keys || !keys.p256dh || !keys.auth) return resp({ error: 'Invalid subscription' }, 400)
-    const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE)
+    const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY)
     await supabase.from('push_subscriptions').upsert({ endpoint, keys, user: user||null }, { onConflict: 'endpoint' })
     return resp({ ok:true })
   } catch(e){ return resp({ error: 'Unexpected' }) }

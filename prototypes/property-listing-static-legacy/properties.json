@@ -1,0 +1,32 @@
+[
+  {
+    "id": 1,
+    "title": "2 BHK Apartment",
+    "address": "Anna Nagar, Chennai",
+    "price": "₹45 Lakhs",
+    "bedrooms": 2,
+    "bathrooms": 2,
+    "lat": 13.0827,
+    "lng": 80.2707
+  },
+  {
+    "id": 2,
+    "title": "Luxury Villa",
+    "address": "Adyar, Chennai",
+    "price": "₹2.5 Crore",
+    "bedrooms": 4,
+    "bathrooms": 3,
+    "lat": 13.0067,
+    "lng": 80.2206
+  },
+  {
+    "id": 3,
+    "title": "3 BHK Flat",
+    "address": "Velachery, Chennai",
+    "price": "₹85 Lakhs",
+    "bedrooms": 3,
+    "bathrooms": 2,
+    "lat": 12.9702,
+    "lng": 80.2169
+  }
+]

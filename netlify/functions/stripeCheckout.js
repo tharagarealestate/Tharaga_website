@@ -31,8 +31,8 @@ exports.handler = async (event) => {
       line_items: [{ price: priceId, quantity: 1 }],
       customer_email: email || undefined,
       allow_promotion_codes: true,
-      success_url: (success_url || process.env.CHECKOUT_SUCCESS_URL || 'https://auth.tharaga.co.in/pricing/?success=1') + '&session_id={CHECKOUT_SESSION_ID}',
-      cancel_url: cancel_url || process.env.CHECKOUT_CANCEL_URL || 'https://auth.tharaga.co.in/pricing/?canceled=1',
+      success_url: (success_url || process.env.CHECKOUT_SUCCESS_URL || 'https://tharaga.in/pricing/?success=1') + '&session_id={CHECKOUT_SESSION_ID}',
+      cancel_url: cancel_url || process.env.CHECKOUT_CANCEL_URL || 'https://tharaga.in/pricing/?canceled=1',
       subscription_data: { metadata },
       metadata,
     })

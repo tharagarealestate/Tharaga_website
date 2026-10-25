@@ -63,7 +63,7 @@ async function upsertEntitlement(payload){
   try {
     const { createClient } = require('@supabase/supabase-js')
     const url = process.env.SUPABASE_URL
-    const key = process.env.SUPABASE_SERVICE_ROLE
+    const key = process.env.SUPABASE_SERVICE_ROLE_KEY
     if (!url || !key) { console.warn('[entitlement] missing supabase env'); return }
     const sb = createClient(url, key)
 

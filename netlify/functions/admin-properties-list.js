@@ -12,7 +12,7 @@ function isAuthorized(event){
 exports.handler = async (event) => {
   if (!isAuthorized(event)) return json({ error: 'Unauthorized' }, 401)
   const url = process.env.SUPABASE_URL
-  const key = process.env.SUPABASE_SERVICE_ROLE
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY
   if (!url || !key) return json({ error: 'Supabase env missing' }, 500)
 
   const supabase = createClient(url, key)

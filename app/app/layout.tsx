@@ -106,8 +106,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link rel="icon" href="/favicon.ico" sizes="any" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link rel="dns-prefetch" href="https://images.unsplash.com" />
-        <link rel="preload" as="image" href="/images/tharaga-logo.jpg" />
         {/* Luxury Perfume Editorial Typography: Instrument Serif, Jost, and Playfair Display */}
         {/* eslint-disable-next-line @next/next/no-page-custom-font */}
         <link

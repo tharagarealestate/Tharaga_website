@@ -429,3 +429,7 @@
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
+
+/* Horizontal pill rows: scroll without a visible bar */
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+.no-scrollbar::-webkit-scrollbar { display: none; }

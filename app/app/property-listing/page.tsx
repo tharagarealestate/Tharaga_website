@@ -1,47 +1,21 @@
 'use client'
 
-import { useState } from 'react'
 import Link from 'next/link'
-import { ArrowLeft, Building2, Sparkles } from 'lucide-react'
-import { CuratedCommercialShowcase } from '@/components/commercial/CuratedCommercialShowcase'
-import { CommercialIntakeModal } from '@/components/commercial/CommercialIntakeModal'
-import { CURATED_COMMERCIAL_MANDATES } from '@/app/api/commercial/mandates/route'
+import { PortfolioShowcase } from '@/components/portfolio/PortfolioShowcase'
 
-export default function CommercialPropertyListingPage() {
-  const [isIntakeOpen, setIsIntakeOpen] = useState(false)
-
+export default function PropertyListingPage() {
   return (
-    <div className="min-h-screen bg-[#070709] text-white selection:bg-amber-400 selection:text-black py-8">
-      {/* Top Bar */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 mb-8 flex items-center justify-between border-b border-white/[0.08] pb-6">
+    <div className="min-h-screen bg-[#FAF8F5] text-[#1A1816]">
+      <div className="max-w-7xl mx-auto px-5 sm:px-8 pt-8 flex items-center justify-between border-b border-[#C5A059]/30 pb-6">
         <Link
           href="/"
-          className="inline-flex items-center gap-2 text-xs font-mono uppercase tracking-wider text-white/60 hover:text-white transition-colors"
+          className="font-sans text-[11px] uppercase tracking-[0.26em] text-[#5A564F] hover:text-[#1A1816] transition-colors"
         >
-          <ArrowLeft className="w-4 h-4" /> Tharaga Institutional Home
+          ← Tharaga
         </Link>
-
-        <Link href="/" className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-xl bg-amber-500 flex items-center justify-center text-black font-bold text-xs">
-            <Building2 className="w-4 h-4" />
-          </div>
-          <span className="font-serif font-bold text-lg text-white">Tharaga</span>
-          <span className="text-[10px] font-mono text-amber-400 uppercase tracking-widest hidden sm:inline">Mandates</span>
-        </Link>
+        <span className="font-serif text-xl">The Portfolio</span>
       </div>
-
-      {/* Main Commercial Showcase Area */}
-      <CuratedCommercialShowcase
-        mandates={CURATED_COMMERCIAL_MANDATES}
-        onOpenIntake={() => setIsIntakeOpen(true)}
-      />
-
-      {/* Commercial Intake Assistant Modal */}
-      <CommercialIntakeModal
-        isOpen={isIntakeOpen}
-        onClose={() => setIsIntakeOpen(false)}
-        user={null}
-      />
+      <PortfolioShowcase />
     </div>
   )
 }

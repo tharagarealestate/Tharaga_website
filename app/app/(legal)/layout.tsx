@@ -1,124 +1,26 @@
-import { Metadata } from 'next';
-import Breadcrumb from '@/components/Breadcrumb';
-import { CookieConsentBanner } from '@/components/legal/CookieConsentBanner';
+import { Metadata } from 'next'
+import { CookieConsentBanner } from '@/components/legal/CookieConsentBanner'
+import { SiteFooter, SiteHeader } from '@/components/brand/SiteHeader'
+import { Grain } from '@/components/portfolio/primitives'
 
 export const metadata: Metadata = {
-  title: 'Legal Documents | Tharaga',
-  description: 'Legal documents including Privacy Policy, Terms of Service, and Refund Policy',
-};
-
-export default function LegalLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-950 via-primary-900 to-primary-800 relative overflow-hidden">
-      {/* Background - similar to pricing but without animated glow */}
-      <div className="absolute inset-0 opacity-10">
-        <div className="absolute top-20 left-10 w-96 h-96 bg-gold-500 rounded-full blur-3xl" />
-        <div className="absolute bottom-20 right-10 w-[600px] h-[600px] bg-emerald-500 rounded-full blur-3xl" />
-      </div>
-
-      <div className="relative z-10">
-        <Breadcrumb items={[
-          { label: 'Home', href: '/' },
-          { label: 'Legal' }
-        ]} />
-        {children}
-      </div>
-
-      <CookieConsentBanner />
-    </div>
-  );
+  title: 'Legal | Tharaga Estates',
+  description: 'Privacy Policy, Terms of Service and Refund Policy of Tharaga Estates.',
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+export default function LegalLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="min-h-screen bg-[#F7F3EC] text-[#15213A]">
+      <SiteHeader />
+      <div className="relative overflow-hidden bg-[#15213A] pt-36 pb-16">
+        <Grain opacity={0.1} />
+        <p className="relative max-w-7xl mx-auto px-6 sm:px-10 flex items-center gap-4 font-sans text-[10.5px] uppercase tracking-[0.36em] text-[#E6C9A0]">
+          <span className="h-px w-10 bg-[#E6C9A0]/70" /> Tharaga Estates · Legal
+        </p>
+      </div>
+      <div className="relative -mt-8">{children}</div>
+      <SiteFooter />
+      <CookieConsentBanner />
+    </div>
+  )
+}

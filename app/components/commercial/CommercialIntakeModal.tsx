@@ -187,24 +187,24 @@ export function CommercialIntakeModal({ isOpen, onClose, user, onSuccess }: Comm
         initial={{ opacity: 0, scale: 0.96, y: 15 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.96, y: 15 }}
-        className="relative w-full max-w-3xl bg-white border border-[#E8E2D6] rounded-3xl shadow-2xl text-[#1A1816] overflow-hidden my-auto max-h-[92vh] flex flex-col"
+        className="relative w-full max-w-3xl bg-white border border-[#D6CAB5] rounded-none text-[#15213A] overflow-hidden my-auto max-h-[92vh] flex flex-col"
       >
         {/* Top Header */}
-        <div className="px-6 sm:px-8 py-5 border-b border-[#E8E2D6] flex items-center justify-between bg-[#FAF8F5] shrink-0">
+        <div className="px-6 sm:px-8 py-5 border-b border-[#D6CAB5] flex items-center justify-between bg-[#F7F3EC] shrink-0">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-[#F4EFE6] border border-[#DDD5C5] flex items-center justify-center text-[#9E7B4F]">
-              <Sparkles className="w-5 h-5 text-[#9E7B4F]" />
+            <div className="w-10 h-10 rounded-full bg-[#F4EFE6] border border-[#D6CAB5] flex items-center justify-center text-[#94643A]">
+              <Sparkles className="w-5 h-5 text-[#94643A]" />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <span className="text-[10px] font-sans font-bold tracking-widest uppercase text-[#9E7B4F]">
+                <span className="text-[10px] font-sans font-bold tracking-widest uppercase text-[#94643A]">
                   AI Property Assistant
                 </span>
-                <span className="text-[10px] font-sans px-2 py-0.5 rounded-full bg-[#1A1816] text-[#FAF8F5]">
+                <span className="text-[10px] font-sans px-2 py-0.5 rounded-full bg-[#15213A] text-[#F7F3EC]">
                   Effortless Placement
                 </span>
               </div>
-              <h2 className="text-base sm:text-lg font-serif font-bold text-[#1A1816]">
+              <h2 className="text-base sm:text-lg font-display font-normal tracking-[0.03em] text-[#15213A]">
                 List Any Property in Minutes
               </h2>
             </div>
@@ -212,7 +212,7 @@ export function CommercialIntakeModal({ isOpen, onClose, user, onSuccess }: Comm
 
           <button
             onClick={onClose}
-            className="w-9 h-9 rounded-full bg-[#F4F0E8] hover:bg-[#ECE6DA] flex items-center justify-center text-[#5A564F] hover:text-[#1A1816] transition-colors"
+            className="w-9 h-9 rounded-full bg-[#EFE8DC] hover:bg-[#ECE6DA] flex items-center justify-center text-[#4A5163] hover:text-[#15213A] transition-colors"
           >
             <X className="w-4 h-4" />
           </button>
@@ -224,7 +224,7 @@ export function CommercialIntakeModal({ isOpen, onClose, user, onSuccess }: Comm
           {step === 'input' && (
             <div className="space-y-6">
               {/* Introduction Note */}
-              <div className="p-4 rounded-2xl bg-[#F7F4EE] border border-[#E8E2D6] text-xs text-[#5A564F] leading-relaxed font-light">
+              <div className="p-4 rounded-none bg-[#F7F4EE] border border-[#D6CAB5] text-xs text-[#4A5163] leading-relaxed font-light">
                 <p>
                   List any property type — residential houses, commercial buildings with 6-7 shops, IT parks, vacant land, or industrial assets. Upload your photos or videos and tell us what you have in your own words. Our AI assistant will structure the underwriting dossier automatically.
                 </p>
@@ -232,7 +232,7 @@ export function CommercialIntakeModal({ isOpen, onClose, user, onSuccess }: Comm
 
               {/* 1. Quick Property Category Pills */}
               <div>
-                <label className="block text-xs font-sans uppercase tracking-wider text-[#8E887E] font-semibold mb-2.5">
+                <label className="block text-xs font-sans uppercase tracking-wider text-[#7D8292] font-semibold mb-2.5">
                   1. Select Property Class
                 </label>
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
@@ -244,13 +244,13 @@ export function CommercialIntakeModal({ isOpen, onClose, user, onSuccess }: Comm
                         key={cat.id}
                         type="button"
                         onClick={() => setSelectedCategory(cat.id)}
-                        className={`p-3 rounded-2xl border text-left transition-all flex items-center gap-2.5 ${
+                        className={`p-3 rounded-none border text-left transition-all flex items-center gap-2.5 ${
                           active
-                            ? 'bg-[#1A1816] border-[#1A1816] text-[#FAF8F5] shadow-sm'
-                            : 'bg-[#FAF8F5] border-[#E8E2D6] text-[#5A564F] hover:bg-[#F4F0E8] hover:text-[#1A1816]'
+                            ? 'bg-[#15213A] border-[#15213A] text-[#F7F3EC] shadow-sm'
+                            : 'bg-[#F7F3EC] border-[#D6CAB5] text-[#4A5163] hover:bg-[#EFE8DC] hover:text-[#15213A]'
                         }`}
                       >
-                        <Icon className={`w-4 h-4 shrink-0 ${active ? 'text-[#C5A059]' : 'text-[#8E887E]'}`} />
+                        <Icon className={`w-4 h-4 shrink-0 ${active ? 'text-[#B0834A]' : 'text-[#7D8292]'}`} />
                         <span className="text-xs font-sans font-medium truncate">{cat.label.split('(')[0].trim()}</span>
                       </button>
                     )
@@ -261,10 +261,10 @@ export function CommercialIntakeModal({ isOpen, onClose, user, onSuccess }: Comm
               {/* 2. Natural Language Description Textarea */}
               <div>
                 <div className="flex items-center justify-between mb-1.5">
-                  <label className="text-xs font-sans uppercase tracking-wider text-[#8E887E] font-semibold">
+                  <label className="text-xs font-sans uppercase tracking-wider text-[#7D8292] font-semibold">
                     2. Describe Your Property in Your Own Words *
                   </label>
-                  <span className="text-[11px] text-[#9E7B4F] font-medium">Type or paste naturally</span>
+                  <span className="text-[11px] text-[#94643A] font-medium">Type or paste naturally</span>
                 </div>
 
                 <textarea
@@ -272,44 +272,44 @@ export function CommercialIntakeModal({ isOpen, onClose, user, onSuccess }: Comm
                   value={description}
                   onChange={e => setDescription(e.target.value)}
                   placeholder="Example: Commercial building on Trichy Main Road, Madurai. 7 shops on ground floor with running grocery & pharmacy, 1st floor office suites. Total built-up 5,200 sq.ft on 6 cents land. Current rental income is ₹1.5 Lakhs/month. Clear title, 40ft road frontage. Asking price ₹3.25 Crores."
-                  className="w-full p-4 rounded-2xl bg-[#FAF8F5] border border-[#E8E2D6] text-xs sm:text-sm text-[#1A1816] leading-relaxed focus:outline-none focus:border-[#9E7B4F]"
+                  className="w-full p-4 rounded-none bg-[#F7F3EC] border border-[#D6CAB5] text-xs sm:text-sm text-[#15213A] leading-relaxed focus:outline-none focus:border-[#94643A]"
                 />
 
                 {/* Helper Snippet Pills */}
                 <div className="flex flex-wrap items-center gap-1.5 pt-2 text-[11px]">
-                  <span className="text-[#8E887E] mr-1">Quick Add:</span>
+                  <span className="text-[#7D8292] mr-1">Quick Add:</span>
                   <button
                     type="button"
                     onClick={() => handleAppendSnippet('7 rental shops on ground floor.')}
-                    className="px-2.5 py-1 rounded-full bg-[#F4F0E8] hover:bg-[#ECE6DA] text-[#5A564F] transition-colors"
+                    className="px-2.5 py-1 rounded-full bg-[#EFE8DC] hover:bg-[#ECE6DA] text-[#4A5163] transition-colors"
                   >
                     + 7 Shops
                   </button>
                   <button
                     type="button"
                     onClick={() => handleAppendSnippet('Monthly rental income is ₹1.5 Lakhs.')}
-                    className="px-2.5 py-1 rounded-full bg-[#F4F0E8] hover:bg-[#ECE6DA] text-[#5A564F] transition-colors"
+                    className="px-2.5 py-1 rounded-full bg-[#EFE8DC] hover:bg-[#ECE6DA] text-[#4A5163] transition-colors"
                   >
                     + Rental Income
                   </button>
                   <button
                     type="button"
                     onClick={() => handleAppendSnippet('Total built-up area 5,000 sq.ft.')}
-                    className="px-2.5 py-1 rounded-full bg-[#F4F0E8] hover:bg-[#ECE6DA] text-[#5A564F] transition-colors"
+                    className="px-2.5 py-1 rounded-full bg-[#EFE8DC] hover:bg-[#ECE6DA] text-[#4A5163] transition-colors"
                   >
                     + Built-up Area
                   </button>
                   <button
                     type="button"
                     onClick={() => handleAppendSnippet('40-foot main road frontage.')}
-                    className="px-2.5 py-1 rounded-full bg-[#F4F0E8] hover:bg-[#ECE6DA] text-[#5A564F] transition-colors"
+                    className="px-2.5 py-1 rounded-full bg-[#EFE8DC] hover:bg-[#ECE6DA] text-[#4A5163] transition-colors"
                   >
                     + Road Frontage
                   </button>
                   <button
                     type="button"
                     onClick={() => handleAppendSnippet('Single owner clean revenue patta.')}
-                    className="px-2.5 py-1 rounded-full bg-[#F4EFE6] text-[#7A5B32] hover:bg-[#ECE6DA] transition-colors font-medium"
+                    className="px-2.5 py-1 rounded-full bg-[#F4EFE6] text-[#7C5230] hover:bg-[#ECE6DA] transition-colors font-medium"
                   >
                     + Clean Patta
                   </button>
@@ -319,12 +319,12 @@ export function CommercialIntakeModal({ isOpen, onClose, user, onSuccess }: Comm
               {/* 3. Photos & Videos Upload Hub */}
               <div>
                 <div className="flex items-center justify-between mb-2">
-                  <label className="text-xs font-sans uppercase tracking-wider text-[#8E887E] font-semibold flex items-center gap-1.5">
-                    <Upload className="w-3.5 h-3.5 text-[#9E7B4F]" />
+                  <label className="text-xs font-sans uppercase tracking-wider text-[#7D8292] font-semibold flex items-center gap-1.5">
+                    <Upload className="w-3.5 h-3.5 text-[#94643A]" />
                     <span>3. Upload Photos & Videos (Optional but Recommended)</span>
                   </label>
                   {(imageCount > 0 || videoCount > 0) && (
-                    <span className="text-[11px] font-sans font-medium text-[#7A5B32]">
+                    <span className="text-[11px] font-sans font-medium text-[#7C5230]">
                       {imageCount} Photo{imageCount === 1 ? '' : 's'}{videoCount > 0 ? `, ${videoCount} Video${videoCount === 1 ? '' : 's'}` : ''}
                     </span>
                   )}
@@ -349,20 +349,20 @@ export function CommercialIntakeModal({ isOpen, onClose, user, onSuccess }: Comm
                     setIsDragging(false)
                     handleFilesSelected(e.dataTransfer.files)
                   }}
-                  className={`p-6 rounded-2xl border-2 border-dashed transition-all cursor-pointer text-center ${
+                  className={`p-6 rounded-none border-2 border-dashed transition-all cursor-pointer text-center ${
                     isDragging
-                      ? 'border-[#9E7B4F] bg-[#F7F4EE]'
-                      : 'border-[#E8E2D6] bg-[#FAF8F5] hover:bg-[#F4F0E8]'
+                      ? 'border-[#94643A] bg-[#F7F4EE]'
+                      : 'border-[#D6CAB5] bg-[#F7F3EC] hover:bg-[#EFE8DC]'
                   }`}
                 >
-                  <div className="flex items-center justify-center gap-3 text-[#9E7B4F] mb-2">
+                  <div className="flex items-center justify-center gap-3 text-[#94643A] mb-2">
                     <ImageIcon className="w-6 h-6" />
                     <Video className="w-6 h-6" />
                   </div>
-                  <p className="text-xs font-medium text-[#1A1816]">
+                  <p className="text-xs font-medium text-[#15213A]">
                     Click or drag & drop photos and videos here
                   </p>
-                  <p className="text-[11px] text-[#8E887E] mt-0.5">
+                  <p className="text-[11px] text-[#7D8292] mt-0.5">
                     Upload facade photos, shop interiors, walkthrough videos, site clips, or survey sketches
                   </p>
                 </div>
@@ -373,13 +373,13 @@ export function CommercialIntakeModal({ isOpen, onClose, user, onSuccess }: Comm
                     {mediaFiles.map((file, idx) => (
                       <div
                         key={idx}
-                        className="relative rounded-xl border border-[#E8E2D6] overflow-hidden bg-white p-1.5 flex flex-col justify-between group shadow-sm"
+                        className="relative rounded-none border border-[#D6CAB5] overflow-hidden bg-white p-1.5 flex flex-col justify-between group shadow-sm"
                       >
-                        <div className="relative aspect-video w-full rounded-lg overflow-hidden bg-[#F4F0E8] flex items-center justify-center">
+                        <div className="relative aspect-video w-full rounded-lg overflow-hidden bg-[#EFE8DC] flex items-center justify-center">
                           {file.type.startsWith('image/') ? (
                             <img src={file.url} alt={file.name} className="w-full h-full object-cover" />
                           ) : (
-                            <div className="flex flex-col items-center justify-center text-[#9E7B4F] gap-1">
+                            <div className="flex flex-col items-center justify-center text-[#94643A] gap-1">
                               <Video className="w-6 h-6" />
                               <span className="text-[9px] uppercase font-bold tracking-wider">Video</span>
                             </div>
@@ -396,7 +396,7 @@ export function CommercialIntakeModal({ isOpen, onClose, user, onSuccess }: Comm
                             <X className="w-3 h-3" />
                           </button>
                         </div>
-                        <p className="text-[10px] text-[#5A564F] truncate mt-1 px-0.5">
+                        <p className="text-[10px] text-[#4A5163] truncate mt-1 px-0.5">
                           {file.name}
                         </p>
                       </div>
@@ -406,56 +406,56 @@ export function CommercialIntakeModal({ isOpen, onClose, user, onSuccess }: Comm
               </div>
 
               {/* 4. Quick Details & Contact Info */}
-              <div className="p-4 sm:p-5 rounded-2xl bg-[#FAF8F5] border border-[#E8E2D6] space-y-3">
-                <span className="text-[10px] font-sans uppercase tracking-[0.2em] text-[#7A5B32] font-semibold block">
+              <div className="p-4 sm:p-5 rounded-none bg-[#F7F3EC] border border-[#D6CAB5] space-y-3">
+                <span className="text-[10px] font-sans uppercase tracking-[0.2em] text-[#7C5230] font-semibold block">
                   4. Location & Contact Details
                 </span>
 
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   <div>
-                    <label className="block text-[10px] uppercase text-[#8E887E] mb-1">City / District in TN</label>
+                    <label className="block text-[10px] uppercase text-[#7D8292] mb-1">City / District in TN</label>
                     <input
                       type="text"
                       value={cityOrLocation}
                       onChange={e => setCityOrLocation(e.target.value)}
                       placeholder="e.g. Madurai, Chennai, Coimbatore"
-                      className="w-full px-3 py-2 rounded-xl bg-white border border-[#E8E2D6] text-xs text-[#1A1816]"
+                      className="w-full px-3 py-2 rounded-none bg-white border border-[#D6CAB5] text-xs text-[#15213A]"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-[10px] uppercase text-[#8E887E] mb-1">Asking Price / Outlay</label>
+                    <label className="block text-[10px] uppercase text-[#7D8292] mb-1">Asking Price / Outlay</label>
                     <input
                       type="text"
                       value={askingPrice}
                       onChange={e => setAskingPrice(e.target.value)}
                       placeholder="e.g. ₹3.25 Cr or ₹45 L"
-                      className="w-full px-3 py-2 rounded-xl bg-white border border-[#E8E2D6] text-xs text-[#1A1816]"
+                      className="w-full px-3 py-2 rounded-none bg-white border border-[#D6CAB5] text-xs text-[#15213A]"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-[10px] uppercase text-[#8E887E] mb-1">Phone Number *</label>
+                    <label className="block text-[10px] uppercase text-[#7D8292] mb-1">Phone Number *</label>
                     <input
                       type="tel"
                       value={sellerPhone}
                       onChange={e => setSellerPhone(e.target.value)}
                       placeholder="+91 98765 43210"
-                      className="w-full px-3 py-2 rounded-xl bg-white border border-[#E8E2D6] text-xs text-[#1A1816]"
+                      className="w-full px-3 py-2 rounded-none bg-white border border-[#D6CAB5] text-xs text-[#15213A]"
                     />
                   </div>
                 </div>
 
                 {!user && (
-                  <p className="text-[11px] text-[#7A5B32] flex items-center gap-1.5 pt-1">
-                    <Shield className="w-3.5 h-3.5 text-[#9E7B4F]" />
+                  <p className="text-[11px] text-[#7C5230] flex items-center gap-1.5 pt-1">
+                    <Shield className="w-3.5 h-3.5 text-[#94643A]" />
                     <span>Sign in with Google to track your live review milestones in real time.</span>
                   </p>
                 )}
               </div>
 
               {errorMsg && (
-                <div className="p-3 rounded-xl bg-red-50 border border-red-200 text-xs text-red-600 flex items-center gap-2">
+                <div className="p-3 rounded-none bg-red-50 border border-red-200 text-xs text-red-600 flex items-center gap-2">
                   <AlertCircle className="w-4 h-4 shrink-0" />
                   <span>{errorMsg}</span>
                 </div>
@@ -466,11 +466,11 @@ export function CommercialIntakeModal({ isOpen, onClose, user, onSuccess }: Comm
                 <button
                   type="button"
                   onClick={handleSubmitListing}
-                  className="w-full sm:w-auto px-8 py-3.5 rounded-full bg-[#1A1816] hover:bg-[#2D2926] text-[#FAF8F5] font-sans text-xs uppercase tracking-wider font-semibold transition-all flex items-center justify-center gap-2 shadow-md group"
+                  className="w-full sm:w-auto px-8 py-3.5 rounded-full bg-[#15213A] hover:bg-[#22314F] text-[#F7F3EC] font-sans text-xs uppercase tracking-wider font-semibold transition-all flex items-center justify-center gap-2 shadow-md group"
                 >
-                  <Sparkles className="w-4 h-4 text-[#C5A059] group-hover:rotate-12 transition-transform" />
+                  <Sparkles className="w-4 h-4 text-[#B0834A] group-hover:rotate-12 transition-transform" />
                   <span>Analyze & List Property</span>
-                  <ArrowRight className="w-3.5 h-3.5 text-[#C5A059]" />
+                  <ArrowRight className="w-3.5 h-3.5 text-[#B0834A]" />
                 </button>
               </div>
             </div>
@@ -479,14 +479,14 @@ export function CommercialIntakeModal({ isOpen, onClose, user, onSuccess }: Comm
           {/* ── STEP 2: ANALYZING STATE ────────────────────────────────────── */}
           {step === 'analyzing' && (
             <div className="py-16 text-center space-y-5">
-              <div className="w-16 h-16 rounded-full bg-[#F4EFE6] border border-[#DDD5C5] flex items-center justify-center mx-auto text-[#9E7B4F]">
-                <Loader2 className="w-8 h-8 animate-spin text-[#9E7B4F]" />
+              <div className="w-16 h-16 rounded-full bg-[#F4EFE6] border border-[#D6CAB5] flex items-center justify-center mx-auto text-[#94643A]">
+                <Loader2 className="w-8 h-8 animate-spin text-[#94643A]" />
               </div>
               <div>
-                <h3 className="text-xl font-serif font-bold text-[#1A1816]">
+                <h3 className="text-xl font-display font-normal tracking-[0.03em] text-[#15213A]">
                   AI Property Assistant is Underwriting...
                 </h3>
-                <p className="text-xs text-[#5A564F] max-w-md mx-auto mt-2 leading-relaxed">
+                <p className="text-xs text-[#4A5163] max-w-md mx-auto mt-2 leading-relaxed">
                   Parsing your natural language notes, evaluating rental yields, structuring the asset dossier, and attaching your media files.
                 </p>
               </div>
@@ -500,61 +500,61 @@ export function CommercialIntakeModal({ isOpen, onClose, user, onSuccess }: Comm
                 <div className="w-12 h-12 rounded-full bg-emerald-50 border border-emerald-200 flex items-center justify-center mx-auto text-emerald-600">
                   <CheckCircle2 className="w-6 h-6" />
                 </div>
-                <span className="text-[10px] font-sans uppercase tracking-[0.2em] text-[#9E7B4F] font-semibold block">
+                <span className="text-[10px] font-sans uppercase tracking-[0.2em] text-[#94643A] font-semibold block">
                   Property Listed Successfully
                 </span>
-                <h3 className="text-2xl font-serif font-bold text-[#1A1816]">
+                <h3 className="text-2xl font-display font-normal tracking-[0.03em] text-[#15213A]">
                   {analysisResult.title}
                 </h3>
-                <p className="text-xs text-[#5A564F] max-w-lg mx-auto leading-relaxed">
+                <p className="text-xs text-[#4A5163] max-w-lg mx-auto leading-relaxed">
                   Your property has been underwritten and recorded under your account. It is now active for confidential review and buyer syndication.
                 </p>
               </div>
 
               {/* Extracted Specifications Grid */}
-              <div className="p-5 rounded-2xl bg-[#FAF8F5] border border-[#E8E2D6] space-y-4">
-                <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[#E8E2D6] pb-3">
-                  <span className="px-3 py-1 rounded-full bg-[#1A1816] text-[#FAF8F5] text-xs font-medium">
+              <div className="p-5 rounded-none bg-[#F7F3EC] border border-[#D6CAB5] space-y-4">
+                <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[#D6CAB5] pb-3">
+                  <span className="px-3 py-1 rounded-full bg-[#15213A] text-[#F7F3EC] text-xs font-medium">
                     {analysisResult.property_type || 'Commercial Asset'}
                   </span>
-                  <span className="text-xs font-sans font-bold text-[#1A1816]">
+                  <span className="text-xs font-sans font-bold text-[#15213A]">
                     {analysisResult.price_display}
                   </span>
                 </div>
 
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
-                  <div className="p-3 rounded-xl bg-white border border-[#E8E2D6]">
-                    <span className="text-[10px] uppercase text-[#8E887E] block">Location</span>
-                    <span className="font-medium text-[#1A1816] mt-0.5 block truncate">
+                  <div className="p-3 rounded-none bg-white border border-[#D6CAB5]">
+                    <span className="text-[10px] uppercase text-[#7D8292] block">Location</span>
+                    <span className="font-medium text-[#15213A] mt-0.5 block truncate">
                       {analysisResult.locality || analysisResult.city}
                     </span>
                   </div>
 
-                  <div className="p-3 rounded-xl bg-white border border-[#E8E2D6]">
-                    <span className="text-[10px] uppercase text-[#8E887E] block">Size / Extent</span>
-                    <span className="font-medium text-[#1A1816] mt-0.5 block truncate">
+                  <div className="p-3 rounded-none bg-white border border-[#D6CAB5]">
+                    <span className="text-[10px] uppercase text-[#7D8292] block">Size / Extent</span>
+                    <span className="font-medium text-[#15213A] mt-0.5 block truncate">
                       {analysisResult.extent_display || 'Verified Size'}
                     </span>
                   </div>
 
-                  <div className="p-3 rounded-xl bg-white border border-[#E8E2D6]">
-                    <span className="text-[10px] uppercase text-[#8E887E] block">Rental Yield</span>
-                    <span className="font-medium text-[#1A1816] mt-0.5 block truncate">
+                  <div className="p-3 rounded-none bg-white border border-[#D6CAB5]">
+                    <span className="text-[10px] uppercase text-[#7D8292] block">Rental Yield</span>
+                    <span className="font-medium text-[#15213A] mt-0.5 block truncate">
                       {analysisResult.rental_yield_display || 'High Capital Growth'}
                     </span>
                   </div>
 
-                  <div className="p-3 rounded-xl bg-white border border-[#E8E2D6]">
-                    <span className="text-[10px] uppercase text-[#8E887E] block">Media Attached</span>
-                    <span className="font-medium text-[#1A1816] mt-0.5 block">
+                  <div className="p-3 rounded-none bg-white border border-[#D6CAB5]">
+                    <span className="text-[10px] uppercase text-[#7D8292] block">Media Attached</span>
+                    <span className="font-medium text-[#15213A] mt-0.5 block">
                       {mediaFiles.length} file{mediaFiles.length === 1 ? '' : 's'}
                     </span>
                   </div>
                 </div>
 
                 {/* AI Executive Summary */}
-                <div className="p-4 rounded-xl bg-[#F7F4EE] border border-[#E8E2D6]">
-                  <span className="text-[10px] uppercase font-sans tracking-wider text-[#7A5B32] font-semibold block mb-1">
+                <div className="p-4 rounded-none bg-[#F7F4EE] border border-[#D6CAB5]">
+                  <span className="text-[10px] uppercase font-sans tracking-wider text-[#7C5230] font-semibold block mb-1">
                     Executive Dossier Summary
                   </span>
                   <p className="text-xs text-[#3A3632] leading-relaxed">
@@ -565,13 +565,13 @@ export function CommercialIntakeModal({ isOpen, onClose, user, onSuccess }: Comm
                 {/* Highlights */}
                 {analysisResult.key_highlights && analysisResult.key_highlights.length > 0 && (
                   <div>
-                    <span className="text-[10px] uppercase font-sans tracking-wider text-[#8E887E] font-semibold block mb-2">
+                    <span className="text-[10px] uppercase font-sans tracking-wider text-[#7D8292] font-semibold block mb-2">
                       Key Verified Strengths
                     </span>
                     <div className="space-y-1.5">
                       {analysisResult.key_highlights.map((h: string, i: number) => (
                         <div key={i} className="flex items-start gap-2 text-xs text-[#3A3632]">
-                          <CheckCircle2 className="w-3.5 h-3.5 text-[#9E7B4F] shrink-0 mt-0.5" />
+                          <CheckCircle2 className="w-3.5 h-3.5 text-[#94643A] shrink-0 mt-0.5" />
                           <span>{h}</span>
                         </div>
                       ))}
@@ -585,7 +585,7 @@ export function CommercialIntakeModal({ isOpen, onClose, user, onSuccess }: Comm
                 <button
                   type="button"
                   onClick={handleFinish}
-                  className="w-full sm:w-auto px-8 py-3.5 rounded-full bg-[#1A1816] hover:bg-[#2D2926] text-[#FAF8F5] font-sans text-xs uppercase tracking-wider font-semibold transition-all shadow-md"
+                  className="w-full sm:w-auto px-8 py-3.5 rounded-full bg-[#15213A] hover:bg-[#22314F] text-[#F7F3EC] font-sans text-xs uppercase tracking-wider font-semibold transition-all shadow-md"
                 >
                   View in Property Status
                 </button>
@@ -597,7 +597,7 @@ export function CommercialIntakeModal({ isOpen, onClose, user, onSuccess }: Comm
                     setMediaFiles([])
                     setAnalysisResult(null)
                   }}
-                  className="w-full sm:w-auto px-6 py-3.5 rounded-full bg-[#FAF8F5] hover:bg-[#F4F0E8] border border-[#E8E2D6] text-[#1A1816] font-sans text-xs font-semibold transition-colors"
+                  className="w-full sm:w-auto px-6 py-3.5 rounded-full bg-[#F7F3EC] hover:bg-[#EFE8DC] border border-[#D6CAB5] text-[#15213A] font-sans text-xs font-semibold transition-colors"
                 >
                   List Another Property
                 </button>

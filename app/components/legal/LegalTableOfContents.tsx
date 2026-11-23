@@ -43,18 +43,18 @@ export function LegalTableOfContents({ sections }: Props) {
   };
 
   return (
-    <div className="sticky top-24">
-      <div className="backdrop-blur-xl bg-white/10 border border-white/20 rounded-2xl p-6">
-        <h3 className="text-lg font-bold text-white mb-4">Table of Contents</h3>
+    <div className="sticky top-28">
+      <div className="bg-[#FBF8F2] border border-[#D6CAB5] p-6">
+        <h3 className="font-display text-base tracking-[0.06em] text-[#15213A] mb-4">Table of Contents</h3>
         <nav className="space-y-2">
           {sections.map((section) => (
             <div key={section.id}>
               <button
                 onClick={() => scrollToSection(section.id)}
-                className={`w-full text-left px-3 py-2 rounded-lg transition-colors flex items-center gap-2 ${
+                className={`w-full text-left px-3 py-2 rounded-none transition-colors flex items-center gap-2 ${
                   activeSection === section.id
-                    ? 'bg-[#D4AF37]/20 text-white font-semibold'
-                    : 'text-gray-300 hover:bg-white/10 hover:text-white'
+                    ? 'bg-[#EFE8DC] text-[#15213A] border-l-2 border-[#B0834A]'
+                    : 'text-[#4A5163] hover:bg-[#EFE8DC] hover:text-[#15213A]'
                 }`}
               >
                 <ChevronRight className={`w-4 h-4 transition-transform ${activeSection === section.id ? 'rotate-90' : ''}`} />
@@ -66,7 +66,7 @@ export function LegalTableOfContents({ sections }: Props) {
                     <button
                       key={subsection.id}
                       onClick={() => scrollToSection(subsection.id)}
-                      className="w-full text-left px-3 py-1.5 rounded text-xs text-gray-400 hover:text-white hover:bg-white/5 transition-colors"
+                      className="w-full text-left px-3 py-1.5 rounded-none text-xs text-[#7D8292] hover:text-[#15213A] hover:bg-[#EFE8DC] transition-colors"
                     >
                       {subsection.heading}
                     </button>

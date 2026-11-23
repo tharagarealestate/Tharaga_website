@@ -100,7 +100,7 @@ export default function HomePage() {
     .slice(0, 2) || 'P'
 
   const NAV = [
-    { label: 'Portfolio', href: '#projects' },
+    { label: 'Portfolio', href: '/properties' },
     { label: 'Acquiring', href: '#acquiring' },
     { label: 'Feasibility', href: '#feasibility' },
     { label: 'The Standard', href: '#advisory' },
@@ -115,8 +115,8 @@ export default function HomePage() {
       <nav
         className={`fixed top-0 left-0 right-0 z-50 transition-[background-color,border-color,padding] duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] ${
           onHero
-            ? 'bg-transparent border-b border-transparent py-5'
-            : 'bg-[#F7F3EC]/95 border-b border-[#B0834A]/25 py-3 shadow-[0_10px_30px_-25px_rgba(21,33,58,0.5)]'
+            ? 'bg-transparent border-b border-transparent py-4'
+            : 'bg-[#F7F3EC]/95 border-b border-[#B0834A]/25 py-2 shadow-[0_10px_30px_-25px_rgba(21,33,58,0.5)]'
         }`}
       >
         <div className="max-w-7xl mx-auto px-6 sm:px-10 grid grid-cols-[1fr_auto_1fr] items-center">
@@ -150,7 +150,7 @@ export default function HomePage() {
           </button>
 
           <Link href="/" aria-label="Tharaga Estates — home" className="justify-self-center">
-            <TharagaWordmark tone={onHero ? 'ivory' : 'navy'} size={scrolled ? 'sm' : 'md'} />
+            <TharagaWordmark tone={onHero ? 'ivory' : 'navy'} height={scrolled ? 56 : 80} priority />
           </Link>
 
           <div className="justify-self-end flex items-center gap-6">
@@ -391,13 +391,14 @@ export default function HomePage() {
       <footer className="bg-[#0E1729] text-white/60 pt-20 pb-10">
         <div className="max-w-7xl mx-auto px-6 sm:px-10">
           <div className="flex flex-col items-center text-center">
-            <TharagaWordmark tone="ivory" size="lg" />
+            <TharagaWordmark tone="ivory" variant="full" height={210} />
             <p className="mt-8 font-serif italic text-xl text-white/60">Land, energy and commercial assets · Tamil Nadu</p>
           </div>
           <div className="mt-14 flex flex-wrap items-center justify-center gap-x-9 gap-y-4 border-y border-[#E6C9A0]/15 py-6 font-sans text-[10px] uppercase tracking-[0.3em]">
             {[...NAV, { label: 'Property Status', href: '#status' }].map(l => (
               <a key={l.label} href={l.href} className="text-white/60 hover:text-[#E6C9A0] transition-colors">{l.label}</a>
             ))}
+            <Link href="/about" className="text-white/60 hover:text-[#E6C9A0] transition-colors">About</Link>
             <Link href="/privacy" className="text-white/60 hover:text-[#E6C9A0] transition-colors">Privacy</Link>
             <Link href="/terms" className="text-white/60 hover:text-[#E6C9A0] transition-colors">Terms</Link>
           </div>

@@ -15,6 +15,7 @@
  *   AuthModal         — React component, mounted once in layout.tsx
  */
 
+import { TharagaWordmark } from '@/components/brand/TharagaWordmark'
 import {
   useState, useEffect, useRef, useCallback,
   type ChangeEvent, type FormEvent,
@@ -107,11 +108,11 @@ function Field({
 }) {
   return (
     <div className="group space-y-1.5">
-      <label className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-zinc-500">
-        <span className="text-zinc-600">{icon}</span>
+      <label className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-[#7D8292]">
+        <span className="text-[#4A5875]">{icon}</span>
         {label}
       </label>
-      <div className="flex items-center gap-2 px-3 py-2.5 rounded-xl bg-zinc-800/50 border border-zinc-700/40 group-focus-within:border-amber-500/40 group-focus-within:bg-zinc-800/80 transition-all duration-200">
+      <div className="flex items-center gap-2 px-3 py-2.5 rounded-xl bg-[#22314F]/50 border border-[#2E3E5E]/40 group-focus-within:border-[#B0834A]/40 group-focus-within:bg-[#22314F]/80 transition-all duration-200">
         {children}
         {action}
       </div>
@@ -317,12 +318,12 @@ export function AuthModal() {
             <motion.div
               animate={{ x:[0,50,-30,0], y:[0,-40,25,0], scale:[1,1.12,0.9,1] }}
               transition={{ duration: 20, repeat: Infinity, ease: 'easeInOut' }}
-              className="absolute -top-48 -left-48 w-[550px] h-[550px] rounded-full bg-amber-500/6 blur-[130px]"
+              className="absolute -top-48 -left-48 w-[550px] h-[550px] rounded-full bg-[#B0834A]/6 blur-[130px]"
             />
             <motion.div
               animate={{ x:[0,-35,20,0], y:[0,30,-40,0], scale:[1,0.88,1.1,1] }}
               transition={{ duration: 25, repeat: Infinity, ease: 'easeInOut', delay: 4 }}
-              className="absolute -bottom-48 -right-40 w-[500px] h-[500px] rounded-full bg-amber-600/5 blur-[120px]"
+              className="absolute -bottom-48 -right-40 w-[500px] h-[500px] rounded-full bg-[#94643A]/5 blur-[120px]"
             />
           </div>
 
@@ -336,11 +337,11 @@ export function AuthModal() {
             className="relative z-10 w-full max-w-[400px]"
           >
             {/* Amber glow border */}
-            <div className="absolute -inset-px rounded-2xl bg-gradient-to-br from-amber-500/22 via-amber-400/6 to-transparent pointer-events-none" />
+            <div className="absolute -inset-px bg-gradient-to-br from-[#B0834A]/22 via-[#D9AE78]/6 to-transparent pointer-events-none" />
 
-            <div className="relative rounded-2xl bg-zinc-900/92 backdrop-blur-2xl border border-white/[0.065] overflow-y-auto max-h-[90svh] shadow-2xl shadow-black/60">
+            <div className="relative bg-[#15213A] border border-[#E6C9A0]/20 overflow-y-auto max-h-[90svh] shadow-2xl shadow-black/60">
               {/* Top amber accent line */}
-              <div className="h-[2px] w-full bg-gradient-to-r from-amber-500 via-amber-400 to-amber-600" />
+              <div className="h-[2px] w-full bg-gradient-to-r from-[#B0834A] via-[#D9AE78] to-[#94643A]" />
 
               {/* ── Success overlay ── */}
               <AnimatePresence mode="wait">
@@ -355,33 +356,33 @@ export function AuthModal() {
                       initial={{ scale: 0, rotate: -20 }}
                       animate={{ scale: 1, rotate: 0 }}
                       transition={{ type: 'spring', stiffness: 240, damping: 16, delay: 0.12 }}
-                      className="w-16 h-16 rounded-full bg-amber-500/12 border border-amber-500/25 flex items-center justify-center"
+                      className="w-16 h-16 rounded-full bg-[#B0834A]/12 border border-[#B0834A]/25 flex items-center justify-center"
                     >
-                      <CheckCircle2 className="w-8 h-8 text-amber-400" />
+                      <CheckCircle2 className="w-8 h-8 text-[#D9AE78]" />
                     </motion.div>
 
                     {checkEmail ? (
                       <motion.div initial={{ opacity:0, y:8 }} animate={{ opacity:1, y:0, transition:{delay:0.2} }} className="space-y-2">
-                        <h2 className="text-lg font-bold text-zinc-100">Check your inbox</h2>
-                        <p className="text-sm text-zinc-400 leading-relaxed max-w-[280px]">
+                        <h2 className="text-lg font-bold text-[#F7F3EC]">Check your inbox</h2>
+                        <p className="text-sm text-[#A3A8B6] leading-relaxed max-w-[280px]">
                           Confirmation sent to{' '}
-                          <span className="text-amber-400 font-medium">{checkAddr}</span>.
+                          <span className="text-[#D9AE78] font-medium">{checkAddr}</span>.
                           Click the link, then sign in.
                         </p>
                         <button
                           onClick={() => { setStage('idle'); switchTab('signin') }}
-                          className="mt-3 text-xs text-zinc-500 hover:text-amber-400 transition-colors underline underline-offset-2"
+                          className="mt-3 text-xs text-[#7D8292] hover:text-[#D9AE78] transition-colors underline underline-offset-2"
                         >
                           Back to sign in
                         </button>
                       </motion.div>
                     ) : (
                       <motion.div initial={{ opacity:0, y:8 }} animate={{ opacity:1, y:0, transition:{delay:0.2} }} className="space-y-2">
-                        <h2 className="text-lg font-bold text-zinc-100">You're in!</h2>
-                        <p className="text-sm text-zinc-400">Loading your dashboard…</p>
+                        <h2 className="text-lg font-bold text-[#F7F3EC]">You're in!</h2>
+                        <p className="text-sm text-[#A3A8B6]">Loading your dashboard…</p>
                         <div className="flex items-center justify-center gap-2 mt-1">
-                          <div className="w-3.5 h-3.5 rounded-full border-t-2 border-amber-500 animate-spin" />
-                          <span className="text-xs text-zinc-600">Redirecting</span>
+                          <div className="w-3.5 h-3.5 rounded-full border-t-2 border-[#B0834A] animate-spin" />
+                          <span className="text-xs text-[#4A5875]">Redirecting</span>
                         </div>
                       </motion.div>
                     )}
@@ -394,20 +395,18 @@ export function AuthModal() {
 
                     {/* Header row */}
                     <div className="flex items-center justify-between px-6 pt-5 pb-4">
-                      <div className="flex items-center gap-2.5">
-                        <div className="w-8 h-8 rounded-lg bg-amber-500/12 border border-amber-500/20 flex items-center justify-center">
-                          <Building2 className="w-4 h-4 text-amber-400" />
-                        </div>
-                        <div>
-                          <p className="text-[9px] font-bold uppercase tracking-widest text-amber-400/60">Tharaga</p>
-                          <p className="text-sm font-bold text-zinc-100 leading-tight">Builder Platform</p>
+                      <div className="flex items-center gap-3.5">
+                        <TharagaWordmark tone="ivory" height={44} />
+                        <div className="border-l border-[#E6C9A0]/20 pl-3.5">
+                          <p className="font-sans text-[9px] uppercase tracking-[0.3em] text-[#D9AE78]">Tharaga Estates</p>
+                          <p className="font-display text-sm tracking-[0.06em] text-[#F7F3EC] leading-tight mt-0.5">Private Client Access</p>
                         </div>
                       </div>
                       <button
                         onClick={() => setOpen(false)}
                         disabled={isLoading}
                         aria-label="Close"
-                        className="w-7 h-7 rounded-lg flex items-center justify-center text-zinc-500 hover:text-zinc-200 hover:bg-zinc-800/70 transition-all disabled:opacity-30"
+                        className="w-7 h-7 rounded-lg flex items-center justify-center text-[#7D8292] hover:text-[#E4DACA] hover:bg-[#22314F]/70 transition-all disabled:opacity-30"
                       >
                         <X className="w-3.5 h-3.5" />
                       </button>
@@ -415,10 +414,10 @@ export function AuthModal() {
 
                     {/* Tabs */}
                     <div className="px-6 mb-5">
-                      <div className="relative flex bg-zinc-800/45 rounded-xl p-1 gap-1">
+                      <div className="relative flex bg-[#22314F]/45 rounded-xl p-1 gap-1">
                         <motion.div
                           layoutId="auth-tab-pill"
-                          className="absolute inset-y-1 rounded-lg bg-zinc-700/55 border border-white/[0.055]"
+                          className="absolute inset-y-1 rounded-lg bg-[#2E3E5E]/55 border border-white/[0.055]"
                           style={{
                             left:  tab === 'signin' ? '4px' : undefined,
                             right: tab === 'signup' ? '4px' : undefined,
@@ -432,7 +431,7 @@ export function AuthModal() {
                             onClick={() => switchTab(t)}
                             disabled={isLoading}
                             className={`relative z-10 flex-1 py-2 text-xs font-semibold rounded-lg transition-colors duration-150 ${
-                              tab === t ? 'text-zinc-100' : 'text-zinc-500 hover:text-zinc-300'
+                              tab === t ? 'text-[#F7F3EC]' : 'text-[#7D8292] hover:text-[#C9CCD4]'
                             }`}
                           >
                             {t === 'signin' ? 'Sign In' : 'Create Account'}
@@ -458,9 +457,9 @@ export function AuthModal() {
                               type="button"
                               onClick={handleGoogle}
                               disabled={isLoading}
-                              className="w-full flex items-center justify-center gap-2.5 py-2.5 rounded-xl border border-zinc-700/55 bg-zinc-800/30 hover:bg-zinc-800/60 hover:border-zinc-600/55 text-sm font-medium text-zinc-300 transition-all duration-200 disabled:opacity-40"
+                              className="w-full flex items-center justify-center gap-2.5 py-2.5 rounded-xl border border-[#2E3E5E]/55 bg-[#22314F]/30 hover:bg-[#22314F]/60 hover:border-[#4A5875]/55 text-sm font-medium text-[#C9CCD4] transition-all duration-200 disabled:opacity-40"
                             >
-                              {isLoading ? <Loader2 className="w-4 h-4 animate-spin text-amber-400" /> : <GoogleIcon />}
+                              {isLoading ? <Loader2 className="w-4 h-4 animate-spin text-[#D9AE78]" /> : <GoogleIcon />}
                               Continue with Google
                             </button>
                           </motion.div>
@@ -468,9 +467,9 @@ export function AuthModal() {
                           {/* Divider */}
                           <motion.div custom={1} variants={fieldV} initial="hidden" animate="visible"
                             className="flex items-center gap-3 my-4">
-                            <div className="flex-1 h-px bg-zinc-800/80" />
-                            <span className="text-[9px] font-bold uppercase tracking-widest text-zinc-700">or</span>
-                            <div className="flex-1 h-px bg-zinc-800/80" />
+                            <div className="flex-1 h-px bg-[#22314F]/80" />
+                            <span className="text-[9px] font-bold uppercase tracking-widest text-[#2E3E5E]">or</span>
+                            <div className="flex-1 h-px bg-[#22314F]/80" />
                           </motion.div>
 
                           {/* ── Sign In ── */}
@@ -486,7 +485,7 @@ export function AuthModal() {
                                     placeholder="you@company.com"
                                     disabled={isLoading}
                                     autoComplete="email"
-                                    className="flex-1 bg-transparent text-sm text-zinc-100 placeholder:text-zinc-600 outline-none disabled:opacity-40"
+                                    className="flex-1 bg-transparent text-sm text-[#F7F3EC] placeholder:text-[#4A5875] outline-none disabled:opacity-40"
                                   />
                                 </Field>
                               </motion.div>
@@ -497,7 +496,7 @@ export function AuthModal() {
                                   label="Password"
                                   action={
                                     <button type="button" tabIndex={-1} onClick={() => setShowPw(p => !p)}
-                                      className="text-zinc-600 hover:text-zinc-400 transition-colors shrink-0">
+                                      className="text-[#4A5875] hover:text-[#A3A8B6] transition-colors shrink-0">
                                       {showPw ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
                                     </button>
                                   }
@@ -509,7 +508,7 @@ export function AuthModal() {
                                     placeholder="••••••••"
                                     disabled={isLoading}
                                     autoComplete="current-password"
-                                    className="flex-1 bg-transparent text-sm text-zinc-100 placeholder:text-zinc-600 outline-none disabled:opacity-40"
+                                    className="flex-1 bg-transparent text-sm text-[#F7F3EC] placeholder:text-[#4A5875] outline-none disabled:opacity-40"
                                   />
                                 </Field>
                               </motion.div>
@@ -527,7 +526,7 @@ export function AuthModal() {
                                 <button
                                   type="submit"
                                   disabled={isLoading}
-                                  className="w-full flex items-center justify-center gap-2 py-3 rounded-xl font-bold text-sm bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-zinc-950 shadow-lg shadow-amber-500/18 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                                  className="w-full flex items-center justify-center gap-2 py-3 rounded-xl font-bold text-sm bg-gradient-to-r from-[#B0834A] to-[#94643A] hover:from-[#D9AE78] hover:to-[#B0834A] text-[#0E1729] shadow-lg shadow-[#B0834A]/18 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
                                   {isLoading
                                     ? <Loader2 className="w-4 h-4 animate-spin" />
@@ -537,10 +536,10 @@ export function AuthModal() {
                               </motion.div>
 
                               <motion.p custom={5} variants={fieldV} initial="hidden" animate="visible"
-                                className="text-center text-[11px] text-zinc-600 pt-0.5">
+                                className="text-center text-[11px] text-[#4A5875] pt-0.5">
                                 No account?{' '}
                                 <button type="button" onClick={() => switchTab('signup')}
-                                  className="text-amber-400 hover:text-amber-300 transition-colors font-semibold">
+                                  className="text-[#D9AE78] hover:text-[#E6C9A0] transition-colors font-semibold">
                                   Create one free
                                 </button>
                               </motion.p>
@@ -560,7 +559,7 @@ export function AuthModal() {
                                     placeholder="Your full name"
                                     disabled={isLoading}
                                     autoComplete="name"
-                                    className="flex-1 bg-transparent text-sm text-zinc-100 placeholder:text-zinc-600 outline-none disabled:opacity-40"
+                                    className="flex-1 bg-transparent text-sm text-[#F7F3EC] placeholder:text-[#4A5875] outline-none disabled:opacity-40"
                                   />
                                 </Field>
                               </motion.div>
@@ -574,7 +573,7 @@ export function AuthModal() {
                                     placeholder="you@company.com"
                                     disabled={isLoading}
                                     autoComplete="email"
-                                    className="flex-1 bg-transparent text-sm text-zinc-100 placeholder:text-zinc-600 outline-none disabled:opacity-40"
+                                    className="flex-1 bg-transparent text-sm text-[#F7F3EC] placeholder:text-[#4A5875] outline-none disabled:opacity-40"
                                   />
                                 </Field>
                               </motion.div>
@@ -585,7 +584,7 @@ export function AuthModal() {
                                   label="Password"
                                   action={
                                     <button type="button" tabIndex={-1} onClick={() => setShowPw(p => !p)}
-                                      className="text-zinc-600 hover:text-zinc-400 transition-colors shrink-0">
+                                      className="text-[#4A5875] hover:text-[#A3A8B6] transition-colors shrink-0">
                                       {showPw ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
                                     </button>
                                   }
@@ -597,7 +596,7 @@ export function AuthModal() {
                                     placeholder="Min 8 characters"
                                     disabled={isLoading}
                                     autoComplete="new-password"
-                                    className="flex-1 bg-transparent text-sm text-zinc-100 placeholder:text-zinc-600 outline-none disabled:opacity-40"
+                                    className="flex-1 bg-transparent text-sm text-[#F7F3EC] placeholder:text-[#4A5875] outline-none disabled:opacity-40"
                                   />
                                 </Field>
                                 {/* Strength bar */}
@@ -608,9 +607,9 @@ export function AuthModal() {
                                         i < pwStrength
                                           ? pwStrength <= 1 ? 'bg-red-500'
                                             : pwStrength <= 2 ? 'bg-orange-400'
-                                            : pwStrength <= 3 ? 'bg-amber-400'
+                                            : pwStrength <= 3 ? 'bg-[#D9AE78]'
                                             : 'bg-emerald-500'
-                                          : 'bg-zinc-800'
+                                          : 'bg-[#22314F]'
                                       }`} />
                                     ))}
                                   </div>
@@ -623,7 +622,7 @@ export function AuthModal() {
                                   label="Confirm Password"
                                   action={
                                     <button type="button" tabIndex={-1} onClick={() => setShowPw2(p => !p)}
-                                      className="text-zinc-600 hover:text-zinc-400 transition-colors shrink-0">
+                                      className="text-[#4A5875] hover:text-[#A3A8B6] transition-colors shrink-0">
                                       {showPw2 ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
                                     </button>
                                   }
@@ -635,7 +634,7 @@ export function AuthModal() {
                                     placeholder="Repeat password"
                                     disabled={isLoading}
                                     autoComplete="new-password"
-                                    className="flex-1 bg-transparent text-sm text-zinc-100 placeholder:text-zinc-600 outline-none disabled:opacity-40"
+                                    className="flex-1 bg-transparent text-sm text-[#F7F3EC] placeholder:text-[#4A5875] outline-none disabled:opacity-40"
                                   />
                                 </Field>
                               </motion.div>
@@ -653,7 +652,7 @@ export function AuthModal() {
                                 <button
                                   type="submit"
                                   disabled={isLoading}
-                                  className="w-full flex items-center justify-center gap-2 py-3 rounded-xl font-bold text-sm bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-zinc-950 shadow-lg shadow-amber-500/18 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                                  className="w-full flex items-center justify-center gap-2 py-3 rounded-xl font-bold text-sm bg-gradient-to-r from-[#B0834A] to-[#94643A] hover:from-[#D9AE78] hover:to-[#B0834A] text-[#0E1729] shadow-lg shadow-[#B0834A]/18 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
                                   {isLoading
                                     ? <Loader2 className="w-4 h-4 animate-spin" />
@@ -663,16 +662,16 @@ export function AuthModal() {
                               </motion.div>
 
                               <motion.div custom={7} variants={fieldV} initial="hidden" animate="visible" className="space-y-1">
-                                <p className="text-center text-[11px] text-zinc-600">
+                                <p className="text-center text-[11px] text-[#4A5875]">
                                   By signing up you agree to our{' '}
-                                  <a href="/terms" className="text-zinc-500 hover:text-zinc-300 underline underline-offset-2 transition-colors">Terms</a>
+                                  <a href="/terms" className="text-[#7D8292] hover:text-[#C9CCD4] underline underline-offset-2 transition-colors">Terms</a>
                                   {' & '}
-                                  <a href="/privacy" className="text-zinc-500 hover:text-zinc-300 underline underline-offset-2 transition-colors">Privacy Policy</a>
+                                  <a href="/privacy" className="text-[#7D8292] hover:text-[#C9CCD4] underline underline-offset-2 transition-colors">Privacy Policy</a>
                                 </p>
-                                <p className="text-center text-[11px] text-zinc-600">
+                                <p className="text-center text-[11px] text-[#4A5875]">
                                   Have an account?{' '}
                                   <button type="button" onClick={() => switchTab('signin')}
-                                    className="text-amber-400 hover:text-amber-300 transition-colors font-semibold">
+                                    className="text-[#D9AE78] hover:text-[#E6C9A0] transition-colors font-semibold">
                                     Sign in
                                   </button>
                                 </p>

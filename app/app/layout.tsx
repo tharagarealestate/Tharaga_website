@@ -61,13 +61,13 @@ export const metadata: Metadata = {
     siteName: 'Tharaga Estates',
     locale: 'en_IN',
     type: 'website',
-    images: [{ url: '/images/tharaga-logo.jpg', width: 1200, height: 630, alt: 'Tharaga Estates' }],
+    images: [{ url: '/brand/tharaga-og.jpg', width: 1200, height: 630, alt: 'Tharaga Estates' }],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'Tharaga Estates — Commercial & Land Advisory',
     description: 'Direct advisory for high-extent commercial land banks, solar power parcels, and limestone quarries across Tamil Nadu.',
-    images: ['/images/tharaga-logo.jpg'],
+    images: ['/brand/tharaga-og.jpg'],
   },
   manifest: '/manifest.webmanifest',
   verification: {
@@ -86,8 +86,8 @@ const organizationJsonLd = {
       '@id': `${SITE_URL}/#organization`,
       name: 'Tharaga Estates',
       url: SITE_URL,
-      logo: `${SITE_URL}/images/tharaga-logo.jpg`,
-      image: `${SITE_URL}/images/tharaga-logo.jpg`,
+      logo: `${SITE_URL}/brand/tharaga-full-navy.png`,
+      image: `${SITE_URL}/brand/tharaga-og.jpg`,
       telephone: '+91-8870980839',
       email: 'advisory@tharaga.in',
       areaServed: { '@type': 'State', name: 'Tamil Nadu' },
@@ -119,7 +119,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en">
       <head>
         <meta name="theme-color" content="#F7F3EC" />
-        <link rel="icon" href="/favicon.ico" sizes="any" />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }}

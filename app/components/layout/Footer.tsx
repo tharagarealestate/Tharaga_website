@@ -72,7 +72,7 @@ export function Footer() {
         {/* Bottom */}
         <div className="pt-8 border-t border-zinc-800 flex flex-col sm:flex-row items-center justify-between gap-4">
           <p className="text-xs text-zinc-600">
-            &copy; {new Date().getFullYear()} Tharaga Real Estate. All rights reserved.
+            &copy; {new Date().getFullYear()} Tharaga Estates. All rights reserved.
           </p>
           <div className="flex items-center gap-4">
             <span className="inline-flex items-center gap-1.5 px-2 py-1 text-xs font-medium text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 rounded-full">

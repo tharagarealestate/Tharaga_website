@@ -141,7 +141,7 @@ function builderNotificationHTML(opts: {
     </td>
   </tr>
   <tr><td style="padding:14px 28px;border-top:1px solid rgba(255,255,255,0.06);text-align:center;">
-    <p style="margin:0;font-size:11px;color:#4b5563;">Tharaga Real Estate · <a href="https://tharaga.in" style="color:#fbbf24;text-decoration:none;">tharaga.in</a></p>
+    <p style="margin:0;font-size:11px;color:#4b5563;">Tharaga Estates · <a href="https://tharaga.in" style="color:#fbbf24;text-decoration:none;">tharaga.in</a></p>
   </td></tr>
 </table>
 </td></tr>
@@ -200,7 +200,7 @@ function buyerConfirmationHTML(opts: {
     </td>
   </tr>
   <tr><td style="padding:14px 28px;border-top:1px solid rgba(255,255,255,0.06);text-align:center;">
-    <p style="margin:0;font-size:11px;color:#4b5563;">Tharaga Real Estate · Chennai, Tamil Nadu · <a href="https://tharaga.in" style="color:#fbbf24;text-decoration:none;">tharaga.in</a></p>
+    <p style="margin:0;font-size:11px;color:#4b5563;">Tharaga Estates · Chennai, Tamil Nadu · <a href="https://tharaga.in" style="color:#fbbf24;text-decoration:none;">tharaga.in</a></p>
   </td></tr>
 </table>
 </td></tr>
@@ -220,7 +220,7 @@ function emailHdr(day: string, headline: string) {
 
 function emailFooter(leadId: string) {
   return `<tr><td style="padding:14px 28px;border-top:1px solid rgba(255,255,255,0.06);text-align:center;">
-    <p style="margin:0;font-size:11px;color:#4b5563;">Tharaga Real Estate · <a href="https://tharaga.in" style="color:#fbbf24;text-decoration:none;">tharaga.in</a> · <a href="https://tharaga.in/unsubscribe?lead=${leadId}" style="color:#6b7280;text-decoration:none;font-size:10px;">Unsubscribe</a></p>
+    <p style="margin:0;font-size:11px;color:#4b5563;">Tharaga Estates · <a href="https://tharaga.in" style="color:#fbbf24;text-decoration:none;">tharaga.in</a> · <a href="https://tharaga.in/unsubscribe?lead=${leadId}" style="color:#6b7280;text-decoration:none;font-size:10px;">Unsubscribe</a></p>
   </td></tr>`
 }
 

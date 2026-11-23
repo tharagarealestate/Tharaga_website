@@ -2,20 +2,16 @@
 
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import Link from 'next/link'
-import Image from 'next/image'
-import { motion, useScroll, useTransform, AnimatePresence } from 'framer-motion'
-import {
-  Building2, Shield, ArrowRight, Sun, Mountain,
-  Warehouse, Landmark, CheckCircle2, ChevronRight,
-  Phone, LogIn, LogOut, Lock, MapPin,
-  ExternalLink, Menu, X, ChevronDown, User, Sparkles, Search, Compass, SlidersHorizontal
-} from 'lucide-react'
+import { motion, useScroll, useMotionValueEvent, AnimatePresence } from 'framer-motion'
+import { Shield, LogOut, ChevronDown } from 'lucide-react'
 import { openAuthModal } from '@/components/ui/AuthButton'
 import { getSupabase } from '@/lib/supabase'
 import { CinematicHero } from '@/components/portfolio/CinematicHero'
 import { PortfolioShowcase } from '@/components/portfolio/PortfolioShowcase'
-import { GoldDivider } from '@/components/portfolio/primitives'
-import { whatsappLink } from '@/lib/mandates'
+import { Eyebrow, Grain } from '@/components/portfolio/primitives'
+import { TharagaWordmark } from '@/components/brand/TharagaWordmark'
+import { SmoothScroll } from '@/components/brand/SmoothScroll'
+import { DESK_PHONE_DISPLAY, telLink, whatsappLink } from '@/lib/mandates'
 import { CommercialIntakeModal } from '@/components/commercial/CommercialIntakeModal'
 import { InstitutionalScreener } from '@/components/commercial/InstitutionalScreener'
 import { MandateTracker } from '@/components/commercial/MandateTracker'
@@ -28,12 +24,10 @@ export default function HomePage() {
   const [mobileNavOpen, setMobileNavOpen] = useState(false)
   const [isIntakeModalOpen, setIsIntakeModalOpen] = useState(false)
 
+  // Navigation sits transparent over the hero and settles into ivory once scrolled
   const { scrollY } = useScroll()
-  const navBg = useTransform(
-    scrollY,
-    [0, 80],
-    ['rgba(250, 248, 245, 0.85)', 'rgba(250, 248, 245, 0.98)']
-  )
+  const [scrolled, setScrolled] = useState(false)
+  useMotionValueEvent(scrollY, 'change', v => setScrolled(v > 48))
 
   // Supabase Auth Integration
   useEffect(() => {
@@ -105,91 +99,93 @@ export default function HomePage() {
     .toUpperCase()
     .slice(0, 2) || 'P'
 
+  const NAV = [
+    { label: 'Portfolio', href: '#projects' },
+    { label: 'Acquiring', href: '#acquiring' },
+    { label: 'Feasibility', href: '#feasibility' },
+    { label: 'The Standard', href: '#advisory' },
+  ]
+  const onHero = !scrolled && !mobileNavOpen
+
   return (
-    <div className="min-h-screen bg-[#FAF8F5] text-[#1A1816] selection:bg-[#EAE2D2] selection:text-[#1A1816]">
+    <div className="min-h-screen bg-[#F7F3EC] text-[#15213A] selection:bg-[#E6C9A0] selection:text-[#15213A]">
+      <SmoothScroll />
 
-      {/* ── MASTER NAVIGATION ─────────────────────────────────────────── */}
-      <motion.nav
-        style={{ backgroundColor: navBg }}
-        className="fixed top-0 left-0 right-0 z-50 border-b border-[#E8E2D6] backdrop-blur-md transition-colors"
+      {/* ── NAVIGATION ─────────────────────────────────────────────── */}
+      <nav
+        className={`fixed top-0 left-0 right-0 z-50 transition-[background-color,border-color,padding] duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] ${
+          onHero
+            ? 'bg-transparent border-b border-transparent py-5'
+            : 'bg-[#F7F3EC]/95 border-b border-[#B0834A]/25 py-3 shadow-[0_10px_30px_-25px_rgba(21,33,58,0.5)]'
+        }`}
       >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3.5 flex items-center justify-between">
-          {/* Brand Logo & Title */}
-          <Link href="/" className="flex items-center gap-3.5 group">
-            <div className="w-10 h-10 rounded-xl overflow-hidden border border-[#DDD5C5] shadow-sm bg-white shrink-0">
-              <img
-                src="/images/tharaga-logo.jpg"
-                alt="Tharaga Real Estate"
-                className="w-full h-full object-cover group-hover:scale-105 transition-transform"
-              />
-            </div>
-            <div>
-              <span className="font-serif font-bold text-[#1A1816] text-xl tracking-tight block leading-tight">
-                Tharaga
-              </span>
-              <span className="block text-[10px] font-sans text-[#7A5B32] tracking-[0.22em] uppercase font-semibold">
-                Real Estate
-              </span>
-            </div>
-          </Link>
-
-          {/* Desktop Nav Links */}
-          <div className="hidden lg:flex items-center gap-1">
-            {[
-              { label: 'Portfolio', href: '#projects' },
-              { label: 'Acquiring', href: '#acquiring' },
-              { label: 'Feasibility Study', href: '#feasibility' },
-              { label: 'Advisory Standard', href: '#advisory' },
-            ].map(link => (
+        <div className="max-w-7xl mx-auto px-6 sm:px-10 grid grid-cols-[1fr_auto_1fr] items-center">
+          <div className="hidden lg:flex items-center gap-8">
+            {NAV.map(link => (
               <a
                 key={link.label}
                 href={link.href}
-                className="px-4 py-2 text-xs font-sans tracking-wide text-[#5A564F] hover:text-[#1A1816] hover:bg-[#F4F0E8] rounded-full transition-all"
+                className={`group/nav relative font-sans text-[10px] uppercase tracking-[0.3em] transition-colors duration-500 ${
+                  onHero ? 'text-[#F7F3EC]/80 hover:text-[#F7F3EC]' : 'text-[#4A5163] hover:text-[#15213A]'
+                }`}
               >
                 {link.label}
+                <span className="absolute left-0 -bottom-1.5 h-px w-full origin-left scale-x-0 bg-[#B0834A] transition-transform duration-500 group-hover/nav:scale-x-100" />
               </a>
             ))}
           </div>
+          <button
+            onClick={() => setMobileNavOpen(o => !o)}
+            aria-label={mobileNavOpen ? 'Close menu' : 'Open menu'}
+            className="lg:hidden justify-self-start flex flex-col gap-[5px] p-2 -ml-2"
+          >
+            {[0, 1].map(i => (
+              <span
+                key={i}
+                className={`block h-px w-6 transition-all duration-500 ${onHero ? 'bg-[#F7F3EC]' : 'bg-[#15213A]'} ${
+                  mobileNavOpen ? (i === 0 ? 'translate-y-[3px] rotate-45' : '-translate-y-[3px] -rotate-45') : ''
+                }`}
+              />
+            ))}
+          </button>
 
-          {/* Action CTAs */}
-          <div className="flex items-center gap-3">
+          <Link href="/" aria-label="Tharaga Estates — home" className="justify-self-center">
+            <TharagaWordmark tone={onHero ? 'ivory' : 'navy'} size={scrolled ? 'sm' : 'md'} />
+          </Link>
+
+          <div className="justify-self-end flex items-center gap-6">
             {user ? (
-              <div
-                className="relative"
-                onMouseEnter={() => setUserMenuOpen(true)}
-                onMouseLeave={() => setUserMenuOpen(false)}
-              >
-                <button className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white border border-[#E8E2D6] hover:border-[#C5A059] transition-colors shadow-sm">
-                  <div className="w-7 h-7 rounded-full bg-[#1A1816] flex items-center justify-center text-[#FAF8F5] text-xs font-bold">
-                    {initials}
-                  </div>
-                  <span className="text-xs font-sans font-medium text-[#1A1816] max-w-[120px] truncate hidden sm:block">
-                    {displayName}
-                  </span>
-                  <ChevronDown className="w-3 h-3 text-[#8E887E]" />
+              <div className="relative" onMouseEnter={() => setUserMenuOpen(true)} onMouseLeave={() => setUserMenuOpen(false)}>
+                <button
+                  className={`flex items-center gap-2 font-sans text-[10px] uppercase tracking-[0.26em] ${
+                    onHero ? 'text-[#F7F3EC]' : 'text-[#15213A]'
+                  }`}
+                >
+                  <span className="flex h-7 w-7 items-center justify-center border border-[#B0834A] font-display text-[11px]">{initials}</span>
+                  <ChevronDown className="h-3 w-3 text-[#B0834A]" />
                 </button>
                 <AnimatePresence>
                   {userMenuOpen && (
                     <motion.div
-                      initial={{ opacity: 0, y: -6, scale: 0.97 }}
-                      animate={{ opacity: 1, y: 0, scale: 1 }}
-                      exit={{ opacity: 0, y: -6, scale: 0.97 }}
-                      className="absolute right-0 top-full mt-2 w-60 bg-white border border-[#E8E2D6] rounded-2xl shadow-xl p-2 space-y-1 z-50 text-left"
+                      initial={{ opacity: 0, y: -6 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -6 }}
+                      className="absolute right-0 top-full mt-3 w-60 bg-[#F7F3EC] border border-[#B0834A]/30 shadow-xl p-2 z-50 text-left"
                     >
-                      <div className="px-3 py-2 border-b border-[#E8E2D6]">
-                        <p className="text-xs font-bold text-[#1A1816] truncate">{displayName}</p>
-                        <p className="text-[10px] text-[#8E887E] truncate">{userEmail}</p>
+                      <div className="px-3 py-2 border-b border-[#E4DACA]">
+                        <p className="font-display text-xs text-[#15213A] truncate">{displayName}</p>
+                        <p className="text-[10px] text-[#7D8292] truncate">{userEmail}</p>
                       </div>
                       <a
                         href="#status"
                         onClick={() => setUserMenuOpen(false)}
-                        className="flex items-center gap-2 px-3 py-2 text-xs text-[#5A564F] hover:text-[#1A1816] hover:bg-[#FAF8F5] rounded-xl transition-colors font-medium"
+                        className="flex items-center gap-2 px-3 py-2 text-xs text-[#4A5163] hover:text-[#15213A] hover:bg-[#EFE8DC] transition-colors"
                       >
-                        <Shield className="w-3.5 h-3.5 text-[#9E7B4F]" /> My Property Status
+                        <Shield className="w-3.5 h-3.5 text-[#94643A]" /> My Property Status
                       </a>
                       <button
                         onClick={handleSignOut}
-                        className="w-full flex items-center gap-2 px-3 py-2 text-xs text-rose-600 hover:bg-rose-50 rounded-xl transition-colors font-medium text-left"
+                        className="w-full flex items-center gap-2 px-3 py-2 text-xs text-rose-700 hover:bg-rose-50 transition-colors text-left"
                       >
                         <LogOut className="w-3.5 h-3.5" /> Sign Out
                       </button>
@@ -200,232 +196,219 @@ export default function HomePage() {
             ) : (
               <button
                 onClick={() => openAuthModal()}
-                className="hidden sm:flex items-center gap-1.5 px-4 py-2 text-xs font-sans uppercase tracking-wider text-[#1A1816] hover:bg-[#F4F0E8] rounded-full border border-[#DDD5C5] transition-all font-medium"
+                className={`hidden sm:block font-sans text-[10px] uppercase tracking-[0.3em] transition-colors duration-500 ${
+                  onHero ? 'text-[#F7F3EC]/80 hover:text-[#F7F3EC]' : 'text-[#4A5163] hover:text-[#15213A]'
+                }`}
               >
-                <LogIn className="w-3.5 h-3.5 text-[#9E7B4F]" /> Sign In
+                Sign in
               </button>
             )}
-
             <button
               onClick={() => setIsIntakeModalOpen(true)}
-              className="flex items-center gap-2 px-5 py-2.5 rounded-full bg-[#1A1816] hover:bg-[#2D2926] text-[#FAF8F5] font-sans font-medium text-xs tracking-wider uppercase transition-all shadow-sm whitespace-nowrap"
+              className={`group/list relative overflow-hidden border px-5 py-2.5 font-sans text-[10px] uppercase tracking-[0.28em] transition-colors duration-500 ${
+                onHero ? 'border-[#E6C9A0]/70 text-[#F7F3EC]' : 'border-[#15213A] text-[#15213A]'
+              }`}
             >
-              <span>List Property</span>
-              <ArrowRight className="w-3 h-3 text-[#C5A059]" />
-            </button>
-
-            {/* Mobile menu trigger */}
-            <button
-              onClick={() => setMobileNavOpen(o => !o)}
-              className="lg:hidden p-2 rounded-full bg-white border border-[#E8E2D6] text-[#1A1816]"
-            >
-              {mobileNavOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+              <span className={`absolute inset-0 origin-bottom scale-y-0 transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover/list:scale-y-100 ${onHero ? 'bg-[#F7F3EC]' : 'bg-[#15213A]'}`} />
+              <span className={`relative transition-colors duration-500 ${onHero ? 'group-hover/list:text-[#15213A]' : 'group-hover/list:text-[#F7F3EC]'}`}>
+                <span className="hidden sm:inline">List a Property</span>
+                <span className="sm:hidden">List</span>
+              </span>
             </button>
           </div>
         </div>
+      </nav>
 
-        {/* Mobile dropdown */}
-        <AnimatePresence>
-          {mobileNavOpen && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
-              exit={{ opacity: 0, height: 0 }}
-              className="lg:hidden px-4 py-4 bg-[#FAF8F5] border-t border-[#E8E2D6] space-y-2"
-            >
-              {[
-                { label: 'Portfolio', href: '#projects' },
-                { label: 'Acquiring', href: '#acquiring' },
-                { label: 'Feasibility Study', href: '#feasibility' },
-                { label: 'Advisory Standard', href: '#advisory' },
-              ].map(link => (
-                <a
+      {/* Mobile menu: full-screen navy curtain */}
+      <AnimatePresence>
+        {mobileNavOpen && (
+          <motion.div
+            initial={{ clipPath: 'inset(0 0 100% 0)' }}
+            animate={{ clipPath: 'inset(0 0 0% 0)' }}
+            exit={{ clipPath: 'inset(0 0 100% 0)' }}
+            transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+            className="fixed inset-0 z-40 bg-[#15213A] text-[#F7F3EC] flex flex-col justify-center px-8 lg:hidden"
+          >
+            <Grain opacity={0.1} />
+            <ul className="relative space-y-6">
+              {NAV.map((link, i) => (
+                <motion.li
                   key={link.label}
-                  href={link.href}
-                  onClick={() => setMobileNavOpen(false)}
-                  className="block px-3 py-2 text-xs font-sans uppercase tracking-wider text-[#5A564F] hover:text-[#1A1816] hover:bg-[#F4F0E8] rounded-xl"
+                  initial={{ opacity: 0, y: 24 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.25 + i * 0.07, duration: 0.6 }}
                 >
-                  {link.label}
-                </a>
+                  <a
+                    href={link.href}
+                    onClick={() => setMobileNavOpen(false)}
+                    className="flex items-baseline gap-5 text-[#F7F3EC]"
+                  >
+                    <span className="font-display text-sm text-[#D9AE78]">{['I', 'II', 'III', 'IV'][i]}</span>
+                    <span className="font-display text-3xl tracking-[0.06em]">{link.label}</span>
+                  </a>
+                </motion.li>
               ))}
+            </ul>
+            <div className="relative mt-14 border-t border-[#E6C9A0]/20 pt-8 space-y-4 font-sans text-[10.5px] uppercase tracking-[0.3em]">
+              <a href={telLink} className="block text-[#E6C9A0] hover:text-[#F7F3EC]">{DESK_PHONE_DISPLAY}</a>
               {!user && (
                 <button
                   onClick={() => {
                     setMobileNavOpen(false)
                     openAuthModal()
                   }}
-                  className="w-full text-left px-3 py-2 text-xs font-sans uppercase tracking-wider text-[#9E7B4F] font-bold"
+                  className="block text-white/70"
                 >
-                  Sign In with Google
+                  Sign in with Google
                 </button>
               )}
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </motion.nav>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
-      {/* ── CINEMATIC HERO ─────────────────────────────────────────── */}
+      {/* ── HERO ───────────────────────────────────────────────────── */}
       <CinematicHero onEnquire={() => window.open(whatsappLink('a private discussion'), '_blank', 'noopener')} />
 
-      {/* ── THE PORTFOLIO (live mandates) + CURRENT ACQUISITION BRIEFS ── */}
+      {/* ── I. PORTFOLIO  ·  II. ACQUIRING ─────────────────────────── */}
       <PortfolioShowcase />
 
-      <GoldDivider />
-
-      {/* ── SECTION 2: LAND & INDUSTRIAL FEASIBILITY STUDY ──────────────── */}
-      <section id="feasibility" className="py-24 bg-[#F4F0E8] border-t border-[#E8E2D6]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6">
+      {/* ── III. FEASIBILITY ───────────────────────────────────────── */}
+      <section id="feasibility" className="py-24 sm:py-32 bg-[#EFE8DC] scroll-mt-20">
+        <div className="max-w-7xl mx-auto px-5 sm:px-8">
+          <div className="mb-14 max-w-3xl">
+            <Eyebrow numeral="III">Feasibility Study</Eyebrow>
+            <h2 className="mt-7 text-[#15213A]">
+              <span className="block font-display text-4xl sm:text-5xl tracking-[0.03em] leading-[1.1]">Before you buy land,</span>
+              <span className="block font-serif italic font-light text-5xl sm:text-6xl text-[#94643A]">know what it can carry.</span>
+            </h2>
+          </div>
           <InstitutionalScreener />
         </div>
       </section>
 
-      {/* ── SECTION 3: SELLER PROPERTY STATUS & REVIEW HUB ─────────────── */}
-      <section id="status" className="py-24 bg-[#FAF8F5] border-t border-[#E8E2D6]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6">
-          <MandateTracker
-            user={user}
-            onOpenIntake={() => setIsIntakeModalOpen(true)}
-          />
+      {/* ── SELLER STATUS ──────────────────────────────────────────── */}
+      <section id="status" className="py-24 sm:py-28 bg-[#F7F3EC] border-t border-[#B0834A]/20 scroll-mt-20">
+        <div className="max-w-7xl mx-auto px-5 sm:px-8">
+          <MandateTracker user={user} onOpenIntake={() => setIsIntakeModalOpen(true)} />
         </div>
       </section>
 
-      {/* ── SECTION 4: THE THARAGA ADVISORY STANDARD ──────────────────── */}
-      <section id="advisory" className="py-24 bg-white border-t border-[#E8E2D6]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6">
-          <div className="text-center max-w-3xl mx-auto mb-16 space-y-3">
-            <span className="text-[11px] font-sans uppercase tracking-[0.2em] text-[#9E7B4F] font-semibold">
-              The Advisory Standard
-            </span>
-            <h2 className="text-3xl sm:text-4xl md:text-5xl font-serif font-bold text-[#1A1816] tracking-tight">
-              Bespoke Commercial Placement. Zero Public Noise.
+      {/* ── IV. THE STANDARD ───────────────────────────────────────── */}
+      <section id="advisory" className="relative overflow-hidden py-24 sm:py-32 bg-[#F7F3EC] border-t border-[#B0834A]/20 scroll-mt-20">
+        <div className="max-w-7xl mx-auto px-5 sm:px-8 grid gap-16 lg:grid-cols-12">
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: '-80px' }}
+            transition={{ duration: 1, ease: [0.22, 1, 0.36, 1] }}
+            className="lg:col-span-5 lg:sticky lg:top-32 self-start"
+          >
+            <Eyebrow numeral="IV">The Tharaga Standard</Eyebrow>
+            <h2 className="mt-7 text-[#15213A]">
+              <span className="block font-display text-4xl sm:text-5xl tracking-[0.03em] leading-[1.1]">Bespoke placement.</span>
+              <span className="block font-serif italic font-light text-5xl sm:text-6xl text-[#94643A]">Zero public noise.</span>
             </h2>
-            <p className="text-[#5A564F] text-sm sm:text-base leading-relaxed font-light">
-              We do not operate mass consumer real estate classifieds. Tharaga provides private commercial advisory connecting land owners directly with corporate buyers and institutional investors.
+            <p className="mt-8 font-serif text-[1.3rem] leading-[1.6] text-[#2E3648] max-w-md">
+              We are not a classifieds portal. Tharaga Estates represents owners privately and places their assets directly
+              with corporate buyers and serious investors.
             </p>
-          </div>
+          </motion.div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <ol className="lg:col-span-7 border-t border-[#B0834A]/30">
             {[
               {
-                num: '01',
-                title: 'Direct Corporate Access',
-                desc: 'Whether placing an operational limestone quarry for cement manufacturing or 150 acres with utility solar developers, we transact directly through strategic corporate decision desks.',
-                icon: Building2,
+                title: 'Direct corporate access',
+                desc: 'Quarries, solar land and large extents are placed directly with the decision desks of cement, energy and infrastructure companies — not broadcast to the market.',
               },
               {
-                num: '02',
-                title: 'Technical & Grid Underwriting',
-                desc: 'Every property submitted undergoes rigorous assessment: grid substation proximity (110kV/230kV), highway freight haulage access, statutory environmental zoning, and proven mineral reserve data.',
-                icon: Compass,
+                title: 'Technical underwriting',
+                desc: 'Every asset is assessed before it is shown: access and haulage, statutory zoning, title, and — where relevant — grid proximity or mineral data.',
               },
               {
-                num: '03',
-                title: 'Total Discretion & Live Tracking',
-                desc: 'Asset owners maintain full control over sensitive commercial data. Track title verification, due diligence reports, and qualified buyer interest live through your verified Google account.',
-                icon: Shield,
+                title: 'Total discretion',
+                desc: 'Owners decide what is disclosed and to whom. Locations, documents and pricing reach a buyer only after we have verified them.',
               },
-            ].map(col => {
-              const Icon = col.icon
-              return (
-                <div
-                  key={col.num}
-                  className="p-8 rounded-3xl bg-[#FAF8F5] border border-[#E8E2D6] hover:border-[#C5A059] transition-all space-y-4 group"
-                >
-                  <div className="flex items-center justify-between">
-                    <span className="text-2xl font-serif font-bold text-[#9E7B4F]/40 group-hover:text-[#9E7B4F] transition-colors">
-                      {col.num}
-                    </span>
-                    <div className="w-10 h-10 rounded-full bg-[#F4F0E8] border border-[#DDD5C5] flex items-center justify-center text-[#9E7B4F]">
-                      <Icon className="w-5 h-5" />
-                    </div>
-                  </div>
-                  <h3 className="text-xl font-serif font-bold text-[#1A1816]">{col.title}</h3>
-                  <p className="text-xs sm:text-sm text-[#5A564F] leading-relaxed font-light">{col.desc}</p>
+            ].map((col, i) => (
+              <motion.li
+                key={col.title}
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: '-60px' }}
+                transition={{ duration: 0.9, ease: [0.22, 1, 0.36, 1], delay: i * 0.1 }}
+                className="group grid grid-cols-[4rem_1fr] gap-6 border-b border-[#B0834A]/30 py-10"
+              >
+                <span className="font-display text-4xl text-[#B0834A]/40 transition-colors duration-700 group-hover:text-[#B0834A]">
+                  {['I', 'II', 'III'][i]}
+                </span>
+                <div>
+                  <h3 className="font-display text-xl sm:text-2xl tracking-[0.04em] text-[#15213A]">{col.title}</h3>
+                  <p className="mt-4 font-serif text-[1.18rem] leading-[1.6] text-[#4A5163]">{col.desc}</p>
                 </div>
-              )
-            })}
-          </div>
+              </motion.li>
+            ))}
+          </ol>
         </div>
       </section>
 
-      {/* ── SECTION 5: DIRECT MANAGING DESK ───────────────────────────── */}
-      <section className="py-20 bg-[#FAF8F5] border-t border-[#E8E2D6] relative overflow-hidden">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 text-center space-y-5">
-          <div className="w-12 h-12 rounded-full bg-[#F4EFE6] border border-[#DDD5C5] flex items-center justify-center mx-auto text-[#9E7B4F]">
-            <Phone className="w-5 h-5" />
+      {/* ── V. THE DESK ────────────────────────────────────────────── */}
+      <section className="relative overflow-hidden bg-[#15213A] text-[#F7F3EC] py-28 sm:py-36">
+        <Grain opacity={0.12} />
+        <div aria-hidden className="pointer-events-none absolute inset-6 border border-[#E6C9A0]/15" />
+        <div className="relative max-w-4xl mx-auto px-6 text-center">
+          <div className="flex justify-center">
+            <Eyebrow numeral="V" light>The Managing Desk</Eyebrow>
           </div>
-
-          <span className="text-[11px] font-sans uppercase tracking-[0.2em] text-[#9E7B4F] font-semibold block">
-            Direct Principal Line
-          </span>
-
-          <h2 className="text-3xl sm:text-4xl font-serif font-bold text-[#1A1816] tracking-tight">
-            Initiate a Confidential Discussion
+          <h2 className="mt-9 text-[#F7F3EC]">
+            <span className="block font-display text-4xl sm:text-6xl tracking-[0.04em] leading-[1.1]">A private conversation</span>
+            <span className="block font-serif italic font-light text-5xl sm:text-7xl text-[#E6C9A0]">begins here.</span>
           </h2>
-
-          <p className="text-[#5A564F] text-sm max-w-xl mx-auto leading-relaxed font-light">
-            For institutional land acquisitions, commercial asset sales, or quarry concessions across Tamil Nadu. Direct communication with the Managing Desk under strict non-disclosure.
+          <p className="mt-8 font-serif text-[1.3rem] leading-[1.6] text-white/70 max-w-xl mx-auto">
+            For land acquisitions, asset sales and quarry concessions across Tamil Nadu — directly with the desk, in confidence.
           </p>
-
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
+          <div className="mt-12 flex flex-col sm:flex-row items-center justify-center gap-5">
             <a
-              href="tel:+918870980839"
-              className="flex items-center justify-center gap-2 px-8 py-3.5 rounded-full bg-[#1A1816] hover:bg-[#2D2926] text-[#FAF8F5] font-sans text-xs uppercase tracking-wider font-semibold transition-all shadow-md"
+              href={telLink}
+              className="group/d relative overflow-hidden border border-[#E6C9A0]/70 px-9 py-4 font-sans text-[10.5px] uppercase tracking-[0.3em] text-[#F7F3EC] hover:text-[#F7F3EC]"
             >
-              <Phone className="w-4 h-4 text-[#C5A059]" /> Call Desk: +91 88709 80839
+              <span className="absolute inset-0 origin-bottom scale-y-0 bg-[#F7F3EC] transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover/d:scale-y-100" />
+              <span className="relative transition-colors duration-500 group-hover/d:text-[#15213A]">Call {DESK_PHONE_DISPLAY}</span>
             </a>
-
             <a
-              href="https://wa.me/918870980839?text=Hello%20Tharaga%20Real%20Estate,%20I%20wish%20to%20discuss%20a%20commercial%20mandate%20or%20land%20parcel."
+              href={whatsappLink('a commercial mandate or land parcel')}
               target="_blank"
               rel="noreferrer"
-              className="flex items-center justify-center gap-2 px-8 py-3.5 rounded-full bg-white hover:bg-[#F4F0E8] border border-[#E8E2D6] text-[#1A1816] font-sans text-xs font-semibold uppercase tracking-wider transition-colors shadow-sm"
+              className="group/w relative py-2 font-sans text-[10.5px] uppercase tracking-[0.3em] text-[#E6C9A0]"
             >
-              <span>WhatsApp Managing Desk</span>
-              <ExternalLink className="w-3.5 h-3.5 text-[#9E7B4F]" />
+              WhatsApp the desk →
+              <span className="absolute left-0 -bottom-px h-px w-full origin-left scale-x-0 bg-[#D9AE78] transition-transform duration-500 group-hover/w:scale-x-100" />
             </a>
           </div>
         </div>
       </section>
 
-      {/* ── FOOTER ───────────────────────────────────────────────────── */}
-      <footer className="py-12 bg-white border-t border-[#E8E2D6] text-[#5A564F] text-xs">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 flex flex-col md:flex-row items-center justify-between gap-6">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg overflow-hidden border border-[#E8E2D6] bg-white">
-              <img
-                src="/images/tharaga-logo.jpg"
-                alt="Tharaga Real Estate"
-                className="w-full h-full object-cover"
-              />
-            </div>
-            <div>
-              <span className="font-serif font-bold text-[#1A1816] text-sm block">Tharaga Real Estate</span>
-              <span className="text-[10px] text-[#8E887E]">Commercial Land & Industrial Asset Advisory · Tamil Nadu</span>
-            </div>
+      {/* ── FOOTER ─────────────────────────────────────────────────── */}
+      <footer className="bg-[#0E1729] text-white/60 pt-20 pb-10">
+        <div className="max-w-7xl mx-auto px-6 sm:px-10">
+          <div className="flex flex-col items-center text-center">
+            <TharagaWordmark tone="ivory" size="lg" />
+            <p className="mt-8 font-serif italic text-xl text-white/60">Land, energy and commercial assets · Tamil Nadu</p>
           </div>
-
-          <div className="flex flex-wrap items-center gap-6 text-[11px] font-sans">
-            <a href="#projects" className="hover:text-[#1A1816] transition-colors">Portfolio</a>
-            <a href="#acquiring" className="hover:text-[#1A1816] transition-colors">Acquiring</a>
-            <a href="#feasibility" className="hover:text-[#1A1816] transition-colors">Feasibility Study</a>
-            <a href="#status" className="hover:text-[#1A1816] transition-colors">Property Status</a>
-            <Link href="/privacy" className="hover:text-[#1A1816] transition-colors">Privacy Protocol</Link>
-            <Link href="/terms" className="hover:text-[#1A1816] transition-colors">Terms of Placement</Link>
+          <div className="mt-14 flex flex-wrap items-center justify-center gap-x-9 gap-y-4 border-y border-[#E6C9A0]/15 py-6 font-sans text-[10px] uppercase tracking-[0.3em]">
+            {[...NAV, { label: 'Property Status', href: '#status' }].map(l => (
+              <a key={l.label} href={l.href} className="text-white/60 hover:text-[#E6C9A0] transition-colors">{l.label}</a>
+            ))}
+            <Link href="/privacy" className="text-white/60 hover:text-[#E6C9A0] transition-colors">Privacy</Link>
+            <Link href="/terms" className="text-white/60 hover:text-[#E6C9A0] transition-colors">Terms</Link>
           </div>
-
-          <p className="text-[10px] text-[#8E887E]">
-            © {new Date().getFullYear()} Tharaga Real Estate. Chennai · Tamil Nadu · India.
-          </p>
+          <div className="mt-8 flex flex-col sm:flex-row items-center justify-between gap-4 font-sans text-[10px] tracking-[0.18em] uppercase text-white/40">
+            <span>© {new Date().getFullYear()} Tharaga Estates · Chennai, Tamil Nadu</span>
+            <a href={telLink} className="text-white/40 hover:text-[#E6C9A0] transition-colors">{DESK_PHONE_DISPLAY} · tharaga.in</a>
+          </div>
         </div>
       </footer>
 
-      {/* ── PROPERTY INTAKE MODAL (SILENT CLAUDE API INTAKE) ──────────── */}
-      <CommercialIntakeModal
-        isOpen={isIntakeModalOpen}
-        onClose={() => setIsIntakeModalOpen(false)}
-        user={user}
-      />
+      <CommercialIntakeModal isOpen={isIntakeModalOpen} onClose={() => setIsIntakeModalOpen(false)} user={user} />
     </div>
   )
 }

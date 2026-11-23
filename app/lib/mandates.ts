@@ -44,8 +44,14 @@ export interface Mandate {
   idealFor: string
   badge?: Badge
   featured?: boolean
-  image: string
-  imageAlt: string
+  /** Photograph (representative until project photography is shot). */
+  image?: string
+  imageAlt?: string
+  /**
+   * Generated survey plate used instead of a photograph for land whose location is
+   * withheld — avoids misleading stock imagery of somewhere else.
+   */
+  plate?: { caption: string; tone: 'navy' | 'ivory' }
   /** Acreage used for the portfolio total, when known. */
   acres?: number
 }
@@ -124,8 +130,7 @@ export const MANDATES: Mandate[] = [
     idealFor: 'Corporate land-acquisition teams · Industrial and infrastructure developers',
     badge: { kind: 'curated', label: 'By Invitation' },
     featured: true,
-    image: u('1500076656116-558758c991c1'),
-    imageAlt: 'Wide green agricultural land under morning light',
+    plate: { caption: '500 ACRES', tone: 'navy' },
     acres: 500,
   },
 
@@ -149,8 +154,7 @@ export const MANDATES: Mandate[] = [
     ],
     idealFor: 'Corporate land banks · Industrial parks · Long-horizon investors',
     badge: { kind: 'curated', label: 'Exclusively Curated' },
-    image: u('1472214103451-9374bd1c798e'),
-    imageAlt: 'Open rolling countryside under a wide sky',
+    plate: { caption: '464 ACRES', tone: 'ivory' },
     acres: 464,
   },
   {
@@ -168,8 +172,7 @@ export const MANDATES: Mandate[] = [
     highlights: ['Survey-number-highlighted village maps', 'Ottapidaram taluk, Thoothukudi district'],
     idealFor: 'Industrial buyers · Land investors',
     badge: { kind: 'curated', label: 'By Invitation' },
-    image: u('1470071459604-3b5ec3a7fe05'),
-    imageAlt: 'Mist over green hills at dawn',
+    plate: { caption: 'S. KUMARAPURAM', tone: 'navy' },
   },
   {
     slug: 'padur-omr-13-acres',
@@ -186,8 +189,7 @@ export const MANDATES: Mandate[] = [
     highlights: ['13-acre single parcel', 'Padur, on Old Mahabalipuram Road'],
     idealFor: 'Residential developers · Educational and healthcare institutions',
     badge: { kind: 'curated', label: 'Exclusively Curated' },
-    image: u('1441974231531-c6227db76b6e'),
-    imageAlt: 'Sunlight through tall trees',
+    plate: { caption: '13 ACRES', tone: 'ivory' },
     acres: 13,
   },
   {
@@ -203,8 +205,7 @@ export const MANDATES: Mandate[] = [
     stats: ['11 grounds', 'Development land', 'Near Metro Phase 2'],
     highlights: ['11 grounds', 'Close to Chennai Metro Phase 2'],
     idealFor: 'Developers · Investors tracking metro-led growth',
-    image: u('1449824913935-59a10b8d2000'),
-    imageAlt: 'Aerial view of a city at dusk',
+    plate: { caption: '11 GROUNDS', tone: 'navy' },
   },
   {
     slug: 'anna-nagar-west-corner-plot',
@@ -218,8 +219,7 @@ export const MANDATES: Mandate[] = [
     stats: ['3 grounds', 'Corner plot', 'Anna Nagar'],
     highlights: ['Three grounds', 'Corner position'],
     idealFor: 'Families building a signature home · Boutique developers',
-    image: u('1480714378408-67cf0d13bc1b'),
-    imageAlt: 'City streets seen from above',
+    plate: { caption: '3 GROUNDS', tone: 'ivory' },
   },
   {
     slug: 'santhome-heritage-parcel',
@@ -233,8 +233,7 @@ export const MANDATES: Mandate[] = [
     stats: ['2,537 sq.ft', 'Heritage micro-market', 'Santhome'],
     highlights: ['2,537 sq.ft land', 'Santhome heritage micro-market'],
     idealFor: 'End-users building a city home · Long-term holders',
-    image: u('1564013799919-ab600027ffc6'),
-    imageAlt: 'An elegant house with warm evening light',
+    plate: { caption: '2,537 SQ.FT', tone: 'navy' },
   },
   {
     slug: 'muttukadu-land',
@@ -263,8 +262,7 @@ export const MANDATES: Mandate[] = [
     stats: ['Extent on request', 'Central city', 'Egmore'],
     highlights: ['Egmore, central Chennai'],
     idealFor: 'Commercial developers · Institutions',
-    image: u('1477959858617-67f85cf4f1df'),
-    imageAlt: 'City skyline in soft light',
+    plate: { caption: 'EGMORE', tone: 'ivory' },
   },
 
   // ── QUARRY ───────────────────────────────────────────────────────

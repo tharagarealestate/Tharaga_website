@@ -44,7 +44,7 @@ export async function generateTOTPSecret(userId: string): Promise<{
 
   const secret = speakeasy.generateSecret({
     name: `Tharaga (${userId})`,
-    issuer: 'Tharaga Real Estate'
+    issuer: 'Tharaga Estates'
   })
 
   const backupCodes = generateBackupCodes(10)

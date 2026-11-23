@@ -12,27 +12,13 @@ import {
 } from 'lucide-react'
 import { openAuthModal } from '@/components/ui/AuthButton'
 import { getSupabase } from '@/lib/supabase'
-import { CuratedCommercialShowcase } from '@/components/commercial/CuratedCommercialShowcase'
+import { CinematicHero } from '@/components/portfolio/CinematicHero'
+import { PortfolioShowcase } from '@/components/portfolio/PortfolioShowcase'
+import { GoldDivider } from '@/components/portfolio/primitives'
+import { whatsappLink } from '@/lib/mandates'
 import { CommercialIntakeModal } from '@/components/commercial/CommercialIntakeModal'
 import { InstitutionalScreener } from '@/components/commercial/InstitutionalScreener'
 import { MandateTracker } from '@/components/commercial/MandateTracker'
-import { CURATED_COMMERCIAL_MANDATES } from '@/app/api/commercial/mandates/route'
-
-const CORRIDOR_OPTIONS = [
-  { value: 'all', label: 'All Tamil Nadu Corridors' },
-  { value: 'Tuticorin', label: 'Tuticorin – Tirunelveli (Renewable / Port)' },
-  { value: 'Sriperumbudur', label: 'Sriperumbudur – Oragadam (Manufacturing)' },
-  { value: 'Ariyalur', label: 'Ariyalur – Karur (Limestone & Cement Belt)' },
-  { value: 'Hosur', label: 'Hosur – Krishnagiri (EV & Logistics)' },
-  { value: 'OMR', label: 'Chennai OMR – Guindy (Commercial IT)' },
-]
-
-const SCALE_OPTIONS = [
-  { value: 'all', label: 'Any Extent' },
-  { value: '25', label: '25+ Acres' },
-  { value: '50', label: '50+ Acres' },
-  { value: '100', label: '100+ Acres' },
-]
 
 export default function HomePage() {
   const [user, setUser] = useState<any>(null)
@@ -41,13 +27,6 @@ export default function HomePage() {
   const [userMenuOpen, setUserMenuOpen] = useState(false)
   const [mobileNavOpen, setMobileNavOpen] = useState(false)
   const [isIntakeModalOpen, setIsIntakeModalOpen] = useState(false)
-  const [showcaseMandates, setShowcaseMandates] = useState<any[]>(CURATED_COMMERCIAL_MANDATES)
-
-  // Innovative Search & Filter State
-  const [selectedCategory, setSelectedCategory] = useState('all')
-  const [selectedCorridor, setSelectedCorridor] = useState('all')
-  const [selectedScale, setSelectedScale] = useState('all')
-  const [searchQuery, setSearchQuery] = useState('')
 
   const { scrollY } = useScroll()
   const navBg = useTransform(
@@ -107,18 +86,6 @@ export default function HomePage() {
     }
   }, [])
 
-  // Fetch updated showcase mandates from API
-  useEffect(() => {
-    fetch('/api/commercial/mandates')
-      .then(r => r.json())
-      .then(d => {
-        if (d.showcase && d.showcase.length > 0) {
-          setShowcaseMandates(d.showcase)
-        }
-      })
-      .catch(() => {})
-  }, [])
-
   const handleSignOut = useCallback(async () => {
     setUserMenuOpen(false)
     setUser(null)
@@ -137,12 +104,6 @@ export default function HomePage() {
     .join('')
     .toUpperCase()
     .slice(0, 2) || 'P'
-
-  // Scroll smoothly to projects section
-  const scrollToProjects = () => {
-    const el = document.getElementById('projects')
-    if (el) el.scrollIntoView({ behavior: 'smooth' })
-  }
 
   return (
     <div className="min-h-screen bg-[#FAF8F5] text-[#1A1816] selection:bg-[#EAE2D2] selection:text-[#1A1816]">
@@ -175,9 +136,9 @@ export default function HomePage() {
           {/* Desktop Nav Links */}
           <div className="hidden lg:flex items-center gap-1">
             {[
-              { label: 'Active Projects', href: '#projects' },
+              { label: 'Portfolio', href: '#projects' },
+              { label: 'Acquiring', href: '#acquiring' },
               { label: 'Feasibility Study', href: '#feasibility' },
-              { label: 'Property Status', href: '#status' },
               { label: 'Advisory Standard', href: '#advisory' },
             ].map(link => (
               <a
@@ -273,9 +234,9 @@ export default function HomePage() {
               className="lg:hidden px-4 py-4 bg-[#FAF8F5] border-t border-[#E8E2D6] space-y-2"
             >
               {[
-                { label: 'Active Projects', href: '#projects' },
+                { label: 'Portfolio', href: '#projects' },
+                { label: 'Acquiring', href: '#acquiring' },
                 { label: 'Feasibility Study', href: '#feasibility' },
-                { label: 'Property Status', href: '#status' },
                 { label: 'Advisory Standard', href: '#advisory' },
               ].map(link => (
                 <a
@@ -303,229 +264,13 @@ export default function HomePage() {
         </AnimatePresence>
       </motion.nav>
 
-      {/* ── ARCHITECTURAL HERO SECTION (WARM PAPER & PERFUME AESTHETIC) ──── */}
-      <section className="relative pt-36 pb-20 px-4 sm:px-6 overflow-hidden">
-        {/* ── PREMIUM 4-STRIP HORIZONTAL COLLAGE BACKGROUND ──
-            Layout math: 4 strips × 25% = 100%. Each strip height = 26% (1% seam overlap).
-            Starts: 0%, 25%, 50%, 75%. background-size: cover fills the full-width panoramic band.
-        ── */}
-        <div className="absolute inset-0 pointer-events-none overflow-hidden">
-          {/* Four terrain strips — full-width landscape panoramic bands */}
-          {[
-            // 1 · Quarry — raw limestone excavation, earthy texture
-            { src: 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=1600&q=90&fit=crop', pos: '50% 58%' },
-            // 2 · Land — golden harvest field, vast horizon
-            { src: 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=1600&q=90&fit=crop', pos: '50% 52%' },
-            // 3 · Farmhouse — lush green agricultural estate
-            { src: 'https://images.unsplash.com/photo-1500076656116-558758c991c1?w=1600&q=90&fit=crop', pos: '50% 42%' },
-            // 4 · Industries — industrial land complex
-            { src: 'https://images.unsplash.com/photo-1504328345606-18bbc8c9d7d1?w=1600&q=90&fit=crop', pos: '50% 46%' },
-          ].map((strip, i) => (
-            <div
-              key={i}
-              className="absolute inset-x-0"
-              style={{
-                top: `${i * 25}%`,
-                height: '26%',
-                backgroundImage: `url(${strip.src})`,
-                backgroundSize: 'cover',
-                backgroundPosition: strip.pos,
-                filter: 'blur(0.6px) brightness(0.74) saturate(1.35) contrast(1.10)',
-                transform: 'scale(1.09)',
-                transformOrigin: 'center',
-              }}
-            />
-          ))}
+      {/* ── CINEMATIC HERO ─────────────────────────────────────────── */}
+      <CinematicHero onEnquire={() => window.open(whatsappLink('a private discussion'), '_blank', 'noopener')} />
 
-          {/* Layer 1 — Top protective fade: covers badge + headline zone only */}
-          <div
-            className="absolute inset-x-0 top-0"
-            style={{
-              height: '48%',
-              background: 'linear-gradient(to bottom, rgba(250,248,245,0.82) 0%, rgba(250,248,245,0.40) 55%, transparent 100%)',
-            }}
-          />
+      {/* ── THE PORTFOLIO (live mandates) + CURRENT ACQUISITION BRIEFS ── */}
+      <PortfolioShowcase />
 
-          {/* Layer 2 — Bottom anchor fade: lifts filter-console card out of the photo */}
-          <div
-            className="absolute inset-x-0 bottom-0"
-            style={{
-              height: '36%',
-              background: 'linear-gradient(to top, rgba(250,248,245,0.78) 0%, transparent 100%)',
-            }}
-          />
-
-          {/* Layer 3 — Ultra-thin mid tint: barely-there warmth, lets photos breathe */}
-          <div
-            className="absolute inset-0"
-            style={{ background: 'rgba(250,248,245,0.12)' }}
-          />
-
-          {/* Luxury gold bloom — wide warm radiance at text centroid */}
-          <div
-            className="absolute inset-0"
-            style={{
-              background:
-                'radial-gradient(ellipse 85% 68% at 50% 30%, rgba(197,160,89,0.17) 0%, transparent 60%)',
-            }}
-          />
-        </div>
-
-        {/* Hero Editorial Header */}
-        <div className="relative z-10 max-w-5xl mx-auto text-center space-y-6">
-          <motion.div
-            initial={{ opacity: 0, y: 14 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#F4EFE6] border border-[#DDD5C5] text-[#7A5B32] text-xs font-sans tracking-[0.2em] uppercase font-semibold"
-          >
-            <div className="w-1.5 h-1.5 rounded-full bg-[#9E7B4F]" />
-            Tharaga Real Estate · Commercial & Land Advisory
-          </motion.div>
-
-          <motion.h1
-            initial={{ opacity: 0, y: 18 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, delay: 0.1 }}
-            className="text-4xl sm:text-6xl md:text-7xl font-serif font-bold tracking-tight text-[#1A1816] leading-[1.08]"
-            style={{ textShadow: '0 2px 32px rgba(250,248,245,0.96), 0 1px 8px rgba(250,248,245,0.90)' }}
-          >
-            Commercial Land, Solar Sites &<br />
-            <span className="italic font-normal text-[#9E7B4F]">
-              Operational Quarries Across Tamil Nadu.
-            </span>
-          </motion.h1>
-
-          <motion.p
-            initial={{ opacity: 0, y: 18 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, delay: 0.2 }}
-            className="text-base sm:text-lg text-[#5A564F] max-w-3xl mx-auto leading-relaxed font-light"
-            style={{ textShadow: '0 1px 20px rgba(250,248,245,0.94), 0 1px 6px rgba(250,248,245,0.80)' }}
-          >
-            We represent large-extent industrial land banks, grid-connected solar power parcels, and high-yield limestone reserves connecting directly with enterprise buyers and institutional capital. Clean patta, complete due diligence, and absolute discretion.
-          </motion.p>
-
-          {/* ── INNOVATIVE CONCIERGE SEARCH & FILTER CONSOLE ──────────── */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.3 }}
-            className="mt-8 p-4 sm:p-6 rounded-3xl bg-white border border-[#E8E2D6] shadow-xl max-w-4xl mx-auto text-left space-y-4"
-          >
-            <div className="flex items-center justify-between pb-3 border-b border-[#E8E2D6]">
-              <div className="flex items-center gap-2">
-                <SlidersHorizontal className="w-4 h-4 text-[#9E7B4F]" />
-                <span className="text-xs font-sans uppercase tracking-[0.18em] text-[#7A5B32] font-semibold">
-                  Asset & Corridor Filter Console
-                </span>
-              </div>
-              <span className="text-xs text-[#8E887E]">
-                Showing active placement assets
-              </span>
-            </div>
-
-            {/* Row 1: Category Filter Buttons */}
-            <div className="flex flex-wrap gap-2">
-              {[
-                { id: 'all', label: 'All Assets' },
-                { id: 'solar', label: 'Solar & Renewable' },
-                { id: 'mines', label: 'Mines & Quarries' },
-                { id: 'industrial', label: 'Industrial Land' },
-                { id: 'logistics', label: 'Logistics Hubs' },
-                { id: 'commercial', label: 'Commercial IT' },
-              ].map(cat => (
-                <button
-                  key={cat.id}
-                  onClick={() => {
-                    setSelectedCategory(cat.id)
-                    scrollToProjects()
-                  }}
-                  className={`px-3.5 py-1.5 rounded-full text-xs font-sans transition-all ${
-                    selectedCategory === cat.id
-                      ? 'bg-[#1A1816] text-[#FAF8F5] font-medium shadow-sm'
-                      : 'bg-[#FAF8F5] border border-[#E8E2D6] text-[#5A564F] hover:bg-[#F4F0E8] hover:text-[#1A1816]'
-                  }`}
-                >
-                  {cat.label}
-                </button>
-              ))}
-            </div>
-
-            {/* Row 2: Search Input + Corridor Select + Scale Select + Explore CTA */}
-            <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 pt-1">
-              {/* Keyword Search */}
-              <div className="sm:col-span-5 relative">
-                <Search className="w-4 h-4 text-[#8E887E] absolute left-3.5 top-1/2 -translate-y-1/2" />
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={e => setSearchQuery(e.target.value)}
-                  placeholder="Search district, corridor, or keyword..."
-                  className="w-full pl-9 pr-4 py-2.5 rounded-full bg-[#FAF8F5] border border-[#E8E2D6] text-xs text-[#1A1816] focus:outline-none focus:border-[#9E7B4F]"
-                />
-              </div>
-
-              {/* Corridor Dropdown */}
-              <div className="sm:col-span-4">
-                <select
-                  value={selectedCorridor}
-                  onChange={e => {
-                    setSelectedCorridor(e.target.value)
-                    scrollToProjects()
-                  }}
-                  className="w-full px-4 py-2.5 rounded-full bg-[#FAF8F5] border border-[#E8E2D6] text-xs text-[#1A1816] focus:outline-none focus:border-[#9E7B4F]"
-                >
-                  {CORRIDOR_OPTIONS.map(c => (
-                    <option key={c.value} value={c.value}>{c.label}</option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Scale Dropdown */}
-              <div className="sm:col-span-3">
-                <select
-                  value={selectedScale}
-                  onChange={e => {
-                    setSelectedScale(e.target.value)
-                    scrollToProjects()
-                  }}
-                  className="w-full px-4 py-2.5 rounded-full bg-[#FAF8F5] border border-[#E8E2D6] text-xs text-[#1A1816] focus:outline-none focus:border-[#9E7B4F]"
-                >
-                  {SCALE_OPTIONS.map(s => (
-                    <option key={s.value} value={s.value}>{s.label}</option>
-                  ))}
-                </select>
-              </div>
-            </div>
-
-            {/* Filter Footer Action */}
-            <div className="flex items-center justify-between pt-2 text-xs text-[#5A564F]">
-              <span>
-                Select filters to immediately update the projects below
-              </span>
-              <button
-                onClick={scrollToProjects}
-                className="flex items-center gap-1.5 font-sans font-semibold text-[#9E7B4F] hover:text-[#7A5B32]"
-              >
-                <span>View Matching Projects</span>
-                <ArrowRight className="w-3.5 h-3.5" />
-              </button>
-            </div>
-          </motion.div>
-        </div>
-      </section>
-
-      {/* ── SECTION 1: RECENT ACTIVE PROJECTS (ZERO OVERLAP & FULL DOSSIER) ── */}
-      <CuratedCommercialShowcase
-        mandates={showcaseMandates}
-        onOpenIntake={() => setIsIntakeModalOpen(true)}
-        externalCategory={selectedCategory}
-        externalCorridor={selectedCorridor}
-        externalScale={selectedScale}
-        searchQuery={searchQuery}
-        onSelectCategory={setSelectedCategory}
-      />
+      <GoldDivider />
 
       {/* ── SECTION 2: LAND & INDUSTRIAL FEASIBILITY STUDY ──────────────── */}
       <section id="feasibility" className="py-24 bg-[#F4F0E8] border-t border-[#E8E2D6]">
@@ -661,7 +406,8 @@ export default function HomePage() {
           </div>
 
           <div className="flex flex-wrap items-center gap-6 text-[11px] font-sans">
-            <a href="#projects" className="hover:text-[#1A1816] transition-colors">Active Projects</a>
+            <a href="#projects" className="hover:text-[#1A1816] transition-colors">Portfolio</a>
+            <a href="#acquiring" className="hover:text-[#1A1816] transition-colors">Acquiring</a>
             <a href="#feasibility" className="hover:text-[#1A1816] transition-colors">Feasibility Study</a>
             <a href="#status" className="hover:text-[#1A1816] transition-colors">Property Status</a>
             <Link href="/privacy" className="hover:text-[#1A1816] transition-colors">Privacy Protocol</Link>
@@ -679,14 +425,6 @@ export default function HomePage() {
         isOpen={isIntakeModalOpen}
         onClose={() => setIsIntakeModalOpen(false)}
         user={user}
-        onSuccess={() => {
-          fetch('/api/commercial/mandates')
-            .then(r => r.json())
-            .then(d => {
-              if (d.showcase) setShowcaseMandates(d.showcase)
-            })
-            .catch(() => {})
-        }}
       />
     </div>
   )

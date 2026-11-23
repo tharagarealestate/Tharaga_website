@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import { TharagaWordmark } from '@/components/brand/TharagaWordmark'
 import { PortfolioShowcase } from '@/components/portfolio/PortfolioShowcase'
 
 export default function PropertyListingPage() {
@@ -11,9 +12,9 @@ export default function PropertyListingPage() {
           href="/"
           className="font-sans text-[11px] uppercase tracking-[0.26em] text-[#4A5163] hover:text-[#15213A] transition-colors"
         >
-          ← Tharaga
+          ← Home
         </Link>
-        <span className="font-serif text-xl">The Portfolio</span>
+        <TharagaWordmark height={56} priority />
       </div>
       <PortfolioShowcase />
     </div>

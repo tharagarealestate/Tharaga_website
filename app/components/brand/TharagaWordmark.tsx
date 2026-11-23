@@ -1,71 +1,54 @@
-/**
- * Tharaga Estates wordmark.
- *
- * When the official logo artwork is committed (LOGO_SRC below), the header and footer
- * render that file. Until then this renders a vector lockup set in the logo's typeface:
- * Cinzel capitals with copper diamond accents, a ruled diamond divider and spaced
- * Montserrat "ESTATES", in navy and copper.
- */
+import Image from 'next/image'
 
-/** Path to the official logo file in /public, or null to use the vector lockup. */
-export const LOGO_SRC: string | null = null
+/**
+ * Official Tharaga logo (ornamental emblem, THARAGA wordmark, roots; full lockup adds the
+ * ruled diamond and GROUP). Cut out from the master artwork onto transparent backgrounds:
+ *   navy  — navy wordmark + copper line-art, for ivory surfaces
+ *   ivory — ivory wordmark + light-copper line-art, for navy / photographic surfaces
+ */
+const SRC = {
+  mark: { navy: '/brand/tharaga-mark-navy.png', ivory: '/brand/tharaga-mark-ivory.png', w: 900, h: 648 },
+  full: { navy: '/brand/tharaga-full-navy.png', ivory: '/brand/tharaga-full-ivory.png', w: 1000, h: 918 },
+}
 
 type Tone = 'navy' | 'ivory'
 
+/**
+ * Renders the logo at a given height. Both tones are stacked and the active one fades in,
+ * so the header can switch from ivory (over the hero) to navy (on scroll) without a flash.
+ */
 export function TharagaWordmark({
   tone = 'navy',
-  size = 'md',
+  variant = 'mark',
+  height = 56,
+  priority = false,
   className = '',
 }: {
   tone?: Tone
-  size?: 'sm' | 'md' | 'lg'
+  variant?: 'mark' | 'full'
+  height?: number
+  priority?: boolean
   className?: string
 }) {
-  const ink = tone === 'navy' ? '#15213A' : '#F7F3EC'
-  const copper = tone === 'navy' ? '#A8743F' : '#D9AE78'
-  const s = {
-    sm: { word: 'text-[17px] tracking-[0.2em]', sub: 'text-[7.5px] tracking-[0.62em]', rule: 'w-4' },
-    md: { word: 'text-[21px] tracking-[0.22em]', sub: 'text-[8.5px] tracking-[0.66em]', rule: 'w-6' },
-    lg: { word: 'text-[44px] tracking-[0.2em]', sub: 'text-[13px] tracking-[0.7em]', rule: 'w-12' },
-  }[size]
-
-  if (LOGO_SRC) {
-    // eslint-disable-next-line @next/next/no-img-element
-    return <img src={LOGO_SRC} alt="Tharaga Estates" className={`h-12 w-auto ${className}`} />
-  }
-
+  const s = SRC[variant]
+  const width = Math.round((s.w / s.h) * height)
   return (
-    <span className={`inline-flex flex-col items-center leading-none select-none ${className}`} aria-label="Tharaga Estates">
-      <span className={`font-display font-semibold ${s.word} pl-[0.2em]`} style={{ color: ink }} aria-hidden>
-        TH
-        <Diamond color={copper} />
-        R
-        <Diamond color={copper} />
-        G
-        <Diamond color={copper} />
-      </span>
-      <span className="mt-[5px] flex items-center gap-1.5" aria-hidden>
-        <span className={`h-px ${s.rule}`} style={{ background: copper }} />
-        <span className="h-[4px] w-[4px] rotate-45" style={{ background: copper }} />
-        <span className={`font-sans font-medium ${s.sub} pl-[0.6em]`} style={{ color: copper }}>
-          ESTATES
-        </span>
-        <span className="h-[4px] w-[4px] rotate-45" style={{ background: copper }} />
-        <span className={`h-px ${s.rule}`} style={{ background: copper }} />
-      </span>
-    </span>
-  )
-}
-
-/** An "A" whose crossbar is a copper diamond, as in the logo. */
-function Diamond({ color }: { color: string }) {
-  return (
-    <span className="relative inline-block">
-      A
-      <span
-        className="absolute top-[64%] h-[0.15em] w-[0.15em] -translate-x-1/2 -translate-y-1/2 rotate-45"
-        style={{ background: color, left: 'calc(50% - 0.1em)' }}
-      />
+    <span
+      className={`relative inline-block transition-[width,height] duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] ${className}`}
+      style={{ width, height }}
+    >
+      {(['navy', 'ivory'] as const).map(t => (
+        <Image
+          key={t}
+          src={s[t]}
+          alt={t === tone ? 'Tharaga Estates' : ''}
+          aria-hidden={t !== tone}
+          fill
+          priority={priority}
+          sizes={`${width * 2}px`}
+          className={`object-contain transition-opacity duration-700 ${t === tone ? 'opacity-100' : 'opacity-0'}`}
+        />
+      ))}
     </span>
   )
 }

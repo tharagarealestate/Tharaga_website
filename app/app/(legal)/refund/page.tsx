@@ -1,5 +1,7 @@
 import { createClient } from '@/lib/supabase/server';
 import { Metadata } from 'next';
+
+export const dynamic = 'force-dynamic';
 import { LegalDocumentLayout } from '@/components/legal/LegalDocumentLayout';
 import { LegalTableOfContents } from '@/components/legal/LegalTableOfContents';
 import { LegalContent } from '@/types/legal';
@@ -268,12 +270,11 @@ Changes are effective immediately upon notification. Continued use of our servic
 };
 
 export default async function RefundPolicyPage() {
-  const supabase = await createClient();
   
   let refundContent = defaultRefundContent;
   
   try {
-    const { data: document, error } = await supabase
+    const { data: document, error } = await (await createClient())
       .from('legal_documents')
       .select('*')
       .eq('document_type', 'refund_policy')

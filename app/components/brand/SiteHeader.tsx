@@ -11,7 +11,7 @@ const NAV = [
   { label: 'Home', href: '/' },
   { label: 'Portfolio', href: '/properties' },
   { label: 'Acquiring', href: '/#acquiring' },
-  { label: 'The Standard', href: '/#advisory' },
+  { label: 'About', href: '/about' },
 ]
 
 /** Header for inner pages: transparent over a navy masthead, ivory once scrolled. */

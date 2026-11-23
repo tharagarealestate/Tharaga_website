@@ -1,12 +1,14 @@
 import { createClient } from '@/lib/supabase/server';
 import { Metadata } from 'next';
+
+export const dynamic = 'force-dynamic';
 import { LegalDocumentLayout } from '@/components/legal/LegalDocumentLayout';
 import { LegalTableOfContents } from '@/components/legal/LegalTableOfContents';
 import { LegalContent } from '@/types/legal';
 
 export const metadata: Metadata = {
   title: 'Terms of Service | Tharaga',
-  description: 'Terms of Service for Tharaga - AI-powered zero-commission real estate platform',
+  description: 'Terms of Service of Tharaga Estates, a private real estate advisory in Tamil Nadu',
   robots: 'index, follow',
 };
 
@@ -19,7 +21,7 @@ const defaultTermsContent: LegalContent = {
       heading: '1. Acceptance of Terms',
       content: `By accessing or using Tharaga ("Platform", "Service"), you agree to be bound by these Terms of Service ("Terms"). If you disagree with any part of these terms, you may not access the Service. These Terms apply to all users, including buyers, builders, and visitors to our platform.
 
-Tharaga is an AI-powered zero-commission real estate platform connecting verified builders with home seekers in Chennai, Tamil Nadu. Our goal is to provide a broker-free, transparent real estate marketplace.`,
+Tharaga Estates is a private real estate advisory based in Chennai, Tamil Nadu. We represent owners of land, energy, quarry, commercial and residential assets and introduce them to verified buyers.`,
       order: 1
     },
     {
@@ -325,12 +327,11 @@ Continued use of the Service after changes constitutes acceptance. If you do not
 };
 
 export default async function TermsOfServicePage() {
-  const supabase = await createClient();
   
   let termsContent = defaultTermsContent;
   
   try {
-    const { data: document, error } = await supabase
+    const { data: document, error } = await (await createClient())
       .from('legal_documents')
       .select('*')
       .eq('document_type', 'terms_of_service')

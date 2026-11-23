@@ -398,6 +398,7 @@ export default function HomePage() {
             {[...NAV, { label: 'Property Status', href: '#status' }].map(l => (
               <a key={l.label} href={l.href} className="text-white/60 hover:text-[#E6C9A0] transition-colors">{l.label}</a>
             ))}
+            <Link href="/about" className="text-white/60 hover:text-[#E6C9A0] transition-colors">About</Link>
             <Link href="/privacy" className="text-white/60 hover:text-[#E6C9A0] transition-colors">Privacy</Link>
             <Link href="/terms" className="text-white/60 hover:text-[#E6C9A0] transition-colors">Terms</Link>
           </div>

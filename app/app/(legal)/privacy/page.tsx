@@ -1,5 +1,7 @@
 import { createClient } from '@/lib/supabase/server';
 import { Metadata } from 'next';
+
+export const dynamic = 'force-dynamic';
 import { LegalDocumentLayout } from '@/components/legal/LegalDocumentLayout';
 import { LegalTableOfContents } from '@/components/legal/LegalTableOfContents';
 import { ConsentManager } from '@/components/legal/ConsentManager';
@@ -19,7 +21,7 @@ const defaultPrivacyContent: LegalContent = {
     {
       id: 'introduction',
       heading: '1. Introduction',
-      content: `Welcome to Tharaga ("we," "our," or "us"). We are committed to protecting your personal data and respecting your privacy rights. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our AI-powered real estate platform.
+      content: `Welcome to Tharaga Estates ("Tharaga", "we," "our," or "us"). We are committed to protecting your personal data and respecting your privacy rights. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our website and advisory services.
 
 This policy complies with:
 - India's Digital Personal Data Protection Act, 2023 (DPDP Act)
@@ -36,7 +38,7 @@ Email: tharagarealestate@gmail.com
 Phone: +91 88709 80839
 Address: Chennai, Tamil Nadu, India
 
-For data protection queries, contact: privacy@tharaga.com`,
+For data protection queries, contact: tharagarealestate@gmail.com`,
       order: 2
     },
     {
@@ -244,7 +246,7 @@ We never share financial data, passwords, or full search history.`,
 - **AI training data**: Anonymized permanently (cannot be deleted)
 - **RERA documents**: 5 years (regulatory requirement)
 
-You can request immediate deletion via: privacy@tharaga.com`,
+You can request immediate deletion via: tharagarealestate@gmail.com`,
       order: 7
     },
     {
@@ -362,7 +364,7 @@ We ensure all international transfers comply with DPDP Act 2023 requirements.`,
     {
       id: 'children-privacy',
       heading: "12. Children's Privacy",
-      content: `Tharaga is not intended for users under 18 years old. We do not knowingly collect data from minors. If you believe a minor has provided us data, contact: privacy@tharaga.com`,
+      content: `Tharaga is not intended for users under 18 years old. We do not knowingly collect data from minors. If you believe a minor has provided us data, contact: tharagarealestate@gmail.com`,
       order: 12
     },
     {
@@ -421,7 +423,7 @@ Major changes require re-consent.`,
       content: `For privacy concerns, data requests, or complaints:
 
 **Data Protection Officer**
-Email: privacy@tharaga.com / tharagarealestate@gmail.com
+Email: tharagarealestate@gmail.com / tharagarealestate@gmail.com
 Phone: +91 88709 80839
 Address: Tharaga, Chennai, Tamil Nadu, India
 
@@ -449,13 +451,12 @@ Version: 1.0`,
 };
 
 export default async function PrivacyPolicyPage() {
-  const supabase = await createClient();
   
   // Fetch active privacy policy from database
   let privacyContent = defaultPrivacyContent;
   
   try {
-    const { data: document, error } = await supabase
+    const { data: document, error } = await (await createClient())
       .from('legal_documents')
       .select('*')
       .eq('document_type', 'privacy_policy')

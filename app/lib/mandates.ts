@@ -82,8 +82,8 @@ export const MANDATES: Mandate[] = [
     idealFor: 'Manufacturers seeking captive green power · Investors seeking 25-year income',
     badge: { kind: 'scarcity', label: 'Only 5 MW Remaining' },
     featured: true,
-    image: u('1509391365360-2e959784a276'),
-    imageAlt: 'Rows of solar panels under a clear sky',
+    image: u('1508514177221-188b1cf16e9d'),
+    imageAlt: 'Utility-scale solar arrays under a clear blue sky',
   },
   {
     slug: 'courtalam-hill-estates',
@@ -280,8 +280,7 @@ export const MANDATES: Mandate[] = [
     highlights: ['6.7 acres quarry land', '7.7 acres crusher land', 'Offered as one asset'],
     idealFor: 'M-Sand and aggregate producers · Cement and infrastructure companies',
     badge: { kind: 'curated', label: 'Exclusively Curated' },
-    image: u('1578662996442-48f60103fc96'),
-    imageAlt: 'Layered stone of an open quarry',
+    plate: { caption: '14.4 ACRES', tone: 'navy' },
     acres: 14.4,
   },
 
@@ -300,8 +299,7 @@ export const MANDATES: Mandate[] = [
     highlights: ['Anchored by Starbucks', 'Adyar, south Chennai'],
     idealFor: 'Family offices · HNI investors seeking anchored retail',
     badge: { kind: 'curated', label: 'By Invitation' },
-    image: u('1486406146926-c627a92ad1ab'),
-    imageAlt: 'A modern commercial building facade',
+    plate: { caption: 'ADYAR', tone: 'navy' },
   },
 
   // ── RESIDENCES ───────────────────────────────────────────────────

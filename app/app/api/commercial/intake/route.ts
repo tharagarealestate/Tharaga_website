@@ -91,7 +91,7 @@ export async function POST(req: NextRequest) {
           ? `${media.length} media files uploaded (${media.map((m: any) => `${m.name} [${m.type?.includes('video') ? 'Video' : 'Photo'}]`).join(', ')})`
           : 'No media uploaded'
 
-        const prompt = `You are the Senior Property Director and Valuation Expert at Tharaga Real Estate.
+        const prompt = `You are the Senior Property Director and Valuation Expert at Tharaga Estates.
 A seller has used the AI Property Assistant to submit their property. The property can be ANY type:
 - Commercial building (e.g. building with 6-7 shops, retail complex, showroom, offices)
 - Residential property (independent villa, flat/apartment, residential building, layout plots)

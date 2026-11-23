@@ -252,7 +252,7 @@ export function LeadsSection({ onNavigate }: LeadsSectionProps) {
                         setOutreachForm({ ...outreachForm, body })
                         setOutreachValidation(body ? validateMessage(body, outreachForm.type) : null)
                       }}
-                      placeholder={outreachForm.type === 'whatsapp' ? 'Hi! Thank you for your interest in our properties…' : 'Hi, this is Tharaga Real Estate…'}
+                      placeholder={outreachForm.type === 'whatsapp' ? 'Hi! Thank you for your interest in our properties…' : 'Hi, this is Tharaga Estates…'}
                       rows={5}
                       className="w-full px-4 py-2.5 bg-slate-700/50 glow-border rounded-lg text-white placeholder:text-slate-400 focus:outline-none transition-all resize-none" />
                     {outreachValidation && outreachValidation.errors.length > 0 && (

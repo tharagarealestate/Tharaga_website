@@ -192,7 +192,7 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
   return {
     title: { absolute: title }, description,
     alternates: { canonical: propertyUrl },
-    openGraph: { title: p.title || title, description: richDescription, images: [{ url: ogImageUrl, width: 1200, height: 630, alt: p.title || 'Property' }], url: propertyUrl, type: 'website', siteName: 'Tharaga Real Estate', locale: 'en_IN' },
+    openGraph: { title: p.title || title, description: richDescription, images: [{ url: ogImageUrl, width: 1200, height: 630, alt: p.title || 'Property' }], url: propertyUrl, type: 'website', siteName: 'Tharaga Estates', locale: 'en_IN' },
     twitter: { card: 'summary_large_image', title: p.title || title, description: richDescription, images: [ogImageUrl] },
     other: { 'script:ld+json': JSON.stringify({ '@context': 'https://schema.org', '@type': 'RealEstateListing', name: p.title, price: p.priceDisplay, priceCurrency: 'INR', address: { '@type': 'PostalAddress', addressLocality: p.locality || p.city || '', addressRegion: p.city || '', addressCountry: 'IN' }, numberOfRooms: p.bedrooms || 3, image: p.images || [] }) },
   }

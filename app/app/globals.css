@@ -96,10 +96,10 @@
     --z-tooltip: 400;
 
     /* Typography — Luxury Perfume Editorial */
-    --font-display: 'Instrument Serif', 'Playfair Display', Georgia, serif;
-    --font-body: 'Jost', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    --font-display: 'Cinzel', 'Cormorant Garamond', Georgia, serif;
+    --font-body: 'Montserrat', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     --font-mono: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
-    --font-serif: 'Instrument Serif', 'Playfair Display', Georgia, 'Times New Roman', serif;
+    --font-serif: 'Cormorant Garamond', 'Cinzel', Georgia, 'Times New Roman', serif;
 
     /* Warm Paper Perfume Aesthetic */
     --paper-base: #FAF8F5;
@@ -433,3 +433,14 @@
 /* Horizontal pill rows: scroll without a visible bar */
 .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 .no-scrollbar::-webkit-scrollbar { display: none; }
+
+/* Tharaga Estates — unified photographic grade (warm, slightly desaturated, editorial) */
+.tharaga-grade { filter: saturate(0.8) sepia(0.12) contrast(1.04) brightness(0.97); }
+
+/* Lenis smooth scroll */
+html.lenis, html.lenis body { height: auto; }
+.lenis.lenis-smooth { scroll-behavior: auto !important; }
+.lenis.lenis-smooth [data-lenis-prevent] { overscroll-behavior: contain; }
+.lenis.lenis-stopped { overflow: hidden; }
+
+@keyframes tharaga-marquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }

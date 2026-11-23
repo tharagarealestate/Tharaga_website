@@ -158,7 +158,7 @@ function generateRuleBasedContent(p: PropertyRow): ContentSet {
         <!-- Footer -->
         <tr>
           <td style="padding:20px 32px;border-top:1px solid rgba(255,255,255,0.06);text-align:center;">
-            <p style="margin:0;font-size:11px;color:#4b5563;">Tharaga Real Estate · Chennai, Tamil Nadu · <a href="https://tharaga.in" style="color:#fbbf24;text-decoration:none;">tharaga.in</a></p>
+            <p style="margin:0;font-size:11px;color:#4b5563;">Tharaga Estates · Chennai, Tamil Nadu · <a href="https://tharaga.in" style="color:#fbbf24;text-decoration:none;">tharaga.in</a></p>
           </td>
         </tr>
       </table>
@@ -355,7 +355,7 @@ async function sendBuilderEmail(
         </tr>
         <tr>
           <td style="padding:16px 32px;border-top:1px solid rgba(255,255,255,0.06);text-align:center;">
-            <p style="margin:0;font-size:11px;color:#4b5563;">Tharaga Real Estate · <a href="https://tharaga.in" style="color:#fbbf24;text-decoration:none;">tharaga.in</a></p>
+            <p style="margin:0;font-size:11px;color:#4b5563;">Tharaga Estates · <a href="https://tharaga.in" style="color:#fbbf24;text-decoration:none;">tharaga.in</a></p>
           </td>
         </tr>
       </table>

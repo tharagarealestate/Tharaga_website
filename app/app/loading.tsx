@@ -4,5 +4,5 @@
  * a spinner, skeleton or a dark frame.
  */
 export default function RootLoading() {
-  return <div className="min-h-screen bg-[#FAF8F5]" aria-hidden />
+  return <div className="min-h-screen bg-[#F7F3EC]" aria-hidden />
 }

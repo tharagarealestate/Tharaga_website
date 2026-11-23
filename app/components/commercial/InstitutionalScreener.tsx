@@ -67,26 +67,26 @@ export function InstitutionalScreener() {
   }
 
   return (
-    <div className="rounded-3xl bg-white border border-[#E8E2D6] overflow-hidden text-[#1A1816] shadow-xl">
+    <div className="rounded-none bg-[#FBF8F2] border border-[#D6CAB5] overflow-hidden text-[#15213A]">
       {/* Editorial Header */}
-      <div className="p-6 sm:p-10 border-b border-[#E8E2D6] bg-[#FAF8F5] flex flex-col md:flex-row md:items-center justify-between gap-6">
+      <div className="p-6 sm:p-10 border-b border-[#D6CAB5] bg-[#F7F3EC] flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div>
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#F4EFE6] border border-[#DDD5C5] mb-2.5">
-            <Compass className="w-3.5 h-3.5 text-[#9E7B4F]" />
-            <span className="text-[11px] font-sans uppercase tracking-[0.2em] text-[#7A5B32] font-semibold">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#F4EFE6] border border-[#D6CAB5] mb-2.5">
+            <Compass className="w-3.5 h-3.5 text-[#94643A]" />
+            <span className="text-[11px] font-sans uppercase tracking-[0.2em] text-[#7C5230] font-semibold">
               Strategic Advisory Tool
             </span>
           </div>
-          <h3 className="text-2xl sm:text-3xl md:text-4xl font-serif font-bold text-[#1A1816] tracking-tight">
+          <h3 className="text-2xl sm:text-3xl md:text-4xl font-display font-normal tracking-[0.03em] text-[#15213A]">
             Land & Industrial Feasibility Study
           </h3>
-          <p className="text-xs sm:text-sm text-[#5A564F] max-w-2xl mt-1.5 leading-relaxed font-light">
+          <p className="text-xs sm:text-sm text-[#4A5163] max-w-2xl mt-1.5 leading-relaxed font-light">
             Evaluate grid evacuation capacity, logistics latency, statutory zoning, and capital outlay for industrial land, solar parks, or quarries across Tamil Nadu.
           </p>
         </div>
 
         <div className="flex items-center gap-2 shrink-0">
-          <span className="text-[11px] font-sans px-3.5 py-1.5 rounded-full bg-white border border-[#E8E2D6] text-[#7A5B32] font-medium shadow-sm">
+          <span className="text-[11px] font-sans px-3.5 py-1.5 rounded-full bg-[#FBF8F2] border border-[#D6CAB5] text-[#7C5230] font-medium shadow-sm">
             Live Substation & Zoning Index
           </span>
         </div>
@@ -99,10 +99,10 @@ export function InstitutionalScreener() {
           {/* Question 01: Asset / Industry */}
           <div>
             <div className="flex items-center justify-between mb-2.5">
-              <label className="text-[11px] font-sans uppercase tracking-[0.18em] text-[#8E887E] font-semibold">
+              <label className="text-[11px] font-sans uppercase tracking-[0.18em] text-[#7D8292] font-semibold">
                 Question 01 · Asset & Industry Class
               </label>
-              <span className="text-[10px] text-[#9E7B4F] font-medium">Select Class</span>
+              <span className="text-[10px] text-[#94643A] font-medium">Select Class</span>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
               {SECTORS.map(sec => {
@@ -117,13 +117,13 @@ export function InstitutionalScreener() {
                       setScale(sec.defaultScale)
                       setBudgetCrores(sec.defaultBudget)
                     }}
-                    className={`p-3.5 rounded-2xl border text-left transition-all flex items-center gap-3 ${
+                    className={`p-3.5 rounded-none border text-left transition-all flex items-center gap-3 ${
                       active
-                        ? 'bg-[#1A1816] border-[#1A1816] text-[#FAF8F5] shadow-sm'
-                        : 'bg-[#FAF8F5] border-[#E8E2D6] text-[#5A564F] hover:text-[#1A1816] hover:bg-[#F4F0E8]'
+                        ? 'bg-[#15213A] border-[#15213A] text-[#F7F3EC] shadow-sm'
+                        : 'bg-[#F7F3EC] border-[#D6CAB5] text-[#4A5163] hover:text-[#15213A] hover:bg-[#EFE8DC]'
                     }`}
                   >
-                    <Icon className={`w-4 h-4 ${active ? 'text-[#C5A059]' : 'text-[#8E887E]'}`} />
+                    <Icon className={`w-4 h-4 ${active ? 'text-[#B0834A]' : 'text-[#7D8292]'}`} />
                     <span className="text-xs font-sans font-medium">{sec.label}</span>
                   </button>
                 )
@@ -133,7 +133,7 @@ export function InstitutionalScreener() {
 
           {/* Question 02: Strategic Corridor */}
           <div>
-            <label className="block text-[11px] font-sans uppercase tracking-[0.18em] text-[#8E887E] font-semibold mb-2.5">
+            <label className="block text-[11px] font-sans uppercase tracking-[0.18em] text-[#7D8292] font-semibold mb-2.5">
               Question 02 · Strategic Tamil Nadu Corridor
             </label>
             <div className="space-y-1.5">
@@ -144,17 +144,17 @@ export function InstitutionalScreener() {
                     key={c.id}
                     type="button"
                     onClick={() => setSelectedCorridor(c.label)}
-                    className={`w-full p-2.5 px-3.5 rounded-xl border text-left transition-all flex items-center justify-between ${
+                    className={`w-full p-2.5 px-3.5 rounded-none border text-left transition-all flex items-center justify-between ${
                       active
-                        ? 'bg-[#F7F4EE] border-[#C5A059] text-[#1A1816] font-medium'
-                        : 'bg-[#FAF8F5] border-[#E8E2D6] text-[#5A564F] hover:text-[#1A1816] hover:bg-[#F4F0E8]'
+                        ? 'bg-[#F7F4EE] border-[#B0834A] text-[#15213A] font-medium'
+                        : 'bg-[#F7F3EC] border-[#D6CAB5] text-[#4A5163] hover:text-[#15213A] hover:bg-[#EFE8DC]'
                     }`}
                   >
                     <div className="flex items-center gap-2">
-                      <MapPin className={`w-3.5 h-3.5 ${active ? 'text-[#9E7B4F]' : 'text-[#8E887E]'}`} />
+                      <MapPin className={`w-3.5 h-3.5 ${active ? 'text-[#94643A]' : 'text-[#7D8292]'}`} />
                       <span className="text-xs font-sans">{c.label}</span>
                     </div>
-                    <span className="text-[10px] text-[#8E887E] hidden sm:inline">{c.desc}</span>
+                    <span className="text-[10px] text-[#7D8292] hidden sm:inline">{c.desc}</span>
                   </button>
                 )
               })}
@@ -163,7 +163,7 @@ export function InstitutionalScreener() {
 
           {/* Question 03: Scale & Capacity */}
           <div>
-            <label className="block text-[11px] font-sans uppercase tracking-[0.18em] text-[#8E887E] font-semibold mb-2.5">
+            <label className="block text-[11px] font-sans uppercase tracking-[0.18em] text-[#7D8292] font-semibold mb-2.5">
               Question 03 · Target Extent / Capacity
             </label>
             <div className="flex flex-wrap gap-2 mb-3">
@@ -174,8 +174,8 @@ export function InstitutionalScreener() {
                   onClick={() => setScale(sc)}
                   className={`px-3 py-1.5 rounded-full text-xs font-sans transition-all ${
                     scale === sc
-                      ? 'bg-[#1A1816] text-[#FAF8F5] font-medium'
-                      : 'bg-[#FAF8F5] border border-[#E8E2D6] text-[#5A564F] hover:bg-[#F4F0E8]'
+                      ? 'bg-[#15213A] text-[#F7F3EC] font-medium'
+                      : 'bg-[#F7F3EC] border border-[#D6CAB5] text-[#4A5163] hover:bg-[#EFE8DC]'
                   }`}
                 >
                   {sc}
@@ -187,17 +187,17 @@ export function InstitutionalScreener() {
               value={scale}
               onChange={e => setScale(e.target.value)}
               placeholder="Or specify custom requirement..."
-              className="w-full px-4 py-2.5 rounded-xl bg-[#FAF8F5] border border-[#E8E2D6] text-xs text-[#1A1816] focus:outline-none focus:border-[#9E7B4F]"
+              className="w-full px-4 py-2.5 rounded-none bg-[#F7F3EC] border border-[#D6CAB5] text-xs text-[#15213A] focus:outline-none focus:border-[#94643A]"
             />
           </div>
 
           {/* Question 04: Indicative Budget Outlay */}
           <div>
             <div className="flex items-center justify-between mb-2">
-              <label className="text-[11px] font-sans uppercase tracking-[0.18em] text-[#8E887E] font-semibold">
+              <label className="text-[11px] font-sans uppercase tracking-[0.18em] text-[#7D8292] font-semibold">
                 Question 04 · Target Capital Outlay
               </label>
-              <span className="text-sm font-sans font-bold text-[#1A1816]">
+              <span className="text-sm font-sans font-bold text-[#15213A]">
                 ₹{budgetCrores} Crores
               </span>
             </div>
@@ -208,9 +208,9 @@ export function InstitutionalScreener() {
               step="5"
               value={budgetCrores}
               onChange={e => setBudgetCrores(Number(e.target.value))}
-              className="w-full accent-[#1A1816] cursor-pointer"
+              className="w-full accent-[#15213A] cursor-pointer"
             />
-            <div className="flex justify-between text-[10px] text-[#8E887E] mt-1">
+            <div className="flex justify-between text-[10px] text-[#7D8292] mt-1">
               <span>₹15 Cr</span>
               <span>₹100 Cr</span>
               <span>₹250+ Cr</span>
@@ -221,23 +221,23 @@ export function InstitutionalScreener() {
           <button
             onClick={handleRunScreener}
             disabled={loading}
-            className="w-full py-3.5 rounded-full bg-[#1A1816] hover:bg-[#2D2926] text-[#FAF8F5] font-sans text-xs uppercase tracking-wider font-semibold transition-all shadow-md flex items-center justify-center gap-2 group disabled:opacity-50"
+            className="w-full py-3.5 rounded-full bg-[#15213A] hover:bg-[#22314F] text-[#F7F3EC] font-sans text-xs uppercase tracking-wider font-semibold transition-all shadow-md flex items-center justify-center gap-2 group disabled:opacity-50"
           >
             {loading ? (
               <>
-                <Loader2 className="w-4 h-4 animate-spin text-[#C5A059]" />
+                <Loader2 className="w-4 h-4 animate-spin text-[#B0834A]" />
                 <span>Evaluating Corridor Indices...</span>
               </>
             ) : (
               <>
                 <span>Run Feasibility Study</span>
-                <ArrowRight className="w-4 h-4 text-[#C5A059] group-hover:translate-x-1 transition-transform" />
+                <ArrowRight className="w-4 h-4 text-[#B0834A] group-hover:translate-x-1 transition-transform" />
               </>
             )}
           </button>
 
           {error && (
-            <div className="p-3 rounded-xl bg-red-50 border border-red-200 text-xs text-red-600 flex items-center gap-2">
+            <div className="p-3 rounded-none bg-red-50 border border-red-200 text-xs text-red-600 flex items-center gap-2">
               <AlertCircle className="w-4 h-4 shrink-0" />
               <span>{error}</span>
             </div>
@@ -246,25 +246,25 @@ export function InstitutionalScreener() {
 
         {/* Right Side: Luxury Editorial Result Output (Dark Ink Card reminiscent of Image 4) */}
         <div className="lg:col-span-6 flex flex-col">
-          <div className="rounded-3xl bg-[#171513] text-[#FAF8F5] p-6 sm:p-8 flex-1 flex flex-col justify-between border border-[#2D2926] shadow-2xl relative overflow-hidden">
+          <div className="rounded-none bg-[#15213A] text-[#F7F3EC] p-6 sm:p-8 flex-1 flex flex-col justify-between border border-[#22314F] relative overflow-hidden">
             {/* Subtle light accent */}
-            <div className="absolute top-0 right-0 w-64 h-64 bg-radial from-[#C5A059]/10 to-transparent pointer-events-none" />
+            <div className="absolute top-0 right-0 w-64 h-64 bg-radial from-[#B0834A]/10 to-transparent pointer-events-none" />
 
             <div>
               {/* Card Header */}
               <div className="flex items-center justify-between pb-4 border-b border-white/10 mb-6">
                 <div>
-                  <span className="text-[10px] font-sans uppercase tracking-[0.2em] text-[#C5A059] font-medium block">
+                  <span className="text-[10px] font-sans uppercase tracking-[0.2em] text-[#B0834A] font-medium block">
                     Strategic Feasibility Assessment
                   </span>
-                  <h4 className="text-lg font-serif font-bold text-white mt-0.5">
+                  <h4 className="text-lg font-display font-normal tracking-[0.03em] text-white mt-0.5">
                     {activeSectorObj.label} · {selectedCorridor.split('–')[0].trim()}
                   </h4>
                 </div>
 
                 <div className="text-right">
                   <span className="text-[10px] font-sans text-white/50 uppercase tracking-wider block">Feasibility Rating</span>
-                  <span className="text-xl font-serif font-bold text-[#C5A059]">
+                  <span className="text-xl font-display font-normal tracking-[0.03em] text-[#B0834A]">
                     {analysis ? `${analysis.feasibility_score}/100` : '92/100'}
                   </span>
                 </div>
@@ -278,8 +278,8 @@ export function InstitutionalScreener() {
                   className="space-y-5"
                 >
                   {/* Viability Rating */}
-                  <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 text-xs text-[#FAF8F5] border border-white/15">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-[#C5A059]" />
+                  <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 text-xs text-[#F7F3EC] border border-white/15">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-[#B0834A]" />
                     <span className="font-medium">{analysis.viability_rating || 'High Corridor Viability'}</span>
                   </div>
 
@@ -290,8 +290,8 @@ export function InstitutionalScreener() {
 
                   {/* Technical Synthesis Grid */}
                   <div className="space-y-3 pt-2">
-                    <div className="p-3.5 rounded-2xl bg-white/[0.04] border border-white/[0.08]">
-                      <span className="text-[10px] font-sans uppercase tracking-wider text-[#C5A059] block mb-1">
+                    <div className="p-3.5 rounded-none bg-white/[0.04] border border-white/[0.08]">
+                      <span className="text-[10px] font-sans uppercase tracking-wider text-[#B0834A] block mb-1">
                         Grid & Evacuation Readiness
                       </span>
                       <p className="text-xs text-white/70 leading-relaxed">
@@ -299,8 +299,8 @@ export function InstitutionalScreener() {
                       </p>
                     </div>
 
-                    <div className="p-3.5 rounded-2xl bg-white/[0.04] border border-white/[0.08]">
-                      <span className="text-[10px] font-sans uppercase tracking-wider text-[#C5A059] block mb-1">
+                    <div className="p-3.5 rounded-none bg-white/[0.04] border border-white/[0.08]">
+                      <span className="text-[10px] font-sans uppercase tracking-wider text-[#B0834A] block mb-1">
                         Freight & Highway Connectivity
                       </span>
                       <p className="text-xs text-white/70 leading-relaxed">
@@ -308,14 +308,14 @@ export function InstitutionalScreener() {
                       </p>
                     </div>
 
-                    <div className="p-3.5 rounded-2xl bg-white/[0.04] border border-white/[0.08]">
-                      <span className="text-[10px] font-sans uppercase tracking-wider text-[#C5A059] block mb-1">
+                    <div className="p-3.5 rounded-none bg-white/[0.04] border border-white/[0.08]">
+                      <span className="text-[10px] font-sans uppercase tracking-wider text-[#B0834A] block mb-1">
                         Statutory Clearances & Patta Verification
                       </span>
                       <ul className="space-y-1 text-xs text-white/70">
                         {analysis.statutory_roadmap?.map((step: string, i: number) => (
                           <li key={i} className="flex items-center gap-1.5">
-                            <span className="w-1 h-1 rounded-full bg-[#C5A059]" />
+                            <span className="w-1 h-1 rounded-full bg-[#B0834A]" />
                             <span>{step}</span>
                           </li>
                         ))}
@@ -331,19 +331,19 @@ export function InstitutionalScreener() {
                   </p>
 
                   <div className="space-y-2.5 pt-2">
-                    <div className="p-3 rounded-xl bg-white/[0.03] border border-white/[0.06] flex items-center justify-between text-xs">
+                    <div className="p-3 rounded-none bg-white/[0.03] border border-white/[0.06] flex items-center justify-between text-xs">
                       <span className="text-white/60">Substation Proximity</span>
-                      <span className="text-[#C5A059] font-medium">{activeSectorObj.power}</span>
+                      <span className="text-[#B0834A] font-medium">{activeSectorObj.power}</span>
                     </div>
-                    <div className="p-3 rounded-xl bg-white/[0.03] border border-white/[0.06] flex items-center justify-between text-xs">
+                    <div className="p-3 rounded-none bg-white/[0.03] border border-white/[0.06] flex items-center justify-between text-xs">
                       <span className="text-white/60">Target Corridor</span>
                       <span className="text-white font-medium">{selectedCorridor}</span>
                     </div>
-                    <div className="p-3 rounded-xl bg-white/[0.03] border border-white/[0.06] flex items-center justify-between text-xs">
+                    <div className="p-3 rounded-none bg-white/[0.03] border border-white/[0.06] flex items-center justify-between text-xs">
                       <span className="text-white/60">Target Scale</span>
                       <span className="text-white font-medium">{scale}</span>
                     </div>
-                    <div className="p-3 rounded-xl bg-white/[0.03] border border-white/[0.06] flex items-center justify-between text-xs">
+                    <div className="p-3 rounded-none bg-white/[0.03] border border-white/[0.06] flex items-center justify-between text-xs">
                       <span className="text-white/60">Allocated Budget</span>
                       <span className="text-white font-medium">₹{budgetCrores} Cr</span>
                     </div>
@@ -359,13 +359,13 @@ export function InstitutionalScreener() {
               </span>
 
               <a
-                href={`https://wa.me/918870980839?text=${encodeURIComponent(`Hello Tharaga Real Estate, I ran a feasibility study for ${activeSectorObj.label} in ${selectedCorridor} (${scale}, ₹${budgetCrores} Cr budget). I wish to discuss matching site options.`)}`}
+                href={`https://wa.me/918870980839?text=${encodeURIComponent(`Hello Tharaga Estates, I ran a feasibility study for ${activeSectorObj.label} in ${selectedCorridor} (${scale}, ₹${budgetCrores} Cr budget). I wish to discuss matching site options.`)}`}
                 target="_blank"
                 rel="noreferrer"
-                className="w-full sm:w-auto px-5 py-2.5 rounded-full bg-[#FAF8F5] hover:bg-white text-[#1A1816] text-xs font-sans font-semibold transition-all flex items-center justify-center gap-1.5"
+                className="w-full sm:w-auto px-5 py-2.5 rounded-full bg-[#F7F3EC] hover:bg-[#FBF8F2] text-[#15213A] text-xs font-sans font-semibold transition-all flex items-center justify-center gap-1.5"
               >
                 <span>Discuss Feasibility With Desk</span>
-                <ExternalLink className="w-3.5 h-3.5 text-[#9E7B4F]" />
+                <ExternalLink className="w-3.5 h-3.5 text-[#94643A]" />
               </a>
             </div>
           </div>

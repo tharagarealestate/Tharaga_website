@@ -44,10 +44,11 @@ const config: Config = {
         },
       },
       fontFamily: {
-        display: ['"Instrument Serif"', '"Playfair Display"', 'Georgia', 'serif'],
-        serif: ['"Instrument Serif"', '"Playfair Display"', 'Georgia', 'serif'],
-        sans: ['Jost', 'Inter', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
-        body: ['Jost', 'Inter', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
+        // Matched to the Tharaga Estates logo
+        display: ['Cinzel', '"Cormorant Garamond"', 'Georgia', 'serif'],
+        serif: ['"Cormorant Garamond"', 'Cinzel', 'Georgia', 'serif'],
+        sans: ['Montserrat', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
+        body: ['Montserrat', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
         mono: ['"JetBrains Mono"', 'monospace'],
       },
       borderRadius: {

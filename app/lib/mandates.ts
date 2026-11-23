@@ -400,3 +400,18 @@ export function whatsappLink(subject: string) {
 }
 
 export const telLink = `tel:+${DESK_PHONE_E164}`
+
+/** Broad zone for filtering on the portfolio page. */
+export type Zone = 'Chennai' | 'South Tamil Nadu' | 'Location withheld'
+export function zoneOf(m: Mandate): Zone {
+  if (m.region === 'Chennai') return 'Chennai'
+  if (m.category === 'energy') return 'Location withheld'
+  return 'South Tamil Nadu'
+}
+
+export function shortlistWhatsappLink(names: string[]) {
+  const text = `Hello Tharaga, I would like a private briefing on the following mandates:\n${names
+    .map((n, i) => `${i + 1}. ${n}`)
+    .join('\n')}`
+  return `https://wa.me/${DESK_PHONE_E164}?text=${encodeURIComponent(text)}`
+}

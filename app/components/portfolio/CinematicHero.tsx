@@ -111,7 +111,7 @@ export function CinematicHero({ onEnquire }: { onEnquire: () => void }) {
               </dl>
               <div className="flex items-center gap-7">
                 <a
-                  href="#projects"
+                  href="/properties"
                   className="group/hero relative overflow-hidden border border-[#E6C9A0]/70 px-8 py-3.5 font-sans text-[10.5px] uppercase tracking-[0.3em] text-[#F7F3EC] hover:text-[#F7F3EC]"
                 >
                   <span className="absolute inset-0 origin-bottom scale-y-0 bg-[#F7F3EC] transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover/hero:scale-y-100" />

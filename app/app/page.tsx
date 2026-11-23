@@ -100,7 +100,7 @@ export default function HomePage() {
     .slice(0, 2) || 'P'
 
   const NAV = [
-    { label: 'Portfolio', href: '#projects' },
+    { label: 'Portfolio', href: '/properties' },
     { label: 'Acquiring', href: '#acquiring' },
     { label: 'Feasibility', href: '#feasibility' },
     { label: 'The Standard', href: '#advisory' },

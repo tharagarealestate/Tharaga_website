@@ -1,6 +1,7 @@
 'use client'
 
 import { useCallback, useMemo, useState } from 'react'
+import Link from 'next/link'
 import { AnimatePresence, LayoutGroup, motion } from 'framer-motion'
 import {
   ACQUISITION_BRIEFS,
@@ -24,6 +25,7 @@ const reveal = {
 }
 
 export function PortfolioShowcase({ showBriefs = true }: { showBriefs?: boolean }) {
+  const PREVIEW = 3
   const [filter, setFilter] = useState<Filter>('all')
   const [open, setOpen] = useState<Mandate | null>(null)
   const close = useCallback(() => setOpen(null), [])
@@ -37,7 +39,8 @@ export function PortfolioShowcase({ showBriefs = true }: { showBriefs?: boolean 
   }, [])
 
   const featured = filter === 'all' ? MANDATES.filter(m => m.featured) : []
-  const rest = filter === 'all' ? MANDATES.filter(m => !m.featured) : MANDATES.filter(m => m.category === filter)
+  const all = filter === 'all' ? MANDATES.filter(m => !m.featured) : MANDATES.filter(m => m.category === filter)
+  const rest = all.slice(0, filter === 'all' ? PREVIEW : 6)
 
   return (
     <>
@@ -111,7 +114,7 @@ export function PortfolioShowcase({ showBriefs = true }: { showBriefs?: boolean 
                 <span className="font-serif italic font-light text-3xl sm:text-[2.5rem] text-[#94643A]">across Tamil Nadu</span>
               </h3>
               <span className="hidden sm:block font-sans text-[11px] uppercase tracking-[0.26em] text-[#7D8292]">
-                {rest.length} properties
+                A selection
               </span>
             </motion.div>
           )}
@@ -133,6 +136,29 @@ export function PortfolioShowcase({ showBriefs = true }: { showBriefs?: boolean 
               ))}
             </motion.div>
           </AnimatePresence>
+
+          {/* Gateway to the full portfolio page */}
+          <motion.div {...reveal} className="mt-24 flex flex-col items-center text-center">
+            <div className="flex items-center gap-3" aria-hidden>
+              <span className="h-px w-16 bg-[#B0834A]/60" />
+              <span className="h-2 w-2 rotate-45 bg-[#B0834A]" />
+              <span className="h-px w-16 bg-[#B0834A]/60" />
+            </div>
+            <p className="mt-8 font-serif italic text-2xl text-[#4A5163]">
+              {MANDATES.length - featured.length - rest.length > 0
+                ? `${MANDATES.length - featured.length - rest.length} more mandates in the full portfolio`
+                : 'The full portfolio, with search, index view and your private shortlist'}
+            </p>
+            <Link
+              href="/properties"
+              className="group/all relative mt-8 overflow-hidden border border-[#15213A] px-10 py-4 font-sans text-[10.5px] uppercase tracking-[0.3em] text-[#15213A] hover:text-[#15213A]"
+            >
+              <span className="absolute inset-0 origin-bottom scale-y-0 bg-[#15213A] transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover/all:scale-y-100" />
+              <span className="relative transition-colors duration-500 group-hover/all:text-[#F7F3EC]">
+                Explore all {MANDATES.length} mandates
+              </span>
+            </Link>
+          </motion.div>
         </div>
       </section>
 

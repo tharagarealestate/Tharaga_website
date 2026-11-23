@@ -6,6 +6,7 @@ import { X, Phone } from 'lucide-react'
 import { CATEGORY_LABELS, DESK_PHONE_DISPLAY, telLink, whatsappLink, type Mandate } from '@/lib/mandates'
 import { BadgeTag, EASE, StatPills } from './primitives'
 import { MandateVisual, isPlate } from './MandateVisual'
+import { SaveToggle } from './MandateCard'
 
 function useIsMobile() {
   const [mobile, setMobile] = useState(false)
@@ -23,7 +24,17 @@ function useIsMobile() {
  * Progressive-disclosure detail view.
  * Desktop: centred editorial modal. Mobile: draggable bottom sheet.
  */
-export function MandateDetail({ mandate, onClose }: { mandate: Mandate | null; onClose: () => void }) {
+export function MandateDetail({
+  mandate,
+  onClose,
+  saved,
+  onToggleSave,
+}: {
+  mandate: Mandate | null
+  onClose: () => void
+  saved?: boolean
+  onToggleSave?: () => void
+}) {
   const mobile = useIsMobile()
   const drag = useDragControls()
 
@@ -105,6 +116,11 @@ export function MandateDetail({ mandate, onClose }: { mandate: Mandate | null; o
               <p className="mt-2 font-sans text-xs uppercase tracking-[0.2em] text-[#7D8292]">
                 {mandate.location} · {mandate.region}
               </p>
+              {onToggleSave && (
+                <div className="mt-5">
+                  <SaveToggle saved={!!saved} onToggle={onToggleSave} />
+                </div>
+              )}
 
               <div className="mt-6">
                 <StatPills stats={mandate.stats} />
@@ -132,6 +148,11 @@ export function MandateDetail({ mandate, onClose }: { mandate: Mandate | null; o
                 <p className="mt-2 font-sans text-sm font-light text-[#4A5163]">
                   Shared privately with verified buyers. Speak to the managing desk to receive the full dossier.
                 </p>
+                {isPlate(mandate) && (
+                  <p className="mt-3 font-sans text-[10px] uppercase tracking-[0.2em] text-[#7D8292]">
+                    Plate shown is illustrative, not a survey.
+                  </p>
+                )}
               </div>
 
               <div className="sticky bottom-0 -mx-6 md:-mx-10 mt-8 flex flex-row gap-2 sm:gap-3 bg-gradient-to-t from-[#F7F3EC] via-[#F7F3EC] to-transparent px-6 md:px-10 pt-6 pb-2">

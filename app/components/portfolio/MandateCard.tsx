@@ -124,11 +124,15 @@ export function MandateCard({
   index,
   onOpen,
   tall = false,
+  saved,
+  onToggleSave,
 }: {
   mandate: Mandate
   index: number
   onOpen: () => void
   tall?: boolean
+  saved?: boolean
+  onToggleSave?: () => void
 }) {
   const keys = useCardKeys(onOpen)
   const plate = isPlate(mandate)
@@ -177,11 +181,37 @@ export function MandateCard({
         <StatPills stats={mandate.stats} />
         <div className="mt-4 flex items-center justify-between border-t border-[#B0834A]/25 pt-4">
           <span className="font-serif italic text-[1.08rem] text-[#4A5163] line-clamp-1 pr-4">{mandate.tagline}</span>
-          <span onClick={e => e.stopPropagation()} className="shrink-0">
+          <span onClick={e => e.stopPropagation()} className="shrink-0 flex items-center gap-5">
+            {onToggleSave && <SaveToggle saved={!!saved} onToggle={onToggleSave} />}
             <EnquireLink href={whatsappLink(mandate.name)} />
           </span>
         </div>
       </div>
     </motion.article>
+  )
+}
+
+/** Shortlist toggle: a hollow diamond that fills when saved. */
+export function SaveToggle({ saved, onToggle, tone = 'dark' }: { saved: boolean; onToggle: () => void; tone?: 'dark' | 'light' }) {
+  return (
+    <button
+      type="button"
+      onClick={e => {
+        e.stopPropagation()
+        onToggle()
+      }}
+      aria-pressed={saved}
+      aria-label={saved ? 'Remove from shortlist' : 'Add to shortlist'}
+      className={`group/save inline-flex items-center gap-2 font-sans text-[10px] uppercase tracking-[0.26em] ${
+        tone === 'dark' ? 'text-[#4A5163] hover:text-[#15213A]' : 'text-white/75 hover:text-white'
+      }`}
+    >
+      <motion.span
+        animate={saved ? { scale: [1, 1.5, 1], rotate: 45 } : { scale: 1, rotate: 45 }}
+        transition={{ duration: 0.45 }}
+        className={`block h-2.5 w-2.5 border border-[#B0834A] transition-colors ${saved ? 'bg-[#B0834A]' : 'bg-transparent group-hover/save:bg-[#B0834A]/30'}`}
+      />
+      {saved ? 'Saved' : 'Save'}
+    </button>
   )
 }

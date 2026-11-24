@@ -9,8 +9,8 @@ import { DESK_PHONE_DISPLAY, telLink, whatsappLink } from '@/lib/mandates'
 
 const NAV = [
   { label: 'Home', href: '/' },
-  { label: 'Portfolio', href: '/properties' },
-  { label: 'Acquiring', href: '/#acquiring' },
+  { label: 'Properties', href: '/properties' },
+  { label: 'Land Check', href: '/feasibility' },
   { label: 'About', href: '/about' },
 ]
 
@@ -26,7 +26,7 @@ export function SiteHeader() {
     <>
       <nav
         className={`fixed top-0 left-0 right-0 z-50 transition-[background-color,border-color,padding] duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] ${
-          dark ? 'bg-transparent border-b border-transparent py-4' : 'bg-[#F7F3EC]/95 border-b border-[#B0834A]/25 py-2'
+          dark ? 'bg-transparent border-b border-transparent py-4' : 'bg-[#F7F3EC] border-b border-[#B0834A]/25 py-2 shadow-[0_10px_30px_-25px_rgba(21,33,58,0.5)]'
         }`}
       >
         <div className="max-w-7xl mx-auto px-6 sm:px-10 grid grid-cols-[1fr_auto_1fr] items-center">
@@ -74,7 +74,7 @@ export function SiteHeader() {
               href={whatsappLink('the Tharaga portfolio')}
               target="_blank"
               rel="noreferrer"
-              className={`group/e relative overflow-hidden border px-5 py-2.5 font-sans text-[10px] uppercase tracking-[0.28em] transition-colors duration-500 ${
+              className={`group/e relative inline-flex h-10 items-center overflow-hidden border-[1.5px] px-5 font-sans text-[10px] font-semibold uppercase tracking-[0.24em] transition-colors duration-200 ${
                 dark ? 'border-[#E6C9A0]/70 text-[#F7F3EC] hover:text-[#F7F3EC]' : 'border-[#15213A] text-[#15213A] hover:text-[#15213A]'
               }`}
             >

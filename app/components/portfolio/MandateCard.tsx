@@ -146,7 +146,7 @@ export function MandateCard({
       aria-label={`${mandate.name} — view details`}
       {...keys}
     >
-      <div className={`${FRAME} ${tall ? 'aspect-[4/5]' : 'aspect-[4/5] sm:aspect-[5/4]'}`}>
+      <div className={`${FRAME} ${tall ? 'aspect-[5/4] sm:aspect-[4/5]' : 'aspect-[5/4]'}`}>
         <div className="absolute inset-0 transition-transform duration-[1500ms] ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-[1.06]">
           <MandateVisual mandate={mandate} sizes="(min-width:1024px) 33vw, (min-width:640px) 50vw, 100vw" />
         </div>
@@ -159,7 +159,7 @@ export function MandateCard({
 
         <div className="absolute top-6 left-6 right-6 flex items-start justify-between gap-2">
           {mandate.badge ? <BadgeTag badge={mandate.badge} onDark /> : <span />}
-          <span className="font-sans text-[9px] uppercase tracking-[0.26em] text-[#F7F3EC]/80">
+          <span className="hidden font-sans text-[9px] uppercase tracking-[0.26em] text-[#F7F3EC]/80 sm:inline">
             {CATEGORY_LABELS[mandate.category]}
           </span>
         </div>
@@ -167,7 +167,7 @@ export function MandateCard({
         <div className="absolute inset-x-6 bottom-6 text-[#F7F3EC]">
           <p className="font-sans text-[9.5px] uppercase tracking-[0.28em] text-[#E6C9A0]">{mandate.location}</p>
           <h3 className="mt-2.5 font-display text-[1.3rem] sm:text-[1.4rem] leading-[1.22] tracking-[0.02em]">{mandate.name}</h3>
-          <div className="grid transition-[grid-template-rows] duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] lg:grid-rows-[0fr] lg:group-hover:grid-rows-[1fr] lg:group-focus-visible:grid-rows-[1fr]">
+          <div className="hidden transition-[grid-template-rows] duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] lg:grid lg:grid-rows-[0fr] lg:group-hover:grid-rows-[1fr] lg:group-focus-visible:grid-rows-[1fr]">
             <div className="overflow-hidden">
               <p className="pt-3 font-serif text-[1.08rem] leading-relaxed text-white/85 transition-all duration-700 lg:translate-y-3 lg:opacity-0 lg:group-hover:translate-y-0 lg:group-hover:opacity-100">
                 {mandate.teaser}
@@ -180,8 +180,8 @@ export function MandateCard({
       <div className="pt-5">
         <StatPills stats={mandate.stats} />
         <div className="mt-4 flex items-center justify-between border-t border-[#B0834A]/25 pt-4">
-          <span className="font-serif italic text-[1.08rem] text-[#4A5163] line-clamp-1 pr-4">{mandate.tagline}</span>
-          <span onClick={e => e.stopPropagation()} className="shrink-0 flex items-center gap-5">
+          <span className="hidden pr-4 font-serif text-[1.08rem] italic text-[#4A5163] line-clamp-1 sm:block">{mandate.tagline}</span>
+          <span onClick={e => e.stopPropagation()} className="flex w-full shrink-0 items-center justify-between gap-5 sm:w-auto sm:justify-end">
             {onToggleSave && <SaveToggle saved={!!saved} onToggle={onToggleSave} />}
             <EnquireLink href={whatsappLink(mandate.name)} />
           </span>

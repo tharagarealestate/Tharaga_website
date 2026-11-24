@@ -2,11 +2,12 @@
 
 import { useEffect, useState } from 'react'
 import { AnimatePresence, motion, useDragControls, type PanInfo } from 'framer-motion'
-import { X, Phone } from 'lucide-react'
+import { X } from 'lucide-react'
 import { CATEGORY_LABELS, DESK_PHONE_DISPLAY, telLink, whatsappLink, type Mandate } from '@/lib/mandates'
 import { BadgeTag, EASE, StatPills } from './primitives'
 import { MandateVisual, isPlate } from './MandateVisual'
 import { SaveToggle } from './MandateCard'
+import { Button } from '@/components/brand/Button'
 
 function useIsMobile() {
   const [mobile, setMobile] = useState(false)
@@ -103,7 +104,7 @@ export function MandateDetail({
               <div className={`absolute inset-0 bg-gradient-to-t ${isPlate(mandate) ? 'from-[#0E1729]/70 via-transparent' : 'from-[#0E1729]/85 via-transparent to-[#0E1729]/20'}`} />
               <div className="absolute left-6 right-6 bottom-6 text-[#F7F3EC]">
                 {mandate.badge && <BadgeTag badge={mandate.badge} onDark />}
-                <p className="mt-4 font-serif italic text-xl md:text-2xl leading-snug">“{mandate.tagline}”</p>
+                <p className="mt-4 font-serif italic text-xl md:text-2xl leading-snug text-[#F7F3EC]">“{mandate.tagline}”</p>
               </div>
             </div>
 
@@ -155,24 +156,15 @@ export function MandateDetail({
                 )}
               </div>
 
-              <div className="sticky bottom-0 -mx-6 md:-mx-10 mt-8 flex flex-row gap-2 sm:gap-3 bg-gradient-to-t from-[#F7F3EC] via-[#F7F3EC] to-transparent px-6 md:px-10 pt-6 pb-2">
-                <a
-                  href={whatsappLink(mandate.name)}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="flex-1 bg-[#15213A] px-4 sm:px-6 py-3.5 text-center font-sans text-[11px] uppercase tracking-[0.26em] text-[#F7F3EC] hover:bg-[#22314F] transition-colors"
-                >
+              <div className="sticky bottom-0 -mx-6 mt-8 grid grid-cols-2 gap-2 bg-gradient-to-t from-[#F7F3EC] via-[#F7F3EC] to-transparent px-6 pb-2 pt-6 sm:gap-3 md:-mx-10 md:px-10">
+                <Button full arrow href={whatsappLink(mandate.name)}>
                   <span className="sm:hidden">WhatsApp</span>
                   <span className="hidden sm:inline">Enquire on WhatsApp</span>
-                </a>
-                <a
-                  href={telLink}
-                  className="flex-1 flex items-center justify-center gap-2 whitespace-nowrap border border-[#B0834A]/60 px-4 sm:px-6 py-3.5 font-sans text-[11px] uppercase tracking-[0.26em] text-[#15213A] hover:bg-[#F4EFE6] transition-colors"
-                >
-                  <Phone className="h-3.5 w-3.5 text-[#94643A]" />
-                  <span className="sm:hidden">Call Desk</span>
+                </Button>
+                <Button full variant="secondary" href={telLink}>
+                  <span className="sm:hidden">Call us</span>
                   <span className="hidden sm:inline">{DESK_PHONE_DISPLAY}</span>
-                </a>
+                </Button>
               </div>
             </div>
           </motion.div>

@@ -10,10 +10,10 @@ import { CinematicHero } from '@/components/portfolio/CinematicHero'
 import { PortfolioShowcase } from '@/components/portfolio/PortfolioShowcase'
 import { Eyebrow, Grain } from '@/components/portfolio/primitives'
 import { TharagaWordmark } from '@/components/brand/TharagaWordmark'
+import { Button } from '@/components/brand/Button'
 import { SmoothScroll } from '@/components/brand/SmoothScroll'
 import { DESK_PHONE_DISPLAY, telLink, whatsappLink } from '@/lib/mandates'
 import { CommercialIntakeModal } from '@/components/commercial/CommercialIntakeModal'
-import { InstitutionalScreener } from '@/components/commercial/InstitutionalScreener'
 import { MandateTracker } from '@/components/commercial/MandateTracker'
 
 export default function HomePage() {
@@ -28,6 +28,16 @@ export default function HomePage() {
   const { scrollY } = useScroll()
   const [scrolled, setScrolled] = useState(false)
   useMotionValueEvent(scrollY, 'change', v => setScrolled(v > 48))
+
+  // Deep links from other pages: /?signin=1 opens sign-in, /?list=1 opens the listing form
+  useEffect(() => {
+    const q = new URLSearchParams(window.location.search)
+    const t = setTimeout(() => {
+      if (q.get('signin') === '1') openAuthModal()
+      if (q.get('list') === '1') setIsIntakeModalOpen(true)
+    }, 300)
+    return () => clearTimeout(t)
+  }, [])
 
   // Supabase Auth Integration
   useEffect(() => {
@@ -100,10 +110,10 @@ export default function HomePage() {
     .slice(0, 2) || 'P'
 
   const NAV = [
-    { label: 'Portfolio', href: '/properties' },
-    { label: 'Acquiring', href: '#acquiring' },
-    { label: 'Feasibility', href: '#feasibility' },
-    { label: 'The Standard', href: '#advisory' },
+    { label: 'Properties', href: '/properties' },
+    { label: 'Land Check', href: '/feasibility' },
+    { label: 'We Are Buying', href: '#acquiring' },
+    { label: 'About', href: '/about' },
   ]
   const onHero = !scrolled && !mobileNavOpen
 
@@ -116,7 +126,7 @@ export default function HomePage() {
         className={`fixed top-0 left-0 right-0 z-50 transition-[background-color,border-color,padding] duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] ${
           onHero
             ? 'bg-transparent border-b border-transparent py-4'
-            : 'bg-[#F7F3EC]/95 border-b border-[#B0834A]/25 py-2 shadow-[0_10px_30px_-25px_rgba(21,33,58,0.5)]'
+            : 'bg-[#F7F3EC] border-b border-[#B0834A]/25 py-2 shadow-[0_10px_30px_-25px_rgba(21,33,58,0.5)]'
         }`}
       >
         <div className="max-w-7xl mx-auto px-6 sm:px-10 grid grid-cols-[1fr_auto_1fr] items-center">
@@ -205,7 +215,7 @@ export default function HomePage() {
             )}
             <button
               onClick={() => setIsIntakeModalOpen(true)}
-              className={`group/list relative overflow-hidden border px-5 py-2.5 font-sans text-[10px] uppercase tracking-[0.28em] transition-colors duration-500 ${
+              className={`group/list relative inline-flex h-10 items-center overflow-hidden border-[1.5px] px-5 font-sans text-[10px] font-semibold uppercase tracking-[0.24em] transition-colors duration-200 ${
                 onHero ? 'border-[#E6C9A0]/70 text-[#F7F3EC]' : 'border-[#15213A] text-[#15213A]'
               }`}
             >
@@ -273,116 +283,154 @@ export default function HomePage() {
       {/* ── I. PORTFOLIO  ·  II. ACQUIRING ─────────────────────────── */}
       <PortfolioShowcase />
 
-      {/* ── III. FEASIBILITY ───────────────────────────────────────── */}
-      <section id="feasibility" className="py-24 sm:py-32 bg-[#EFE8DC] scroll-mt-20">
-        <div className="max-w-7xl mx-auto px-5 sm:px-8">
-          <div className="mb-14 max-w-3xl">
-            <Eyebrow numeral="III">Feasibility Study</Eyebrow>
-            <h2 className="mt-7 text-[#15213A]">
-              <span className="block font-display text-4xl sm:text-5xl tracking-[0.03em] leading-[1.1]">Before you buy land,</span>{' '}
-              <span className="block font-serif italic font-light text-5xl sm:text-6xl text-[#94643A]">know what it can carry.</span>
-            </h2>
-          </div>
-          <InstitutionalScreener />
-        </div>
-      </section>
-
-      {/* ── SELLER STATUS ──────────────────────────────────────────── */}
-      <section id="status" className="py-24 sm:py-28 bg-[#F7F3EC] border-t border-[#B0834A]/20 scroll-mt-20">
-        <div className="max-w-7xl mx-auto px-5 sm:px-8">
-          <MandateTracker user={user} onOpenIntake={() => setIsIntakeModalOpen(true)} />
-        </div>
-      </section>
-
-      {/* ── IV. THE STANDARD ───────────────────────────────────────── */}
-      <section id="advisory" className="relative overflow-hidden py-24 sm:py-32 bg-[#F7F3EC] border-t border-[#B0834A]/20 scroll-mt-20">
-        <div className="max-w-7xl mx-auto px-5 sm:px-8 grid gap-16 lg:grid-cols-12">
+      {/* ── III. LAND CHECK (teaser) ───────────────────────────────── */}
+      <section id="feasibility" className="scroll-mt-20 border-b border-[#B0834A]/20 bg-[#EFE8DC] py-20 sm:py-24">
+        <div className="mx-auto grid max-w-7xl gap-12 px-5 sm:px-8 lg:grid-cols-12 lg:items-center">
           <motion.div
-            initial={{ opacity: 0, y: 30 }}
+            initial={{ opacity: 0, y: 24 }}
             whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: '-80px' }}
-            transition={{ duration: 1, ease: [0.22, 1, 0.36, 1] }}
-            className="lg:col-span-5 lg:sticky lg:top-32 self-start"
+            viewport={{ once: true, margin: '-60px' }}
+            transition={{ duration: 0.9, ease: [0.22, 1, 0.36, 1] }}
+            className="lg:col-span-6"
           >
-            <Eyebrow numeral="IV">The Tharaga Standard</Eyebrow>
-            <h2 className="mt-7 text-[#15213A]">
-              <span className="block font-display text-4xl sm:text-5xl tracking-[0.03em] leading-[1.1]">Bespoke placement.</span>{' '}
-              <span className="block font-serif italic font-light text-5xl sm:text-6xl text-[#94643A]">Zero public noise.</span>
+            <Eyebrow numeral="III">Free land check</Eyebrow>
+            <h2 className="mt-6 text-[#15213A]">
+              <span className="block font-display text-[2rem] leading-[1.1] tracking-[0.03em] sm:text-[2.8rem]">Find out what your land</span>{' '}
+              <span className="block font-serif text-[2.5rem] font-light italic leading-[1.05] text-[#94643A] sm:text-[3.4rem]">is right for.</span>
             </h2>
-            <p className="mt-8 font-serif text-[1.3rem] leading-[1.6] text-[#2E3648] max-w-md">
-              We are not a classifieds portal. Tharaga Estates represents owners privately and places their assets directly
-              with corporate buyers and serious investors.
+            <p className="mt-6 max-w-lg font-serif text-[1.2rem] leading-[1.6] text-[#2E3648]">
+              Four questions. You get the checks to make, the Tamil Nadu approvals that apply, and the properties in our
+              portfolio that fit.
             </p>
+            <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+              <Button arrow href="/feasibility">
+                Start the land check
+              </Button>
+            </div>
           </motion.div>
 
-          <ol className="lg:col-span-7 border-t border-[#B0834A]/30">
+          <ol className="grid grid-cols-2 gap-px bg-[#D6CAB5] lg:col-span-6">
+            {[
+              ['I', 'Use', 'Solar, quarry, factory, homes…'],
+              ['II', 'Location', 'Anywhere in Tamil Nadu'],
+              ['III', 'Extent', 'From a plot to 100+ acres'],
+              ['IV', 'Stage', 'Exploring, buying or owning'],
+            ].map(([n, t, d]) => (
+              <li key={n} className="bg-[#F7F3EC] p-5 sm:p-7">
+                <span className="font-display text-sm text-[#B0834A]">{n}</span>
+                <p className="mt-3 font-sans text-[11px] font-semibold uppercase tracking-[0.22em] text-[#15213A]">{t}</p>
+                <p className="mt-1.5 font-serif text-[1.02rem] text-[#7D8292]">{d}</p>
+              </li>
+            ))}
+          </ol>
+        </div>
+      </section>
+
+      {/* ── IV. WHY THARAGA ────────────────────────────────────────── */}
+      <section id="advisory" className="scroll-mt-20 bg-[#F7F3EC] py-20 sm:py-24">
+        <div className="mx-auto max-w-7xl px-5 sm:px-8">
+          <div className="grid gap-8 lg:grid-cols-12 lg:items-end">
+            <div className="lg:col-span-7">
+              <Eyebrow numeral="IV">Why Tharaga</Eyebrow>
+              <h2 className="mt-6 text-[#15213A]">
+                <span className="block font-display text-[2rem] leading-[1.1] tracking-[0.03em] sm:text-[2.8rem]">Private placement,</span>{' '}
+                <span className="block font-serif text-[2.5rem] font-light italic leading-[1.05] text-[#94643A] sm:text-[3.4rem]">not public listing.</span>
+              </h2>
+            </div>
+            <p className="font-serif text-[1.2rem] leading-[1.6] text-[#2E3648] lg:col-span-5">
+              We are not a classifieds portal. We represent owners privately and introduce each property to the buyers best
+              placed to act.
+            </p>
+          </div>
+          <ol className="mt-12 grid gap-px bg-[#B0834A]/30 md:grid-cols-3">
             {[
               {
-                title: 'Direct corporate access',
-                desc: 'Quarries, solar land and large extents are placed directly with the decision desks of cement, energy and infrastructure companies — not broadcast to the market.',
+                title: 'We go straight to buyers',
+                desc: 'Land, quarries and energy assets go directly to the people who decide — not broadcast to the market.',
               },
               {
-                title: 'Technical underwriting',
-                desc: 'Every asset is assessed before it is shown: access and haulage, statutory zoning, title, and — where relevant — grid proximity or mineral data.',
+                title: 'We check before we show',
+                desc: 'Access, zoning, title and, where relevant, grid or mineral data are reviewed before a buyer sees a property.',
               },
               {
-                title: 'Total discretion',
-                desc: 'Owners decide what is disclosed and to whom. Locations, documents and pricing reach a buyer only after we have verified them.',
+                title: 'You control what is shared',
+                desc: 'Locations, documents and prices reach a buyer only after we have verified them.',
               },
-            ].map((col, i) => (
+            ].map((c, i) => (
               <motion.li
-                key={col.title}
-                initial={{ opacity: 0, y: 30 }}
+                key={c.title}
+                initial={{ opacity: 0, y: 24 }}
                 whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, margin: '-60px' }}
-                transition={{ duration: 0.9, ease: [0.22, 1, 0.36, 1], delay: i * 0.1 }}
-                className="group grid grid-cols-[4rem_1fr] gap-6 border-b border-[#B0834A]/30 py-10"
+                viewport={{ once: true, margin: '-40px' }}
+                transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1], delay: i * 0.08 }}
+                className="group bg-[#F7F3EC] p-7 sm:p-9"
               >
-                <span className="font-display text-4xl text-[#B0834A]/40 transition-colors duration-700 group-hover:text-[#B0834A]">
+                <span className="font-display text-3xl text-[#B0834A]/40 transition-colors duration-500 group-hover:text-[#B0834A]">
                   {['I', 'II', 'III'][i]}
                 </span>
-                <div>
-                  <h3 className="font-display text-xl sm:text-2xl tracking-[0.04em] text-[#15213A]">{col.title}</h3>
-                  <p className="mt-4 font-serif text-[1.18rem] leading-[1.6] text-[#4A5163]">{col.desc}</p>
-                </div>
+                <h3 className="mt-5 font-display text-[1.2rem] tracking-[0.04em] text-[#15213A]">{c.title}</h3>
+                <p className="mt-3 font-serif text-[1.1rem] leading-[1.6] text-[#4A5163]">{c.desc}</p>
               </motion.li>
             ))}
           </ol>
         </div>
       </section>
 
-      {/* ── V. THE DESK ────────────────────────────────────────────── */}
-      <section className="relative overflow-hidden bg-[#15213A] text-[#F7F3EC] py-28 sm:py-36">
+      {/* ── FOR OWNERS ─────────────────────────────────────────────── */}
+      <section id="status" className="scroll-mt-20 border-t border-[#B0834A]/20 bg-[#F7F3EC] pb-20 sm:pb-24">
+        <div className="mx-auto max-w-7xl px-5 pt-20 sm:px-8 sm:pt-24">
+          {user ? (
+            <MandateTracker user={user} onOpenIntake={() => setIsIntakeModalOpen(true)} />
+          ) : (
+            <div className="grid gap-10 border border-[#D6CAB5] bg-[#FBF8F2] p-7 sm:p-10 lg:grid-cols-12 lg:items-center">
+              <div className="lg:col-span-7">
+                <Eyebrow>For property owners</Eyebrow>
+                <h2 className="mt-5 text-[#15213A]">
+                  <span className="block font-display text-[1.8rem] leading-[1.15] tracking-[0.03em] sm:text-[2.4rem]">Sell or lease your property</span>{' '}
+                  <span className="block font-serif text-[2.2rem] font-light italic text-[#94643A] sm:text-[2.8rem]">— privately.</span>
+                </h2>
+                <p className="mt-5 max-w-lg font-serif text-[1.15rem] leading-[1.6] text-[#4A5163]">
+                  List it with us in a few minutes, then follow every step — review, verification and buyer interest — from
+                  your own account.
+                </p>
+              </div>
+              <div className="flex flex-col gap-3 sm:flex-row lg:col-span-5 lg:flex-col xl:flex-row lg:justify-end">
+                <Button arrow onClick={() => setIsIntakeModalOpen(true)}>
+                  List your property
+                </Button>
+                <Button variant="secondary" onClick={() => openAuthModal()}>
+                  Track my property
+                </Button>
+              </div>
+            </div>
+          )}
+        </div>
+      </section>
+
+      {/* ── V. CONTACT ─────────────────────────────────────────────── */}
+      <section className="relative overflow-hidden bg-[#15213A] py-24 text-[#F7F3EC] sm:py-28">
         <Grain opacity={0.12} />
-        <div aria-hidden className="pointer-events-none absolute inset-6 border border-[#E6C9A0]/15" />
-        <div className="relative max-w-4xl mx-auto px-6 text-center">
+        <div aria-hidden className="pointer-events-none absolute inset-4 border border-[#E6C9A0]/15 sm:inset-6" />
+        <div className="relative mx-auto max-w-4xl px-6 text-center">
           <div className="flex justify-center">
-            <Eyebrow numeral="V" light>The Managing Desk</Eyebrow>
+            <Eyebrow numeral="V" light>
+              Contact
+            </Eyebrow>
           </div>
-          <h2 className="mt-9 text-[#F7F3EC]">
-            <span className="block font-display text-4xl sm:text-6xl tracking-[0.04em] leading-[1.1]">A private conversation</span>{' '}
-            <span className="block font-serif italic font-light text-5xl sm:text-7xl text-[#E6C9A0]">begins here.</span>
+          <h2 className="mt-8 text-[#F7F3EC]">
+            <span className="block font-display text-[2.2rem] leading-[1.1] tracking-[0.04em] sm:text-6xl">Speak to us</span>{' '}
+            <span className="block font-serif text-[2.6rem] font-light italic text-[#E6C9A0] sm:text-7xl">directly.</span>
           </h2>
-          <p className="mt-8 font-serif text-[1.3rem] leading-[1.6] text-white/70 max-w-xl mx-auto">
-            For land acquisitions, asset sales and quarry concessions across Tamil Nadu — directly with the desk, in confidence.
+          <p className="mx-auto mt-7 max-w-xl font-serif text-[1.25rem] leading-[1.6] text-white/70">
+            Buying, selling or leasing land, energy or commercial property in Tamil Nadu — one call, in confidence.
           </p>
-          <div className="mt-12 flex flex-col sm:flex-row items-center justify-center gap-5">
-            <a
-              href={telLink}
-              className="group/d relative overflow-hidden border border-[#E6C9A0]/70 px-9 py-4 font-sans text-[10.5px] uppercase tracking-[0.3em] text-[#F7F3EC] hover:text-[#F7F3EC]"
-            >
-              <span className="absolute inset-0 origin-bottom scale-y-0 bg-[#F7F3EC] transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover/d:scale-y-100" />
-              <span className="relative transition-colors duration-500 group-hover/d:text-[#15213A]">Call {DESK_PHONE_DISPLAY}</span>
-            </a>
-            <a
-              href={whatsappLink('a commercial mandate or land parcel')}
-              target="_blank"
-              rel="noreferrer"
-              className="group/w relative py-2 font-sans text-[10.5px] uppercase tracking-[0.3em] text-[#E6C9A0]"
-            >
-              WhatsApp the desk →
-              <span className="absolute left-0 -bottom-px h-px w-full origin-left scale-x-0 bg-[#D9AE78] transition-transform duration-500 group-hover/w:scale-x-100" />
-            </a>
+          <div className="mt-10 flex flex-col items-stretch justify-center gap-3 sm:flex-row sm:items-center">
+            <Button variant="light" size="lg" arrow href={whatsappLink('buying, selling or leasing a property')}>
+              WhatsApp us
+            </Button>
+            <Button variant="outline-light" size="lg" href={telLink}>
+              Call {DESK_PHONE_DISPLAY}
+            </Button>
           </div>
         </div>
       </section>

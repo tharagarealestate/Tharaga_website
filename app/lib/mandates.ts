@@ -250,6 +250,17 @@ export const MANDATES: Mandate[] = [
     idealFor: 'Industrial buyers · Land investors',
     badge: { kind: 'curated', label: 'By Invitation' },
     plate: { caption: 'S. KUMARAPURAM', tone: 'navy' },
+    media: [
+      { kind: 'plan', src: '/properties/ottapidaram-land/parcel-plan.jpg', alt: 'S. Kumarapuram village map with the mandate parcels highlighted in copper and survey numbers blurred', caption: 'Village map — mandate parcels highlighted, survey numbers withheld' },
+    ],
+    facts: [
+      { label: 'Village', value: 'S. Kumarapuram' },
+      { label: 'Taluk', value: 'Ottapidaram' },
+      { label: 'District', value: 'Thoothukudi' },
+      { label: 'Maps', value: 'Survey-wise, parcel by parcel' },
+      { label: 'Extent', value: 'Shared on enquiry' },
+    ],
+    dossier: ['Survey-wise village maps', 'Land records summary', 'Guided site visit'],
   },
   {
     slug: 'padur-omr-13-acres',
@@ -364,7 +375,6 @@ export const MANDATES: Mandate[] = [
     highlights: ['6.7 acres quarry land + 7.7 acres crusher land', 'Complete line: jaw, cone, VSI, screens, washing, M-Sand', 'Pollution and quarry licences current', 'Ready to run or transfer'],
     idealFor: 'M-Sand and aggregate producers · Cement and infrastructure companies',
     badge: { kind: 'curated', label: 'Exclusively Curated' },
-    plate: { caption: '14.4 ACRES', tone: 'navy' },
     acres: 14.4,
     story:
       'A fully operational quarry and crusher plant across 14.4 acres in Karur — 6.7 acres of quarry land and 7.7 acres of crusher land, offered together. The production line runs from jaw crushing through cone crushing, VSI shaping, screening, washing and M-Sand processing, fed by fourteen conveyors. Pollution and quarry licence certificates are current, so the plant is ready to run or transfer.',
@@ -397,6 +407,120 @@ export const MANDATES: Mandate[] = [
       },
     ],
     dossier: ['Property detail sheet', 'Plant walkthrough videos', 'Licence copies on verification'],
+    media: [
+      { kind: 'video', src: '/properties/karur-quarry-crusher/crusher-plant.mp4', poster: '/properties/karur-quarry-crusher/crusher-plant.jpg', alt: 'The crusher line with its conveyors and screening towers on the Karur site', caption: 'The crusher line — filmed on site' },
+      { kind: 'photo', src: '/properties/karur-quarry-crusher/conveyors.jpg', alt: 'Conveyor belts feeding the VSI and screening units', caption: 'Conveyors feeding the VSI and screens' },
+      { kind: 'video', src: '/properties/karur-quarry-crusher/land-walk.mp4', poster: '/properties/karur-quarry-crusher/land-walk.jpg', alt: 'A walk across the open land with hills in the distance', caption: 'Walking the land', portrait: true },
+      { kind: 'photo', src: '/properties/karur-quarry-crusher/rock-outcrop.jpg', alt: 'Exposed rock sheet on the quarry land', caption: 'Exposed rock on the quarry land', portrait: true },
+    ],
+  },
+  {
+    slug: 'vellore-blue-metal-quarry',
+    name: 'Blue Metal Quarry, Anaicut',
+    category: 'quarry',
+    location: 'Anaicut',
+    region: 'Vellore District',
+    tagline: 'A working quarry with land to grow into.',
+    teaser: 'A blue metal quarry with 35 acres of patta quarry land, 10 acres of commercial land and a running crushing line.',
+    story:
+      'A working blue metal quarry in Anaicut taluk, about 28 km from Vellore bus stand. It holds a sanctioned 2.5-acre permit valid for five years, with a further 2.5 acres at the final stage of sanction. Behind it sit 35 acres of patta quarry land and 10 acres of commercial land that includes a petrol bunk. A 150 TPH jaw crusher and a 220 TPH cone crusher run on a 500 HP HT service with generator back-up.',
+    stats: ['45 acres patta land', 'Jaw 150 · Cone 220 TPH', 'Vellore'],
+    highlights: ['2.5-acre sanctioned permit, valid five years', 'Further 2.5 acres at final sanction stage', '35 acres patta quarry land + 10 acres commercial land with petrol bunk', '500 HP HT power with 500 kVA generator back-up'],
+    idealFor: 'Aggregate and M-Sand producers · Cement and infrastructure companies',
+    badge: { kind: 'curated', label: 'Exclusively Curated' },
+    acres: 45,
+    media: [
+      { kind: 'video', src: '/properties/vellore-blue-metal-quarry/quarry-walk.mp4', poster: '/properties/vellore-blue-metal-quarry/quarry-pit.jpg', alt: 'The quarry pit and the crushing line, filmed walking the site', caption: 'The quarry pit and plant — filmed on site', portrait: true },
+      { kind: 'video', src: '/properties/vellore-blue-metal-quarry/crusher.mp4', poster: '/properties/vellore-blue-metal-quarry/crusher.jpg', alt: 'The jaw crusher tower and conveyors', caption: 'Crusher tower and conveyors', portrait: true },
+      { kind: 'photo', src: '/properties/vellore-blue-metal-quarry/stockpile.jpg', alt: 'Aggregate stockpiles under the conveyor discharge', caption: 'Aggregate stockpiles', portrait: true },
+    ],
+    facts: [
+      { label: 'Permit', value: '2.5 acres sanctioned, 5-year validity' },
+      { label: 'In sanction', value: '2.5 acres, final stage' },
+      { label: 'Patta quarry land', value: '35 acres' },
+      { label: 'Commercial land', value: '10 acres incl. petrol bunk' },
+      { label: 'Distance', value: '28 km from Vellore bus stand' },
+    ],
+    specs: [
+      {
+        title: 'Plant & power',
+        rows: [
+          { label: 'Primary jaw crusher', value: '150 TPH' },
+          { label: 'Cone crusher', value: '220 TPH' },
+          { label: 'EB HT service', value: '500 HP' },
+          { label: 'EB LT service', value: '111 kVA', note: '2 connections' },
+          { label: 'Generator', value: '500 kVA', note: '2019 model' },
+        ],
+      },
+      {
+        title: 'Equipment on site (per quarry profile)',
+        rows: [
+          { label: 'Excavators', value: '2', note: 'Tata Hitachi · Komatsu PC 200' },
+          { label: 'Rock breakers', value: '2', note: 'ACT 1500 · ACT 1200' },
+          { label: 'Loaders', value: '2', note: 'JCB loader · JCB 225' },
+          { label: 'Tippers', value: '6', note: 'Tata 2518 · 1618 · 407E · 912E' },
+        ],
+      },
+    ],
+    nearby: [{ place: 'Vellore bus stand', distance: '28 km' }],
+    dossier: ['Quarry profile and permit details', 'Plant walkthrough videos', 'Guided site visit'],
+  },
+  {
+    slug: 'vengaimandalam-16-acres',
+    name: '16-Acre Land, Vengaimandalam',
+    category: 'land',
+    location: 'Vengaimandalam',
+    region: 'Tiruchirappalli District',
+    tagline: 'Sixteen green acres in the Cauvery country.',
+    teaser: 'Sixteen acres of open, green farmland with mature tree cover in Tiruchirappalli district.',
+    story:
+      'Sixteen acres of open land at Vengaimandalam in Tiruchirappalli district — level, green fields edged with mature trees and reached by a village road. Large, clean extents like this suit farmhouse estates, agri ventures and long-hold investors looking at the Tiruchirappalli growth belt.',
+    stats: ['16 acres', 'Open farmland', 'Tiruchirappalli'],
+    highlights: ['16 acres in one location', 'Level, green fields with mature trees', 'Village road access', 'Patta details shared with verified buyers'],
+    idealFor: 'Farmhouse and agri ventures · Long-hold land investors',
+    badge: { kind: 'scarcity', label: 'New Mandate' },
+    acres: 16,
+    media: [
+      { kind: 'video', src: '/properties/vengaimandalam-16-acres/field-walk.mp4', poster: '/properties/vengaimandalam-16-acres/field-walk.jpg', alt: 'A walk across the green fields of the 16-acre land', caption: 'Walking the fields — filmed on site', portrait: true },
+      { kind: 'photo', src: '/properties/vengaimandalam-16-acres/open-field.jpg', alt: 'Open green field framed by a neem tree', caption: 'Open fields under a wide sky' },
+      { kind: 'photo', src: '/properties/vengaimandalam-16-acres/shade-tree.jpg', alt: 'Mature shade tree on the land', caption: 'Mature tree cover', portrait: true },
+    ],
+    facts: [
+      { label: 'Extent', value: '16 acres' },
+      { label: 'Village', value: 'Vengaimandalam' },
+      { label: 'District', value: 'Tiruchirappalli' },
+      { label: 'Land', value: 'Open, level farmland' },
+      { label: 'Patta & survey', value: 'Shared with verified buyers' },
+    ],
+    dossier: ['Patta and survey details', 'Location pin and boundary walk', 'Guided site visit'],
+  },
+  {
+    slug: 'kattankulathur-plot',
+    name: 'Residential Plot, Kattankulathur',
+    category: 'land',
+    location: 'Kattankulathur · GST Road',
+    region: 'Chennai',
+    tagline: 'A clean plot, two minutes off GST Road.',
+    teaser: 'A 3,600 sq.ft residential plot behind A2B, Kattankulathur — 200 m from GST Road.',
+    story:
+      'A 3,600 sq.ft residential plot behind A2B in Kattankulathur, 200 metres from GST Road, inside an established layout. The SRM campus skyline rises just beyond the plot — one of the busiest education and employment corridors on Chennai\'s southern edge.',
+    stats: ['3,600 sq.ft', '200 m from GST Road', 'Kattankulathur'],
+    highlights: ['3,600 sq.ft (1.5 grounds)', '200 m from GST Road, behind A2B', 'Inside a residential layout with internal roads', 'SRM campus within sight'],
+    idealFor: 'Home builders · Rental investors near SRM',
+    badge: { kind: 'scarcity', label: 'New Mandate' },
+    media: [
+      { kind: 'video', src: '/properties/kattankulathur-plot/plot-walk.mp4', poster: '/properties/kattankulathur-plot/plot-walk.jpg', alt: 'The plot with the SRM campus skyline behind it', caption: 'The plot — filmed on site', portrait: true },
+      { kind: 'video', src: '/properties/kattankulathur-plot/gst-road.mp4', poster: '/properties/kattankulathur-plot/gst-road.jpg', alt: 'GST Road and the shops at the layout entrance', caption: 'GST Road, 200 m away', portrait: true },
+      { kind: 'photo', src: '/properties/kattankulathur-plot/skyline.jpg', alt: 'View across the plot to the city skyline', caption: 'View across the plot', portrait: true },
+      { kind: 'plan', src: '/properties/kattankulathur-plot/layout-plan.jpg', alt: 'Layout sketch with the plot highlighted in copper and plot numbers blurred', caption: 'Layout — the plot highlighted, numbers withheld' },
+    ],
+    facts: [
+      { label: 'Plot', value: '3,600 sq.ft (1.5 grounds)' },
+      { label: 'Location', value: 'Behind A2B, Kattankulathur' },
+      { label: 'GST Road', value: '200 m' },
+      { label: 'Use', value: 'Residential' },
+    ],
+    dossier: ['Layout copy and plot details', 'Title documents on verification', 'Site visit'],
   },
 
   // ── COMMERCIAL ───────────────────────────────────────────────────
@@ -528,11 +652,11 @@ export function whatsappLink(subject: string) {
 export const telLink = `tel:+${DESK_PHONE_E164}`
 
 /** Broad zone for filtering on the portfolio page. */
-export type Zone = 'Chennai' | 'South Tamil Nadu' | 'Location withheld'
+export type Zone = 'Chennai' | 'Across Tamil Nadu' | 'Location withheld'
 export function zoneOf(m: Mandate): Zone {
   if (m.region === 'Chennai') return 'Chennai'
   if (m.category === 'energy') return 'Location withheld'
-  return 'South Tamil Nadu'
+  return 'Across Tamil Nadu'
 }
 
 export function shortlistWhatsappLink(names: string[]) {

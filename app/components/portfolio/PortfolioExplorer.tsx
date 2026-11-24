@@ -22,7 +22,7 @@ import { Button } from '@/components/brand/Button'
 
 type View = 'gallery' | 'index'
 type Sort = 'curated' | 'extent' | 'az'
-const ZONES: ('all' | Zone)[] = ['all', 'Chennai', 'South Tamil Nadu', 'Location withheld']
+const ZONES: ('all' | Zone)[] = ['all', 'Chennai', 'Across Tamil Nadu', 'Location withheld']
 
 export function PortfolioExplorer() {
   const [category, setCategory] = useState<'all' | MandateCategory>('all')

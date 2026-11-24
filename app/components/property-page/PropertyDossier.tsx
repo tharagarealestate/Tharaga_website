@@ -605,7 +605,7 @@ export function PropertyDossier({ mandate }: { mandate: Mandate }) {
                 title="See it for yourself"
                 intro="Footage and photographs from the property, as shared by the owner. Tap any frame to view it full screen."
               />
-              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4">
+              <div className={`grid grid-cols-2 gap-3 sm:gap-4 ${shots.length === 4 ? 'sm:grid-cols-4' : shots.length === 2 ? 'sm:grid-cols-2' : 'sm:grid-cols-3'}`}>
                 {media.map((m, i) =>
                   m.kind === 'plan' ? null : (
                     <MediaThumb

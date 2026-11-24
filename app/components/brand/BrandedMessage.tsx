@@ -24,7 +24,7 @@ export function BrandedMessage({
       </Link>
       <p className="mt-14 font-display text-sm tracking-[0.4em] text-[#D9AE78]">{numeral}</p>
       <h1 className="mt-6">
-        <span className="block font-display text-4xl sm:text-6xl tracking-[0.04em]">{title}</span>
+        <span className="block font-display text-4xl sm:text-6xl tracking-[0.04em]">{title}</span>{' '}
         <span className="block font-serif italic font-light text-4xl sm:text-6xl text-[#E6C9A0]">{italic}</span>
       </h1>
       <p className="mt-8 max-w-md font-serif text-xl leading-relaxed text-white/70">{body}</p>

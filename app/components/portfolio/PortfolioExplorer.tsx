@@ -93,7 +93,7 @@ export function PortfolioExplorer() {
                     }
                   >
                     {line}
-                  </motion.span>
+                  </motion.span>{' '}
                 </span>
               ))}
               <span className="block overflow-hidden">
@@ -257,7 +257,7 @@ export function PortfolioExplorer() {
         <div className="relative max-w-5xl mx-auto px-6 text-center">
           <Eyebrow light>Off-market</Eyebrow>
           <h2 className="mt-8 text-[#F7F3EC]">
-            <span className="block font-display text-3xl sm:text-5xl tracking-[0.04em]">Some of our finest mandates</span>
+            <span className="block font-display text-3xl sm:text-5xl tracking-[0.04em]">Some of our finest mandates</span>{' '}
             <span className="block font-serif italic font-light text-4xl sm:text-6xl text-[#E6C9A0]">are never published.</span>
           </h2>
           <p className="mt-7 font-serif text-xl text-white/70 max-w-2xl mx-auto">

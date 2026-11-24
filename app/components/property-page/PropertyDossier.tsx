@@ -451,6 +451,8 @@ export function PropertyDossier({ mandate }: { mandate: Mandate }) {
   const media = useMemo(() => mandate.media ?? [], [mandate.media])
   const plans = media.filter(m => m.kind === 'plan')
   const shots = media.filter(m => m.kind !== 'plan')
+  const [galleryFilter, setGalleryFilter] = useState<'all' | 'video' | 'photo'>('all')
+  const visibleShots = galleryFilter === 'all' ? shots : shots.filter(m => m.kind === galleryFilter)
   const facts = mandate.facts ?? mandate.stats.map((s, i) => ({ label: ['Extent', 'Type', 'Location'][i] ?? 'Detail', value: s }))
   const related = relatedMandates(mandate)
   const wa = whatsappLink(mandate.name)
@@ -605,19 +607,42 @@ export function PropertyDossier({ mandate }: { mandate: Mandate }) {
                 title="See it for yourself"
                 intro="Footage and photographs from the property, as shared by the owner. Tap any frame to view it full screen."
               />
-              <div className={`grid grid-cols-2 gap-3 sm:gap-4 ${shots.length === 4 ? 'sm:grid-cols-4' : shots.length === 2 ? 'sm:grid-cols-2' : 'sm:grid-cols-3'}`}>
-                {media.map((m, i) =>
-                  m.kind === 'plan' ? null : (
+              {shots.some(m => m.kind === 'video') && shots.some(m => m.kind === 'photo') && shots.length > 4 && (
+                <div role="tablist" aria-label="Filter gallery" className="mb-6 flex flex-wrap gap-2">
+                  {([
+                    ['all', `All · ${shots.length}`],
+                    ['video', `Videos · ${shots.filter(m => m.kind === 'video').length}`],
+                    ['photo', `Photos · ${shots.filter(m => m.kind === 'photo').length}`],
+                  ] as const).map(([k, label]) => (
+                    <button
+                      key={k}
+                      type="button"
+                      role="tab"
+                      aria-selected={galleryFilter === k}
+                      onClick={() => setGalleryFilter(k)}
+                      className={`h-9 border px-4 font-sans text-[10px] uppercase tracking-[0.22em] transition-colors ${
+                        galleryFilter === k ? 'border-[#15213A] bg-[#15213A] text-[#F7F3EC]' : 'border-[#B0834A]/40 text-[#4A5163] hover:border-[#15213A] hover:text-[#15213A]'
+                      }`}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+              )}
+              <motion.div layout className={`grid grid-cols-2 gap-3 sm:gap-4 ${visibleShots.length === 4 ? 'sm:grid-cols-4' : visibleShots.length === 2 ? 'sm:grid-cols-2' : visibleShots.length === 1 ? 'sm:grid-cols-2' : 'sm:grid-cols-3'}`}>
+                {visibleShots.map((m, vi) => {
+                  const i = media.indexOf(m)
+                  return (
                     <MediaThumb
                       key={m.src}
                       item={m}
-                      index={i}
-                      onOpen={setLightbox}
-                      className={`${m.portrait ? 'aspect-[3/4]' : 'aspect-[4/3]'} ${i === 0 && shots.length % 2 === 1 ? 'col-span-2 !aspect-[4/5] sm:col-span-1 sm:!aspect-[3/4]' : ''}`}
+                      index={vi}
+                      onOpen={() => setLightbox(i)}
+                      className={`${m.portrait ? 'aspect-[3/4]' : 'aspect-[4/3]'} ${vi === 0 && visibleShots.length % 2 === 1 ? 'col-span-2 !aspect-[4/5] sm:col-span-1 sm:!aspect-[3/4]' : ''}`}
                     />
-                  ),
-                )}
-              </div>
+                  )
+                })}
+              </motion.div>
             </section>
           )}
 

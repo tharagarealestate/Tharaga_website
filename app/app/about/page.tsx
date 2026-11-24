@@ -8,7 +8,7 @@ import { Eyebrow, Grain } from '@/components/portfolio/primitives'
 import { ACQUISITION_BRIEFS, CATEGORY_LABELS, MANDATES, PORTFOLIO_ACRES, whatsappLink } from '@/lib/mandates'
 
 export const metadata: Metadata = {
-  title: 'About Us — Tharaga Estates',
+  title: 'About Us',
   description:
     'Tharaga Estates was founded in Chennai in 2024 by Nithish R. We represent owners of land, energy, quarry, commercial and residential property across Tamil Nadu — rooted like the vine, guided by the star.',
   alternates: { canonical: '/about' },
@@ -108,7 +108,7 @@ export default function AboutPage() {
             <span aria-hidden className="absolute -bottom-3 -right-3 hidden h-full w-full border border-[#B0834A]/50 sm:block" />
             <div className="relative aspect-[4/5] overflow-hidden bg-[#D6CAB5]">
               <Image
-                src="/brand/founder-nithish-r.jpg"
+                src="/brand/founder-nithish-r-v2.jpg"
                 alt="Nithish R, Founder of Tharaga Estates"
                 fill
                 sizes="(min-width:1024px) 40vw, 90vw"

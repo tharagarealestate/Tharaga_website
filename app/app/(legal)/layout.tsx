@@ -4,7 +4,7 @@ import { SiteFooter, SiteHeader } from '@/components/brand/SiteHeader'
 import { Grain } from '@/components/portfolio/primitives'
 
 export const metadata: Metadata = {
-  title: 'Legal | Tharaga Estates',
+  title: 'Legal',
   description: 'Privacy Policy, Terms of Service and Refund Policy of Tharaga Estates.',
 }
 

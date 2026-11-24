@@ -108,7 +108,7 @@ export default function AboutPage() {
             <span aria-hidden className="absolute -bottom-3 -right-3 hidden h-full w-full border border-[#B0834A]/50 sm:block" />
             <div className="relative aspect-[4/5] overflow-hidden bg-[#D6CAB5]">
               <Image
-                src="/brand/founder-nithish-r.jpg"
+                src="/brand/founder-nithish-r-v2.jpg"
                 alt="Nithish R, Founder of Tharaga Estates"
                 fill
                 sizes="(min-width:1024px) 40vw, 90vw"

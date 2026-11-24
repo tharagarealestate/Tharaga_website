@@ -183,6 +183,9 @@ export const MANDATES: Mandate[] = [
       { kind: 'video', src: '/properties/malaipatti-500-acres/site-walk.mp4', poster: '/properties/malaipatti-500-acres/field-horizon.jpg', alt: 'A slow walk across the open land at Malaipatti', caption: 'Site walk — filmed on the land', portrait: true },
       { kind: 'photo', src: '/properties/malaipatti-500-acres/field-palm.jpg', alt: 'Open, level farmland with a lone palmyra palm under a wide sky', caption: 'Level, open ground under a wide sky', portrait: true },
       { kind: 'photo', src: '/properties/malaipatti-500-acres/field-turbines.jpg', alt: 'Cleared land running to a flat horizon', caption: 'Cleared ground to the horizon', portrait: true },
+      { kind: 'photo', src: '/properties/malaipatti-500-acres/still-1.jpg', alt: 'Palmyra palm on open ground under scattered clouds', caption: 'A lone palmyra on the holding', portrait: true },
+      { kind: 'photo', src: '/properties/malaipatti-500-acres/still-3.jpg', alt: 'Level ground stretching to the horizon', caption: 'Level ground, end to end', portrait: true },
+      { kind: 'photo', src: '/properties/malaipatti-500-acres/still-4.jpg', alt: 'Wide sky over cleared land', caption: 'Wide sky, clear land', portrait: true },
       { kind: 'plan', src: '/properties/malaipatti-500-acres/parcel-plan.jpg', alt: 'Parcel plan of the 500-acre holding with survey numbers blurred', caption: 'Parcel plan — survey numbers withheld until verification' },
     ],
     facts: [
@@ -408,10 +411,15 @@ export const MANDATES: Mandate[] = [
     ],
     dossier: ['Property detail sheet', 'Plant walkthrough videos', 'Licence copies on verification'],
     media: [
-      { kind: 'video', src: '/properties/karur-quarry-crusher/crusher-plant.mp4', poster: '/properties/karur-quarry-crusher/crusher-plant.jpg', alt: 'The crusher line with its conveyors and screening towers on the Karur site', caption: 'The crusher line — filmed on site' },
-      { kind: 'photo', src: '/properties/karur-quarry-crusher/conveyors.jpg', alt: 'Conveyor belts feeding the VSI and screening units', caption: 'Conveyors feeding the VSI and screens' },
+      { kind: 'video', src: '/properties/karur-quarry-crusher/crusher-plant.mp4', poster: '/properties/karur-quarry-crusher/crusher-plant.jpg', alt: 'The crusher line with its conveyors and screening towers on the Karur site', caption: 'The crusher line — filmed on site', portrait: true },
+      { kind: 'photo', src: '/properties/karur-quarry-crusher/conveyors.jpg', alt: 'Conveyor belts feeding the VSI and screening units', caption: 'Conveyors feeding the VSI and screens', portrait: true },
       { kind: 'video', src: '/properties/karur-quarry-crusher/land-walk.mp4', poster: '/properties/karur-quarry-crusher/land-walk.jpg', alt: 'A walk across the open land with hills in the distance', caption: 'Walking the land', portrait: true },
       { kind: 'photo', src: '/properties/karur-quarry-crusher/rock-outcrop.jpg', alt: 'Exposed rock sheet on the quarry land', caption: 'Exposed rock on the quarry land', portrait: true },
+      { kind: 'photo', src: '/properties/karur-quarry-crusher/plant-1.jpg', alt: 'Feed hopper and primary crusher tower', caption: 'Feed hopper and primary crusher', portrait: true },
+      { kind: 'photo', src: '/properties/karur-quarry-crusher/plant-2.jpg', alt: 'VSI unit with conveyor gantries', caption: 'VSI and conveyor gantries', portrait: true },
+      { kind: 'photo', src: '/properties/karur-quarry-crusher/plant-3.jpg', alt: 'Screening house and stockpile area', caption: 'Screening house', portrait: true },
+      { kind: 'photo', src: '/properties/karur-quarry-crusher/land-1.jpg', alt: 'Open land under a cloudy sky', caption: 'The open land', portrait: true },
+      { kind: 'photo', src: '/properties/karur-quarry-crusher/land-3.jpg', alt: 'Gated entrance to the land', caption: 'Gated entrance', portrait: true },
     ],
   },
   {
@@ -433,6 +441,9 @@ export const MANDATES: Mandate[] = [
       { kind: 'video', src: '/properties/vellore-blue-metal-quarry/quarry-walk.mp4', poster: '/properties/vellore-blue-metal-quarry/quarry-pit.jpg', alt: 'The quarry pit and the crushing line, filmed walking the site', caption: 'The quarry pit and plant — filmed on site', portrait: true },
       { kind: 'video', src: '/properties/vellore-blue-metal-quarry/crusher.mp4', poster: '/properties/vellore-blue-metal-quarry/crusher.jpg', alt: 'The jaw crusher tower and conveyors', caption: 'Crusher tower and conveyors', portrait: true },
       { kind: 'photo', src: '/properties/vellore-blue-metal-quarry/stockpile.jpg', alt: 'Aggregate stockpiles under the conveyor discharge', caption: 'Aggregate stockpiles', portrait: true },
+      { kind: 'photo', src: '/properties/vellore-blue-metal-quarry/plant-2.jpg', alt: 'The jaw crusher tower', caption: 'Jaw crusher tower', portrait: true },
+      { kind: 'photo', src: '/properties/vellore-blue-metal-quarry/site-1.jpg', alt: 'Crusher structure behind trees at the site entrance', caption: 'At the site entrance', portrait: true },
+      { kind: 'photo', src: '/properties/vellore-blue-metal-quarry/site-2.jpg', alt: 'Conveyor gantry over the haul road', caption: 'Conveyor over the haul road', portrait: true },
     ],
     facts: [
       { label: 'Permit', value: '2.5 acres sanctioned, 5-year validity' },
@@ -482,8 +493,11 @@ export const MANDATES: Mandate[] = [
     acres: 16,
     media: [
       { kind: 'video', src: '/properties/vengaimandalam-16-acres/field-walk.mp4', poster: '/properties/vengaimandalam-16-acres/field-walk.jpg', alt: 'A walk across the green fields of the 16-acre land', caption: 'Walking the fields — filmed on site', portrait: true },
-      { kind: 'photo', src: '/properties/vengaimandalam-16-acres/open-field.jpg', alt: 'Open green field framed by a neem tree', caption: 'Open fields under a wide sky' },
+      { kind: 'photo', src: '/properties/vengaimandalam-16-acres/open-field.jpg', alt: 'Open green field framed by a neem tree', caption: 'Open fields under a wide sky', portrait: true },
       { kind: 'photo', src: '/properties/vengaimandalam-16-acres/shade-tree.jpg', alt: 'Mature shade tree on the land', caption: 'Mature tree cover', portrait: true },
+      { kind: 'photo', src: '/properties/vengaimandalam-16-acres/still-1.jpg', alt: 'Green fields with a tree line on the horizon', caption: 'Green fields to the tree line', portrait: true },
+      { kind: 'photo', src: '/properties/vengaimandalam-16-acres/still-2.jpg', alt: 'A footpath across the land', caption: 'Footpath across the land', portrait: true },
+      { kind: 'photo', src: '/properties/vengaimandalam-16-acres/still-3.jpg', alt: 'A large shade tree on the land', caption: 'A mature shade tree', portrait: true },
     ],
     facts: [
       { label: 'Extent', value: '16 acres' },
@@ -512,6 +526,9 @@ export const MANDATES: Mandate[] = [
       { kind: 'video', src: '/properties/kattankulathur-plot/plot-walk.mp4', poster: '/properties/kattankulathur-plot/plot-walk.jpg', alt: 'The plot with the SRM campus skyline behind it', caption: 'The plot — filmed on site', portrait: true },
       { kind: 'video', src: '/properties/kattankulathur-plot/gst-road.mp4', poster: '/properties/kattankulathur-plot/gst-road.jpg', alt: 'GST Road and the shops at the layout entrance', caption: 'GST Road, 200 m away', portrait: true },
       { kind: 'photo', src: '/properties/kattankulathur-plot/skyline.jpg', alt: 'View across the plot to the city skyline', caption: 'View across the plot', portrait: true },
+      { kind: 'photo', src: '/properties/kattankulathur-plot/plot-1.jpg', alt: 'The plot with a new building and the city skyline beyond', caption: 'The plot and its neighbourhood', portrait: true },
+      { kind: 'photo', src: '/properties/kattankulathur-plot/road-1.jpg', alt: 'GST Road service lane', caption: 'GST Road service lane', portrait: true },
+      { kind: 'photo', src: '/properties/kattankulathur-plot/street-1.jpg', alt: 'The street leading from GST Road to the layout', caption: 'The street in from GST Road', portrait: true },
       { kind: 'plan', src: '/properties/kattankulathur-plot/layout-plan.jpg', alt: 'Layout sketch with the plot highlighted in copper and plot numbers blurred', caption: 'Layout — the plot highlighted, numbers withheld' },
     ],
     facts: [

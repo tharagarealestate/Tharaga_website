@@ -4,6 +4,7 @@ import { useRef } from 'react'
 import Image from 'next/image'
 import { motion, useReducedMotion, useScroll, useTransform } from 'framer-motion'
 import { Grain, EASE } from './primitives'
+import { Button } from '@/components/brand/Button'
 import { ACQUISITION_BRIEFS, MANDATES, PORTFOLIO_ACRES } from '@/lib/mandates'
 
 const HERO_IMAGE =
@@ -59,7 +60,8 @@ export function CinematicHero({ onEnquire }: { onEnquire: () => void }) {
             className="mb-8 flex items-center gap-4 font-sans text-[10.5px] uppercase tracking-[0.4em] text-[#E6C9A0]"
           >
             <span className="h-px w-10 bg-[#D9AE78]" />
-            Tharaga Estates · Private Mandates · Tamil Nadu
+            <span className="sm:hidden">Tharaga Estates · Tamil Nadu</span>
+            <span className="hidden sm:inline">Tharaga Estates · Land & Property Advisors · Tamil Nadu</span>
           </motion.p>
 
           <h1 className="leading-[0.95]">
@@ -91,17 +93,17 @@ export function CinematicHero({ onEnquire }: { onEnquire: () => void }) {
             transition={{ duration: 1, ease: EASE, delay: 1.1 }}
             className="mt-10 grid gap-10 md:grid-cols-[1.15fr_1fr] md:items-end"
           >
-            <p className="max-w-xl font-serif text-xl sm:text-[1.45rem] leading-[1.5] text-white/80">
-              Hill estates, land banks, energy assets and city addresses — each represented privately, each shown only to
-              buyers we have verified. Pricing is shared in conversation, never in public.
+            <p className="max-w-xl font-serif text-[1.15rem] leading-[1.5] text-white/80 sm:text-[1.45rem]">
+              Land, energy and city property across Tamil Nadu — represented privately
+              <span className="hidden sm:inline">, and shown only to buyers we have verified. Pricing is shared in conversation, never in public</span>.
             </p>
 
             <div className="flex flex-col gap-8 md:items-end">
               <dl className="flex divide-x divide-[#E6C9A0]/25 font-sans">
                 {[
-                  { k: 'Mandates', v: MANDATES.length },
+                  { k: 'Properties', v: MANDATES.length },
                   { k: 'Acres', v: `${PORTFOLIO_ACRES.toLocaleString('en-IN')}+` },
-                  { k: 'Buyer briefs', v: ACQUISITION_BRIEFS.length },
+                  { k: 'Buyer requests', v: ACQUISITION_BRIEFS.length },
                 ].map((s, i) => (
                   <div key={s.k} className={`flex flex-col-reverse ${i === 0 ? 'pr-7' : 'px-7 last:pr-0'}`}>
                     <dt className="mt-2 text-[9.5px] uppercase tracking-[0.3em] text-white/55">{s.k}</dt>
@@ -109,21 +111,13 @@ export function CinematicHero({ onEnquire }: { onEnquire: () => void }) {
                   </div>
                 ))}
               </dl>
-              <div className="flex items-center gap-7">
-                <a
-                  href="/properties"
-                  className="group/hero relative overflow-hidden border border-[#E6C9A0]/70 px-8 py-3.5 font-sans text-[10.5px] uppercase tracking-[0.3em] text-[#F7F3EC] hover:text-[#F7F3EC]"
-                >
-                  <span className="absolute inset-0 origin-bottom scale-y-0 bg-[#F7F3EC] transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover/hero:scale-y-100" />
-                  <span className="relative transition-colors duration-500 group-hover/hero:text-[#15213A]">View the Portfolio</span>
-                </a>
-                <button
-                  onClick={onEnquire}
-                  className="group/cta relative py-1.5 font-sans text-[10.5px] uppercase tracking-[0.3em] text-[#F7F3EC]"
-                >
-                  Enquire Privately
-                  <span className="absolute left-0 -bottom-px h-px w-full origin-left scale-x-0 bg-[#D9AE78] transition-transform duration-500 group-hover/cta:scale-x-100" />
-                </button>
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+                <Button variant="light" arrow href="/properties">
+                  View properties
+                </Button>
+                <Button variant="outline-light" onClick={onEnquire}>
+                  Enquire privately
+                </Button>
               </div>
             </div>
           </motion.div>

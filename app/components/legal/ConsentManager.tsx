@@ -6,21 +6,36 @@ import { getSupabase } from '@/lib/supabase';
 import { UserConsent } from '@/types/legal';
 
 export function ConsentManager() {
-  const supabase = getSupabase();
+  const supabase = (() => {
+    try {
+      return getSupabase();
+    } catch {
+      return null;
+    }
+  })();
   const [consents, setConsents] = useState<UserConsent[]>([]);
   const [loading, setLoading] = useState(true);
+  const [signedIn, setSignedIn] = useState(false);
+  const [message, setMessage] = useState<string | null>(null);
 
   useEffect(() => {
     loadConsents();
   }, []);
 
   const loadConsents = async () => {
+    if (!supabase) {
+      setSignedIn(false);
+      setLoading(false);
+      return;
+    }
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
+        setSignedIn(false);
         setLoading(false);
         return;
       }
+      setSignedIn(true);
 
       const { data, error } = await supabase
         .from('user_consents')
@@ -32,12 +47,14 @@ export function ConsentManager() {
       setConsents(data || []);
     } catch (error) {
       console.error('Failed to load consents:', error);
+      setSignedIn(false);
     } finally {
       setLoading(false);
     }
   };
 
   const updateConsent = async (consentType: UserConsent['consent_type'], given: boolean) => {
+    if (!supabase) return;
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
@@ -50,10 +67,6 @@ export function ConsentManager() {
           consent_given: given,
           consent_timestamp: new Date().toISOString(),
           withdrawn_at: given ? null : new Date().toISOString(),
-          ip_address: await fetch('https://api.ipify.org?format=json')
-            .then(r => r.json())
-            .then(d => d.ip)
-            .catch(() => null),
           user_agent: navigator.userAgent
         }, {
           onConflict: 'user_id,consent_type'
@@ -63,14 +76,46 @@ export function ConsentManager() {
       await loadConsents();
     } catch (error) {
       console.error('Failed to update consent:', error);
-      alert('Failed to update consent. Please try again.');
+      setMessage('We could not save that change. Please try again in a moment.');
     }
   };
 
+  if (!loading && !signedIn) {
+    return (
+      <div className="bg-[#FBF8F2] border border-[#D6CAB5] p-6 sm:p-8">
+        <h3 className="font-display text-xl tracking-[0.04em] text-[#15213A]">Your consent choices</h3>
+        <p className="mt-4 font-serif text-[1.1rem] leading-relaxed text-[#2E3648]">
+          Consent records are stored against your account. Sign in to view or withdraw them. Your cookie choices on this
+          device can be changed at any time.
+        </p>
+        <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+          <button
+            type="button"
+            onClick={() => {
+              try {
+                localStorage.removeItem('tharaga_cookie_consent');
+              } catch {}
+              window.location.reload();
+            }}
+            className="h-12 px-7 bg-[#15213A] font-sans text-[10.5px] font-semibold uppercase tracking-[0.24em] text-[#F7F3EC] transition-colors duration-200 hover:bg-[#94643A]"
+          >
+            Change cookie choices
+          </button>
+          <a
+            href="/?signin=1"
+            className="inline-flex h-12 items-center justify-center px-7 border-[1.5px] border-[#15213A] font-sans text-[10.5px] font-semibold uppercase tracking-[0.24em] text-[#15213A] transition-colors duration-200 hover:bg-[#15213A] hover:text-[#F7F3EC]"
+          >
+            Sign in
+          </a>
+        </div>
+      </div>
+    );
+  }
+
   if (loading) {
     return (
-      <div className="backdrop-blur-xl bg-white/10 border border-white/20 rounded-2xl p-6">
-        <div className="animate-pulse text-white">Loading consent preferences...</div>
+      <div className="bg-[#FBF8F2] border border-[#D6CAB5] p-6 sm:p-8">
+        <div className="animate-pulse text-[#4A5163]">Loading consent preferences...</div>
       </div>
     );
   }
@@ -99,9 +144,9 @@ export function ConsentManager() {
   ];
 
   return (
-    <div className="backdrop-blur-xl bg-white/10 border border-white/20 rounded-2xl p-6">
-      <h3 className="text-xl font-bold text-white mb-4">Your Consent Preferences</h3>
-      <p className="text-gray-300 text-sm mb-6">
+    <div className="bg-[#FBF8F2] border border-[#D6CAB5] p-6 sm:p-8">
+      <h3 className="font-display text-xl tracking-[0.04em] text-[#15213A] mb-4">Your Consent Preferences</h3>
+      <p className="font-serif text-[1.1rem] text-[#2E3648] mb-6">
         Manage your consent preferences for data processing and communications.
       </p>
 
@@ -113,13 +158,13 @@ export function ConsentManager() {
           return (
             <div
               key={type}
-              className="flex items-start justify-between p-4 bg-white/5 rounded-lg border border-white/10"
+              className="flex items-start justify-between gap-6 p-5 border border-[#D6CAB5] bg-[#F7F3EC]"
             >
               <div className="flex-1">
-                <h4 className="font-semibold text-white mb-1">{label}</h4>
-                <p className="text-sm text-gray-400">{description}</p>
+                <h4 className="font-sans text-[11px] font-semibold uppercase tracking-[0.2em] text-[#15213A] mb-1">{label}</h4>
+                <p className="font-serif text-[1.02rem] text-[#4A5163]">{description}</p>
                 {consent && (
-                  <p className="text-xs text-gray-500 mt-2">
+                  <p className="font-sans text-[10px] uppercase tracking-[0.18em] text-[#7D8292] mt-2">
                     Last updated: {new Date(consent.consent_timestamp).toLocaleDateString('en-IN')}
                   </p>
                 )}
@@ -127,10 +172,10 @@ export function ConsentManager() {
               <div className="flex items-center gap-3">
                 <button
                   onClick={() => updateConsent(type, !isGiven)}
-                  className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                  className={`h-11 shrink-0 px-5 font-sans text-[10px] font-semibold uppercase tracking-[0.22em] transition-colors duration-200 ${
                     isGiven
-                      ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 hover:bg-emerald-500/30'
-                      : 'bg-slate-500/20 text-slate-300 border border-slate-500/30 hover:bg-slate-500/30'
+                      ? 'bg-[#15213A] text-[#F7F3EC] border border-[#15213A] hover:bg-[#94643A] hover:border-[#94643A]'
+                      : 'bg-transparent text-[#15213A] border-[1.5px] border-[#15213A] hover:bg-[#15213A] hover:text-[#F7F3EC]'
                   }`}
                 >
                   {isGiven ? (
@@ -151,10 +196,13 @@ export function ConsentManager() {
         })}
       </div>
 
-      <div className="mt-6 p-4 bg-yellow-500/10 border border-yellow-500/30 rounded-lg">
+      {message && (
+        <p role="alert" className="mt-4 font-serif text-[1.02rem] text-[#9B2C2C]">{message}</p>
+      )}
+      <div className="mt-6 p-4 border-l-2 border-[#B0834A] bg-[#EFE8DC]">
         <div className="flex items-start gap-3">
-          <AlertCircle className="w-5 h-5 text-yellow-400 flex-shrink-0 mt-0.5" />
-          <div className="text-sm text-yellow-200">
+          <AlertCircle className="w-5 h-5 text-[#94643A] flex-shrink-0 mt-0.5" />
+          <div className="font-serif text-[1.02rem] text-[#2E3648]">
             <p className="font-semibold mb-1">Note:</p>
             <p>
               You can withdraw your consent at any time. However, some consents are required for

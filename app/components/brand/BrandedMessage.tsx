@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { TharagaWordmark } from './TharagaWordmark'
 import { DESK_PHONE_DISPLAY, telLink } from '@/lib/mandates'
+import { Button } from './Button'
 
 /** Full-screen branded message used by the 404 and error pages. */
 export function BrandedMessage({
@@ -30,13 +31,9 @@ export function BrandedMessage({
       <p className="mt-8 max-w-md font-serif text-xl leading-relaxed text-white/70">{body}</p>
       <div className="mt-12 flex flex-col sm:flex-row items-center gap-6">
         {action}
-        <Link
-          href="/properties"
-          className="group/b relative overflow-hidden border border-[#E6C9A0]/70 px-8 py-3.5 font-sans text-[10.5px] uppercase tracking-[0.3em] text-[#F7F3EC] hover:text-[#F7F3EC]"
-        >
-          <span className="absolute inset-0 origin-bottom scale-y-0 bg-[#F7F3EC] transition-transform duration-500 group-hover/b:scale-y-100" />
-          <span className="relative transition-colors duration-500 group-hover/b:text-[#15213A]">View the portfolio</span>
-        </Link>
+        <Button variant="light" arrow href="/properties">
+          View properties
+        </Button>
         <a href={telLink} className="font-sans text-[10.5px] uppercase tracking-[0.3em] text-[#E6C9A0] hover:text-[#F7F3EC]">
           {DESK_PHONE_DISPLAY}
         </a>

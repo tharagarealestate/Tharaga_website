@@ -63,7 +63,7 @@ export function EnquireLink({
 export function BadgeTag({ badge, onDark = false }: { badge: Badge; onDark?: boolean }) {
   if (badge.kind === 'scarcity') {
     return (
-      <span className="inline-flex items-center gap-2 bg-[#B0834A] px-3 py-[5px] text-[9.5px] font-sans font-medium uppercase tracking-[0.24em] text-[#FBF7F0]">
+      <span className="inline-flex items-center gap-2 whitespace-nowrap bg-[#B0834A] px-3 py-[5px] text-[9.5px] font-sans font-medium uppercase tracking-[0.24em] text-[#FBF7F0]">
         <span className="h-1.5 w-1.5 rotate-45 bg-[#FBF7F0]" />
         {badge.label}
       </span>
@@ -71,7 +71,7 @@ export function BadgeTag({ badge, onDark = false }: { badge: Badge; onDark?: boo
   }
   return (
     <span
-      className={`inline-flex items-center gap-2 border px-3 py-[5px] text-[9.5px] font-sans uppercase tracking-[0.24em] ${
+      className={`inline-flex items-center gap-2 whitespace-nowrap border px-3 py-[5px] text-[9.5px] font-sans uppercase tracking-[0.24em] ${
         onDark ? 'border-[#E6C9A0]/60 bg-[#0E1729]/45 text-[#F0E2CC]' : 'border-[#B0834A]/50 bg-[#F7F3EC] text-[#7C5230]'
       }`}
     >
@@ -83,7 +83,7 @@ export function BadgeTag({ badge, onDark = false }: { badge: Badge; onDark?: boo
 /** Section eyebrow: a roman numeral, a copper rule and a spaced label. */
 export function Eyebrow({ numeral, children, light = false }: { numeral?: string; children: ReactNode; light?: boolean }) {
   return (
-    <p className={`flex items-center gap-4 font-sans text-[10.5px] uppercase tracking-[0.36em] ${light ? 'text-[#E6C9A0]' : 'text-[#94643A]'}`}>
+    <p className={`flex flex-wrap items-center gap-x-4 gap-y-2 font-sans text-[10px] uppercase tracking-[0.26em] sm:text-[10.5px] sm:tracking-[0.36em] ${light ? 'text-[#E6C9A0]' : 'text-[#94643A]'}`}>
       {numeral && <span className="font-display text-[13px] tracking-[0.1em]">{numeral}<span className="sr-only">. </span></span>}
       <span className={`h-px w-10 ${light ? 'bg-[#E6C9A0]/70' : 'bg-[#B0834A]'}`} />
       {children}

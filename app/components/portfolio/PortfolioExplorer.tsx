@@ -18,6 +18,7 @@ import { MandateCard, SaveToggle } from './MandateCard'
 import { MandateDetail } from './MandateDetail'
 import { MandateVisual } from './MandateVisual'
 import { BadgeTag, EASE, EnquireLink, Eyebrow, Grain } from './primitives'
+import { Button } from '@/components/brand/Button'
 
 type View = 'gallery' | 'index'
 type Sort = 'curated' | 'extent' | 'az'
@@ -77,10 +78,10 @@ export function PortfolioExplorer() {
         <div className="relative max-w-7xl mx-auto px-6 sm:px-10 grid gap-12 lg:grid-cols-12 lg:items-end">
           <div className="lg:col-span-8">
             <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.9, ease: EASE }}>
-              <Eyebrow light>The Portfolio · {MANDATES.length} Private Mandates</Eyebrow>
+              <Eyebrow light>All properties · {MANDATES.length} available</Eyebrow>
             </motion.div>
             <h1 className="mt-8">
-              {['Every address', 'chosen with intent,'].map((line, i) => (
+              {['Every property', 'we represent,'].map((line, i) => (
                 <span key={line} className="block overflow-hidden">
                   <motion.span
                     initial={{ y: '110%' }}
@@ -103,7 +104,7 @@ export function PortfolioExplorer() {
                   transition={{ duration: 1.2, ease: EASE, delay: 0.39 }}
                   className="block font-serif italic font-light text-[12vw] sm:text-7xl lg:text-[6.4rem] leading-[1.02] text-[#E6C9A0]"
                 >
-                  shown in confidence.
+                  in one place.
                 </motion.span>
               </span>
             </h1>
@@ -120,9 +121,9 @@ export function PortfolioExplorer() {
             </p>
             <dl className="flex divide-x divide-[#E6C9A0]/25">
               {[
-                { k: 'Mandates', v: MANDATES.length },
+                { k: 'Properties', v: MANDATES.length },
                 { k: 'Acres', v: `${PORTFOLIO_ACRES.toLocaleString('en-IN')}+` },
-                { k: 'Categories', v: categories.length - 1 },
+                { k: 'Property types', v: categories.length - 1 },
               ].map((s, i) => (
                 <div key={s.k} className={`flex flex-col-reverse ${i === 0 ? 'pr-6' : 'px-6'}`}>
                   <dt className="mt-2 font-sans text-[9.5px] uppercase tracking-[0.3em] text-white/50">{s.k}</dt>
@@ -160,8 +161,8 @@ export function PortfolioExplorer() {
               })}
             </LayoutGroup>
           </div>
-          <div className="flex flex-wrap md:flex-nowrap items-center gap-x-6 gap-y-3 border-t border-[#B0834A]/15 py-3">
-            <label className="flex basis-full md:basis-auto flex-1 min-w-[180px] items-center gap-3 border-b border-[#D6CAB5] focus-within:border-[#B0834A] transition-colors">
+          <div className="flex flex-wrap lg:flex-nowrap items-center gap-x-6 gap-y-3 border-t border-[#B0834A]/15 py-3">
+            <label className="flex basis-full lg:basis-auto flex-1 min-w-[180px] items-center gap-3 border-b border-[#D6CAB5] focus-within:border-[#B0834A] transition-colors">
               <span className="h-2 w-2 rotate-45 border border-[#B0834A]" aria-hidden />
               <input
                 value={query}
@@ -208,17 +209,17 @@ export function PortfolioExplorer() {
       <section className="bg-[#F7F3EC] pt-14 pb-32 min-h-[60vh]">
         <div className="max-w-7xl mx-auto px-5 sm:px-8">
           <p className="mb-10 font-sans text-[10px] uppercase tracking-[0.3em] text-[#7D8292]">
-            Showing <span className="text-[#15213A]">{list.length}</span> of {MANDATES.length} mandates
+            Showing <span className="text-[#15213A]">{list.length}</span> of {MANDATES.length} properties
           </p>
 
           {list.length === 0 ? (
             <div className="py-24 text-center">
               <p className="font-serif italic text-3xl text-[#4A5163]">Nothing matches — yet.</p>
               <p className="mt-4 font-serif text-lg text-[#7D8292]">
-                Many of our mandates are never listed. Tell the desk what you are looking for.
+                Many of our properties are never listed publicly. Tell us what you are looking for.
               </p>
               <div className="mt-8 flex justify-center">
-                <EnquireLink href={whatsappLink(`a requirement: ${query || 'unlisted assets'}`)}>Brief the desk</EnquireLink>
+                <EnquireLink href={whatsappLink(`a requirement: ${query || 'unlisted assets'}`)}>Tell us what you need</EnquireLink>
               </div>
             </div>
           ) : view === 'gallery' ? (
@@ -255,19 +256,19 @@ export function PortfolioExplorer() {
       <section className="relative overflow-hidden bg-[#15213A] text-[#F7F3EC] py-24">
         <Grain opacity={0.1} />
         <div className="relative max-w-5xl mx-auto px-6 text-center">
-          <Eyebrow light>Off-market</Eyebrow>
+          <Eyebrow light>Not listed publicly</Eyebrow>
           <h2 className="mt-8 text-[#F7F3EC]">
-            <span className="block font-display text-3xl sm:text-5xl tracking-[0.04em]">Some of our finest mandates</span>{' '}
+            <span className="block font-display text-3xl sm:text-5xl tracking-[0.04em]">Some of our finest properties</span>{' '}
             <span className="block font-serif italic font-light text-4xl sm:text-6xl text-[#E6C9A0]">are never published.</span>
           </h2>
           <p className="mt-7 font-serif text-xl text-white/70 max-w-2xl mx-auto">
-            Share what you are looking for — extent, district, use — and the desk will tell you what exists before it reaches
+            Tell us what you are looking for — size, district, use — and we will tell you what is available before it reaches
             any market.
           </p>
           <div className="mt-10 flex justify-center">
-            <EnquireLink tone="light" href={whatsappLink('an off-market requirement')}>
-              Request off-market access
-            </EnquireLink>
+            <Button variant="light" arrow href={whatsappLink('a property that is not listed publicly')}>
+              Ask about unlisted properties
+            </Button>
           </div>
         </div>
       </section>
@@ -353,16 +354,11 @@ export function PortfolioExplorer() {
               </ul>
               <div className="border-t border-[#B0834A]/25 px-7 py-6 space-y-4">
                 <p className="font-serif text-[1.05rem] text-[#4A5163]">
-                  Send your shortlist to the desk in one message. A principal will brief you on each — privately.
+                  Send your shortlist to the desk in one message. An advisor will brief you on each one — privately.
                 </p>
-                <a
-                  href={shortlistWhatsappLink(savedMandates.map(m => m.name))}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="block bg-[#15213A] py-4 text-center font-sans text-[10.5px] uppercase tracking-[0.28em] text-[#F7F3EC] hover:bg-[#22314F] hover:text-[#F7F3EC] transition-colors"
-                >
+                <Button full arrow href={shortlistWhatsappLink(savedMandates.map(m => m.name))}>
                   Request a private briefing
-                </a>
+                </Button>
                 <button onClick={shortlist.clear} className="w-full font-sans text-[9.5px] uppercase tracking-[0.24em] text-[#7D8292]">
                   Clear shortlist
                 </button>

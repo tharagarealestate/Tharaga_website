@@ -2,6 +2,7 @@
 
 import { useEffect } from 'react'
 import { BrandedMessage } from '@/components/brand/BrandedMessage'
+import { Button } from '@/components/brand/Button'
 
 export default function GlobalError({
   error,
@@ -21,12 +22,9 @@ export default function GlobalError({
       italic="on our side."
       body="Something did not load as it should. Please try again — or speak to the desk directly."
       action={
-        <button
-          onClick={reset}
-          className="font-sans text-[10.5px] uppercase tracking-[0.3em] text-[#F7F3EC] border-b border-[#D9AE78] pb-1"
-        >
+        <Button variant="outline-light" onClick={reset}>
           Try again
-        </button>
+        </Button>
       }
     />
   )

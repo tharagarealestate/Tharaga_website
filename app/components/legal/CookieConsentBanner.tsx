@@ -1,376 +1,184 @@
-'use client';
+'use client'
 
-import { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Cookie, Settings, X, Check } from 'lucide-react';
-import { CookiePreferences } from '@/types/legal';
-import { getSupabase } from '@/lib/supabase';
+import { useEffect, useState } from 'react'
+import { AnimatePresence, motion } from 'framer-motion'
+import Link from 'next/link'
+import type { CookiePreferences } from '@/types/legal'
+import { getSupabase } from '@/lib/supabase'
+import { Button } from '@/components/brand/Button'
 
-export function CookieConsentBanner() {
-  const supabase = getSupabase();
-  const [showBanner, setShowBanner] = useState(false);
-  const [showSettings, setShowSettings] = useState(false);
-  const [preferences, setPreferences] = useState<CookiePreferences>({
-    essential: true,
-    analytics: false,
-    marketing: false,
-    preferences: false
-  });
+const KEY = 'tharaga_cookie_consent'
 
-  useEffect(() => {
-    // Check if user has already consented
-    const consent = localStorage.getItem('tharaga_cookie_consent');
-    if (!consent) {
-      // Show banner after 2 seconds
-      const timer = setTimeout(() => setShowBanner(true), 2000);
-      return () => clearTimeout(timer);
-    } else {
-      // Load saved preferences
-      try {
-        const saved = JSON.parse(consent);
-        setPreferences(saved);
-      } catch (e) {
-        // Invalid saved data, show banner
-        setTimeout(() => setShowBanner(true), 2000);
-      }
-    }
-  }, []);
+/** Records consent in the background. Never blocks the UI and never throws. */
+function persistConsent(prefs: CookiePreferences) {
+  try {
+    localStorage.setItem(KEY, JSON.stringify(prefs))
+    localStorage.setItem(`${KEY}_date`, new Date().toISOString())
+  } catch {}
 
-  const handleAcceptAll = async () => {
-    const allAccepted = {
-      essential: true,
-      analytics: true,
-      marketing: true,
-      preferences: true
-    };
-    
-    await saveConsent(allAccepted);
-    setShowBanner(false);
-  };
+  const gtag = (window as any).gtag
+  if (gtag) {
+    gtag('consent', 'update', {
+      analytics_storage: prefs.analytics ? 'granted' : 'denied',
+      ad_storage: prefs.marketing ? 'granted' : 'denied',
+    })
+  }
 
-  const handleRejectAll = async () => {
-    const essentialOnly = {
-      essential: true,
-      analytics: false,
-      marketing: false,
-      preferences: false
-    };
-    
-    await saveConsent(essentialOnly);
-    setShowBanner(false);
-  };
-
-  const handleSavePreferences = async () => {
-    await saveConsent(preferences);
-    setShowBanner(false);
-    setShowSettings(false);
-  };
-
-  const saveConsent = async (prefs: CookiePreferences) => {
-    // Save to localStorage
-    localStorage.setItem('tharaga_cookie_consent', JSON.stringify(prefs));
-    localStorage.setItem('tharaga_cookie_consent_date', new Date().toISOString());
-
-    // Generate session ID
-    const sessionId = crypto.randomUUID();
-
-    // Save to database
+  // Fire-and-forget audit record; failures are ignored.
+  ;(async () => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      
+      const supabase = getSupabase()
+      const {
+        data: { user },
+      } = await supabase.auth.getUser()
       await supabase.from('cookie_consents').insert({
-        session_id: sessionId,
+        session_id: crypto.randomUUID(),
         user_id: user?.id || null,
-        essential_cookies: prefs.essential,
+        essential_cookies: true,
         analytics_cookies: prefs.analytics,
         marketing_cookies: prefs.marketing,
         preference_cookies: prefs.preferences,
-        ip_address: await fetch('https://api.ipify.org?format=json')
-          .then(r => r.json())
-          .then(d => d.ip)
-          .catch(() => null),
-        user_agent: navigator.userAgent
-      });
+        user_agent: navigator.userAgent,
+      })
+    } catch {}
+  })()
+}
 
-      // Initialize analytics if accepted
-      if (prefs.analytics && typeof window !== 'undefined') {
-        // Initialize Google Analytics
-        if ((window as any).gtag) {
-          (window as any).gtag('consent', 'update', {
-            'analytics_storage': 'granted'
-          });
-        }
-      }
+const OPTIONS: { key: keyof CookiePreferences; title: string; body: string; locked?: boolean }[] = [
+  { key: 'essential', title: 'Essential', body: 'Keep the site secure and remember your sign-in. Always on.', locked: true },
+  { key: 'analytics', title: 'Analytics', body: 'Anonymous visit statistics that help us improve the site.' },
+  { key: 'marketing', title: 'Marketing', body: 'Measure our advertising so we reach the right buyers.' },
+  { key: 'preferences', title: 'Preferences', body: 'Remember choices such as filters and your shortlist.' },
+]
 
-      // Initialize marketing if accepted
-      if (prefs.marketing && typeof window !== 'undefined') {
-        // Initialize Facebook Pixel, etc.
-        if ((window as any).gtag) {
-          (window as any).gtag('consent', 'update', {
-            'ad_storage': 'granted'
-          });
-        }
-      }
-    } catch (error) {
-      console.error('Failed to save cookie consent:', error);
+export function CookieConsentBanner() {
+  const [show, setShow] = useState(false)
+  const [settings, setSettings] = useState(false)
+  const [prefs, setPrefs] = useState<CookiePreferences>({
+    essential: true,
+    analytics: false,
+    marketing: false,
+    preferences: false,
+  })
+
+  useEffect(() => {
+    let saved: string | null = null
+    try {
+      saved = localStorage.getItem(KEY)
+    } catch {}
+    if (saved) {
+      try {
+        setPrefs(JSON.parse(saved))
+        return
+      } catch {}
     }
-  };
+    const t = setTimeout(() => setShow(true), 1200)
+    return () => clearTimeout(t)
+  }, [])
+
+  const decide = (p: CookiePreferences) => {
+    setShow(false) // close immediately; saving happens in the background
+    setSettings(false)
+    persistConsent(p)
+  }
 
   return (
     <AnimatePresence>
-      {showBanner && (
+      {show && (
         <motion.div
-          initial={{ y: 100, opacity: 0 }}
+          role="dialog"
+          aria-live="polite"
+          aria-label="Cookie preferences"
+          initial={{ y: 40, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
-          exit={{ y: 100, opacity: 0 }}
-          transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-          className="fixed bottom-0 left-0 right-0 z-50 p-4 sm:p-6"
+          exit={{ y: 40, opacity: 0 }}
+          transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
+          className="fixed inset-x-3 bottom-3 z-[90] sm:inset-x-6 sm:bottom-6"
         >
-          <div className="max-w-7xl mx-auto">
-            <div className="backdrop-blur-xl bg-white/10 border border-white/20 rounded-2xl p-6 sm:p-8 shadow-2xl">
-              {!showSettings ? (
-                // Simple Banner
-                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6">
-                  <div className="flex items-start gap-4 flex-1">
-                    <div className="p-3 bg-[#D4AF37]/10 rounded-xl">
-                      <Cookie className="w-6 h-6 text-[#D4AF37]" />
-                    </div>
-                    <div className="flex-1">
-                      <h3 className="text-lg font-semibold text-white mb-2">
-                        We Value Your Privacy
-                      </h3>
-                      <p className="text-sm text-gray-300 leading-relaxed">
-                        We use cookies to enhance your experience, analyze site traffic, and personalize content. 
-                        Essential cookies are required for core functionality. By clicking "Accept All", you consent 
-                        to our use of cookies. Visit our{' '}
-                        <a href="/privacy" className="text-[#D4AF37] hover:underline font-medium">
-                          Privacy Policy
-                        </a>{' '}
-                        to learn more.
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="flex flex-wrap sm:flex-nowrap items-center gap-3 w-full sm:w-auto">
-                    <button
-                      onClick={() => setShowSettings(true)}
-                      className="flex items-center gap-2 px-4 py-2 text-gray-300 hover:text-white font-medium transition-colors"
-                    >
-                      <Settings className="w-4 h-4" />
-                      Customize
-                    </button>
-                    <button
-                      onClick={handleRejectAll}
-                      className="px-6 py-2 bg-slate-500/20 hover:bg-slate-500/30 text-white font-medium rounded-lg transition-colors border border-slate-500/30"
-                    >
-                      Reject All
-                    </button>
-                    <button
-                      onClick={handleAcceptAll}
-                      className="px-6 py-2 bg-gradient-to-r from-[#D4AF37] to-[#1e40af] text-white font-medium rounded-lg hover:shadow-lg transition-all"
-                    >
-                      Accept All
-                    </button>
-                  </div>
+          <div className="mx-auto max-w-5xl border border-[#B0834A]/40 bg-[#F7F3EC] shadow-[0_30px_80px_-30px_rgba(14,23,41,0.55)]">
+            <div className="h-[3px] bg-[#15213A]" />
+            {!settings ? (
+              <div className="flex flex-col gap-6 p-6 sm:p-7 lg:flex-row lg:items-center lg:gap-10">
+                <div className="flex-1">
+                  <p className="font-display text-[15px] tracking-[0.06em] text-[#15213A]">Your privacy, your choice</p>
+                  <p className="mt-2 font-serif text-[1.08rem] leading-relaxed text-[#2E3648]">
+                    We use essential cookies to run this site, and — only with your consent — analytics and marketing
+                    cookies. Read our{' '}
+                    <Link href="/privacy" className="text-[#94643A] underline decoration-[#B0834A]/50 underline-offset-4 hover:text-[#15213A]">
+                      Privacy Policy
+                    </Link>
+                    .
+                  </p>
                 </div>
-              ) : (
-                // Settings Panel
-                <div>
-                  <div className="flex items-center justify-between mb-6">
-                    <h3 className="text-xl font-bold text-white">Cookie Preferences</h3>
-                    <button
-                      onClick={() => setShowSettings(false)}
-                      className="p-2 hover:bg-white/10 rounded-lg transition-colors text-white"
-                    >
-                      <X className="w-5 h-5" />
-                    </button>
-                  </div>
-
-                  <div className="space-y-4 mb-6">
-                    {/* Essential */}
-                    <div className="flex items-start justify-between p-4 bg-white/5 rounded-lg border border-white/10">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-1">
-                          <h4 className="font-semibold text-white">Essential Cookies</h4>
-                          <span className="px-2 py-0.5 bg-slate-500/20 text-xs font-medium rounded text-gray-300">Required</span>
-                        </div>
-                        <p className="text-sm text-gray-400">
-                          Necessary for authentication, security, and core functionality. Cannot be disabled.
-                        </p>
-                      </div>
-                      <div className="ml-4">
-                        <div className="w-12 h-6 bg-[#D4AF37] rounded-full flex items-center justify-end px-1">
-                          <div className="w-4 h-4 bg-white rounded-full"></div>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Analytics */}
-                    <div className="flex items-start justify-between p-4 bg-white/5 rounded-lg border border-white/10">
-                      <div className="flex-1">
-                        <h4 className="font-semibold text-white mb-1">Analytics Cookies</h4>
-                        <p className="text-sm text-gray-400">
-                          Help us understand how you use Tharaga to improve your experience. Uses Google Analytics with anonymized IPs.
-                        </p>
-                      </div>
-                      <div className="ml-4">
-                        <button
-                          onClick={() => setPreferences(p => ({ ...p, analytics: !p.analytics }))}
-                          className={`w-12 h-6 rounded-full transition-colors ${
-                            preferences.analytics ? 'bg-[#D4AF37]' : 'bg-slate-500/30'
-                          } flex items-center ${preferences.analytics ? 'justify-end' : 'justify-start'} px-1`}
-                        >
-                          <div className="w-4 h-4 bg-white rounded-full"></div>
-                        </button>
-                      </div>
-                    </div>
-
-                    {/* Marketing */}
-                    <div className="flex items-start justify-between p-4 bg-white/5 rounded-lg border border-white/10">
-                      <div className="flex-1">
-                        <h4 className="font-semibold text-white mb-1">Marketing Cookies</h4>
-                        <p className="text-sm text-gray-400">
-                          Track your activity for personalized ads on Google, Facebook, and LinkedIn. Help us show you relevant property listings.
-                        </p>
-                      </div>
-                      <div className="ml-4">
-                        <button
-                          onClick={() => setPreferences(p => ({ ...p, marketing: !p.marketing }))}
-                          className={`w-12 h-6 rounded-full transition-colors ${
-                            preferences.marketing ? 'bg-[#D4AF37]' : 'bg-slate-500/30'
-                          } flex items-center ${preferences.marketing ? 'justify-end' : 'justify-start'} px-1`}
-                        >
-                          <div className="w-4 h-4 bg-white rounded-full"></div>
-                        </button>
-                      </div>
-                    </div>
-
-                    {/* Preferences */}
-                    <div className="flex items-start justify-between p-4 bg-white/5 rounded-lg border border-white/10">
-                      <div className="flex-1">
-                        <h4 className="font-semibold text-white mb-1">Preference Cookies</h4>
-                        <p className="text-sm text-gray-400">
-                          Remember your settings like language, theme, and filter preferences for a personalized experience.
-                        </p>
-                      </div>
-                      <div className="ml-4">
-                        <button
-                          onClick={() => setPreferences(p => ({ ...p, preferences: !p.preferences }))}
-                          className={`w-12 h-6 rounded-full transition-colors ${
-                            preferences.preferences ? 'bg-[#D4AF37]' : 'bg-slate-500/30'
-                          } flex items-center ${preferences.preferences ? 'justify-end' : 'justify-start'} px-1`}
-                        >
-                          <div className="w-4 h-4 bg-white rounded-full"></div>
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-3">
-                    <button
-                      onClick={handleSavePreferences}
-                      className="flex-1 px-6 py-3 bg-gradient-to-r from-[#D4AF37] to-[#1e40af] text-white font-medium rounded-lg hover:shadow-lg transition-all flex items-center justify-center gap-2"
-                    >
-                      <Check className="w-5 h-5" />
-                      Save Preferences
-                    </button>
-                  </div>
+                <div className="grid grid-cols-2 gap-3 sm:flex sm:items-center">
+                  <button
+                    type="button"
+                    onClick={() => setSettings(true)}
+                    className="col-span-2 h-12 font-sans text-[10.5px] font-semibold uppercase tracking-[0.24em] text-[#4A5163] underline decoration-[#B0834A]/50 underline-offset-[6px] hover:text-[#15213A] sm:col-span-1 sm:px-3"
+                  >
+                    Preferences
+                  </button>
+                  <Button variant="secondary" onClick={() => decide({ essential: true, analytics: false, marketing: false, preferences: false })}>
+                    Essential only
+                  </Button>
+                  <Button onClick={() => decide({ essential: true, analytics: true, marketing: true, preferences: true })}>
+                    Accept all
+                  </Button>
                 </div>
-              )}
-            </div>
+              </div>
+            ) : (
+              <div className="p-6 sm:p-8">
+                <div className="flex items-start justify-between gap-6">
+                  <p className="font-display text-lg tracking-[0.06em] text-[#15213A]">Cookie preferences</p>
+                  <button
+                    type="button"
+                    onClick={() => setSettings(false)}
+                    className="font-sans text-[10px] font-semibold uppercase tracking-[0.24em] text-[#7D8292] hover:text-[#15213A]"
+                  >
+                    Back
+                  </button>
+                </div>
+                <ul className="mt-5 divide-y divide-[#D6CAB5] border-y border-[#D6CAB5]">
+                  {OPTIONS.map(o => {
+                    const on = o.locked || prefs[o.key]
+                    return (
+                      <li key={o.key} className="flex items-center justify-between gap-6 py-4">
+                        <div>
+                          <p className="font-sans text-[11px] font-semibold uppercase tracking-[0.2em] text-[#15213A]">{o.title}</p>
+                          <p className="mt-1 font-serif text-[1.02rem] text-[#4A5163]">{o.body}</p>
+                        </div>
+                        <button
+                          type="button"
+                          role="switch"
+                          aria-checked={on}
+                          aria-label={o.title}
+                          disabled={o.locked}
+                          onClick={() => setPrefs(p => ({ ...p, [o.key]: !p[o.key] }))}
+                          className={`relative h-7 w-12 shrink-0 border transition-colors duration-200 ${
+                            on ? 'border-[#15213A] bg-[#15213A]' : 'border-[#A9A190] bg-transparent'
+                          } ${o.locked ? 'opacity-60' : ''}`}
+                        >
+                          <span
+                            className={`absolute top-1/2 h-4 w-4 -translate-y-1/2 transition-all duration-200 ${
+                              on ? 'left-[26px] bg-[#E6C9A0]' : 'left-[4px] bg-[#A9A190]'
+                            }`}
+                          />
+                        </button>
+                      </li>
+                    )
+                  })}
+                </ul>
+                <div className="mt-6 grid grid-cols-1 gap-3 sm:flex sm:justify-end">
+                  <Button variant="secondary" onClick={() => decide({ essential: true, analytics: false, marketing: false, preferences: false })}>
+                    Essential only
+                  </Button>
+                  <Button onClick={() => decide({ ...prefs, essential: true })}>Save my choices</Button>
+                </div>
+              </div>
+            )}
           </div>
         </motion.div>
       )}
     </AnimatePresence>
-  );
+  )
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

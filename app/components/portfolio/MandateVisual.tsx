@@ -17,6 +17,19 @@ export function MandateVisual({
   priority?: boolean
   className?: string
 }) {
+  const real = realStill(mandate)
+  if (real) {
+    return (
+      <Image
+        src={real.src}
+        alt={real.alt}
+        fill
+        priority={priority}
+        sizes={sizes}
+        className={`object-cover tharaga-grade ${className}`}
+      />
+    )
+  }
   if (mandate.plate || !mandate.image) {
     return (
       <div className={`absolute inset-0 ${className}`}>
@@ -41,4 +54,14 @@ export function MandateVisual({
   )
 }
 
-export const isPlate = (m: Mandate) => Boolean(m.plate || !m.image)
+/** First real still for a mandate: a site photo, else a video poster. */
+export function realStill(m: Mandate): { src: string; alt: string } | null {
+  const media = m.media ?? []
+  const video = media.find(x => x.kind === 'video' && x.poster)
+  if (video?.poster) return { src: video.poster, alt: video.alt }
+  const photo = media.find(x => x.kind === 'photo')
+  if (photo) return { src: photo.src, alt: photo.alt }
+  return null
+}
+
+export const isPlate = (m: Mandate) => !realStill(m) && Boolean(m.plate || !m.image)

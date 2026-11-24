@@ -1,5 +1,6 @@
 'use client'
 
+import { useRouter } from 'next/navigation'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { AnimatePresence, LayoutGroup, motion, useMotionValue, useSpring } from 'framer-motion'
 import {
@@ -15,7 +16,6 @@ import {
 } from '@/lib/mandates'
 import { useShortlist } from '@/lib/useShortlist'
 import { MandateCard, SaveToggle } from './MandateCard'
-import { MandateDetail } from './MandateDetail'
 import { MandateVisual } from './MandateVisual'
 import { BadgeTag, EASE, EnquireLink, Eyebrow, Grain } from './primitives'
 import { Button } from '@/components/brand/Button'
@@ -30,25 +30,18 @@ export function PortfolioExplorer() {
   const [query, setQuery] = useState('')
   const [sort, setSort] = useState<Sort>('curated')
   const [view, setView] = useState<View>('gallery')
-  const [open, setOpen] = useState<Mandate | null>(null)
+  const router = useRouter()
   const [drawer, setDrawer] = useState(false)
   const shortlist = useShortlist()
 
-  // Deep links: /properties?m=<slug> opens that dossier
+  // Legacy deep links (/properties?m=<slug>) now go to the property's own page
   useEffect(() => {
     const slug = new URLSearchParams(window.location.search).get('m')
-    const m = slug && MANDATES.find(x => x.slug === slug)
-    if (m) setOpen(m)
-  }, [])
+    if (slug && MANDATES.some(x => x.slug === slug)) router.replace(`/properties/${slug}`)
+  }, [router])
   const openMandate = useCallback((m: Mandate | null) => {
-    setOpen(m)
-    try {
-      const url = new URL(window.location.href)
-      if (m) url.searchParams.set('m', m.slug)
-      else url.searchParams.delete('m')
-      window.history.replaceState(null, '', url.toString())
-    } catch {}
-  }, [])
+    if (m) router.push(`/properties/${m.slug}`)
+  }, [router])
 
   const list = useMemo(() => {
     const q = query.trim().toLowerCase()
@@ -368,12 +361,6 @@ export function PortfolioExplorer() {
         )}
       </AnimatePresence>
 
-      <MandateDetail
-        mandate={open}
-        onClose={() => openMandate(null)}
-        saved={open ? shortlist.has(open.slug) : false}
-        onToggleSave={open ? () => shortlist.toggle(open.slug) : undefined}
-      />
     </>
   )
 }

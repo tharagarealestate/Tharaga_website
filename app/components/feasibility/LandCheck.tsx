@@ -182,7 +182,7 @@ export function LandCheck({ onOpenMandate }: { onOpenMandate?: (m: Mandate) => v
                       <button
                         key={m.slug}
                         type="button"
-                        onClick={() => (onOpenMandate ? onOpenMandate(m) : (window.location.href = `/properties?m=${m.slug}`))}
+                        onClick={() => (onOpenMandate ? onOpenMandate(m) : (window.location.href = `/properties/${m.slug}`))}
                         className="group text-left"
                       >
                         <span className="relative block aspect-[4/3] overflow-hidden bg-[#E4DACA]">

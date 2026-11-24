@@ -25,6 +25,8 @@ import PropertySectionNav from '@/components/property/PropertySectionNav'
 import MobileContactBar from '@/components/property/MobileContactBar'
 import { getSupabase } from '@/lib/supabase'
 import { cn } from '@/lib/utils'
+import { getMandate, MANDATES, type Mandate } from '@/lib/mandates'
+import { PropertyDossier } from '@/components/property-page/PropertyDossier'
 
 export const revalidate = 300
 
@@ -177,7 +179,33 @@ async function fetchReviews(supabase: ReturnType<typeof getSupabase>, propertyId
 }
 
 // ── Metadata ───────────────────────────────────────────────────────────────────
+export function generateStaticParams() {
+  return MANDATES.map(m => ({ id: m.slug }))
+}
+
+function mandateOgImage(m: Mandate) {
+  const shot = m.media?.find(x => x.kind === 'photo')?.src || m.media?.find(x => x.kind === 'video')?.poster
+  if (shot) return `https://tharaga.in${shot}`
+  if (m.image && !m.plate) return m.image
+  return 'https://tharaga.in/brand/tharaga-og.jpg'
+}
+
+function mandateMetadata(m: Mandate): Metadata {
+  const url = `https://tharaga.in/properties/${m.slug}`
+  const description = `${m.teaser} ${m.location}, ${m.region}. Enquire with Tharaga Estates.`
+  const image = mandateOgImage(m)
+  return {
+    title: m.name,
+    description,
+    alternates: { canonical: url },
+    openGraph: { title: `${m.name} · Tharaga Estates`, description, url, type: 'website', siteName: 'Tharaga Estates', locale: 'en_IN', images: [{ url: image, alt: m.name }] },
+    twitter: { card: 'summary_large_image', title: m.name, description, images: [image] },
+  }
+}
+
 export async function generateMetadata({ params }: { params: { id: string } }): Promise<Metadata> {
+  const mandate = getMandate(params.id)
+  if (mandate) return mandateMetadata(mandate)
   const data = await fetchProperty(params.id)
   if (!data?.property) return {}
   const p = data.property
@@ -606,6 +634,25 @@ function EngagementTracker({ propertyId }: { propertyId: string }) {
 
 // ── Main page ─────────────────────────────────────────────────────────────────
 export default async function PropertyPage({ params }: { params: { id: string } }) {
+  const mandate = getMandate(params.id)
+  if (mandate) {
+    const ld = {
+      '@context': 'https://schema.org',
+      '@type': 'RealEstateListing',
+      name: mandate.name,
+      description: mandate.story,
+      url: `https://tharaga.in/properties/${mandate.slug}`,
+      image: mandateOgImage(mandate),
+      address: { '@type': 'PostalAddress', addressLocality: mandate.location, addressRegion: mandate.region, addressCountry: 'IN' },
+      provider: { '@type': 'RealEstateAgent', name: 'Tharaga Estates', telephone: '+91-88709-80839', url: 'https://tharaga.in' },
+    }
+    return (
+      <>
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(ld) }} />
+        <PropertyDossier mandate={mandate} />
+      </>
+    )
+  }
   const data = await fetchProperty(params.id)
   if (!data?.property) notFound()
   const { property: p, builder, similar, reviews } = data

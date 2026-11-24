@@ -89,6 +89,7 @@ export function SurveyPlate({
       preserveAspectRatio="xMidYMid slice"
       className="absolute inset-0 h-full w-full"
       role="img"
+      focusable="false"
       aria-label={`Survey plate — ${label}`}
     >
       <defs>
@@ -133,7 +134,7 @@ export function SurveyPlate({
       <g transform="translate(690 300)">
         <circle r="30" fill="none" stroke={strong} strokeWidth="1" />
         <path d="M0,-24 L7,6 L0,0 L-7,6 Z" fill={strong} />
-        <text y="-38" textAnchor="middle" fontFamily="Cinzel, serif" fontSize="16" fill={strong}>N</text>
+        <text y="-38" textAnchor="middle" fontFamily="Cinzel, serif" fontSize="16" fill={strong} aria-hidden="true">N</text>
       </g>
 
       <rect width={W} height={H} fill={`url(#${id}-vig)`} />

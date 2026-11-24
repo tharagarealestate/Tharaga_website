@@ -72,7 +72,7 @@ export function CinematicHero({ onEnquire }: { onEnquire: () => void }) {
               >
                 Land that
               </motion.span>
-            </span>
+            </span>{' '}
             <span className="block overflow-hidden pb-2">
               <motion.span
                 className="block font-serif italic font-light text-[15vw] sm:text-8xl md:text-[7.5rem] lg:text-[9.4rem] text-[#E6C9A0] -mt-1 sm:-mt-3"

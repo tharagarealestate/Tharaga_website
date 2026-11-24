@@ -53,7 +53,7 @@ export function PortfolioShowcase({ showBriefs = true }: { showBriefs?: boolean 
               <h2 className="mt-7 text-[#15213A]">
                 <span className="block font-display text-[2.6rem] sm:text-6xl md:text-[4.4rem] leading-[1.02] tracking-[0.03em]">
                   Exclusively curated.
-                </span>
+                </span>{' '}
                 <span className="block font-serif italic font-light text-5xl sm:text-7xl md:text-[5.4rem] leading-[1] text-[#94643A]">
                   Privately offered.
                 </span>
@@ -170,7 +170,7 @@ export function PortfolioShowcase({ showBriefs = true }: { showBriefs?: boolean 
               <motion.div {...reveal} className="lg:col-span-4">
                 <Eyebrow numeral="II" light>Currently Acquiring</Eyebrow>
                 <h2 className="mt-7 text-[#F7F3EC]">
-                  <span className="block font-display text-4xl sm:text-5xl tracking-[0.03em] leading-[1.08]">Our buyers</span>
+                  <span className="block font-display text-4xl sm:text-5xl tracking-[0.03em] leading-[1.08]">Our buyers</span>{' '}
                   <span className="block font-serif italic font-light text-5xl sm:text-6xl text-[#E6C9A0]">are waiting.</span>
                 </h2>
                 <p className="mt-7 font-serif text-[1.2rem] leading-[1.6] text-white/70">

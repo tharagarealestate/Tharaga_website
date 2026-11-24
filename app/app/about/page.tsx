@@ -49,7 +49,7 @@ export default function AboutPage() {
           <h1 className="mt-9">
             <span className="block font-display text-4xl sm:text-6xl lg:text-7xl tracking-[0.04em] leading-[1.08]">
               Rooted in land.
-            </span>
+            </span>{' '}
             <span className="block font-serif italic font-light text-5xl sm:text-7xl lg:text-[5.6rem] text-[#E6C9A0]">
               Built on discretion.
             </span>
@@ -66,7 +66,7 @@ export default function AboutPage() {
           <div className="lg:col-span-5 lg:sticky lg:top-32 self-start">
             <Eyebrow numeral="I">The name</Eyebrow>
             <h2 className="mt-7">
-              <span className="block font-display text-3xl sm:text-4xl tracking-[0.04em] text-[#15213A]">Thaa·ra·gaa</span>
+              <span className="block font-display text-3xl sm:text-4xl tracking-[0.04em] text-[#15213A]">Thaa·ra·gaa</span>{' '}
               <span className="block font-serif italic font-light text-4xl sm:text-5xl text-[#94643A]">தாரகா</span>
             </h2>
             <p className="mt-7 font-serif text-[1.25rem] leading-[1.6] text-[#2E3648] max-w-md">
@@ -119,7 +119,7 @@ export default function AboutPage() {
       <section className="py-24 text-center">
         <div className="max-w-3xl mx-auto px-6">
           <h2>
-            <span className="block font-display text-3xl sm:text-5xl tracking-[0.04em] text-[#15213A]">Own something worth placing?</span>
+            <span className="block font-display text-3xl sm:text-5xl tracking-[0.04em] text-[#15213A]">Own something worth placing?</span>{' '}
             <span className="block font-serif italic font-light text-4xl sm:text-6xl text-[#94643A]">Let us talk, privately.</span>
           </h2>
           <div className="mt-12 flex flex-col sm:flex-row items-center justify-center gap-8">

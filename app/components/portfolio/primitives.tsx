@@ -84,7 +84,7 @@ export function BadgeTag({ badge, onDark = false }: { badge: Badge; onDark?: boo
 export function Eyebrow({ numeral, children, light = false }: { numeral?: string; children: ReactNode; light?: boolean }) {
   return (
     <p className={`flex items-center gap-4 font-sans text-[10.5px] uppercase tracking-[0.36em] ${light ? 'text-[#E6C9A0]' : 'text-[#94643A]'}`}>
-      {numeral && <span className="font-display text-[13px] tracking-[0.1em]">{numeral}</span>}
+      {numeral && <span className="font-display text-[13px] tracking-[0.1em]">{numeral}<span className="sr-only">. </span></span>}
       <span className={`h-px w-10 ${light ? 'bg-[#E6C9A0]/70' : 'bg-[#B0834A]'}`} />
       {children}
     </p>

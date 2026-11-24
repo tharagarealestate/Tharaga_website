@@ -279,7 +279,7 @@ export default function HomePage() {
           <div className="mb-14 max-w-3xl">
             <Eyebrow numeral="III">Feasibility Study</Eyebrow>
             <h2 className="mt-7 text-[#15213A]">
-              <span className="block font-display text-4xl sm:text-5xl tracking-[0.03em] leading-[1.1]">Before you buy land,</span>
+              <span className="block font-display text-4xl sm:text-5xl tracking-[0.03em] leading-[1.1]">Before you buy land,</span>{' '}
               <span className="block font-serif italic font-light text-5xl sm:text-6xl text-[#94643A]">know what it can carry.</span>
             </h2>
           </div>
@@ -306,7 +306,7 @@ export default function HomePage() {
           >
             <Eyebrow numeral="IV">The Tharaga Standard</Eyebrow>
             <h2 className="mt-7 text-[#15213A]">
-              <span className="block font-display text-4xl sm:text-5xl tracking-[0.03em] leading-[1.1]">Bespoke placement.</span>
+              <span className="block font-display text-4xl sm:text-5xl tracking-[0.03em] leading-[1.1]">Bespoke placement.</span>{' '}
               <span className="block font-serif italic font-light text-5xl sm:text-6xl text-[#94643A]">Zero public noise.</span>
             </h2>
             <p className="mt-8 font-serif text-[1.3rem] leading-[1.6] text-[#2E3648] max-w-md">
@@ -360,7 +360,7 @@ export default function HomePage() {
             <Eyebrow numeral="V" light>The Managing Desk</Eyebrow>
           </div>
           <h2 className="mt-9 text-[#F7F3EC]">
-            <span className="block font-display text-4xl sm:text-6xl tracking-[0.04em] leading-[1.1]">A private conversation</span>
+            <span className="block font-display text-4xl sm:text-6xl tracking-[0.04em] leading-[1.1]">A private conversation</span>{' '}
             <span className="block font-serif italic font-light text-5xl sm:text-7xl text-[#E6C9A0]">begins here.</span>
           </h2>
           <p className="mt-8 font-serif text-[1.3rem] leading-[1.6] text-white/70 max-w-xl mx-auto">

@@ -18,7 +18,7 @@ const SECTORS = [
 ]
 
 const CORRIDORS = [
-  { id: 'tuticorin', label: 'Tuticorin – Tirunelveli', desc: 'Renewable & Deepwater Port Belt' },
+  { id: 'tuticorin', label: 'Thoothukudi – Tirunelveli', desc: 'Renewable & Deepwater Port Belt' },
   { id: 'sriperumbudur', label: 'Sriperumbudur – Oragadam', desc: 'Auto, EV & High-Tech Corridor' },
   { id: 'ariyalur', label: 'Ariyalur – Karur', desc: 'Mineral, Quarry & Cement Belt' },
   { id: 'hosur', label: 'Hosur – Krishnagiri', desc: 'Logistics & Advanced Manufacturing' },

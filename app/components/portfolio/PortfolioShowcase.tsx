@@ -1,12 +1,11 @@
 'use client'
 
-import { useCallback, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { ACQUISITION_BRIEFS, MANDATES, whatsappLink, type Mandate } from '@/lib/mandates'
 import { useShortlist } from '@/lib/useShortlist'
 import { Button } from '@/components/brand/Button'
 import { MandateCard } from './MandateCard'
-import { MandateDetail } from './MandateDetail'
 import { EASE, EnquireLink, Eyebrow, Grain } from './primitives'
 
 const reveal = {
@@ -18,8 +17,8 @@ const reveal = {
 
 /** Homepage: three featured properties in one row, then what our buyers are looking for. */
 export function PortfolioShowcase() {
-  const [open, setOpen] = useState<Mandate | null>(null)
-  const close = useCallback(() => setOpen(null), [])
+  const router = useRouter()
+  const setOpen = (m: Mandate) => router.push(`/properties/${m.slug}`)
   const shortlist = useShortlist()
   const featured = MANDATES.filter(m => m.featured).slice(0, 3)
 
@@ -123,12 +122,6 @@ export function PortfolioShowcase() {
         </div>
       </section>
 
-      <MandateDetail
-        mandate={open}
-        onClose={close}
-        saved={open ? shortlist.has(open.slug) : false}
-        onToggleSave={open ? () => shortlist.toggle(open.slug) : undefined}
-      />
     </>
   )
 }

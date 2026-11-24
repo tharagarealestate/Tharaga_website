@@ -6,7 +6,9 @@
  *  - Prices are NEVER published. Pricing is shared only on enquiry.
  *  - Only state facts confirmed by the owner / mandate. Lifestyle copy is framing, not a claim.
  *  - All enquiries route to the managing desk: +91 88709 80839.
- *  - Images are representative stock photography until project photography is shot.
+ *  - Stock photographs are labelled "Representative image" on property pages. Real site
+ *    media (video, field photographs, plans) lives in /public/properties/<slug>/.
+ *  - Survey numbers are never published: plans are cropped or blurred before upload.
  */
 
 export const DESK_PHONE_E164 = '918870980839'
@@ -25,6 +27,22 @@ export const CATEGORY_LABELS: Record<MandateCategory, string> = {
 export type Badge =
   | { kind: 'scarcity'; label: string }   // e.g. "Only 5 MW Remaining", "Limited Release"
   | { kind: 'curated'; label: string }    // e.g. "Exclusively Curated", "By Invitation"
+
+/** One item in a property's media gallery. Only real, owner-supplied media goes here. */
+export interface MediaItem {
+  kind: 'photo' | 'video' | 'plan'
+  src: string
+  alt: string
+  caption: string
+  /** Poster frame for videos. */
+  poster?: string
+  /** Portrait (phone-shot) media is framed differently in the gallery. */
+  portrait?: boolean
+}
+
+export interface Fact { label: string; value: string }
+export interface SpecGroup { title: string; rows: { label: string; value: string; note?: string }[] }
+export interface Nearby { place: string; distance: string; note?: string }
 
 export interface Mandate {
   slug: string
@@ -54,6 +72,16 @@ export interface Mandate {
   plate?: { caption: string; tone: 'navy' | 'ivory' }
   /** Acreage used for the portfolio total, when known. */
   acres?: number
+  /** Real site media from the owner (videos, field photos, plans). */
+  media?: MediaItem[]
+  /** Confirmed key facts for the property page. Falls back to `stats`. */
+  facts?: Fact[]
+  /** Technical specification tables (plant & machinery, compliance). */
+  specs?: SpecGroup[]
+  /** Approximate distances to places buyers know. */
+  nearby?: Nearby[]
+  /** What a verified buyer receives after the first call. */
+  dossier?: string[]
 }
 
 const u = (id: string) => `https://images.unsplash.com/photo-${id}?auto=format&fit=crop&w=1800&q=80`
@@ -84,6 +112,14 @@ export const MANDATES: Mandate[] = [
     featured: true,
     image: u('1508514177221-188b1cf16e9d'),
     imageAlt: 'Utility-scale solar arrays under a clear blue sky',
+    facts: [
+      { label: 'Plant size', value: '15 MW' },
+      { label: 'Available', value: '5 MW' },
+      { label: 'Booked', value: '10 MW, industrial clients' },
+      { label: 'Commissioning', value: '15 December 2026' },
+      { label: 'Agreement', value: '25-year PPA incl. warranty' },
+      { label: 'Site', value: 'Shared with verified buyers' },
+    ],
   },
   {
     slug: 'courtalam-hill-estates',
@@ -109,6 +145,17 @@ export const MANDATES: Mandate[] = [
     featured: true,
     image: u('1433086966358-54859d0ed716'),
     imageAlt: 'A waterfall falling through dense green forest',
+    media: [
+      { kind: 'plan', src: '/properties/courtalam-hill-estates/layout-plan.jpg', alt: 'Estate layout sketch showing individual plots and the internal road', caption: 'Estate layout — every plot reached by the internal road' },
+    ],
+    facts: [
+      { label: 'Plot sizes', value: 'From 21 cents' },
+      { label: 'Setting', value: 'Hill-view, Courtalam belt' },
+      { label: 'Highway', value: 'Within 1 km of Kollam – Senkottai' },
+      { label: 'Hills', value: 'Mekkarai & Gundar, 2–3 km' },
+      { label: 'Amenities', value: 'Pools, waterfalls, play area, orchard' },
+    ],
+    dossier: ['Plot-wise layout with measurements', 'Walkthrough videos of the land', 'Site visit with the desk'],
   },
   {
     slug: 'malaipatti-500-acres',
@@ -132,6 +179,20 @@ export const MANDATES: Mandate[] = [
     featured: true,
     plate: { caption: '500 ACRES', tone: 'navy' },
     acres: 500,
+    media: [
+      { kind: 'video', src: '/properties/malaipatti-500-acres/site-walk.mp4', poster: '/properties/malaipatti-500-acres/field-horizon.jpg', alt: 'A slow walk across the open land at Malaipatti', caption: 'Site walk — filmed on the land', portrait: true },
+      { kind: 'photo', src: '/properties/malaipatti-500-acres/field-palm.jpg', alt: 'Open, level farmland with a lone palmyra palm under a wide sky', caption: 'Level, open ground under a wide sky', portrait: true },
+      { kind: 'photo', src: '/properties/malaipatti-500-acres/field-turbines.jpg', alt: 'Cleared land running to a flat horizon', caption: 'Cleared ground to the horizon', portrait: true },
+      { kind: 'plan', src: '/properties/malaipatti-500-acres/parcel-plan.jpg', alt: 'Parcel plan of the 500-acre holding with survey numbers blurred', caption: 'Parcel plan — survey numbers withheld until verification' },
+    ],
+    facts: [
+      { label: 'Extent', value: '500 acres' },
+      { label: 'Village', value: 'Malaipatti' },
+      { label: 'District', value: 'Thoothukudi' },
+      { label: 'Access', value: 'Road runs through the holding' },
+      { label: 'Survey details', value: 'Shared with verified buyers' },
+    ],
+    dossier: ['Full parcel plan with survey numbers', 'Ownership and title summary', 'Guided site visit'],
   },
 
   // ── LAND ─────────────────────────────────────────────────────────
@@ -156,6 +217,22 @@ export const MANDATES: Mandate[] = [
     badge: { kind: 'curated', label: 'Exclusively Curated' },
     plate: { caption: '464 ACRES', tone: 'ivory' },
     acres: 464,
+    facts: [
+      { label: 'Extent', value: '464 acres' },
+      { label: 'Mapped block', value: '~700 acres' },
+      { label: 'Village', value: 'Valukkalotti, Kariyapatti taluk' },
+      { label: 'Approach', value: '1 km in via 33-ft Mangammal Salai' },
+      { label: 'Rail', value: 'Line runs through the village' },
+    ],
+    nearby: [
+      { place: 'Palavanatham', distance: '2.1 km', note: 'by road' },
+      { place: 'Virudhunagar Junction', distance: '6.7 km' },
+      { place: 'Aruppukottai', distance: '10.8 km' },
+      { place: 'PM MITRA Textile Park', distance: '19.1 km' },
+      { place: 'Madurai Airport', distance: '31.2 km' },
+      { place: 'Thoothukudi Port', distance: '93 km', note: 'straight line' },
+    ],
+    dossier: ['Village map, parcel by parcel', 'Satellite view of the block', 'Guided site visit'],
   },
   {
     slug: 'ottapidaram-land',
@@ -214,12 +291,21 @@ export const MANDATES: Mandate[] = [
     location: 'Anna Nagar West Extension',
     region: 'Chennai',
     tagline: 'Two frontages in one of Chennai’s most settled addresses.',
-    teaser: 'A three-ground corner plot in Anna Nagar West Extension.',
-    story: 'A three-ground corner plot in Anna Nagar West Extension — a mature, well-connected residential neighbourhood.',
+    teaser: 'A three-ground south-east corner with two 30-ft frontages and a 19,100 sq.ft building, beside SBOA School.',
+    story:
+      'A 7,200 sq.ft (three-ground) south-east corner in Anna Nagar West Extension, 60 × 120 ft, with frontage on two 30-foot roads and an existing 19,100 sq.ft building. It sits beside SBOA School & Junior College, close to the Padi 200-ft Road — a mature, well-connected address.',
     stats: ['3 grounds', 'Corner plot', 'Anna Nagar'],
-    highlights: ['Three grounds', 'Corner position'],
+    highlights: ['Three grounds, 60 × 120 ft', 'South-east corner, two 30-ft roads', '19,100 sq.ft existing building', 'Beside SBOA School, near Padi 200-ft Road'],
     idealFor: 'Families building a signature home · Boutique developers',
     plate: { caption: '3 GROUNDS', tone: 'ivory' },
+    facts: [
+      { label: 'Land', value: '7,200 sq.ft (3 grounds)' },
+      { label: 'Built-up', value: '19,100 sq.ft' },
+      { label: 'Dimensions', value: '60 × 120 ft' },
+      { label: 'Facing', value: 'South-east corner' },
+      { label: 'Roads', value: 'Two 30-ft frontages' },
+      { label: 'Landmark', value: 'Beside SBOA School & Junior College' },
+    ],
   },
   {
     slug: 'santhome-heritage-parcel',
@@ -274,14 +360,43 @@ export const MANDATES: Mandate[] = [
     region: 'Karur District',
     tagline: 'Raw material security, ready to run.',
     teaser: '6.7 acres of quarry land paired with 7.7 acres of crusher land in the Karur belt.',
-    story:
-      'A quarry and crusher plant in Karur: 6.7 acres of quarry land and 7.7 acres of crusher land, offered together as one integrated asset.',
     stats: ['14.4 acres total', 'Quarry + crusher', 'Karur'],
-    highlights: ['6.7 acres quarry land', '7.7 acres crusher land', 'Offered as one asset'],
+    highlights: ['6.7 acres quarry land + 7.7 acres crusher land', 'Complete line: jaw, cone, VSI, screens, washing, M-Sand', 'Pollution and quarry licences current', 'Ready to run or transfer'],
     idealFor: 'M-Sand and aggregate producers · Cement and infrastructure companies',
     badge: { kind: 'curated', label: 'Exclusively Curated' },
     plate: { caption: '14.4 ACRES', tone: 'navy' },
     acres: 14.4,
+    story:
+      'A fully operational quarry and crusher plant across 14.4 acres in Karur — 6.7 acres of quarry land and 7.7 acres of crusher land, offered together. The production line runs from jaw crushing through cone crushing, VSI shaping, screening, washing and M-Sand processing, fed by fourteen conveyors. Pollution and quarry licence certificates are current, so the plant is ready to run or transfer.',
+    facts: [
+      { label: 'Total land', value: '14.4 acres' },
+      { label: 'Quarry land', value: '6.7 acres' },
+      { label: 'Crusher land', value: '7.7 acres' },
+      { label: 'Status', value: 'Fully operational' },
+      { label: 'Licences', value: 'Pollution & quarry — current' },
+    ],
+    specs: [
+      {
+        title: 'Plant & machinery',
+        rows: [
+          { label: 'Jaw crusher', value: '42 × 32', note: 'Agarwala' },
+          { label: 'Cone crusher', value: '200 TPH', note: 'Propel' },
+          { label: 'VSI (vertical shaft impactor)', value: '100 TPH', note: 'Propel' },
+          { label: '4-deck screen', value: '20 × 6' },
+          { label: 'Washing plant', value: '1 unit' },
+          { label: 'M-Sand screen', value: '1 unit' },
+          { label: 'Conveyors', value: '14', note: 'production & product' },
+        ],
+      },
+      {
+        title: 'Compliance',
+        rows: [
+          { label: 'Pollution certificate', value: 'Current / valid' },
+          { label: 'Quarry licence', value: 'Current / valid' },
+        ],
+      },
+    ],
+    dossier: ['Property detail sheet', 'Plant walkthrough videos', 'Licence copies on verification'],
   },
 
   // ── COMMERCIAL ───────────────────────────────────────────────────
@@ -389,6 +504,19 @@ export const ACQUISITION_BRIEFS: AcquisitionBrief[] = [
     forWhom: 'A private investor',
   },
 ]
+
+export function getMandate(slug: string) {
+  return MANDATES.find(m => m.slug === slug)
+}
+
+/** Up to `n` other mandates, same category first. */
+export function relatedMandates(m: Mandate, n = 3) {
+  const same = MANDATES.filter(x => x.slug !== m.slug && x.category === m.category)
+  const rest = MANDATES.filter(x => x.slug !== m.slug && x.category !== m.category && x.featured)
+  return [...same, ...rest].slice(0, n)
+}
+
+export const hasRealMedia = (m: Mandate) => Boolean(m.media?.some(x => x.kind !== 'plan'))
 
 export const PORTFOLIO_ACRES = Math.round(MANDATES.reduce((s, m) => s + (m.acres || 0), 0))
 

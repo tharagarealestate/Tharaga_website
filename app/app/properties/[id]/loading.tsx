@@ -1,53 +1,20 @@
 /**
- * Property detail page loading skeleton.
- * Shown while ISR regenerates the property page.
+ * Property page loading state — a quiet navy masthead in the house style,
+ * so navigating from a card never flashes an off-brand skeleton.
  */
 export default function PropertyDetailLoading() {
   return (
-    <div className="min-h-screen bg-zinc-950">
-      {/* Back nav */}
-      <div className="h-14 border-b border-white/[0.06] flex items-center px-6 gap-3">
-        <div className="w-6 h-6 rounded bg-white/[0.06] animate-pulse" />
-        <div className="w-32 h-4 rounded bg-white/[0.05] animate-pulse" />
-      </div>
-
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
-        <div className="grid lg:grid-cols-[1fr_380px] gap-8">
-          {/* Main content */}
-          <div className="space-y-6">
-            {/* Image gallery */}
-            <div className="rounded-2xl overflow-hidden bg-white/[0.04] aspect-video animate-pulse" />
-
-            {/* Title block */}
-            <div className="space-y-3">
-              <div className="w-3/4 h-8 rounded-xl bg-white/[0.06] animate-pulse" />
-              <div className="w-1/2 h-5 rounded bg-white/[0.04] animate-pulse" />
-            </div>
-
-            {/* Spec chips */}
-            <div className="flex gap-3 flex-wrap">
-              {[1, 2, 3, 4].map(i => (
-                <div key={i} className="w-20 h-8 rounded-xl bg-white/[0.05] animate-pulse" />
-              ))}
-            </div>
-
-            {/* Description */}
-            <div className="space-y-2">
-              {[1, 2, 3, 4, 5].map(i => (
-                <div
-                  key={i}
-                  className="h-3 rounded bg-white/[0.04] animate-pulse"
-                  style={{ width: `${70 + i * 5}%`, animationDelay: `${i * 40}ms` }}
-                />
-              ))}
-            </div>
+    <div className="min-h-screen bg-[#F7F3EC]">
+      <div className="relative bg-[#15213A] pb-20 pt-40">
+        <div aria-hidden className="pointer-events-none absolute inset-4 border border-[#E6C9A0]/15 sm:inset-6" />
+        <div className="mx-auto grid max-w-7xl gap-12 px-5 sm:px-8 lg:grid-cols-12">
+          <div className="space-y-6 lg:col-span-7">
+            <div className="h-3 w-40 animate-pulse bg-white/10" />
+            <div className="h-12 w-4/5 animate-pulse bg-white/10" />
+            <div className="h-12 w-3/5 animate-pulse bg-white/[0.07]" />
+            <div className="h-6 w-2/3 animate-pulse bg-[#E6C9A0]/15" />
           </div>
-
-          {/* Sidebar */}
-          <div className="space-y-4">
-            <div className="h-64 rounded-2xl bg-white/[0.04] border border-amber-500/10 animate-pulse" />
-            <div className="h-40 rounded-2xl bg-white/[0.03] border border-white/[0.06] animate-pulse" />
-          </div>
+          <div className="aspect-[4/5] w-full animate-pulse bg-white/[0.06] lg:col-span-5" />
         </div>
       </div>
     </div>

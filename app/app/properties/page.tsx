@@ -4,7 +4,7 @@ import { SmoothScroll } from '@/components/brand/SmoothScroll'
 import { PortfolioExplorer } from '@/components/portfolio/PortfolioExplorer'
 
 export const metadata: Metadata = {
-  title: 'The Portfolio — Private Mandates',
+  title: 'All Properties',
   description:
     'Land banks, solar and energy assets, quarries, commercial buildings and residences across Tamil Nadu, represented privately by Tharaga Estates.',
   alternates: { canonical: '/properties' },

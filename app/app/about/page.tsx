@@ -8,7 +8,7 @@ import { Eyebrow, Grain } from '@/components/portfolio/primitives'
 import { ACQUISITION_BRIEFS, CATEGORY_LABELS, MANDATES, PORTFOLIO_ACRES, whatsappLink } from '@/lib/mandates'
 
 export const metadata: Metadata = {
-  title: 'About Us — Tharaga Estates',
+  title: 'About Us',
   description:
     'Tharaga Estates was founded in Chennai in 2024 by Nithish R. We represent owners of land, energy, quarry, commercial and residential property across Tamil Nadu — rooted like the vine, guided by the star.',
   alternates: { canonical: '/about' },

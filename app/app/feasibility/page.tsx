@@ -5,7 +5,7 @@ import { LandCheck } from '@/components/feasibility/LandCheck'
 import { Eyebrow, Grain } from '@/components/portfolio/primitives'
 
 export const metadata: Metadata = {
-  title: 'Land Check — What is your land right for? | Tharaga Estates',
+  title: 'Land Check — What is your land right for?',
   description:
     'Answer four questions and see what to check, which Tamil Nadu approvals apply, and which properties in our portfolio fit — for solar, quarries, factories, commercial and residential land.',
   alternates: { canonical: '/feasibility' },

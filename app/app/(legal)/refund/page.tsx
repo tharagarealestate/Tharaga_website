@@ -7,7 +7,8 @@ import { LegalTableOfContents } from '@/components/legal/LegalTableOfContents';
 import { LegalContent } from '@/types/legal';
 
 export const metadata: Metadata = {
-  title: 'Refund Policy | Tharaga',
+  title: 'Refund Policy | Tharaga Estates',
+  alternates: { canonical: '/refund' },
   description: 'Refund and cancellation policy for Tharaga subscription plans',
   robots: 'index, follow',
 };

@@ -8,7 +8,8 @@ import { ConsentManager } from '@/components/legal/ConsentManager';
 import { LegalContent } from '@/types/legal';
 
 export const metadata: Metadata = {
-  title: 'Privacy Policy | Tharaga - DPDP Act 2023 Compliant',
+  title: 'Privacy Policy | Tharaga Estates',
+  alternates: { canonical: '/privacy' },
   description: "Tharaga privacy policy compliant with India's Digital Personal Data Protection Act 2023. Learn how we protect your data.",
   robots: 'index, follow',
 };

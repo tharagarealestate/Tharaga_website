@@ -110,7 +110,7 @@ export function MandateDetail({
 
             <div data-lenis-prevent
               className="h-[62%] md:h-auto md:max-h-[88vh] overflow-y-auto overscroll-contain px-6 py-7 md:px-10 md:py-12">
-              <p className="font-sans text-[11px] uppercase tracking-[0.3em] text-[#94643A]">
+              <p className="font-sans text-[11px] uppercase tracking-[0.22em] text-[#94643A]">
                 {CATEGORY_LABELS[mandate.category]}
               </p>
               <h2 className="mt-4 font-display text-[1.7rem] md:text-[2.1rem] leading-[1.15] tracking-[0.02em] text-[#15213A]">{mandate.name}</h2>
@@ -131,7 +131,7 @@ export function MandateDetail({
 
               <p className="font-serif text-[1.2rem] leading-[1.6] text-[#2E3648]">{mandate.story}</p>
 
-              <h3 className="mt-8 font-sans text-[11px] uppercase tracking-[0.28em] text-[#15213A]">Highlights</h3>
+              <h3 className="mt-8 font-sans text-[11px] uppercase tracking-[0.2em] text-[#15213A]">Highlights</h3>
               <ul className="mt-4 space-y-3">
                 {mandate.highlights.map(h => (
                   <li key={h} className="flex gap-3 font-sans text-sm font-light text-[#4A5163]">
@@ -141,7 +141,7 @@ export function MandateDetail({
                 ))}
               </ul>
 
-              <h3 className="mt-8 font-sans text-[11px] uppercase tracking-[0.28em] text-[#15213A]">Ideal for</h3>
+              <h3 className="mt-8 font-sans text-[11px] uppercase tracking-[0.2em] text-[#15213A]">Ideal for</h3>
               <p className="mt-3 font-sans text-sm font-light text-[#4A5163]">{mandate.idealFor}</p>
 
               <div className="mt-8 border-l-2 border-[#B0834A] bg-[#EFE8DC] p-5">
@@ -150,7 +150,7 @@ export function MandateDetail({
                   Shared privately with verified buyers. Speak to the managing desk to receive the full dossier.
                 </p>
                 {isPlate(mandate) && (
-                  <p className="mt-3 font-sans text-[10px] uppercase tracking-[0.2em] text-[#7D8292]">
+                  <p className="mt-3 font-sans text-[11px] uppercase tracking-[0.2em] text-[#7D8292]">
                     Plate shown is illustrative, not a survey.
                   </p>
                 )}

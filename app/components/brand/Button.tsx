@@ -25,9 +25,9 @@ const BASE =
   'disabled:pointer-events-none disabled:opacity-40'
 
 const SIZES: Record<ButtonSize, string> = {
-  sm: 'h-10 px-5 text-[10px] tracking-[0.22em]',
-  md: 'h-12 px-7 text-[10.5px] tracking-[0.24em]',
-  lg: 'h-14 px-9 text-[11px] tracking-[0.26em]',
+  sm: 'h-10 px-5 text-[11px] tracking-[0.18em]',
+  md: 'h-12 px-7 text-[11.5px] tracking-[0.18em]',
+  lg: 'h-14 px-9 text-[12px] tracking-[0.18em]',
 }
 
 // [resting classes, fill colour that rises on hover, label colour on hover]

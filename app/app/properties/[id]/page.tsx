@@ -192,7 +192,8 @@ function mandateOgImage(m: Mandate) {
 
 function mandateMetadata(m: Mandate): Metadata {
   const url = `https://tharaga.in/properties/${m.slug}`
-  const description = `${m.teaser} ${m.location}, ${m.region}. Enquire with Tharaga Estates.`
+  const full = `${m.teaser} ${m.location}, ${m.region}. Enquire with Tharaga Estates.`
+  const description = full.length <= 158 ? full : `${m.teaser.length <= 150 ? m.teaser : m.teaser.slice(0, 147).replace(/\s+\S*$/, '') + '…'}`
   const image = mandateOgImage(m)
   return {
     title: m.name,
@@ -646,9 +647,19 @@ export default async function PropertyPage({ params }: { params: { id: string } 
       address: { '@type': 'PostalAddress', addressLocality: mandate.location, addressRegion: mandate.region, addressCountry: 'IN' },
       provider: { '@type': 'RealEstateAgent', name: 'Tharaga Estates', telephone: '+91-88709-80839', url: 'https://tharaga.in' },
     }
+    const crumbs = {
+      '@context': 'https://schema.org',
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://tharaga.in' },
+        { '@type': 'ListItem', position: 2, name: 'Properties', item: 'https://tharaga.in/properties' },
+        { '@type': 'ListItem', position: 3, name: mandate.name, item: `https://tharaga.in/properties/${mandate.slug}` },
+      ],
+    }
     return (
       <>
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(ld) }} />
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(crumbs) }} />
         <PropertyDossier mandate={mandate} />
       </>
     )

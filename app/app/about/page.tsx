@@ -8,9 +8,9 @@ import { Eyebrow, Grain } from '@/components/portfolio/primitives'
 import { ACQUISITION_BRIEFS, CATEGORY_LABELS, MANDATES, PORTFOLIO_ACRES, whatsappLink } from '@/lib/mandates'
 
 export const metadata: Metadata = {
-  title: 'About Us',
+  title: 'About Us — Founder Nithish R, Chennai',
   description:
-    'Tharaga Estates was founded in Chennai in 2024 by Nithish R. We represent owners of land, energy, quarry, commercial and residential property across Tamil Nadu — rooted like the vine, guided by the star.',
+    'Tharaga Estates, founded in Chennai in 2024 by Nithish R, represents owners of land, solar, quarry, commercial and residential property across Tamil Nadu.',
   alternates: { canonical: '/about' },
 }
 
@@ -68,13 +68,13 @@ export default function AboutPage() {
               <div className="bg-[#F7F3EC] p-7 sm:pr-10">
                 <p className="font-display text-3xl tracking-[0.05em] text-[#15213A]">Tharaga</p>
                 <p className="mt-1 font-serif text-3xl italic text-[#94643A]">தாரகா</p>
-                <p className="mt-5 font-sans text-[10px] font-semibold uppercase tracking-[0.26em] text-[#7D8292]">Means</p>
+                <p className="mt-5 font-sans text-[11px] font-semibold uppercase tracking-[0.2em] text-[#7D8292]">Means</p>
                 <p className="mt-1 font-serif text-2xl text-[#2E3648]">A star</p>
               </div>
               <div className="bg-[#F7F3EC] p-7 sm:pl-10">
                 <p className="font-display text-3xl tracking-[0.05em] text-[#15213A]">Latha</p>
                 <p className="mt-1 font-serif text-3xl italic text-[#94643A]">லதா</p>
-                <p className="mt-5 font-sans text-[10px] font-semibold uppercase tracking-[0.26em] text-[#7D8292]">Means</p>
+                <p className="mt-5 font-sans text-[11px] font-semibold uppercase tracking-[0.2em] text-[#7D8292]">Means</p>
                 <p className="mt-1 font-serif text-2xl text-[#2E3648]">A vine</p>
               </div>
             </div>
@@ -140,7 +140,7 @@ export default function AboutPage() {
                 { k: 'Active in', v: 'Tamil Nadu' },
               ].map((s, i) => (
                 <div key={s.k} className={`flex flex-col-reverse py-5 ${i === 0 ? 'pr-4' : 'px-4'}`}>
-                  <dt className="mt-1 font-sans text-[9.5px] uppercase tracking-[0.26em] text-[#7D8292]">{s.k}</dt>
+                  <dt className="mt-1 font-sans text-[10.5px] uppercase tracking-[0.2em] text-[#7D8292]">{s.k}</dt>
                   <dd className="font-display text-xl tracking-[0.04em] text-[#15213A] sm:text-2xl">{s.v}</dd>
                 </div>
               ))}
@@ -189,7 +189,7 @@ export default function AboutPage() {
               { k: 'Buyer requests', v: ACQUISITION_BRIEFS.length },
             ].map(s => (
               <div key={s.k} className="flex flex-col-reverse border-l border-[#E6C9A0]/20 pl-5">
-                <dt className="mt-3 font-sans text-[10px] uppercase tracking-[0.28em] text-white/55">{s.k}</dt>
+                <dt className="mt-3 font-sans text-[11px] uppercase tracking-[0.2em] text-white/55">{s.k}</dt>
                 <dd className="font-display text-4xl text-[#F7F3EC] sm:text-5xl">{s.v}</dd>
               </div>
             ))}

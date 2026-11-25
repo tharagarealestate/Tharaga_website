@@ -71,15 +71,15 @@ export function MandateTracker({ user, onOpenIntake }: MandateTrackerProps) {
           <div className="pt-3 flex flex-col sm:flex-row items-center justify-center gap-3">
             <button
               onClick={() => openAuthModal()}
-              className="w-full sm:w-auto px-7 py-3.5 rounded-full bg-[#15213A] hover:bg-[#22314F] text-[#F7F3EC] font-sans text-xs uppercase tracking-wider font-semibold transition-all shadow-md"
+              className="w-full sm:w-auto px-7 py-3.5 bg-[#15213A] hover:bg-[#22314F] text-[#F7F3EC] font-sans text-[11.5px] uppercase tracking-[0.16em] font-semibold transition-all"
             >
-              Sign In with Google
+              Sign in
             </button>
             <button
               onClick={onOpenIntake}
-              className="w-full sm:w-auto px-6 py-3.5 rounded-full bg-[#F7F3EC] hover:bg-[#EFE8DC] border border-[#D6CAB5] text-[#15213A] font-sans text-xs font-semibold transition-colors"
+              className="w-full sm:w-auto px-6 py-3.5 bg-[#F7F3EC] hover:bg-[#EFE8DC] border border-[#D6CAB5] text-[#15213A] font-sans text-xs font-semibold transition-colors"
             >
-              List Commercial Property
+              List a property
             </button>
           </div>
         </div>
@@ -95,15 +95,15 @@ export function MandateTracker({ user, onOpenIntake }: MandateTrackerProps) {
         <div>
           <div className="flex items-center gap-2 mb-1">
             <span className="text-[11px] font-sans tracking-[0.18em] uppercase text-[#94643A] font-semibold">
-              Principal Profile
+              Your account
             </span>
             <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
           </div>
           <h3 className="text-xl sm:text-2xl font-display font-normal tracking-[0.03em] text-[#15213A]">
-            Property Status & Review Hub
+            Your listings
           </h3>
           <p className="text-xs text-[#4A5163] font-light">
-            Logged in as {user.email}. Live verification milestones and buyer syndication.
+            Signed in as {user.email}. Follow review, verification and buyer interest for every property you list.
           </p>
         </div>
 
@@ -111,37 +111,37 @@ export function MandateTracker({ user, onOpenIntake }: MandateTrackerProps) {
           <button
             onClick={fetchUserMandates}
             disabled={loading}
-            className="p-2.5 rounded-full bg-[#FBF8F2] border border-[#D6CAB5] hover:bg-[#EFE8DC] text-[#4A5163] transition-colors"
+            className="p-2.5 bg-[#FBF8F2] border border-[#D6CAB5] hover:bg-[#EFE8DC] text-[#4A5163] transition-colors"
             title="Refresh status"
           >
             <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
           </button>
           <button
             onClick={onOpenIntake}
-            className="flex items-center gap-1.5 px-4 py-2.5 rounded-full bg-[#15213A] hover:bg-[#22314F] text-[#F7F3EC] text-xs font-sans font-semibold transition-all shadow-sm"
+            className="flex items-center gap-1.5 px-4 py-2.5 bg-[#15213A] hover:bg-[#22314F] text-[#F7F3EC] text-xs font-sans font-semibold transition-all"
           >
-            <Plus className="w-3.5 h-3.5 text-[#B0834A]" /> List Another Property
+            <Plus className="w-3.5 h-3.5 text-[#B0834A]" /> List a property
           </button>
         </div>
       </div>
 
       {/* Content Area */}
       {mandates.length === 0 ? (
-        <div className="p-10 sm:p-16 text-center space-y-4">
+        <div className="p-8 sm:p-12 text-center space-y-4">
           <div className="w-12 h-12 rounded-full bg-[#F7F3EC] border border-[#D6CAB5] flex items-center justify-center mx-auto text-[#7D8292]">
             <Building2 className="w-6 h-6" />
           </div>
           <div>
-            <h4 className="text-lg font-display font-normal tracking-[0.03em] text-[#15213A]">No Properties Uploaded Yet</h4>
+            <h4 className="text-lg font-display font-normal tracking-[0.03em] text-[#15213A]">No listings yet</h4>
             <p className="text-xs text-[#4A5163] max-w-md mx-auto mt-1 leading-relaxed">
-              When you list a commercial land parcel, solar site, or quarry, its technical audit and buyer matching progress will display here.
+              List a property and its review, verification and buyer interest will show here, step by step.
             </p>
           </div>
           <button
             onClick={onOpenIntake}
-            className="mt-2 px-6 py-3 rounded-full bg-[#15213A] hover:bg-[#22314F] text-[#F7F3EC] text-xs font-sans uppercase tracking-wider font-semibold shadow-md"
+            className="mt-2 px-6 py-3 bg-[#15213A] hover:bg-[#22314F] text-[#F7F3EC] text-xs font-sans uppercase tracking-wider font-semibold"
           >
-            List Your First Property
+            List your first property
           </button>
         </div>
       ) : (
@@ -278,7 +278,7 @@ export function MandateTracker({ user, onOpenIntake }: MandateTrackerProps) {
                   href={`https://wa.me/918870980839?text=${encodeURIComponent(`Hello Tharaga Estates, I am inquiring about the status of my listed property: ${selectedMandate.title} (ID: ${selectedMandate.id}).`)}`}
                   target="_blank"
                   rel="noreferrer"
-                  className="w-full sm:w-auto px-5 py-2.5 rounded-full bg-[#15213A] hover:bg-[#22314F] text-[#F7F3EC] text-xs font-sans font-semibold transition-all flex items-center justify-center gap-2"
+                  className="w-full sm:w-auto px-5 py-2.5 bg-[#15213A] hover:bg-[#22314F] text-[#F7F3EC] text-xs font-sans font-semibold transition-all flex items-center justify-center gap-2"
                 >
                   <Phone className="w-3.5 h-3.5 text-[#B0834A]" />
                   <span>Contact Managing Desk</span>

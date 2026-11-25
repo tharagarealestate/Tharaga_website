@@ -28,20 +28,21 @@ const SITE_URL = 'https://tharaga.in'
 
 export const metadata: Metadata = {
   title: {
-    default: 'Tharaga Estates — Commercial & Land Advisory',
+    default: 'Land, Solar & Quarry Property in Tamil Nadu | Tharaga Estates',
     template: '%s | Tharaga Estates',
   },
-  description: 'Private commercial real estate and industrial land advisory in Tamil Nadu. Direct advisory for high-extent land parcels, solar power sites, and limestone quarries.',
+  description: 'Land banks, solar plants, quarries, commercial buildings and homes across Tamil Nadu, represented directly by Tharaga Estates, Chennai. Browse and enquire.',
   metadataBase: new URL(SITE_URL),
   applicationName: 'Tharaga Estates',
   keywords: [
     'Tharaga Estates',
-    'Commercial land Tamil Nadu',
-    'Solar ready land Tuticorin',
-    'Limestone quarry lease Ariyalur',
-    'Industrial land Sriperumbudur Oragadam',
-    'Hosur logistics warehouse land',
-    'Commercial asset advisory Chennai',
+    'land for sale Tamil Nadu',
+    'industrial land Thoothukudi',
+    'solar plant for sale Tamil Nadu',
+    'quarry for sale Tamil Nadu',
+    'commercial property Chennai',
+    'farm land Tiruchirappalli',
+    'plots near GST Road Kattankulathur',
   ],
   robots: {
     index: true,
@@ -55,8 +56,8 @@ export const metadata: Metadata = {
     },
   },
   openGraph: {
-    title: 'Tharaga Estates — Commercial & Land Advisory',
-    description: 'Direct advisory for high-extent commercial land banks, solar power parcels, and limestone quarries across Tamil Nadu.',
+    title: 'Land, Solar & Quarry Property in Tamil Nadu | Tharaga Estates',
+    description: 'Land banks, solar plants, quarries, commercial buildings and homes across Tamil Nadu, represented directly by Tharaga Estates, Chennai. Browse and enquire.',
     url: SITE_URL,
     siteName: 'Tharaga Estates',
     locale: 'en_IN',
@@ -65,8 +66,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Tharaga Estates — Commercial & Land Advisory',
-    description: 'Direct advisory for high-extent commercial land banks, solar power parcels, and limestone quarries across Tamil Nadu.',
+    title: 'Land, Solar & Quarry Property in Tamil Nadu | Tharaga Estates',
+    description: 'Land banks, solar plants, quarries, commercial buildings and homes across Tamil Nadu, represented directly by Tharaga Estates, Chennai. Browse and enquire.',
     images: ['/brand/tharaga-og.jpg'],
   },
   manifest: '/manifest.webmanifest',

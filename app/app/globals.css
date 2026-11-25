@@ -444,3 +444,8 @@ html.lenis, html.lenis body { height: auto; }
 .lenis.lenis-stopped { overflow: hidden; }
 
 @keyframes tharaga-marquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+
+
+/* Never let decorative layers create sideways scroll on phones */
+html, body { overflow-x: clip; }
+@supports not (overflow: clip) { html, body { overflow-x: hidden; } }

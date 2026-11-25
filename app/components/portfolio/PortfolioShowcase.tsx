@@ -1,127 +1,122 @@
 'use client'
 
+import { useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { motion } from 'framer-motion'
-import { ACQUISITION_BRIEFS, MANDATES, whatsappLink, type Mandate } from '@/lib/mandates'
+import { AnimatePresence, LayoutGroup, motion } from 'framer-motion'
+import { CATEGORY_LABELS, MANDATES, type MandateCategory } from '@/lib/mandates'
 import { useShortlist } from '@/lib/useShortlist'
 import { Button } from '@/components/brand/Button'
 import { MandateCard } from './MandateCard'
-import { EASE, EnquireLink, Eyebrow, Grain } from './primitives'
+import { EASE, Eyebrow } from './primitives'
 
-const reveal = {
-  initial: { opacity: 0, y: 28 },
-  whileInView: { opacity: 1, y: 0 },
-  viewport: { once: true, margin: '-60px' },
-  transition: { duration: 0.9, ease: EASE },
-}
+const ORDER: MandateCategory[] = ['land', 'energy', 'quarry', 'commercial', 'residence']
+const LIMIT = 6
 
-/** Homepage: three featured properties in one row, then what our buyers are looking for. */
+/** Homepage: the whole pipeline at a glance — filter by type, featured first. */
 export function PortfolioShowcase() {
   const router = useRouter()
-  const setOpen = (m: Mandate) => router.push(`/properties/${m.slug}`)
   const shortlist = useShortlist()
-  const featured = MANDATES.filter(m => m.featured).slice(0, 3)
+  const [cat, setCat] = useState<'all' | MandateCategory>('all')
+
+  const tabs = useMemo(
+    () => [
+      { key: 'all' as const, label: 'All', n: MANDATES.length },
+      ...ORDER.map(c => ({ key: c, label: CATEGORY_LABELS[c], n: MANDATES.filter(m => m.category === c).length })).filter(t => t.n),
+    ],
+    [],
+  )
+
+  const list = useMemo(() => {
+    const pool = cat === 'all' ? MANDATES : MANDATES.filter(m => m.category === cat)
+    return [...pool].sort((a, b) => Number(!!b.featured) - Number(!!a.featured) || Number(!!b.media?.some(x => x.kind !== 'plan')) - Number(!!a.media?.some(x => x.kind !== 'plan')))
+  }, [cat])
+  const shown = list.slice(0, LIMIT)
+  const more = list.length - shown.length
 
   return (
-    <>
-      <section id="projects" className="scroll-mt-20 bg-[#F7F3EC] py-20 sm:py-28">
-        <div className="mx-auto max-w-7xl px-5 sm:px-8">
-          <div className="grid gap-8 lg:grid-cols-12 lg:items-end">
-            <motion.div {...reveal} className="lg:col-span-7">
-              <Eyebrow numeral="I">Featured properties</Eyebrow>
-              <h2 className="mt-6 text-[#15213A]">
-                <span className="block font-display text-[2.2rem] leading-[1.06] tracking-[0.03em] sm:text-5xl md:text-[3.6rem]">
-                  Our finest properties,
-                </span>{' '}
-                <span className="block font-serif text-[2.6rem] font-light italic leading-[1.05] text-[#94643A] sm:text-6xl md:text-[4.4rem]">
-                  available now.
-                </span>
-              </h2>
-            </motion.div>
-            <motion.div {...reveal} className="space-y-6 lg:col-span-5">
-              <p className="font-serif text-[1.25rem] leading-[1.6] text-[#2E3648]">
-                Every property here is represented by us directly. Location details, documents and prices are shared with
-                verified buyers.
-              </p>
-              <div className="hidden sm:block">
-                <Button variant="secondary" arrow href="/properties">
-                  View all {MANDATES.length} properties
-                </Button>
-              </div>
-            </motion.div>
-          </div>
+    <section id="projects" className="scroll-mt-20 bg-[#F7F3EC] py-20 sm:py-24">
+      <div className="mx-auto max-w-7xl px-5 sm:px-8">
+        <div className="grid gap-6 lg:grid-cols-12 lg:items-end">
+          <motion.div
+            initial={{ opacity: 0, y: 24 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: '-60px' }}
+            transition={{ duration: 0.8, ease: EASE }}
+            className="lg:col-span-7"
+          >
+            <Eyebrow>The pipeline</Eyebrow>
+            <h2 className="mt-5 font-display text-[2.1rem] leading-[1.1] tracking-[0.02em] text-[#15213A] sm:text-[2.8rem]">
+              What is open right now
+            </h2>
+          </motion.div>
+          <p className="font-sans text-[16px] leading-[1.7] text-[#4A5163] lg:col-span-5">
+            Every property below is represented by us directly. Open one to see the site footage, plans and key facts —
+            then message the desk.
+          </p>
+        </div>
 
-          {/* One row on desktop; a swipeable rail on phones */}
-          <div className="-mx-5 mt-12 flex snap-x snap-mandatory scroll-pl-5 gap-5 overflow-x-auto px-5 pb-2 no-scrollbar sm:mx-0 sm:grid sm:grid-cols-2 sm:gap-8 sm:overflow-visible sm:px-0 lg:grid-cols-3">
-            {featured.map((m, i) => (
-              <div key={m.slug} className="w-[84%] shrink-0 snap-start sm:w-auto">
+        {/* Type filter */}
+        <LayoutGroup>
+          <div role="tablist" aria-label="Filter by property type" className="-mx-5 mt-10 flex gap-2 overflow-x-auto px-5 pb-1 no-scrollbar sm:mx-0 sm:flex-wrap sm:px-0">
+            {tabs.map(t => {
+              const active = cat === t.key
+              return (
+                <button
+                  key={t.key}
+                  role="tab"
+                  aria-selected={active}
+                  onClick={() => setCat(t.key)}
+                  className={`relative inline-flex h-11 shrink-0 items-center gap-2.5 border px-4 font-sans text-[13.5px] font-medium transition-colors duration-300 ${
+                    active ? 'border-[#15213A] text-[#F7F3EC]' : 'border-[#B0834A]/35 text-[#2E3648] hover:border-[#15213A]'
+                  }`}
+                >
+                  {active && <motion.span layoutId="pipeline-tab" className="absolute inset-0 -z-0 bg-[#15213A]" transition={{ duration: 0.4, ease: EASE }} />}
+                  <span className="relative">{t.label}</span>
+                  <span
+                    className={`relative flex h-5 min-w-5 items-center justify-center rounded-full px-1.5 text-[11px] font-semibold ${
+                      active ? 'bg-[#E6C9A0] text-[#15213A]' : 'bg-[#E4DACA] text-[#4A5163]'
+                    }`}
+                  >
+                    {t.n}
+                  </span>
+                </button>
+              )
+            })}
+          </div>
+        </LayoutGroup>
+
+        <motion.div layout className="-mx-5 mt-8 flex snap-x snap-mandatory scroll-pl-5 gap-4 overflow-x-auto px-5 pb-3 no-scrollbar sm:mx-0 sm:mt-10 sm:grid sm:grid-cols-2 sm:gap-x-7 sm:gap-y-12 sm:overflow-visible sm:px-0 sm:pb-0 lg:grid-cols-3">
+          <AnimatePresence mode="popLayout" initial={false}>
+            {shown.map((m, i) => (
+              <motion.div
+                key={m.slug}
+                layout
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.97 }}
+                transition={{ duration: 0.45, ease: EASE, delay: i * 0.04 }}
+                className="w-[82%] shrink-0 snap-start sm:w-auto"
+              >
                 <MandateCard
                   mandate={m}
                   index={i}
-                  tall
-                  onOpen={() => setOpen(m)}
+                  onOpen={() => router.push(`/properties/${m.slug}`)}
                   saved={shortlist.has(m.slug)}
                   onToggleSave={() => shortlist.toggle(m.slug)}
                 />
-              </div>
+              </motion.div>
             ))}
-          </div>
+          </AnimatePresence>
+        </motion.div>
 
-          <div className="mt-10 sm:hidden">
-            <Button variant="primary" arrow full href="/properties">
-              View all {MANDATES.length} properties
-            </Button>
-          </div>
+        <p className="mt-3 font-sans text-[12.5px] text-[#7D8292] sm:hidden">Swipe to see more →</p>
+        <div className="mt-10 flex flex-col items-center gap-3 text-center sm:mt-14">
+          <Button arrow href={cat === 'all' ? '/properties' : `/properties?cat=${cat}`}>
+            {more > 0 ? `See all ${list.length} ${cat === 'all' ? 'properties' : CATEGORY_LABELS[cat].toLowerCase()}` : 'Open the full portfolio'}
+          </Button>
+          <p className="font-sans text-[13px] text-[#7D8292]">Filter by type, region and size · save a shortlist · share it with the desk</p>
         </div>
-      </section>
-
-      <section id="acquiring" className="relative scroll-mt-20 overflow-hidden bg-[#15213A] py-20 text-[#F7F3EC] sm:py-24">
-        <Grain opacity={0.1} />
-        <div className="relative mx-auto grid max-w-7xl gap-12 px-5 sm:px-8 lg:grid-cols-12">
-          <motion.div {...reveal} className="lg:col-span-4">
-            <Eyebrow numeral="II" light>
-              Properties we are buying
-            </Eyebrow>
-            <h2 className="mt-6 text-[#F7F3EC]">
-              <span className="block font-display text-[2rem] leading-[1.1] tracking-[0.03em] sm:text-[2.6rem]">Our buyers</span>{' '}
-              <span className="block font-serif text-[2.5rem] font-light italic leading-[1.05] text-[#E6C9A0] sm:text-[3.2rem]">
-                are looking for these.
-              </span>
-            </h2>
-            <p className="mt-6 font-serif text-[1.15rem] leading-[1.6] text-white/70">
-              Own one of these? Tell us — we will introduce you to a buyer who is ready.
-            </p>
-          </motion.div>
-
-          <ul className="divide-y divide-[#E6C9A0]/15 border-y border-[#E6C9A0]/15 lg:col-span-8">
-            {ACQUISITION_BRIEFS.map((b, i) => (
-              <motion.li
-                key={b.slug}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, margin: '-40px' }}
-                transition={{ duration: 0.7, ease: EASE, delay: i * 0.06 }}
-                className="group grid gap-3 py-6 sm:grid-cols-[2.5rem_1fr_auto] sm:items-center"
-              >
-                <span className="font-display text-lg text-[#D9AE78]">{['I', 'II', 'III', 'IV', 'V', 'VI'][i]}</span>
-                <div>
-                  <h3 className="font-display text-[1.2rem] tracking-[0.03em] text-[#F7F3EC] transition-transform duration-500 group-hover:translate-x-1.5">
-                    {b.title}
-                  </h3>
-                  <p className="mt-1.5 font-sans text-[10px] uppercase tracking-[0.24em] text-[#D9AE78]">{b.region}</p>
-                  <p className="mt-2 font-serif text-[1.05rem] text-white/70">
-                    {b.seeking} <span className="text-white/50">For {b.forWhom.charAt(0).toLowerCase() + b.forWhom.slice(1)}.</span>
-                  </p>
-                </div>
-                <EnquireLink tone="light" href={whatsappLink(`I own a property for your brief: ${b.title} (${b.region})`)}>
-                  I own one
-                </EnquireLink>
-              </motion.li>
-            ))}
-          </ul>
-        </div>
-      </section>
-
-    </>
+      </div>
+    </section>
   )
 }

@@ -1,112 +1,326 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import Image from 'next/image'
 import Link from 'next/link'
+import { usePathname } from 'next/navigation'
 import { AnimatePresence, motion, useMotionValueEvent, useScroll } from 'framer-motion'
+import { Bookmark, ClipboardList, LogOut, Phone, Plus, User } from 'lucide-react'
 import { TharagaWordmark } from './TharagaWordmark'
 import { Grain } from '@/components/portfolio/primitives'
 import { DESK_PHONE_DISPLAY, telLink, whatsappLink } from '@/lib/mandates'
+import { useAuthUser, type AuthUser } from '@/lib/useAuthUser'
+import { useShortlist } from '@/lib/useShortlist'
+import { openAuthModal } from '@/components/auth/AuthModal'
 
 const NAV = [
-  { label: 'Home', href: '/' },
   { label: 'Properties', href: '/properties' },
   { label: 'Land Check', href: '/feasibility' },
   { label: 'About', href: '/about' },
 ]
 
-/** Header for inner pages: transparent over a navy masthead, ivory once scrolled. */
-export function SiteHeader() {
+const EASE = [0.22, 1, 0.36, 1] as const
+
+function Avatar({ user, size = 34 }: { user: AuthUser; size?: number }) {
+  if (user.avatarUrl) {
+    return (
+      <Image
+        src={user.avatarUrl}
+        alt=""
+        width={size}
+        height={size}
+        unoptimized
+        referrerPolicy="no-referrer"
+        className="rounded-full object-cover"
+        style={{ width: size, height: size }}
+      />
+    )
+  }
+  return (
+    <span
+      className="flex items-center justify-center rounded-full bg-[#B0834A] font-sans font-semibold text-[#FBF8F2]"
+      style={{ width: size, height: size, fontSize: size * 0.36 }}
+    >
+      {user.initials}
+    </span>
+  )
+}
+
+/**
+ * One header for every page. Transparent over a dark masthead, then a solid ivory bar once
+ * the visitor scrolls. A single row: navigation · logo · account and the one primary action.
+ */
+export function SiteHeader({ onListProperty }: { onListProperty?: () => void }) {
+  const pathname = usePathname()
   const { scrollY } = useScroll()
   const [scrolled, setScrolled] = useState(false)
   const [open, setOpen] = useState(false)
-  useMotionValueEvent(scrollY, 'change', v => setScrolled(v > 48))
-  const dark = !scrolled && !open
+  const [menu, setMenu] = useState(false)
+  const menuRef = useRef<HTMLDivElement>(null)
+  const { user, signOut } = useAuthUser()
+  const shortlist = useShortlist()
+  useMotionValueEvent(scrollY, 'change', v => setScrolled(v > 40))
+  const dark = open || !scrolled
+
+  // Close the account menu on outside click / Escape; lock the page under the mobile menu.
+  useEffect(() => {
+    if (!menu) return
+    const onDown = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) setMenu(false)
+    }
+    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && setMenu(false)
+    document.addEventListener('mousedown', onDown)
+    document.addEventListener('keydown', onKey)
+    return () => {
+      document.removeEventListener('mousedown', onDown)
+      document.removeEventListener('keydown', onKey)
+    }
+  }, [menu])
+  useEffect(() => {
+    document.documentElement.style.overflow = open ? 'hidden' : ''
+    return () => {
+      document.documentElement.style.overflow = ''
+    }
+  }, [open])
+
+  const list = () => {
+    setOpen(false)
+    setMenu(false)
+    if (onListProperty) onListProperty()
+    else window.location.href = '/?list=1'
+  }
+  const statusHref = pathname === '/' ? '#status' : '/#status'
+  const textTone = dark ? 'text-[#F7F3EC]/85 hover:text-[#F7F3EC]' : 'text-[#2E3648] hover:text-[#15213A]'
 
   return (
     <>
-      <nav
-        className={`fixed top-0 left-0 right-0 z-50 transition-[background-color,border-color,padding] duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] ${
-          dark ? 'bg-transparent border-b border-transparent py-4' : 'bg-[#F7F3EC] border-b border-[#B0834A]/25 py-2 shadow-[0_10px_30px_-25px_rgba(21,33,58,0.5)]'
+      <header
+        className={`fixed inset-x-0 top-0 z-50 transition-[background-color,box-shadow,border-color] duration-500 ${
+          dark
+            ? 'border-b border-white/0 bg-gradient-to-b from-[#0B1220]/60 to-transparent'
+            : 'border-b border-[#B0834A]/20 bg-[#F7F3EC]/95 shadow-[0_8px_30px_-22px_rgba(21,33,58,0.45)] backdrop-blur-md'
         }`}
       >
-        <div className="max-w-7xl mx-auto px-6 sm:px-10 grid grid-cols-[1fr_auto_1fr] items-center">
-          <div className="hidden lg:flex items-center gap-8">
-            {NAV.map(l => (
-              <Link
-                key={l.label}
-                href={l.href}
-                className={`group/nav relative font-sans text-[10px] uppercase tracking-[0.3em] transition-colors duration-500 ${
-                  dark ? 'text-[#F7F3EC]/80 hover:text-[#F7F3EC]' : 'text-[#4A5163] hover:text-[#15213A]'
-                }`}
-              >
-                {l.label}
-                <span className="absolute left-0 -bottom-1.5 h-px w-full origin-left scale-x-0 bg-[#B0834A] transition-transform duration-500 group-hover/nav:scale-x-100" />
-              </Link>
-            ))}
-          </div>
+        <div className={`mx-auto grid max-w-7xl grid-cols-[1fr_auto_1fr] items-center px-4 transition-[height] duration-500 sm:px-8 ${scrolled ? 'h-16' : 'h-[84px]'}`}>
+          {/* Left: navigation (desktop) / menu (mobile) */}
+          <nav aria-label="Main" className="hidden items-center gap-9 lg:flex">
+            {NAV.map(l => {
+              const active = pathname?.startsWith(l.href)
+              return (
+                <Link
+                  key={l.label}
+                  href={l.href}
+                  className={`group/nav relative py-2 font-sans text-[11.5px] font-medium uppercase tracking-[0.2em] transition-colors duration-300 ${textTone}`}
+                >
+                  {l.label}
+                  <span
+                    className={`absolute inset-x-0 bottom-0 h-px origin-left bg-[#B0834A] transition-transform duration-500 ${
+                      active ? 'scale-x-100' : 'scale-x-0 group-hover/nav:scale-x-100'
+                    }`}
+                  />
+                </Link>
+              )
+            })}
+          </nav>
           <button
             onClick={() => setOpen(o => !o)}
             aria-label={open ? 'Close menu' : 'Open menu'}
-            className="lg:hidden justify-self-start flex flex-col gap-[5px] p-2 -ml-2"
+            aria-expanded={open}
+            className="-ml-2 flex h-11 w-11 flex-col items-center justify-center gap-[6px] justify-self-start lg:hidden"
           >
             {[0, 1].map(i => (
               <span
                 key={i}
-                className={`block h-px w-6 transition-all duration-500 ${dark ? 'bg-[#F7F3EC]' : 'bg-[#15213A]'} ${
-                  open ? (i === 0 ? 'translate-y-[3px] rotate-45' : '-translate-y-[3px] -rotate-45') : ''
+                className={`block h-[1.5px] w-6 transition-all duration-500 ${dark ? 'bg-[#F7F3EC]' : 'bg-[#15213A]'} ${
+                  open ? (i === 0 ? 'translate-y-[3.75px] rotate-45' : '-translate-y-[3.75px] -rotate-45') : ''
                 }`}
               />
             ))}
           </button>
+
+          {/* Centre: logo */}
           <Link href="/" aria-label="Tharaga Estates — home" className="justify-self-center">
-            <TharagaWordmark tone={dark ? 'ivory' : 'navy'} height={scrolled ? 56 : 80} priority />
+            <TharagaWordmark tone={dark ? 'ivory' : 'navy'} height={scrolled ? 46 : 60} priority />
           </Link>
-          <div className="justify-self-end flex items-center gap-6">
-            <a
-              href={telLink}
-              className={`hidden md:block font-sans text-[10px] uppercase tracking-[0.28em] transition-colors ${
-                dark ? 'text-[#F7F3EC]/80 hover:text-[#F7F3EC]' : 'text-[#4A5163] hover:text-[#15213A]'
+
+          {/* Right: account + primary action */}
+          <div className="flex items-center justify-self-end gap-3 sm:gap-5">
+            {user ? (
+              <div ref={menuRef} className="relative">
+                <button
+                  onClick={() => setMenu(m => !m)}
+                  aria-haspopup="menu"
+                  aria-expanded={menu}
+                  aria-label="Your account"
+                  className={`relative flex items-center rounded-full p-[3px] ring-1 transition ${
+                    dark ? 'ring-white/40 hover:ring-white/80' : 'ring-[#B0834A]/50 hover:ring-[#B0834A]'
+                  }`}
+                >
+                  <Avatar user={user} size={32} />
+                  {shortlist.items.length > 0 && (
+                    <span className="absolute -right-1 -top-1 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-[#15213A] px-1 font-sans text-[10px] font-semibold text-[#F7F3EC] ring-2 ring-[#F7F3EC]">
+                      {shortlist.items.length}
+                    </span>
+                  )}
+                </button>
+                <AnimatePresence>
+                  {menu && (
+                    <motion.div
+                      role="menu"
+                      initial={{ opacity: 0, y: -8, scale: 0.98 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: -6, scale: 0.98 }}
+                      transition={{ duration: 0.22, ease: EASE }}
+                      className="absolute right-0 top-[calc(100%+12px)] w-[280px] origin-top-right border border-[#B0834A]/25 bg-[#FBF8F2] text-left shadow-[0_30px_60px_-25px_rgba(14,23,41,0.45)]"
+                    >
+                      <div className="flex items-center gap-3 border-b border-[#E4DACA] p-4">
+                        <Avatar user={user} size={40} />
+                        <div className="min-w-0">
+                          <p className="truncate font-sans text-[14px] font-semibold text-[#15213A]">{user.name}</p>
+                          <p className="truncate font-sans text-[12px] text-[#7D8292]">{user.email}</p>
+                        </div>
+                      </div>
+                      <div className="p-1.5">
+                        {[
+                          { href: '/properties?shortlist=1', icon: Bookmark, label: 'My shortlist', meta: shortlist.items.length || '' },
+                          { href: statusHref, icon: ClipboardList, label: 'My listings & status', meta: '' },
+                        ].map(it => (
+                          <Link
+                            key={it.label}
+                            role="menuitem"
+                            href={it.href}
+                            onClick={() => setMenu(false)}
+                            className="flex items-center gap-3 px-3 py-2.5 font-sans text-[13.5px] text-[#2E3648] transition-colors hover:bg-[#EFE8DC] hover:text-[#15213A]"
+                          >
+                            <it.icon className="h-4 w-4 text-[#94643A]" />
+                            <span className="flex-1">{it.label}</span>
+                            {it.meta !== '' && <span className="font-sans text-[12px] text-[#7D8292]">{it.meta}</span>}
+                          </Link>
+                        ))}
+                        <button
+                          role="menuitem"
+                          onClick={list}
+                          className="flex w-full items-center gap-3 px-3 py-2.5 text-left font-sans text-[13.5px] text-[#2E3648] transition-colors hover:bg-[#EFE8DC] hover:text-[#15213A]"
+                        >
+                          <Plus className="h-4 w-4 text-[#94643A]" /> List a property
+                        </button>
+                      </div>
+                      <div className="border-t border-[#E4DACA] p-1.5">
+                        <button
+                          role="menuitem"
+                          onClick={async () => {
+                            setMenu(false)
+                            await signOut()
+                          }}
+                          className="flex w-full items-center gap-3 px-3 py-2.5 text-left font-sans text-[13.5px] text-[#7D8292] transition-colors hover:bg-[#EFE8DC] hover:text-[#15213A]"
+                        >
+                          <LogOut className="h-4 w-4" /> Sign out
+                        </button>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            ) : (
+              <button
+                onClick={() => openAuthModal()}
+                aria-label="Sign in"
+                className={`flex h-11 items-center gap-2 font-sans text-[11.5px] font-medium uppercase tracking-[0.2em] transition-colors ${textTone}`}
+              >
+                <User className="h-[18px] w-[18px]" strokeWidth={1.6} />
+                <span className="hidden sm:inline">Sign in</span>
+              </button>
+            )}
+            <button
+              onClick={list}
+              className={`hidden h-10 items-center gap-2 px-5 font-sans text-[11px] font-semibold uppercase tracking-[0.18em] transition-colors duration-300 md:inline-flex ${
+                dark ? 'bg-[#F7F3EC] text-[#15213A] hover:bg-white' : 'bg-[#15213A] text-[#F7F3EC] hover:bg-[#0E1729]'
               }`}
             >
-              {DESK_PHONE_DISPLAY}
-            </a>
-            <a
-              href={whatsappLink('the Tharaga portfolio')}
-              target="_blank"
-              rel="noreferrer"
-              className={`group/e relative inline-flex h-10 items-center overflow-hidden border-[1.5px] px-5 font-sans text-[10px] font-semibold uppercase tracking-[0.24em] transition-colors duration-200 ${
-                dark ? 'border-[#E6C9A0]/70 text-[#F7F3EC] hover:text-[#F7F3EC]' : 'border-[#15213A] text-[#15213A] hover:text-[#15213A]'
-              }`}
-            >
-              <span className={`absolute inset-0 origin-bottom scale-y-0 transition-transform duration-500 group-hover/e:scale-y-100 ${dark ? 'bg-[#F7F3EC]' : 'bg-[#15213A]'}`} />
-              <span className={`relative transition-colors duration-500 ${dark ? 'group-hover/e:text-[#15213A]' : 'group-hover/e:text-[#F7F3EC]'}`}>Enquire</span>
-            </a>
+              List property
+            </button>
           </div>
         </div>
-      </nav>
+      </header>
+
+      {/* Mobile menu */}
       <AnimatePresence>
         {open && (
           <motion.div
+            data-lenis-prevent
             initial={{ clipPath: 'inset(0 0 100% 0)' }}
             animate={{ clipPath: 'inset(0 0 0% 0)' }}
             exit={{ clipPath: 'inset(0 0 100% 0)' }}
-            transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
-            className="fixed inset-0 z-40 bg-[#15213A] text-[#F7F3EC] flex flex-col justify-center px-8 lg:hidden"
+            transition={{ duration: 0.6, ease: EASE }}
+            className="fixed inset-0 z-40 flex flex-col overflow-y-auto bg-[#15213A] px-6 pb-10 pt-28 text-[#F7F3EC] lg:hidden"
           >
-            <Grain opacity={0.1} />
-            <ul className="relative space-y-6">
-              {NAV.map((l, i) => (
-                <li key={l.label}>
-                  <Link href={l.href} onClick={() => setOpen(false)} className="flex items-baseline gap-5 text-[#F7F3EC] hover:text-[#F7F3EC]">
-                    <span className="font-display text-sm text-[#D9AE78]">{['I', 'II', 'III', 'IV'][i]}</span>
-                    <span className="font-display text-3xl tracking-[0.06em]">{l.label}</span>
+            <Grain opacity={0.08} />
+            <ul className="relative space-y-1">
+              {[{ label: 'Home', href: '/' }, ...NAV].map((l, i) => (
+                <motion.li key={l.label} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 + i * 0.06, duration: 0.5 }}>
+                  <Link
+                    href={l.href}
+                    onClick={() => setOpen(false)}
+                    className="flex items-center justify-between border-b border-white/10 py-4 font-display text-[1.7rem] tracking-[0.04em] text-[#F7F3EC] hover:text-[#E6C9A0]"
+                  >
+                    {l.label}
+                    <span aria-hidden className="text-base text-[#D9AE78]">→</span>
                   </Link>
-                </li>
+                </motion.li>
               ))}
             </ul>
-            <a href={telLink} className="relative mt-14 border-t border-[#E6C9A0]/20 pt-8 font-sans text-[10.5px] uppercase tracking-[0.3em] text-[#E6C9A0]">
-              {DESK_PHONE_DISPLAY}
-            </a>
+
+            <div className="relative mt-8 space-y-3">
+              <button onClick={list} className="flex h-12 w-full items-center justify-center bg-[#F7F3EC] font-sans text-[12px] font-semibold uppercase tracking-[0.18em] text-[#15213A]">
+                List your property
+              </button>
+              <a
+                href={whatsappLink('the Tharaga portfolio')}
+                target="_blank"
+                rel="noreferrer"
+                className="flex h-12 w-full items-center justify-center border border-[#E6C9A0]/50 font-sans text-[12px] font-semibold uppercase tracking-[0.18em] text-[#F7F3EC] hover:text-[#F7F3EC]"
+              >
+                WhatsApp the desk
+              </a>
+            </div>
+
+            <div className="relative mt-8 border-t border-white/10 pt-6">
+              {user ? (
+                <div className="space-y-4">
+                  <div className="flex items-center gap-3">
+                    <Avatar user={user} size={40} />
+                    <div className="min-w-0">
+                      <p className="truncate font-sans text-[15px] font-semibold text-[#F7F3EC]">{user.name}</p>
+                      <p className="truncate font-sans text-[12.5px] text-white/60">{user.email}</p>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <Link href="/properties?shortlist=1" onClick={() => setOpen(false)} className="border border-white/15 px-3 py-3 font-sans text-[13px] text-[#F7F3EC] hover:text-[#F7F3EC]">
+                      My shortlist {shortlist.items.length ? `· ${shortlist.items.length}` : ''}
+                    </Link>
+                    <Link href={statusHref} onClick={() => setOpen(false)} className="border border-white/15 px-3 py-3 font-sans text-[13px] text-[#F7F3EC] hover:text-[#F7F3EC]">
+                      My listings
+                    </Link>
+                  </div>
+                  <button onClick={() => { setOpen(false); signOut() }} className="font-sans text-[13px] text-white/60">
+                    Sign out
+                  </button>
+                </div>
+              ) : (
+                <button
+                  onClick={() => {
+                    setOpen(false)
+                    openAuthModal()
+                  }}
+                  className="flex items-center gap-3 font-sans text-[14px] text-[#F7F3EC]"
+                >
+                  <User className="h-5 w-5 text-[#D9AE78]" strokeWidth={1.6} /> Sign in to save properties and track listings
+                </button>
+              )}
+              <a href={telLink} className="mt-6 flex items-center gap-3 font-sans text-[14px] text-[#E6C9A0] hover:text-[#F7F3EC]">
+                <Phone className="h-4 w-4" /> {DESK_PHONE_DISPLAY}
+              </a>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
@@ -114,15 +328,74 @@ export function SiteHeader() {
   )
 }
 
+const FOOTER_LINKS = [
+  { label: 'All properties', href: '/properties' },
+  { label: 'Land Check', href: '/feasibility' },
+  { label: 'List a property', href: '/?list=1' },
+  { label: 'About', href: '/about' },
+]
+const LEGAL = [
+  { label: 'Privacy', href: '/privacy' },
+  { label: 'Terms', href: '/terms' },
+  { label: 'Refunds', href: '/refund' },
+]
+
 export function SiteFooter() {
   return (
-    <footer className="bg-[#0E1729] text-white/60 pt-20 pb-10">
-      <div className="max-w-7xl mx-auto px-6 sm:px-10 flex flex-col items-center text-center">
-        <TharagaWordmark tone="ivory" variant="full" height={190} />
-        <p className="mt-8 font-serif italic text-xl text-white/60">Land, energy and commercial assets · Tamil Nadu</p>
-        <div className="mt-12 w-full flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-[#E6C9A0]/15 pt-8 font-sans text-[10px] tracking-[0.18em] uppercase text-white/40">
-          <span>© {new Date().getFullYear()} Tharaga Estates · Chennai, Tamil Nadu</span>
-          <a href={telLink} className="text-white/40 hover:text-[#E6C9A0] transition-colors">{DESK_PHONE_DISPLAY} · tharaga.in</a>
+    <footer className="bg-[#0E1729] pb-10 pt-16 text-white/70 sm:pt-20">
+      <div className="mx-auto max-w-7xl px-6 sm:px-10">
+        <div className="grid gap-12 md:grid-cols-12 md:items-start">
+          <div className="md:col-span-5">
+            <TharagaWordmark tone="ivory" variant="full" height={150} />
+            <p className="mt-6 max-w-sm font-serif text-[1.15rem] leading-relaxed text-white/65">
+              Land, energy, quarries and city property across Tamil Nadu — represented directly by the Tharaga desk.
+            </p>
+          </div>
+          <nav aria-label="Footer" className="grid grid-cols-2 gap-10 md:col-span-4">
+            <div>
+              <p className="font-sans text-[11px] font-semibold uppercase tracking-[0.2em] text-[#D9AE78]">Explore</p>
+              <ul className="mt-4 space-y-3">
+                {FOOTER_LINKS.map(l => (
+                  <li key={l.label}>
+                    <Link href={l.href} className="font-sans text-[14px] text-white/70 transition-colors hover:text-[#F7F3EC]">
+                      {l.label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <div>
+              <p className="font-sans text-[11px] font-semibold uppercase tracking-[0.2em] text-[#D9AE78]">Legal</p>
+              <ul className="mt-4 space-y-3">
+                {LEGAL.map(l => (
+                  <li key={l.label}>
+                    <Link href={l.href} className="font-sans text-[14px] text-white/70 transition-colors hover:text-[#F7F3EC]">
+                      {l.label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </nav>
+          <div className="md:col-span-3">
+            <p className="font-sans text-[11px] font-semibold uppercase tracking-[0.2em] text-[#D9AE78]">The desk</p>
+            <a href={telLink} className="mt-4 block font-display text-[1.35rem] tracking-[0.04em] text-[#F7F3EC] hover:text-[#E6C9A0]">
+              {DESK_PHONE_DISPLAY}
+            </a>
+            <a
+              href={whatsappLink('the Tharaga portfolio')}
+              target="_blank"
+              rel="noreferrer"
+              className="mt-3 inline-flex font-sans text-[14px] text-white/70 underline decoration-[#B0834A]/60 underline-offset-4 hover:text-[#F7F3EC]"
+            >
+              Message on WhatsApp
+            </a>
+            <p className="mt-3 font-sans text-[13px] text-white/50">Chennai, Tamil Nadu</p>
+          </div>
+        </div>
+        <div className="mt-14 flex flex-col items-center justify-between gap-3 border-t border-white/10 pt-6 font-sans text-[12px] text-white/45 sm:flex-row">
+          <span>© {new Date().getFullYear()} Tharaga Estates. All rights reserved.</span>
+          <span>tharaga.in</span>
         </div>
       </div>
     </footer>

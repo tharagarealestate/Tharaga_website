@@ -89,7 +89,7 @@ function HeroVisual({ mandate, onOpenGallery }: { mandate: Mandate; onOpenGaller
       {body}
       <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[#0E1729]/70 via-transparent to-[#0E1729]/20" />
       <div aria-hidden className="pointer-events-none absolute inset-3 border border-[#E6C9A0]/35" />
-      <span className="absolute left-6 top-6 inline-flex items-center gap-2 bg-[#0E1729]/60 px-3 py-[6px] font-sans text-[9.5px] uppercase tracking-[0.26em] text-[#F0E2CC] backdrop-blur-sm">
+      <span className="absolute left-6 top-6 inline-flex items-center gap-2 bg-[#0E1729]/60 px-3 py-[6px] font-sans text-[10.5px] uppercase tracking-[0.2em] text-[#F0E2CC] backdrop-blur-sm">
         {(lead?.kind === 'video' || lead?.kind === 'photo') && (
           <span className="relative flex h-1.5 w-1.5">
             <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#E6C9A0] opacity-60" />
@@ -102,7 +102,7 @@ function HeroVisual({ mandate, onOpenGallery }: { mandate: Mandate; onOpenGaller
         <button
           type="button"
           onClick={() => onOpenGallery(leadIndex)}
-          className="absolute inset-x-6 bottom-6 flex items-center justify-between border-t border-[#E6C9A0]/40 pt-4 text-left font-sans text-[10px] uppercase tracking-[0.28em] text-[#F7F3EC]"
+          className="absolute inset-x-6 bottom-6 flex items-center justify-between border-t border-[#E6C9A0]/40 pt-4 text-left font-sans text-[11px] uppercase tracking-[0.2em] text-[#F7F3EC]"
         >
           <span>Open the gallery · {media.length}</span>
           <span aria-hidden>↗</span>
@@ -138,7 +138,7 @@ function SectionNav({ sections }: { sections: { id: string; label: string }[] })
           <li key={s.id} className="shrink-0">
             <a
               href={`#${s.id}`}
-              className={`relative block py-4 font-sans text-[10px] uppercase tracking-[0.26em] transition-colors ${
+              className={`relative block py-4 font-sans text-[11px] uppercase tracking-[0.2em] transition-colors ${
                 active === s.id ? 'text-[#15213A]' : 'text-[#7D8292] hover:text-[#15213A]'
               }`}
             >
@@ -186,7 +186,7 @@ function MediaThumb({ item, index, onOpen, className = '' }: { item: MediaItem; 
       )}
       <span className="absolute inset-x-4 bottom-4 flex items-end justify-between gap-3">
         <span className="font-serif text-[0.92rem] leading-snug text-[#F7F3EC] sm:text-[1.02rem]">{item.caption}</span>
-        <span className="hidden shrink-0 font-sans text-[9px] uppercase tracking-[0.24em] text-[#E6C9A0] sm:inline">
+        <span className="hidden shrink-0 font-sans text-[10.5px] uppercase tracking-[0.24em] text-[#E6C9A0] sm:inline">
           {item.kind === 'video' ? 'Video' : item.kind === 'plan' ? 'Plan' : 'Photo'}
         </span>
       </span>
@@ -235,13 +235,13 @@ function Lightbox({ items, index, onClose, onIndex }: { items: MediaItem[]; inde
           className="fixed inset-0 z-[70] flex flex-col bg-[#0B1220] text-[#F7F3EC]"
         >
           <div className="flex items-center justify-between px-5 py-4 sm:px-8">
-            <span className="font-sans text-[10px] uppercase tracking-[0.3em] text-[#E6C9A0]">
+            <span className="font-sans text-[11px] uppercase tracking-[0.22em] text-[#E6C9A0]">
               {String(index + 1).padStart(2, '0')} / {String(items.length).padStart(2, '0')}
             </span>
             <button
               type="button"
               onClick={onClose}
-              className="inline-flex h-11 items-center gap-3 font-sans text-[10px] uppercase tracking-[0.3em] text-[#F7F3EC] hover:text-[#E6C9A0]"
+              className="inline-flex h-11 items-center gap-3 font-sans text-[11px] uppercase tracking-[0.22em] text-[#F7F3EC] hover:text-[#E6C9A0]"
             >
               Close <span aria-hidden className="text-lg leading-none">×</span>
             </button>
@@ -357,7 +357,7 @@ function PlanViewer({ item, dark = false }: { item: MediaItem; dark?: boolean })
         <button type="button" onClick={() => setZoom(z => clamp(z - 0.5))} aria-label="Zoom out" className="h-10 w-10 text-lg hover:bg-[#15213A] hover:text-[#F7F3EC]">
           −
         </button>
-        <span className="flex h-10 w-14 items-center justify-center border-x border-[#B0834A]/40 font-sans text-[10px] tracking-[0.15em]">{Math.round(zoom * 100)}%</span>
+        <span className="flex h-10 w-14 items-center justify-center border-x border-[#B0834A]/40 font-sans text-[11px] tracking-[0.15em]">{Math.round(zoom * 100)}%</span>
         <button type="button" onClick={() => setZoom(z => clamp(z + 0.5))} aria-label="Zoom in" className="h-10 w-10 text-lg hover:bg-[#15213A] hover:text-[#F7F3EC]">
           +
         </button>
@@ -396,7 +396,7 @@ function ShareButton({ name, tone = 'light' }: { name: string; tone?: 'light' | 
     <button
       type="button"
       onClick={share}
-      className={`inline-flex items-center gap-2 font-sans text-[10px] uppercase tracking-[0.26em] ${
+      className={`inline-flex items-center gap-2 font-sans text-[11px] uppercase tracking-[0.2em] ${
         tone === 'light' ? 'text-white/75 hover:text-white' : 'text-[#4A5163] hover:text-[#15213A]'
       }`}
     >
@@ -426,7 +426,7 @@ function DistanceBars({ items }: { items: NonNullable<Mandate['nearby']> }) {
             </span>
             <span className="text-right font-sans text-[12px] tracking-[0.08em] text-[#15213A]">
               {n.distance}
-              {n.note && <span className="block text-[9.5px] uppercase tracking-[0.2em] text-[#7D8292]">{n.note}</span>}
+              {n.note && <span className="block text-[10.5px] uppercase tracking-[0.2em] text-[#7D8292]">{n.note}</span>}
             </span>
           </li>
         )
@@ -503,7 +503,7 @@ export function PropertyDossier({ mandate }: { mandate: Mandate }) {
 
         <div className="relative mx-auto grid max-w-7xl items-center gap-12 px-5 sm:px-8 lg:grid-cols-12 lg:gap-16">
           <motion.div style={{ y: textY, opacity: textO }} className="lg:col-span-7">
-            <nav aria-label="Breadcrumb" className="font-sans text-[10px] uppercase tracking-[0.26em] text-white/60">
+            <nav aria-label="Breadcrumb" className="font-sans text-[11px] uppercase tracking-[0.2em] text-white/60">
               <Link href="/properties" className="text-white/60 hover:text-[#E6C9A0]">
                 Properties
               </Link>
@@ -530,7 +530,7 @@ export function PropertyDossier({ mandate }: { mandate: Mandate }) {
               ))}
             </h1>
 
-            <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 1, delay: 0.6 }} className="mt-5 font-sans text-[11px] uppercase tracking-[0.26em] text-white/70">
+            <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 1, delay: 0.6 }} className="mt-5 font-sans text-[11px] uppercase tracking-[0.2em] text-white/70">
               {mandate.location} · {mandate.region}
             </motion.p>
             <motion.p
@@ -593,7 +593,7 @@ export function PropertyDossier({ mandate }: { mandate: Mandate }) {
             </motion.div>
 
             <motion.div {...reveal} className="mt-10 border-l-2 border-[#B0834A] pl-6">
-              <p className="font-sans text-[10px] uppercase tracking-[0.3em] text-[#94643A]">Best suited to</p>
+              <p className="font-sans text-[11px] uppercase tracking-[0.22em] text-[#94643A]">Best suited to</p>
               <p className="mt-2 font-serif text-[1.25rem] leading-relaxed text-[#15213A]">{mandate.idealFor.split(' · ').join('  ·  ')}</p>
             </motion.div>
           </section>
@@ -620,7 +620,7 @@ export function PropertyDossier({ mandate }: { mandate: Mandate }) {
                       role="tab"
                       aria-selected={galleryFilter === k}
                       onClick={() => setGalleryFilter(k)}
-                      className={`h-9 border px-4 font-sans text-[10px] uppercase tracking-[0.22em] transition-colors ${
+                      className={`h-9 border px-4 font-sans text-[11px] uppercase tracking-[0.22em] transition-colors ${
                         galleryFilter === k ? 'border-[#15213A] bg-[#15213A] text-[#F7F3EC]' : 'border-[#B0834A]/40 text-[#4A5163] hover:border-[#15213A] hover:text-[#15213A]'
                       }`}
                     >
@@ -659,7 +659,7 @@ export function PropertyDossier({ mandate }: { mandate: Mandate }) {
                 <motion.figure key={p.src} {...reveal}>
                   <div className="relative aspect-[4/3] w-full overflow-hidden border border-[#B0834A]/30 bg-[#F7F3EC] sm:aspect-[16/11]">
                     <PlanViewer item={p} />
-                    <span className="pointer-events-none absolute left-4 top-4 font-sans text-[9.5px] uppercase tracking-[0.26em] text-[#94643A]">Not to scale</span>
+                    <span className="pointer-events-none absolute left-4 top-4 font-sans text-[10.5px] uppercase tracking-[0.2em] text-[#94643A]">Not to scale</span>
                   </div>
                   <figcaption className="mt-3 font-sans text-[12px] tracking-[0.04em] text-[#4A5163]">{p.caption}</figcaption>
                 </motion.figure>
@@ -673,19 +673,19 @@ export function PropertyDossier({ mandate }: { mandate: Mandate }) {
             <motion.dl {...reveal} className="grid grid-cols-1 border-t border-[#B0834A]/25 sm:grid-cols-2">
               {facts.map(f => (
                 <div key={f.label} className="flex items-baseline justify-between gap-6 border-b border-[#B0834A]/25 py-5 sm:pr-8 sm:even:pl-8 sm:even:pr-0">
-                  <dt className="shrink-0 font-sans text-[10px] uppercase tracking-[0.24em] text-[#7D8292]">{f.label}</dt>
+                  <dt className="shrink-0 font-sans text-[11px] uppercase tracking-[0.24em] text-[#7D8292]">{f.label}</dt>
                   <dd className="text-right font-serif text-[1.15rem] leading-snug text-[#15213A]">{f.value}</dd>
                 </div>
               ))}
               <div className="flex items-baseline justify-between gap-6 border-b border-[#B0834A]/25 py-5 sm:pr-8 sm:even:pl-8 sm:even:pr-0">
-                <dt className="shrink-0 font-sans text-[10px] uppercase tracking-[0.24em] text-[#7D8292]">Price</dt>
+                <dt className="shrink-0 font-sans text-[11px] uppercase tracking-[0.24em] text-[#7D8292]">Price</dt>
                 <dd className="text-right font-serif text-[1.15rem] italic leading-snug text-[#94643A]">Shared privately on enquiry</dd>
               </div>
             </motion.dl>
 
             {mandate.specs?.map(g => (
               <motion.div key={g.title} {...reveal} className="mt-12">
-                <h3 className="font-sans text-[11px] font-semibold uppercase tracking-[0.28em] text-[#15213A]">{g.title}</h3>
+                <h3 className="font-sans text-[11px] font-semibold uppercase tracking-[0.2em] text-[#15213A]">{g.title}</h3>
                 <table className="mt-4 w-full border-collapse text-left">
                   <tbody>
                     {g.rows.map(r => (
@@ -694,7 +694,7 @@ export function PropertyDossier({ mandate }: { mandate: Mandate }) {
                           {r.label}
                         </th>
                         <td className="py-4 pr-4 text-right font-sans text-[13.5px] font-medium text-[#15213A]">{r.value}</td>
-                        <td className="hidden w-40 py-4 text-right font-sans text-[10px] uppercase tracking-[0.2em] text-[#7D8292] sm:table-cell">{r.note ?? ''}</td>
+                        <td className="hidden w-40 py-4 text-right font-sans text-[11px] uppercase tracking-[0.2em] text-[#7D8292] sm:table-cell">{r.note ?? ''}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -743,7 +743,7 @@ export function PropertyDossier({ mandate }: { mandate: Mandate }) {
             <motion.div {...reveal} className="relative overflow-hidden bg-[#15213A] p-8 text-[#F7F3EC]">
               <Grain opacity={0.08} />
               <div aria-hidden className="pointer-events-none absolute inset-2 border border-[#E6C9A0]/20" />
-              <p className="relative font-sans text-[10px] uppercase tracking-[0.3em] text-[#E6C9A0]">Interested?</p>
+              <p className="relative font-sans text-[11px] uppercase tracking-[0.22em] text-[#E6C9A0]">Interested?</p>
               <h2 className="relative mt-4 font-display text-[1.5rem] leading-tight tracking-[0.02em] text-[#F7F3EC]">Speak to the desk that holds this mandate.</h2>
               <p className="relative mt-4 font-sans text-[13.5px] leading-relaxed text-white/70">
                 No forms. Message or call — you reach the person managing this property directly.
@@ -757,7 +757,7 @@ export function PropertyDossier({ mandate }: { mandate: Mandate }) {
                 </Button>
               </div>
               <div className="relative mt-8 border-t border-white/15 pt-6">
-                <p className="font-sans text-[10px] uppercase tracking-[0.26em] text-white/55">After your first call</p>
+                <p className="font-sans text-[11px] uppercase tracking-[0.2em] text-white/55">After your first call</p>
                 <ul className="mt-4 space-y-3">
                   {dossier.map(d => (
                     <li key={d} className="flex gap-3 font-sans text-[13.5px] leading-snug text-[#F7F3EC]/90">
@@ -838,7 +838,7 @@ export function PropertyDossier({ mandate }: { mandate: Mandate }) {
             transition={{ duration: 0.45, ease: EASE }}
             className="fixed inset-x-0 bottom-0 z-40 border-t border-[#B0834A]/30 bg-[#F7F3EC]/95 px-4 pb-[max(12px,env(safe-area-inset-bottom))] pt-3 backdrop-blur-md lg:hidden"
           >
-            <p className="mb-2 truncate font-sans text-[9.5px] uppercase tracking-[0.24em] text-[#7D8292]">{mandate.name}</p>
+            <p className="mb-2 truncate font-sans text-[10.5px] uppercase tracking-[0.24em] text-[#7D8292]">{mandate.name}</p>
             <div className="flex gap-2">
               <a
                 href={wa}

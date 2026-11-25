@@ -164,7 +164,7 @@ export function ConsentManager() {
                 <h4 className="font-sans text-[11px] font-semibold uppercase tracking-[0.2em] text-[#15213A] mb-1">{label}</h4>
                 <p className="font-serif text-[1.02rem] text-[#4A5163]">{description}</p>
                 {consent && (
-                  <p className="font-sans text-[10px] uppercase tracking-[0.18em] text-[#7D8292] mt-2">
+                  <p className="font-sans text-[10px] uppercase tracking-[0.18em] text-[#5F6575] mt-2">
                     Last updated: {new Date(consent.consent_timestamp).toLocaleDateString('en-IN')}
                   </p>
                 )}

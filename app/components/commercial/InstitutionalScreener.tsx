@@ -99,7 +99,7 @@ export function InstitutionalScreener() {
           {/* Question 01: Asset / Industry */}
           <div>
             <div className="flex items-center justify-between mb-2.5">
-              <label className="text-[11px] font-sans uppercase tracking-[0.18em] text-[#7D8292] font-semibold">
+              <label className="text-[11px] font-sans uppercase tracking-[0.18em] text-[#5F6575] font-semibold">
                 Question 01 · Asset & Industry Class
               </label>
               <span className="text-[10px] text-[#94643A] font-medium">Select Class</span>
@@ -123,7 +123,7 @@ export function InstitutionalScreener() {
                         : 'bg-[#F7F3EC] border-[#D6CAB5] text-[#4A5163] hover:text-[#15213A] hover:bg-[#EFE8DC]'
                     }`}
                   >
-                    <Icon className={`w-4 h-4 ${active ? 'text-[#B0834A]' : 'text-[#7D8292]'}`} />
+                    <Icon className={`w-4 h-4 ${active ? 'text-[#B0834A]' : 'text-[#5F6575]'}`} />
                     <span className="text-xs font-sans font-medium">{sec.label}</span>
                   </button>
                 )
@@ -133,7 +133,7 @@ export function InstitutionalScreener() {
 
           {/* Question 02: Strategic Corridor */}
           <div>
-            <label className="block text-[11px] font-sans uppercase tracking-[0.18em] text-[#7D8292] font-semibold mb-2.5">
+            <label className="block text-[11px] font-sans uppercase tracking-[0.18em] text-[#5F6575] font-semibold mb-2.5">
               Question 02 · Strategic Tamil Nadu Corridor
             </label>
             <div className="space-y-1.5">
@@ -151,10 +151,10 @@ export function InstitutionalScreener() {
                     }`}
                   >
                     <div className="flex items-center gap-2">
-                      <MapPin className={`w-3.5 h-3.5 ${active ? 'text-[#94643A]' : 'text-[#7D8292]'}`} />
+                      <MapPin className={`w-3.5 h-3.5 ${active ? 'text-[#94643A]' : 'text-[#5F6575]'}`} />
                       <span className="text-xs font-sans">{c.label}</span>
                     </div>
-                    <span className="text-[10px] text-[#7D8292] hidden sm:inline">{c.desc}</span>
+                    <span className="text-[10px] text-[#5F6575] hidden sm:inline">{c.desc}</span>
                   </button>
                 )
               })}
@@ -163,7 +163,7 @@ export function InstitutionalScreener() {
 
           {/* Question 03: Scale & Capacity */}
           <div>
-            <label className="block text-[11px] font-sans uppercase tracking-[0.18em] text-[#7D8292] font-semibold mb-2.5">
+            <label className="block text-[11px] font-sans uppercase tracking-[0.18em] text-[#5F6575] font-semibold mb-2.5">
               Question 03 · Target Extent / Capacity
             </label>
             <div className="flex flex-wrap gap-2 mb-3">
@@ -194,7 +194,7 @@ export function InstitutionalScreener() {
           {/* Question 04: Indicative Budget Outlay */}
           <div>
             <div className="flex items-center justify-between mb-2">
-              <label className="text-[11px] font-sans uppercase tracking-[0.18em] text-[#7D8292] font-semibold">
+              <label className="text-[11px] font-sans uppercase tracking-[0.18em] text-[#5F6575] font-semibold">
                 Question 04 · Target Capital Outlay
               </label>
               <span className="text-sm font-sans font-bold text-[#15213A]">
@@ -210,7 +210,7 @@ export function InstitutionalScreener() {
               onChange={e => setBudgetCrores(Number(e.target.value))}
               className="w-full accent-[#15213A] cursor-pointer"
             />
-            <div className="flex justify-between text-[10px] text-[#7D8292] mt-1">
+            <div className="flex justify-between text-[10px] text-[#5F6575] mt-1">
               <span>₹15 Cr</span>
               <span>₹100 Cr</span>
               <span>₹250+ Cr</span>

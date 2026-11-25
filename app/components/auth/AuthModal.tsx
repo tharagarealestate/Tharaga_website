@@ -108,7 +108,7 @@ function Field({
 }) {
   return (
     <div className="group space-y-1.5">
-      <label className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-[#7D8292]">
+      <label className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-[#5F6575]">
         <span className="text-[#4A5875]">{icon}</span>
         {label}
       </label>
@@ -371,7 +371,7 @@ export function AuthModal() {
                         </p>
                         <button
                           onClick={() => { setStage('idle'); switchTab('signin') }}
-                          className="mt-3 text-xs text-[#7D8292] hover:text-[#D9AE78] transition-colors underline underline-offset-2"
+                          className="mt-3 text-xs text-[#5F6575] hover:text-[#D9AE78] transition-colors underline underline-offset-2"
                         >
                           Back to sign in
                         </button>
@@ -406,7 +406,7 @@ export function AuthModal() {
                         onClick={() => setOpen(false)}
                         disabled={isLoading}
                         aria-label="Close"
-                        className="w-7 h-7 rounded-lg flex items-center justify-center text-[#7D8292] hover:text-[#E4DACA] hover:bg-[#22314F]/70 transition-all disabled:opacity-30"
+                        className="w-7 h-7 rounded-lg flex items-center justify-center text-[#5F6575] hover:text-[#E4DACA] hover:bg-[#22314F]/70 transition-all disabled:opacity-30"
                       >
                         <X className="w-3.5 h-3.5" />
                       </button>
@@ -431,7 +431,7 @@ export function AuthModal() {
                             onClick={() => switchTab(t)}
                             disabled={isLoading}
                             className={`relative z-10 flex-1 py-2 text-xs font-semibold rounded-lg transition-colors duration-150 ${
-                              tab === t ? 'text-[#F7F3EC]' : 'text-[#7D8292] hover:text-[#C9CCD4]'
+                              tab === t ? 'text-[#F7F3EC]' : 'text-[#5F6575] hover:text-[#C9CCD4]'
                             }`}
                           >
                             {t === 'signin' ? 'Sign In' : 'Create Account'}
@@ -664,9 +664,9 @@ export function AuthModal() {
                               <motion.div custom={7} variants={fieldV} initial="hidden" animate="visible" className="space-y-1">
                                 <p className="text-center text-[11px] text-[#4A5875]">
                                   By signing up you agree to our{' '}
-                                  <a href="/terms" className="text-[#7D8292] hover:text-[#C9CCD4] underline underline-offset-2 transition-colors">Terms</a>
+                                  <a href="/terms" className="text-[#5F6575] hover:text-[#C9CCD4] underline underline-offset-2 transition-colors">Terms</a>
                                   {' & '}
-                                  <a href="/privacy" className="text-[#7D8292] hover:text-[#C9CCD4] underline underline-offset-2 transition-colors">Privacy Policy</a>
+                                  <a href="/privacy" className="text-[#5F6575] hover:text-[#C9CCD4] underline underline-offset-2 transition-colors">Privacy Policy</a>
                                 </p>
                                 <p className="text-center text-[11px] text-[#4A5875]">
                                   Have an account?{' '}

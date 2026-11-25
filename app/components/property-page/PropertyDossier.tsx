@@ -139,7 +139,7 @@ function SectionNav({ sections }: { sections: { id: string; label: string }[] })
             <a
               href={`#${s.id}`}
               className={`relative block py-4 font-sans text-[11px] uppercase tracking-[0.2em] transition-colors ${
-                active === s.id ? 'text-[#15213A]' : 'text-[#7D8292] hover:text-[#15213A]'
+                active === s.id ? 'text-[#15213A]' : 'text-[#5F6575] hover:text-[#15213A]'
               }`}
             >
               {s.label}
@@ -426,7 +426,7 @@ function DistanceBars({ items }: { items: NonNullable<Mandate['nearby']> }) {
             </span>
             <span className="text-right font-sans text-[12px] tracking-[0.08em] text-[#15213A]">
               {n.distance}
-              {n.note && <span className="block text-[10.5px] uppercase tracking-[0.2em] text-[#7D8292]">{n.note}</span>}
+              {n.note && <span className="block text-[10.5px] uppercase tracking-[0.2em] text-[#5F6575]">{n.note}</span>}
             </span>
           </li>
         )
@@ -673,12 +673,12 @@ export function PropertyDossier({ mandate }: { mandate: Mandate }) {
             <motion.dl {...reveal} className="grid grid-cols-1 border-t border-[#B0834A]/25 sm:grid-cols-2">
               {facts.map(f => (
                 <div key={f.label} className="flex items-baseline justify-between gap-6 border-b border-[#B0834A]/25 py-5 sm:pr-8 sm:even:pl-8 sm:even:pr-0">
-                  <dt className="shrink-0 font-sans text-[11px] uppercase tracking-[0.24em] text-[#7D8292]">{f.label}</dt>
+                  <dt className="shrink-0 font-sans text-[11px] uppercase tracking-[0.24em] text-[#5F6575]">{f.label}</dt>
                   <dd className="text-right font-serif text-[1.15rem] leading-snug text-[#15213A]">{f.value}</dd>
                 </div>
               ))}
               <div className="flex items-baseline justify-between gap-6 border-b border-[#B0834A]/25 py-5 sm:pr-8 sm:even:pl-8 sm:even:pr-0">
-                <dt className="shrink-0 font-sans text-[11px] uppercase tracking-[0.24em] text-[#7D8292]">Price</dt>
+                <dt className="shrink-0 font-sans text-[11px] uppercase tracking-[0.24em] text-[#5F6575]">Price</dt>
                 <dd className="text-right font-serif text-[1.15rem] italic leading-snug text-[#94643A]">Shared privately on enquiry</dd>
               </div>
             </motion.dl>
@@ -694,7 +694,7 @@ export function PropertyDossier({ mandate }: { mandate: Mandate }) {
                           {r.label}
                         </th>
                         <td className="py-4 pr-4 text-right font-sans text-[13.5px] font-medium text-[#15213A]">{r.value}</td>
-                        <td className="hidden w-40 py-4 text-right font-sans text-[11px] uppercase tracking-[0.2em] text-[#7D8292] sm:table-cell">{r.note ?? ''}</td>
+                        <td className="hidden w-40 py-4 text-right font-sans text-[11px] uppercase tracking-[0.2em] text-[#5F6575] sm:table-cell">{r.note ?? ''}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -838,7 +838,7 @@ export function PropertyDossier({ mandate }: { mandate: Mandate }) {
             transition={{ duration: 0.45, ease: EASE }}
             className="fixed inset-x-0 bottom-0 z-40 border-t border-[#B0834A]/30 bg-[#F7F3EC]/95 px-4 pb-[max(12px,env(safe-area-inset-bottom))] pt-3 backdrop-blur-md lg:hidden"
           >
-            <p className="mb-2 truncate font-sans text-[10.5px] uppercase tracking-[0.24em] text-[#7D8292]">{mandate.name}</p>
+            <p className="mb-2 truncate font-sans text-[10.5px] uppercase tracking-[0.24em] text-[#5F6575]">{mandate.name}</p>
             <div className="flex gap-2">
               <a
                 href={wa}

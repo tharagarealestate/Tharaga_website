@@ -109,12 +109,12 @@ export function PortfolioShowcase() {
           </AnimatePresence>
         </motion.div>
 
-        <p className="mt-3 font-sans text-[12.5px] text-[#7D8292] sm:hidden">Swipe to see more →</p>
+        <p className="mt-3 font-sans text-[12.5px] text-[#5F6575] sm:hidden">Swipe to see more →</p>
         <div className="mt-10 flex flex-col items-center gap-3 text-center sm:mt-14">
           <Button arrow href={cat === 'all' ? '/properties' : `/properties?cat=${cat}`}>
             {more > 0 ? `See all ${list.length} ${cat === 'all' ? 'properties' : CATEGORY_LABELS[cat].toLowerCase()}` : 'Open the full portfolio'}
           </Button>
-          <p className="font-sans text-[13px] text-[#7D8292]">Filter by type, region and size · save a shortlist · share it with the desk</p>
+          <p className="font-sans text-[13px] text-[#5F6575]">Filter by type, region and size · save a shortlist · share it with the desk</p>
         </div>
       </div>
     </section>

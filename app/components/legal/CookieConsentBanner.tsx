@@ -133,7 +133,7 @@ export function CookieConsentBanner() {
                   <button
                     type="button"
                     onClick={() => setSettings(false)}
-                    className="font-sans text-[10px] font-semibold uppercase tracking-[0.24em] text-[#7D8292] hover:text-[#15213A]"
+                    className="font-sans text-[10px] font-semibold uppercase tracking-[0.24em] text-[#5F6575] hover:text-[#15213A]"
                   >
                     Back
                   </button>

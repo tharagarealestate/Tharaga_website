@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   X, Building2, Sun, Mountain, Warehouse,
@@ -47,6 +47,12 @@ export function CommercialIntakeModal({ isOpen, onClose, user, onSuccess }: Comm
   const [sellerName, setSellerName] = useState(user?.user_metadata?.full_name || user?.user_metadata?.name || '')
   const [sellerPhone, setSellerPhone] = useState(user?.user_metadata?.phone || '')
   const [sellerEmail, setSellerEmail] = useState(user?.email || '')
+  useEffect(() => {
+    if (!user) return
+    setSellerName(n => n || user.user_metadata?.full_name || user.user_metadata?.name || '')
+    setSellerPhone(p => p || user.user_metadata?.phone || '')
+    setSellerEmail(e => e || user.email || '')
+  }, [user])
 
   // Media files (photos & videos)
   const [mediaFiles, setMediaFiles] = useState<MediaItem[]>([])

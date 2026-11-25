@@ -36,8 +36,12 @@ export function PortfolioExplorer() {
 
   // Legacy deep links (/properties?m=<slug>) now go to the property's own page
   useEffect(() => {
-    const slug = new URLSearchParams(window.location.search).get('m')
+    const q = new URLSearchParams(window.location.search)
+    const slug = q.get('m')
     if (slug && MANDATES.some(x => x.slug === slug)) router.replace(`/properties/${slug}`)
+    const cat = q.get('cat') as MandateCategory | null
+    if (cat && MANDATES.some(x => x.category === cat)) setCategory(cat)
+    if (q.get('shortlist') === '1') setDrawer(true)
   }, [router])
   const openMandate = useCallback((m: Mandate | null) => {
     if (m) router.push(`/properties/${m.slug}`)
@@ -119,7 +123,7 @@ export function PortfolioExplorer() {
                 { k: 'Property types', v: categories.length - 1 },
               ].map((s, i) => (
                 <div key={s.k} className={`flex flex-col-reverse ${i === 0 ? 'pr-6' : 'px-6'}`}>
-                  <dt className="mt-2 font-sans text-[9.5px] uppercase tracking-[0.3em] text-white/50">{s.k}</dt>
+                  <dt className="mt-2 font-sans text-[10.5px] uppercase tracking-[0.22em] text-white/50">{s.k}</dt>
                   <dd className="font-display text-3xl">{s.v}</dd>
                 </div>
               ))}
@@ -140,7 +144,7 @@ export function PortfolioExplorer() {
                   <button
                     key={c}
                     onClick={() => setCategory(c)}
-                    className={`relative shrink-0 py-2 font-sans text-[10px] uppercase tracking-[0.26em] transition-colors ${
+                    className={`relative shrink-0 py-2 font-sans text-[11px] uppercase tracking-[0.2em] transition-colors ${
                       active ? 'text-[#15213A]' : 'text-[#7D8292] hover:text-[#15213A]'
                     }`}
                   >
@@ -186,7 +190,7 @@ export function PortfolioExplorer() {
                   key={v}
                   onClick={() => setView(v)}
                   aria-pressed={view === v}
-                  className={`px-3.5 py-2 font-sans text-[9.5px] uppercase tracking-[0.24em] transition-colors ${
+                  className={`px-3.5 py-2 font-sans text-[10.5px] uppercase tracking-[0.24em] transition-colors ${
                     view === v ? 'bg-[#15213A] text-[#F7F3EC]' : 'text-[#4A5163] hover:text-[#15213A]'
                   }`}
                 >
@@ -201,7 +205,7 @@ export function PortfolioExplorer() {
       {/* ── Results ──────────────────────────────────────────────── */}
       <section className="bg-[#F7F3EC] pt-14 pb-32 min-h-[60vh]">
         <div className="max-w-7xl mx-auto px-5 sm:px-8">
-          <p className="mb-10 font-sans text-[10px] uppercase tracking-[0.3em] text-[#7D8292]">
+          <p className="mb-10 font-sans text-[11px] uppercase tracking-[0.22em] text-[#7D8292]">
             Showing <span className="text-[#15213A]">{list.length}</span> of {MANDATES.length} properties
           </p>
 
@@ -282,7 +286,7 @@ export function PortfolioExplorer() {
             className="pointer-events-auto flex items-center gap-4 whitespace-nowrap bg-[#15213A] px-6 py-3.5 text-[#F7F3EC] shadow-[0_20px_50px_-15px_rgba(14,23,41,0.7)]"
           >
             <span className="h-2.5 w-2.5 rotate-45 bg-[#B0834A]" />
-            <span className="font-sans text-[10px] uppercase tracking-[0.28em]">
+            <span className="font-sans text-[11px] uppercase tracking-[0.2em]">
               <span className="hidden sm:inline">Your </span>shortlist · {shortlist.items.length}
             </span>
             <span className="font-serif italic text-[#E6C9A0]">Review →</span>
@@ -312,10 +316,10 @@ export function PortfolioExplorer() {
             >
               <div className="flex items-center justify-between border-b border-[#B0834A]/25 px-7 py-6">
                 <div>
-                  <p className="font-sans text-[10px] uppercase tracking-[0.3em] text-[#94643A]">Private</p>
+                  <p className="font-sans text-[11px] uppercase tracking-[0.22em] text-[#94643A]">Private</p>
                   <h2 className="mt-1 font-display text-2xl tracking-[0.04em] text-[#15213A]">Your shortlist</h2>
                 </div>
-                <button onClick={() => setDrawer(false)} className="font-sans text-[10px] uppercase tracking-[0.26em] text-[#4A5163]">
+                <button onClick={() => setDrawer(false)} className="font-sans text-[11px] uppercase tracking-[0.2em] text-[#4A5163]">
                   Close
                 </button>
               </div>
@@ -334,11 +338,11 @@ export function PortfolioExplorer() {
                     </button>
                     <div className="min-w-0 flex-1">
                       <p className="font-display text-[0.95rem] leading-snug text-[#15213A]">{m.name}</p>
-                      <p className="mt-1 font-sans text-[9.5px] uppercase tracking-[0.22em] text-[#7D8292]">{m.location}</p>
+                      <p className="mt-1 font-sans text-[10.5px] uppercase tracking-[0.22em] text-[#7D8292]">{m.location}</p>
                     </div>
                     <button
                       onClick={() => shortlist.toggle(m.slug)}
-                      className="font-sans text-[9.5px] uppercase tracking-[0.22em] text-[#94643A]"
+                      className="font-sans text-[10.5px] uppercase tracking-[0.22em] text-[#94643A]"
                     >
                       Remove
                     </button>
@@ -352,7 +356,7 @@ export function PortfolioExplorer() {
                 <Button full arrow href={shortlistWhatsappLink(savedMandates.map(m => m.name))}>
                   Request a private briefing
                 </Button>
-                <button onClick={shortlist.clear} className="w-full font-sans text-[9.5px] uppercase tracking-[0.24em] text-[#7D8292]">
+                <button onClick={shortlist.clear} className="w-full font-sans text-[10.5px] uppercase tracking-[0.24em] text-[#7D8292]">
                   Clear shortlist
                 </button>
               </div>
@@ -377,7 +381,7 @@ function Select({
   options: { v: string; l: string }[]
 }) {
   return (
-    <label className="flex items-center gap-2 whitespace-nowrap font-sans text-[9.5px] uppercase tracking-[0.24em] text-[#7D8292]">
+    <label className="flex items-center gap-2 whitespace-nowrap font-sans text-[10.5px] uppercase tracking-[0.24em] text-[#7D8292]">
       {label}
       <select
         value={value}
@@ -428,7 +432,7 @@ function IndexView({
       }}
       onMouseLeave={() => setHover(null)}
     >
-      <div className="hidden md:grid grid-cols-[3.5rem_1.6fr_1fr_1fr_auto] gap-6 border-b border-[#15213A] pb-3 font-sans text-[9.5px] uppercase tracking-[0.28em] text-[#7D8292]">
+      <div className="hidden md:grid grid-cols-[3.5rem_1.6fr_1fr_1fr_auto] gap-6 border-b border-[#15213A] pb-3 font-sans text-[10.5px] uppercase tracking-[0.2em] text-[#7D8292]">
         <span>No.</span>
         <span>Mandate</span>
         <span>Location</span>
@@ -458,7 +462,7 @@ function IndexView({
                 </div>
               )}
             </div>
-            <p className="col-start-2 md:col-start-auto font-sans text-[10px] uppercase tracking-[0.22em] text-[#4A5163]">
+            <p className="col-start-2 md:col-start-auto font-sans text-[11px] uppercase tracking-[0.22em] text-[#4A5163]">
               {m.location}
               <span className="block text-[#A9A190]">{m.region}</span>
             </p>

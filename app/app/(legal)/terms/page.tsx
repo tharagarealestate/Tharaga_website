@@ -7,7 +7,8 @@ import { LegalTableOfContents } from '@/components/legal/LegalTableOfContents';
 import { LegalContent } from '@/types/legal';
 
 export const metadata: Metadata = {
-  title: 'Terms of Service | Tharaga',
+  title: 'Terms of Service | Tharaga Estates',
+  alternates: { canonical: '/terms' },
   description: 'Terms of Service of Tharaga Estates, a private real estate advisory in Tamil Nadu',
   robots: 'index, follow',
 };

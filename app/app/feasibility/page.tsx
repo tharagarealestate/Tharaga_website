@@ -7,7 +7,7 @@ import { Eyebrow, Grain } from '@/components/portfolio/primitives'
 export const metadata: Metadata = {
   title: 'Land Check — What is your land right for?',
   description:
-    'Answer four questions and see what to check, which Tamil Nadu approvals apply, and which properties in our portfolio fit — for solar, quarries, factories, commercial and residential land.',
+    'Free land check for Tamil Nadu: four questions show the checks to make, the approvals that apply and matching properties — solar, quarry, factory or homes.',
   alternates: { canonical: '/feasibility' },
 }
 

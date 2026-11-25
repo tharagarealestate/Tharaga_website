@@ -226,7 +226,7 @@ export function AuthModal() {
         provider: 'google',
         options: {
           redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(nextPath)}`,
-          queryParams: { access_type: 'offline', prompt: 'consent' },
+          queryParams: { prompt: 'select_account' },
         },
       })
       if (error) await fail(error.message)

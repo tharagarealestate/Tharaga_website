@@ -63,7 +63,7 @@ export function LandCheck({ onOpenMandate }: { onOpenMandate?: (m: Mandate) => v
                 {['I', 'II', 'III', 'IV'][i]}
               </span>
               <span
-                className={`mt-1 hidden font-sans text-[9.5px] uppercase tracking-[0.2em] sm:block ${
+                className={`mt-1 hidden font-sans text-[10.5px] uppercase tracking-[0.2em] sm:block ${
                   state === 'todo' ? 'text-[#A9A190]' : 'text-[#15213A]'
                 }`}
               >
@@ -89,7 +89,7 @@ export function LandCheck({ onOpenMandate }: { onOpenMandate?: (m: Mandate) => v
             transition={{ duration: 0.35, ease: EASE }}
             className="p-6 sm:p-10"
           >
-            <p className="font-sans text-[10px] uppercase tracking-[0.3em] text-[#94643A]">
+            <p className="font-sans text-[11px] uppercase tracking-[0.22em] text-[#94643A]">
               Question {step + 1} of {STEPS.length}
             </p>
             <h3 className="mt-3 font-display text-2xl tracking-[0.03em] text-[#15213A] sm:text-[2rem] sm:leading-tight">
@@ -130,7 +130,7 @@ export function LandCheck({ onOpenMandate }: { onOpenMandate?: (m: Mandate) => v
               <button
                 type="button"
                 onClick={() => setStep(s => s - 1)}
-                className="mt-8 font-sans text-[10px] font-semibold uppercase tracking-[0.24em] text-[#7D8292] hover:text-[#15213A]"
+                className="mt-8 font-sans text-[11px] font-semibold uppercase tracking-[0.24em] text-[#7D8292] hover:text-[#15213A]"
               >
                 ← Previous question
               </button>
@@ -147,7 +147,7 @@ export function LandCheck({ onOpenMandate }: { onOpenMandate?: (m: Mandate) => v
             >
               <div className="flex flex-col gap-4 border-b border-[#D6CAB5] pb-8 sm:flex-row sm:items-end sm:justify-between">
                 <div>
-                  <p className="font-sans text-[10px] uppercase tracking-[0.3em] text-[#94643A]">Your land check</p>
+                  <p className="font-sans text-[11px] uppercase tracking-[0.22em] text-[#94643A]">Your land check</p>
                   <h3 className="mt-3 font-display text-2xl tracking-[0.03em] text-[#15213A] sm:text-3xl">
                     {USES.find(u => u.id === answers.use)?.label} · {REGIONS.find(r => r.id === answers.region)?.label}
                   </h3>
@@ -158,7 +158,7 @@ export function LandCheck({ onOpenMandate }: { onOpenMandate?: (m: Mandate) => v
                 <button
                   type="button"
                   onClick={restart}
-                  className="self-start font-sans text-[10px] font-semibold uppercase tracking-[0.24em] text-[#7D8292] underline decoration-[#B0834A]/50 underline-offset-[6px] hover:text-[#15213A] sm:self-auto"
+                  className="self-start font-sans text-[11px] font-semibold uppercase tracking-[0.24em] text-[#7D8292] underline decoration-[#B0834A]/50 underline-offset-[6px] hover:text-[#15213A] sm:self-auto"
                 >
                   Start again
                 </button>
@@ -174,7 +174,7 @@ export function LandCheck({ onOpenMandate }: { onOpenMandate?: (m: Mandate) => v
 
               {(report.matches.length > 0 || report.nearMatches.length > 0) && (
                 <div className="mt-12 border-t border-[#D6CAB5] pt-10">
-                  <p className="font-sans text-[10px] uppercase tracking-[0.3em] text-[#94643A]">
+                  <p className="font-sans text-[11px] uppercase tracking-[0.22em] text-[#94643A]">
                     {report.matches.length ? 'Properties in our portfolio that fit' : 'Closest properties in our portfolio'}
                   </p>
                   <div className="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
@@ -191,7 +191,7 @@ export function LandCheck({ onOpenMandate }: { onOpenMandate?: (m: Mandate) => v
                           </span>
                         </span>
                         <span className="mt-3 block font-display text-[1.05rem] leading-snug text-[#15213A]">{m.name}</span>
-                        <span className="mt-1 block font-sans text-[10px] uppercase tracking-[0.2em] text-[#7D8292]">
+                        <span className="mt-1 block font-sans text-[11px] uppercase tracking-[0.2em] text-[#7D8292]">
                           {m.location} · {m.stats[0]}
                         </span>
                       </button>
@@ -216,7 +216,7 @@ export function LandCheck({ onOpenMandate }: { onOpenMandate?: (m: Mandate) => v
                   </Button>
                 </div>
               </div>
-              <p className="mt-5 font-sans text-[10px] uppercase leading-relaxed tracking-[0.16em] text-[#7D8292]">
+              <p className="mt-5 font-sans text-[11px] uppercase leading-relaxed tracking-[0.16em] text-[#7D8292]">
                 General guidance based on Tamil Nadu approval requirements. It is not legal advice or a valuation —
                 requirements for a specific parcel are confirmed by verification.
               </p>

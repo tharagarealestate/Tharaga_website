@@ -30,10 +30,10 @@ export async function GET(request: NextRequest) {
   const code      = searchParams.get('code')
   const tokenHash = searchParams.get('token_hash')
   const type      = searchParams.get('type') as 'email' | 'signup' | 'recovery' | 'invite' | 'magiclink' | null
-  const next      = searchParams.get('next') ?? '/builder'
+  const next      = searchParams.get('next') ?? '/'
 
   // Security: only allow relative paths (prevent open-redirect)
-  const redirectTo = next.startsWith('/') ? next : '/builder'
+  const redirectTo = next.startsWith('/') && !next.startsWith('//') ? next : '/'
 
   // ── 1. PKCE (Google OAuth) ────────────────────────────────────────────────
   // ── 2. Email OTP / Magic Link ─────────────────────────────────────────────
@@ -97,17 +97,17 @@ export async function GET(request: NextRequest) {
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Signing you in…</title>
   <style>
-    body { margin:0; background:#09090b; display:flex; align-items:center; justify-content:center; min-height:100vh; font-family:system-ui,sans-serif; }
+    body { margin:0; background:#15213A; display:flex; align-items:center; justify-content:center; min-height:100vh; font-family:system-ui,sans-serif; }
     .wrap { text-align:center; }
-    .spinner { width:32px; height:32px; border-radius:50%; border:2px solid rgba(245,158,11,0.2); border-top-color:#f59e0b; animation:spin .7s linear infinite; margin:0 auto 16px; }
+    .spinner { width:32px; height:32px; border-radius:50%; border:2px solid rgba(230,201,160,0.2); border-top-color:#E6C9A0; animation:spin .7s linear infinite; margin:0 auto 16px; }
     @keyframes spin { to { transform:rotate(360deg) } }
-    p { color:#71717a; font-size:13px; margin:0; }
+    p { color:#F7F3EC; opacity:.8; font-size:14px; letter-spacing:.04em; margin:0; }
   </style>
 </head>
 <body>
   <div class="wrap">
     <div class="spinner"></div>
-    <p>Completing sign in&hellip;</p>
+    <p>Tharaga Estates &middot; signing you in&hellip;</p>
   </div>
   <script>
     (function () {

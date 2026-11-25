@@ -86,7 +86,7 @@ export function FeatureMandate({ mandate, index, onOpen }: { mandate: Mandate; i
           <span className="font-display text-[3.4rem] leading-none text-[#B0834A]/35 transition-colors duration-700 group-hover:text-[#B0834A]">
             {roman}
           </span>
-          <p className="font-sans text-[10.5px] uppercase tracking-[0.32em] text-[#94643A]">
+          <p className="font-sans text-[10.5px] uppercase tracking-[0.22em] text-[#94643A]">
             {CATEGORY_LABELS[mandate.category]}
           </p>
         </div>
@@ -105,7 +105,7 @@ export function FeatureMandate({ mandate, index, onOpen }: { mandate: Mandate; i
           <StatPills stats={mandate.stats} />
         </div>
         <div className="mt-9 flex items-center gap-9">
-          <span className="relative font-sans text-[10.5px] uppercase tracking-[0.3em] text-[#15213A]">
+          <span className="relative font-sans text-[10.5px] uppercase tracking-[0.22em] text-[#15213A]">
             View the dossier
             <span className="absolute left-0 -bottom-1.5 h-px w-full origin-left scale-x-0 bg-[#B0834A] transition-transform duration-500 group-hover:scale-x-100" />
           </span>
@@ -152,21 +152,21 @@ export function MandateCard({
         </div>
         <div
           className={`absolute inset-0 bg-gradient-to-t ${
-            plate ? 'from-[#0E1729]/90 via-[#0E1729]/25 to-transparent' : 'from-[#0E1729]/85 via-[#0E1729]/10 to-transparent'
+            plate ? 'from-[#0E1729]/90 via-[#0E1729]/25 to-transparent' : 'from-[#0B1220]/95 via-[#0B1220]/35 to-[#0B1220]/30'
           }`}
         />
         <Corners />
 
         <div className="absolute top-6 left-6 right-6 flex items-start justify-between gap-2">
           {mandate.badge ? <BadgeTag badge={mandate.badge} onDark /> : <span />}
-          <span className="hidden font-sans text-[9px] uppercase tracking-[0.26em] text-[#F7F3EC]/80 sm:inline">
+          <span className="hidden bg-[#0B1220]/55 px-2 py-1 font-sans text-[10.5px] uppercase tracking-[0.18em] text-[#F7F3EC] backdrop-blur-sm sm:inline">
             {CATEGORY_LABELS[mandate.category]}
           </span>
         </div>
 
         <div className="absolute inset-x-6 bottom-6 text-[#F7F3EC]">
-          <p className="font-sans text-[9.5px] uppercase tracking-[0.28em] text-[#E6C9A0]">{mandate.location}</p>
-          <h3 className="mt-2.5 font-display text-[1.3rem] sm:text-[1.4rem] leading-[1.22] tracking-[0.02em]">{mandate.name}</h3>
+          <p className="font-sans text-[11px] font-medium uppercase tracking-[0.18em] text-[#F0DDBF] [text-shadow:0_1px_8px_rgba(0,0,0,0.5)]">{mandate.location}</p>
+          <h3 className="mt-2.5 font-display text-[1.3rem] sm:text-[1.4rem] leading-[1.22] tracking-[0.02em] [text-shadow:0_2px_14px_rgba(0,0,0,0.45)]">{mandate.name}</h3>
           <div className="hidden transition-[grid-template-rows] duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] lg:grid lg:grid-rows-[0fr] lg:group-hover:grid-rows-[1fr] lg:group-focus-visible:grid-rows-[1fr]">
             <div className="overflow-hidden">
               <p className="pt-3 font-serif text-[1.08rem] leading-relaxed text-white/85 transition-all duration-700 lg:translate-y-3 lg:opacity-0 lg:group-hover:translate-y-0 lg:group-hover:opacity-100">
@@ -202,7 +202,7 @@ export function SaveToggle({ saved, onToggle, tone = 'dark' }: { saved: boolean;
       }}
       aria-pressed={saved}
       aria-label={saved ? 'Remove from shortlist' : 'Add to shortlist'}
-      className={`group/save inline-flex items-center gap-2 font-sans text-[10px] uppercase tracking-[0.26em] ${
+      className={`group/save inline-flex items-center gap-2 font-sans text-[11px] uppercase tracking-[0.2em] ${
         tone === 'dark' ? 'text-[#4A5163] hover:text-[#15213A]' : 'text-white/75 hover:text-white'
       }`}
     >

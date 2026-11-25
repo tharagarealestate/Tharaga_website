@@ -23,7 +23,7 @@ export function BrandedMessage({
       <Link href="/" aria-label="Tharaga Estates — home">
         <TharagaWordmark tone="ivory" height={96} priority />
       </Link>
-      <p className="mt-14 font-display text-sm tracking-[0.4em] text-[#D9AE78]">{numeral}</p>
+      <p className="mt-14 font-display text-sm tracking-[0.22em] text-[#D9AE78]">{numeral}</p>
       <h1 className="mt-6">
         <span className="block font-display text-4xl sm:text-6xl tracking-[0.04em]">{title}</span>{' '}
         <span className="block font-serif italic font-light text-4xl sm:text-6xl text-[#E6C9A0]">{italic}</span>
@@ -34,7 +34,7 @@ export function BrandedMessage({
         <Button variant="light" arrow href="/properties">
           View properties
         </Button>
-        <a href={telLink} className="font-sans text-[10.5px] uppercase tracking-[0.3em] text-[#E6C9A0] hover:text-[#F7F3EC]">
+        <a href={telLink} className="font-sans text-[10.5px] uppercase tracking-[0.22em] text-[#E6C9A0] hover:text-[#F7F3EC]">
           {DESK_PHONE_DISPLAY}
         </a>
       </div>

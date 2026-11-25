@@ -46,15 +46,19 @@ export function CinematicHero({ onListProperty }: { onListProperty: () => void }
         </motion.div>
 
         {/* Legibility: a deep wash on the text side and at the base; the light stays on the right */}
-        <div className="absolute inset-0 -z-10 bg-[linear-gradient(180deg,rgba(11,18,32,0.78)_0%,rgba(11,18,32,0.55)_45%,rgba(11,18,32,0.94)_100%)] lg:bg-[linear-gradient(90deg,rgba(11,18,32,0.94)_0%,rgba(11,18,32,0.8)_38%,rgba(11,18,32,0.35)_70%,rgba(11,18,32,0.25)_100%)]" />
-        <div className="absolute inset-x-0 bottom-0 -z-10 h-2/5 bg-gradient-to-t from-[#0B1220] to-transparent" />
-        <Grain opacity={0.1} />
+        {/* The original sunrise grade: light through the middle of the frame, deep at top and base */}
+        <div className="absolute inset-0 -z-10 bg-gradient-to-b from-[#0E1729]/70 via-[#0E1729]/20 to-[#0E1729]/95" />
+        <div className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_70%_55%_at_70%_35%,rgba(217,174,120,0.22),transparent_70%)]" />
+        {/* Legibility only where the copy sits — a soft shade, not a wall, so the light still reads */}
+        <div className="absolute inset-0 -z-10 bg-[radial-gradient(120%_70%_at_0%_70%,rgba(11,18,32,0.55),transparent_70%)] lg:bg-[linear-gradient(90deg,rgba(11,18,32,0.62)_0%,rgba(11,18,32,0.38)_34%,rgba(11,18,32,0.08)_56%,transparent_68%)]" />
+        <Grain opacity={0.16} />
         <div aria-hidden className="pointer-events-none absolute inset-3 border border-[#E6C9A0]/15 sm:inset-5" />
 
         <motion.div
           style={{ opacity: fade }}
-          className="relative mx-auto flex w-full max-w-7xl flex-1 flex-col justify-end px-5 pb-10 pt-[120px] sm:px-8 sm:pb-14 lg:justify-center lg:pb-16 lg:pt-[128px]"
+          className="relative mx-auto grid w-full max-w-7xl flex-1 items-end gap-10 px-5 pb-10 pt-[120px] sm:px-8 sm:pb-14 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center lg:gap-12 lg:pb-16 lg:pt-[128px]"
         >
+          <div className="min-w-0">
           <motion.p
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
@@ -95,7 +99,7 @@ export function CinematicHero({ onListProperty }: { onListProperty: () => void }
             initial={{ y: 10 }}
             animate={{ y: 0 }}
             transition={{ duration: 0.9, ease: EASE, delay: 0.2 }}
-            className="mt-6 max-w-xl font-sans text-[16px] leading-[1.65] text-[#F7F3EC]/90 sm:text-[17.5px]"
+            className="mt-6 max-w-xl font-sans text-[16px] leading-[1.65] text-[#F7F3EC]/90 [text-shadow:0_1px_18px_rgba(0,0,0,0.55)] sm:text-[17.5px]"
           >
             Land banks, solar plants, quarries and city property across Tamil Nadu — each represented directly by our desk.
             <span className="hidden sm:inline"> Browse the pipeline, shortlist what fits, and speak to us privately. Prices are shared in conversation.</span>
@@ -106,7 +110,7 @@ export function CinematicHero({ onListProperty }: { onListProperty: () => void }
             initial={{ opacity: 0, y: 18 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.9, ease: EASE, delay: 1 }}
-            className="mt-8 w-full max-w-3xl border border-[#E6C9A0]/25 bg-[#0B1220]/55 p-4 backdrop-blur-md sm:p-5"
+            className="mt-8 w-full max-w-2xl border border-[#E6C9A0]/25 bg-[#0B1220]/55 p-4 backdrop-blur-md sm:p-5"
           >
             <p className="font-sans text-[11px] font-semibold uppercase tracking-[0.18em] text-[#D9AE78]">Explore by type</p>
             <div className="mt-3 flex flex-wrap gap-2">
@@ -131,28 +135,36 @@ export function CinematicHero({ onListProperty }: { onListProperty: () => void }
                 onClick={onListProperty}
                 className="text-left font-sans text-[14px] text-[#F7F3EC]/85 underline decoration-[#D9AE78]/70 underline-offset-[6px] transition-colors hover:text-[#F7F3EC] sm:text-right"
               >
-                Own land or property? <span className="font-semibold text-[#F0DDBF]">List it with us →</span>
+                Own land or property? <span className="whitespace-nowrap font-semibold text-[#F0DDBF]">List it with us →</span>
               </button>
             </div>
           </motion.div>
 
-          <motion.ul
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 1, delay: 1.2 }}
-            className="mt-7 flex flex-wrap gap-x-8 gap-y-2 font-sans text-[13px] text-[#F7F3EC]/75"
+          </div>
+
+          {/* The numbers — set on the light side, like a plate in a monograph */}
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 1.1, ease: EASE, delay: 1.15 }}
+            className="lg:self-end lg:pb-2"
           >
-            {[
-              [`${PORTFOLIO_ACRES.toLocaleString('en-IN')}+`, 'acres represented'],
-              [String(counts.length), 'asset types'],
-              ['Direct', 'owner mandates'],
-            ].map(([v, k]) => (
-              <li key={k} className="flex items-baseline gap-2">
-                <span className="font-display text-[1.25rem] tracking-[0.02em] text-[#FBF8F2]">{v}</span>
-                <span>{k}</span>
-              </li>
-            ))}
-          </motion.ul>
+            <dl className="grid grid-cols-3 border-y border-[#E6C9A0]/25 py-5 lg:flex lg:border-y-0 lg:py-0">
+              {[
+                [`${PORTFOLIO_ACRES.toLocaleString('en-IN')}+`, 'Acres represented'],
+                [String(MANDATES.length), 'Properties open'],
+                [String(counts.length), 'Asset types'],
+              ].map(([v, k], i) => (
+                <div key={k} className={`flex flex-col items-center px-2 text-center lg:items-start lg:px-8 lg:text-left ${i ? 'border-l border-[#E6C9A0]/30' : 'lg:pl-0'}`}>
+                  <dt className="order-2 mt-2 font-sans text-[10.5px] font-semibold uppercase tracking-[0.2em] text-[#F0DDBF] sm:text-[11px]">{k}</dt>
+                  <dd className="order-1 font-serif text-[2.2rem] leading-none text-[#FBF8F2] [text-shadow:0_2px_24px_rgba(0,0,0,0.45)] sm:text-[2.8rem] lg:text-[3.6rem]">{v}</dd>
+                </div>
+              ))}
+            </dl>
+            <p className="mt-4 text-center font-serif text-[1.05rem] italic text-[#EBCB9C] lg:mt-5 lg:text-left lg:text-[1.15rem]">
+              Every one a direct owner mandate.
+            </p>
+          </motion.div>
         </motion.div>
       </section>
 

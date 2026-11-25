@@ -11,7 +11,7 @@ import { SmoothScroll } from '@/components/brand/SmoothScroll'
 import { SiteFooter, SiteHeader } from '@/components/brand/SiteHeader'
 import { DESK_PHONE_DISPLAY, telLink, whatsappLink } from '@/lib/mandates'
 import { useAuthUser } from '@/lib/useAuthUser'
-import { CommercialIntakeModal } from '@/components/commercial/CommercialIntakeModal'
+import { ListPropertyFlow } from '@/components/listing/ListPropertyFlow'
 import { MandateTracker } from '@/components/commercial/MandateTracker'
 
 const reveal = {
@@ -197,7 +197,7 @@ export function HomeClient() {
           </div>
         </div>
       )}
-      <CommercialIntakeModal isOpen={intake} onClose={() => setIntake(false)} user={user?.raw ?? null} />
+      <ListPropertyFlow isOpen={intake} onClose={() => setIntake(false)} />
     </div>
   )
 }

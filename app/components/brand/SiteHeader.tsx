@@ -341,26 +341,30 @@ const LEGAL = [
 ]
 
 export function SiteFooter() {
+  const linkCls = 'font-sans text-[14px] text-white/70 transition-colors hover:text-[#F7F3EC]'
   return (
-    <footer className="bg-[#0E1729] pb-10 pt-16 text-white/70 sm:pt-20">
+    <footer className="relative isolate overflow-hidden bg-[#0E1729] pb-10 pt-16 text-white/70 sm:pt-20">
+      {/* Warm horizon glow, echoing the hero */}
+      <div aria-hidden className="pointer-events-none absolute left-1/2 top-0 -z-10 h-[28rem] w-[min(68rem,140vw)] -translate-x-1/2 -translate-y-[38%] rounded-full bg-[radial-gradient(closest-side,rgba(255,196,128,0.26),rgba(176,131,74,0.12)_55%,transparent)] blur-2xl" />
+      <div aria-hidden className="pointer-events-none absolute -bottom-40 right-[-10%] -z-10 h-[26rem] w-[26rem] rounded-full bg-[radial-gradient(closest-side,rgba(176,131,74,0.18),transparent)] blur-2xl" />
+      <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[#E6C9A0]/45 to-transparent" />
+
       <div className="mx-auto max-w-7xl px-6 sm:px-10">
-        <div className="grid gap-12 md:grid-cols-12 md:items-start">
-          <div className="md:col-span-5">
-            <TharagaWordmark tone="ivory" variant="full" height={150} />
-            <p className="mt-6 max-w-sm font-serif text-[1.15rem] leading-relaxed text-white/65">
+        <div className="grid gap-12 text-center md:grid-cols-12 md:items-start md:gap-10 md:text-left">
+          <div className="flex flex-col items-center md:col-span-5 md:items-start">
+            <span className="md:hidden"><TharagaWordmark tone="ivory" variant="full" height={112} /></span>
+            <span className="hidden md:block"><TharagaWordmark tone="ivory" variant="full" height={136} /></span>
+            <p className="mt-5 max-w-sm font-serif text-[1.15rem] leading-relaxed text-white/70">
               Land, energy, quarries and city property across Tamil Nadu — represented directly by the Tharaga desk.
             </p>
           </div>
-          <nav aria-label="Footer" className="grid grid-cols-2 gap-10 md:col-span-4">
+
+          <nav aria-label="Footer" className="mx-auto grid w-full max-w-sm grid-cols-2 gap-8 border-y border-white/10 py-8 md:col-span-4 md:mx-0 md:max-w-none md:border-0 md:py-0 md:pt-3">
             <div>
               <p className="font-sans text-[11px] font-semibold uppercase tracking-[0.2em] text-[#D9AE78]">Explore</p>
               <ul className="mt-4 space-y-3">
                 {FOOTER_LINKS.map(l => (
-                  <li key={l.label}>
-                    <Link href={l.href} className="font-sans text-[14px] text-white/70 transition-colors hover:text-[#F7F3EC]">
-                      {l.label}
-                    </Link>
-                  </li>
+                  <li key={l.label}><Link href={l.href} className={linkCls}>{l.label}</Link></li>
                 ))}
               </ul>
             </div>
@@ -368,34 +372,32 @@ export function SiteFooter() {
               <p className="font-sans text-[11px] font-semibold uppercase tracking-[0.2em] text-[#D9AE78]">Legal</p>
               <ul className="mt-4 space-y-3">
                 {LEGAL.map(l => (
-                  <li key={l.label}>
-                    <Link href={l.href} className="font-sans text-[14px] text-white/70 transition-colors hover:text-[#F7F3EC]">
-                      {l.label}
-                    </Link>
-                  </li>
+                  <li key={l.label}><Link href={l.href} className={linkCls}>{l.label}</Link></li>
                 ))}
               </ul>
             </div>
           </nav>
-          <div className="md:col-span-3">
+
+          <div className="flex flex-col items-center md:col-span-3 md:items-start md:pt-3">
             <p className="font-sans text-[11px] font-semibold uppercase tracking-[0.2em] text-[#D9AE78]">The desk</p>
-            <a href={telLink} className="mt-4 block font-display text-[1.35rem] tracking-[0.04em] text-[#F7F3EC] hover:text-[#E6C9A0]">
+            <a href={telLink} className="mt-4 block font-display text-[1.4rem] tracking-[0.04em] text-[#F7F3EC] hover:text-[#E6C9A0]">
               {DESK_PHONE_DISPLAY}
             </a>
             <a
               href={whatsappLink('the Tharaga portfolio')}
               target="_blank"
               rel="noreferrer"
-              className="mt-3 inline-flex font-sans text-[14px] text-white/70 underline decoration-[#B0834A]/60 underline-offset-4 hover:text-[#F7F3EC]"
+              className="mt-4 inline-flex h-11 items-center border border-[#E6C9A0]/40 px-5 font-sans text-[12px] font-semibold uppercase tracking-[0.16em] text-[#F0DDBF] transition-colors hover:border-[#E6C9A0] hover:bg-[#E6C9A0] hover:text-[#15213A]"
             >
               Message on WhatsApp
             </a>
-            <p className="mt-3 font-sans text-[13px] text-white/50">Chennai, Tamil Nadu</p>
+            <p className="mt-4 font-sans text-[13px] text-white/55">Chennai, Tamil Nadu</p>
           </div>
         </div>
-        <div className="mt-14 flex flex-col items-center justify-between gap-3 border-t border-white/10 pt-6 font-sans text-[12px] text-white/45 sm:flex-row">
+
+        <div className="mt-14 flex flex-col items-center justify-between gap-2 border-t border-white/10 pt-6 text-center font-sans text-[12px] text-white/50 sm:flex-row sm:text-left">
           <span>© {new Date().getFullYear()} Tharaga Estates. All rights reserved.</span>
-          <span>tharaga.in</span>
+          <span className="tracking-[0.18em] uppercase">tharaga.in</span>
         </div>
       </div>
     </footer>

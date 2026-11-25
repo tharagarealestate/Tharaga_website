@@ -1,291 +1,142 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { motion } from 'framer-motion'
-import {
-  ShieldCheck, Clock, CheckCircle2, ArrowUpRight,
-  Building2, RefreshCw, AlertCircle, Lock,
-  ChevronRight, ExternalLink, Plus, MapPin, Phone
-} from 'lucide-react'
-import { openAuthModal } from '@/components/ui/AuthButton'
+import { useCallback, useEffect, useState } from 'react'
+import { AnimatePresence, motion } from 'framer-motion'
+import { Check, Image as ImageIcon, MapPin, Plus, RefreshCw } from 'lucide-react'
+import { getSupabase } from '@/lib/supabase'
 
-interface MandateTrackerProps {
-  user: any
-  onOpenIntake: () => void
+type Stage = { key: string; label: string; state: 'done' | 'current' | 'next'; at?: string | null }
+type Listing = {
+  id: string
+  reference: string
+  title: string
+  category: string
+  location: string
+  extent?: string | null
+  media_count: number
+  status: string
+  status_note?: string | null
+  created_at: string
+  stages: Stage[]
 }
 
-export function MandateTracker({ user, onOpenIntake }: MandateTrackerProps) {
-  const [mandates, setMandates] = useState<any[]>([])
-  const [loading, setLoading] = useState(false)
-  const [selectedMandate, setSelectedMandate] = useState<any>(null)
+const EASE = [0.22, 1, 0.36, 1] as const
+const fmtDate = (s?: string | null) =>
+  s ? new Date(s).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : ''
 
-  const fetchUserMandates = async () => {
+export function MandateTracker({ user, onOpenIntake }: { user: any; onOpenIntake: () => void }) {
+  const [listings, setListings] = useState<Listing[]>([])
+  const [active, setActive] = useState(0)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
+
+  const load = useCallback(async () => {
     if (!user) return
     setLoading(true)
+    setError('')
     try {
-      const q = new URLSearchParams()
-      if (user.id) q.set('user_id', user.id)
-      if (user.email) q.set('email', user.email)
-
-      const res = await fetch(`/api/commercial/mandates?${q.toString()}`)
-      const data = await res.json()
-      if (data.user_mandates && data.user_mandates.length > 0) {
-        setMandates(data.user_mandates)
-        setSelectedMandate(data.user_mandates[0])
-      } else {
-        setMandates([])
-        setSelectedMandate(null)
-      }
-    } catch (err) {
-      console.warn('Could not load user mandates:', err)
+      const token = (await getSupabase().auth.getSession()).data.session?.access_token
+      if (!token) throw new Error('Please sign in again to see your listings.')
+      const res = await fetch('/api/listings', { headers: { Authorization: `Bearer ${token}` }, cache: 'no-store' })
+      const j = await res.json()
+      if (!res.ok) throw new Error(j.error || 'Could not load your listings.')
+      setListings(j.listings || [])
+      setActive(0)
+    } catch (e: any) {
+      setError(e?.message || 'Could not load your listings.')
     } finally {
       setLoading(false)
     }
-  }
-
-  useEffect(() => {
-    fetchUserMandates()
   }, [user])
 
-  // Not signed in state
-  if (!user) {
-    return (
-      <div className="rounded-none bg-[#FBF8F2] border border-[#D6CAB5] p-8 sm:p-14 text-center relative overflow-hidden">
-        <div className="relative z-10 max-w-xl mx-auto space-y-5">
-          <div className="w-12 h-12 rounded-full bg-[#F4EFE6] border border-[#D6CAB5] flex items-center justify-center mx-auto text-[#94643A]">
-            <Lock className="w-5 h-5" />
-          </div>
+  useEffect(() => {
+    load()
+    const on = () => load()
+    window.addEventListener('tharaga:listing-created', on)
+    return () => window.removeEventListener('tharaga:listing-created', on)
+  }, [load])
 
-          <div>
-            <span className="text-[11px] font-sans uppercase tracking-[0.2em] text-[#94643A] font-semibold block mb-1">
-              Private Client Access
-            </span>
-            <h3 className="text-2xl sm:text-3xl font-display font-normal tracking-[0.03em] text-[#15213A]">
-              Track Your Property Status
-            </h3>
-            <p className="text-[#4A5163] text-xs sm:text-sm leading-relaxed mt-2 font-light">
-              Signed in with Google? Access the live review stage, title due diligence audit, and buyer matching for your submitted properties in real time.
-            </p>
-          </div>
+  const l = listings[active]
 
-          <div className="pt-3 flex flex-col sm:flex-row items-center justify-center gap-3">
-            <button
-              onClick={() => openAuthModal()}
-              className="w-full sm:w-auto px-7 py-3.5 bg-[#15213A] hover:bg-[#22314F] text-[#F7F3EC] font-sans text-[11.5px] uppercase tracking-[0.16em] font-semibold transition-all"
-            >
-              Sign in
-            </button>
-            <button
-              onClick={onOpenIntake}
-              className="w-full sm:w-auto px-6 py-3.5 bg-[#F7F3EC] hover:bg-[#EFE8DC] border border-[#D6CAB5] text-[#15213A] font-sans text-xs font-semibold transition-colors"
-            >
-              List a property
-            </button>
-          </div>
-        </div>
-      </div>
-    )
-  }
-
-  // Signed in state
   return (
-    <div className="rounded-none bg-[#FBF8F2] border border-[#D6CAB5] overflow-hidden text-[#15213A]">
-      {/* Header bar */}
-      <div className="px-6 sm:px-10 py-6 border-b border-[#D6CAB5] flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-[#F7F3EC]">
+    <div className="border border-[#D6CAB5] bg-[#FBF8F2]">
+      <div className="flex flex-wrap items-center justify-between gap-4 border-b border-[#E4DACA] px-5 py-5 sm:px-8">
         <div>
-          <div className="flex items-center gap-2 mb-1">
-            <span className="text-[11px] font-sans tracking-[0.18em] uppercase text-[#94643A] font-semibold">
-              Your account
-            </span>
-            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-          </div>
-          <h3 className="text-xl sm:text-2xl font-display font-normal tracking-[0.03em] text-[#15213A]">
-            Your listings
-          </h3>
-          <p className="text-xs text-[#4A5163] font-light">
-            Signed in as {user.email}. Follow review, verification and buyer interest for every property you list.
+          <p className="font-sans text-[11px] font-semibold uppercase tracking-[0.18em] text-[#94643A]">Your listings</p>
+          <p className="mt-1 font-display text-[1.35rem] tracking-[0.02em] text-[#15213A]">
+            {loading ? 'Loading…' : listings.length ? `${listings.length} propert${listings.length > 1 ? 'ies' : 'y'} with the desk` : 'Nothing listed yet'}
           </p>
         </div>
-
-        <div className="flex items-center gap-3 self-start sm:self-auto">
-          <button
-            onClick={fetchUserMandates}
-            disabled={loading}
-            className="p-2.5 bg-[#FBF8F2] border border-[#D6CAB5] hover:bg-[#EFE8DC] text-[#4A5163] transition-colors"
-            title="Refresh status"
-          >
-            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+        <div className="flex items-center gap-2">
+          <button onClick={load} aria-label="Refresh" className="flex h-11 w-11 items-center justify-center border border-[#D6CAB5] text-[#4A5163] hover:border-[#15213A] hover:text-[#15213A]">
+            <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
           </button>
-          <button
-            onClick={onOpenIntake}
-            className="flex items-center gap-1.5 px-4 py-2.5 bg-[#15213A] hover:bg-[#22314F] text-[#F7F3EC] text-xs font-sans font-semibold transition-all"
-          >
-            <Plus className="w-3.5 h-3.5 text-[#B0834A]" /> List a property
+          <button onClick={onOpenIntake} className="inline-flex h-11 items-center gap-2 bg-[#15213A] px-5 font-sans text-[11.5px] font-semibold uppercase tracking-[0.16em] text-[#F7F3EC] hover:bg-[#0E1729]">
+            <Plus className="h-4 w-4" /> List a property
           </button>
         </div>
       </div>
 
-      {/* Content Area */}
-      {mandates.length === 0 ? (
-        <div className="p-8 sm:p-12 text-center space-y-4">
-          <div className="w-12 h-12 rounded-full bg-[#F7F3EC] border border-[#D6CAB5] flex items-center justify-center mx-auto text-[#5F6575]">
-            <Building2 className="w-6 h-6" />
-          </div>
-          <div>
-            <h4 className="text-lg font-display font-normal tracking-[0.03em] text-[#15213A]">No listings yet</h4>
-            <p className="text-xs text-[#4A5163] max-w-md mx-auto mt-1 leading-relaxed">
-              List a property and its review, verification and buyer interest will show here, step by step.
-            </p>
-          </div>
-          <button
-            onClick={onOpenIntake}
-            className="mt-2 px-6 py-3 bg-[#15213A] hover:bg-[#22314F] text-[#F7F3EC] text-xs font-sans uppercase tracking-wider font-semibold"
-          >
-            List your first property
-          </button>
+      {error && <p className="px-5 py-6 font-sans text-[14px] text-[#A3412B] sm:px-8">{error}</p>}
+
+      {!loading && !error && listings.length === 0 && (
+        <div className="px-5 py-12 text-center sm:px-8">
+          <p className="mx-auto max-w-md font-sans text-[15px] leading-relaxed text-[#4A5163]">
+            When you list a property, you can follow each step here — desk review, title check, buyer matching and site visits.
+          </p>
         </div>
-      ) : (
-        <div className="p-6 sm:p-10 grid grid-cols-1 lg:grid-cols-12 gap-8">
-          {/* Left Property List */}
-          <div className="lg:col-span-5 space-y-3">
-            <span className="text-[11px] font-sans uppercase tracking-[0.18em] text-[#5F6575] font-semibold block mb-2">
-              Your Listed Properties ({mandates.length})
-            </span>
-            {mandates.map(m => {
-              const active = selectedMandate?.id === m.id
-              return (
-                <div
-                  key={m.id}
-                  onClick={() => setSelectedMandate(m)}
-                  className={`p-4 rounded-none border transition-all cursor-pointer ${
-                    active
-                      ? 'border-[#15213A] bg-[#F7F4EE] shadow-sm'
-                      : 'border-[#D6CAB5] bg-[#FBF8F2] hover:bg-[#F7F3EC]'
-                  }`}
+      )}
+
+      {listings.length > 0 && l && (
+        <div className="grid lg:grid-cols-[minmax(0,300px)_1fr]">
+          <ul className="flex gap-2 overflow-x-auto border-b border-[#E4DACA] p-3 lg:block lg:space-y-1 lg:overflow-visible lg:border-b-0 lg:border-r">
+            {listings.map((x, i) => (
+              <li key={x.id} className="shrink-0">
+                <button
+                  onClick={() => setActive(i)}
+                  className={`w-[240px] px-4 py-3 text-left transition-colors lg:w-full ${i === active ? 'bg-[#15213A] text-[#F7F3EC]' : 'hover:bg-[#EFE8DC]'}`}
                 >
-                  <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <span className="text-[10px] font-sans uppercase tracking-wider text-[#94643A] font-semibold block">
-                        {m.category}
-                      </span>
-                      <h4 className="text-sm font-display font-normal tracking-[0.03em] text-[#15213A] mt-0.5 leading-snug">
-                        {m.title}
-                      </h4>
-                      <p className="text-xs text-[#4A5163] flex items-center gap-1 mt-1">
-                        <MapPin className="w-3 h-3 text-[#94643A]" /> {m.corridor || m.district} {m.extent_acres ? `· ${String(m.extent_acres).toLowerCase().includes('acre') || String(m.extent_acres).toLowerCase().includes('sq') ? m.extent_acres : `${m.extent_acres} Acres`}` : ''}
-                      </p>
-                      {m.rental_yield_display && (
-                        <p className="text-[11px] text-[#7C5230] font-medium mt-0.5">
-                          {m.rental_yield_display}
-                        </p>
-                      )}
-                    </div>
+                  <span className={`block font-sans text-[11px] font-semibold tracking-[0.14em] ${i === active ? 'text-[#E6C9A0]' : 'text-[#94643A]'}`}>{x.reference}</span>
+                  <span className={`mt-1 block truncate font-sans text-[14px] font-semibold ${i === active ? 'text-[#F7F3EC]' : 'text-[#15213A]'}`}>{x.title}</span>
+                  <span className={`mt-0.5 block truncate font-sans text-[12.5px] ${i === active ? 'text-white/70' : 'text-[#5F6575]'}`}>{fmtDate(x.created_at)}</span>
+                </button>
+              </li>
+            ))}
+          </ul>
 
-                    <span className="text-[10px] font-sans px-2.5 py-1 rounded-full bg-[#15213A] text-[#F7F3EC] shrink-0 font-medium">
-                      In Review
-                    </span>
-                  </div>
-                </div>
-              )
-            })}
-          </div>
-
-          {/* Right Selected Mandate Live Progress Stage */}
-          {selectedMandate && (
-            <div className="lg:col-span-7 rounded-none bg-[#F7F3EC] border border-[#D6CAB5] p-6 sm:p-8 space-y-6">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-4 border-b border-[#D6CAB5]">
-                <div>
-                  <span className="text-[10px] font-sans uppercase tracking-wider text-[#94643A] font-bold block">
-                    Live Status
-                  </span>
-                  <h4 className="text-lg font-display font-normal tracking-[0.03em] text-[#15213A]">
-                    {selectedMandate.tracking_stage_title || 'Technical Due Diligence & Review'}
-                  </h4>
-                </div>
-
-                <div className="text-left sm:text-right">
-                  <span className="text-[10px] text-[#5F6575] uppercase block">Asking Outlay</span>
-                  <span className="text-base font-bold text-[#15213A]">{selectedMandate.price_display}</span>
-                </div>
+          <AnimatePresence mode="wait">
+            <motion.div key={l.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.4, ease: EASE }} className="p-5 sm:p-8">
+              <h4 className="font-display text-[1.5rem] leading-tight tracking-[0.02em] text-[#15213A]">{l.title}</h4>
+              <div className="mt-2 flex flex-wrap gap-x-5 gap-y-1 font-sans text-[13.5px] text-[#4A5163]">
+                <span className="inline-flex items-center gap-1.5"><MapPin className="h-3.5 w-3.5 text-[#94643A]" />{l.location}</span>
+                {l.extent && <span>{l.extent}</span>}
+                <span className="inline-flex items-center gap-1.5"><ImageIcon className="h-3.5 w-3.5 text-[#94643A]" />{l.media_count} file{l.media_count === 1 ? '' : 's'}</span>
               </div>
 
-              {/* Progress Milestones Strip */}
-              <div className="space-y-4">
-                <span className="text-[11px] font-sans uppercase tracking-[0.18em] text-[#5F6575] font-semibold block">
-                  Advisory Milestones
-                </span>
-
-                <div className="space-y-3">
-                  {[
-                    {
-                      step: '01',
-                      title: 'Property Submitted & Details Recorded',
-                      desc: 'Asset parameters recorded under verified Google identity.',
-                      done: true,
-                    },
-                    {
-                      step: '02',
-                      title: 'Technical Underwriting & Title Audit',
-                      desc: 'Verification of revenue patta, FMB boundary sketches, and substation proximity.',
-                      done: true,
-                      active: true,
-                    },
-                    {
-                      step: '03',
-                      title: 'Direct Enterprise Buyer Syndication',
-                      desc: 'Confidential bilateral outreach to registered industrial and corporate buyers.',
-                      done: false,
-                    },
-                  ].map((st, idx) => (
-                    <div
-                      key={st.step}
-                      className={`p-3.5 rounded-none border flex items-start gap-3.5 ${
-                        st.active
-                          ? 'bg-[#FBF8F2] border-[#B0834A] shadow-sm'
-                          : st.done
-                          ? 'bg-[#FBF8F2] border-[#D6CAB5]'
-                          : 'bg-[#F7F3EC] border-[#D6CAB5]/60 opacity-60'
+              <ol className="relative mt-8">
+                {l.stages.map((s, i) => (
+                  <li key={s.key} className="relative flex gap-4 pb-6 last:pb-0">
+                    {i < l.stages.length - 1 && (
+                      <span aria-hidden className={`absolute left-[13px] top-7 h-[calc(100%-20px)] w-px ${s.state === 'done' ? 'bg-[#B0834A]' : 'bg-[#E4DACA]'}`} />
+                    )}
+                    <span
+                      className={`relative z-10 flex h-7 w-7 shrink-0 items-center justify-center rounded-full border font-sans text-[11px] font-semibold ${
+                        s.state === 'done' ? 'border-[#B0834A] bg-[#B0834A] text-white' : s.state === 'current' ? 'border-[#15213A] bg-[#15213A] text-[#E6C9A0]' : 'border-[#D6CAB5] bg-white text-[#8A8F9C]'
                       }`}
                     >
-                      <div
-                        className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold shrink-0 mt-0.5 ${
-                          st.active
-                            ? 'bg-[#15213A] text-[#F7F3EC]'
-                            : st.done
-                            ? 'bg-[#94643A] text-white'
-                            : 'bg-[#E4DACA] text-[#5F6575]'
-                        }`}
-                      >
-                        {st.done && !st.active ? '✓' : st.step}
-                      </div>
-
-                      <div>
-                        <h5 className="text-xs font-display font-normal tracking-[0.03em] text-[#15213A]">{st.title}</h5>
-                        <p className="text-[11px] text-[#4A5163] mt-0.5 leading-relaxed">{st.desc}</p>
-                      </div>
+                      {s.state === 'done' ? <Check className="h-3.5 w-3.5" strokeWidth={2.5} /> : i + 1}
+                      {s.state === 'current' && <span className="absolute inset-0 animate-ping rounded-full bg-[#15213A]/25" />}
+                    </span>
+                    <div className="pt-0.5">
+                      <p className={`font-sans text-[14.5px] font-semibold ${s.state === 'next' ? 'text-[#8A8F9C]' : 'text-[#15213A]'}`}>{s.label}</p>
+                      {s.at && <p className="font-sans text-[12.5px] text-[#5F6575]">{fmtDate(s.at)}</p>}
+                      {s.state === 'current' && l.status_note && <p className="mt-1 max-w-lg font-sans text-[13.5px] leading-relaxed text-[#4A5163]">{l.status_note}</p>}
                     </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Direct Desk Inquiry for this property */}
-              <div className="pt-4 border-t border-[#D6CAB5] flex flex-col sm:flex-row items-center justify-between gap-3">
-                <span className="text-xs text-[#4A5163]">
-                  Questions about your listing status?
-                </span>
-
-                <a
-                  href={`https://wa.me/918870980839?text=${encodeURIComponent(`Hello Tharaga Estates, I am inquiring about the status of my listed property: ${selectedMandate.title} (ID: ${selectedMandate.id}).`)}`}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="w-full sm:w-auto px-5 py-2.5 bg-[#15213A] hover:bg-[#22314F] text-[#F7F3EC] text-xs font-sans font-semibold transition-all flex items-center justify-center gap-2"
-                >
-                  <Phone className="w-3.5 h-3.5 text-[#B0834A]" />
-                  <span>Contact Managing Desk</span>
-                </a>
-              </div>
-            </div>
-          )}
+                  </li>
+                ))}
+              </ol>
+            </motion.div>
+          </AnimatePresence>
         </div>
       )}
     </div>

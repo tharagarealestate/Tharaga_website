@@ -57,22 +57,33 @@ function start() {
     if (raw) {
       const parsed = JSON.parse(raw)
       const fresh = !parsed?.expires_at || parsed.expires_at * 1000 > Date.now()
-      if (fresh && parsed?.user) set({ user: toUser(parsed.user) })
+      // An expired access token with a refresh token is still a signed-in visitor;
+      // show them as signed in while Supabase refreshes in the background.
+      if ((fresh || parsed?.refresh_token) && parsed?.user) set({ user: toUser(parsed.user) })
     }
   } catch {}
   try {
     const supabase = getSupabase()
-    supabase.auth
-      .getSession()
-      .then(async ({ data }) => {
-        set({ user: toUser(data.session?.user), ready: true })
+    const withTimeout = <T,>(p: Promise<T>, ms: number) =>
+      Promise.race([p, new Promise<never>((_, rej) => setTimeout(() => rej(new Error('timeout')), ms))])
+    withTimeout(supabase.auth.getSession(), 8000)
+      .then(async ({ data, error }: any) => {
+        if (error && !data?.session) {
+          set({ user: null, ready: true })
+          return
+        }
+        if (!data?.session) {
+          set({ user: null, ready: true })
+          return
+        }
+        set({ user: toUser(data.session.user), ready: true })
         // The cached session can hold a bare user (no name/photo) — fetch the full profile.
         if (data.session) {
           const { data: full } = await supabase.auth.getUser()
           if (full?.user) set({ user: toUser(full.user) })
         }
       })
-      .catch(() => set({ ready: true }))
+      .catch(() => set({ ready: true })) // timeout: keep the cached view, auth events will reconcile
     supabase.auth.onAuthStateChange((_e, session) => set({ user: toUser(session?.user), ready: true }))
   } catch {
     set({ ready: true })

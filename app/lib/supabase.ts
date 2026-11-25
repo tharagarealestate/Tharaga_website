@@ -50,6 +50,9 @@ export function getSupabase(): SupabaseClient {
       autoRefreshToken: true,
       detectSessionInUrl: true,
       storage: typeof window !== 'undefined' ? window.localStorage : undefined,
+      // Skip navigator.locks: with legacy scripts also touching auth, the lock can
+      // deadlock and leave getSession() hanging, so visitors look signed out.
+      lock: async (_name: string, _timeout: number, fn: () => Promise<any>) => await fn(),
     },
   })
 

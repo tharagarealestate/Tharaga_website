@@ -68,13 +68,13 @@ export default function AboutPage() {
               <div className="bg-[#F7F3EC] p-7 sm:pr-10">
                 <p className="font-display text-3xl tracking-[0.05em] text-[#15213A]">Tharaga</p>
                 <p className="mt-1 font-serif text-3xl italic text-[#94643A]">தாரகா</p>
-                <p className="mt-5 font-sans text-[11px] font-semibold uppercase tracking-[0.2em] text-[#7D8292]">Means</p>
+                <p className="mt-5 font-sans text-[11px] font-semibold uppercase tracking-[0.2em] text-[#5F6575]">Means</p>
                 <p className="mt-1 font-serif text-2xl text-[#2E3648]">A star</p>
               </div>
               <div className="bg-[#F7F3EC] p-7 sm:pl-10">
                 <p className="font-display text-3xl tracking-[0.05em] text-[#15213A]">Latha</p>
                 <p className="mt-1 font-serif text-3xl italic text-[#94643A]">லதா</p>
-                <p className="mt-5 font-sans text-[11px] font-semibold uppercase tracking-[0.2em] text-[#7D8292]">Means</p>
+                <p className="mt-5 font-sans text-[11px] font-semibold uppercase tracking-[0.2em] text-[#5F6575]">Means</p>
                 <p className="mt-1 font-serif text-2xl text-[#2E3648]">A vine</p>
               </div>
             </div>
@@ -140,7 +140,7 @@ export default function AboutPage() {
                 { k: 'Active in', v: 'Tamil Nadu' },
               ].map((s, i) => (
                 <div key={s.k} className={`flex flex-col-reverse py-5 ${i === 0 ? 'pr-4' : 'px-4'}`}>
-                  <dt className="mt-1 font-sans text-[10.5px] uppercase tracking-[0.2em] text-[#7D8292]">{s.k}</dt>
+                  <dt className="mt-1 font-sans text-[10.5px] uppercase tracking-[0.2em] text-[#5F6575]">{s.k}</dt>
                   <dd className="font-display text-xl tracking-[0.04em] text-[#15213A] sm:text-2xl">{s.v}</dd>
                 </div>
               ))}

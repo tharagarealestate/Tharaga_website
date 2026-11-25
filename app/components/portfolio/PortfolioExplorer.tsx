@@ -145,7 +145,7 @@ export function PortfolioExplorer() {
                     key={c}
                     onClick={() => setCategory(c)}
                     className={`relative shrink-0 py-2 font-sans text-[11px] uppercase tracking-[0.2em] transition-colors ${
-                      active ? 'text-[#15213A]' : 'text-[#7D8292] hover:text-[#15213A]'
+                      active ? 'text-[#15213A]' : 'text-[#5F6575] hover:text-[#15213A]'
                     }`}
                   >
                     {c === 'all' ? 'All' : CATEGORY_LABELS[c]}
@@ -205,14 +205,14 @@ export function PortfolioExplorer() {
       {/* ── Results ──────────────────────────────────────────────── */}
       <section className="bg-[#F7F3EC] pt-14 pb-32 min-h-[60vh]">
         <div className="max-w-7xl mx-auto px-5 sm:px-8">
-          <p className="mb-10 font-sans text-[11px] uppercase tracking-[0.22em] text-[#7D8292]">
+          <p className="mb-10 font-sans text-[11px] uppercase tracking-[0.22em] text-[#5F6575]">
             Showing <span className="text-[#15213A]">{list.length}</span> of {MANDATES.length} properties
           </p>
 
           {list.length === 0 ? (
             <div className="py-24 text-center">
               <p className="font-serif italic text-3xl text-[#4A5163]">Nothing matches — yet.</p>
-              <p className="mt-4 font-serif text-lg text-[#7D8292]">
+              <p className="mt-4 font-serif text-lg text-[#5F6575]">
                 Many of our properties are never listed publicly. Tell us what you are looking for.
               </p>
               <div className="mt-8 flex justify-center">
@@ -338,7 +338,7 @@ export function PortfolioExplorer() {
                     </button>
                     <div className="min-w-0 flex-1">
                       <p className="font-display text-[0.95rem] leading-snug text-[#15213A]">{m.name}</p>
-                      <p className="mt-1 font-sans text-[10.5px] uppercase tracking-[0.22em] text-[#7D8292]">{m.location}</p>
+                      <p className="mt-1 font-sans text-[10.5px] uppercase tracking-[0.22em] text-[#5F6575]">{m.location}</p>
                     </div>
                     <button
                       onClick={() => shortlist.toggle(m.slug)}
@@ -356,7 +356,7 @@ export function PortfolioExplorer() {
                 <Button full arrow href={shortlistWhatsappLink(savedMandates.map(m => m.name))}>
                   Request a private briefing
                 </Button>
-                <button onClick={shortlist.clear} className="w-full font-sans text-[10.5px] uppercase tracking-[0.24em] text-[#7D8292]">
+                <button onClick={shortlist.clear} className="w-full font-sans text-[10.5px] uppercase tracking-[0.24em] text-[#5F6575]">
                   Clear shortlist
                 </button>
               </div>
@@ -381,7 +381,7 @@ function Select({
   options: { v: string; l: string }[]
 }) {
   return (
-    <label className="flex items-center gap-2 whitespace-nowrap font-sans text-[10.5px] uppercase tracking-[0.24em] text-[#7D8292]">
+    <label className="flex items-center gap-2 whitespace-nowrap font-sans text-[10.5px] uppercase tracking-[0.24em] text-[#5F6575]">
       {label}
       <select
         value={value}
@@ -432,7 +432,7 @@ function IndexView({
       }}
       onMouseLeave={() => setHover(null)}
     >
-      <div className="hidden md:grid grid-cols-[3.5rem_1.6fr_1fr_1fr_auto] gap-6 border-b border-[#15213A] pb-3 font-sans text-[10.5px] uppercase tracking-[0.2em] text-[#7D8292]">
+      <div className="hidden md:grid grid-cols-[3.5rem_1.6fr_1fr_1fr_auto] gap-6 border-b border-[#15213A] pb-3 font-sans text-[10.5px] uppercase tracking-[0.2em] text-[#5F6575]">
         <span>No.</span>
         <span>Mandate</span>
         <span>Location</span>
@@ -455,7 +455,7 @@ function IndexView({
               <p className="font-display text-[1.15rem] sm:text-[1.3rem] leading-snug tracking-[0.02em] text-[#15213A] transition-transform duration-500 group-hover:translate-x-2">
                 {m.name}
               </p>
-              <p className="mt-1 font-serif italic text-[1.02rem] text-[#7D8292]">{m.tagline}</p>
+              <p className="mt-1 font-serif italic text-[1.02rem] text-[#5F6575]">{m.tagline}</p>
               {m.badge && (
                 <div className="mt-2 md:hidden">
                   <BadgeTag badge={m.badge} />

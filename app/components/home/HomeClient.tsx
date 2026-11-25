@@ -193,7 +193,7 @@ export function HomeClient() {
           <p className="font-sans text-[14px] text-[#15213A]">Sign-in didn&apos;t complete. Please try again.</p>
           <div className="flex shrink-0 gap-3">
             <button onClick={() => { setAuthError(false); openAuthModal() }} className="font-sans text-[13px] font-semibold text-[#94643A]">Try again</button>
-            <button onClick={() => setAuthError(false)} aria-label="Dismiss" className="font-sans text-[16px] text-[#7D8292]">×</button>
+            <button onClick={() => setAuthError(false)} aria-label="Dismiss" className="font-sans text-[16px] text-[#5F6575]">×</button>
           </div>
         </div>
       )}

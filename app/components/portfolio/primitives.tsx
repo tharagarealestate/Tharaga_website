@@ -63,7 +63,7 @@ export function EnquireLink({
 export function BadgeTag({ badge, onDark = false }: { badge: Badge; onDark?: boolean }) {
   if (badge.kind === 'scarcity') {
     return (
-      <span className="inline-flex items-center gap-2 whitespace-nowrap bg-[#B0834A] px-3 py-[5px] text-[10.5px] font-sans font-medium uppercase tracking-[0.24em] text-[#FBF7F0]">
+      <span className="inline-flex items-center gap-2 whitespace-nowrap bg-[#8A5F2E] px-3 py-[5px] text-[10.5px] font-sans font-medium uppercase tracking-[0.24em] text-[#FBF7F0]">
         <span className="h-1.5 w-1.5 rotate-45 bg-[#FBF7F0]" />
         {badge.label}
       </span>

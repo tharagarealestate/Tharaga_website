@@ -114,7 +114,7 @@ export function MandateDetail({
                 {CATEGORY_LABELS[mandate.category]}
               </p>
               <h2 className="mt-4 font-display text-[1.7rem] md:text-[2.1rem] leading-[1.15] tracking-[0.02em] text-[#15213A]">{mandate.name}</h2>
-              <p className="mt-2 font-sans text-xs uppercase tracking-[0.2em] text-[#7D8292]">
+              <p className="mt-2 font-sans text-xs uppercase tracking-[0.2em] text-[#5F6575]">
                 {mandate.location} · {mandate.region}
               </p>
               {onToggleSave && (
@@ -150,7 +150,7 @@ export function MandateDetail({
                   Shared privately with verified buyers. Speak to the managing desk to receive the full dossier.
                 </p>
                 {isPlate(mandate) && (
-                  <p className="mt-3 font-sans text-[11px] uppercase tracking-[0.2em] text-[#7D8292]">
+                  <p className="mt-3 font-sans text-[11px] uppercase tracking-[0.2em] text-[#5F6575]">
                     Plate shown is illustrative, not a survey.
                   </p>
                 )}

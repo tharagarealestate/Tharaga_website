@@ -177,7 +177,7 @@ export function SiteHeader({ onListProperty }: { onListProperty?: () => void }) 
                         <Avatar user={user} size={40} />
                         <div className="min-w-0">
                           <p className="truncate font-sans text-[14px] font-semibold text-[#15213A]">{user.name}</p>
-                          <p className="truncate font-sans text-[12px] text-[#7D8292]">{user.email}</p>
+                          <p className="truncate font-sans text-[12px] text-[#5F6575]">{user.email}</p>
                         </div>
                       </div>
                       <div className="p-1.5">
@@ -194,7 +194,7 @@ export function SiteHeader({ onListProperty }: { onListProperty?: () => void }) 
                           >
                             <it.icon className="h-4 w-4 text-[#94643A]" />
                             <span className="flex-1">{it.label}</span>
-                            {it.meta !== '' && <span className="font-sans text-[12px] text-[#7D8292]">{it.meta}</span>}
+                            {it.meta !== '' && <span className="font-sans text-[12px] text-[#5F6575]">{it.meta}</span>}
                           </Link>
                         ))}
                         <button
@@ -212,7 +212,7 @@ export function SiteHeader({ onListProperty }: { onListProperty?: () => void }) 
                             setMenu(false)
                             await signOut()
                           }}
-                          className="flex w-full items-center gap-3 px-3 py-2.5 text-left font-sans text-[13.5px] text-[#7D8292] transition-colors hover:bg-[#EFE8DC] hover:text-[#15213A]"
+                          className="flex w-full items-center gap-3 px-3 py-2.5 text-left font-sans text-[13.5px] text-[#5F6575] transition-colors hover:bg-[#EFE8DC] hover:text-[#15213A]"
                         >
                           <LogOut className="h-4 w-4" /> Sign out
                         </button>

@@ -114,7 +114,7 @@ export function LandCheck({ onOpenMandate }: { onOpenMandate?: (m: Mandate) => v
                       <span className={`block font-sans text-[12px] font-semibold uppercase tracking-[0.16em] ${selected ? 'text-[#F7F3EC]' : 'text-[#15213A]'}`}>
                         {o.label}
                       </span>
-                      <span className={`mt-1.5 block font-serif text-[1.02rem] ${selected ? 'text-white/70' : 'text-[#7D8292]'}`}>{o.hint}</span>
+                      <span className={`mt-1.5 block font-serif text-[1.02rem] ${selected ? 'text-white/70' : 'text-[#5F6575]'}`}>{o.hint}</span>
                     </span>
                     <span
                       aria-hidden
@@ -130,7 +130,7 @@ export function LandCheck({ onOpenMandate }: { onOpenMandate?: (m: Mandate) => v
               <button
                 type="button"
                 onClick={() => setStep(s => s - 1)}
-                className="mt-8 font-sans text-[11px] font-semibold uppercase tracking-[0.24em] text-[#7D8292] hover:text-[#15213A]"
+                className="mt-8 font-sans text-[11px] font-semibold uppercase tracking-[0.24em] text-[#5F6575] hover:text-[#15213A]"
               >
                 ← Previous question
               </button>
@@ -158,7 +158,7 @@ export function LandCheck({ onOpenMandate }: { onOpenMandate?: (m: Mandate) => v
                 <button
                   type="button"
                   onClick={restart}
-                  className="self-start font-sans text-[11px] font-semibold uppercase tracking-[0.24em] text-[#7D8292] underline decoration-[#B0834A]/50 underline-offset-[6px] hover:text-[#15213A] sm:self-auto"
+                  className="self-start font-sans text-[11px] font-semibold uppercase tracking-[0.24em] text-[#5F6575] underline decoration-[#B0834A]/50 underline-offset-[6px] hover:text-[#15213A] sm:self-auto"
                 >
                   Start again
                 </button>
@@ -191,7 +191,7 @@ export function LandCheck({ onOpenMandate }: { onOpenMandate?: (m: Mandate) => v
                           </span>
                         </span>
                         <span className="mt-3 block font-display text-[1.05rem] leading-snug text-[#15213A]">{m.name}</span>
-                        <span className="mt-1 block font-sans text-[11px] uppercase tracking-[0.2em] text-[#7D8292]">
+                        <span className="mt-1 block font-sans text-[11px] uppercase tracking-[0.2em] text-[#5F6575]">
                           {m.location} · {m.stats[0]}
                         </span>
                       </button>
@@ -216,7 +216,7 @@ export function LandCheck({ onOpenMandate }: { onOpenMandate?: (m: Mandate) => v
                   </Button>
                 </div>
               </div>
-              <p className="mt-5 font-sans text-[11px] uppercase leading-relaxed tracking-[0.16em] text-[#7D8292]">
+              <p className="mt-5 font-sans text-[11px] uppercase leading-relaxed tracking-[0.16em] text-[#5F6575]">
                 General guidance based on Tamil Nadu approval requirements. It is not legal advice or a valuation —
                 requirements for a specific parcel are confirmed by verification.
               </p>

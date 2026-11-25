@@ -238,7 +238,7 @@ export function CommercialIntakeModal({ isOpen, onClose, user, onSuccess }: Comm
 
               {/* 1. Quick Property Category Pills */}
               <div>
-                <label className="block text-xs font-sans uppercase tracking-wider text-[#7D8292] font-semibold mb-2.5">
+                <label className="block text-xs font-sans uppercase tracking-wider text-[#5F6575] font-semibold mb-2.5">
                   1. Select Property Class
                 </label>
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
@@ -256,7 +256,7 @@ export function CommercialIntakeModal({ isOpen, onClose, user, onSuccess }: Comm
                             : 'bg-[#F7F3EC] border-[#D6CAB5] text-[#4A5163] hover:bg-[#EFE8DC] hover:text-[#15213A]'
                         }`}
                       >
-                        <Icon className={`w-4 h-4 shrink-0 ${active ? 'text-[#B0834A]' : 'text-[#7D8292]'}`} />
+                        <Icon className={`w-4 h-4 shrink-0 ${active ? 'text-[#B0834A]' : 'text-[#5F6575]'}`} />
                         <span className="text-xs font-sans font-medium truncate">{cat.label.split('(')[0].trim()}</span>
                       </button>
                     )
@@ -267,7 +267,7 @@ export function CommercialIntakeModal({ isOpen, onClose, user, onSuccess }: Comm
               {/* 2. Natural Language Description Textarea */}
               <div>
                 <div className="flex items-center justify-between mb-1.5">
-                  <label className="text-xs font-sans uppercase tracking-wider text-[#7D8292] font-semibold">
+                  <label className="text-xs font-sans uppercase tracking-wider text-[#5F6575] font-semibold">
                     2. Describe Your Property in Your Own Words *
                   </label>
                   <span className="text-[11px] text-[#94643A] font-medium">Type or paste naturally</span>
@@ -283,7 +283,7 @@ export function CommercialIntakeModal({ isOpen, onClose, user, onSuccess }: Comm
 
                 {/* Helper Snippet Pills */}
                 <div className="flex flex-wrap items-center gap-1.5 pt-2 text-[11px]">
-                  <span className="text-[#7D8292] mr-1">Quick Add:</span>
+                  <span className="text-[#5F6575] mr-1">Quick Add:</span>
                   <button
                     type="button"
                     onClick={() => handleAppendSnippet('7 rental shops on ground floor.')}
@@ -325,7 +325,7 @@ export function CommercialIntakeModal({ isOpen, onClose, user, onSuccess }: Comm
               {/* 3. Photos & Videos Upload Hub */}
               <div>
                 <div className="flex items-center justify-between mb-2">
-                  <label className="text-xs font-sans uppercase tracking-wider text-[#7D8292] font-semibold flex items-center gap-1.5">
+                  <label className="text-xs font-sans uppercase tracking-wider text-[#5F6575] font-semibold flex items-center gap-1.5">
                     <Upload className="w-3.5 h-3.5 text-[#94643A]" />
                     <span>3. Upload Photos & Videos (Optional but Recommended)</span>
                   </label>
@@ -368,7 +368,7 @@ export function CommercialIntakeModal({ isOpen, onClose, user, onSuccess }: Comm
                   <p className="text-xs font-medium text-[#15213A]">
                     Click or drag & drop photos and videos here
                   </p>
-                  <p className="text-[11px] text-[#7D8292] mt-0.5">
+                  <p className="text-[11px] text-[#5F6575] mt-0.5">
                     Upload facade photos, shop interiors, walkthrough videos, site clips, or survey sketches
                   </p>
                 </div>
@@ -419,7 +419,7 @@ export function CommercialIntakeModal({ isOpen, onClose, user, onSuccess }: Comm
 
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   <div>
-                    <label className="block text-[10px] uppercase text-[#7D8292] mb-1">City / District in TN</label>
+                    <label className="block text-[10px] uppercase text-[#5F6575] mb-1">City / District in TN</label>
                     <input
                       type="text"
                       value={cityOrLocation}
@@ -430,7 +430,7 @@ export function CommercialIntakeModal({ isOpen, onClose, user, onSuccess }: Comm
                   </div>
 
                   <div>
-                    <label className="block text-[10px] uppercase text-[#7D8292] mb-1">Asking Price / Outlay</label>
+                    <label className="block text-[10px] uppercase text-[#5F6575] mb-1">Asking Price / Outlay</label>
                     <input
                       type="text"
                       value={askingPrice}
@@ -441,7 +441,7 @@ export function CommercialIntakeModal({ isOpen, onClose, user, onSuccess }: Comm
                   </div>
 
                   <div>
-                    <label className="block text-[10px] uppercase text-[#7D8292] mb-1">Phone Number *</label>
+                    <label className="block text-[10px] uppercase text-[#5F6575] mb-1">Phone Number *</label>
                     <input
                       type="tel"
                       value={sellerPhone}
@@ -530,28 +530,28 @@ export function CommercialIntakeModal({ isOpen, onClose, user, onSuccess }: Comm
 
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
                   <div className="p-3 rounded-none bg-white border border-[#D6CAB5]">
-                    <span className="text-[10px] uppercase text-[#7D8292] block">Location</span>
+                    <span className="text-[10px] uppercase text-[#5F6575] block">Location</span>
                     <span className="font-medium text-[#15213A] mt-0.5 block truncate">
                       {analysisResult.locality || analysisResult.city}
                     </span>
                   </div>
 
                   <div className="p-3 rounded-none bg-white border border-[#D6CAB5]">
-                    <span className="text-[10px] uppercase text-[#7D8292] block">Size / Extent</span>
+                    <span className="text-[10px] uppercase text-[#5F6575] block">Size / Extent</span>
                     <span className="font-medium text-[#15213A] mt-0.5 block truncate">
                       {analysisResult.extent_display || 'Verified Size'}
                     </span>
                   </div>
 
                   <div className="p-3 rounded-none bg-white border border-[#D6CAB5]">
-                    <span className="text-[10px] uppercase text-[#7D8292] block">Rental Yield</span>
+                    <span className="text-[10px] uppercase text-[#5F6575] block">Rental Yield</span>
                     <span className="font-medium text-[#15213A] mt-0.5 block truncate">
                       {analysisResult.rental_yield_display || 'High Capital Growth'}
                     </span>
                   </div>
 
                   <div className="p-3 rounded-none bg-white border border-[#D6CAB5]">
-                    <span className="text-[10px] uppercase text-[#7D8292] block">Media Attached</span>
+                    <span className="text-[10px] uppercase text-[#5F6575] block">Media Attached</span>
                     <span className="font-medium text-[#15213A] mt-0.5 block">
                       {mediaFiles.length} file{mediaFiles.length === 1 ? '' : 's'}
                     </span>
@@ -571,7 +571,7 @@ export function CommercialIntakeModal({ isOpen, onClose, user, onSuccess }: Comm
                 {/* Highlights */}
                 {analysisResult.key_highlights && analysisResult.key_highlights.length > 0 && (
                   <div>
-                    <span className="text-[10px] uppercase font-sans tracking-wider text-[#7D8292] font-semibold block mb-2">
+                    <span className="text-[10px] uppercase font-sans tracking-wider text-[#5F6575] font-semibold block mb-2">
                       Key Verified Strengths
                     </span>
                     <div className="space-y-1.5">

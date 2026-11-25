@@ -93,7 +93,7 @@ export function FeatureMandate({ mandate, index, onOpen }: { mandate: Mandate; i
         <h3 className="mt-6 font-display text-[2rem] sm:text-[2.5rem] leading-[1.12] tracking-[0.02em] text-[#15213A]">
           {mandate.name}
         </h3>
-        <p className="mt-3 font-sans text-[11px] uppercase tracking-[0.24em] text-[#7D8292]">
+        <p className="mt-3 font-sans text-[11px] uppercase tracking-[0.24em] text-[#5F6575]">
           {mandate.location} · {mandate.region}
         </p>
         <div className="mt-7 flex items-center gap-2" aria-hidden>

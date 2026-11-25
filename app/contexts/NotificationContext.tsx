@@ -185,7 +185,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
   useEffect(() => {
     if (typeof Audio === 'undefined') return
     const audio = new Audio('/sounds/notification.mp3')
-    audio.preload = 'auto'
+    audio.preload = 'none'
     audio.volume = 0.5
     audio.addEventListener('error', () => {
       audioRef.current = null

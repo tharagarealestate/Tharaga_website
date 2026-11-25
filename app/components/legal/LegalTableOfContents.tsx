@@ -66,7 +66,7 @@ export function LegalTableOfContents({ sections }: Props) {
                     <button
                       key={subsection.id}
                       onClick={() => scrollToSection(subsection.id)}
-                      className="w-full text-left px-3 py-1.5 rounded-none text-xs text-[#7D8292] hover:text-[#15213A] hover:bg-[#EFE8DC] transition-colors"
+                      className="w-full text-left px-3 py-1.5 rounded-none text-xs text-[#5F6575] hover:text-[#15213A] hover:bg-[#EFE8DC] transition-colors"
                     >
                       {subsection.heading}
                     </button>

@@ -128,7 +128,7 @@ export function MandateTracker({ user, onOpenIntake }: MandateTrackerProps) {
       {/* Content Area */}
       {mandates.length === 0 ? (
         <div className="p-8 sm:p-12 text-center space-y-4">
-          <div className="w-12 h-12 rounded-full bg-[#F7F3EC] border border-[#D6CAB5] flex items-center justify-center mx-auto text-[#7D8292]">
+          <div className="w-12 h-12 rounded-full bg-[#F7F3EC] border border-[#D6CAB5] flex items-center justify-center mx-auto text-[#5F6575]">
             <Building2 className="w-6 h-6" />
           </div>
           <div>
@@ -148,7 +148,7 @@ export function MandateTracker({ user, onOpenIntake }: MandateTrackerProps) {
         <div className="p-6 sm:p-10 grid grid-cols-1 lg:grid-cols-12 gap-8">
           {/* Left Property List */}
           <div className="lg:col-span-5 space-y-3">
-            <span className="text-[11px] font-sans uppercase tracking-[0.18em] text-[#7D8292] font-semibold block mb-2">
+            <span className="text-[11px] font-sans uppercase tracking-[0.18em] text-[#5F6575] font-semibold block mb-2">
               Your Listed Properties ({mandates.length})
             </span>
             {mandates.map(m => {
@@ -204,14 +204,14 @@ export function MandateTracker({ user, onOpenIntake }: MandateTrackerProps) {
                 </div>
 
                 <div className="text-left sm:text-right">
-                  <span className="text-[10px] text-[#7D8292] uppercase block">Asking Outlay</span>
+                  <span className="text-[10px] text-[#5F6575] uppercase block">Asking Outlay</span>
                   <span className="text-base font-bold text-[#15213A]">{selectedMandate.price_display}</span>
                 </div>
               </div>
 
               {/* Progress Milestones Strip */}
               <div className="space-y-4">
-                <span className="text-[11px] font-sans uppercase tracking-[0.18em] text-[#7D8292] font-semibold block">
+                <span className="text-[11px] font-sans uppercase tracking-[0.18em] text-[#5F6575] font-semibold block">
                   Advisory Milestones
                 </span>
 
@@ -253,7 +253,7 @@ export function MandateTracker({ user, onOpenIntake }: MandateTrackerProps) {
                             ? 'bg-[#15213A] text-[#F7F3EC]'
                             : st.done
                             ? 'bg-[#94643A] text-white'
-                            : 'bg-[#E4DACA] text-[#7D8292]'
+                            : 'bg-[#E4DACA] text-[#5F6575]'
                         }`}
                       >
                         {st.done && !st.active ? '✓' : st.step}

@@ -30,8 +30,8 @@ export function CinematicHero({ onListProperty }: { onListProperty: () => void }
         {/* Photograph: revealed from a navy field, gently drifting on scroll */}
         <motion.div
           style={{ y: imgY }}
-          initial={{ opacity: 0, scale: 1.12 }}
-          animate={{ opacity: 1, scale: 1.04 }}
+          initial={{ scale: 1.12 }}
+          animate={{ scale: 1.04 }}
           transition={{ duration: 2.2, ease: EASE }}
           className="absolute inset-0 -z-10 will-change-transform"
         >
@@ -92,9 +92,9 @@ export function CinematicHero({ onListProperty }: { onListProperty: () => void }
           </h1>
 
           <motion.p
-            initial={{ opacity: 0, y: 14 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.9, ease: EASE, delay: 0.8 }}
+            initial={{ y: 10 }}
+            animate={{ y: 0 }}
+            transition={{ duration: 0.9, ease: EASE, delay: 0.2 }}
             className="mt-6 max-w-xl font-sans text-[16px] leading-[1.65] text-[#F7F3EC]/90 sm:text-[17.5px]"
           >
             Land banks, solar plants, quarries and city property across Tamil Nadu — each represented directly by our desk.
@@ -136,7 +136,7 @@ export function CinematicHero({ onListProperty }: { onListProperty: () => void }
             </div>
           </motion.div>
 
-          <motion.dl
+          <motion.ul
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 1, delay: 1.2 }}
@@ -147,13 +147,12 @@ export function CinematicHero({ onListProperty }: { onListProperty: () => void }
               [String(counts.length), 'asset types'],
               ['Direct', 'owner mandates'],
             ].map(([v, k]) => (
-              <div key={k} className="flex items-baseline gap-2">
-                <dt className="sr-only">{k}</dt>
-                <dd className="font-display text-[1.25rem] tracking-[0.02em] text-[#FBF8F2]">{v}</dd>
+              <li key={k} className="flex items-baseline gap-2">
+                <span className="font-display text-[1.25rem] tracking-[0.02em] text-[#FBF8F2]">{v}</span>
                 <span>{k}</span>
-              </div>
+              </li>
             ))}
-          </motion.dl>
+          </motion.ul>
         </motion.div>
       </section>
 

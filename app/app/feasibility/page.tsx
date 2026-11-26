@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import { SiteFooter, SiteHeader } from '@/components/brand/SiteHeader'
 import { SmoothScroll } from '@/components/brand/SmoothScroll'
 import { LandCheck } from '@/components/feasibility/LandCheck'
-import { Eyebrow, Grain } from '@/components/portfolio/primitives'
+import { Eyebrow } from '@/components/portfolio/primitives'
 
 export const metadata: Metadata = {
   title: 'Land Check — What is your land right for?',
@@ -23,7 +23,6 @@ export default function FeasibilityPage() {
       <SmoothScroll />
       <SiteHeader />
       <header className="relative overflow-hidden bg-[#15213A] pb-20 pt-40 text-[#F7F3EC] sm:pt-44">
-        <Grain opacity={0.1} />
         <div aria-hidden className="pointer-events-none absolute inset-4 border border-[#E6C9A0]/15 sm:inset-6" />
         <div className="relative mx-auto grid max-w-7xl gap-12 px-6 sm:px-10 lg:grid-cols-12 lg:items-end">
           <div className="lg:col-span-7">
@@ -41,7 +40,7 @@ export default function FeasibilityPage() {
             {TRUST.map(t => (
               <div key={t.k} className="bg-[#15213A] py-4 sm:px-5 lg:px-0 lg:pl-6">
                 <dt className="font-display text-lg tracking-[0.04em]">{t.k}</dt>
-                <dd className="mt-1 font-sans text-[10px] uppercase tracking-[0.24em] text-white/55">{t.v}</dd>
+                <dd className="mt-1 font-sans text-[11px] uppercase tracking-[0.2em] text-white/65">{t.v}</dd>
               </div>
             ))}
           </dl>

@@ -1,256 +1,106 @@
-'use client';
+'use client'
 
-import { LegalSection } from '@/types/legal';
-import { Download, Share2, BookmarkPlus, Clock, FileText } from 'lucide-react';
-import { useState } from 'react';
-import { motion } from 'framer-motion';
+import { useState } from 'react'
+import { Check, Clock, Printer, Share2 } from 'lucide-react'
+import type { LegalSection } from '@/types/legal'
 
 interface Props {
-  title: string;
-  lastUpdated: string;
-  documentType: string;
-  sections: LegalSection[];
-  metadata?: {
-    word_count?: number;
-    reading_time_minutes?: number;
-    compliance_standards?: string[];
-  };
+  title: string
+  lastUpdated: string
+  documentType: string
+  sections: LegalSection[]
+  metadata?: { compliance_standards?: string[] }
 }
 
-export function LegalDocumentLayout({ title, lastUpdated, documentType, sections, metadata }: Props) {
-  const [bookmarked, setBookmarked] = useState(false);
+/** Renders plain text where lines starting with "- " become a bullet list. */
+function Body({ text }: { text: string }) {
+  const blocks: { type: 'p' | 'ul'; lines: string[] }[] = []
+  for (const line of text.split('\n')) {
+    const isItem = line.trim().startsWith('- ')
+    const last = blocks[blocks.length - 1]
+    if (isItem) {
+      if (last?.type === 'ul') last.lines.push(line.trim().slice(2))
+      else blocks.push({ type: 'ul', lines: [line.trim().slice(2)] })
+    } else if (line.trim()) {
+      blocks.push({ type: 'p', lines: [line] })
+    }
+  }
+  return (
+    <div className="space-y-3 font-sans text-[15.5px] leading-[1.75] text-[#2E3648] sm:text-[16px]">
+      {blocks.map((b, i) =>
+        b.type === 'p' ? (
+          <p key={i} className="text-[#2E3648]">{b.lines[0]}</p>
+        ) : (
+          <ul key={i} className="space-y-2">
+            {b.lines.map(l => (
+              <li key={l} className="flex gap-3 text-[#2E3648]">
+                <span aria-hidden className="mt-[11px] h-1 w-1 shrink-0 rotate-45 bg-[#B0834A]" />
+                <span>{l}</span>
+              </li>
+            ))}
+          </ul>
+        ),
+      )}
+    </div>
+  )
+}
 
-  const handleDownloadPDF = async () => {
-    // Implement PDF generation
+export function LegalDocumentLayout({ title, lastUpdated, sections, metadata }: Props) {
+  const [copied, setCopied] = useState(false)
+  const share = async () => {
     try {
-      const response = await fetch('/api/legal/generate-pdf', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ documentType })
-      });
-      
-      if (response.ok) {
-        const blob = await response.blob();
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `${documentType}_${new Date().toISOString().split('T')[0]}.pdf`;
-        a.click();
+      if (navigator.share) await navigator.share({ title, url: location.href })
+      else {
+        await navigator.clipboard.writeText(location.href)
+        setCopied(true)
+        setTimeout(() => setCopied(false), 2000)
       }
-    } catch (error) {
-      console.error('PDF download failed:', error);
-    }
-  };
-
-  const handleShare = async () => {
-    if (navigator.share) {
-      await navigator.share({
-        title: title,
-        url: window.location.href
-      });
-    } else {
-      navigator.clipboard.writeText(window.location.href);
-      alert('Link copied to clipboard!');
-    }
-  };
+    } catch {}
+  }
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
-      className="bg-[#FBF8F2] border border-[#D6CAB5] overflow-hidden"
-    >
-      {/* Header */}
-      <div className="bg-[#15213A] p-8 sm:p-12 text-[#F7F3EC]">
-        <div className="flex items-start justify-between">
-          <div className="flex-1">
-            <h1 className="font-display text-3xl sm:text-5xl tracking-[0.04em] mb-4">{title}</h1>
-            <div className="flex items-center gap-6 text-sm text-white/80">
-              <span className="flex items-center gap-2">
-                <Clock className="w-4 h-4" />
-                Last updated: {new Date(lastUpdated).toLocaleDateString('en-IN', { 
-                  day: 'numeric', 
-                  month: 'long', 
-                  year: 'numeric' 
-                })}
-              </span>
-              {metadata?.reading_time_minutes && (
-                <span className="flex items-center gap-2">
-                  <FileText className="w-4 h-4" />
-                  {metadata.reading_time_minutes} min read
-                </span>
-              )}
-            </div>
+    <article className="border border-[#D6CAB5] bg-[#FBF8F2]">
+      <header className="bg-[#15213A] px-6 py-9 text-[#F7F3EC] sm:px-12 sm:py-12">
+        <div className="flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between">
+          <div>
+            <h1 className="font-display text-[2rem] leading-tight tracking-[0.03em] text-[#FBF8F2] sm:text-[2.8rem]">{title}</h1>
+            <p className="mt-3 flex items-center gap-2 font-sans text-[13.5px] text-white/75">
+              <Clock className="h-4 w-4" />
+              Last updated {new Date(lastUpdated).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}
+            </p>
           </div>
-
-          {/* Actions */}
-          <div className="flex items-center gap-2">
-            <button
-              onClick={handleDownloadPDF}
-              className="p-2 bg-white/10 hover:bg-white/20 rounded-none transition-colors"
-              aria-label="Download PDF"
-            >
-              <Download className="w-5 h-5" />
+          <div className="flex gap-2 print:hidden">
+            <button onClick={() => window.print()} className="inline-flex h-10 items-center gap-2 border border-white/20 px-4 font-sans text-[12px] font-semibold uppercase tracking-[0.14em] text-[#F7F3EC] hover:border-[#E6C9A0]">
+              <Printer className="h-4 w-4" /> Print
             </button>
-            <button
-              onClick={handleShare}
-              className="p-2 bg-white/10 hover:bg-white/20 rounded-none transition-colors"
-              aria-label="Share"
-            >
-              <Share2 className="w-5 h-5" />
-            </button>
-            <button
-              onClick={() => setBookmarked(!bookmarked)}
-              className="p-2 bg-white/10 hover:bg-white/20 rounded-none transition-colors"
-              aria-label="Bookmark"
-            >
-              <BookmarkPlus className={`w-5 h-5 ${bookmarked ? 'fill-current' : ''}`} />
+            <button onClick={share} className="inline-flex h-10 items-center gap-2 border border-white/20 px-4 font-sans text-[12px] font-semibold uppercase tracking-[0.14em] text-[#F7F3EC] hover:border-[#E6C9A0]">
+              {copied ? <Check className="h-4 w-4" /> : <Share2 className="h-4 w-4" />} {copied ? 'Copied' : 'Share'}
             </button>
           </div>
         </div>
-
-        {/* Compliance Badges */}
         {metadata?.compliance_standards && (
           <div className="mt-6 flex flex-wrap gap-2">
-            {metadata.compliance_standards.map((standard) => (
-              <span
-                key={standard}
-                className="px-3 py-1 bg-white/10 backdrop-blur-sm rounded-none text-xs font-medium"
-              >
-                ✓ {standard}
-              </span>
+            {metadata.compliance_standards.map(s => (
+              <span key={s} className="border border-white/15 px-3 py-1 font-sans text-[12px] text-white/80">{s}</span>
             ))}
           </div>
         )}
-      </div>
+      </header>
 
-      {/* Content */}
-      <div className="p-8">
-        <div className="prose prose-slate max-w-none">
-          {sections.map((section) => (
-            <div key={section.id} id={section.id} className="mb-8 scroll-mt-24">
-              <h2 className="font-display text-2xl tracking-[0.03em] text-[#15213A] mb-4">{section.heading}</h2>
-              <div className="font-serif text-[1.15rem] text-[#2E3648] leading-[1.7] whitespace-pre-line">
-                {section.content}
+      <div className="px-6 py-10 sm:px-12 sm:py-12">
+        {sections.map(section => (
+          <section key={section.id} id={section.id} className="scroll-mt-28 border-b border-[#E4DACA] py-8 first:pt-0 last:border-0 last:pb-0">
+            <h2 className="mb-4 font-display text-[1.35rem] leading-snug tracking-[0.02em] text-[#15213A] sm:text-[1.55rem]">{section.heading}</h2>
+            <Body text={section.content} />
+            {section.subsections?.map(sub => (
+              <div key={sub.id} id={sub.id} className="mt-6 border-l-2 border-[#B0834A] pl-5">
+                <h3 className="mb-2 font-sans text-[15px] font-semibold text-[#15213A]">{sub.heading}</h3>
+                <Body text={sub.content} />
               </div>
-
-              {section.subsections && section.subsections.length > 0 && (
-                <div className="mt-6 space-y-6">
-                  {section.subsections.map((subsection) => (
-                    <div key={subsection.id} className="ml-6 border-l-2 border-[#B0834A] pl-6">
-                      <h3 className="font-display text-lg tracking-[0.03em] text-[#15213A] mb-3">
-                        {subsection.heading}
-                      </h3>
-                      <div className="font-serif text-[1.15rem] text-[#2E3648] leading-[1.7] whitespace-pre-line">
-                        {subsection.content}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
+            ))}
+          </section>
+        ))}
       </div>
-
-      {/* Footer */}
-      <div className="bg-[#EFE8DC] p-6 border-t border-[#D6CAB5]">
-        <div className="flex items-center justify-between text-sm text-slate-600">
-          <span>Document Version: {new Date(lastUpdated).toISOString().split('T')[0]}</span>
-          <span>{metadata?.word_count} words</span>
-        </div>
-      </div>
-    </motion.div>
-  );
+    </article>
+  )
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

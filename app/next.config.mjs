@@ -53,6 +53,18 @@ const nextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
   },
+  // Old SaaS-era pages advertised paid plans; Tharaga listing is free, so send visitors to the current pages.
+  async redirects() {
+    return [
+      { source: '/pricing', destination: '/refund', permanent: true },
+      { source: '/saas', destination: '/', permanent: true },
+      { source: '/saas/:path*', destination: '/', permanent: true },
+      { source: '/help', destination: '/#contact', permanent: true },
+      { source: '/trial-signup', destination: '/?list=1', permanent: true },
+      { source: '/builders/signup', destination: '/?list=1', permanent: true },
+      { source: '/property-listing', destination: '/properties', permanent: true },
+    ]
+  },
   async headers() {
     return [
       {

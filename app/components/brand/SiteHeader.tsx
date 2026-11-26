@@ -344,10 +344,7 @@ export function SiteFooter() {
   const linkCls = 'font-sans text-[14px] text-white/70 transition-colors hover:text-[#F7F3EC]'
   return (
     <footer className="relative isolate overflow-hidden bg-[#0E1729] pb-10 pt-16 text-white/70 sm:pt-20">
-      {/* Warm horizon glow, echoing the hero */}
-      <div aria-hidden className="pointer-events-none absolute left-1/2 top-0 -z-10 h-[28rem] w-[min(68rem,140vw)] -translate-x-1/2 -translate-y-[38%] rounded-full bg-[radial-gradient(closest-side,rgba(255,196,128,0.26),rgba(176,131,74,0.12)_55%,transparent)] blur-2xl" />
-      <div aria-hidden className="pointer-events-none absolute -bottom-40 right-[-10%] -z-10 h-[26rem] w-[26rem] rounded-full bg-[radial-gradient(closest-side,rgba(176,131,74,0.18),transparent)] blur-2xl" />
-      <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[#E6C9A0]/45 to-transparent" />
+      <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 h-px bg-[#E6C9A0]/20" />
 
       <div className="mx-auto max-w-7xl px-6 sm:px-10">
         <div className="grid gap-12 text-center md:grid-cols-12 md:items-start md:gap-10 md:text-left">

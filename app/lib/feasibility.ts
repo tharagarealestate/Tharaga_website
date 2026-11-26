@@ -23,9 +23,9 @@ export const USES: { id: Use; label: string; hint: string }[] = [
 
 export const REGIONS: { id: Region; label: string; hint: string }[] = [
   { id: 'chennai', label: 'Chennai & suburbs', hint: 'OMR, ECR, GST Road, Sriperumbudur' },
-  { id: 'north', label: 'North Tamil Nadu', hint: 'Vellore, Ranipet, Kancheepuram' },
+  { id: 'north', label: 'North Tamil Nadu', hint: 'Vellore, Ranipet, Kancheepuram, Chengalpattu' },
   { id: 'west', label: 'West Tamil Nadu', hint: 'Coimbatore, Karur, Hosur, Salem' },
-  { id: 'delta', label: 'Cauvery Delta', hint: 'Thanjavur, Thiruvarur, Nagapattinam' },
+  { id: 'delta', label: 'Central & Delta', hint: 'Tiruchirappalli, Thanjavur, Nagapattinam' },
   { id: 'south', label: 'South Tamil Nadu', hint: 'Madurai, Virudhunagar, Thoothukudi, Tenkasi' },
   { id: 'open', label: 'Not decided yet', hint: 'Show me every option' },
 ]
@@ -61,7 +61,7 @@ const RULES: Record<Use, { checks: string[]; approvals: string[]; siteStudy: str
       'Access for heavy vehicles during construction',
     ],
     approvals: [
-      'Land-use classification permitting the project (conversion if agricultural)',
+      'Land-use classification permitting the project (conversion where the rules require it)',
       'Grid connectivity approval from the state transmission / distribution utility',
       'Electrical safety approval from the Chief Electrical Inspector (CEIG)',
     ],
@@ -150,14 +150,24 @@ function extentFits(m: Mandate, e: Extent) {
   return m.acres > 100
 }
 
+const REGION_PATTERNS: Record<Exclude<Region, 'open'>, RegExp> = {
+  chennai: /^Chennai$/i,
+  north: /Vellore|Ranipet|Kancheepuram|Kanchipuram|Chengalpattu|Tiruvallur|Tiruvannamalai/i,
+  west: /Karur|Coimbatore|Salem|Hosur|Krishnagiri|Erode|Tiruppur|Namakkal/i,
+  delta: /Tiruchirappalli|Trichy|Thanjavur|Nagapattinam|Pudukkottai|Ariyalur/i,
+  south: /Thoothukudi|Virudhunagar|Courtalam|Tenkasi|Senkottai|Madurai|Tirunelveli|Kanyakumari|Ramanathapuram|Sivaganga/i,
+}
+
 function regionFits(m: Mandate, r: Region) {
-  // The solar plant's location is withheld, so it is offered for every region.
+  // The solar plant's location is withheld, so it is offered for every region (never placed in one).
   if (r === 'open' || m.category === 'energy') return true
-  const z = zoneOf(m)
-  if (r === 'chennai') return z === 'Chennai'
-  if (r === 'south') return z === 'South Tamil Nadu' && /Thoothukudi|Virudhunagar|Courtalam|Tenkasi/i.test(m.region + m.location)
-  if (r === 'west') return /Karur/i.test(m.region)
-  return false
+  if (r === 'chennai') return m.region === 'Chennai'
+  return REGION_PATTERNS[r].test(`${m.region} ${m.location}`)
+}
+
+/** Parcels that must never be presented as suited to a use (e.g. no confirmed grid capacity). */
+const EXCLUDE_FOR_USE: Partial<Record<Use, string[]>> = {
+  solar: ['malaipatti-500-acres'],
 }
 
 export interface LandCheckAnswers {
@@ -170,10 +180,10 @@ export interface LandCheckAnswers {
 export function buildReport(a: LandCheckAnswers) {
   const rule = RULES[a.use]
   const cats = USE_TO_CATEGORY[a.use]
-  const strong = MANDATES.filter(m => cats.includes(m.category) && regionFits(m, a.region) && extentFits(m, a.extent))
-  const loose = strong.length
-    ? []
-    : MANDATES.filter(m => cats.includes(m.category) && (regionFits(m, a.region) || extentFits(m, a.extent))).slice(0, 3)
+  const excluded = new Set(EXCLUDE_FOR_USE[a.use] ?? [])
+  const pool = MANDATES.filter(m => cats.includes(m.category) && !excluded.has(m.slug))
+  const strong = pool.filter(m => regionFits(m, a.region) && extentFits(m, a.extent))
+  const loose = strong.length ? [] : pool.filter(m => regionFits(m, a.region) || extentFits(m, a.extent)).slice(0, 3)
   return {
     checks: [...rule.checks, ...COMMON_CHECKS],
     approvals: rule.approvals,
@@ -183,7 +193,16 @@ export function buildReport(a: LandCheckAnswers) {
   }
 }
 
-export function summaryText(a: LandCheckAnswers) {
+export function summaryText(a: LandCheckAnswers, matches: { name: string }[] = []) {
   const f = (list: { id: string; label: string }[], id: string) => list.find(x => x.id === id)?.label
-  return `Land check — Use: ${f(USES, a.use)}; Area: ${f(REGIONS, a.region)}; Extent: ${f(EXTENTS, a.extent)}; Stage: ${f(STAGES, a.stage)}`
+  const lines = [
+    'Hello Tharaga, I did the Land Check on tharaga.in.',
+    `Use: ${f(USES, a.use)}`,
+    `Area: ${f(REGIONS, a.region)}`,
+    `Extent: ${f(EXTENTS, a.extent)}`,
+    `Stage: ${f(STAGES, a.stage)}`,
+  ]
+  if (matches.length) lines.push(`Interested in: ${matches.map(m => m.name).join(', ')}`)
+  lines.push(a.stage === 'own' ? 'Please help me verify my land and its best use.' : 'Please verify this for a specific parcel.')
+  return lines.join('\n')
 }

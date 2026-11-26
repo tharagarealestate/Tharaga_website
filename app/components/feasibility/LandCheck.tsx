@@ -11,7 +11,8 @@ import {
   summaryText,
   type LandCheckAnswers,
 } from '@/lib/feasibility'
-import { DESK_PHONE_DISPLAY, telLink, whatsappLink, type Mandate } from '@/lib/mandates'
+import { DESK_PHONE_DISPLAY, DESK_PHONE_E164, telLink, type Mandate } from '@/lib/mandates'
+import { openProperty } from '@/lib/propertyAccess'
 import { Button } from '@/components/brand/Button'
 import { MandateVisual } from '@/components/portfolio/MandateVisual'
 
@@ -182,7 +183,7 @@ export function LandCheck({ onOpenMandate }: { onOpenMandate?: (m: Mandate) => v
                       <button
                         key={m.slug}
                         type="button"
-                        onClick={() => (onOpenMandate ? onOpenMandate(m) : (window.location.href = `/properties/${m.slug}`))}
+                        onClick={() => (onOpenMandate ? onOpenMandate(m) : openProperty({ push: href => (window.location.href = href) }, m))}
                         className="group text-left"
                       >
                         <span className="relative block aspect-[4/3] overflow-hidden bg-[#E4DACA]">
@@ -208,17 +209,38 @@ export function LandCheck({ onOpenMandate }: { onOpenMandate?: (m: Mandate) => v
                   </p>
                 </div>
                 <div className="flex flex-col gap-3 sm:flex-row lg:justify-end">
-                  <Button variant="light" arrow href={whatsappLink(summaryText(answers as LandCheckAnswers))}>
-                    Get it verified
+                  <Button
+                    variant="light"
+                    arrow
+                    href={`https://wa.me/${DESK_PHONE_E164}?text=${encodeURIComponent(summaryText(answers as LandCheckAnswers, report.matches.length ? report.matches : report.nearMatches))}`}
+                  >
+                    Get it verified free
                   </Button>
                   <Button variant="outline-light" href={telLink}>
                     {DESK_PHONE_DISPLAY}
                   </Button>
                 </div>
               </div>
-              <p className="mt-5 font-sans text-[11px] uppercase leading-relaxed tracking-[0.16em] text-[#5F6575]">
-                General guidance based on Tamil Nadu approval requirements. It is not legal advice or a valuation —
-                requirements for a specific parcel are confirmed by verification.
+              {answers.stage === 'own' && (
+                <a
+                  href="/?list=1"
+                  className="mt-4 flex flex-col gap-2 border border-[#B0834A]/50 bg-[#F7EFE3] p-5 transition-colors hover:border-[#15213A] sm:flex-row sm:items-center sm:justify-between"
+                >
+                  <span>
+                    <span className="block font-sans text-[15px] font-semibold text-[#15213A]">Thinking of selling or leasing it?</span>
+                    <span className="mt-0.5 block font-sans text-[13.5px] text-[#4A5163]">List it with Tharaga — free, private, reviewed by our desk before any buyer sees it.</span>
+                  </span>
+                  <span className="shrink-0 font-sans text-[12px] font-semibold uppercase tracking-[0.16em] text-[#94643A]">List my land free →</span>
+                </a>
+              )}
+              <div className="mt-4 flex flex-wrap gap-4 print:hidden">
+                <button type="button" onClick={() => window.print()} className="font-sans text-[12px] font-semibold uppercase tracking-[0.16em] text-[#15213A] underline decoration-[#B0834A]/60 underline-offset-[6px]">
+                  Save or print this check
+                </button>
+              </div>
+              <p className="mt-5 font-sans text-[12px] leading-relaxed text-[#5F6575]">
+                General guidance based on Tamil Nadu approval requirements. It is not legal, survey or financial advice, or a valuation —
+                requirements for a specific parcel are confirmed by verification of the actual records.
               </p>
             </motion.div>
           )

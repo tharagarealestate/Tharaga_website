@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { Check, Image as ImageIcon, MapPin, Plus, RefreshCw } from 'lucide-react'
-import { getSupabase } from '@/lib/supabase'
+import { getAccessToken } from '@/lib/authToken'
 
 type Stage = { key: string; label: string; state: 'done' | 'current' | 'next'; at?: string | null }
 type Listing = {
@@ -30,24 +30,31 @@ export function MandateTracker({ user, onOpenIntake }: { user: any; onOpenIntake
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
 
+  const userId: string | undefined = user?.id
   const load = useCallback(async () => {
-    if (!user) return
+    if (!userId) {
+      setLoading(false)
+      return
+    }
     setLoading(true)
     setError('')
     try {
-      const token = (await getSupabase().auth.getSession()).data.session?.access_token
-      if (!token) throw new Error('Please sign in again to see your listings.')
-      const res = await fetch('/api/listings', { headers: { Authorization: `Bearer ${token}` }, cache: 'no-store' })
+      const token = await getAccessToken()
+      if (!token) throw new Error('Your session has expired — please sign in again to see your listings.')
+      const ctrl = new AbortController()
+      const t = setTimeout(() => ctrl.abort(), 12000)
+      const res = await fetch('/api/listings', { headers: { Authorization: `Bearer ${token}` }, cache: 'no-store', signal: ctrl.signal })
+      clearTimeout(t)
       const j = await res.json()
       if (!res.ok) throw new Error(j.error || 'Could not load your listings.')
       setListings(j.listings || [])
       setActive(0)
     } catch (e: any) {
-      setError(e?.message || 'Could not load your listings.')
+      setError(e?.name === 'AbortError' ? 'The connection is slow — tap refresh to try again.' : e?.message || 'Could not load your listings.')
     } finally {
       setLoading(false)
     }
-  }, [user])
+  }, [userId])
 
   useEffect(() => {
     load()
@@ -64,7 +71,7 @@ export function MandateTracker({ user, onOpenIntake }: { user: any; onOpenIntake
         <div>
           <p className="font-sans text-[11px] font-semibold uppercase tracking-[0.18em] text-[#94643A]">Your listings</p>
           <p className="mt-1 font-display text-[1.35rem] tracking-[0.02em] text-[#15213A]">
-            {loading ? 'Loading…' : listings.length ? `${listings.length} propert${listings.length > 1 ? 'ies' : 'y'} with the desk` : 'Nothing listed yet'}
+            {loading ? 'Loading…' : error ? 'Your listings' : listings.length ? `${listings.length} propert${listings.length > 1 ? 'ies' : 'y'} with the desk` : 'Nothing listed yet'}
           </p>
         </div>
         <div className="flex items-center gap-2">

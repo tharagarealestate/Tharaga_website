@@ -1,6 +1,7 @@
 'use client'
 
 import Image from 'next/image'
+import { openProperty } from '@/lib/propertyAccess'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
@@ -15,6 +16,9 @@ import {
   type MediaItem,
 } from '@/lib/mandates'
 import { useShortlist } from '@/lib/useShortlist'
+import { useAuthUser } from '@/lib/useAuthUser'
+import { openAuthModal } from '@/components/auth/AuthModal'
+import { Check, FileText, Home, Image as ImageIcon, Lock, MapPin, Ruler } from 'lucide-react'
 import { Button } from '@/components/brand/Button'
 import { SiteFooter, SiteHeader } from '@/components/brand/SiteHeader'
 import { SmoothScroll } from '@/components/brand/SmoothScroll'
@@ -437,6 +441,83 @@ function DistanceBars({ items }: { items: NonNullable<Mandate['nearby']> }) {
 
 /* ───────────────────────────── Page ───────────────────────────── */
 
+
+/* ───────────────────────────── Members gate ───────────────────────────── */
+function MembersGate({ mandate, counts, onSignIn }: { mandate: Mandate; counts: { media: number; plans: number; facts: number; nearby: number }; onSignIn: () => void }) {
+  const items = [
+    counts.media > 0 && { icon: ImageIcon, text: `${counts.media} photo${counts.media > 1 ? 's' : ''} & video${counts.media > 1 ? 's' : ''} from the site` },
+    counts.plans > 0 && { icon: Ruler, text: 'The site plan, zoomable' },
+    { icon: FileText, text: `${counts.facts} key facts and specifications` },
+    counts.nearby > 0 && { icon: MapPin, text: 'Distances to highways, rail and towns' },
+  ].filter(Boolean) as { icon: any; text: string }[]
+  return (
+    <section id="members" aria-labelledby="members-title" className="tharaga-members-only scroll-mt-36">
+      <div className="relative overflow-hidden border border-[#B0834A]/35 bg-[#FBF8F2]">
+        {/* A quiet, blurred hint of what is inside */}
+        <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 grid grid-cols-3 gap-2 p-2 opacity-50 blur-[10px]">
+          {[0, 1, 2].map(i => <div key={i} className="aspect-[4/3] bg-gradient-to-br from-[#D6CAB5] to-[#EFE8DC]" />)}
+        </div>
+        <div className="relative bg-gradient-to-b from-[#FBF8F2]/60 via-[#FBF8F2]/95 to-[#FBF8F2] px-6 pb-9 pt-24 sm:px-10 sm:pt-28">
+          <span className="flex h-12 w-12 items-center justify-center rounded-full bg-[#15213A] text-[#E6C9A0]">
+            <Lock className="h-5 w-5" strokeWidth={1.7} />
+          </span>
+          <p className="mt-5 font-sans text-[11px] font-semibold uppercase tracking-[0.2em] text-[#94643A]">For signed-in buyers</p>
+          <h2 id="members-title" className="mt-2 font-display text-[1.6rem] leading-tight tracking-[0.02em] text-[#15213A] sm:text-[1.9rem]">
+            See the full details of {mandate.name}
+          </h2>
+          <ul className="mt-6 grid gap-3 sm:grid-cols-2">
+            {items.map(({ icon: Icon, text }) => (
+              <li key={text} className="flex items-start gap-3 font-sans text-[14.5px] text-[#2E3648]">
+                <Icon className="mt-0.5 h-4 w-4 shrink-0 text-[#94643A]" strokeWidth={1.7} /> {text}
+              </li>
+            ))}
+          </ul>
+          <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
+            <button onClick={onSignIn} className="inline-flex h-12 items-center justify-center gap-3 bg-[#15213A] px-7 font-sans text-[12px] font-semibold uppercase tracking-[0.16em] text-[#F7F3EC] transition-colors hover:bg-[#0E1729]">
+              Sign in to view — it&apos;s free
+            </button>
+            <p className="font-sans text-[13px] text-[#5F6575]">One tap with Google. Your details stay private.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+  )
+}
+
+function GateSkeleton() {
+  return (
+    <div aria-hidden className="space-y-4">
+      <div className="h-6 w-48 animate-pulse bg-[#EFE8DC]" />
+      <div className="grid grid-cols-3 gap-3">{[0, 1, 2].map(i => <div key={i} className="aspect-[4/3] animate-pulse bg-[#EFE8DC]" />)}</div>
+      <div className="h-40 animate-pulse bg-[#EFE8DC]" />
+    </div>
+  )
+}
+
+function SignedOutDialog({ onSignIn, onHome, onDismiss }: { onSignIn: () => void; onHome: () => void; onDismiss: () => void }) {
+  const ref = useRef<HTMLButtonElement>(null)
+  useEffect(() => {
+    ref.current?.focus()
+    const k = (e: KeyboardEvent) => e.key === 'Escape' && onDismiss()
+    window.addEventListener('keydown', k)
+    return () => window.removeEventListener('keydown', k)
+  }, [onDismiss])
+  return (
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[90] flex items-end justify-center bg-[#0B1220]/70 p-0 backdrop-blur-[4px] sm:items-center sm:p-6" role="dialog" aria-modal="true" aria-labelledby="signedout-title">
+      <motion.div initial={{ y: 30, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 20, opacity: 0 }} transition={{ duration: 0.45, ease: EASE }} className="w-full max-w-md bg-[#FBF8F2] p-7 pb-[max(28px,env(safe-area-inset-bottom))] shadow-[0_40px_120px_-30px_rgba(0,0,0,0.6)] sm:p-9">
+        <span className="flex h-11 w-11 items-center justify-center rounded-full bg-[#15213A] text-[#E6C9A0]"><Lock className="h-5 w-5" strokeWidth={1.7} /></span>
+        <h2 id="signedout-title" className="mt-5 font-display text-[1.5rem] leading-tight tracking-[0.02em] text-[#15213A]">You&apos;ve signed out</h2>
+        <p className="mt-2 font-sans text-[14.5px] leading-relaxed text-[#4A5163]">Property details are for signed-in buyers. Sign in again to keep viewing, or head back to the home page.</p>
+        <div className="mt-7 flex flex-col gap-3">
+          <button ref={ref} onClick={onSignIn} className="inline-flex h-12 items-center justify-center bg-[#15213A] font-sans text-[12px] font-semibold uppercase tracking-[0.16em] text-[#F7F3EC] hover:bg-[#0E1729]">Sign in again</button>
+          <button onClick={onHome} className="inline-flex h-12 items-center justify-center gap-2 border border-[#15213A] font-sans text-[12px] font-semibold uppercase tracking-[0.16em] text-[#15213A]"><Home className="h-4 w-4" /> Return to home</button>
+          <button onClick={onDismiss} className="h-10 font-sans text-[13px] text-[#5F6575] underline underline-offset-4 hover:text-[#15213A]">Stay on the summary</button>
+        </div>
+      </motion.div>
+    </motion.div>
+  )
+}
+
 export function PropertyDossier({ mandate }: { mandate: Mandate }) {
   const router = useRouter()
   const shortlist = useShortlist()
@@ -459,6 +540,31 @@ export function PropertyDossier({ mandate }: { mandate: Mandate }) {
   const saved = shortlist.has(mandate.slug)
   const dossier = mandate.dossier ?? DEFAULT_DOSSIER
 
+  // ── Access: the summary is public; the details are for signed-in buyers ──
+  const { user, ready } = useAuthUser()
+  const unlocked = !!user
+  const checking = !user && !ready
+  const signIn = useCallback(
+    () =>
+      openAuthModal(`/properties/${mandate.slug}`, {
+        title: `Sign in to view ${mandate.name}`,
+        body: 'Photos, videos, the site plan and key facts are shared with signed-in buyers. One tap with Google — no forms.',
+      }),
+    [mandate.slug, mandate.name],
+  )
+  const wasSignedIn = useRef(false)
+  const [signedOut, setSignedOut] = useState(false)
+  useEffect(() => {
+    if (user) {
+      wasSignedIn.current = true
+      setSignedOut(false)
+    } else if (ready && wasSignedIn.current) {
+      wasSignedIn.current = false
+      setLightbox(null)
+      setSignedOut(true)
+    }
+  }, [user, ready])
+
   useEffect(() => {
     const onScroll = () => setShowBar(window.scrollY > window.innerHeight * 0.7)
     onScroll()
@@ -468,13 +574,17 @@ export function PropertyDossier({ mandate }: { mandate: Mandate }) {
 
   const sections = useMemo(() => {
     const s = [{ id: 'overview', label: 'Overview' }]
+    if (!unlocked) {
+      s.push({ id: 'members', label: 'Full details' }, { id: 'next-steps', label: 'How to buy' })
+      return s
+    }
     if (shots.length) s.push({ id: 'gallery', label: 'Photos & video' })
     if (plans.length) s.push({ id: 'layout', label: 'Layout' })
     s.push({ id: 'details', label: 'Key facts' })
     if (mandate.nearby?.length) s.push({ id: 'location', label: 'Nearby' })
     s.push({ id: 'next-steps', label: 'How to buy' })
     return s
-  }, [shots.length, plans.length, mandate.nearby])
+  }, [shots.length, plans.length, mandate.nearby, unlocked])
 
   let n = 0
   const roman = () => ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII'][n++]
@@ -497,8 +607,6 @@ export function PropertyDossier({ mandate }: { mandate: Mandate }) {
             />
           </div>
         ) : null}
-        <div aria-hidden className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_left,rgba(176,131,74,0.18),transparent_55%)]" />
-        <Grain opacity={0.1} />
         <div aria-hidden className="pointer-events-none absolute inset-4 border border-[#E6C9A0]/15 sm:inset-6" />
 
         <div className="relative mx-auto grid max-w-7xl items-center gap-12 px-5 sm:px-8 lg:grid-cols-12 lg:gap-16">
@@ -566,7 +674,7 @@ export function PropertyDossier({ mandate }: { mandate: Mandate }) {
           </motion.div>
 
           <div className="lg:col-span-5">
-            <HeroVisual mandate={mandate} onOpenGallery={setLightbox} />
+            <HeroVisual mandate={mandate} onOpenGallery={i => (unlocked ? setLightbox(i) : signIn())} />
           </div>
         </div>
       </header>
@@ -598,6 +706,8 @@ export function PropertyDossier({ mandate }: { mandate: Mandate }) {
             </motion.div>
           </section>
 
+          {unlocked ? (
+            <>
           {/* Gallery */}
           {shots.length > 0 && (
             <section id="gallery" className="scroll-mt-36">
@@ -718,6 +828,17 @@ export function PropertyDossier({ mandate }: { mandate: Mandate }) {
             </section>
           ) : null}
 
+            </>
+          ) : checking ? (
+            <GateSkeleton />
+          ) : (
+            <MembersGate
+              mandate={mandate}
+              counts={{ media: shots.length, plans: plans.length, facts: facts.length + (mandate.specs?.reduce((a, g) => a + g.rows.length, 0) ?? 0), nearby: mandate.nearby?.length ?? 0 }}
+              onSignIn={signIn}
+            />
+          )}
+
           {/* How to buy */}
           <section id="next-steps" className="scroll-mt-36">
             <SectionTitle numeral={roman()} eyebrow="How to buy" title="Three steps, one point of contact" />
@@ -795,7 +916,7 @@ export function PropertyDossier({ mandate }: { mandate: Mandate }) {
                   key={m.slug}
                   mandate={m}
                   index={i}
-                  onOpen={() => router.push(`/properties/${m.slug}`)}
+                  onOpen={() => openProperty(router, m)}
                   saved={shortlist.has(m.slug)}
                   onToggleSave={() => shortlist.toggle(m.slug)}
                 />
@@ -860,7 +981,19 @@ export function PropertyDossier({ mandate }: { mandate: Mandate }) {
         )}
       </AnimatePresence>
 
-      <Lightbox items={media} index={lightbox} onClose={() => setLightbox(null)} onIndex={setLightbox} />
+      <Lightbox items={media} index={unlocked ? lightbox : null} onClose={() => setLightbox(null)} onIndex={setLightbox} />
+      <AnimatePresence>
+        {signedOut && (
+          <SignedOutDialog
+            onSignIn={() => {
+              setSignedOut(false)
+              signIn()
+            }}
+            onHome={() => router.push('/')}
+            onDismiss={() => setSignedOut(false)}
+          />
+        )}
+      </AnimatePresence>
     </div>
   )
 }

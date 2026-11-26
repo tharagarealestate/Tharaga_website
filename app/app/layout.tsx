@@ -1,95 +1,142 @@
+// Brand typography (self-hosted), matched to the Tharaga Estates logo:
+// Cinzel = wordmark capitals · Cormorant Garamond = editorial serif · Montserrat = spaced labels
+import '@fontsource/cinzel/400.css'
+import '@fontsource/cinzel/500.css'
+import '@fontsource/cinzel/600.css'
+import '@fontsource/cormorant-garamond/300.css'
+import '@fontsource/cormorant-garamond/400.css'
+import '@fontsource/cormorant-garamond/500.css'
+import '@fontsource/cormorant-garamond/600.css'
+import '@fontsource/cormorant-garamond/300-italic.css'
+import '@fontsource/cormorant-garamond/400-italic.css'
+import '@fontsource/cormorant-garamond/500-italic.css'
+import '@fontsource/montserrat/300.css'
+import '@fontsource/montserrat/400.css'
+import '@fontsource/montserrat/500.css'
+import '@fontsource/montserrat/600.css'
 import './globals.css'
 import type { Metadata } from 'next'
+import { NextIntlClientProvider } from 'next-intl'
+import { ToastProvider } from '@/components/ui/toast'
+import { NotificationProvider } from '@/contexts/NotificationContext'
+import { AuthModal } from '@/components/auth/AuthModal'
+import { Suspense } from 'react'
+
+export const runtime = 'nodejs'
+
+const SITE_URL = 'https://tharaga.in'
 
 export const metadata: Metadata = {
-  title: 'Tharaga — Premium Real Estate',
-  description: 'AI-powered real estate assistant',
+  title: {
+    default: 'Land, Solar & Quarry Property in Tamil Nadu | Tharaga Estates',
+    template: '%s | Tharaga Estates',
+  },
+  description: 'Land banks, solar plants, quarries, commercial buildings and homes across Tamil Nadu, represented directly by Tharaga Estates, Chennai. Browse and enquire.',
+  metadataBase: new URL(SITE_URL),
+  applicationName: 'Tharaga Estates',
+  keywords: [
+    'Tharaga Estates',
+    'land for sale Tamil Nadu',
+    'industrial land Thoothukudi',
+    'solar plant for sale Tamil Nadu',
+    'quarry for sale Tamil Nadu',
+    'commercial property Chennai',
+    'farm land Tiruchirappalli',
+    'plots near GST Road Kattankulathur',
+  ],
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+      'max-video-preview': -1,
+    },
+  },
+  openGraph: {
+    title: 'Land, Solar & Quarry Property in Tamil Nadu | Tharaga Estates',
+    description: 'Land banks, solar plants, quarries, commercial buildings and homes across Tamil Nadu, represented directly by Tharaga Estates, Chennai. Browse and enquire.',
+    url: SITE_URL,
+    siteName: 'Tharaga Estates',
+    locale: 'en_IN',
+    type: 'website',
+    images: [{ url: '/brand/tharaga-og.jpg', width: 1200, height: 630, alt: 'Tharaga Estates' }],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Land, Solar & Quarry Property in Tamil Nadu | Tharaga Estates',
+    description: 'Land banks, solar plants, quarries, commercial buildings and homes across Tamil Nadu, represented directly by Tharaga Estates, Chennai. Browse and enquire.',
+    images: ['/brand/tharaga-og.jpg'],
+  },
+  manifest: '/manifest.webmanifest',
+  verification: {
+    google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION || undefined,
+    other: process.env.NEXT_PUBLIC_BING_SITE_VERIFICATION
+      ? { 'msvalidate.01': process.env.NEXT_PUBLIC_BING_SITE_VERIFICATION }
+      : undefined,
+  },
 }
 
-import { EntitlementsProvider } from '@/components/ui/FeatureGate'
+const organizationJsonLd = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'RealEstateAgent',
+      '@id': `${SITE_URL}/#organization`,
+      name: 'Tharaga Estates',
+      url: SITE_URL,
+      logo: `${SITE_URL}/brand/tharaga-full-navy.png`,
+      image: `${SITE_URL}/brand/tharaga-og.jpg`,
+      telephone: '+91-8870980839',
+      email: 'advisory@tharaga.in',
+      areaServed: { '@type': 'State', name: 'Tamil Nadu' },
+      address: {
+        '@type': 'PostalAddress',
+        addressLocality: 'Chennai',
+        addressRegion: 'Tamil Nadu',
+        addressCountry: 'IN',
+      },
+    },
+    {
+      '@type': 'WebSite',
+      '@id': `${SITE_URL}/#website`,
+      url: SITE_URL,
+      name: 'Tharaga Estates',
+      inLanguage: 'en-IN',
+      publisher: { '@id': `${SITE_URL}/#organization` },
+      potentialAction: {
+        '@type': 'SearchAction',
+        target: `${SITE_URL}/#projects?q={search_term_string}`,
+        'query-input': 'required name=search_term_string',
+      },
+    },
+  ],
+}
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
       <head>
-        <link rel="manifest" href="/manifest.webmanifest" />
-        <meta name="theme-color" content="#ffffff" />
-        <script dangerouslySetInnerHTML={{ __html: `
-          (function(){
-            try {
-              var stored = localStorage.getItem('thg.theme');
-              var mode = stored || (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
-              document.documentElement.setAttribute('data-color-mode', mode);
-              var meta = document.querySelector('meta[name=\"theme-color\"]');
-              if (meta) meta.setAttribute('content', mode === 'dark' ? '#0d1117' : '#ffffff');
-            } catch(_){}
-          })();
-        `}} />
+        <meta name="theme-color" content="#F7F3EC" />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }}
+        />
       </head>
-      <body className="font-ui bg-canvas text-fg">
-        <script dangerouslySetInnerHTML={{ __html: `
-          (function(){
-            if ('serviceWorker' in navigator) {
-              window.addEventListener('load', function(){
-                navigator.serviceWorker.register('/sw.js').catch(function(){});
-              });
-            }
-          })();
-        `}} />
-        <header className="sticky top-0 z-50 bg-canvas/95 backdrop-blur supports-[backdrop-filter]:bg-canvas/80 border-b border-border">
-          <nav className="mx-auto max-w-6xl px-4 sm:px-6 py-3 flex items-center gap-4 text-sm text-fg-muted">
-            <a href="/" className="font-bold text-fg hover:text-accent">Tharaga</a>
-            <a href="/property-listing/" className="hover:text-accent">Browse</a>
-            <a href="/tools/cost-calculator" className="hover:text-accent">Cost</a>
-            <a href="/pricing/" className="hover:text-accent">Pricing</a>
-            <a href="/tools/currency-risk" className="hover:text-accent">FX Risk</a>
-            <a href="/tools/vastu" className="hover:text-accent">Vastu</a>
-            <a href="/tools/voice-tamil" className="hover:text-accent">தமிழ் Voice</a>
-            <a href="/tours" className="hover:text-accent">Tours</a>
-            <a href="/dashboard/map" className="hover:text-accent">Map</a>
-            <a href="/dashboard/market" className="hover:text-accent">Market</a>
-            <a href="/saved" className="hover:text-accent">Saved</a>
-            <a href="/tools/roi" className="hover:text-accent">ROI</a>
-            <a href="/tools/environment" className="hover:text-accent">Env</a>
-            <a href="/filters/radial" className="hover:text-accent">Filters</a>
-            <span className="grow" />
-            <button id="themeToggleBtn" className="rounded-md border border-border px-2 py-1 text-xs text-fg hover:text-accent">
-              Toggle theme
-            </button>
-          </nav>
-        </header>
-        <EntitlementsProvider>
-          {children}
-        </EntitlementsProvider>
-        {/* Web Vitals reporting */}
-        <script dangerouslySetInnerHTML={{ __html: `
-          (function(){
-            function report(name, value){
-              try{ navigator.sendBeacon && navigator.sendBeacon('/api/__vitals', JSON.stringify({ name, value, t: Date.now() })); }catch(_){ }
-            }
-            try{
-              if ('PerformanceObserver' in window) {
-                new PerformanceObserver((list) => { for (const entry of list.getEntries()) report(entry.name, entry.value) }).observe({ type: 'largest-contentful-paint', buffered: true });
-                new PerformanceObserver((list) => { for (const entry of list.getEntries()) report('CLS', entry.value) }).observe({ type: 'layout-shift', buffered: true });
-              }
-            }catch(_){ }
-            var btn = document.getElementById('themeToggleBtn');
-            if (btn) {
-              btn.addEventListener('click', function(){
-                try {
-                  var current = document.documentElement.getAttribute('data-color-mode') || 'light';
-                  var next = current === 'dark' ? 'light' : 'dark';
-                  document.documentElement.setAttribute('data-color-mode', next);
-                  localStorage.setItem('thg.theme', next);
-                  var meta = document.querySelector('meta[name=\"theme-color\"]');
-                  if (meta) meta.setAttribute('content', next === 'dark' ? '#0d1117' : '#ffffff');
-                } catch(_){}
-              });
-            }
-          })();
-        `}} />
+      <body className="font-sans antialiased bg-[#F7F3EC] text-[#15213A] selection:bg-[#E6C9A0] selection:text-[#15213A]">
+        <NextIntlClientProvider locale="en" messages={{}}>
+          <NotificationProvider>
+            <ToastProvider>
+              <Suspense fallback={null}>
+                {children}
+              </Suspense>
+              <AuthModal />
+            </ToastProvider>
+          </NotificationProvider>
+        </NextIntlClientProvider>
       </body>
     </html>
   )
 }
-

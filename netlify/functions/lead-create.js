@@ -19,7 +19,7 @@ exports.handler = async (event) => {
     if (now - last < 60 * 1000) return { statusCode: 200, headers: corsJson(), body: JSON.stringify({ error: 'Too many requests. Try again shortly.' }) }
     global.__thg_rl.set(ip, now)
     if (!(name || email || phone)) return { statusCode: 400, headers: corsJson(), body: JSON.stringify({ error: 'Provide contact: phone or email' }) }
-    const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE)
+    const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY)
     const source = (event.headers['origin'] || event.headers['referer'] || '').slice(0, 200)
     const { error } = await supabase.from('leads').insert([{ property_id: property_id || null, name, email, phone, message, source }])
     if (error) {

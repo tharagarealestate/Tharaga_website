@@ -1,24 +1,40 @@
 {
-  "name": "Tharaga — Premium Real Estate",
+  "name": "Tharaga Estates",
   "short_name": "Tharaga",
+  "description": "Private land, energy, quarry and commercial mandates across Tamil Nadu.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
-  "background_color": "#0f0d0e",
-  "theme_color": "#6e0d25",
-  "description": "Verified homes, smart matches, immersive tours, and buyer tools.",
+  "background_color": "#F7F3EC",
+  "theme_color": "#15213A",
+  "categories": [
+    "business",
+    "real estate"
+  ],
   "icons": [
     {
-      "src": "/property-listing/noimg.svg",
+      "src": "/brand/icon-192.png",
       "sizes": "192x192",
-      "type": "image/svg+xml",
+      "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/property-listing/noimg.svg",
+      "src": "/brand/icon-512.png",
       "sizes": "512x512",
-      "type": "image/svg+xml",
-      "purpose": "any maskable"
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "The Portfolio",
+      "url": "/properties",
+      "icons": [
+        {
+          "src": "/brand/icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
     }
   ]
 }

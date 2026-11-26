@@ -90,7 +90,7 @@
         try {
           // Razorpay offers a hosted subscription management link via APIs in some plans.
           // For now, guide via email to support or expose an internal page.
-          location.href = 'mailto:support@tharaga.co.in?subject=Billing%20assistance'
+          location.href = 'mailto:support@tharaga.in?subject=Billing%20assistance'
         } catch(_) { alert('Unable to open portal') }
       })
     }

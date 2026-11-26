@@ -1,29 +1,62 @@
-"use client"
+'use client'
 
-import * as React from 'react'
-import clsx from 'clsx'
+import { forwardRef, type ButtonHTMLAttributes, type ReactNode } from 'react'
+import { cn } from '@/lib/utils'
 
-type ButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement> & {
-  variant?: 'primary' | 'secondary' | 'invisible' | 'danger'
-  size?: 'sm' | 'md'
+type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'outline' | 'danger'
+type ButtonSize = 'sm' | 'md' | 'lg'
+
+interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
+  variant?: ButtonVariant
+  size?: ButtonSize
+  loading?: boolean
+  icon?: ReactNode
+  children: ReactNode
 }
 
-export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(function Button(
-  { className, variant = 'primary', size = 'md', ...props },
-  ref,
-) {
-  const base = 'inline-flex items-center justify-center rounded-md border font-semibold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:opacity-60 disabled:cursor-not-allowed'
-  const variants: Record<string, string> = {
-    primary: 'bg-accent text-onEmphasis border-border hover:bg-accentEmphasis focus-visible:ring-[color:var(--color-accent-muted)]',
-    secondary: 'bg-canvas text-fg border-border hover:bg-canvasSubtle',
-    invisible: 'bg-transparent text-fg border-transparent hover:bg-canvasSubtle',
-    danger: 'bg-dangerEmphasis text-onEmphasis border-border hover:brightness-110',
+const variantStyles: Record<ButtonVariant, string> = {
+  primary: 'bg-amber-500 text-zinc-950 hover:bg-amber-400 font-semibold shadow-sm',
+  secondary: 'bg-zinc-800 text-zinc-100 border border-zinc-700 hover:border-zinc-600 hover:bg-zinc-700/50',
+  ghost: 'text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800',
+  outline: 'border border-zinc-700 text-zinc-100 hover:bg-zinc-800 hover:border-zinc-600',
+  danger: 'bg-red-500/10 text-red-400 border border-red-500/20 hover:bg-red-500/20',
+}
+
+const sizeStyles: Record<ButtonSize, string> = {
+  sm: 'h-8 px-3 text-xs gap-1.5 rounded-md',
+  md: 'h-10 px-4 text-sm gap-2 rounded-lg',
+  lg: 'h-12 px-6 text-base gap-2.5 rounded-xl',
+}
+
+export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
+  ({ variant = 'primary', size = 'md', loading, icon, children, className, disabled, ...props }, ref) => {
+    return (
+      <button
+        ref={ref}
+        disabled={disabled || loading}
+        className={cn(
+          'inline-flex items-center justify-center font-medium transition-all duration-150',
+          'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-500',
+          'disabled:opacity-50 disabled:cursor-not-allowed',
+          'active:scale-[0.98]',
+          variantStyles[variant],
+          sizeStyles[size],
+          className
+        )}
+        {...props}
+      >
+        {loading ? (
+          <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none">
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+          </svg>
+        ) : icon ? (
+          <span className="shrink-0">{icon}</span>
+        ) : null}
+        {children}
+      </button>
+    )
   }
-  const sizes: Record<string, string> = {
-    sm: 'text-xs px-2.5 py-1.5',
-    md: 'text-sm px-3 py-2',
-  }
-  return (
-    <button ref={ref} className={clsx(base, variants[variant], sizes[size], className)} {...props} />
-  )
-})
+)
+
+Button.displayName = 'Button'

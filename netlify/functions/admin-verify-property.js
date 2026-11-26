@@ -14,7 +14,7 @@ exports.handler = async (event) => {
   try {
     const { id, verified = true, listing_status = 'active' } = JSON.parse(event.body || '{}')
     if (!id) return json({ error: 'id required' }, 400)
-    const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE)
+    const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY)
     const { error } = await supabase
       .from('properties')
       .update({ is_verified: !!verified, listing_status })

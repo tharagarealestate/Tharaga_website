@@ -21,31 +21,55 @@ jobs:
         run: npm ci || npm i
       - name: Build Next.js
         working-directory: app
+        env:
+          NEXT_PUBLIC_E2E: 'true'
         run: npm run build
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: next-build
           path: app/.next
+          include-hidden-files: true
+          if-no-files-found: error
 
   e2e:
     needs: build-preview
     runs-on: ubuntu-latest
+    env:
+      # Map secret to env var — secrets context is NOT allowed in `if:` expressions
+      E2E_BASE_URL: ${{ secrets.E2E_BASE_URL }}
     steps:
       - uses: actions/checkout@v4
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: '20'
+      - name: Download build artifact
+        if: ${{ env.E2E_BASE_URL == '' }}
+        uses: actions/download-artifact@v4
+        with:
+          name: next-build
+          path: app/.next
+      - name: Install app deps
+        if: ${{ env.E2E_BASE_URL == '' }}
+        working-directory: app
+        run: npm ci || npm i
+      - name: Start Next.js server
+        if: ${{ env.E2E_BASE_URL == '' }}
+        working-directory: app
+        run: npm run start &
       - name: Install Playwright
         run: |
           npm ci || npm i
-          npx playwright install --with-deps
-      - name: Run E2E
-        if: ${{ !secrets.E2E_BASE_URL }}
+          npx playwright install --with-deps chromium
+      - name: Wait for server
+        if: ${{ env.E2E_BASE_URL == '' }}
+        run: npx wait-on http://localhost:3000 --timeout 60000
+      - name: Run E2E (local build)
+        if: ${{ env.E2E_BASE_URL == '' }}
         run: npm run test:e2e
       - name: Run E2E (external base URL)
-        if: ${{ secrets.E2E_BASE_URL }}
+        if: ${{ env.E2E_BASE_URL != '' }}
         env:
-          PLAYWRIGHT_BASE_URL: ${{ secrets.E2E_BASE_URL }}
+          PLAYWRIGHT_BASE_URL: ${{ env.E2E_BASE_URL }}
         run: npm run test:e2e

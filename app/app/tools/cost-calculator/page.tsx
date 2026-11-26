@@ -1,6 +1,12 @@
 "use client"
 
 import * as React from 'react'
+import Breadcrumb from '@/components/Breadcrumb'
+import { PageWrapper } from '@/components/ui/PageWrapper'
+import { PageHeader } from '@/components/ui/PageHeader'
+import { SectionWrapper } from '@/components/ui/SectionWrapper'
+import { GlassCard } from '@/components/ui/glass-card'
+import { DESIGN_TOKENS } from '@/lib/design-system'
 
 type Fees = {
   stampDutyPct: number
@@ -39,9 +45,21 @@ export default function CostCalculatorPage() {
   const total = priceINR + stamp + reg + gst + fees.otherFeesINR
 
   return (
-    <main className="mx-auto max-w-3xl px-6 py-8">
-      <h1 className="text-2xl font-bold text-fg mb-4">Cost calculator</h1>
-      <div className="rounded-xl border border-border bg-canvas p-4 space-y-4">
+    <PageWrapper>
+      <Breadcrumb items={[
+        { label: 'Home', href: '/' },
+        { label: 'Tools', href: '/sitemap' },
+        { label: 'Cost Calculator' }
+      ]} />
+      
+      <PageHeader
+        title="Cost Calculator"
+        description="Calculate stamp duty, registration, GST, and total property purchase costs"
+        className="text-center mb-8"
+      />
+
+      <SectionWrapper noPadding>
+        <GlassCard variant="dark" glow border className="p-6 sm:p-8 space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm mb-1">State</label>
@@ -101,16 +119,17 @@ export default function CostCalculatorPage() {
             }}>Export</button>
           </div>
         </div>
-      </div>
-    </main>
+        </GlassCard>
+      </SectionWrapper>
+    </PageWrapper>
   )
 }
 
 function Metric({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-lg border border-border p-3">
-      <div className="text-xs text-fgMuted">{label}</div>
-      <div className="font-semibold">{value}</div>
+    <div className={`rounded-lg border ${DESIGN_TOKENS.colors.border.default} p-3`}>
+      <div className={`text-xs ${DESIGN_TOKENS.colors.text.muted}`}>{label}</div>
+      <div className={`font-semibold ${DESIGN_TOKENS.colors.text.primary}`}>{value}</div>
     </div>
   )
 }

@@ -1,0 +1,18 @@
+# Completely disable line ending normalization - treat all files as binary for line endings
+* -text
+
+# Mark actual binary files
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.pdf binary
+*.woff binary
+*.woff2 binary
+*.ttf binary
+*.eot binary
+*.svg binary
+*.zip binary
+*.tar binary
+*.gz binary

@@ -1,0 +1,87 @@
+{
+  "common": {
+    "appName": "Tharaga",
+    "search": "Search",
+    "save": "Save",
+    "cancel": "Cancel",
+    "submit": "Submit"
+  },
+  "homepage": {
+    "hero": {
+      "title": "Build Wealth, Not Just Homes",
+      "subtitle": "AI-driven verified listings with transparent insights",
+      "cta": "Explore Properties",
+      "stats": {
+        "timeSaved": "28h saved per buyer",
+        "priceGain": "₹1,200 avg price/sqft gain",
+        "reraChecks": "RERA & document hygiene checks"
+      }
+    }
+  },
+  "vastu": {
+    "title": "Vastu compliance checker",
+    "fields": {
+      "entrance": "Entrance direction",
+      "kitchen": "Kitchen direction",
+      "master": "Master bedroom",
+      "toilet": "Toilet location",
+      "sunVent": "Sunlight & ventilation"
+    },
+    "scoreLabel": "Compliance score",
+    "detectedFacing": "Detected facing",
+    "reco": "Recommendations",
+    "levels": { "excellent": "Excellent", "good": "Good", "average": "Average", "poor": "Poor" }
+  },
+  "dashboard": {
+    "leads": {
+      "title": "Leads",
+      "scoreLabel": "Score",
+      "statusNew": "New",
+      "statusContacted": "Contacted"
+    }
+  },
+  "nav": {
+    "brand": "Tharaga",
+    "features": "Features",
+    "browse": "Browse",
+    "cost": "Cost",
+    "pricing": "Pricing",
+    "fx": "FX Risk",
+    "vastu": "Vastu",
+    "tamilVoice": "தமிழ் Voice",
+    "tours": "Tours",
+    "map": "Map",
+    "market": "Market",
+    "builder": "Builder",
+    "saved": "Saved",
+    "roi": "ROI",
+    "env": "Env",
+    "filters": "Filters",
+    "toggleTheme": "Toggle theme",
+    "about": "About",
+    "verification": "Verification"
+  },
+  "tools": {
+    "fx": {
+      "title": "Currency risk (NRI)",
+      "fields": {
+        "investment": "Investment (INR)",
+        "currency": "Currency",
+        "drift": "Annual drift ±%",
+        "vol": "Annual vol %",
+        "volatility": "Annual vol %",
+        "horizon": "Horizon (years)",
+        "paths": "Paths"
+      },
+      "cards": {
+        "current": "Current value",
+        "best": "Best case",
+        "worst": "Worst case",
+        "var5": "VaR 5%",
+        "median": "Median",
+        "p95": "95th pct"
+      },
+      "disclaimer": "This is a simple scenario analysis. For exact planning, consult a financial advisor."
+    }
+  }
+}

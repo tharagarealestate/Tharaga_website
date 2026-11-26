@@ -646,6 +646,8 @@ export default async function PropertyPage({ params }: { params: { id: string } 
       image: mandateOgImage(mandate),
       address: { '@type': 'PostalAddress', addressLocality: mandate.location, addressRegion: mandate.region, addressCountry: 'IN' },
       provider: { '@type': 'RealEstateAgent', name: 'Tharaga Estates', telephone: '+91-88709-80839', url: 'https://tharaga.in' },
+      // Full details are for signed-in buyers; the summary on the page is public.
+      isAccessibleForFree: false,
     }
     const crumbs = {
       '@context': 'https://schema.org',

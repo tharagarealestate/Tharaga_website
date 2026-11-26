@@ -1,6 +1,7 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
+import { openProperty } from '@/lib/propertyAccess'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { AnimatePresence, LayoutGroup, motion, useMotionValue, useSpring } from 'framer-motion'
 import {
@@ -44,7 +45,7 @@ export function PortfolioExplorer() {
     if (q.get('shortlist') === '1') setDrawer(true)
   }, [router])
   const openMandate = useCallback((m: Mandate | null) => {
-    if (m) router.push(`/properties/${m.slug}`)
+    if (m) openProperty(router, m)
   }, [router])
 
   const list = useMemo(() => {
@@ -70,7 +71,6 @@ export function PortfolioExplorer() {
     <>
       {/* ── Masthead ─────────────────────────────────────────────── */}
       <header className="relative overflow-hidden bg-[#15213A] text-[#F7F3EC] pt-40 pb-20 sm:pt-48 sm:pb-24">
-        <Grain opacity={0.1} />
         <div aria-hidden className="pointer-events-none absolute inset-4 sm:inset-6 border border-[#E6C9A0]/15" />
         <div className="relative max-w-7xl mx-auto px-6 sm:px-10 grid gap-12 lg:grid-cols-12 lg:items-end">
           <div className="lg:col-span-8">

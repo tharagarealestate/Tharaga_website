@@ -7,9 +7,8 @@ import {
   Plus, ShieldCheck, Sun, Trees, Video, Warehouse, X,
 } from 'lucide-react'
 import { TharagaWordmark } from '@/components/brand/TharagaWordmark'
-import { Grain } from '@/components/portfolio/primitives'
 import { openAuthModal } from '@/components/auth/AuthModal'
-import { getSupabase } from '@/lib/supabase'
+import { getAccessToken } from '@/lib/authToken'
 import { useAuthUser } from '@/lib/useAuthUser'
 import { DESK_PHONE_DISPLAY, DESK_PHONE_E164, telLink } from '@/lib/mandates'
 
@@ -39,10 +38,10 @@ const CHIPS: Record<string, string[]> = {
 const STEPS = ['Property type', 'Location & details', 'Photos & videos', 'Your contact']
 
 type Draft = {
-  category: string; location: string; extent: string; description: string
+  category: string; location: string; maps_link: string; extent: string; description: string
   asking_price: string; rental_income: string; seller_name: string; seller_phone: string; seller_email: string
 }
-const EMPTY: Draft = { category: '', location: '', extent: '', description: '', asking_price: '', rental_income: '', seller_name: '', seller_phone: '', seller_email: '' }
+const EMPTY: Draft = { category: '', location: '', maps_link: '', extent: '', description: '', asking_price: '', rental_income: '', seller_name: '', seller_phone: '', seller_email: '' }
 
 type Picked = { id: string; file: File; preview?: string; progress: number; done: boolean; error?: string }
 
@@ -95,7 +94,8 @@ export function ListPropertyFlow({ isOpen, onClose }: { isOpen: boolean; onClose
   const [phase, setPhase] = useState<'form' | 'sending' | 'done'>('form')
   const [sendLabel, setSendLabel] = useState('')
   const [failure, setFailure] = useState('')
-  const [result, setResult] = useState<{ reference: string } | null>(null)
+  const [result, setResult] = useState<{ reference: string; duplicate?: boolean } | null>(null)
+  const honey = useRef<HTMLInputElement>(null)
   const [dragging, setDragging] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
 
@@ -231,9 +231,17 @@ export function ListPropertyFlow({ isOpen, onClose }: { isOpen: boolean; onClose
           while (queue.length) {
             const { file, i } = queue.shift()!
             const up = j.uploads[i]
-            await putWithProgress(up.signedUrl, file, p =>
-              setFiles(prev => prev.map(f => (f.id === good[i].id ? { ...f, progress: p } : f))),
-            )
+            for (let attempt = 1; ; attempt++) {
+              try {
+                await putWithProgress(up.signedUrl, file, p =>
+                  setFiles(prev => prev.map(f => (f.id === good[i].id ? { ...f, progress: p } : f))),
+                )
+                break
+              } catch (err) {
+                if (attempt >= 3) throw new Error(`"${file.name}" would not upload. Check your connection and try again.`)
+                await new Promise(r => setTimeout(r, 1200 * attempt))
+              }
+            }
             finished++
             setFiles(prev => prev.map(f => (f.id === good[i].id ? { ...f, progress: 1, done: true } : f)))
             setSendLabel(`Uploaded ${finished} of ${good.length}…`)
@@ -244,18 +252,15 @@ export function ListPropertyFlow({ isOpen, onClose }: { isOpen: boolean; onClose
       }
 
       setSendLabel('Saving your listing…')
-      let token = ''
-      try {
-        token = (await getSupabase().auth.getSession()).data.session?.access_token || ''
-      } catch {}
+      const token = user ? await getAccessToken() : ''
       const res = await fetch('/api/listings', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
-        body: JSON.stringify({ ...d, media }),
+        body: JSON.stringify({ ...d, media, website: honey.current?.value || '' }),
       })
       const out = await res.json()
       if (!res.ok) throw new Error(out.error || 'Could not save')
-      setResult({ reference: out.reference })
+      setResult({ reference: out.reference, duplicate: !!out.duplicate })
       setPhase('done')
       try {
         localStorage.removeItem(DRAFT_KEY)
@@ -301,18 +306,15 @@ export function ListPropertyFlow({ isOpen, onClose }: { isOpen: boolean; onClose
             className="relative flex h-[100dvh] w-full max-w-5xl overflow-hidden bg-[#FBF8F2] shadow-[0_60px_140px_-40px_rgba(0,0,0,0.7)] sm:h-[min(780px,92vh)]"
           >
             {/* ── Brand side (desktop) ── */}
-            <aside className="relative hidden w-[34%] shrink-0 flex-col justify-between overflow-hidden bg-[#15213A] p-9 text-[#F7F3EC] lg:flex">
-              <div aria-hidden className="pointer-events-none absolute -left-24 -top-24 h-80 w-80 rounded-full bg-[radial-gradient(circle,rgba(230,201,160,0.32),transparent_65%)] blur-2xl" />
-              <div aria-hidden className="pointer-events-none absolute -bottom-32 -right-20 h-96 w-96 rounded-full bg-[radial-gradient(circle,rgba(176,131,74,0.28),transparent_65%)] blur-2xl" />
-              <Grain opacity={0.1} />
+            <aside className="relative hidden w-[34%] shrink-0 flex-col overflow-y-auto bg-[#15213A] px-9 py-10 text-[#F7F3EC] lg:flex">
               <div aria-hidden className="pointer-events-none absolute inset-3 border border-[#E6C9A0]/15" />
               <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25, duration: 0.7, ease: EASE }} className="relative">
-                <TharagaWordmark tone="ivory" height={56} />
-                <h2 className="mt-8 font-display text-[1.9rem] leading-[1.1] tracking-[0.02em] text-[#FBF8F2]">List your property</h2>
-                <p className="mt-3 font-serif text-[1.15rem] italic leading-snug text-[#EBCB9C]">Quietly, to the right buyers.</p>
+                <TharagaWordmark tone="ivory" height={50} />
+                <h2 className="mt-7 font-display text-[1.75rem] leading-[1.12] tracking-[0.02em] text-[#FBF8F2]">List your property</h2>
+                <p className="mt-2.5 font-serif text-[1.12rem] italic leading-snug text-[#EBCB9C]">Quietly, to the right buyers.</p>
               </motion.div>
 
-              <ol className="relative mt-8 space-y-1">
+              <ol className="relative mb-6 mt-8">
                 {STEPS.map((label, i) => {
                   const state = phase === 'done' || i < step ? 'done' : i === step ? 'current' : 'next'
                   return (
@@ -321,7 +323,7 @@ export function ListPropertyFlow({ isOpen, onClose }: { isOpen: boolean; onClose
                       initial={{ opacity: 0, x: -10 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: 0.35 + i * 0.07, duration: 0.6, ease: EASE }}
-                      className="flex items-center gap-4 py-2.5"
+                      className="flex items-center gap-4 py-2"
                     >
                       <span
                         className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full border font-sans text-[12px] font-semibold transition-colors duration-500 ${
@@ -336,14 +338,14 @@ export function ListPropertyFlow({ isOpen, onClose }: { isOpen: boolean; onClose
                 })}
               </ol>
 
-              <motion.ul initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.7, duration: 0.8 }} className="relative mt-8 space-y-3 border-t border-white/10 pt-6">
+              <motion.ul initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.7, duration: 0.8 }} className="relative mt-auto space-y-3 border-t border-white/10 pt-6">
                 {[
-                  [ShieldCheck, 'No fee to list'],
+                  [ShieldCheck, 'Free to list — no fees, no commitment'],
                   [Lock, 'Reviewed by our desk before any buyer sees it'],
                   [Phone, 'Your number is never shown publicly'],
                 ].map(([Icon, t]: any) => (
-                  <li key={t} className="flex items-start gap-3 font-sans text-[13.5px] leading-snug text-white/75">
-                    <Icon className="mt-0.5 h-4 w-4 shrink-0 text-[#D9AE78]" strokeWidth={1.7} /> {t}
+                  <li key={t} className="flex items-start gap-3 font-sans text-[13px] leading-snug text-white/75">
+                    <Icon className="mt-0.5 h-4 w-4 shrink-0 text-[#D9AE78]" strokeWidth={1.7} /> <span>{t}</span>
                   </li>
                 ))}
               </motion.ul>
@@ -389,7 +391,8 @@ export function ListPropertyFlow({ isOpen, onClose }: { isOpen: boolean; onClose
                       </svg>
                       <h3 className="mt-6 font-display text-[1.9rem] leading-tight tracking-[0.02em] text-[#15213A]">Listing received</h3>
                       <p className="mt-3 font-sans text-[15px] leading-relaxed text-[#4A5163]">
-                        Your reference is <span className="font-semibold text-[#15213A]">{result.reference}</span>. The Tharaga desk reviews every property before any buyer sees it.
+                        {result.duplicate ? 'We already had this property from you today, so we added to the same listing. ' : ''}
+                        Your reference is <span className="font-semibold text-[#15213A]">{result.reference}</span>. The Tharaga desk reviews every property before any buyer sees it{d.seller_email ? ' — a confirmation is on its way to your email' : ''}.
                       </p>
                       <ol className="mx-auto mt-8 max-w-sm space-y-3 text-left">
                         {['Received — we have your details and media', 'Desk review and title check', 'Private buyer matching, then site visits'].map((t, i) => (
@@ -495,6 +498,9 @@ export function ListPropertyFlow({ isOpen, onClose }: { isOpen: boolean; onClose
                           <Field label="Location" required error={errors.location} icon={<MapPin className="h-4 w-4" />}>
                             <input value={d.location} onChange={e => set('location')(e.target.value)} placeholder="e.g. Pulivalam, Tiruchirappalli or OMR, Chennai" className={inputCls} autoFocus />
                           </Field>
+                          <Field label="Google Maps pin" hint="Optional · private">
+                            <input value={d.maps_link} onChange={e => set('maps_link')(e.target.value)} inputMode="url" placeholder="Paste a maps.app.goo.gl link — helps us find it fast" className={inputCls} />
+                          </Field>
                           <div className="grid gap-5 sm:grid-cols-2">
                             <Field label="Size / extent">
                               <input value={d.extent} onChange={e => set('extent')(e.target.value)} placeholder="e.g. 16 acres · 3,600 sq.ft" className={inputCls} />
@@ -594,7 +600,7 @@ export function ListPropertyFlow({ isOpen, onClose }: { isOpen: boolean; onClose
                         <div className="space-y-6">
                           <div>
                             <h3 className="font-display text-[1.7rem] leading-tight tracking-[0.02em] text-[#15213A] sm:text-[2rem]">How should we reach you?</h3>
-                            <p className="mt-2 font-sans text-[15px] text-[#4A5163]">A person from the desk will call you. Your number is never shown on the site.</p>
+                            <p className="mt-2 font-sans text-[15px] text-[#4A5163]">A person from the desk will call you. Your number is never shown on the site, and listing is free.</p>
                           </div>
                           <div className="grid gap-5 sm:grid-cols-2">
                             <Field label="Your name" required error={errors.seller_name}>
@@ -607,7 +613,8 @@ export function ListPropertyFlow({ isOpen, onClose }: { isOpen: boolean; onClose
                               </div>
                             </Field>
                           </div>
-                          <Field label="Email" hint="Optional" error={errors.seller_email}>
+                          <input ref={honey} type="text" name="website" tabIndex={-1} autoComplete="off" aria-hidden className="sr-only" />
+                          <Field label="Email" hint="Optional — for your confirmation" error={errors.seller_email}>
                             <input value={d.seller_email} onChange={e => set('seller_email')(e.target.value)} type="email" autoComplete="email" className={inputCls} />
                           </Field>
 

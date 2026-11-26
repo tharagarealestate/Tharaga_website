@@ -60,7 +60,7 @@ export default function HelpCenterPage() {
       icon: <FileText className="w-5 h-5" />,
       questions: [
         { id: 'q14', question: 'What payment methods do you accept?', answer: 'We accept credit cards, debit cards, UPI, net banking, and digital wallets (Paytm, PhonePe). All payments are processed securely via Razorpay.' },
-        { id: 'q15', question: 'Can I get a refund?', answer: 'Yes, we offer a 7-day money-back guarantee for new subscriptions. See our Refund Policy for details and eligibility.', link: '/refund' },
+        { id: 'q15', question: 'Can I get a refund?', answer: 'Listing a property and browsing are free, and we take no payments on the website, so there is nothing to refund. See our Refund & Fees Policy.', link: '/refund' },
         { id: 'q16', question: 'When will I be charged?', answer: 'Subscriptions are billed in advance monthly or annually. You\'ll receive an email invoice before each billing cycle. Auto-renewal can be disabled anytime.' }
       ]
     }

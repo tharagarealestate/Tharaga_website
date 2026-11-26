@@ -38,10 +38,16 @@ let _switchTab:    ((tab: 'signin' | 'signup') => void) | null = null
 // to override the current pathname.
 let _sourcePathname = '/'
 
-export function openAuthModal(next?: string) {
+export type AuthContext = { title: string; body?: string; preview?: { label: string; href: string } }
+let _context: AuthContext | null = null
+let _setContext: ((c: AuthContext | null) => void) | null = null
+
+export function openAuthModal(next?: string, context?: AuthContext) {
   if (typeof window !== 'undefined') {
     _sourcePathname = next ?? window.location.pathname
   }
+  _context = context ?? null
+  _setContext?.(_context)
   _open?.()
 }
 
@@ -123,6 +129,11 @@ function Field({
 // ─── Main component ───────────────────────────────────────────────────────────
 export function AuthModal() {
   const [open,       setOpen]       = useState(false)
+  const [context,    setContext]    = useState<AuthContext | null>(null)
+  useEffect(() => {
+    _setContext = setContext
+    return () => { _setContext = null }
+  }, [])
   const [tab,        setTab]        = useState<Tab>('signin')
   const [tabDir,     setTabDir]     = useState(1)
   const [stage,      setStage]      = useState<Stage>('idle')
@@ -148,7 +159,7 @@ export function AuthModal() {
   // ── Register globals ──────────────────────────────────────────────────────
   useEffect(() => {
     _open       = () => { setOpen(true); setStage('idle'); setErrorMsg('') }
-    _close      = () => setOpen(false)
+    _close      = () => { setOpen(false); setContext(null) }
     _switchTab  = (t) => { setTab(t); setTabDir(t === 'signup' ? 1 : -1) }
     setMounted(true)
     ;(window as any).__thgOpenAuthModal = () => { setOpen(true); setStage('idle') }
@@ -411,6 +422,18 @@ export function AuthModal() {
                         <X className="w-3.5 h-3.5" />
                       </button>
                     </div>
+
+                    {context && (
+                      <div className="mx-6 mb-5 border border-[#E6C9A0]/20 bg-[#0E1729]/60 px-4 py-3.5">
+                        <p className="font-display text-[15px] tracking-[0.03em] text-[#F7F3EC]">{context.title}</p>
+                        {context.body && <p className="mt-1.5 font-sans text-[12.5px] leading-relaxed text-[#C9CCD4]">{context.body}</p>}
+                        {context.preview && (
+                          <a href={context.preview.href} onClick={() => setOpen(false)} className="mt-2.5 inline-block font-sans text-[12px] font-semibold text-[#D9AE78] underline underline-offset-4 hover:text-[#F0DDBF]">
+                            {context.preview.label}
+                          </a>
+                        )}
+                      </div>
+                    )}
 
                     {/* Tabs */}
                     <div className="px-6 mb-5">

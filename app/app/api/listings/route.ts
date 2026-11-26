@@ -78,6 +78,33 @@ ${mediaLinks.length ? `<p><b>Media (links valid 7 days):</b><br/>${mediaLinks.ma
   }
 }
 
+async function confirmSeller(listing: Record<string, any>) {
+  const key = process.env.RESEND_API_KEY
+  if (!key || !listing.seller_email) return
+  try {
+    await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        from: process.env.LISTINGS_FROM_EMAIL || 'Tharaga Listings <listings@tharaga.in>',
+        to: [listing.seller_email],
+        reply_to: process.env.LISTINGS_ALERT_EMAIL || 'tharagarealestate@gmail.com',
+        subject: `We have your property — reference ${listing.reference}`,
+        html: `<div style="font-family:Arial,sans-serif;color:#15213A;line-height:1.6">
+<p>Dear ${esc(listing.seller_name)},</p>
+<p>Thank you for listing your property with Tharaga Estates. Your reference is <b>${listing.reference}</b>.</p>
+<p><b>${esc(CATEGORY_LABELS[listing.category] || '')}</b> · ${esc(listing.location)}${listing.extent ? ' · ' + esc(listing.extent) : ''}</p>
+<p>What happens next: our desk reviews the details and title, then calls you before any buyer sees the property. Listing with us is free.</p>
+<p>Questions? Reply to this email or WhatsApp +91 88709 80839 with your reference.</p>
+<p>— The Tharaga desk</p></div>`,
+      }),
+      signal: AbortSignal.timeout(6000),
+    })
+  } catch (e: any) {
+    console.warn('seller confirmation skipped:', e?.message)
+  }
+}
+
 /** Submit a listing. */
 export async function POST(req: Request) {
   try {
@@ -95,9 +122,18 @@ export async function POST(req: Request) {
       asking_price: clean(body.asking_price, 80) || null,
       rental_income: clean(body.rental_income, 80) || null,
     }
+    // Quiet bot trap: real people never fill this hidden field.
+    if (clean(body.website, 200)) return NextResponse.json({ ok: true, reference: 'TH-RECEIVED' })
+
+    // Normalise Indian mobiles to +91XXXXXXXXXX so the desk can call/WhatsApp in one tap.
     const phoneDigits = listing.seller_phone.replace(/\D/g, '')
-    if (!listing.seller_name || phoneDigits.length < 10)
-      return NextResponse.json({ error: 'Please add your name and a 10-digit phone number.' }, { status: 400 })
+    const local = phoneDigits.slice(-10)
+    if (!listing.seller_name || phoneDigits.length < 10 || (phoneDigits.length <= 12 && !/^[6-9]/.test(local)))
+      return NextResponse.json({ error: 'Please add your name and a valid 10-digit mobile number.' }, { status: 400 })
+    listing.seller_phone = phoneDigits.length <= 12 ? `+91${local}` : `+${phoneDigits}`
+    const mapsLink = clean(body.maps_link, 300)
+    if (mapsLink && /^https?:\/\/(www\.)?(google\.[a-z.]+\/maps|maps\.google\.|maps\.app\.goo\.gl|goo\.gl\/maps)/i.test(mapsLink))
+      listing.description = `${listing.description ? listing.description + '\n\n' : ''}Map pin: ${mapsLink}`
     if (!CATEGORY_LABELS[listing.category]) return NextResponse.json({ error: 'Please choose the property type.' }, { status: 400 })
     if (!listing.location) return NextResponse.json({ error: 'Please add where the property is.' }, { status: 400 })
 
@@ -109,6 +145,39 @@ export async function POST(req: Request) {
     if (!listing.description && !media.length)
       return NextResponse.json({ error: 'Please describe the property or add a photo.' }, { status: 400 })
 
+    const db = serviceClient()
+
+    // Only keep media that actually reached storage.
+    if (media.length) {
+      const folders = Array.from(new Set(media.map((m: any) => m.path.split('/').slice(0, 2).join('/')))) as string[]
+      const present = new Set<string>()
+      for (const f of folders) {
+        const { data } = await db.storage.from(LISTING_BUCKET).list(f, { limit: 100 })
+        ;(data || []).forEach(o => present.add(`${f}/${o.name}`))
+      }
+      for (let i = media.length - 1; i >= 0; i--) if (!present.has(media[i].path)) media.splice(i, 1)
+    }
+
+    // Same owner, same place, within a day: treat as the same listing (no duplicate desk work).
+    const since = new Date(Date.now() - 24 * 3600 * 1000).toISOString()
+    const { data: recent } = await db
+      .from('owner_listings')
+      .select('id, reference, location, media, created_at')
+      .eq('seller_phone', listing.seller_phone)
+      .gte('created_at', since)
+      .order('created_at', { ascending: false })
+      .limit(10)
+    if ((recent?.length ?? 0) >= 6)
+      return NextResponse.json({ error: 'You have sent several listings today. The desk will call you — or WhatsApp us to add more.' }, { status: 429 })
+    const same = recent?.find(r => r.location.trim().toLowerCase() === listing.location.toLowerCase())
+    if (same) {
+      if (media.length) {
+        const merged = [...(Array.isArray(same.media) ? same.media : []), ...media].slice(0, 30)
+        await db.from('owner_listings').update({ media: merged }).eq('id', same.id)
+      }
+      return NextResponse.json({ ok: true, id: same.id, reference: same.reference, duplicate: true })
+    }
+
     const ai_summary = await summarise({
       category: CATEGORY_LABELS[listing.category],
       location: listing.location,
@@ -117,7 +186,6 @@ export async function POST(req: Request) {
     })
 
     const now = new Date().toISOString()
-    const db = serviceClient()
     let inserted: any = null
     for (let attempt = 0; attempt < 3 && !inserted; attempt++) {
       const { data, error } = await db
@@ -143,7 +211,10 @@ export async function POST(req: Request) {
       const { data } = await db.storage.from(LISTING_BUCKET).createSignedUrls(media.map((m: any) => m.path), 60 * 60 * 24 * 7)
       links = (data || []).map(d => d.signedUrl).filter(Boolean) as string[]
     }
-    await alertDesk({ ...listing, reference: inserted.reference, ai_summary }, links)
+    await Promise.all([
+      alertDesk({ ...listing, reference: inserted.reference, ai_summary }, links),
+      confirmSeller({ ...listing, reference: inserted.reference }),
+    ])
 
     return NextResponse.json({ ok: true, id: inserted.id, reference: inserted.reference, title: ai_summary?.title || null })
   } catch (e: any) {

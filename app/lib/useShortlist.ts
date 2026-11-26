@@ -3,6 +3,7 @@
 import { useCallback, useSyncExternalStore } from 'react'
 import { getSupabase } from '@/lib/supabase'
 import { currentAuthUser, onAuthChange } from '@/lib/useAuthUser'
+import { requireSignInToSave } from '@/lib/propertyAccess'
 
 const KEY = 'tharaga.shortlist.v1'
 
@@ -75,6 +76,8 @@ const serverSnap = () => EMPTY
 export function useShortlist() {
   const list = useSyncExternalStore(subscribe, snap, serverSnap)
   const toggle = useCallback((slug: string) => {
+    // Adding needs an account (removing never does).
+    if (!items.includes(slug) && !requireSignInToSave()) return
     items = items.includes(slug) ? items.filter(s => s !== slug) : [...items, slug]
     persist()
   }, [])

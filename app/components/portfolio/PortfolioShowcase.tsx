@@ -1,6 +1,7 @@
 'use client'
 
 import { useMemo, useState } from 'react'
+import { openProperty } from '@/lib/propertyAccess'
 import { useRouter } from 'next/navigation'
 import { AnimatePresence, LayoutGroup, motion } from 'framer-motion'
 import { CATEGORY_LABELS, MANDATES, type MandateCategory } from '@/lib/mandates'
@@ -100,7 +101,7 @@ export function PortfolioShowcase() {
                 <MandateCard
                   mandate={m}
                   index={i}
-                  onOpen={() => router.push(`/properties/${m.slug}`)}
+                  onOpen={() => openProperty(router, m)}
                   saved={shortlist.has(m.slug)}
                   onToggleSave={() => shortlist.toggle(m.slug)}
                 />
